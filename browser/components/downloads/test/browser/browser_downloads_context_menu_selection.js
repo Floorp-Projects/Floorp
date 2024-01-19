@@ -124,7 +124,7 @@ async function checkCommandsWithContextMenu(element, commands) {
 
     let commandElt = contextMenu.querySelector(`[command="${command}"]`);
     Assert.equal(
-      !BrowserTestUtils.is_hidden(commandElt),
+      !BrowserTestUtils.isHidden(commandElt),
       enabled,
       `${command} should be ${enabled ? "visible" : "hidden"}`
     );

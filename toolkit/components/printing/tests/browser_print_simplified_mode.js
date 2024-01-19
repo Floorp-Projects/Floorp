@@ -181,7 +181,7 @@ add_task(async function testSimplifyHiddenNonArticle() {
     await helper.openMoreSettings();
     let sourceVersionSection = helper.get("source-version-section");
     ok(
-      BrowserTestUtils.is_hidden(sourceVersionSection),
+      BrowserTestUtils.isHidden(sourceVersionSection),
       "Source version is hidden"
     );
     await helper.closeDialog();
@@ -254,7 +254,7 @@ add_task(async function testSimplifyHiddenReaderMode() {
     await helper.openMoreSettings();
     let sourceVersionSection = helper.get("source-version-section");
     ok(
-      BrowserTestUtils.is_hidden(sourceVersionSection),
+      BrowserTestUtils.isHidden(sourceVersionSection),
       "Source version is hidden in reader mode"
     );
     await helper.closeDialog();

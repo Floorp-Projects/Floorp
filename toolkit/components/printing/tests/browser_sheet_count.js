@@ -27,7 +27,7 @@ add_task(async function testSheetCount() {
     // Since we're using the Save to PDF printer, the numCopies element should
     // be hidden and its value ignored.
     let numCopies = helper.get("copies-count");
-    ok(BrowserTestUtils.is_hidden(numCopies), "numCopies element is hidden");
+    ok(BrowserTestUtils.isHidden(numCopies), "numCopies element is hidden");
     helper.dispatchSettingsChange({
       numCopies: 4,
     });

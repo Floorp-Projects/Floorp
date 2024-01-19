@@ -22,7 +22,7 @@ add_task(async function test_private_window_disabled() {
     "shopping-sidebar-button"
   );
   ok(
-    BrowserTestUtils.is_hidden(shoppingButton),
+    BrowserTestUtils.isHidden(shoppingButton),
     "Shopping Button should not be visible on a product page"
   );
 

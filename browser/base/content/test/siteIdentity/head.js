@@ -167,7 +167,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     // HTTP request, there should be a broken padlock shown always.
     ok(classList.contains("notSecure"), "notSecure on HTTP page");
     ok(
-      !BrowserTestUtils.is_hidden(identityIcon),
+      !BrowserTestUtils.isHidden(identityIcon),
       "information icon should be visible"
     );
 
@@ -202,7 +202,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     );
 
     ok(
-      !BrowserTestUtils.is_hidden(identityIcon),
+      !BrowserTestUtils.isHidden(identityIcon),
       "information icon should be visible"
     );
     if (activeLoaded) {
@@ -377,7 +377,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
         doc
           .getElementById("identity-popup-securityView")
           .querySelectorAll(".identity-popup-mcb-learn-more"),
-        element => !BrowserTestUtils.is_hidden(element)
+        element => !BrowserTestUtils.isHidden(element)
       ).length,
       1,
       "The 'Learn more' link should be visible once."

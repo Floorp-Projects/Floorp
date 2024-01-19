@@ -130,7 +130,7 @@ async function runTest(i, forward) {
   await popupHidden;
   ok(
     !gIdentityHandler._identityPopup ||
-      BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup),
+      BrowserTestUtils.isHidden(gIdentityHandler._identityPopup),
     "Control Center is hidden"
   );
 
@@ -160,7 +160,7 @@ async function runTest(i, forward) {
   info("Waiting for the Control Center to be shown");
   await popupShown;
   ok(
-    !BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup),
+    !BrowserTestUtils.isHidden(gIdentityHandler._identityPopup),
     "Control Center is visible"
   );
   let displayedHost = currentTest.hostForDisplay || currentTest.location;

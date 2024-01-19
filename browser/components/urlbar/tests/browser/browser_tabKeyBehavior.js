@@ -357,7 +357,7 @@ async function waitForFocusOnNextFocusableElement(reverse = false) {
     (!nextFocusableElement.classList.contains("toolbarbutton-1") ||
       nextFocusableElement.hasAttribute("hidden") ||
       nextFocusableElement.hasAttribute("disabled") ||
-      BrowserTestUtils.is_hidden(nextFocusableElement))
+      BrowserTestUtils.isHidden(nextFocusableElement))
   ) {
     nextFocusableElement = reverse
       ? nextFocusableElement.previousElementSibling

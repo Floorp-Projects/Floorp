@@ -362,7 +362,7 @@ async function verifyDoorhangerToggles(browser, notif, expected) {
     );
   } else {
     Assert.ok(
-      BrowserTestUtils.is_hidden(toggleCheckbox),
+      BrowserTestUtils.isHidden(toggleCheckbox),
       "The visibility checkbox is hidden"
     );
   }

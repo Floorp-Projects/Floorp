@@ -292,12 +292,12 @@ export var BrowserTestUtils = {
    *
    * @return {boolean}
    */
-  is_hidden(element) {
+  isHidden(element) {
     if (
       element.nodeType == Node.DOCUMENT_FRAGMENT_NODE &&
       element.containingShadowRoot == element
     ) {
-      return BrowserTestUtils.is_hidden(element.getRootNode().host);
+      return BrowserTestUtils.isHidden(element.getRootNode().host);
     }
 
     let win = element.ownerGlobal;
@@ -314,7 +314,7 @@ export var BrowserTestUtils = {
 
     // Hiding a parent element will hide all its children
     if (element.parentNode != element.ownerDocument) {
-      return BrowserTestUtils.is_hidden(element.parentNode);
+      return BrowserTestUtils.isHidden(element.parentNode);
     }
 
     return false;

@@ -113,7 +113,7 @@ async function testBenignPageWithException() {
   );
 
   ok(
-    !BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
+    !BrowserTestUtils.isHidden(gProtectionsHandler.iconBox),
     "icon box is not hidden"
   );
 

@@ -55,5 +55,5 @@ function is_element_visible(element, msg) {
 }
 function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
-  ok(BrowserTestUtils.is_hidden(element), msg || "Element should be hidden");
+  ok(BrowserTestUtils.isHidden(element), msg || "Element should be hidden");
 }

@@ -22,7 +22,7 @@ add_task(async function test_fullpageScreenshot() {
         panel,
         { attributes: true },
         () => {
-          return BrowserTestUtils.is_hidden(panel);
+          return BrowserTestUtils.isHidden(panel);
         }
       );
 
@@ -30,7 +30,7 @@ add_task(async function test_fullpageScreenshot() {
 
       await waitForPanelHide;
       ok(
-        BrowserTestUtils.is_hidden(panel),
+        BrowserTestUtils.isHidden(panel),
         "Panel buttons are hidden after page crash"
       );
 
@@ -46,7 +46,7 @@ add_task(async function test_fullpageScreenshot() {
       SessionStore.reviveCrashedTab(tab);
 
       ok(
-        BrowserTestUtils.is_hidden(panel),
+        BrowserTestUtils.isHidden(panel),
         "Panel buttons are hidden after page crash"
       );
     }

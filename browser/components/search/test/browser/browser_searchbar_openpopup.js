@@ -213,7 +213,7 @@ add_task(async function open_empty_hiddenOneOffs() {
     "The one-offs buttons container should have the hidden attribute."
   );
   Assert.ok(
-    BrowserTestUtils.is_hidden(searchPopup.searchOneOffsContainer),
+    BrowserTestUtils.isHidden(searchPopup.searchOneOffsContainer),
     "The one-off buttons container should be hidden."
   );
 

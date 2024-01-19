@@ -68,7 +68,7 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
         "picture-in-picture-button"
       );
       ok(
-        BrowserTestUtils.is_hidden(pipUrlbarToggle),
+        BrowserTestUtils.isHidden(pipUrlbarToggle),
         "PiP urlbar toggle is hidden because there is more than 1 video"
       );
 
@@ -126,11 +126,11 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
       await BrowserTestUtils.waitForMutationCondition(
         pipUrlbarToggle,
         { attributeFilter: ["hidden"] },
-        () => BrowserTestUtils.is_hidden(pipUrlbarToggle)
+        () => BrowserTestUtils.isHidden(pipUrlbarToggle)
       );
 
       ok(
-        BrowserTestUtils.is_hidden(pipUrlbarToggle),
+        BrowserTestUtils.isHidden(pipUrlbarToggle),
         "PiP urlbar toggle is hidden because there are no videos on the page"
       );
 
@@ -287,7 +287,7 @@ add_task(async function test_pipDisabled() {
       pipUrlbarToggle.click();
 
       await BrowserTestUtils.waitForCondition(async () => {
-        return BrowserTestUtils.is_hidden(panel);
+        return BrowserTestUtils.isHidden(panel);
       });
 
       let filter = {
@@ -369,7 +369,7 @@ add_task(async function test_urlbar_toggle_telemetry() {
         "picture-in-picture-button"
       );
       ok(
-        BrowserTestUtils.is_hidden(pipUrlbarToggle),
+        BrowserTestUtils.isHidden(pipUrlbarToggle),
         "PiP urlbar toggle is hidden because there is more than 1 video"
       );
 

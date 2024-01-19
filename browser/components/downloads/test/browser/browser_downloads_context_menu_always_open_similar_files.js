@@ -100,7 +100,7 @@ add_task(async function test_checkbox_useSystemDefault() {
   );
 
   ok(
-    !BrowserTestUtils.is_hidden(alwaysOpenSimilarFilesItem),
+    !BrowserTestUtils.isHidden(alwaysOpenSimilarFilesItem),
     "alwaysOpenSimilarFiles should be visible"
   );
   ok(
@@ -139,7 +139,7 @@ add_task(async function test_checkbox_saveToDisk() {
   );
 
   ok(
-    !BrowserTestUtils.is_hidden(alwaysOpenSimilarFilesItem),
+    !BrowserTestUtils.isHidden(alwaysOpenSimilarFilesItem),
     "alwaysOpenSimilarFiles should be visible"
   );
   ok(

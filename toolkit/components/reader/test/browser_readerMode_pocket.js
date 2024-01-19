@@ -126,11 +126,11 @@ add_task(async function () {
         panel,
         { attributes: true },
         () => {
-          return BrowserTestUtils.is_hidden(panel);
+          return BrowserTestUtils.isHidden(panel);
         }
       );
 
-      ok(BrowserTestUtils.is_hidden(panel), "Panel buttons are hidden");
+      ok(BrowserTestUtils.isHidden(panel), "Panel buttons are hidden");
     }
   );
 });

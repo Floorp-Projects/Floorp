@@ -112,7 +112,7 @@ add_task(async function () {
     await pageLoaded;
 
     is(
-      BrowserTestUtils.is_hidden(
+      BrowserTestUtils.isHidden(
         gProtectionsHandler._trackingProtectionIconContainer
       ),
       testData.hidden,

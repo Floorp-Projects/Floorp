@@ -637,6 +637,6 @@ add_task(async function test_search_recent_browsing() {
       () => slot.tabList.rowEls.length === NUMBER_OF_TABS,
       "All search results are shown."
     );
-    ok(BrowserTestUtils.is_hidden(showAllLink), "The show all link is hidden.");
+    ok(BrowserTestUtils.isHidden(showAllLink), "The show all link is hidden.");
   });
 });

@@ -192,7 +192,7 @@ add_task(async function test_tabdialogbox_tab_switch_hidden() {
   dialogBoxManager.hideDialog(browser);
 
   ok(
-    BrowserTestUtils.is_hidden(dialogBoxManager._dialogStack),
+    BrowserTestUtils.isHidden(dialogBoxManager._dialogStack),
     "Dialog stack is hidden"
   );
 

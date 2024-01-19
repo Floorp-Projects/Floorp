@@ -1376,7 +1376,7 @@ function promiseLoadSubDialog(aURL) {
           "Element should not be null, when checking visibility"
         );
         Assert.ok(
-          !BrowserTestUtils.is_hidden(aEvent.detail.dialog._overlay),
+          !BrowserTestUtils.isHidden(aEvent.detail.dialog._overlay),
           "The element is visible"
         );
 

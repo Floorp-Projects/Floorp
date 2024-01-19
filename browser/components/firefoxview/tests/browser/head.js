@@ -139,7 +139,7 @@ function testVisibility(browser, expected) {
         `Expected ${selector} to be visible`
       );
     } else {
-      ok(BrowserTestUtils.is_hidden(elem), `Expected ${selector} to be hidden`);
+      ok(BrowserTestUtils.isHidden(elem), `Expected ${selector} to be hidden`);
     }
   }
 }
@@ -160,7 +160,7 @@ async function waitForElementVisible(browser, selector, isVisible = true) {
     () => {
       return isVisible
         ? BrowserTestUtils.is_visible(elem)
-        : BrowserTestUtils.is_hidden(elem);
+        : BrowserTestUtils.isHidden(elem);
     }
   );
 }
@@ -190,7 +190,7 @@ async function waitForVisibleSetupStep(browser, expected) {
       );
     } else {
       ok(
-        BrowserTestUtils.is_hidden(elem),
+        BrowserTestUtils.isHidden(elem),
         `Expected ${elem.id || elem.className} to be hidden`
       );
     }

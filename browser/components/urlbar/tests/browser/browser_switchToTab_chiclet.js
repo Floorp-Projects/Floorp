@@ -61,7 +61,7 @@ add_task(async function test_with_oneoff_button() {
     "Waiting until the search mode title will be visible"
   );
   await BrowserTestUtils.waitForCondition(
-    () => BrowserTestUtils.is_hidden(switchTabLabel),
+    () => BrowserTestUtils.isHidden(switchTabLabel),
     "Waiting until the switch tab label will be hidden"
   );
 
@@ -109,7 +109,7 @@ add_task(async function test_with_keytype() {
   );
   const switchTabLabel = document.getElementById("urlbar-label-switchtab");
   await BrowserTestUtils.waitForCondition(
-    () => BrowserTestUtils.is_hidden(searchModeTitle),
+    () => BrowserTestUtils.isHidden(searchModeTitle),
     "Waiting until the search mode title will be hidden"
   );
   await BrowserTestUtils.waitForCondition(

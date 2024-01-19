@@ -57,7 +57,7 @@ add_task(async function test_sidebar_navigation() {
     BrowserTestUtils.startLoadingURIString(browser, "https://example.com/1");
     info("Go to a non-product.");
     await loadedPromise;
-    Assert.ok(BrowserTestUtils.is_hidden(sidebar));
+    Assert.ok(BrowserTestUtils.isHidden(sidebar));
 
     // Navigate using pushState:
     loadedPromise = BrowserTestUtils.waitForLocationChange(
@@ -219,7 +219,7 @@ add_task(async function test_sidebar_button_open_close() {
 
     // close the sidebar
     shoppingButton.click();
-    ok(BrowserTestUtils.is_hidden(sidebar), "Sidebar should be hidden");
+    ok(BrowserTestUtils.isHidden(sidebar), "Sidebar should be hidden");
 
     // reopen the sidebar
     shoppingButton.click();

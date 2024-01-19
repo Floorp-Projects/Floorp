@@ -58,7 +58,7 @@ add_task(async function showSearchTermsVisibility_experiment_afterOpen() {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CHECKBOX_ID);
   Assert.ok(
-    BrowserTestUtils.is_hidden(container),
+    BrowserTestUtils.isHidden(container),
     "The option box is initially hidden."
   );
 
@@ -76,7 +76,7 @@ add_task(async function showSearchTermsVisibility_experiment_afterOpen() {
   });
 
   Assert.ok(
-    BrowserTestUtils.is_hidden(container),
+    BrowserTestUtils.isHidden(container),
     "The option box is hidden again after the experiment is uninstalled."
   );
 

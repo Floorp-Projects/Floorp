@@ -55,7 +55,7 @@ async function testPermissionPopup({ expectPermissionHidden }) {
 
   if (expectPermissionHidden) {
     ok(
-      BrowserTestUtils.is_hidden(permissionsGrantedIcon),
+      BrowserTestUtils.isHidden(permissionsGrantedIcon),
       "Permission Granted Icon is hidden"
     );
   } else {

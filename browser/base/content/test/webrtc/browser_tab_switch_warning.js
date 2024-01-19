@@ -428,11 +428,11 @@ add_task(async function testWindowVsScreenLabel() {
   let windowHeader = document.getElementById(WINDOW_SHARING_HEADER_ID);
   let screenHeader = document.getElementById(SCREEN_SHARING_HEADER_ID);
   Assert.ok(
-    !BrowserTestUtils.is_hidden(windowHeader),
+    !BrowserTestUtils.isHidden(windowHeader),
     "Should be showing window sharing header"
   );
   Assert.ok(
-    BrowserTestUtils.is_hidden(screenHeader),
+    BrowserTestUtils.isHidden(screenHeader),
     "Should not be showing screen sharing header"
   );
 
@@ -446,11 +446,11 @@ add_task(async function testWindowVsScreenLabel() {
   await warningPromise;
 
   Assert.ok(
-    BrowserTestUtils.is_hidden(windowHeader),
+    BrowserTestUtils.isHidden(windowHeader),
     "Should not be showing window sharing header"
   );
   Assert.ok(
-    !BrowserTestUtils.is_hidden(screenHeader),
+    !BrowserTestUtils.isHidden(screenHeader),
     "Should be showing screen sharing header"
   );
   await resetDisplaySharingState();

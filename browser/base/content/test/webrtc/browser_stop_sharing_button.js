@@ -48,7 +48,7 @@ add_task(async function test_stop_sharing() {
 
     // Ensure that the "display-share" section of the indicator is now hidden
     Assert.ok(
-      BrowserTestUtils.is_hidden(
+      BrowserTestUtils.isHidden(
         indicator.document.getElementById("display-share")
       ),
       "The display-share section of the indicator should now be hidden."
@@ -98,7 +98,7 @@ add_task(async function test_stop_sharing_multiple() {
 
   // Ensure that the "display-share" section of the indicator is now hidden
   Assert.ok(
-    BrowserTestUtils.is_hidden(
+    BrowserTestUtils.isHidden(
       indicator.document.getElementById("display-share")
     ),
     "The display-share section of the indicator should now be hidden."
@@ -138,7 +138,7 @@ add_task(async function test_keep_permissions() {
 
     // Ensure that the "display-share" section of the indicator is now hidden
     Assert.ok(
-      BrowserTestUtils.is_hidden(
+      BrowserTestUtils.isHidden(
         indicator.document.getElementById("display-share")
       ),
       "The display-share section of the indicator should now be hidden."
