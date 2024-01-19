@@ -75,6 +75,7 @@ TabEngine.prototype = {
       tabs.map(tab => {
         // rust wants lastUsed in MS but the provider gives it in seconds
         tab.lastUsed = tab.lastUsed * 1000;
+        tab.inactive = false;
         return tab;
       })
     );
@@ -414,6 +415,7 @@ export const TabProvider = {
         title: tab.linkedBrowser.contentTitle || "",
         urlHistory: [url],
         icon: "",
+        inactive: false,
         lastUsed: Math.floor((tab.lastAccessed || 0) / 1000),
       };
       tabRecords.push(thisTab);
