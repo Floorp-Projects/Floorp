@@ -95,6 +95,9 @@ def configure_gradlew(config, job, taskdesc):
             "mobile/android/config/mozconfigs/android-arm/nightly-android-lints",
         ),
     )
+    worker["env"].setdefault(
+        "MOZ_ANDROID_FAT_AAR_ARCHITECTURES", "armeabi-v7a,arm64-v8a,x86,x86_64"
+    )
 
     dummy_secrets = [
         _generate_dummy_secret_command(secret)
