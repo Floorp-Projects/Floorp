@@ -21,6 +21,7 @@ class ClientManagerChild final : public PClientManagerChild {
   bool mTeardownStarted;
 
   ClientManagerChild();
+  ~ClientManagerChild() = default;
 
   // PClientManagerChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
@@ -45,7 +46,9 @@ class ClientManagerChild final : public PClientManagerChild {
   bool DeallocPClientSourceChild(PClientSourceChild* aActor) override;
 
  public:
-  static ClientManagerChild* Create();
+  NS_INLINE_DECL_REFCOUNTING(ClientManagerChild, override)
+
+  static already_AddRefed<ClientManagerChild> Create();
 
   void SetOwner(ClientThing<ClientManagerChild>* aThing);
 

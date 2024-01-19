@@ -24,7 +24,9 @@ IPCResult ClientManagerParent::RecvTeardown() {
   return IPC_OK();
 }
 
-void ClientManagerParent::ActorDestroy(ActorDestroyReason aReason) {}
+void ClientManagerParent::ActorDestroy(ActorDestroyReason aReason) {
+  mService->RemoveManager(this);
+}
 
 already_AddRefed<PClientHandleParent>
 ClientManagerParent::AllocPClientHandleParent(
@@ -98,7 +100,7 @@ IPCResult ClientManagerParent::RecvPClientSourceConstructor(
 ClientManagerParent::ClientManagerParent()
     : mService(ClientManagerService::GetOrCreateInstance()) {}
 
-ClientManagerParent::~ClientManagerParent() { mService->RemoveManager(this); }
+ClientManagerParent::~ClientManagerParent() = default;
 
 void ClientManagerParent::Init() { mService->AddManager(this); }
 

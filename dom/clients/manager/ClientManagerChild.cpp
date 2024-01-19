@@ -71,8 +71,8 @@ bool ClientManagerChild::DeallocPClientSourceChild(PClientSourceChild* aActor) {
 }
 
 // static
-ClientManagerChild* ClientManagerChild::Create() {
-  ClientManagerChild* actor = new ClientManagerChild();
+already_AddRefed<ClientManagerChild> ClientManagerChild::Create() {
+  RefPtr<ClientManagerChild> actor = new ClientManagerChild();
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -86,12 +86,11 @@ ClientManagerChild* ClientManagerChild::Create() {
         [helper] { helper->Actor()->MaybeStartTeardown(); });
 
     if (NS_WARN_IF(!actor->mIPCWorkerRef)) {
-      delete actor;
       return nullptr;
     }
   }
 
-  return actor;
+  return actor.forget();
 }
 
 ClientManagerChild::ClientManagerChild()

@@ -52,7 +52,7 @@ ClientManager::ClientManager() {
     return;
   }
 
-  ClientManagerChild* actor = ClientManagerChild::Create();
+  RefPtr<ClientManagerChild> actor = ClientManagerChild::Create();
   if (NS_WARN_IF(!actor)) {
     Shutdown();
     return;

@@ -463,16 +463,6 @@ bool BackgroundChildImpl::DeallocPQuotaChild(PQuotaChild* aActor) {
   return true;
 }
 
-mozilla::dom::PClientManagerChild*
-BackgroundChildImpl::AllocPClientManagerChild() {
-  return mozilla::dom::AllocClientManagerChild();
-}
-
-bool BackgroundChildImpl::DeallocPClientManagerChild(
-    mozilla::dom::PClientManagerChild* aActor) {
-  return mozilla::dom::DeallocClientManagerChild(aActor);
-}
-
 dom::PWebAuthnTransactionChild*
 BackgroundChildImpl::AllocPWebAuthnTransactionChild() {
   MOZ_CRASH("PWebAuthnTransaction actor should be manually constructed!");

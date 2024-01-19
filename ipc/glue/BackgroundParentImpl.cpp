@@ -1200,14 +1200,9 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
   return IPC_OK();
 }
 
-mozilla::dom::PClientManagerParent*
+already_AddRefed<mozilla::dom::PClientManagerParent>
 BackgroundParentImpl::AllocPClientManagerParent() {
   return mozilla::dom::AllocClientManagerParent();
-}
-
-bool BackgroundParentImpl::DeallocPClientManagerParent(
-    mozilla::dom::PClientManagerParent* aActor) {
-  return mozilla::dom::DeallocClientManagerParent(aActor);
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPClientManagerConstructor(

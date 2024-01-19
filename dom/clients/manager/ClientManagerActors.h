@@ -6,19 +6,14 @@
 #ifndef _mozilla_dom_ClientManagerActors_h
 #define _mozilla_dom_ClientManagerActors_h
 
+#include "mozilla/AlreadyAddRefed.h"
+
 namespace mozilla {
 namespace dom {
 
-class PClientManagerChild;
 class PClientManagerParent;
 
-PClientManagerChild* AllocClientManagerChild();
-
-bool DeallocClientManagerChild(PClientManagerChild* aActor);
-
-PClientManagerParent* AllocClientManagerParent();
-
-bool DeallocClientManagerParent(PClientManagerParent* aActor);
+already_AddRefed<PClientManagerParent> AllocClientManagerParent();
 
 void InitClientManagerParent(PClientManagerParent* aActor);
 
