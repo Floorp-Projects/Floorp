@@ -28,7 +28,7 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Focus debug build from source code'
         run:
             gradle-build-type: debug
@@ -44,7 +44,7 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Klar debug build from source code'
         run:
             gradle-build-type: debug
@@ -60,7 +60,7 @@ jobs:
             code-review: true
             shipping-product: fenix
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Fenix debug build from source code'
         run:
             gradle-build-type: debug
@@ -302,7 +302,7 @@ jobs:
             shipping-product: focus
         description: 'Focus Android Test for debugging'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
@@ -321,7 +321,7 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Debug Android Test for debugging'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
