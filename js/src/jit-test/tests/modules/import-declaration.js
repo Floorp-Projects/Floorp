@@ -387,6 +387,42 @@ if (getRealmConfiguration("importAttributes")) {
             moduleRequest(
                 lit("b"),
                 [
+                    importAttribute(ident('foo'), lit('bar')),
+                ]
+            )
+        )
+    ]).assert(parseAsModule(`import a from 'b' with { foo: 'bar' }`));
+
+    // `assert` has NLTH but `with` doesn't
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('foo'), lit('bar')),
+                ]
+            )
+        )
+    ]).assert(parseAsModule(`import a from 'b'
+                             with { foo: 'bar' }`));
+
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
                     importAssertion(ident('type'), lit('js')),
                     importAssertion(ident('foo'), lit('bar')),
                 ]
@@ -396,6 +432,12 @@ if (getRealmConfiguration("importAttributes")) {
 
     assertThrowsInstanceOf(function () {
         parseAsModule("import a from 'b' assert { type: type }");
+    }, SyntaxError);
+
+    assertThrowsInstanceOf(function () {
+        // No newline allowed as assert.
+        parseAsModule(`import foo from "foo"
+        assert {type: 'js' }`);
     }, SyntaxError);
 }
 
