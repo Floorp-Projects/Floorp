@@ -1,3 +1,5 @@
+// |jit-test| --enable-import-attributes
+
 // Test importEntries property
 
 function assertionEq(actual, expected) {
