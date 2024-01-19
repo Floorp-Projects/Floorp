@@ -31,7 +31,7 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Focus debug AAB build from source code'
         run:
             gradle-build-type: debug
@@ -47,7 +47,7 @@ jobs:
             code-review: true
             shipping-product: focus
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Klar debug AAB build from source code'
         run:
             gradle-build-type: debug
@@ -63,7 +63,7 @@ jobs:
             code-review: true
             shipping-product: fenix
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         description: 'Fenix debug AAB build from source code'
         run:
             gradle-build-type: debug
