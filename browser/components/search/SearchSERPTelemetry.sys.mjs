@@ -49,6 +49,8 @@ export const CATEGORIZATION_SETTINGS = {
   MAX_DOMAINS_TO_CATEGORIZE: 10,
   MINIMUM_SCORE: 0,
   STARTING_RANK: 2,
+  IDLE_TIMEOUT_SECONDS: 60 * 60,
+  WAKE_TIMEOUT_MS: 60 * 60 * 1000,
 };
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -72,7 +74,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "serpEventTelemetryCategorization",
   CATEGORIZATION_PREF,
-  false
+  false,
+  (aPreference, previousValue, newValue) => {
+    if (newValue) {
+      SearchSERPDomainToCategoriesMap.init();
+      SearchSERPCategorizationEventScheduler.init();
+    } else {
+      SearchSERPDomainToCategoriesMap.uninit();
+      SearchSERPCategorizationEventScheduler.uninit();
+    }
+  }
 );
 
 export const SearchSERPTelemetryUtils = {
@@ -567,19 +578,7 @@ class TelemetryHandler {
           lazy.serpEventTelemetryCategorization &&
           telemetryState.categorizationInfo
         ) {
-          let impressionInfo = telemetryState.impressionInfo;
-          SERPCategorizationRecorder.recordCategorizationTelemetry({
-            ...telemetryState.categorizationInfo,
-            app_version: item.appVersion,
-            channel: item.channel,
-            locale: item.locale,
-            region: item.region,
-            partner_code: impressionInfo.partnerCode,
-            provider: impressionInfo.provider,
-            tagged: impressionInfo.tagged,
-            num_ads_clicked: telemetryState.adsClicked,
-            num_ads_visible: telemetryState.adsVisible,
-          });
+          SearchSERPCategorizationEventScheduler.sendCallback(browser);
         }
 
         item.browserTelemetryStateMap.delete(browser);
@@ -1575,6 +1574,22 @@ class ContentHandler {
       );
       if (result) {
         telemetryState.categorizationInfo = result;
+        let callback = () => {
+          let impressionInfo = telemetryState.impressionInfo;
+          SERPCategorizationRecorder.recordCategorizationTelemetry({
+            ...telemetryState.categorizationInfo,
+            app_version: item.appVersion,
+            channel: item.channel,
+            locale: item.locale,
+            region: item.region,
+            partner_code: impressionInfo.partnerCode,
+            provider: impressionInfo.provider,
+            tagged: impressionInfo.tagged,
+            num_ads_clicked: telemetryState.adsClicked,
+            num_ads_visible: telemetryState.adsVisible,
+          });
+        };
+        SearchSERPCategorizationEventScheduler.addCallback(browser, callback);
       }
     }
     Services.obs.notifyObservers(
@@ -1816,6 +1831,155 @@ class SERPCategorizer {
 }
 
 /**
+ * Contains outstanding categorizations of browser objects that have yet to be
+ * scheduled to be reported into a Glean event.
+ * They are kept here until one of the conditions are met:
+ * 1. The browser that was tracked is no longer being tracked.
+ * 2. A user has been idle for IDLE_TIMEOUT_SECONDS
+ * 3. The user has awoken their computer and the time elapsed from the last
+ *    categorization event exceeds WAKE_TIMEOUT_MS.
+ */
+class CategorizationEventScheduler {
+  /**
+   * A WeakMap containing browser objects mapped to a callback.
+   *
+   * @type {WeakMap | null}
+   */
+  #browserToCallbackMap = null;
+
+  /**
+   * An instance of user idle service. Cached for testing purposes.
+   *
+   * @type {nsIUserIdleService | null}
+   */
+  #idleService = null;
+
+  /**
+   * Whether it has been initialized.
+   *
+   * @type {boolean}
+   */
+  #init = false;
+
+  /**
+   * The last Date.now() of a callback insertion.
+   *
+   * @type {number | null}
+   */
+  #mostRecentMs = null;
+
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    if (!lazy.serpEventTelemetryCategorization || this.#init) {
+      return;
+    }
+
+    lazy.logConsole.debug("Initializing categorization event scheduler.");
+
+    this.#browserToCallbackMap = new WeakMap();
+
+    // In tests, we simulate idleness as it is more reliable and easier than
+    // trying to replicate idleness. The way to do is so it by creating
+    // an mock idle service and having the component subscribe to it. If we
+    // used a lazy instantiation of idle service, the test could only ever be
+    // subscribed to the real one.
+    this.#idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+      Ci.nsIUserIdleService
+    );
+
+    this.#idleService.addIdleObserver(
+      this,
+      CATEGORIZATION_SETTINGS.IDLE_TIMEOUT_SECONDS
+    );
+
+    Services.obs.addObserver(this, "quit-application");
+    Services.obs.addObserver(this, "wake_notification");
+
+    this.#init = true;
+  }
+
+  uninit() {
+    if (!this.#init) {
+      return;
+    }
+
+    this.#browserToCallbackMap = null;
+
+    lazy.logConsole.debug("Un-initializing categorization event scheduler.");
+    this.#idleService.removeIdleObserver(
+      this,
+      CATEGORIZATION_SETTINGS.IDLE_TIMEOUT_SECONDS
+    );
+
+    Services.obs.removeObserver(this, "quit-application");
+    Services.obs.removeObserver(this, "wake_notification");
+
+    this.#idleService = null;
+    this.#init = false;
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "idle":
+        lazy.logConsole.debug("Triggering all callbacks due to idle.");
+        this.#sendAllCallbacks();
+        break;
+      case "quit-application":
+        this.uninit();
+        break;
+      case "wake_notification":
+        if (
+          this.#mostRecentMs &&
+          Date.now() - this.#mostRecentMs >=
+            CATEGORIZATION_SETTINGS.WAKE_TIMEOUT_MS
+        ) {
+          lazy.logConsole.debug(
+            "Triggering all callbacks due to a wake notification."
+          );
+          this.#sendAllCallbacks();
+        }
+        break;
+    }
+  }
+
+  addCallback(browser, callback) {
+    lazy.logConsole.debug("Adding callback to queue.");
+    this.#mostRecentMs = Date.now();
+    this.#browserToCallbackMap?.set(browser, callback);
+  }
+
+  sendCallback(browser) {
+    let callback = this.#browserToCallbackMap?.get(browser);
+    if (callback) {
+      lazy.logConsole.debug("Triggering callback.");
+      callback();
+      Services.obs.notifyObservers(
+        null,
+        "recorded-single-categorization-event"
+      );
+      this.#browserToCallbackMap.delete(browser);
+    }
+  }
+
+  #sendAllCallbacks() {
+    let browsers = ChromeUtils.nondeterministicGetWeakMapKeys(
+      this.#browserToCallbackMap
+    );
+    if (browsers) {
+      lazy.logConsole.debug("Triggering all callbacks.");
+      for (let browser of browsers) {
+        this.sendCallback(browser);
+      }
+    }
+    this.#mostRecentMs = null;
+    Services.obs.notifyObservers(null, "recorded-all-categorization-events");
+  }
+}
+
+/**
  * Handles reporting SERP categorization telemetry to Glean.
  */
 class CategorizationRecorder {
@@ -1826,7 +1990,7 @@ class CategorizationRecorder {
    *  The object containing all the data required to report.
    */
   recordCategorizationTelemetry(resultToReport) {
-    resultToReport.lazy.logConsole.debug(
+    lazy.logConsole.debug(
       "Reporting the following categorization result:",
       resultToReport
     );
@@ -1904,51 +2068,25 @@ class DomainToCategoriesMap {
   #downloadRetries = 0;
 
   /**
-   * Runs at application startup with startup idle tasks. Creates a listener
-   * to changes of the SERP categorization preference. Additionally, if the
-   * SERP categorization preference is enabled, it creates a Remote Settings
+   * Runs at application startup with startup idle tasks. If the SERP
+   * categorization preference is enabled, it creates a Remote Settings
    * client to listen to updates, and populates the map.
    */
   async init() {
-    if (this.#init) {
+    if (!lazy.serpEventTelemetryCategorization || this.#init) {
       return;
     }
-
-    Services.prefs.addObserver(CATEGORIZATION_PREF, this);
+    lazy.logConsole.debug("Initializing domain-to-categories map.");
+    this.#setupClientAndMap();
     this.#init = true;
-
-    if (lazy.serpEventTelemetryCategorization) {
-      this.#setupClientAndMap();
-    }
   }
 
-  /**
-   * Predominantly a test-only function.
-   */
   uninit() {
-    lazy.logConsole.debug("Un-initialize domain-to-categories map.");
     if (this.#init) {
-      if (this.#map) {
-        this.#clearClientAndMap();
-      } else {
-        this.#cancelAndNullifyTimer();
-      }
+      lazy.logConsole.debug("Un-initializing domain-to-categories map.");
+      this.#clearClientAndMap();
+      this.#cancelAndNullifyTimer();
       this.#init = false;
-      Services.prefs.removeObserver(CATEGORIZATION_PREF, this);
-    }
-  }
-
-  observe(subject, topic, data) {
-    if (topic != "nsPref:changed") {
-      return;
-    }
-    if (data == CATEGORIZATION_PREF) {
-      if (lazy.serpEventTelemetryCategorization) {
-        this.#setupClientAndMap();
-      } else {
-        this.#cancelAndNullifyTimer();
-        this.#clearClientAndMap();
-      }
     }
   }
 
@@ -2019,7 +2157,7 @@ class DomainToCategoriesMap {
     if (this.#client && !this.empty) {
       return;
     }
-    lazy.logConsole.debug("Initializing domain-to-categories map.");
+    lazy.logConsole.debug("Setting up domain-to-categories map.");
     this.#client = lazy.RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
 
     this.#onSettingsSync = event => this.#sync(event.data);
@@ -2219,3 +2357,5 @@ export var SearchSERPDomainToCategoriesMap = new DomainToCategoriesMap();
 export var SearchSERPTelemetry = new TelemetryHandler();
 export var SearchSERPCategorization = new SERPCategorizer();
 export var SERPCategorizationRecorder = new CategorizationRecorder();
+export var SearchSERPCategorizationEventScheduler =
+  new CategorizationEventScheduler();

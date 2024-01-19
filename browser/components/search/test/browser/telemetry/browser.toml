@@ -41,6 +41,9 @@ support-files = [
 ["browser_search_telemetry_domain_categorization_ad_values.js"]
 support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
+["browser_search_telemetry_domain_categorization_download_timer.js"]
+support-files = ["domain_category_mappings.json"]
+
 ["browser_search_telemetry_domain_categorization_extraction.js"]
 support-files = ["searchTelemetryDomainExtraction.html"]
 
@@ -53,8 +56,11 @@ support-files = [
   "searchTelemetryDomainCategorizationCapProcessedDomains.html",
 ]
 
-["browser_search_telemetry_domain_categorization_download_timer.js"]
-support-files = ["domain_category_mappings.json"]
+["browser_search_telemetry_domain_categorization_reporting_timer.js"]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
+
+["browser_search_telemetry_domain_categorization_reporting_timer_wakeup.js"]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
 ["browser_search_telemetry_engagement_cached.js"]
 support-files = [
