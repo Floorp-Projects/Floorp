@@ -1914,13 +1914,8 @@ bool ContentChild::DeallocPHeapSnapshotTempFileHelperChild(
   return true;
 }
 
-PTestShellChild* ContentChild::AllocPTestShellChild() {
-  return new TestShellChild();
-}
-
-bool ContentChild::DeallocPTestShellChild(PTestShellChild* shell) {
-  delete shell;
-  return true;
+already_AddRefed<PTestShellChild> ContentChild::AllocPTestShellChild() {
+  return MakeAndAddRef<TestShellChild>();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPTestShellConstructor(

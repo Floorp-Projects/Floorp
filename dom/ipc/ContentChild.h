@@ -213,9 +213,7 @@ class ContentChild final : public PContentChild,
   bool DeallocPWebBrowserPersistDocumentChild(
       PWebBrowserPersistDocumentChild* aActor);
 
-  PTestShellChild* AllocPTestShellChild();
-
-  bool DeallocPTestShellChild(PTestShellChild*);
+  already_AddRefed<PTestShellChild> AllocPTestShellChild();
 
   virtual mozilla::ipc::IPCResult RecvPTestShellConstructor(
       PTestShellChild*) override;

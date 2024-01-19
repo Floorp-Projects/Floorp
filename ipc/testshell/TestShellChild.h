@@ -18,6 +18,8 @@ class XPCShellEnvironment;
 
 class TestShellChild : public PTestShellChild {
  public:
+  NS_INLINE_DECL_REFCOUNTING(TestShellChild, override)
+
   TestShellChild();
 
   mozilla::ipc::IPCResult RecvExecuteCommand(const nsAString& aCommand);
@@ -31,6 +33,8 @@ class TestShellChild : public PTestShellChild {
   bool DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand);
 
  private:
+  ~TestShellChild() = default;
+
   UniquePtr<XPCShellEnvironment> mXPCShell;
 };
 
