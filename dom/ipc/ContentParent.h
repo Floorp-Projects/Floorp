@@ -962,8 +962,7 @@ class ContentParent final : public PContentParent,
   bool DeallocPBenchmarkStorageParent(PBenchmarkStorageParent* aActor);
 
 #ifdef MOZ_WEBSPEECH
-  PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
-  bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
+  already_AddRefed<PSpeechSynthesisParent> AllocPSpeechSynthesisParent();
 
   virtual mozilla::ipc::IPCResult RecvPSpeechSynthesisConstructor(
       PSpeechSynthesisParent* aActor) override;

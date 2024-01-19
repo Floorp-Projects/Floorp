@@ -4781,17 +4781,13 @@ bool ContentParent::DeallocPBenchmarkStorageParent(
 }
 
 #ifdef MOZ_WEBSPEECH
-PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
+already_AddRefed<PSpeechSynthesisParent>
+ContentParent::AllocPSpeechSynthesisParent() {
   if (!StaticPrefs::media_webspeech_synth_enabled()) {
     return nullptr;
   }
-  return new mozilla::dom::SpeechSynthesisParent();
-}
-
-bool ContentParent::DeallocPSpeechSynthesisParent(
-    PSpeechSynthesisParent* aActor) {
-  delete aActor;
-  return true;
+  RefPtr<SpeechSynthesisParent> actor = new SpeechSynthesisParent();
+  return actor.forget();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPSpeechSynthesisConstructor(
