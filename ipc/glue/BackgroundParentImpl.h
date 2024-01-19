@@ -45,7 +45,8 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   mozilla::ipc::IPCResult RecvFlushPendingFileDeletions() override;
 
-  PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
+  already_AddRefed<PBackgroundSDBConnectionParent>
+  AllocPBackgroundSDBConnectionParent(
       const PersistenceType& aPersistenceType,
       const PrincipalInfo& aPrincipalInfo) override;
 
@@ -53,9 +54,6 @@ class BackgroundParentImpl : public PBackgroundParent {
       PBackgroundSDBConnectionParent* aActor,
       const PersistenceType& aPersistenceType,
       const PrincipalInfo& aPrincipalInfo) override;
-
-  bool DeallocPBackgroundSDBConnectionParent(
-      PBackgroundSDBConnectionParent* aActor) override;
 
   PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
       const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,

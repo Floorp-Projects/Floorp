@@ -192,7 +192,7 @@ nsresult SDBConnection::EnsureBackgroundActor() {
     return NS_ERROR_FAILURE;
   }
 
-  SDBConnectionChild* actor = new SDBConnectionChild(this);
+  RefPtr<SDBConnectionChild> actor = new SDBConnectionChild(this);
 
   mBackgroundActor = static_cast<SDBConnectionChild*>(
       backgroundActor->SendPBackgroundSDBConnectionConstructor(

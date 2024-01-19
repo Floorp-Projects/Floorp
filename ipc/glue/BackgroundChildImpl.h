@@ -57,13 +57,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPBackgroundIndexedDBUtilsChild(
       PBackgroundIndexedDBUtilsChild* aActor) override;
 
-  virtual PBackgroundSDBConnectionChild* AllocPBackgroundSDBConnectionChild(
-      const PersistenceType& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo) override;
-
-  virtual bool DeallocPBackgroundSDBConnectionChild(
-      PBackgroundSDBConnectionChild* aActor) override;
-
   virtual PBackgroundLSDatabaseChild* AllocPBackgroundLSDatabaseChild(
       const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
       const uint64_t& aDatastoreId) override;
