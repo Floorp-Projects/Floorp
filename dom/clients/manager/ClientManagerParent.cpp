@@ -26,15 +26,10 @@ IPCResult ClientManagerParent::RecvTeardown() {
 
 void ClientManagerParent::ActorDestroy(ActorDestroyReason aReason) {}
 
-PClientHandleParent* ClientManagerParent::AllocPClientHandleParent(
+already_AddRefed<PClientHandleParent>
+ClientManagerParent::AllocPClientHandleParent(
     const IPCClientInfo& aClientInfo) {
-  return new ClientHandleParent();
-}
-
-bool ClientManagerParent::DeallocPClientHandleParent(
-    PClientHandleParent* aActor) {
-  delete aActor;
-  return true;
+  return MakeAndAddRef<ClientHandleParent>();
 }
 
 IPCResult ClientManagerParent::RecvPClientHandleConstructor(

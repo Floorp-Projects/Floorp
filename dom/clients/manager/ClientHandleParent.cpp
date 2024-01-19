@@ -68,17 +68,17 @@ void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
   mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this](bool) {
-            mSourcePromiseRequestHolder.Complete();
-            ClientSourceParent* source =
-                mService->FindExistingSource(mClientId, mPrincipalInfo);
+          [self = RefPtr{this}](bool) {
+            self->mSourcePromiseRequestHolder.Complete();
+            ClientSourceParent* source = self->mService->FindExistingSource(
+                self->mClientId, self->mPrincipalInfo);
             if (source) {
-              FoundSource(source);
+              self->FoundSource(source);
             }
           },
-          [this](const CopyableErrorResult&) {
-            mSourcePromiseRequestHolder.Complete();
-            Unused << Send__delete__(this);
+          [self = RefPtr{this}](const CopyableErrorResult&) {
+            self->mSourcePromiseRequestHolder.Complete();
+            Unused << Send__delete__(self);
           })
       ->Track(mSourcePromiseRequestHolder);
 }
