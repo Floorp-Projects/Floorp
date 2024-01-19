@@ -22,7 +22,7 @@ job-defaults:
         component: samples-browser
         treeherder-group: samples-browser
     dependencies:
-        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
     description: Execute Gradle tasks for component "{component}"
     fetches:
         toolchain:
