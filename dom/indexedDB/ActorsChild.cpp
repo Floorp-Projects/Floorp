@@ -807,7 +807,7 @@ bool BackgroundFactoryChild::DeallocPBackgroundIDBFactoryRequestChild(
   return true;
 }
 
-PBackgroundIDBDatabaseChild*
+already_AddRefed<PBackgroundIDBDatabaseChild>
 BackgroundFactoryChild::AllocPBackgroundIDBDatabaseChild(
     const DatabaseSpec& aSpec,
     PBackgroundIDBFactoryRequestChild* aRequest) const {
@@ -816,15 +816,9 @@ BackgroundFactoryChild::AllocPBackgroundIDBDatabaseChild(
   auto* const request = static_cast<BackgroundFactoryRequestChild*>(aRequest);
   MOZ_ASSERT(request);
 
-  return new BackgroundDatabaseChild(aSpec, request);
-}
-
-bool BackgroundFactoryChild::DeallocPBackgroundIDBDatabaseChild(
-    PBackgroundIDBDatabaseChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundDatabaseChild*>(aActor);
-  return true;
+  RefPtr<BackgroundDatabaseChild> actor =
+      new BackgroundDatabaseChild(aSpec, request);
+  return actor.forget();
 }
 
 mozilla::ipc::IPCResult

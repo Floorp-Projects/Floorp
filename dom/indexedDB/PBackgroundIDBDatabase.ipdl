@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-[ManualDealloc, ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
+[ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBDatabase
 {
   manager PBackgroundIDBFactory;

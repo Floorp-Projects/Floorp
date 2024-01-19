@@ -104,11 +104,10 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
   bool DeallocPBackgroundIDBFactoryRequestChild(
       PBackgroundIDBFactoryRequestChild* aActor);
 
-  PBackgroundIDBDatabaseChild* AllocPBackgroundIDBDatabaseChild(
+  already_AddRefed<PBackgroundIDBDatabaseChild>
+  AllocPBackgroundIDBDatabaseChild(
       const DatabaseSpec& aSpec,
       PBackgroundIDBFactoryRequestChild* aRequest) const;
-
-  bool DeallocPBackgroundIDBDatabaseChild(PBackgroundIDBDatabaseChild* aActor);
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBDatabaseConstructor(
       PBackgroundIDBDatabaseChild* aActor, const DatabaseSpec& aSpec,
@@ -211,6 +210,8 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   IDBDatabase* mDatabase;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(BackgroundDatabaseChild, override)
+
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
       ;
@@ -236,7 +237,6 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   BackgroundDatabaseChild(const DatabaseSpec& aSpec,
                           BackgroundFactoryRequestChild* aOpenRequest);
 
-  // Only destroyed by BackgroundFactoryChild.
   ~BackgroundDatabaseChild();
 
   void SendDeleteMeInternal();
