@@ -24,7 +24,8 @@ void ClientHandleOpParent::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
-  auto handle = static_cast<ClientHandleParent*>(Manager());
+  RefPtr<ClientHandleParent> handle =
+      static_cast<ClientHandleParent*>(Manager());
   handle->EnsureSource()
       ->Then(
           GetCurrentSerialEventTarget(), __func__,

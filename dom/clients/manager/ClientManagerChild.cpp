@@ -28,16 +28,6 @@ void ClientManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   }
 }
 
-PClientHandleChild* ClientManagerChild::AllocPClientHandleChild(
-    const IPCClientInfo& aClientInfo) {
-  return new ClientHandleChild();
-}
-
-bool ClientManagerChild::DeallocPClientHandleChild(PClientHandleChild* aActor) {
-  delete aActor;
-  return true;
-}
-
 PClientManagerOpChild* ClientManagerChild::AllocPClientManagerOpChild(
     const ClientOpConstructorArgs& aArgs) {
   MOZ_ASSERT_UNREACHABLE(

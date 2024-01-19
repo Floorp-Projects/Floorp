@@ -25,11 +25,6 @@ class ClientManagerChild final : public PClientManagerChild {
   // PClientManagerChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PClientHandleChild* AllocPClientHandleChild(
-      const IPCClientInfo& aClientInfo) override;
-
-  bool DeallocPClientHandleChild(PClientHandleChild* aActor) override;
-
   PClientManagerOpChild* AllocPClientManagerOpChild(
       const ClientOpConstructorArgs& aArgs) override;
 

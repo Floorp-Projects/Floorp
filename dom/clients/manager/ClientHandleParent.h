@@ -30,6 +30,8 @@ class ClientHandleParent final : public PClientHandleParent {
   nsID mClientId;
   mozilla::ipc::PrincipalInfo mPrincipalInfo;
 
+  ~ClientHandleParent();
+
   // PClientHandleParent interface
   mozilla::ipc::IPCResult RecvTeardown() override;
 
@@ -45,8 +47,9 @@ class ClientHandleParent final : public PClientHandleParent {
       const ClientOpConstructorArgs& aArgs) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ClientHandleParent, override)
+
   ClientHandleParent();
-  ~ClientHandleParent();
 
   void Init(const IPCClientInfo& aClientInfo);
 

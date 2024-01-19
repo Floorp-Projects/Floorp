@@ -85,14 +85,13 @@ void ClientHandle::Activate(PClientManagerChild* aActor) {
     return;
   }
 
-  PClientHandleChild* actor =
-      aActor->SendPClientHandleConstructor(mClientInfo.ToIPC());
-  if (!actor) {
+  RefPtr<ClientHandleChild> actor = new ClientHandleChild();
+  if (!aActor->SendPClientHandleConstructor(actor, mClientInfo.ToIPC())) {
     Shutdown();
     return;
   }
 
-  ActivateThing(static_cast<ClientHandleChild*>(actor));
+  ActivateThing(actor);
 }
 
 void ClientHandle::ExecutionReady(const ClientInfo& aClientInfo) {

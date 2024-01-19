@@ -21,6 +21,8 @@ class ClientHandleChild final : public PClientHandleChild {
   ClientHandle* mHandle;
   bool mTeardownStarted;
 
+  ~ClientHandleChild() = default;
+
   // PClientHandleChild interface
   mozilla::ipc::IPCResult RecvExecutionReady(
       const IPCClientInfo& aClientInfo) override;
@@ -33,6 +35,8 @@ class ClientHandleChild final : public PClientHandleChild {
   bool DeallocPClientHandleOpChild(PClientHandleOpChild* aActor) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ClientHandleChild, override)
+
   ClientHandleChild();
 
   void SetOwner(ClientThing<ClientHandleChild>* aThing);

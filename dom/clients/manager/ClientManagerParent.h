@@ -20,10 +20,8 @@ class ClientManagerParent final : public PClientManagerParent {
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PClientHandleParent* AllocPClientHandleParent(
+  already_AddRefed<PClientHandleParent> AllocPClientHandleParent(
       const IPCClientInfo& aClientInfo) override;
-
-  bool DeallocPClientHandleParent(PClientHandleParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvPClientHandleConstructor(
       PClientHandleParent* aActor, const IPCClientInfo& aClientInfo) override;
