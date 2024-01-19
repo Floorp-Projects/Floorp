@@ -112,7 +112,7 @@ async function testReporting(test) {
     // Wait until the reporting UI is visible.
     await ContentTaskUtils.waitForCondition(() => {
       let reportUI = content.document.getElementById("blockingErrorReporting");
-      return ContentTaskUtils.is_visible(reportUI);
+      return ContentTaskUtils.isVisible(reportUI);
     });
 
     let reportCheckBox = content.document.getElementById(
@@ -146,7 +146,7 @@ async function testReporting(test) {
     // Wait until the reporting UI is visible.
     await ContentTaskUtils.waitForCondition(() => {
       let reportUI = content.document.getElementById("blockingErrorReporting");
-      return ContentTaskUtils.is_visible(reportUI);
+      return ContentTaskUtils.isVisible(reportUI);
     });
 
     let reportCheckBox = content.document.getElementById(
@@ -186,7 +186,7 @@ async function testReporting(test) {
     // Wait until the reporting UI is visible.
     await ContentTaskUtils.waitForCondition(() => {
       let reportUI = content.document.getElementById("blockingErrorReporting");
-      return ContentTaskUtils.is_visible(reportUI);
+      return ContentTaskUtils.isVisible(reportUI);
     });
 
     let reportCheckBox = content.document.getElementById(

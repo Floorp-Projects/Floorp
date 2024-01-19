@@ -52,7 +52,7 @@ add_task(async function test_show_not_enough_reviews() {
             () => {
               return (
                 !!shoppingContainer.shoppingMessageBarEl &&
-                ContentTaskUtils.is_visible(
+                ContentTaskUtils.isVisible(
                   shoppingContainer.shoppingMessageBarEl
                 )
               );

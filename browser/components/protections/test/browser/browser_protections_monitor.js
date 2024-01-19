@@ -53,7 +53,7 @@ add_task(async function () {
         const hasLogins = content.document.querySelector(
           ".monitor-card.has-logins"
         );
-        return hasLogins && ContentTaskUtils.is_visible(hasLogins);
+        return hasLogins && ContentTaskUtils.isVisible(hasLogins);
       }, "Monitor card for user with stored logins is shown.");
 
       const hasLoginsHeaderContent = content.document.querySelector(
@@ -64,7 +64,7 @@ add_task(async function () {
       );
 
       ok(
-        ContentTaskUtils.is_visible(cardBody),
+        ContentTaskUtils.isVisible(cardBody),
         "Card body is shown for users monitor data."
       );
       await ContentTaskUtils.waitForCondition(() => {
@@ -140,7 +140,7 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
       const noLogins = content.document.querySelector(
         ".monitor-card.no-logins"
       );
-      return noLogins && ContentTaskUtils.is_visible(noLogins);
+      return noLogins && ContentTaskUtils.isVisible(noLogins);
     }, "Monitor card for user with no logins is shown.");
 
     const noLoginsHeaderContent = content.document.querySelector(

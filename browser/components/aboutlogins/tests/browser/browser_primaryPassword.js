@@ -170,7 +170,7 @@ add_task(async function test() {
       ".reveal-password-checkbox"
     );
     Assert.ok(
-      !ContentTaskUtils.is_visible(revealCheckbox),
+      !ContentTaskUtils.isVisible(revealCheckbox),
       "Toggle should not be visible"
     );
     Assert.equal(passwordField.type, "password", "type is password");

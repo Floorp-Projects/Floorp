@@ -50,16 +50,16 @@ class ScreenshotsHelper {
         let iframe;
         await ContentTaskUtils.waitForCondition(() => {
           iframe = content.document.querySelector(iframeSelector);
-          if (!iframe || !ContentTaskUtils.is_visible(iframe)) {
+          if (!iframe || !ContentTaskUtils.isVisible(iframe)) {
             info("in waitForUIContent, no visible iframe yet");
             return false;
           }
           let elem = iframe.contentDocument.querySelector(elemSelector);
           info(
             "in waitForUIContent, got visible elem: " +
-              (elem && ContentTaskUtils.is_visible(elem))
+              (elem && ContentTaskUtils.isVisible(elem))
           );
-          return elem && ContentTaskUtils.is_visible(elem);
+          return elem && ContentTaskUtils.isVisible(elem);
         });
         // wait a frame for the screenshots UI to finish any init
         await new content.Promise(res => content.requestAnimationFrame(res));

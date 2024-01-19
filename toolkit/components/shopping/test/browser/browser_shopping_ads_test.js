@@ -29,7 +29,7 @@ function recommendedAdVisible(sidebar) {
         content.document.querySelector("shopping-container").wrappedJSObject;
       return (
         shoppingContainer?.recommendedAdEl &&
-        ContentTaskUtils.is_visible(shoppingContainer?.recommendedAdEl)
+        ContentTaskUtils.isVisible(shoppingContainer?.recommendedAdEl)
       );
     });
   });

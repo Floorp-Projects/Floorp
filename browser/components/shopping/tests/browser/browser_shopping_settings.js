@@ -184,7 +184,7 @@ add_task(async function test_settings_toggle_ad_and_multiple_tabs() {
     let adVisiblePromise = ContentTaskUtils.waitForCondition(() => {
       return (
         shoppingContainer.recommendedAdEl &&
-        ContentTaskUtils.is_visible(shoppingContainer.recommendedAdEl)
+        ContentTaskUtils.isVisible(shoppingContainer.recommendedAdEl)
       );
     }, "Waiting for recommended-ad to be visible");
 

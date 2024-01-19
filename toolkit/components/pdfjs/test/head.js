@@ -111,7 +111,7 @@ async function waitForSelector(browser, selector, message) {
       );
 
       await ContentTaskUtils.waitForCondition(
-        () => ContentTaskUtils.is_visible(document.querySelector(sel)),
+        () => ContentTaskUtils.isVisible(document.querySelector(sel)),
         msg
       );
     }

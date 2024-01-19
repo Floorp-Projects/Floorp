@@ -27,7 +27,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const lockwiseCard = content.document.querySelector(".lockwise-card");
-      return ContentTaskUtils.is_visible(lockwiseCard);
+      return ContentTaskUtils.isVisible(lockwiseCard);
     }, "Lockwise card for user with no logins is visible.");
 
     const lockwiseHowItWorks = content.document.querySelector(
@@ -68,7 +68,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       "#save-passwords-button"
     );
     ok(
-      ContentTaskUtils.is_visible(savePasswordsButton),
+      ContentTaskUtils.isVisible(savePasswordsButton),
       "Save passwords button is visible in the header"
     );
     info(
@@ -101,7 +101,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(".lockwise-card");
-      return ContentTaskUtils.is_visible(hasLogins);
+      return ContentTaskUtils.isVisible(hasLogins);
     }, "Lockwise card for user with logins is visible");
 
     const lockwiseTitle = content.document.querySelector("#lockwise-title");
@@ -120,7 +120,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
       "#lockwise-how-it-works"
     );
     ok(
-      ContentTaskUtils.is_visible(lockwiseHowItWorks),
+      ContentTaskUtils.isVisible(lockwiseHowItWorks),
       "How it works link is visible"
     );
 
@@ -138,7 +138,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
       ".lockwise-scanned-wrapper"
     );
     ok(
-      ContentTaskUtils.is_visible(lockwiseScannedWrapper),
+      ContentTaskUtils.isVisible(lockwiseScannedWrapper),
       "Lockwise scanned wrapper is visible"
     );
 
@@ -164,7 +164,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
       "#manage-passwords-button"
     );
     ok(
-      ContentTaskUtils.is_visible(managePasswordsButton),
+      ContentTaskUtils.isVisible(managePasswordsButton),
       "Manage passwords button is visible"
     );
     info(
@@ -221,7 +221,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
       "#lockwise-scanned-text"
     );
     ok(
-      ContentTaskUtils.is_visible(lockwiseScannedText),
+      ContentTaskUtils.isVisible(lockwiseScannedText),
       "Lockwise scanned text is visible"
     );
     await ContentTaskUtils.waitForCondition(
@@ -244,7 +244,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
       "#lockwise-scanned-text"
     );
     ok(
-      ContentTaskUtils.is_visible(lockwiseScannedText),
+      ContentTaskUtils.isVisible(lockwiseScannedText),
       "Lockwise scanned text is visible"
     );
     await ContentTaskUtils.waitForCondition(

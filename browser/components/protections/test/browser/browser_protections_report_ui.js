@@ -810,24 +810,24 @@ add_task(async function test_etp_custom_settings() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
-      return ContentTaskUtils.is_visible(legend);
+      return ContentTaskUtils.isVisible(legend);
     }, "The legend is visible");
 
     let label = content.document.getElementById("cookieLabel");
     Assert.ok(ContentTaskUtils.isHidden(label), "Cookie Label is hidden");
 
     label = content.document.getElementById("trackerLabel");
-    Assert.ok(ContentTaskUtils.is_visible(label), "Tracker Label is visible");
+    Assert.ok(ContentTaskUtils.isVisible(label), "Tracker Label is visible");
     label = content.document.getElementById("socialLabel");
-    Assert.ok(ContentTaskUtils.is_visible(label), "Social Label is visible");
+    Assert.ok(ContentTaskUtils.isVisible(label), "Social Label is visible");
     label = content.document.getElementById("cryptominerLabel");
     Assert.ok(
-      ContentTaskUtils.is_visible(label),
+      ContentTaskUtils.isVisible(label),
       "Cryptominer Label is visible"
     );
     label = content.document.getElementById("fingerprinterLabel");
     Assert.ok(
-      ContentTaskUtils.is_visible(label),
+      ContentTaskUtils.isVisible(label),
       "Fingerprinter Label is visible"
     );
   });
@@ -842,7 +842,7 @@ add_task(async function test_etp_custom_settings() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
-      return ContentTaskUtils.is_visible(legend);
+      return ContentTaskUtils.isVisible(legend);
     }, "The legend is visible");
 
     let label = content.document.querySelector("#trackerLabel");
@@ -869,7 +869,7 @@ add_task(async function test_etp_custom_settings() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
-      return ContentTaskUtils.is_visible(legend);
+      return ContentTaskUtils.isVisible(legend);
     }, "The legend is visible");
 
     let label = content.document.querySelector("#socialLabel");
@@ -890,7 +890,7 @@ add_task(async function test_etp_custom_settings() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
-      return ContentTaskUtils.is_visible(legend);
+      return ContentTaskUtils.isVisible(legend);
     }, "The legend is visible");
 
     let label = content.document.querySelector("#fingerprinterLabel");
@@ -918,7 +918,7 @@ add_task(async function test_etp_custom_settings() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
-      return ContentTaskUtils.is_visible(legend);
+      return ContentTaskUtils.isVisible(legend);
     }, "The legend is visible");
 
     let label = content.document.querySelector("#cryptominerLabel");
@@ -972,7 +972,7 @@ add_task(async function test_etp_custom_protections_off() {
     let manageProtectionsButton =
       content.document.getElementById("manage-protections");
     Assert.ok(
-      ContentTaskUtils.is_visible(manageProtectionsButton),
+      ContentTaskUtils.isVisible(manageProtectionsButton),
       "Button to manage protections is displayed"
     );
   });
@@ -995,7 +995,7 @@ add_task(async function test_etp_custom_protections_off() {
     let manageProtectionsButton =
       content.document.getElementById("manage-protections");
     Assert.ok(
-      ContentTaskUtils.is_visible(manageProtectionsButton),
+      ContentTaskUtils.isVisible(manageProtectionsButton),
       "Button to manage protections is displayed"
     );
 
@@ -1030,7 +1030,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
-      ContentTaskUtils.is_visible(mobilePromotion),
+      ContentTaskUtils.isVisible(mobilePromotion),
       "Mobile promotions card is displayed when pref is on and there are no synced mobile devices"
     );
 

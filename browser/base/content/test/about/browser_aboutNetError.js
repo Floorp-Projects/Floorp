@@ -65,7 +65,7 @@ add_task(async function resetToDefaultConfig() {
 
     const prefResetButton = doc.getElementById("prefResetButton");
     await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(prefResetButton),
+      () => ContentTaskUtils.isVisible(prefResetButton),
       "prefResetButton is visible"
     );
 
@@ -118,15 +118,12 @@ add_task(async function checkLearnMoreLink() {
 
     const tlsVersionNotice = doc.getElementById("tlsVersionNotice");
     ok(
-      ContentTaskUtils.is_visible(tlsVersionNotice),
+      ContentTaskUtils.isVisible(tlsVersionNotice),
       "TLS version notice is visible"
     );
 
     const learnMoreLink = doc.getElementById("learnMoreLink");
-    ok(
-      ContentTaskUtils.is_visible(learnMoreLink),
-      "Learn More link is visible"
-    );
+    ok(ContentTaskUtils.isVisible(learnMoreLink), "Learn More link is visible");
     is(learnMoreLink.getAttribute("href"), _baseURL + "connection-not-secure");
 
     const titleEl = doc.querySelector(".title-text");
@@ -182,7 +179,7 @@ add_task(async function checkDomainCorrection() {
     );
 
     const errorNotice = doc.getElementById("errorShortDesc");
-    ok(ContentTaskUtils.is_visible(errorNotice), "Error text is visible");
+    ok(ContentTaskUtils.isVisible(errorNotice), "Error text is visible");
 
     // Wait for the domain suggestion to be resolved and for the text to update
     let link;

@@ -58,7 +58,7 @@ export var ContentTaskUtils = {
    *
    * @return {boolean}
    */
-  is_visible(element) {
+  isVisible(element) {
     return !this.isHidden(element);
   },
 

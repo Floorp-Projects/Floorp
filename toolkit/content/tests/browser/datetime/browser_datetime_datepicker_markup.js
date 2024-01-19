@@ -351,7 +351,7 @@ add_task(async function test_calendar_button_markup_date() {
 
     Assert.equal(calendarBtn.tagName, "BUTTON", "Calendar control is a button");
     Assert.ok(
-      ContentTaskUtils.is_visible(calendarBtn),
+      ContentTaskUtils.isVisible(calendarBtn),
       "The Calendar button is visible"
     );
 
@@ -398,7 +398,7 @@ add_task(async function test_calendar_button_markup_datetime() {
 
     Assert.equal(calendarBtn.tagName, "BUTTON", "Calendar control is a button");
     Assert.ok(
-      ContentTaskUtils.is_visible(calendarBtn),
+      ContentTaskUtils.isVisible(calendarBtn),
       "The Calendar button is visible"
     );
 
