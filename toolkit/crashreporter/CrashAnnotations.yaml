@@ -2,8 +2,9 @@
 #
 # Mandatory fields for each entry are:
 # - description: A string describing the annotation
-# - type: the annotation type, currently `string`, `integer` or `boolean`.
-#   The latter are stringified to `1` for true and `0` for false.
+# - type: the annotation type, currently `string`, `boolean`, `u32`, `u64` or
+#   `usize`. Note that `boolean` values are stringified to `1` for
+#   true and `0` for false.
 #
 # Additionally a field can have the following optional fields:
 # - altname: A string that will be used when writing out the annotation to the
@@ -167,7 +168,7 @@ AvailablePageFile:
       the kernel is not guaranteed to enforce that CommittedLimit >= Committed_AS. If
       Committed_AS > CommittedLimit, this value is set to 0.
     - Not available on other platforms.
-  type: string
+  type: usize
   ping: true
 
 AvailablePhysicalMemory:
@@ -178,7 +179,7 @@ AvailablePhysicalMemory:
     - Under macOS, populated with vm_statistics64_data_t::free_count.
     - Under Linux, populated with /proc/meminfo's MemFree.
     - Not available on other platforms.
-  type: string
+  type: usize
   ping: true
 
 AvailableSwapMemory:
@@ -188,7 +189,7 @@ AvailableSwapMemory:
       sysctl "vm.swapusage" :: xsu_avail.
     - Under Linux, populated with /proc/meminfo's SwapFree.
     - Not available on other platforms.
-  type: string
+  type: usize
   ping: true
 
 AvailableVirtualMemory:
@@ -198,7 +199,7 @@ AvailableVirtualMemory:
     - Under Linux, populated with /proc/meminfo's MemAvailable.
     - Not available on other platforms.
     - For macOS, see AvailableSwapMemory, AvailablePhysicalMemory and PurgeablePhysicalMemory.
-  type: string
+  type: usize
   ping: true
 
 BackgroundTaskMode:
@@ -240,7 +241,7 @@ BuildID:
 ContentSandboxCapabilities:
   description: >
     List of capabilities of the content process sandbox.
-  type: string
+  type: u32
 
 ContentSandboxEnabled:
   description: >
@@ -255,7 +256,7 @@ ContentSandboxCapable:
 ContentSandboxLevel:
   description: >
     Content sandbox level.
-  type: integer
+  type: u32
 
 ContentSandboxWin32kState:
   description: >
@@ -265,7 +266,7 @@ ContentSandboxWin32kState:
 GpuSandboxLevel:
   description: >
     GPU sandbox level.
-  type: integer
+  type: u32
 
 CPUMicrocodeVersion:
   description: >
@@ -291,7 +292,7 @@ DesktopEnvironment:
 DeviceResetReason:
   description: >
     Reason why a DirectX device has been reset, Windows only.
-  type: string
+  type: u32
 
 DOMFissionEnabled:
   description: >
@@ -312,14 +313,16 @@ DumperError:
 
 EMCheckCompatibility:
   description: >
-    Set to 1 if add-on compatibility checking is enabled.
-  type: boolean
+    Set to true if add-on compatibility checking is enabled. Technically this
+    annotation should be a boolean, but historically it's been set by JavaScript
+    code as a string, so keep it as such for the time being.
+  type: string
 
 EventLoopNestingLevel:
   description: >
     Present only if higher than 0, indicates that we're running in a nested
     event loop and indicates the nesting level.
-  type: integer
+  type: u32
   ping: true
   skip_if: "0"
 
@@ -348,7 +351,7 @@ GMPPlugin:
 GPUProcessLaunchCount:
   description: >
     Number of times the GPU process was launched.
-  type: integer
+  type: u32
   ping: true
 
 GPUProcessStatus:
@@ -376,12 +379,12 @@ GraphicsDrawShader:
 GraphicsNumActiveRenderers:
   description: >
     Number of webrender renderer instances that are not in a paused state.
-  type: integer
+  type: usize
 
 GraphicsNumRenderers:
   description: >
     Total number of webrender renderer instances.
-  type: integer
+  type: usize
 
 GraphicsStartupTest:
   description: >
@@ -412,7 +415,7 @@ PHCUsableSize:
     special PHC allocation.
   # A 32-bit integer is enough because the maximum usable size of a special PHC
   # allocation is far less than 2 GiB.
-  type: integer
+  type: u32
 
 PHCAllocStack:
   description: >
@@ -437,7 +440,7 @@ HasDeviceTouchScreen:
 InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch
-  type: integer
+  type: string # This should be u64 but we currently handle it as a string
 
 ipc_channel_error:
   description: >
@@ -450,18 +453,18 @@ IpcCreatePipeCloExecErrno:
   description: >
     errno value retrieved after failing to set the O_CLOEXEC flag on a pipe
     used for IPC.
-  type: integer
+  type: u32
 
 IpcCreatePipeFcntlErrno:
   description: >
     errno value retrieved after a call to fcntl() on a pipe used for IPC failed.
-  type: integer
+  type: u32
 
 IpcCreatePipeSocketPairErrno:
   description: >
     errno value retrieved after a socketpair() call failed while creating an IPC
     transport object.
-  type: integer
+  type: u32
 
 IPCFatalErrorMsg:
   description: >
@@ -481,7 +484,7 @@ IPCMessageName:
 IPCMessageSize:
   description: >
     Size of the IPC message that caused a crash because it was too large.
-  type: integer
+  type: u32
 
 IPCReadErrorReason:
   description: >
@@ -497,7 +500,7 @@ IPCShutdownState:
 IPCSystemError:
   description: >
     Description of the last system error that occurred during IPC operation.
-  type: string
+  type: u32
 
 Hang:
   description: >
@@ -574,7 +577,7 @@ LastInteractionDuration:
   description: >
     How long the user had been inactive in seconds if the user was inactive
     at crash.  The value is not set if the user state was active.
-  type: integer
+  type: u64
   ping: true
 
 LastStartupWasCrash:
@@ -615,13 +618,13 @@ MacMemoryPressureSysctl:
     'kern.memorystatus_vm_pressure_level'. Indicates which memory
     pressure level the system is in at the time of the crash. The expected
     values are one of 4 (Critical), 2 (Warning), or 1 (Normal).
-  type: integer
+  type: u32
 
 MacAvailableMemorySysctl:
   description: >
     The value of the available memory sysctl 'kern.memorystatus_level'.
     Expected to be a percentage integer value.
-  type: integer
+  type: u32
 
 LinuxUnderMemoryPressure:
   description: >
@@ -634,13 +637,13 @@ LauncherProcessState:
     Launcher process enabled state. The integer value of this annotation must
     match with one of the values in the
     mozilla::LauncherRegistryInfo::EnableState enum
-  type: integer
+  type: u32
 
 LowPhysicalMemoryEvents:
   description: >
     Number of times the available memory tracker has detected that free
     physical memory is running low. This is a Windows-specific annotation.
-  type: integer
+  type: u32
   ping: true
   skip_if: "0"
 
@@ -665,7 +668,7 @@ Notes:
 OOMAllocationSize:
   description: >
     Size of the allocation that caused an out-of-memory condition.
-  type: string
+  type: usize
   ping: true
   skip_if: "0"
 
@@ -716,7 +719,7 @@ PurgeablePhysicalMemory:
     macOS only. Amount of physical memory currently allocated but which may
     be deallocated by the system in case of memory pressure. Populated from
     vm_statistics64_data_t::purgeable_count * vm_page_size.
-  type: string
+  type: usize
   ping: true
 
 QuotaManagerShutdownTimeout:
@@ -775,7 +778,7 @@ SafeMode:
 SecondsSinceLastCrash:
   description: >
     Time in seconds since the last crash occurred.
-  type: string
+  type: u64
   ping: true
 
 ServerURL:
@@ -813,7 +816,7 @@ StartupCrash:
 StartupTime:
   description: >
     The time when Firefox was launched expressed in seconds since the Epoch.
-  type: integer
+  type: u64
 
 StorageConnectionNotClosed:
   description: >
@@ -838,7 +841,7 @@ SystemMemoryUsePercentage:
     Windows-only, percentage of physical memory in use. This annotation is
     populated with the contents of the MEMORYSTATUSEX's structure dwMemoryLoad
     field.
-  type: integer
+  type: u32
   ping: true
 
 TelemetryClientId:
@@ -875,7 +878,7 @@ TestUnicode:
 TextureUsage:
   description: >
     Amount of memory in bytes consumed by textures.
-  type: string
+  type: usize
   ping: true
   skip_if: "0"
 
@@ -895,7 +898,7 @@ TotalPageFile:
     - Under Linux, populated with /proc/meminfo MemTotal + SwapTotal. The swap file
       typically cannot be extended, so that's a hard limit.
     - Not available on other systems.
-  type: string
+  type: usize
   ping: true
 
 TotalPhysicalMemory:
@@ -906,7 +909,7 @@ TotalPhysicalMemory:
     - Under macOS, populated with sysctl "hw.memsize".
     - Under Linux, populated with /proc/meminfo's "MemTotal".
     - Not available on other systems.
-  type: string
+  type: usize
   ping: true
 
 TotalVirtualMemory:
@@ -915,20 +918,20 @@ TotalVirtualMemory:
     - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
       ullTotalVirtual field.
     - Not available on other platforms.
-  type: string
+  type: usize
   ping: true
 
 UnknownNetAddrSocketFamily:
   description: >
     An unknown network address family was requested to Necko. The value is the
     requested family number.
-  type: integer
+  type: u32
 
 UptimeTS:
   description: >
     Uptime in seconds. This annotation uses a string instead of an integer
     because it has a fractional component.
-  type: string
+  type: string # This is a floating-point number but we treat it as a string
   ping: true
 
 URL:
@@ -990,7 +993,7 @@ WindowsFileDialogErrorCode:
     The HRESULT returned from a Win32 system call leading to termination of the
     file-dialog utility process. MozCrashReason is expected to provide context
     for the value.
-  type: integer
+  type: u32 # This is an HRESULT which is defined as signed, but we don't want to print it as a signed integer
   ping: true
 
 WindowsPackageFamilyName:
