@@ -30,7 +30,7 @@ def validate_annotations(annotations):
             sys.exit(1)
         else:
             annotation_type = data.get("type")
-            valid_types = ["boolean", "integer", "string"]
+            valid_types = ["string", "boolean", "u32", "u64", "usize"]
             if not any(annotation_type == t for t in valid_types):
                 print(
                     "Annotation "
@@ -92,6 +92,27 @@ def extract_skiplist(annotations):
     ]
 
 
+def type_to_enum(annotation_type):
+    """Emit the enum value corresponding to each annotation type."""
+
+    if annotation_type == "string":
+        return "String"
+    elif annotation_type == "boolean":
+        return "Boolean"
+    elif annotation_type == "u32":
+        return "U32"
+    elif annotation_type == "u64":
+        return "U64"
+    elif annotation_type == "usize":
+        return "USize"
+
+
+def extract_types(annotations):
+    """Extract an array holding the type of each annotation."""
+
+    return [type_to_enum(data.get("type")) for (_, data) in sorted(annotations.items())]
+
+
 ###############################################################################
 # C++ code generation                                                         #
 ###############################################################################
@@ -140,12 +161,21 @@ def generate_skiplist_initializer(contents):
     return ",\n".join(initializer)
 
 
+def generate_types_initializer(contents):
+    """Generates the initializer for a C++ array of AnnotationType values."""
+
+    initializer = ["  AnnotationType::" + typename for typename in contents]
+
+    return ",\n".join(initializer)
+
+
 def generate_header(template, annotations):
     """Generate a header by filling the template with the the list of
     annotations and return it as a string."""
 
     allowedlist = extract_crash_ping_allowedlist(annotations)
     skiplist = extract_skiplist(annotations)
+    typelist = extract_types(annotations)
 
     return template_header + string.Template(template).substitute(
         {
@@ -153,6 +183,7 @@ def generate_header(template, annotations):
             "strings": generate_strings(annotations),
             "allowedlist": generate_annotations_array_initializer(allowedlist),
             "skiplist": generate_skiplist_initializer(skiplist),
+            "types": generate_types_initializer(typelist),
         }
     )
 

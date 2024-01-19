@@ -20,6 +20,20 @@ const char* const kAnnotationStrings[] = {
 ${strings}
 };
 
+// Type of each annotation
+enum class AnnotationType : uint8_t {
+  String = 0,   // Any type of string, const char*, nsCString, etc...
+  Boolean = 1,  // Stored as a byte
+  U32 = 2,      // C/C++'s uint32_t or Rust's u32
+  U64 = 3,      // C/C++'s uint64_t or Rust's u64
+  USize = 4,    // C/C++'s size_t or Rust's usize
+};
+
+// Type of each annotation
+const AnnotationType kAnnotationTypes[] = {
+${types}
+};
+
 // Allowlist of crash annotations that can be included in a crash ping
 const Annotation kCrashPingAllowedList[] = {
 ${allowedlist}

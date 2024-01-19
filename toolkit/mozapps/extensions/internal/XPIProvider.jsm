@@ -2562,9 +2562,12 @@ var XPIProvider = {
       if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
         try {
+          // The `EMCheckCompatibility` annotation represents a boolean, but
+          // we've historically set it as a string so keep doing it for the
+          // time being.
           Services.appinfo.annotateCrashReport(
             "EMCheckCompatibility",
-            AddonManager.checkCompatibility
+            AddonManager.checkCompatibility.toString()
           );
         } catch (e) {}
         this.addAddonsToCrashReporter();
