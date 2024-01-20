@@ -86,10 +86,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
       PipelineCreationContext* const aContext,
       const dom::GPURenderPipelineDescriptor& aDesc);
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<ShaderModule> DeviceCreateShaderModule(
-      const RefPtr<Device>& aDevice,
-      const dom::GPUShaderModuleDescriptor& aDesc,
-      RefPtr<dom::Promise> aPromise);
 
   ffi::WGPUClient* GetClient() const { return mClient.get(); }
 
