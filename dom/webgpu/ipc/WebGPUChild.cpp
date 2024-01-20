@@ -202,56 +202,6 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
   return id;
 }
 
-RawId WebGPUChild::DeviceCreateBindGroup(
-    RawId aSelfId, const dom::GPUBindGroupDescriptor& aDesc) {
-  if (!aDesc.mLayout->IsValid()) {
-    return 0;
-  }
-
-  nsTArray<ffi::WGPUBindGroupEntry> entries(aDesc.mEntries.Length());
-  for (const auto& entry : aDesc.mEntries) {
-    ffi::WGPUBindGroupEntry e = {};
-    e.binding = entry.mBinding;
-    if (entry.mResource.IsGPUBufferBinding()) {
-      const auto& bufBinding = entry.mResource.GetAsGPUBufferBinding();
-      if (!bufBinding.mBuffer->mId) {
-        NS_WARNING("Buffer binding has no id -- ignoring.");
-        continue;
-      }
-      e.buffer = bufBinding.mBuffer->mId;
-      e.offset = bufBinding.mOffset;
-      e.size = bufBinding.mSize.WasPassed() ? bufBinding.mSize.Value() : 0;
-    } else if (entry.mResource.IsGPUTextureView()) {
-      e.texture_view = entry.mResource.GetAsGPUTextureView()->mId;
-    } else if (entry.mResource.IsGPUSampler()) {
-      e.sampler = entry.mResource.GetAsGPUSampler()->mId;
-    } else {
-      // Not a buffer, nor a texture view, nor a sampler. If we pass
-      // this to wgpu_client, it'll panic. Log a warning instead and
-      // ignore this entry.
-      NS_WARNING("Bind group entry has unknown type.");
-      continue;
-    }
-    entries.AppendElement(e);
-  }
-
-  ffi::WGPUBindGroupDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-  desc.layout = aDesc.mLayout->mId;
-  desc.entries = entries.Elements();
-  desc.entries_length = entries.Length();
-
-  ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_bind_group(mClient.get(), aSelfId, &desc,
-                                                ToFFI(&bb));
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
 MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
     const RefPtr<ShaderModule>& aShaderModule,
     const nsTArray<WebGPUCompilationMessage>& aMessages) {
