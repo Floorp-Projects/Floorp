@@ -10,6 +10,7 @@
 #include "Buffer.h"
 #include "RenderBundle.h"
 #include "RenderPipeline.h"
+#include "Utility.h"
 #include "ipc/WebGPUChild.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
@@ -41,14 +42,14 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   ffi::WGPUTextureFormat depthStencilFormat = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mDepthStencilFormat.WasPassed()) {
     depthStencilFormat =
-        WebGPUChild::ConvertTextureFormat(aDesc.mDepthStencilFormat.Value());
+        ConvertTextureFormat(aDesc.mDepthStencilFormat.Value());
     desc.depth_stencil_format = &depthStencilFormat;
   }
 
   std::vector<ffi::WGPUTextureFormat> colorFormats = {};
   for (const auto i : IntegerRange(aDesc.mColorFormats.Length())) {
     ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
-    format = WebGPUChild::ConvertTextureFormat(aDesc.mColorFormats[i]);
+    format = ConvertTextureFormat(aDesc.mColorFormats[i]);
     colorFormats.push_back(format);
   }
 

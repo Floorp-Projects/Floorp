@@ -37,6 +37,9 @@ ffi::WGPUExtent3d ConvertExtent(const dom::OwningGPUExtent3D& aExtent);
 ffi::WGPUCompareFunction ConvertCompareFunction(
     const dom::GPUCompareFunction& aCompare);
 
+ffi::WGPUTextureFormat ConvertTextureFormat(
+    const dom::GPUTextureFormat& aFormat);
+
 }  // namespace webgpu
 }  // namespace mozilla
 

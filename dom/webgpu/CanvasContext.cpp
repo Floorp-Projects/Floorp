@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "ipc/WebGPUChild.h"
+#include "Utility.h"
 
 namespace mozilla {
 
@@ -122,8 +123,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
   mRemoteTextureOwnerId = Some(layers::RemoteTextureOwnerId::GetNext());
   mUseExternalTextureInSwapChain =
       wgpu_client_use_external_texture_in_swapChain(
-          aConfig.mDevice->mId,
-          WebGPUChild::ConvertTextureFormat(aConfig.mFormat));
+          aConfig.mDevice->mId, ConvertTextureFormat(aConfig.mFormat));
   mTexture = aConfig.mDevice->InitSwapChain(
       mConfig.get(), mRemoteTextureOwnerId.ref(),
       mUseExternalTextureInSwapChain, mGfxFormat, mCanvasSize);
