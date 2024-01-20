@@ -390,6 +390,11 @@ jobs:
         find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
         echo "****************************************************************************************************"
 
+    - name: Rename Linux tar.bz2 file 📝
+      run: |
+        cd ~/downloads/artifacts/linux-x64
+        mv floorp-*.linux-x86_64.tar.bz2 floorp-linux-x86_64.tar.bz2
+
     - name: Deploy to GitHub Releases 🚀
       id: create_release
       uses: "softprops/action-gh-release@v1"
@@ -398,7 +403,7 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
           /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
-          /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
+          /home/runner/downloads/artifacts/linux-x64/floorp-linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
           /home/runner/downloads/artifacts/macOS-x64/floorp-daylight-macOS-universal.dmg
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.xml
