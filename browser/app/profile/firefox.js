@@ -2367,9 +2367,6 @@ pref("extensions.screenshots.disabled", false);
 // Preference that determines whether Screenshots is opened as a dedicated browser component
 pref("screenshots.browser.component.enabled", false);
 
-// Preference that determines what button to focus
-pref("screenshots.browser.component.last-saved-method", "download");
-
 // DoH Rollout: whether to clear the mode value at shutdown.
 pref("doh-rollout.clearModeOnShutdown", false);
 
