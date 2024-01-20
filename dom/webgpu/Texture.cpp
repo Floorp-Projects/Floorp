@@ -20,7 +20,7 @@ GPU_IMPL_JS_WRAP(Texture)
 
 static Maybe<uint8_t> GetBytesPerBlockSingleAspect(
     dom::GPUTextureFormat aFormat) {
-  auto format = WebGPUChild::ConvertTextureFormat(aFormat);
+  auto format = ConvertTextureFormat(aFormat);
   uint32_t bytes = ffi::wgpu_texture_format_block_size_single_aspect(format);
   if (bytes == 0) {
     // The above function returns zero if the texture has multiple aspects like

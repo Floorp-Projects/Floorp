@@ -64,9 +64,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<DeviceRequest> AdapterRequestDevice(RawId aSelfId,
                                             const ffi::WGPUDeviceDescriptor&);
-  RawId DeviceCreateTexture(RawId aSelfId,
-                            const dom::GPUTextureDescriptor& aDesc,
-                            Maybe<layers::RemoteTextureOwnerId> aOwnerId);
   RawId TextureCreateView(RawId aSelfId, RawId aDeviceId,
                           const dom::GPUTextureViewDescriptor& aDesc);
   RawId DeviceCreateCommandEncoder(
@@ -117,9 +114,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void RegisterDevice(Device* const aDevice);
   void UnregisterDevice(RawId aId);
   void FreeUnregisteredInParentDevice(RawId aId);
-
-  static ffi::WGPUTextureFormat ConvertTextureFormat(
-      const dom::GPUTextureFormat& aInput);
 
   static void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
 
