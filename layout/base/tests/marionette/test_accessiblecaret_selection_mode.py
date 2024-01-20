@@ -640,6 +640,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # should work.
         self._test_long_press_to_select_a_word(content)
 
+    @unittest.skip("Bug 1855083: High frequent intermittent.")
     def test_long_press_to_select_when_partial_visible_word_is_selected(self):
         self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, self._input_size_id)
