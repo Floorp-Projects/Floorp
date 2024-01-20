@@ -654,13 +654,50 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
   return shaderModule.forget();
 }
 
+RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
+                                WebGPUChild* aBridge,
+                                const dom::GPUComputePipelineDescriptor& aDesc,
+                                ipc::ByteBuf* const aByteBuf) {
+  ffi::WGPUComputePipelineDescriptor desc = {};
+  nsCString entryPoint;
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
+  if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
+    desc.layout = 0;
+  } else if (aDesc.mLayout.IsGPUPipelineLayout()) {
+    desc.layout = aDesc.mLayout.GetAsGPUPipelineLayout()->mId;
+  } else {
+    MOZ_ASSERT_UNREACHABLE();
+  }
+  desc.stage.module = aDesc.mCompute.mModule->mId;
+  CopyUTF16toUTF8(aDesc.mCompute.mEntryPoint, entryPoint);
+  desc.stage.entry_point = entryPoint.get();
+
+  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
+  RawId id = ffi::wgpu_client_create_compute_pipeline(
+      aBridge->GetClient(), aContext->mParentId, &desc, ToFFI(aByteBuf),
+      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
+
+  for (const auto& cur : implicit_bgl_ids) {
+    if (!cur) break;
+    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
+  }
+
+  return id;
+}
+
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
   PipelineCreationContext context = {mId};
-  RawId id = 0;
+  ipc::ByteBuf bb;
+  RawId id = CreateComputePipelineImpl(&context, mBridge, aDesc, &bb);
+
   if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateComputePipeline(&context, aDesc);
+    mBridge->SendDeviceAction(mId, std::move(bb));
   }
+
   RefPtr<ComputePipeline> object =
       new ComputePipeline(this, id, context.mImplicitPipelineLayoutId,
                           std::move(context.mImplicitBindGroupLayoutIds));
@@ -687,27 +724,32 @@ already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
     return nullptr;
   }
 
-  if (!mBridge->CanSend()) {
-    promise->MaybeRejectWithOperationError("Internal communication error");
-    return promise.forget();
-  }
-
   std::shared_ptr<PipelineCreationContext> context(
       new PipelineCreationContext());
   context->mParentId = mId;
-  mBridge->DeviceCreateComputePipelineAsync(context.get(), aDesc)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, context, promise](RawId aId) {
-            RefPtr<ComputePipeline> object = new ComputePipeline(
-                self, aId, context->mImplicitPipelineLayoutId,
-                std::move(context->mImplicitBindGroupLayoutIds));
-            promise->MaybeResolve(object);
-          },
-          [promise](const ipc::ResponseRejectReason&) {
-            promise->MaybeRejectWithOperationError(
-                "Internal communication error");
-          });
+
+  ipc::ByteBuf bb;
+  RawId pipelineId =
+      CreateComputePipelineImpl(context.get(), mBridge, aDesc, &bb);
+
+  if (mBridge->CanSend()) {
+    mBridge->SendDeviceActionWithAck(mId, std::move(bb))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self = RefPtr{this}, context, pipelineId, promise](bool aDummy) {
+              Unused << aDummy;
+              RefPtr<ComputePipeline> object = new ComputePipeline(
+                  self, pipelineId, context->mImplicitPipelineLayoutId,
+                  std::move(context->mImplicitBindGroupLayoutIds));
+              promise->MaybeResolve(object);
+            },
+            [promise](const ipc::ResponseRejectReason&) {
+              promise->MaybeRejectWithOperationError(
+                  "Internal communication error");
+            });
+  } else {
+    promise->MaybeRejectWithOperationError("Internal communication error");
+  }
 
   return promise.forget();
 }
