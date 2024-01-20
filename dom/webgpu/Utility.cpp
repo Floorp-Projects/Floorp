@@ -50,4 +50,10 @@ ffi::WGPUExtent3d ConvertExtent(const dom::OwningGPUExtent3D& aExtent) {
   return extent;
 }
 
+ffi::WGPUCompareFunction ConvertCompareFunction(
+    const dom::GPUCompareFunction& aCompare) {
+  // Value of 0 = Undefined is reserved on the C side for "null" semantics.
+  return ffi::WGPUCompareFunction(UnderlyingValue(aCompare) + 1);
+}
+
 }  // namespace mozilla::webgpu
