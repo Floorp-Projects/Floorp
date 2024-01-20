@@ -269,10 +269,18 @@ already_AddRefed<Sampler> Device::CreateSampler(
 
 already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
     const dom::GPUCommandEncoderDescriptor& aDesc) {
-  RawId id = 0;
+  ffi::WGPUCommandEncoderDescriptor desc = {};
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_command_encoder(mBridge->GetClient(), mId,
+                                                     &desc, ToFFI(&bb));
   if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
+    mBridge->SendDeviceAction(mId, std::move(bb));
   }
+
   RefPtr<CommandEncoder> encoder = new CommandEncoder(this, mBridge, id);
   return encoder.forget();
 }
