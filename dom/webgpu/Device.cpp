@@ -283,13 +283,117 @@ already_AddRefed<RenderBundleEncoder> Device::CreateRenderBundleEncoder(
 
 already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
     const dom::GPUBindGroupLayoutDescriptor& aDesc) {
-  RawId id = 0;
-  if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateBindGroupLayout(mId, aDesc);
+  struct OptionalData {
+    ffi::WGPUTextureViewDimension dim;
+    ffi::WGPURawTextureSampleType type;
+    ffi::WGPUTextureFormat format;
+  };
+  nsTArray<OptionalData> optional(aDesc.mEntries.Length());
+  for (const auto& entry : aDesc.mEntries) {
+    OptionalData data = {};
+    if (entry.mTexture.WasPassed()) {
+      const auto& texture = entry.mTexture.Value();
+      data.dim = ffi::WGPUTextureViewDimension(texture.mViewDimension);
+      switch (texture.mSampleType) {
+        case dom::GPUTextureSampleType::Float:
+          data.type = ffi::WGPURawTextureSampleType_Float;
+          break;
+        case dom::GPUTextureSampleType::Unfilterable_float:
+          data.type = ffi::WGPURawTextureSampleType_UnfilterableFloat;
+          break;
+        case dom::GPUTextureSampleType::Uint:
+          data.type = ffi::WGPURawTextureSampleType_Uint;
+          break;
+        case dom::GPUTextureSampleType::Sint:
+          data.type = ffi::WGPURawTextureSampleType_Sint;
+          break;
+        case dom::GPUTextureSampleType::Depth:
+          data.type = ffi::WGPURawTextureSampleType_Depth;
+          break;
+        case dom::GPUTextureSampleType::EndGuard_:
+          MOZ_ASSERT_UNREACHABLE();
+      }
+    }
+    if (entry.mStorageTexture.WasPassed()) {
+      const auto& texture = entry.mStorageTexture.Value();
+      data.dim = ffi::WGPUTextureViewDimension(texture.mViewDimension);
+      data.format = ConvertTextureFormat(texture.mFormat);
+    }
+    optional.AppendElement(data);
   }
+
+  nsTArray<ffi::WGPUBindGroupLayoutEntry> entries(aDesc.mEntries.Length());
+  for (size_t i = 0; i < aDesc.mEntries.Length(); ++i) {
+    const auto& entry = aDesc.mEntries[i];
+    ffi::WGPUBindGroupLayoutEntry e = {};
+    e.binding = entry.mBinding;
+    e.visibility = entry.mVisibility;
+    if (entry.mBuffer.WasPassed()) {
+      switch (entry.mBuffer.Value().mType) {
+        case dom::GPUBufferBindingType::Uniform:
+          e.ty = ffi::WGPURawBindingType_UniformBuffer;
+          break;
+        case dom::GPUBufferBindingType::Storage:
+          e.ty = ffi::WGPURawBindingType_StorageBuffer;
+          break;
+        case dom::GPUBufferBindingType::Read_only_storage:
+          e.ty = ffi::WGPURawBindingType_ReadonlyStorageBuffer;
+          break;
+        case dom::GPUBufferBindingType::EndGuard_:
+          MOZ_ASSERT_UNREACHABLE();
+      }
+      e.has_dynamic_offset = entry.mBuffer.Value().mHasDynamicOffset;
+    }
+    if (entry.mTexture.WasPassed()) {
+      e.ty = ffi::WGPURawBindingType_SampledTexture;
+      e.view_dimension = &optional[i].dim;
+      e.texture_sample_type = &optional[i].type;
+      e.multisampled = entry.mTexture.Value().mMultisampled;
+    }
+    if (entry.mStorageTexture.WasPassed()) {
+      e.ty = entry.mStorageTexture.Value().mAccess ==
+                     dom::GPUStorageTextureAccess::Write_only
+                 ? ffi::WGPURawBindingType_WriteonlyStorageTexture
+                 : ffi::WGPURawBindingType_ReadonlyStorageTexture;
+      e.view_dimension = &optional[i].dim;
+      e.storage_texture_format = &optional[i].format;
+    }
+    if (entry.mSampler.WasPassed()) {
+      e.ty = ffi::WGPURawBindingType_Sampler;
+      switch (entry.mSampler.Value().mType) {
+        case dom::GPUSamplerBindingType::Filtering:
+          e.sampler_filter = true;
+          break;
+        case dom::GPUSamplerBindingType::Non_filtering:
+          break;
+        case dom::GPUSamplerBindingType::Comparison:
+          e.sampler_compare = true;
+          break;
+        case dom::GPUSamplerBindingType::EndGuard_:
+          MOZ_ASSERT_UNREACHABLE();
+      }
+    }
+    entries.AppendElement(e);
+  }
+
+  ffi::WGPUBindGroupLayoutDescriptor desc = {};
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+  desc.entries = entries.Elements();
+  desc.entries_length = entries.Length();
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_bind_group_layout(mBridge->GetClient(),
+                                                       mId, &desc, ToFFI(&bb));
+  if (mBridge->CanSend()) {
+    mBridge->SendDeviceAction(mId, std::move(bb));
+  }
+
   RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id, true);
   return object.forget();
 }
+
 already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
     const dom::GPUPipelineLayoutDescriptor& aDesc) {
   RawId id = 0;
