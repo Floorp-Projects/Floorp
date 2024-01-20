@@ -101,22 +101,6 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
   return Some(std::move(request));
 }
 
-RawId WebGPUChild::DeviceCreateCommandEncoder(
-    RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc) {
-  ffi::WGPUCommandEncoderDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-
-  ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_command_encoder(mClient.get(), aSelfId,
-                                                     &desc, ToFFI(&bb));
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
 RawId WebGPUChild::CommandEncoderFinish(
     RawId aSelfId, RawId aDeviceId,
     const dom::GPUCommandBufferDescriptor& aDesc) {

@@ -64,8 +64,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<DeviceRequest> AdapterRequestDevice(RawId aSelfId,
                                             const ffi::WGPUDeviceDescriptor&);
-  RawId DeviceCreateCommandEncoder(
-      RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId, RawId aDeviceId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
   RawId RenderBundleEncoderFinish(ffi::WGPURenderBundleEncoder& aEncoder,
