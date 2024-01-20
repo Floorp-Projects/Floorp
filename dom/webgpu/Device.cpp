@@ -9,6 +9,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/Console.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
@@ -17,6 +18,7 @@
 
 #include "Adapter.h"
 #include "Buffer.h"
+#include "CompilationInfo.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
 #include "InternalError.h"
@@ -33,6 +35,7 @@
 #include "ValidationError.h"
 #include "ipc/WebGPUChild.h"
 #include "Utility.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla::webgpu {
 
@@ -451,22 +454,178 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   return object.forget();
 }
 
+MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
+    const RefPtr<ShaderModule>& aShaderModule,
+    const nsTArray<WebGPUCompilationMessage>& aMessages) {
+  auto* global = aShaderModule->GetParentObject();
+
+  dom::AutoJSAPI api;
+  if (!api.Init(global)) {
+    return;
+  }
+
+  const auto& cx = api.cx();
+
+  ErrorResult rv;
+  RefPtr<dom::Console> console =
+      nsGlobalWindowInner::Cast(global->GetAsInnerWindow())->GetConsole(cx, rv);
+  if (rv.Failed()) {
+    return;
+  }
+
+  dom::GlobalObject globalObj(cx, global->GetGlobalJSObject());
+
+  dom::Sequence<JS::Value> args;
+  dom::SequenceRooter<JS::Value> msgArgsRooter(cx, &args);
+  auto SetSingleStrAsArgs =
+      [&](const nsString& message, dom::Sequence<JS::Value>* args)
+          MOZ_CAN_RUN_SCRIPT {
+            args->Clear();
+            JS::Rooted<JSString*> jsStr(
+                cx, JS_NewUCStringCopyN(cx, message.Data(), message.Length()));
+            if (!jsStr) {
+              return;
+            }
+            JS::Rooted<JS::Value> val(cx, JS::StringValue(jsStr));
+            if (!args->AppendElement(val, fallible)) {
+              return;
+            }
+          };
+
+  nsString label;
+  aShaderModule->GetLabel(label);
+  auto appendNiceLabelIfPresent = [&label](nsString* buf) MOZ_CAN_RUN_SCRIPT {
+    if (!label.IsEmpty()) {
+      buf->AppendLiteral(u" \"");
+      buf->Append(label);
+      buf->AppendLiteral(u"\"");
+    }
+  };
+
+  // We haven't actually inspected a message for severity, but
+  // it doesn't actually matter, since we don't do anything at
+  // this level.
+  auto highestSeveritySeen = WebGPUCompilationMessageType::Info;
+  uint64_t errorCount = 0;
+  uint64_t warningCount = 0;
+  uint64_t infoCount = 0;
+  for (const auto& message : aMessages) {
+    bool higherThanSeen =
+        static_cast<std::underlying_type_t<WebGPUCompilationMessageType>>(
+            message.messageType) <
+        static_cast<std::underlying_type_t<WebGPUCompilationMessageType>>(
+            highestSeveritySeen);
+    if (higherThanSeen) {
+      highestSeveritySeen = message.messageType;
+    }
+    switch (message.messageType) {
+      case WebGPUCompilationMessageType::Error:
+        errorCount += 1;
+        break;
+      case WebGPUCompilationMessageType::Warning:
+        warningCount += 1;
+        break;
+      case WebGPUCompilationMessageType::Info:
+        infoCount += 1;
+        break;
+    }
+  }
+  switch (highestSeveritySeen) {
+    case WebGPUCompilationMessageType::Info:
+      // shouldn't happen, but :shrug:
+      break;
+    case WebGPUCompilationMessageType::Warning: {
+      nsString msg(
+          u"Encountered one or more warnings while creating shader module");
+      appendNiceLabelIfPresent(&msg);
+      SetSingleStrAsArgs(msg, &args);
+      console->Warn(globalObj, args);
+      break;
+    }
+    case WebGPUCompilationMessageType::Error: {
+      nsString msg(
+          u"Encountered one or more errors while creating shader module");
+      appendNiceLabelIfPresent(&msg);
+      SetSingleStrAsArgs(msg, &args);
+      console->Error(globalObj, args);
+      break;
+    }
+  }
+
+  nsString header;
+  header.AppendLiteral(u"WebGPU compilation info for shader module");
+  appendNiceLabelIfPresent(&header);
+  header.AppendLiteral(u" (");
+  header.AppendInt(errorCount);
+  header.AppendLiteral(u" error(s), ");
+  header.AppendInt(warningCount);
+  header.AppendLiteral(u" warning(s), ");
+  header.AppendInt(infoCount);
+  header.AppendLiteral(u" info)");
+  SetSingleStrAsArgs(header, &args);
+  console->GroupCollapsed(globalObj, args);
+
+  for (const auto& message : aMessages) {
+    SetSingleStrAsArgs(message.message, &args);
+    switch (message.messageType) {
+      case WebGPUCompilationMessageType::Error:
+        console->Error(globalObj, args);
+        break;
+      case WebGPUCompilationMessageType::Warning:
+        console->Warn(globalObj, args);
+        break;
+      case WebGPUCompilationMessageType::Info:
+        console->Info(globalObj, args);
+        break;
+    }
+  }
+  console->GroupEnd(globalObj);
+}
+
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
     JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc,
     ErrorResult& aRv) {
   Unused << aCx;
-
-  if (!mBridge->CanSend()) {
-    aRv.ThrowInvalidStateError("Connection to GPU process has shut down");
-    return nullptr;
-  }
 
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  return MOZ_KnownLive(mBridge)->DeviceCreateShaderModule(this, aDesc, promise);
+  RawId moduleId =
+      ffi::wgpu_client_make_shader_module_id(mBridge->GetClient(), mId);
+
+  RefPtr<ShaderModule> shaderModule = new ShaderModule(this, moduleId, promise);
+
+  shaderModule->SetLabel(aDesc.mLabel);
+
+  RefPtr<Device> device = this;
+
+  if (mBridge->CanSend()) {
+    mBridge
+        ->SendDeviceCreateShaderModule(mId, moduleId, aDesc.mLabel, aDesc.mCode)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise, device,
+             shaderModule](nsTArray<WebGPUCompilationMessage>&& messages)
+                MOZ_CAN_RUN_SCRIPT {
+                  if (!messages.IsEmpty()) {
+                    reportCompilationMessagesToConsole(shaderModule,
+                                                       std::cref(messages));
+                  }
+                  RefPtr<CompilationInfo> infoObject(
+                      new CompilationInfo(device));
+                  infoObject->SetMessages(messages);
+                  promise->MaybeResolve(infoObject);
+                },
+            [promise](const ipc::ResponseRejectReason& aReason) {
+              promise->MaybeRejectWithNotSupportedError("IPC error");
+            });
+  } else {
+    promise->MaybeRejectWithNotSupportedError("IPC error");
+  }
+
+  return shaderModule.forget();
 }
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
