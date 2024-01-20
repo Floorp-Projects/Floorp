@@ -688,6 +688,137 @@ RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
   return id;
 }
 
+RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
+                               WebGPUChild* aBridge,
+                               const dom::GPURenderPipelineDescriptor& aDesc,
+                               ipc::ByteBuf* const aByteBuf) {
+  // A bunch of stack locals that we can have pointers into
+  nsTArray<ffi::WGPUVertexBufferLayout> vertexBuffers;
+  nsTArray<ffi::WGPUVertexAttribute> vertexAttributes;
+  ffi::WGPURenderPipelineDescriptor desc = {};
+  nsCString vsEntry, fsEntry;
+  ffi::WGPUIndexFormat stripIndexFormat = ffi::WGPUIndexFormat_Uint16;
+  ffi::WGPUFace cullFace = ffi::WGPUFace_Front;
+  ffi::WGPUVertexState vertexState = {};
+  ffi::WGPUFragmentState fragmentState = {};
+  nsTArray<ffi::WGPUColorTargetState> colorStates;
+  nsTArray<ffi::WGPUBlendState> blendStates;
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
+  if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
+    desc.layout = 0;
+  } else if (aDesc.mLayout.IsGPUPipelineLayout()) {
+    desc.layout = aDesc.mLayout.GetAsGPUPipelineLayout()->mId;
+  } else {
+    MOZ_ASSERT_UNREACHABLE();
+  }
+
+  {
+    const auto& stage = aDesc.mVertex;
+    vertexState.stage.module = stage.mModule->mId;
+    CopyUTF16toUTF8(stage.mEntryPoint, vsEntry);
+    vertexState.stage.entry_point = vsEntry.get();
+
+    for (const auto& vertex_desc : stage.mBuffers) {
+      ffi::WGPUVertexBufferLayout vb_desc = {};
+      if (!vertex_desc.IsNull()) {
+        const auto& vd = vertex_desc.Value();
+        vb_desc.array_stride = vd.mArrayStride;
+        vb_desc.step_mode = ffi::WGPUVertexStepMode(vd.mStepMode);
+        // Note: we are setting the length but not the pointer
+        vb_desc.attributes_length = vd.mAttributes.Length();
+        for (const auto& vat : vd.mAttributes) {
+          ffi::WGPUVertexAttribute ad = {};
+          ad.offset = vat.mOffset;
+          ad.format = ffi::WGPUVertexFormat(vat.mFormat);
+          ad.shader_location = vat.mShaderLocation;
+          vertexAttributes.AppendElement(ad);
+        }
+      }
+      vertexBuffers.AppendElement(vb_desc);
+    }
+    // Now patch up all the pointers to attribute lists.
+    size_t numAttributes = 0;
+    for (auto& vb_desc : vertexBuffers) {
+      vb_desc.attributes = vertexAttributes.Elements() + numAttributes;
+      numAttributes += vb_desc.attributes_length;
+    }
+
+    vertexState.buffers = vertexBuffers.Elements();
+    vertexState.buffers_length = vertexBuffers.Length();
+    desc.vertex = &vertexState;
+  }
+
+  if (aDesc.mFragment.WasPassed()) {
+    const auto& stage = aDesc.mFragment.Value();
+    fragmentState.stage.module = stage.mModule->mId;
+    CopyUTF16toUTF8(stage.mEntryPoint, fsEntry);
+    fragmentState.stage.entry_point = fsEntry.get();
+
+    // Note: we pre-collect the blend states into a different array
+    // so that we can have non-stale pointers into it.
+    for (const auto& colorState : stage.mTargets) {
+      ffi::WGPUColorTargetState desc = {};
+      desc.format = ConvertTextureFormat(colorState.mFormat);
+      desc.write_mask = colorState.mWriteMask;
+      colorStates.AppendElement(desc);
+      ffi::WGPUBlendState bs = {};
+      if (colorState.mBlend.WasPassed()) {
+        const auto& blend = colorState.mBlend.Value();
+        bs.alpha = ConvertBlendComponent(blend.mAlpha);
+        bs.color = ConvertBlendComponent(blend.mColor);
+      }
+      blendStates.AppendElement(bs);
+    }
+    for (size_t i = 0; i < colorStates.Length(); ++i) {
+      if (stage.mTargets[i].mBlend.WasPassed()) {
+        colorStates[i].blend = &blendStates[i];
+      }
+    }
+
+    fragmentState.targets = colorStates.Elements();
+    fragmentState.targets_length = colorStates.Length();
+    desc.fragment = &fragmentState;
+  }
+
+  {
+    const auto& prim = aDesc.mPrimitive;
+    desc.primitive.topology = ffi::WGPUPrimitiveTopology(prim.mTopology);
+    if (prim.mStripIndexFormat.WasPassed()) {
+      stripIndexFormat = ffi::WGPUIndexFormat(prim.mStripIndexFormat.Value());
+      desc.primitive.strip_index_format = &stripIndexFormat;
+    }
+    desc.primitive.front_face = ffi::WGPUFrontFace(prim.mFrontFace);
+    if (prim.mCullMode != dom::GPUCullMode::None) {
+      cullFace = prim.mCullMode == dom::GPUCullMode::Front ? ffi::WGPUFace_Front
+                                                           : ffi::WGPUFace_Back;
+      desc.primitive.cull_mode = &cullFace;
+    }
+    desc.primitive.unclipped_depth = prim.mUnclippedDepth;
+  }
+  desc.multisample = ConvertMultisampleState(aDesc.mMultisample);
+
+  ffi::WGPUDepthStencilState depthStencilState = {};
+  if (aDesc.mDepthStencil.WasPassed()) {
+    depthStencilState = ConvertDepthStencilState(aDesc.mDepthStencil.Value());
+    desc.depth_stencil = &depthStencilState;
+  }
+
+  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
+  RawId id = ffi::wgpu_client_create_render_pipeline(
+      aBridge->GetClient(), aContext->mParentId, &desc, ToFFI(aByteBuf),
+      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
+
+  for (const auto& cur : implicit_bgl_ids) {
+    if (!cur) break;
+    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
+  }
+
+  return id;
+}
+
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
   PipelineCreationContext context = {mId};
@@ -707,10 +838,13 @@ already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
 already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
     const dom::GPURenderPipelineDescriptor& aDesc) {
   PipelineCreationContext context = {mId};
-  RawId id = 0;
+  ipc::ByteBuf bb;
+  RawId id = CreateRenderPipelineImpl(&context, mBridge, aDesc, &bb);
+
   if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateRenderPipeline(&context, aDesc);
+    mBridge->SendDeviceAction(mId, std::move(bb));
   }
+
   RefPtr<RenderPipeline> object =
       new RenderPipeline(this, id, context.mImplicitPipelineLayoutId,
                          std::move(context.mImplicitBindGroupLayoutIds));
@@ -761,27 +895,32 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
     return nullptr;
   }
 
-  if (!mBridge->CanSend()) {
-    promise->MaybeRejectWithOperationError("Internal communication error");
-    return promise.forget();
-  }
-
   std::shared_ptr<PipelineCreationContext> context(
       new PipelineCreationContext());
   context->mParentId = mId;
-  mBridge->DeviceCreateRenderPipelineAsync(context.get(), aDesc)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, context, promise](RawId aId) {
-            RefPtr<RenderPipeline> object = new RenderPipeline(
-                self, aId, context->mImplicitPipelineLayoutId,
-                std::move(context->mImplicitBindGroupLayoutIds));
-            promise->MaybeResolve(object);
-          },
-          [promise](const ipc::ResponseRejectReason&) {
-            promise->MaybeRejectWithOperationError(
-                "Internal communication error");
-          });
+
+  ipc::ByteBuf bb;
+  RawId pipelineId =
+      CreateRenderPipelineImpl(context.get(), mBridge, aDesc, &bb);
+
+  if (mBridge->CanSend()) {
+    mBridge->SendDeviceActionWithAck(mId, std::move(bb))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self = RefPtr{this}, context, promise, pipelineId](bool aDummy) {
+              Unused << aDummy;
+              RefPtr<RenderPipeline> object = new RenderPipeline(
+                  self, pipelineId, context->mImplicitPipelineLayoutId,
+                  std::move(context->mImplicitBindGroupLayoutIds));
+              promise->MaybeResolve(object);
+            },
+            [promise](const ipc::ResponseRejectReason&) {
+              promise->MaybeRejectWithOperationError(
+                  "Internal communication error");
+            });
+  } else {
+    promise->MaybeRejectWithOperationError("Internal communication error");
+  }
 
   return promise.forget();
 }
