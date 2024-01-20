@@ -70,12 +70,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                                   RawId aDeviceId,
                                   const dom::GPURenderBundleDescriptor& aDesc);
   RawId RenderBundleEncoderFinishError(RawId aDeviceId, const nsString& aLabel);
-  RawId DeviceCreateComputePipeline(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc);
-  RefPtr<PipelinePromise> DeviceCreateComputePipelineAsync(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc);
   RawId DeviceCreateRenderPipeline(
       PipelineCreationContext* const aContext,
       const dom::GPURenderPipelineDescriptor& aDesc);
@@ -106,10 +100,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
  private:
   virtual ~WebGPUChild();
 
-  RawId DeviceCreateComputePipelineImpl(
-      PipelineCreationContext* const aContext,
-      const dom::GPUComputePipelineDescriptor& aDesc,
-      ipc::ByteBuf* const aByteBuf);
   RawId DeviceCreateRenderPipelineImpl(
       PipelineCreationContext* const aContext,
       const dom::GPURenderPipelineDescriptor& aDesc,

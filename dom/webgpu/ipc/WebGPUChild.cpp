@@ -157,69 +157,6 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
   return id;
 }
 
-RawId WebGPUChild::DeviceCreateComputePipelineImpl(
-    PipelineCreationContext* const aContext,
-    const dom::GPUComputePipelineDescriptor& aDesc, ByteBuf* const aByteBuf) {
-  ffi::WGPUComputePipelineDescriptor desc = {};
-  nsCString entryPoint;
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-
-  if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
-    desc.layout = 0;
-  } else if (aDesc.mLayout.IsGPUPipelineLayout()) {
-    desc.layout = aDesc.mLayout.GetAsGPUPipelineLayout()->mId;
-  } else {
-    MOZ_ASSERT_UNREACHABLE();
-  }
-  desc.stage.module = aDesc.mCompute.mModule->mId;
-  CopyUTF16toUTF8(aDesc.mCompute.mEntryPoint, entryPoint);
-  desc.stage.entry_point = entryPoint.get();
-
-  RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
-  RawId id = ffi::wgpu_client_create_compute_pipeline(
-      mClient.get(), aContext->mParentId, &desc, ToFFI(aByteBuf),
-      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
-
-  for (const auto& cur : implicit_bgl_ids) {
-    if (!cur) break;
-    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
-  }
-
-  return id;
-}
-
-RawId WebGPUChild::DeviceCreateComputePipeline(
-    PipelineCreationContext* const aContext,
-    const dom::GPUComputePipelineDescriptor& aDesc) {
-  ByteBuf bb;
-  const RawId id = DeviceCreateComputePipelineImpl(aContext, aDesc, &bb);
-
-  if (!SendDeviceAction(aContext->mParentId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
-RefPtr<PipelinePromise> WebGPUChild::DeviceCreateComputePipelineAsync(
-    PipelineCreationContext* const aContext,
-    const dom::GPUComputePipelineDescriptor& aDesc) {
-  ByteBuf bb;
-  const RawId id = DeviceCreateComputePipelineImpl(aContext, aDesc, &bb);
-
-  return SendDeviceActionWithAck(aContext->mParentId, std::move(bb))
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [id](bool aDummy) {
-            Unused << aDummy;
-            return PipelinePromise::CreateAndResolve(id, __func__);
-          },
-          [](const ipc::ResponseRejectReason& aReason) {
-            return PipelinePromise::CreateAndReject(aReason, __func__);
-          });
-}
-
 static ffi::WGPUMultisampleState ConvertMultisampleState(
     const dom::GPUMultisampleState& aDesc) {
   ffi::WGPUMultisampleState desc = {};
