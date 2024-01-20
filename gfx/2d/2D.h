@@ -1981,7 +1981,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   UserData mUserData;
   Matrix mTransform;
   IntRect mOpaqueRect;
-  mutable bool mTransformDirty : 1;
+  bool mTransformDirty : 1;
   bool mPermitSubpixelAA : 1;
 
   SurfaceFormat mFormat;
