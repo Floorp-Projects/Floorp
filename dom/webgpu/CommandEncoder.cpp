@@ -252,12 +252,18 @@ void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass) {
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(
     const dom::GPUCommandBufferDescriptor& aDesc) {
-  // WebGPUChild::CommandEncoderFinish handles the case where the IPC channel
-  // closed.
-  RawId id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
+  // We rely on knowledge that `CommandEncoderId` == `CommandBufferId`
+  // TODO: refactor this to truly behave as if the encoder is being finished,
+  // and a new command buffer ID is being created from it. Resolve the ID
+  // type aliasing at the place that introduces it: `wgpu-core`.
+  RawId deviceId = mParent->mId;
+  if (mBridge->CanSend()) {
+    mBridge->SendCommandEncoderFinish(mId, deviceId, aDesc);
+  }
+
   RefPtr<CommandEncoder> me(this);
-  RefPtr<CommandBuffer> comb =
-      new CommandBuffer(mParent, id, std::move(mTargetContexts), std::move(me));
+  RefPtr<CommandBuffer> comb = new CommandBuffer(
+      mParent, mId, std::move(mTargetContexts), std::move(me));
   return comb.forget();
 }
 
