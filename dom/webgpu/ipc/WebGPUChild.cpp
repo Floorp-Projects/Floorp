@@ -103,49 +103,6 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
   return Some(std::move(request));
 }
 
-RawId WebGPUChild::TextureCreateView(
-    RawId aSelfId, RawId aDeviceId,
-    const dom::GPUTextureViewDescriptor& aDesc) {
-  ffi::WGPUTextureViewDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-
-  ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
-  if (aDesc.mFormat.WasPassed()) {
-    format = ConvertTextureFormat(aDesc.mFormat.Value());
-    desc.format = &format;
-  }
-  ffi::WGPUTextureViewDimension dimension =
-      ffi::WGPUTextureViewDimension_Sentinel;
-  if (aDesc.mDimension.WasPassed()) {
-    dimension = ffi::WGPUTextureViewDimension(aDesc.mDimension.Value());
-    desc.dimension = &dimension;
-  }
-
-  // Ideally we'd just do something like "aDesc.mMipLevelCount.ptrOr(nullptr)"
-  // but dom::Optional does not seem to have very many nice things.
-  uint32_t mipCount =
-      aDesc.mMipLevelCount.WasPassed() ? aDesc.mMipLevelCount.Value() : 0;
-  uint32_t layerCount =
-      aDesc.mArrayLayerCount.WasPassed() ? aDesc.mArrayLayerCount.Value() : 0;
-
-  desc.aspect = ffi::WGPUTextureAspect(aDesc.mAspect);
-  desc.base_mip_level = aDesc.mBaseMipLevel;
-  desc.mip_level_count = aDesc.mMipLevelCount.WasPassed() ? &mipCount : nullptr;
-  desc.base_array_layer = aDesc.mBaseArrayLayer;
-  desc.array_layer_count =
-      aDesc.mArrayLayerCount.WasPassed() ? &layerCount : nullptr;
-
-  ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_texture_view(mClient.get(), aSelfId, &desc,
-                                                  ToFFI(&bb));
-  if (!SendTextureAction(aSelfId, aDeviceId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
 RawId WebGPUChild::DeviceCreateCommandEncoder(
     RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc) {
   ffi::WGPUCommandEncoderDescriptor desc = {};
