@@ -69,8 +69,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                             Maybe<layers::RemoteTextureOwnerId> aOwnerId);
   RawId TextureCreateView(RawId aSelfId, RawId aDeviceId,
                           const dom::GPUTextureViewDescriptor& aDesc);
-  RawId DeviceCreateSampler(RawId aSelfId,
-                            const dom::GPUSamplerDescriptor& aDesc);
   RawId DeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId, RawId aDeviceId,

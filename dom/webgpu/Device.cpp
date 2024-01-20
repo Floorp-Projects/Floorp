@@ -32,6 +32,7 @@
 #include "TextureView.h"
 #include "ValidationError.h"
 #include "ipc/WebGPUChild.h"
+#include "Utility.h"
 
 namespace mozilla::webgpu {
 
@@ -193,10 +194,33 @@ already_AddRefed<Texture> Device::CreateTexture(
 
 already_AddRefed<Sampler> Device::CreateSampler(
     const dom::GPUSamplerDescriptor& aDesc) {
-  RawId id = 0;
-  if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateSampler(mId, aDesc);
+  ffi::WGPUSamplerDescriptor desc = {};
+  webgpu::StringHelper label(aDesc.mLabel);
+
+  desc.label = label.Get();
+  desc.address_modes[0] = ffi::WGPUAddressMode(aDesc.mAddressModeU);
+  desc.address_modes[1] = ffi::WGPUAddressMode(aDesc.mAddressModeV);
+  desc.address_modes[2] = ffi::WGPUAddressMode(aDesc.mAddressModeW);
+  desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
+  desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
+  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
+  desc.lod_min_clamp = aDesc.mLodMinClamp;
+  desc.lod_max_clamp = aDesc.mLodMaxClamp;
+
+  ffi::WGPUCompareFunction comparison = ffi::WGPUCompareFunction_Sentinel;
+  if (aDesc.mCompare.WasPassed()) {
+    comparison = ConvertCompareFunction(aDesc.mCompare.Value());
+    desc.compare = &comparison;
   }
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_sampler(mBridge->GetClient(), mId, &desc,
+                                             ToFFI(&bb));
+
+  if (mBridge->CanSend()) {
+    mBridge->SendDeviceAction(mId, std::move(bb));
+  }
+
   RefPtr<Sampler> sampler = new Sampler(this, id);
   return sampler.forget();
 }

@@ -28,6 +28,7 @@
 #include "CompilationInfo.h"
 #include "mozilla/ipc/RawShmem.h"
 #include "nsGlobalWindowInner.h"
+#include "Utility.h"
 
 #include <utility>
 
@@ -47,12 +48,6 @@ void WebGPUChild::JsWarning(nsIGlobalObject* aGlobal,
     printf_stderr("Validation error without device target: %s\n",
                   flatString.get());
   }
-}
-
-static ffi::WGPUCompareFunction ConvertCompareFunction(
-    const dom::GPUCompareFunction& aCompare) {
-  // Value of 0 = Undefined is reserved on the C side for "null" semantics.
-  return ffi::WGPUCompareFunction(UnderlyingValue(aCompare) + 1);
 }
 
 ffi::WGPUTextureFormat WebGPUChild::ConvertTextureFormat(
@@ -377,36 +372,6 @@ RawId WebGPUChild::TextureCreateView(
   RawId id = ffi::wgpu_client_create_texture_view(mClient.get(), aSelfId, &desc,
                                                   ToFFI(&bb));
   if (!SendTextureAction(aSelfId, aDeviceId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
-RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
-                                       const dom::GPUSamplerDescriptor& aDesc) {
-  ffi::WGPUSamplerDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-  desc.address_modes[0] = ffi::WGPUAddressMode(aDesc.mAddressModeU);
-  desc.address_modes[1] = ffi::WGPUAddressMode(aDesc.mAddressModeV);
-  desc.address_modes[2] = ffi::WGPUAddressMode(aDesc.mAddressModeW);
-  desc.mag_filter = ffi::WGPUFilterMode(aDesc.mMagFilter);
-  desc.min_filter = ffi::WGPUFilterMode(aDesc.mMinFilter);
-  desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
-  desc.lod_min_clamp = aDesc.mLodMinClamp;
-  desc.lod_max_clamp = aDesc.mLodMaxClamp;
-
-  ffi::WGPUCompareFunction comparison = ffi::WGPUCompareFunction_Sentinel;
-  if (aDesc.mCompare.WasPassed()) {
-    comparison = ConvertCompareFunction(aDesc.mCompare.Value());
-    desc.compare = &comparison;
-  }
-
-  ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_sampler(mClient.get(), aSelfId, &desc,
-                                             ToFFI(&bb));
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
   return id;
