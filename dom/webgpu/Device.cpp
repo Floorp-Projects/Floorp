@@ -407,13 +407,31 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
 
 already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
     const dom::GPUPipelineLayoutDescriptor& aDesc) {
-  RawId id = 0;
-  if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreatePipelineLayout(mId, aDesc);
+  nsTArray<ffi::WGPUBindGroupLayoutId> bindGroupLayouts(
+      aDesc.mBindGroupLayouts.Length());
+
+  for (const auto& layout : aDesc.mBindGroupLayouts) {
+    bindGroupLayouts.AppendElement(layout->mId);
   }
+
+  ffi::WGPUPipelineLayoutDescriptor desc = {};
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+  desc.bind_group_layouts = bindGroupLayouts.Elements();
+  desc.bind_group_layouts_length = bindGroupLayouts.Length();
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_pipeline_layout(mBridge->GetClient(), mId,
+                                                     &desc, ToFFI(&bb));
+  if (mBridge->CanSend()) {
+    mBridge->SendDeviceAction(mId, std::move(bb));
+  }
+
   RefPtr<PipelineLayout> object = new PipelineLayout(this, id);
   return object.forget();
 }
+
 already_AddRefed<BindGroup> Device::CreateBindGroup(
     const dom::GPUBindGroupDescriptor& aDesc) {
   nsTArray<ffi::WGPUBindGroupEntry> entries(aDesc.mEntries.Length());

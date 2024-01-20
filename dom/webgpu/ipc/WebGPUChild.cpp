@@ -157,33 +157,6 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
   return id;
 }
 
-RawId WebGPUChild::DeviceCreatePipelineLayout(
-    RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc) {
-  nsTArray<ffi::WGPUBindGroupLayoutId> bindGroupLayouts(
-      aDesc.mBindGroupLayouts.Length());
-  for (const auto& layout : aDesc.mBindGroupLayouts) {
-    if (!layout->IsValid()) {
-      return 0;
-    }
-    bindGroupLayouts.AppendElement(layout->mId);
-  }
-
-  ffi::WGPUPipelineLayoutDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-  desc.bind_group_layouts = bindGroupLayouts.Elements();
-  desc.bind_group_layouts_length = bindGroupLayouts.Length();
-
-  ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_pipeline_layout(mClient.get(), aSelfId,
-                                                     &desc, ToFFI(&bb));
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return id;
-}
-
 RawId WebGPUChild::DeviceCreateComputePipelineImpl(
     PipelineCreationContext* const aContext,
     const dom::GPUComputePipelineDescriptor& aDesc, ByteBuf* const aByteBuf) {
