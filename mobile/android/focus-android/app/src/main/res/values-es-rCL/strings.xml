@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Eliminar de los accesos directos</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Qué hay de nuevo</string>
     <string name="menu_settings">Ajustes</string>
     <string name="menu_about">Acerca de</string>
     <string name="menu_help">Ayuda</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Compartir vía</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">¿Eliminar historial de navegación?</string>
+    <string name="notification_erase_text_android_14">Toca o elimina esta notificación para borrar de forma segura tu historial de navegación.</string>
+
     <string name="notification_erase_text">Eliminar historial de navegación</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

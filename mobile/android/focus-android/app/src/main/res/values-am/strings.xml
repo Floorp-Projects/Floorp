@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">ከአቋራጭ ላይ አስወድግ</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">አዲስ ምን አለ</string>
     <string name="menu_settings">ቅንብሮች</string>
     <string name="menu_about">ስለ</string>
     <string name="menu_help">እገዛ</string>
@@ -86,10 +85,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">ያጋሩ በ</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">የአሰሳ ታሪክን ይጥፋ?</string>
+    <string name="notification_erase_text_android_14">የአሰሳ ታሪክዎን ደህንነቱ በተጠበቀ መልኩ ለማጥፋት ይህን ማሳወቂያ መታ ያድርጉ ወይም ያጽዱ።</string>
+
     <string name="notification_erase_text">የአሰሳ ታሪክን አጥፋ</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

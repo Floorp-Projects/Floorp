@@ -28,4 +28,20 @@
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">ایستمجی طرفینده سینیرسیز میقداردا دیتا ساخلایین</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">گزینمه زامانی موروچو فعالیتینه ال چاتما</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">بوکمارک‌لاری اوخوما  و ایصلاح ائتمه</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">مورورچو تنظیم‌لرینی اوخویون و ایصلاح ائله‌یین</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">یاخین زامانداکی گؤزآتما گئچمیشینی، کوکی‌لری و ایلگیلی دیتالاری پوزون</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">کلیپ‌ بوردان دیتا آل</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">کلیپ بوردا دیتا گیر</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">هر صفحه‌ده موحتوانی مسدود ائله</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">گؤز آتما گئچمیشینی اوخویون</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">فایل‌لاری یئندیرین و مورورچو گئچمیشینی اوخویوب ایصلاح ائله‌یین</string>
     </resources>

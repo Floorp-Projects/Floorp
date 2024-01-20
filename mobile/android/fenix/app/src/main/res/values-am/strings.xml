@@ -320,13 +320,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">አሁን አይሆንም</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">የFirefox ግላዊነት ማስታወቂያ</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ደህንነትዎን መጠበቅ እንወዳለን</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">የእኛ ለትርፍ-ባልተቋቋመ የሚደገፈው አሳሽ ኩባንያዎች እርስዎን በድር ላይ በድብቅ እንዳይከተሉዎ ያግዛል።\n\nበግላዊነት ማስታወቂያችን ላይ የበለጠ ይረዱ።</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">የእኛ ለትርፍ-ባልተቋቋመ የሚደገፈው አሳሽ ኩባንያዎች በድር ላይ እርስዎን በድብቅ እንዳይከተሉዎት ያግዛል።</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">የእኛ ለትርፍ-ባልተቋቋመ የሚደገፈው አሳሽ ኩባንያዎች እርስዎን በድር ላይ በድብቅ እንዳይከተሉዎ ያግዛል።\n\nበግላዊነት ማስታወቂያችን ላይ የበለጠ ይረዱ።</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">የግላዊነት ማስታወቂያ</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">የግላዊነት ማስታወቂያ</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ነባሪ አሳሽ አድርገህ አስቀምጥ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1311,6 +1316,11 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">የግል ትሮችን ዝጋ</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">የግል ትሮች ይዘጉ?</string>
+    <string name="notification_erase_text_android_14">የግል ትሮችን ለመዝጋት ይህን ማሳወቂያ ነካ ያድርጉ ወይም ያንሸራትቱ።</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ግብይት</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -2478,6 +2488,8 @@
     <!-- Debug drawer -->
     <!-- The user-facing title of the Debug Drawer feature. -->
     <string name="debug_drawer_title">የፍተሻ መሳሪያዎች</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">ወደ ኋላ ዳስስ</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">የትር መሳሪያዎች</string>
     <!-- The title of the tab count section in Tab Tools. -->

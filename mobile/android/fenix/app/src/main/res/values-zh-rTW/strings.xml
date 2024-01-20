@@ -1355,7 +1355,7 @@
 
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">要關閉隱私分頁嗎？</string>
-    <string name="notification_erase_text_android_14">點擊或滑掉此分頁，即可關閉隱私分頁。</string>
+    <string name="notification_erase_text_android_14">點擊或滑掉此通知，即可關閉隱私分頁。</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">行銷活動</string>
