@@ -70,8 +70,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                                   RawId aDeviceId,
                                   const dom::GPURenderBundleDescriptor& aDesc);
   RawId RenderBundleEncoderFinishError(RawId aDeviceId, const nsString& aLabel);
-  RawId DeviceCreatePipelineLayout(
-      RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc);
   RawId DeviceCreateComputePipeline(
       PipelineCreationContext* const aContext,
       const dom::GPUComputePipelineDescriptor& aDesc);
