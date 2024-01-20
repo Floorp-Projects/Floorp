@@ -240,4 +240,48 @@ ffi::WGPUTextureFormat ConvertTextureFormat(
   return result;
 }
 
+ffi::WGPUMultisampleState ConvertMultisampleState(
+    const dom::GPUMultisampleState& aDesc) {
+  ffi::WGPUMultisampleState desc = {};
+  desc.count = aDesc.mCount;
+  desc.mask = aDesc.mMask;
+  desc.alpha_to_coverage_enabled = aDesc.mAlphaToCoverageEnabled;
+  return desc;
+}
+
+ffi::WGPUBlendComponent ConvertBlendComponent(
+    const dom::GPUBlendComponent& aDesc) {
+  ffi::WGPUBlendComponent desc = {};
+  desc.src_factor = ffi::WGPUBlendFactor(aDesc.mSrcFactor);
+  desc.dst_factor = ffi::WGPUBlendFactor(aDesc.mDstFactor);
+  desc.operation = ffi::WGPUBlendOperation(aDesc.mOperation);
+  return desc;
+}
+
+ffi::WGPUStencilFaceState ConvertStencilFaceState(
+    const dom::GPUStencilFaceState& aDesc) {
+  ffi::WGPUStencilFaceState desc = {};
+  desc.compare = ConvertCompareFunction(aDesc.mCompare);
+  desc.fail_op = ffi::WGPUStencilOperation(aDesc.mFailOp);
+  desc.depth_fail_op = ffi::WGPUStencilOperation(aDesc.mDepthFailOp);
+  desc.pass_op = ffi::WGPUStencilOperation(aDesc.mPassOp);
+  return desc;
+}
+
+ffi::WGPUDepthStencilState ConvertDepthStencilState(
+    const dom::GPUDepthStencilState& aDesc) {
+  ffi::WGPUDepthStencilState desc = {};
+  desc.format = ConvertTextureFormat(aDesc.mFormat);
+  desc.depth_write_enabled = aDesc.mDepthWriteEnabled;
+  desc.depth_compare = ConvertCompareFunction(aDesc.mDepthCompare);
+  desc.stencil.front = ConvertStencilFaceState(aDesc.mStencilFront);
+  desc.stencil.back = ConvertStencilFaceState(aDesc.mStencilBack);
+  desc.stencil.read_mask = aDesc.mStencilReadMask;
+  desc.stencil.write_mask = aDesc.mStencilWriteMask;
+  desc.bias.constant = aDesc.mDepthBias;
+  desc.bias.slope_scale = aDesc.mDepthBiasSlopeScale;
+  desc.bias.clamp = aDesc.mDepthBiasClamp;
+  return desc;
+}
+
 }  // namespace mozilla::webgpu

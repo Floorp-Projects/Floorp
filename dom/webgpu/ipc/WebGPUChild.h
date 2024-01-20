@@ -70,12 +70,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                                   RawId aDeviceId,
                                   const dom::GPURenderBundleDescriptor& aDesc);
   RawId RenderBundleEncoderFinishError(RawId aDeviceId, const nsString& aLabel);
-  RawId DeviceCreateRenderPipeline(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc);
-  RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc);
 
   ffi::WGPUClient* GetClient() const { return mClient.get(); }
 
@@ -99,11 +93,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
  private:
   virtual ~WebGPUChild();
-
-  RawId DeviceCreateRenderPipelineImpl(
-      PipelineCreationContext* const aContext,
-      const dom::GPURenderPipelineDescriptor& aDesc,
-      ipc::ByteBuf* const aByteBuf);
 
   UniquePtr<ffi::WGPUClient> const mClient;
   std::unordered_map<RawId, WeakPtr<Device>> mDeviceMap;
