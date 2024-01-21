@@ -70,22 +70,31 @@ extern MOZ_EXPORT void* __libc_stack_end;  // from ld-linux.so
 
 class FrameSkipper {
  public:
-  constexpr FrameSkipper() : mPc(0) {}
+  constexpr FrameSkipper() : mSkipUntilAddr(0) {}
+  static uintptr_t AddressFromPC(const void* aPC) {
+#ifdef __arm__
+    // On 32-bit ARM, mask off the thumb bit to get the instruction address.
+    return uintptr_t(aPC) & ~1;
+#else
+    return uintptr_t(aPC);
+#endif
+  }
   bool ShouldSkipPC(void* aPC) {
     // Skip frames until we encounter the one we were initialized with,
     // and then never skip again.
-    if (mPc != 0) {
-      if (mPc != uintptr_t(aPC)) {
+    uintptr_t instructionAddress = AddressFromPC(aPC);
+    if (mSkipUntilAddr != 0) {
+      if (mSkipUntilAddr != instructionAddress) {
         return true;
       }
-      mPc = 0;
+      mSkipUntilAddr = 0;
     }
     return false;
   }
-  explicit FrameSkipper(const void* aPc) : mPc(uintptr_t(aPc)) {}
+  explicit FrameSkipper(const void* aPC) : mSkipUntilAddr(AddressFromPC(aPC)) {}
 
  private:
-  uintptr_t mPc;
+  uintptr_t mSkipUntilAddr;
 };
 
 #ifdef XP_WIN
