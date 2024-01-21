@@ -98,6 +98,7 @@ class FxSuggestSuggestionProviderTest {
                     impressionUrl = "https://example.com/impression_url",
                     clickUrl = "https://example.com/click_url",
                     rawClickUrl = "https://example.com/click_url",
+                    score = 0.3,
                 ),
                 Suggestion.Wikipedia(
                     title = "Las Vegas",
@@ -217,6 +218,7 @@ class FxSuggestSuggestionProviderTest {
                     impressionUrl = "https://example.com/impression_url",
                     clickUrl = "https://example.com/click_url",
                     rawClickUrl = "https://example.com/click_url",
+                    score = 0.3,
                 ),
             ),
         )
