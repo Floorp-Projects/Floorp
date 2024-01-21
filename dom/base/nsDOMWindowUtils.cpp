@@ -3146,11 +3146,16 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
                                            double* aResult) {
   NS_ENSURE_ARG_POINTER(aElement);
 
-  nsCSSPropertyID property =
+  nsCSSPropertyID propertyID =
       nsCSSProps::LookupProperty(NS_ConvertUTF16toUTF8(aProperty));
-  if (property == eCSSProperty_UNKNOWN || nsCSSProps::IsShorthand(property)) {
+  if (propertyID == eCSSProperty_UNKNOWN ||
+      nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
+
+  AnimatedPropertyID property = propertyID == eCSSPropertyExtra_variable
+                                    ? AnimatedPropertyID(NS_Atomize(aProperty))
+                                    : AnimatedPropertyID(propertyID);
 
   AnimationValue v1 = AnimationValue::FromString(
       property, NS_ConvertUTF16toUTF8(aValue1), aElement);
@@ -3160,7 +3165,7 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  *aResult = v1.ComputeDistance(property, v2);
+  *aResult = v1.ComputeDistance(v2);
   return NS_OK;
 }
 

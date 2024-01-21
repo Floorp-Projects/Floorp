@@ -44,7 +44,6 @@ class Animatable;
 
 enum class PseudoStyleType : uint8_t;
 struct PropertyStyleAnimationValuePair;
-struct AnimatedPropertyID;
 
 struct AnimationValue {
   explicit AnimationValue(const RefPtr<StyleAnimationValue>& aValue)
@@ -102,13 +101,12 @@ struct AnimationValue {
                           const AnimationValue& aToValue) const;
 
   // Compute the distance between *this and aOther.
-  double ComputeDistance(nsCSSPropertyID aProperty,
-                         const AnimationValue& aOther) const;
+  double ComputeDistance(const AnimationValue& aOther) const;
 
   // Create an AnimaitonValue from a string. This method flushes style, so we
   // should use this carefully. Now, it is only used by
   // nsDOMWindowUtils::ComputeAnimationDistance.
-  static AnimationValue FromString(nsCSSPropertyID aProperty,
+  static AnimationValue FromString(AnimatedPropertyID& aProperty,
                                    const nsACString& aValue,
                                    dom::Element* aElement);
 
