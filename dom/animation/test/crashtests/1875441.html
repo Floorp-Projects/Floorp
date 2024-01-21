@@ -1,0 +1,12 @@
+<!doctype html>
+<style>
+@property --my-property {
+    syntax: "<length>",
+    inherits: false,
+    initial-value: 0,
+}
+</style>
+<div id="box"></div>
+<script>
+SpecialPowers.DOMWindowUtils.computeAnimationDistance(box, "--my-property", "red", "blue");
+</script>

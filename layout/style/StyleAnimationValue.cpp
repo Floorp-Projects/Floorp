@@ -17,7 +17,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSPseudoElements.h"
@@ -175,8 +174,7 @@ bool AnimationValue::IsInterpolableWith(const AnimatedPropertyID& aProperty,
   return Servo_AnimationValues_IsInterpolable(mServo, aToValue.mServo);
 }
 
-double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
-                                       const AnimationValue& aOther) const {
+double AnimationValue::ComputeDistance(const AnimationValue& aOther) const {
   if (IsNull() || aOther.IsNull()) {
     return 0.0;
   }
@@ -190,7 +188,7 @@ double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
 }
 
 /* static */
-AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
+AnimationValue AnimationValue::FromString(AnimatedPropertyID& aProperty,
                                           const nsACString& aValue,
                                           Element* aElement) {
   MOZ_ASSERT(aElement);
@@ -213,9 +211,8 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
       nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 
-  AnimatedPropertyID property(aProperty);
   RefPtr<StyleLockedDeclarationBlock> declarations =
-      ServoCSSParser::ParseProperty(property, aValue,
+      ServoCSSParser::ParseProperty(aProperty, aValue,
                                     ServoCSSParser::GetParsingEnvironment(doc),
                                     StyleParsingMode::DEFAULT);
 
