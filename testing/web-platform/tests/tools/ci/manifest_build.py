@@ -149,7 +149,7 @@ def create_release(manifest_file_paths, owner, repo, sha, tag, body):
         for upload_ext in upload_exts:
             upload_filename = f"{upload_filename_prefix}{upload_ext}"
             params = {"name": upload_filename,
-                    "label": f"{upload_label_prefix}{upload_ext}%s"}
+                    "label": f"{upload_label_prefix}{upload_ext}"}
 
             with open(f"{manifest_path}{upload_ext}", "rb") as f:
                 upload_data = f.read()
