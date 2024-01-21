@@ -362,10 +362,9 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
     return;
   }
 
-  mTranslationTaskQueue->BeginShutdown()->Then(
-      GetCurrentSerialEventTarget(), __func__, this,
-      &CanvasTranslator::FinishShutdown, &CanvasTranslator::FinishShutdown);
+  mTranslationTaskQueue->BeginShutdown();
   mTranslationTaskQueue->AwaitShutdownAndIdle();
+  FinishShutdown();
 }
 
 void CanvasTranslator::FinishShutdown() { ClearTextureInfo(); }
