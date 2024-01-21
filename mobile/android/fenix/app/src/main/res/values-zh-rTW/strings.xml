@@ -333,13 +333,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">現在不要</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox 隱私權公告</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">我們希望確保您上網安全</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">這套由非營利組織打造的瀏覽器，可幫助防止企業在網路上偷偷追蹤您。\n\n到我們的隱私權公告了解更多資訊。</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">我們這套由非營利組織所開發的瀏覽器，會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">這套由非營利組織打造的瀏覽器，可幫助防止企業在網路上偷偷追蹤您。\n\n到我們的隱私權公告了解更多資訊。</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">隱私權公告</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">隱私權公告</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">設為預設瀏覽器</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

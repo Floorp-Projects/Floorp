@@ -327,13 +327,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">Mai tard</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Politica de confidencialitat de Firefox</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nos impòrta vòstra vida privada</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Nòstre navegador sostengut per una organizacion sens but lucratiu empacha las entrepresas de vos seguir secrètament sul Web.\n\nPer ne saber mai consultatz nòstra politica de confidencialitat.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Nòstre navegador es sostengut per una organizacion sens tòca lucrativa empacha automaticament las entrepresas de vos pistar secrètament pel web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Nòstre navegador sostengut per una organizacion sens but lucratiu empacha las entrepresas de vos seguir secrètament sul Web.\n\nPer ne saber mai consultatz nòstra politica de confidencialitat.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">politica de confidencialitat</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">politica de confidencialitat</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Definir coma navegador per defaut</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -2248,8 +2253,24 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Verificar ara</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title">I a pas encara pro d’avises</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">Quand aqueste produch aja mai d’avises, ne poirem verificar la qualitat.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title">Lo produit es pas disponible</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body">Se tornatz veire aqueste produch en estòc, senhalatz-lo e verificarem los avises.</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2">Senhalar que’l produch es en estòc</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Evaluacion de la qualitat dels avises</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Evaluacion de la qualitat dels avises</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Evaluacion de la qualitat dels avises (%s)</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">Aquò trigar unes 60 segondas.</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title">Mercés pel senhalament !</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Las analisis son a jorn</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->

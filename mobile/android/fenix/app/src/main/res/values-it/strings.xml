@@ -332,13 +332,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">Non adesso</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Informativa sulla privacy di Firefox</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ci piace mantenerti al sicuro</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Il nostro browser, supportato da un’organizzazione senza fini di lucro, blocca automaticamente le società che, di nascosto, cercano di seguire le tue attività sul Web.\n\nScopri ulteriori informazioni nella nostra informativa sulla privacy.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Il nostro browser, supportato da un’organizzazione senza fini di lucro, blocca automaticamente le società che, di nascosto, cercano di seguire le tue attività sul Web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Il nostro browser, supportato da un’organizzazione senza fini di lucro, blocca automaticamente le società che, di nascosto, cercano di seguire le tue attività sul Web.\n\nScopri ulteriori informazioni nella nostra informativa sulla privacy.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">informativa sulla privacy</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">informativa sulla privacy</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Imposta come browser predefinito</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

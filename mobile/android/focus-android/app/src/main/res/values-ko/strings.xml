@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">바로가기에서 제거</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">새로운 기능</string>
     <string name="menu_settings">설정</string>
     <string name="menu_about">정보</string>
     <string name="menu_help">도움말</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">다음으로 공유</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">방문 기록을 삭제하시겠습니까?</string>
+    <string name="notification_erase_text_android_14">검색 기록을 안전하게 삭제하려면 이 알림을 탭하거나 지우세요.</string>
+
     <string name="notification_erase_text">방문 기록 지우기</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

@@ -321,13 +321,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">ھازىر ئەمەس</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox شەخسىيەت ئۇقتۇرۇشى</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">بىخەتەرلىكىڭىزنى ساقلاشنى ياخشى كۆرىمىز</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">پايدا تاپمايدىغان ئورگان قوللايدىغان توركۆرگۈمىز شىركەتلەرنىڭ سىزنى مەخپىي ھالدا توردىن ئىزلىشىنى توختىتىشىغا ياردەم بېرىدۇ.\n\nشەخسىيەت ئۇقتۇرۇشى ھەققىدىكى تەپسىلات بىلدۈرگۈسى.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">پايدا تاپمايدىغان توركۆرگۈمىز شىركەتلەرنىڭ سىزگە تور بېكەتلەردە مەخپىي ھالدا ئەگىشىشىنى توسىدۇ.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">پايدا تاپمايدىغان ئورگان قوللايدىغان توركۆرگۈمىز شىركەتلەرنىڭ سىزنى مەخپىي ھالدا توردىن ئىزلىشىنى توختىتىشىغا ياردەم بېرىدۇ.\n\nشەخسىيەت ئۇقتۇرۇشى ھەققىدىكى تەپسىلات بىلدۈرگۈسى.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">شەخسىيەت ئۇقتۇرۇشى</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">شەخسىيەت ئۇقتۇرۇشى</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">كۆڭۈلدىكى توركۆرگۈ قىلىپ تەڭشە</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

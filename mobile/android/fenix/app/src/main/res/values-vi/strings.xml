@@ -326,14 +326,19 @@
     <string name="onboarding_home_enable_notifications_negative_button">Không phải bây giờ</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Thông báo về quyền riêng tư Firefox</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Chúng tôi thích giữ an toàn cho bạn</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Trình duyệt được tài trợ bởi tổ chức phi lợi nhuận của chúng tôi giúp ngăn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm về thông báo quyền riêng tư của chúng tôi.
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Trình duyệt được hỗ trợ phi lợi nhuận của chúng tôi giúp ngăn các công ty bí mật theo dõi bạn trên web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Trình duyệt được tài trợ bởi tổ chức phi lợi nhuận của chúng tôi giúp ngăn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm về thông báo quyền riêng tư của chúng tôi.
 </string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">thông báo bảo mật</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">thông báo bảo mật</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Đặt làm trình duyệt mặc định</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

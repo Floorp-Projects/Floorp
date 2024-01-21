@@ -328,13 +328,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ne zdaj</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Obvestilo o zasebnosti za Firefox</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Z veseljem skrbimo za vašo varnost</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Naš neprofitni brskalnik pomaga podjetjem preprečiti, da bi vam na skrivaj sledila po spletu.\n\nVeč o tem v našem pravilniku o zasebnosti.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Naš neprofitni brskalnik preprečuje podjetjem, da bi vas skrivaj spremljala po spletu.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Naš neprofitni brskalnik pomaga podjetjem preprečiti, da bi vam na skrivaj sledila po spletu.\n\nVeč o tem v našem pravilniku o zasebnosti.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">obvestilu o zasebnosti</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">obvestilu o zasebnosti</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Nastavi kot privzeti brskalnik</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -2474,7 +2479,33 @@
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">Prekliči</string>
 
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+    <string name="download_language_file_dialog_positive_button_text">Prenesi</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">Prenesi in prevedi</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">Prekliči</string>
 
-    </resources>
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title">Orodja za zavihke</string>
+    <!-- The title of the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_title">Št. zavihkov</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_normal">Dejavni</string>
+    <!-- The inactive tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_inactive">Nedejavni</string>
+    <!-- The private tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_private">Zasebni</string>
+    <!-- The total tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_total">Skupaj</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Orodje za ustvarjanje zavihkov</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Količina zavihkov, ki jih želite ustvariti</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Dodaj med dejavne zavihke</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Dodaj med nedejavne zavihke</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Dodaj med zasebne zavihke</string>
+</resources>

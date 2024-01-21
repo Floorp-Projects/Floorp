@@ -325,13 +325,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ոչ հիմա</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox֊ի գաղտնիության ծանուցում</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Մենք սիրում ենք ձեզ ապահով պահել</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Մեր շահույթ չհետապնդող զննարկիչը օգնում է դադարեցնել ընկերություններին գաղտնի հետևել ձեզ համացանցում:\n\nԻմացեք ավելին մեր գաղտնիության ծանուցման մեջ:</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Մեր շահույթ չհետապնդող զննարկիչն օգնում է դադարեցնել ընկերությունների կողմից համացանցում ձեզ գաղտնի հետևելը:</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Մեր շահույթ չհետապնդող զննարկիչը օգնում է դադարեցնել ընկերություններին գաղտնի հետևել ձեզ համացանցում:\n\nԻմացեք ավելին մեր գաղտնիության ծանուցման մեջ:</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">գաղտնիության ծանուցում</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">գաղտնիության ծանուցում</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Կայել որպես սկզբնադիր դիտարկիչ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
