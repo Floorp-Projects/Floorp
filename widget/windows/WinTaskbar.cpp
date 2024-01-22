@@ -441,33 +441,6 @@ WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
 }
 
 NS_IMETHODIMP
-WinTaskbar::GetGroupIdForWindow(mozIDOMWindow* aParent,
-                                nsAString& aIdentifier) {
-  NS_ENSURE_ARG_POINTER(aParent);
-  HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aParent), GA_ROOT);
-  if (!toplevelHWND) return NS_ERROR_INVALID_ARG;
-  RefPtr<IPropertyStore> pPropStore;
-  if (FAILED(SHGetPropertyStoreForWindow(toplevelHWND, IID_IPropertyStore,
-                                         getter_AddRefs(pPropStore)))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  PROPVARIANT pv;
-  PropVariantInit(&pv);
-  auto cleanupPropVariant = MakeScopeExit([&] { PropVariantClear(&pv); });
-  if (FAILED(pPropStore->GetValue(PKEY_AppUserModel_ID, &pv))) {
-    return NS_ERROR_FAILURE;
-  }
-  if (pv.vt != VT_LPWSTR) {
-    // This can happen when there is no window specific group ID set
-    // It's not an error case so we have to check for empty strings
-    // returned from the function.
-    return NS_OK;
-  }
-  aIdentifier.Assign(char16ptr_t(pv.pwszVal));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WinTaskbar::SetGroupIdForWindow(mozIDOMWindow* aParent,
                                 const nsAString& aIdentifier) {
   return SetWindowAppUserModelProp(aParent, nsString(aIdentifier));
