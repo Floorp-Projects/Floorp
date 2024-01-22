@@ -46,11 +46,6 @@ impl AppServicesLogger {
     xpcom_method!(register => Register(target: *const nsAString, logger: *const mozIServicesLogSink));
     fn register(&self, target: &nsAString, logger: &mozIServicesLogSink) -> Result<(), nsresult> {
         let log_sink_logger = LogSink::with_logger(Some(logger))?;
-        let max_level = cmp::max(log::max_level(), log_sink_logger.max_level);
-
-        // Note: This will only work if the max_level is lower than the compile-time
-        // max_level_* filter.
-        log::set_max_level(max_level);
 
         ensure_observing_shutdown();
 
