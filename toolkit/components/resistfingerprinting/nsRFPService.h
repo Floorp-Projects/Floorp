@@ -424,6 +424,7 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   nsresult GetBrowsingSessionKey(const OriginAttributes& aOriginAttributes,
                                  nsID& aBrowsingSessionKey);
   void ClearBrowsingSessionKey(const OriginAttributesPattern& aPattern);
+  void ClearBrowsingSessionKey(const OriginAttributes& aOriginAttributes);
 
   // The keys that represent the browsing session. The lifetime of the key ties
   // to the browsing session. For normal windows, the key is generated when

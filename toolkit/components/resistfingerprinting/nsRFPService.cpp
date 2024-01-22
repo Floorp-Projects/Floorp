@@ -1187,6 +1187,15 @@ void nsRFPService::ClearBrowsingSessionKey(
   }
 }
 
+void nsRFPService::ClearBrowsingSessionKey(
+    const OriginAttributes& aOriginAttributes) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsAutoCString key;
+  aOriginAttributes.CreateSuffix(key);
+
+  mBrowsingSessionKeys.Remove(key);
+}
+
 // static
 Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1268,6 +1277,115 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
   }
 
   return key;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanAllRandomKeys() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  mBrowsingSessionKeys.Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanRandomKeyByPrincipal(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
+
+  OriginAttributes attrs = aPrincipal->OriginAttributesRef();
+  nsCOMPtr<nsIURI> uri = aPrincipal->GetURI();
+  attrs.SetPartitionKey(uri);
+
+  ClearBrowsingSessionKey(attrs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanRandomKeyByDomain(const nsACString& aDomain) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Get http URI from the domain.
+  nsCOMPtr<nsIURI> httpURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(httpURI), "http://"_ns + aDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the originAttributes to get the partitionKey.
+  OriginAttributes attrs;
+  attrs.SetPartitionKey(httpURI);
+
+  // Create a originAttributesPattern and set the http partitionKey to the
+  // pattern.
+  OriginAttributesPattern pattern;
+  pattern.mPartitionKey.Reset();
+  pattern.mPartitionKey.Construct(attrs.mPartitionKey);
+
+  ClearBrowsingSessionKey(pattern);
+
+  // Get https URI from the domain.
+  nsCOMPtr<nsIURI> httpsURI;
+  rv = NS_NewURI(getter_AddRefs(httpsURI), "https://"_ns + aDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the originAttributes to get the partitionKey and set to the pattern.
+  attrs.SetPartitionKey(httpsURI);
+  pattern.mPartitionKey.Reset();
+  pattern.mPartitionKey.Construct(attrs.mPartitionKey);
+
+  ClearBrowsingSessionKey(pattern);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanRandomKeyByHost(const nsACString& aHost,
+                                   const nsAString& aPattern) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  OriginAttributesPattern pattern;
+  if (!pattern.Init(aPattern)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Get http URI from the host.
+  nsCOMPtr<nsIURI> httpURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(httpURI), "http://"_ns + aHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the originAttributes to get the partitionKey.
+  OriginAttributes attrs;
+  attrs.SetPartitionKey(httpURI);
+
+  // Set the partitionKey to the pattern.
+  pattern.mPartitionKey.Reset();
+  pattern.mPartitionKey.Construct(attrs.mPartitionKey);
+
+  ClearBrowsingSessionKey(pattern);
+
+  // Get https URI from the host.
+  nsCOMPtr<nsIURI> httpsURI;
+  rv = NS_NewURI(getter_AddRefs(httpsURI), "https://"_ns + aHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the originAttributes to get the partitionKey and set to the pattern.
+  attrs.SetPartitionKey(httpsURI);
+  pattern.mPartitionKey.Reset();
+  pattern.mPartitionKey.Construct(attrs.mPartitionKey);
+
+  ClearBrowsingSessionKey(pattern);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanRandomKeyByOriginAttributesPattern(
+    const nsAString& aPattern) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  OriginAttributesPattern pattern;
+  if (!pattern.Init(aPattern)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  ClearBrowsingSessionKey(pattern);
+  return NS_OK;
 }
 
 // static
