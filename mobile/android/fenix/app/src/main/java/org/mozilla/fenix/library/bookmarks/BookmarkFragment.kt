@@ -281,6 +281,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         context?.let {
             requireContext().bookmarkStorage
                 .getTree(guid, recursive)
+                ?.minus(pendingBookmarksToDelete)
                 ?.let { desktopFolders.withOptionalDesktopFolders(it) }
         }
     }
