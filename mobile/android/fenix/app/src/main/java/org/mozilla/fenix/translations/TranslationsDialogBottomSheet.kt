@@ -67,45 +67,29 @@ private val ICON_SIZE = 24.dp
 /**
  * Firefox Translations bottom sheet dialog.
  *
+ * @param translationsDialogState The current state of the Translations bottom sheet dialog.
  * @param learnMoreUrl The learn more link for translations website.
- * @param showFirstTimeTranslation Whether translations first flow should be shown.
- * @param translateFromLanguages Translation menu items to be shown in the translate from dropdown.
- * @param translateToLanguages Translation menu items are to be shown in the translate to dropdown.
- * @param initialFrom The initial selection for the translate from dropdown.
- * @param initialTo The initial selection for the translate to dropdown.
- * @param translationError The type of translation errors that can occur.
+ * @param showFirstTimeFlow Whether translations first flow should be shown.
  * @param onSettingClicked Invoked when the user clicks on the settings button.
  * @param onLearnMoreClicked Invoked when the user clicks on the "Learn More" button.
- * @param onTranslateButtonClicked Invoked when the user clicks on the "Translate" button.
- * @param onNotNowButtonClicked Invoked when the user clicks on the "Not Now" button.
- * @param onFromSelected Invoked when the user selects an item on the from dropdown.
- * @param onToSelected Invoked when the user selects an item on the to dropdown.
+ * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
+ * @param onNegativeButtonClicked Invoked when the user clicks on the negative button.
+ * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
+ * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
  */
-@Composable
 @Suppress("LongParameterList")
+@Composable
 fun TranslationsDialogBottomSheet(
+    translationsDialogState: TranslationsDialogState,
     learnMoreUrl: String,
-    showFirstTimeTranslation: Boolean,
-    translateFromLanguages: List<Language>?,
-    translateToLanguages: List<Language>?,
-    initialFrom: Language? = null,
-    initialTo: Language? = null,
-    translationError: TranslationError? = null,
+    showFirstTimeFlow: Boolean = false,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
-    onTranslateButtonClicked: () -> Unit,
-    onNotNowButtonClicked: () -> Unit,
-    onFromSelected: (Language) -> Unit,
-    onToSelected: (Language) -> Unit,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
 ) {
-    var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
-
-    val configuration = LocalConfiguration.current
-
-    LaunchedEffect(configuration) {
-        snapshotFlow { configuration.orientation }.collect { orientation = it }
-    }
-
     Column(
         modifier = Modifier.padding(16.dp),
     ) {
@@ -116,142 +100,347 @@ fun TranslationsDialogBottomSheet(
         )
 
         TranslationsDialogHeader(
-            showFirstTimeTranslation = showFirstTimeTranslation,
+            title = if (
+                translationsDialogState.isTranslated && translationsDialogState.translatedPageTitle != null
+            ) {
+                translationsDialogState.translatedPageTitle
+            } else {
+                getTranslationsDialogTitle(
+                    showFirstTime = showFirstTimeFlow,
+                )
+            },
             onSettingClicked = onSettingClicked,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (showFirstTimeTranslation) {
+        if (showFirstTimeFlow) {
             TranslationsDialogInfoMessage(
                 learnMoreUrl = learnMoreUrl,
                 onLearnMoreClicked = onLearnMoreClicked,
             )
         }
 
-        translationError?.let {
-            TranslationErrorWarning(translationError)
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        if (translationError !is TranslationError.CouldNotLoadLanguagesError &&
-            translateFromLanguages != null && translateToLanguages != null
-        ) {
-            when (orientation) {
-                Configuration.ORIENTATION_LANDSCAPE -> {
-                    TranslationsDialogContentInLandscapeMode(
-                        translateFromLanguages = translateFromLanguages,
-                        translateToLanguages = translateToLanguages,
-                        initialFrom = initialFrom,
-                        initialTo = initialTo,
-                        onFromSelected = onFromSelected,
-                        onToSelected = onToSelected,
-                    )
-                }
-
-                else -> {
-                    TranslationsDialogContentInPortraitMode(
-                        translateFromLanguages = translateFromLanguages,
-                        translateToLanguages = translateToLanguages,
-                        initialFrom = initialFrom,
-                        initialTo = initialTo,
-                        onFromSelected = onFromSelected,
-                        onToSelected = onToSelected,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        TranslationsDialogActionButtons(
-            translationError = translationError,
-            onTranslateButtonClicked = onTranslateButtonClicked,
-            onNotNowButtonClicked = onNotNowButtonClicked,
+        DialogContentBaseOnTranslationState(
+            translationsDialogState = translationsDialogState,
+            learnMoreUrl = learnMoreUrl,
+            onLearnMoreClicked = onLearnMoreClicked,
+            onPositiveButtonClicked = onPositiveButtonClicked,
+            onNegativeButtonClicked = onNegativeButtonClicked,
+            onFromDropdownSelected = onFromDropdownSelected,
+            onToDropdownSelected = onToDropdownSelected,
         )
     }
 }
 
+/**
+ * Dialog content will adapt based on the [TranslationsDialogState].
+ *
+ * @param translationsDialogState The current state of the Translations bottom sheet dialog.
+ * @param learnMoreUrl The learn more link for translations website.
+ * @param onLearnMoreClicked Invoked when the user clicks on the learn more button.
+ * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
+ * @param onNegativeButtonClicked Invoked when the user clicks on the negative button.
+ * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
+ * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
+ */
 @Composable
-private fun TranslationsDialogContentInPortraitMode(
-    translateFromLanguages: List<Language>,
-    translateToLanguages: List<Language>,
-    initialFrom: Language? = null,
-    initialTo: Language? = null,
-    onFromSelected: (Language) -> Unit,
-    onToSelected: (Language) -> Unit,
-
+private fun DialogContentBaseOnTranslationState(
+    translationsDialogState: TranslationsDialogState,
+    learnMoreUrl: String,
+    onLearnMoreClicked: () -> Unit,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
 ) {
-    Column {
-        TranslationsDropdown(
-            header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
-            modifier = Modifier.fillMaxWidth(),
-            translateLanguages = translateFromLanguages,
-            initiallySelected = initialFrom,
-            onLanguageSelection = onFromSelected,
+    if (translationsDialogState.error != null) {
+        DialogContentAnErrorOccurred(
+            error = translationsDialogState.error,
+            learnMoreUrl = learnMoreUrl,
+            onLearnMoreClicked = onLearnMoreClicked,
+            fromLanguages = translationsDialogState.fromLanguages,
+            toLanguages = translationsDialogState.toLanguages,
+            initialFrom = translationsDialogState.initialFrom,
+            initialTo = translationsDialogState.initialTo,
+            onFromDropdownSelected = onFromDropdownSelected,
+            onToDropdownSelected = onToDropdownSelected,
+            onPositiveButtonClicked = onPositiveButtonClicked,
+            onNegativeButtonClicked = onNegativeButtonClicked,
+        )
+    } else if (translationsDialogState.isTranslated) {
+        DialogContentTranslated(
+            translateToLanguages = translationsDialogState.toLanguages,
+            onFromDropdownSelected = onFromDropdownSelected,
+            onToDropdownSelected = onToDropdownSelected,
+            onPositiveButtonClicked = onPositiveButtonClicked,
+            onNegativeButtonClicked = onNegativeButtonClicked,
+            positiveButtonType = translationsDialogState.positiveButtonType,
+            initialTo = translationsDialogState.initialTo,
+        )
+    } else {
+        Spacer(modifier = Modifier.height(14.dp))
+
+        TranslationsDialogContent(
+            translateFromLanguages = translationsDialogState.fromLanguages,
+            translateToLanguages = translationsDialogState.toLanguages,
+            initialFrom = translationsDialogState.initialFrom,
+            initialTo = translationsDialogState.initialTo,
+            onFromDropdownSelected = onFromDropdownSelected,
+            onToDropdownSelected = onToDropdownSelected,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TranslationsDropdown(
-            header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
-            modifier = Modifier.fillMaxWidth(),
-            translateLanguages = translateToLanguages,
-            initiallySelected = initialTo,
-            onLanguageSelection = onToSelected,
+        TranslationsDialogActionButtons(
+            positiveButtonText = stringResource(id = R.string.translations_bottom_sheet_positive_button),
+            negativeButtonText = stringResource(id = R.string.translations_bottom_sheet_negative_button),
+            positiveButtonType = translationsDialogState.positiveButtonType,
+            onNegativeButtonClicked = onNegativeButtonClicked,
+            onPositiveButtonClicked = onPositiveButtonClicked,
         )
+    }
+}
+
+/**
+ * Dialog content if the web page was translated.
+ *
+ * @param translateToLanguages Translation menu items to be shown in the translate to dropdown.
+ * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
+ * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
+ * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
+ * @param onNegativeButtonClicked Invoked when the user clicks on the negative button.
+ * @param positiveButtonType Can be enabled,disabled or in progress. If it is null, the button will be disabled.
+ * @param initialTo Initial "to" language, based on the translation state and page state.
+ */
+@Composable
+private fun DialogContentTranslated(
+    translateToLanguages: List<Language>?,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
+    positiveButtonType: PositiveButtonType? = null,
+    initialTo: Language? = null,
+) {
+    Spacer(modifier = Modifier.height(14.dp))
+
+    TranslationsDialogContent(
+        translateToLanguages = translateToLanguages,
+        initialTo = initialTo,
+        onFromDropdownSelected = onFromDropdownSelected,
+        onToDropdownSelected = onToDropdownSelected,
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    TranslationsDialogActionButtons(
+        positiveButtonText = stringResource(id = R.string.translations_bottom_sheet_positive_button),
+        negativeButtonText = stringResource(id = R.string.translations_bottom_sheet_negative_button_restore),
+        positiveButtonType = positiveButtonType,
+        onPositiveButtonClicked = onPositiveButtonClicked,
+        onNegativeButtonClicked = onNegativeButtonClicked,
+    )
+}
+
+/**
+ * Dialog content if an [TranslationError] appears during the translation process.
+ *
+ * @param error An error that can occur during the translation process.
+ * @param learnMoreUrl The learn more link for translations website.
+ * @param onLearnMoreClicked Invoked when the user clicks on the learn more button.
+ * @param fromLanguages Translation menu items to be shown in the translate from dropdown.
+ * @param toLanguages Translation menu items to be shown in the translate to dropdown.
+ * @param initialFrom Initial "from" language, based on the translation state and page state.
+ * @param initialTo Initial "to" language, based on the translation state and page state.
+ * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
+ * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
+ * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
+ * @param onNegativeButtonClicked Invoked when the user clicks on the negative button.
+ */
+@Suppress("LongParameterList")
+@Composable
+private fun DialogContentAnErrorOccurred(
+    error: TranslationError,
+    learnMoreUrl: String,
+    onLearnMoreClicked: () -> Unit,
+    fromLanguages: List<Language>?,
+    toLanguages: List<Language>?,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
+) {
+    TranslationErrorWarning(
+        error,
+        learnMoreUrl = learnMoreUrl,
+        onLearnMoreClicked = onLearnMoreClicked,
+    )
+
+    Spacer(modifier = Modifier.height(14.dp))
+
+    if (error !is TranslationError.CouldNotLoadLanguagesError) {
+        TranslationsDialogContent(
+            translateFromLanguages = fromLanguages,
+            translateToLanguages = toLanguages,
+            initialFrom = initialFrom,
+            initialTo = initialTo,
+            onFromDropdownSelected = onFromDropdownSelected,
+            onToDropdownSelected = onToDropdownSelected,
+        )
+    }
+
+    val negativeButtonTitle = if (error is TranslationError.LanguageNotSupportedError) {
+        stringResource(id = R.string.translations_bottom_sheet_negative_button_error)
+    } else {
+        stringResource(id = R.string.translations_bottom_sheet_negative_button)
+    }
+
+    val positiveButtonTitle = if (error is TranslationError.CouldNotLoadLanguagesError) {
+        stringResource(id = R.string.translations_bottom_sheet_positive_button_error)
+    } else {
+        stringResource(id = R.string.translations_bottom_sheet_positive_button)
+    }
+
+    val positiveButtonType = if (error is TranslationError.LanguageNotSupportedError) {
+        PositiveButtonType.Disabled
+    } else {
+        PositiveButtonType.Enabled
+    }
+
+    TranslationsDialogActionButtons(
+        positiveButtonText = positiveButtonTitle,
+        negativeButtonText = negativeButtonTitle,
+        positiveButtonType = positiveButtonType,
+        onNegativeButtonClicked = onNegativeButtonClicked,
+        onPositiveButtonClicked = onPositiveButtonClicked,
+    )
+}
+
+@Composable
+private fun TranslationsDialogContent(
+    translateFromLanguages: List<Language>? = null,
+    translateToLanguages: List<Language>? = null,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
+) {
+    var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
+
+    val configuration = LocalConfiguration.current
+
+    LaunchedEffect(configuration) {
+        snapshotFlow { configuration.orientation }.collect { orientation = it }
+    }
+    when (orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            TranslationsDialogContentInLandscapeMode(
+                translateFromLanguages = translateFromLanguages,
+                translateToLanguages = translateToLanguages,
+                initialFrom = initialFrom,
+                initialTo = initialTo,
+                onFromDropdownSelected = onFromDropdownSelected,
+                onToDropdownSelected = onToDropdownSelected,
+            )
+        }
+
+        else -> {
+            TranslationsDialogContentInPortraitMode(
+                translateFromLanguages = translateFromLanguages,
+                translateToLanguages = translateToLanguages,
+                initialFrom = initialFrom,
+                initialTo = initialTo,
+                onFromDropdownSelected = onFromDropdownSelected,
+                onToDropdownSelected = onToDropdownSelected,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+}
+
+@Composable
+private fun TranslationsDialogContentInPortraitMode(
+    translateFromLanguages: List<Language>? = null,
+    translateToLanguages: List<Language>? = null,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
+) {
+    Column {
+        translateFromLanguages?.let {
+            TranslationsDropdown(
+                header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
+                modifier = Modifier.fillMaxWidth(),
+                isInLandscapeMode = false,
+                translateLanguages = translateFromLanguages,
+                initiallySelected = initialFrom,
+                onLanguageSelection = onFromDropdownSelected,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        translateToLanguages?.let {
+            TranslationsDropdown(
+                header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
+                modifier = Modifier.fillMaxWidth(),
+                isInLandscapeMode = false,
+                translateLanguages = it,
+                initiallySelected = initialTo,
+                onLanguageSelection = onToDropdownSelected,
+            )
+        }
     }
 }
 
 @Composable
 private fun TranslationsDialogContentInLandscapeMode(
-    translateFromLanguages: List<Language>,
-    translateToLanguages: List<Language>,
+    translateFromLanguages: List<Language>? = null,
+    translateToLanguages: List<Language>? = null,
     initialFrom: Language? = null,
     initialTo: Language? = null,
-    onFromSelected: (Language) -> Unit,
-    onToSelected: (Language) -> Unit,
+    onFromDropdownSelected: (Language) -> Unit,
+    onToDropdownSelected: (Language) -> Unit,
 ) {
     Column {
         Row {
-            TranslationsDropdown(
-                header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
-                modifier = Modifier.weight(1f),
-                isInLandscapeMode = true,
-                translateLanguages = translateFromLanguages,
-                initiallySelected = initialFrom,
-                onLanguageSelection = onFromSelected,
-            )
+            translateFromLanguages?.let {
+                TranslationsDropdown(
+                    header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
+                    modifier = Modifier.weight(1f),
+                    isInLandscapeMode = true,
+                    translateLanguages = translateFromLanguages,
+                    initiallySelected = initialFrom,
+                    onLanguageSelection = onFromDropdownSelected,
+                )
 
-            Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+            }
 
-            TranslationsDropdown(
-                header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
-                modifier = Modifier.weight(1f),
-                isInLandscapeMode = true,
-                translateLanguages = translateToLanguages,
-                initiallySelected = initialTo,
-                onLanguageSelection = onToSelected,
-            )
+            translateToLanguages?.let {
+                TranslationsDropdown(
+                    header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
+                    modifier = Modifier.weight(1f),
+                    isInLandscapeMode = true,
+                    translateLanguages = it,
+                    initiallySelected = initialTo,
+                    onLanguageSelection = onToDropdownSelected,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun TranslationsDialogHeader(
-    showFirstTimeTranslation: Boolean,
+    title: String,
     onSettingClicked: () -> Unit,
 ) {
-    val title: String = if (showFirstTimeTranslation) {
-        stringResource(
-            id = R.string.translations_bottom_sheet_title_first_time,
-            stringResource(id = R.string.firefox),
-        )
-    } else {
-        stringResource(id = R.string.translations_bottom_sheet_title)
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -280,7 +469,11 @@ private fun TranslationsDialogHeader(
 }
 
 @Composable
-private fun TranslationErrorWarning(translationError: TranslationError) {
+private fun TranslationErrorWarning(
+    translationError: TranslationError,
+    learnMoreUrl: String,
+    onLearnMoreClicked: () -> Unit,
+) {
     val modifier = Modifier
         .padding(top = 8.dp)
         .fillMaxWidth()
@@ -303,6 +496,9 @@ private fun TranslationErrorWarning(translationError: TranslationError) {
         }
 
         is TranslationError.LanguageNotSupportedError -> {
+            val learnMoreText =
+                stringResource(id = R.string.translation_error_language_not_supported_learn_more)
+
             ReviewQualityCheckInfoCard(
                 title = stringResource(
                     id = R.string.translation_error_language_not_supported_warning_text,
@@ -313,9 +509,9 @@ private fun TranslationErrorWarning(translationError: TranslationError) {
                 footer = stringResource(
                     id = R.string.translation_error_language_not_supported_learn_more,
                 ) to LinkTextState(
-                    text = stringResource(id = R.string.translation_error_language_not_supported_learn_more),
-                    url = "https://www.mozilla.org",
-                    onClick = {},
+                    text = learnMoreText,
+                    url = learnMoreUrl,
+                    onClick = { onLearnMoreClicked() },
                 ),
             )
         }
@@ -353,22 +549,13 @@ private fun TranslationsDialogInfoMessage(
     }
 }
 
-/**
- * Creates a dropdown with language selection to use to select languages for translation.
- *
- * @param header The title of the dropdown.
- * @param translateLanguages The language choices the dropdown should provide.
- * @param modifier Any modifiers for the component.
- * @param isInLandscapeMode If the item should layout for landscape mode.
- * @param initiallySelected The language initially selected, if null will show "Choose a language".
- * @param onLanguageSelection Callback for the selected language.
- */
+@Suppress("LongMethod")
 @Composable
 private fun TranslationsDropdown(
     header: String,
     translateLanguages: List<Language>,
     modifier: Modifier = Modifier,
-    isInLandscapeMode: Boolean = false,
+    isInLandscapeMode: Boolean,
     initiallySelected: Language? = null,
     onLanguageSelection: (Language) -> Unit,
 ) {
@@ -396,7 +583,8 @@ private fun TranslationsDropdown(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        var initialValue = stringResource(R.string.translations_bottom_sheet_default_dropdown_selection)
+        var initialValue =
+            stringResource(R.string.translations_bottom_sheet_default_dropdown_selection)
         initiallySelected?.localizedDisplayName?.let {
             initialValue = it
         }
@@ -423,19 +611,21 @@ private fun TranslationsDropdown(
                     onDismissRequest = {
                         expanded = false
                     },
-
                     menuItems = getContextMenuItems(
                         translateLanguages = translateLanguages,
-                        onClickItem = onLanguageSelection,
+                        selectedLanguage = initiallySelected,
+                        onClickItem = {
+                            onLanguageSelection(it)
+                        },
                     ),
-
                     modifier = Modifier
                         .onGloballyPositioned { coordinates ->
                             contextMenuWidthDp = with(density) {
                                 coordinates.size.width.toDp()
                             }
                         }
-                        .requiredSizeIn(maxHeight = 200.dp),
+                        .requiredSizeIn(maxHeight = 200.dp)
+                        .padding(horizontal = if (initiallySelected == null) 36.dp else 4.dp),
                     offset = if (isInLandscapeMode) {
                         DpOffset(
                             -contextMenuWidthDp + ICON_SIZE,
@@ -455,8 +645,21 @@ private fun TranslationsDropdown(
     }
 }
 
+@Composable
+private fun getTranslationsDialogTitle(
+    showFirstTime: Boolean = false,
+) = if (showFirstTime) {
+    stringResource(
+        id = R.string.translations_bottom_sheet_title_first_time,
+        stringResource(id = R.string.firefox),
+    )
+} else {
+    stringResource(id = R.string.translations_bottom_sheet_title)
+}
+
 private fun getContextMenuItems(
     translateLanguages: List<Language>,
+    selectedLanguage: Language? = null,
     onClickItem: (Language) -> Unit,
 ): List<MenuItem> {
     val menuItems = mutableListOf<MenuItem>()
@@ -465,6 +668,7 @@ private fun getContextMenuItems(
             menuItems.add(
                 MenuItem(
                     title = it,
+                    isChecked = item == selectedLanguage,
                     onClick = {
                         onClickItem(item)
                     },
@@ -477,64 +681,52 @@ private fun getContextMenuItems(
 
 @Composable
 private fun TranslationsDialogActionButtons(
-    translationError: TranslationError? = null,
-    onTranslateButtonClicked: () -> Unit,
-    onNotNowButtonClicked: () -> Unit,
+    positiveButtonText: String,
+    negativeButtonText: String,
+    positiveButtonType: PositiveButtonType? = null,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
 ) {
-    val isTranslationInProgress = remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val negativeButtonTitle =
-            if (translationError is TranslationError.LanguageNotSupportedError) {
-                stringResource(id = R.string.translations_bottom_sheet_negative_button_error)
-            } else {
-                stringResource(id = R.string.translations_bottom_sheet_negative_button)
-            }
-
         TextButton(
-            text = negativeButtonTitle,
+            text = negativeButtonText,
             modifier = Modifier,
-            onClick = onNotNowButtonClicked,
+            onClick = onNegativeButtonClicked,
         )
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        if (isTranslationInProgress.value) {
-            DownloadIndicator(
-                text = stringResource(id = R.string.translations_bottom_sheet_translating_in_progress),
-                contentDescription = stringResource(
-                    id = R.string.translations_bottom_sheet_translating_in_progress_content_description,
-                ),
-                icon = painterResource(id = R.drawable.mozac_ic_sync_24),
-            )
-        } else {
-            val positiveButtonTitle =
-                if (translationError is TranslationError.CouldNotLoadLanguagesError) {
-                    stringResource(id = R.string.translations_bottom_sheet_positive_button_error)
-                } else {
-                    stringResource(id = R.string.translations_bottom_sheet_positive_button)
-                }
+        when (positiveButtonType) {
+            PositiveButtonType.InProgress -> {
+                DownloadIndicator(
+                    text = positiveButtonText,
+                    contentDescription = stringResource(
+                        id = R.string.translations_bottom_sheet_translating_in_progress_content_description,
+                    ),
+                    icon = painterResource(id = R.drawable.mozac_ic_sync_24),
+                )
+            }
 
-            if (translationError is TranslationError.LanguageNotSupportedError) {
+            PositiveButtonType.Enabled -> {
+                PrimaryButton(
+                    text = positiveButtonText,
+                    modifier = Modifier.wrapContentSize(),
+                ) {
+                    onPositiveButtonClicked()
+                }
+            }
+
+            else -> {
                 TertiaryButton(
-                    text = positiveButtonTitle,
+                    text = positiveButtonText,
                     enabled = false,
                     modifier = Modifier.wrapContentSize(),
                 ) {
-                    isTranslationInProgress.value = true
-                    onTranslateButtonClicked()
-                }
-            } else {
-                PrimaryButton(
-                    text = positiveButtonTitle,
-                    modifier = Modifier.wrapContentSize(),
-                ) {
-                    isTranslationInProgress.value = true
-                    onTranslateButtonClicked()
+                    onPositiveButtonClicked()
                 }
             }
         }
@@ -546,19 +738,19 @@ private fun TranslationsDialogActionButtons(
 private fun TranslationsDialogBottomSheetPreview() {
     FirefoxTheme {
         TranslationsDialogBottomSheet(
+            translationsDialogState = TranslationsDialogState(
+                positiveButtonType = PositiveButtonType.Enabled,
+                toLanguages = getTranslateToLanguageList(),
+                fromLanguages = getTranslateFromLanguageList(),
+            ),
             learnMoreUrl = "",
-            showFirstTimeTranslation = true,
-            translationError = TranslationError.LanguageNotSupportedError(null),
-            translateFromLanguages = getTranslateFromLanguageList(),
-            translateToLanguages = getTranslateToLanguageList(),
-            initialFrom = null,
-            initialTo = null,
+            showFirstTimeFlow = true,
             onSettingClicked = {},
             onLearnMoreClicked = {},
-            onTranslateButtonClicked = {},
-            onNotNowButtonClicked = {},
-            onToSelected = {},
-            onFromSelected = {},
+            onPositiveButtonClicked = {},
+            onNegativeButtonClicked = {},
+            onFromDropdownSelected = {},
+            onToDropdownSelected = {},
         )
     }
 }

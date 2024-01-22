@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -52,6 +53,8 @@ import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
 import org.mozilla.fenix.shopping.ReviewQualityCheckFeature
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.translations.TranslationsDialogFragment.Companion.SESSION_ID
+import org.mozilla.fenix.translations.TranslationsDialogFragment.Companion.TRANSLATION_IN_PROGRESS
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -211,6 +214,26 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             owner = viewLifecycleOwner,
             view = binding.root,
         )
+
+        setTranslationFragmentResultListener()
+    }
+
+    private fun setTranslationFragmentResultListener() {
+        setFragmentResultListener(
+            TRANSLATION_IN_PROGRESS,
+        ) { _, result ->
+            result.getString(SESSION_ID)?.let {
+                if (it == getCurrentTab()?.id) {
+                    FenixSnackbar.make(
+                        view = binding.dynamicSnackbarContainer,
+                        duration = Snackbar.LENGTH_LONG,
+                        isDisplayedWithBrowserToolbar = true,
+                    )
+                        .setText(requireContext().getString(R.string.translation_in_progress_snackbar))
+                        .show()
+                }
+            }
+        }
     }
 
     private fun initTranslationsAction(context: Context) {

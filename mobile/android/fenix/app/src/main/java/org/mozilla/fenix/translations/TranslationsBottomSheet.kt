@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import mozilla.components.concept.engine.translate.Language
-import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
@@ -127,37 +126,29 @@ internal fun TranslationsOptionsAnimation(
     }
 }
 
-@Composable
 @Suppress("LongParameterList")
+@Composable
 internal fun TranslationsDialog(
+    translationsDialogState: TranslationsDialogState,
     learnMoreUrl: String,
-    showFirstTimeTranslation: Boolean,
-    translateFromLanguages: List<Language>?,
-    translateToLanguages: List<Language>?,
-    initialFrom: Language? = null,
-    initialTo: Language? = null,
-    translationError: TranslationError? = null,
+    showFirstTime: Boolean = false,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
-    onTranslateButtonClick: () -> Unit,
-    onNotNowButtonClick: () -> Unit,
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit,
     onFromSelected: (Language) -> Unit,
     onToSelected: (Language) -> Unit,
 ) {
     TranslationsDialogBottomSheet(
+        translationsDialogState = translationsDialogState,
         learnMoreUrl = learnMoreUrl,
-        showFirstTimeTranslation = showFirstTimeTranslation,
-        translationError = translationError,
-        translateFromLanguages = translateFromLanguages,
-        translateToLanguages = translateToLanguages,
-        initialFrom = initialFrom,
-        initialTo = initialTo,
+        showFirstTimeFlow = showFirstTime,
         onSettingClicked = onSettingClicked,
         onLearnMoreClicked = onLearnMoreClicked,
-        onTranslateButtonClicked = onTranslateButtonClick,
-        onNotNowButtonClicked = onNotNowButtonClick,
-        onFromSelected = onFromSelected,
-        onToSelected = onToSelected,
+        onPositiveButtonClicked = onPositiveButtonClicked,
+        onNegativeButtonClicked = onNegativeButtonClicked,
+        onFromDropdownSelected = onFromSelected,
+        onToDropdownSelected = onToSelected,
     )
 }
 
