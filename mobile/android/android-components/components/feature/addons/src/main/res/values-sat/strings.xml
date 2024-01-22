@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">ᱚᱱᱚᱞᱤᱭᱟᱹ :</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">ᱚᱱᱚᱞᱤᱭᱟᱹ ᱠᱚ</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">ᱚᱱᱚᱞᱤᱭᱟᱹ ᱠᱚ</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">ᱢᱩᱪᱟᱹᱫ ᱦᱟᱹᱞᱤᱭᱟᱜ</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">ᱵᱤᱵᱨᱚᱬ</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">ᱪᱷᱟᱹᱰ ᱠᱚ</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">ᱚᱪᱚᱜ ᱢᱮ</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">ᱠᱷᱚᱵᱚᱨ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -146,6 +148,12 @@
     <string name="mozac_feature_addons_addons_manager">ᱮᱰᱼᱚᱱᱥ ᱵᱮᱵᱚᱥᱛᱷᱟ</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text">ᱮᱰᱼᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">ᱢᱤᱫ ᱥᱮ ᱚᱱᱟ ᱠᱷᱚᱱ ᱰᱷᱮᱨ ᱮᱰ-ᱚᱱ ᱠᱚ ᱠᱟᱹᱢᱤ ᱵᱚᱸᱫ ᱮᱱᱟ, ᱟᱢᱟᱜ ᱥᱤᱥᱴᱚᱢ ᱵᱟᱹᱪᱠᱟᱹᱨ ᱮᱫᱟᱭ ᱾</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">ᱮᱰ-ᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱦᱚᱵ ᱢᱮ</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">ᱟᱨᱦᱚᱸ ᱮᱰ-ᱳᱱ ᱯᱟᱱᱛᱮ ᱧᱟᱢ ᱢᱮ</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -196,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ᱫᱚ ᱵᱟᱝ ᱵᱚᱦᱟᱞ ᱫᱟᱲᱮ ᱞᱮᱱᱟ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱣᱟ ᱫᱚ %2$s %3$s ᱥᱟᱞᱟᱜ ᱢᱮᱞ ᱵᱟᱭ ᱡᱚᱢ ᱞᱮᱫᱼᱟ ᱾</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s ᱫᱚ ᱵᱚᱦᱟᱞ ᱵᱟᱝ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱫᱼᱟ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱣᱟ ᱫᱚ ᱥᱴᱮᱵᱤᱞᱤᱴᱤ ᱟᱨᱵᱟᱝ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱦᱩᱰᱟᱹᱜ ᱢᱮᱱᱟᱜᱼᱟ ᱾</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ᱫᱚ ᱵᱚᱦᱟᱞ ᱵᱟᱝ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱫᱼᱟ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱣᱟ ᱫᱚ ᱥᱴᱮᱵᱤᱞᱤᱴᱤ ᱟᱨᱵᱟᱝ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱦᱩᱰᱟᱹᱜ ᱢᱮᱱᱟᱜᱼᱟ</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s ᱵᱮᱥ ᱛᱮ ᱮᱢ ᱪᱷᱚ</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -240,4 +246,6 @@
     <string name="mozac_feature_addons_installed_dialog_description">ᱢᱮᱱᱩ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     </resources>
