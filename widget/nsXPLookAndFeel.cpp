@@ -627,7 +627,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Inactiveborder, 0xB4, 0xB4, 0xB4)
       // deprecated in CSS Color Level 4, same as Canvas/Window:
       COLOR(Activecaption, 0xFF, 0xFF, 0xFF)
-      COLOR(Inactivecaption, 0xF0, 0xF0, 0xF4)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Inactivecaption, 0xFF, 0xFF, 0xFF)
       // deprecated in CSS Color Level 4, same as Canvastext/Windowtext:
       COLOR(Captiontext, 0x00, 0x00, 0x00)
       // deprecated in CSS Color Level 4, same as Graytext:
@@ -1277,15 +1278,16 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(Inactivecaptiontext) |
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
-    // Per spec, Activecaption, AppWorkspace, Background, Menu, Scrollbar should
-    // match Canvas/Window, see
+    // Per spec, Activecaption, AppWorkspace, Background, InactiveCaption, Menu,
+    // Scrollbar should match Canvas/Window, see
     // https://drafts.csswg.org/css-color-4/#valdef-color-activecaptiontext,
     // https://drafts.csswg.org/css-color-4/#valdef-color-appworkspace,
     // https://drafts.csswg.org/css-color-4/#valdef-color-background,
+    // https://drafts.csswg.org/css-color-4/#valdef-color-inactivecaption,
     // https://drafts.csswg.org/css-color-4/#valdef-color-menu, and
     // https://drafts.csswg.org/css-color-4/#valdef-color-scrollbar
     BIT_FOR(Activecaption) | BIT_FOR(Appworkspace) | BIT_FOR(Background) |
-    BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
+    BIT_FOR(Inactivecaption) | BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
     // Per spec, CaptionText and InfoText should match CanvasText/WindowText,
     // see https://drafts.csswg.org/css-color-4/#valdef-color-captiontext and
     // https://drafts.csswg.org/css-color-4/#valdef-color-infotext
