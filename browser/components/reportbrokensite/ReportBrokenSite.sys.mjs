@@ -17,9 +17,6 @@ class ViewState {
 
   currentTabURI;
   currentTabWebcompatDetailsPromise;
-  isURLValid = false;
-  isDescriptionValid = false;
-  #isReasonValid = false;
 
   constructor(doc) {
     this.#doc = doc;
@@ -63,7 +60,6 @@ class ViewState {
     const { currentURI } = this.#doc.ownerGlobal.gBrowser.selectedBrowser;
     this.currentTabURI = currentURI;
     this.urlInput.value = currentURI.spec;
-    this.isURLValid = true;
   }
 
   get descriptionInput() {
@@ -118,55 +114,56 @@ class ViewState {
     this.resetURLToCurrentTab();
 
     this.description = "";
-    this.isDescriptionValid = false;
 
     this.reason = "choose";
-    this.#isReasonValid = false;
-    this.toggleReasonValidationMessage(false);
+    this.showOrHideReasonValidationMessage(false);
+  }
+
+  get isURLValid() {
+    return this.urlInput.checkValidity();
   }
 
   get isReasonValid() {
-    return this.#isReasonValid;
+    const { reasonEnabled, reasonIsOptional } =
+      this.#doc.ownerGlobal.ReportBrokenSite;
+    return (
+      !reasonEnabled ||
+      reasonIsOptional ||
+      this.reasonInput.selectedItem.id !== ViewState.CHOOSE_A_REASON_OPT_ID
+    );
   }
 
-  set isReasonValid(isValid) {
-    this.#isReasonValid = isValid;
-    this.toggleReasonValidationMessage(!isValid);
-  }
-
-  toggleReasonValidationMessage(show) {
+  showOrHideReasonValidationMessage(showOrHide) {
+    // If showOrHide === true, show the message. If === false, hide it.
+    // Otherwise, show or hide based on whether the input is presently valid.
+    showOrHide = showOrHide ?? !this.isReasonValid;
     const validation = this.reasonInputValidationHelper;
-    validation.setCustomValidity(show ? "required" : "");
+    validation.setCustomValidity(showOrHide ? "required" : "");
     validation.reportValidity();
   }
 
-  get isReasonOkay() {
-    const { reasonEnabled, reasonIsOptional } =
-      this.#doc.ownerGlobal.ReportBrokenSite;
-    return !reasonEnabled || reasonIsOptional || this.isReasonValid;
-  }
-
-  get isDescriptionOkay() {
+  get isDescriptionValid() {
     const { descriptionIsOptional } = this.#doc.ownerGlobal.ReportBrokenSite;
-    return descriptionIsOptional || this.isDescriptionValid;
+    return (
+      descriptionIsOptional ||
+      gDescriptionCheckRE.test(this.descriptionInput.value)
+    );
   }
 
   checkAndShowInputValidity() {
     // This function focuses on the first invalid input (if any), updates the validity of
     // the helper input for the reason drop-down (so CSS :invalid state is updated),
     // and returns true if the form has an invalid input (false otherwise).
-    const { isURLValid, isReasonOkay, isDescriptionOkay } = this;
-    const validation = this.reasonInputValidationHelper;
-    validation.setCustomValidity(isReasonOkay ? "" : "missing");
-    validation.reportValidity();
+    this.showOrHideReasonValidationMessage();
+    const { isURLValid, isReasonValid, isDescriptionValid } = this;
     if (!isURLValid) {
       this.urlInput.focus();
-    } else if (!isReasonOkay) {
+    } else if (!isReasonValid) {
       this.reasonInput.openMenu(true);
-    } else if (!isDescriptionOkay) {
+    } else if (!isDescriptionValid) {
       this.descriptionInput.focus();
     }
-    return !(isURLValid && isReasonOkay && isDescriptionOkay);
+    return !(isURLValid && isReasonValid && isDescriptionValid);
   }
 
   get sendMoreInfoLink() {
@@ -497,27 +494,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       state.reset();
     });
 
-    state.urlInput.addEventListener("input", ({ target }) => {
-      const newUrlValid = target.value && target.checkValidity();
-      if (state.isURLValid != newUrlValid) {
-        state.isURLValid = newUrlValid;
-      }
-    });
-
-    state.descriptionInput.addEventListener("input", ({ target }) => {
-      const newDescValid = gDescriptionCheckRE.test(target.value);
-      if (state.isDescriptionValid != newDescValid) {
-        state.isDescriptionValid = newDescValid;
-      }
-    });
-
     const reasonDropdown = state.reasonInput;
-    reasonDropdown.addEventListener("command", ({ target }) => {
-      const choiceId = target.closest("menulist").selectedItem.id;
-      const newValidity = choiceId !== ViewState.CHOOSE_A_REASON_OPT_ID;
-      if (state.isReasonValid != newValidity) {
-        state.isReasonValid = newValidity;
-      }
+    reasonDropdown.addEventListener("command", () => {
+      state.showOrHideReasonValidationMessage();
     });
 
     this.#randomizeDropdownItems(reasonDropdown);
