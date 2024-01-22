@@ -24,12 +24,12 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/DOMCollectedFramesBinding.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_test.h"
@@ -2806,10 +2806,16 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds) {
   // 'ready' promise before continuing. Then we could remove the special
   // handling here and the code path followed when testing would more closely
   // match the code path during regular operation. Filed as bug 1112957.
+  nsCOMPtr<Document> doc = GetDocument();
+  if (doc) {
+    PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
+    if (tracker) {
+      tracker->TriggerPendingAnimationsNow();
+    }
+  }
+
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
-    presContext->Document()->Timeline()->TriggerAllPendingAnimationsNow();
-
     RefPtr<nsRefreshDriver> driver = presContext->RefreshDriver();
     driver->AdvanceTimeAndRefresh(aMilliseconds);
 
@@ -3971,6 +3977,32 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement, const nsAString& aProperty,
     return NS_OK;
   }
   aResult.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsAnimationInPendingTracker(dom::Animation* aAnimation,
+                                              bool* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+
+  if (!aAnimation) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  Document* doc = GetDocument();
+  if (!doc) {
+    *aRetVal = false;
+    return NS_OK;
+  }
+
+  PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
+  if (!tracker) {
+    *aRetVal = false;
+    return NS_OK;
+  }
+
+  *aRetVal = tracker->IsWaitingToPlay(*aAnimation) ||
+             tracker->IsWaitingToPause(*aAnimation);
   return NS_OK;
 }
 

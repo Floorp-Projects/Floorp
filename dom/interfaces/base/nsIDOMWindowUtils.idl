@@ -1935,6 +1935,12 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getOMTAStyle(in Element aElement, in AString aProperty,
                        [optional] in AString aPseudoElement);
 
+  /*
+   * Returns true if the given animation is being tracked by the pending
+   * animation tracker for the current document.
+   */
+  bool isAnimationInPendingTracker(in Animation aAnimation);
+
   /**
    * If aHandlingInput is true, this informs the event state manager that
    * we're handling user input, and provides transient user activation.

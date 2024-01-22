@@ -122,7 +122,7 @@ macro_rules! lnf_int_variable {
     }};
 }
 
-static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 7] = [
+static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 6] = [
     lnf_int_variable!(
         atom!("-moz-gtk-csd-titlebar-radius"),
         TitlebarRadius,
@@ -142,11 +142,6 @@ static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 7] = [
         atom!("-moz-gtk-csd-maximize-button-position"),
         GTKCSDMaximizeButtonPosition,
         integer
-    ),
-    lnf_int_variable!(
-        atom!("-moz-overlay-scrollbar-fade-duration"),
-        ScrollbarFadeDuration,
-        int_ms
     ),
     make_variable!(
         atom!("-moz-content-preferred-color-scheme"),
@@ -582,19 +577,6 @@ impl VariableValue {
                 value: number,
                 int_value: None,
                 unit: CowRcStr::from("px"),
-            },
-            url_data,
-        )
-    }
-
-    /// Create VariableValue from an integer amount of milliseconds.
-    fn int_ms(number: i32, url_data: &UrlExtraData) -> Self {
-        Self::from_token(
-            Token::Dimension {
-                has_sign: false,
-                value: number as f32,
-                int_value: Some(number),
-                unit: CowRcStr::from("ms"),
             },
             url_data,
         )

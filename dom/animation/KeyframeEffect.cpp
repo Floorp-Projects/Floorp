@@ -942,6 +942,7 @@ void KeyframeEffect::UpdateTarget(Element* aElement,
     nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
     if (mAnimation) {
       MutationObservers::NotifyAnimationAdded(mAnimation);
+      mAnimation->ReschedulePendingTasks();
     }
   }
 
@@ -2029,7 +2030,7 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
     }
 
     // We don't yet support off-main-thread background-color animations on
-    // canvas frame or on <html> or <body> which generate
+    // canvas frame or on <html> or <body> which genarate
     // nsDisplayCanvasBackgroundColor or nsDisplaySolidColor display item.
     if (aFrame->IsCanvasFrame() ||
         (aFrame->GetContent() &&

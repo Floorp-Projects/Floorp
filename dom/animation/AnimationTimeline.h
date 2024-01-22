@@ -10,7 +10,9 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "js/TypeDecls.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/Attributes.h"
 #include "nsHashKeys.h"
 #include "nsIGlobalObject.h"
 #include "nsTHashSet.h"
@@ -26,27 +28,12 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   explicit AnimationTimeline(nsIGlobalObject* aWindow,
                              RTPCallerType aRTPCallerType);
 
-  // We want to synchronize non-geometric animations that are started at the
-  // same time as geometric ones (e.g., transform animations that are started at
-  // the same time as a width animation).
-  //
-  // We only synchronize animations with animations, and transitions with
-  // transitions.
-  //
-  // TODO: Remove all this once bug 1540906 rides the trains.
-  struct TickState {
-    AutoTArray<Animation*, 8> mStartedAnimations;
-    AutoTArray<Animation*, 8> mStartedTransitions;
-    bool mStartedAnyGeometricTransition = false;
-    bool mStartedAnyGeometricAnimation = false;
-  };
-
  protected:
   virtual ~AnimationTimeline();
 
-  // Tick animations and may remove them from the list if we don't need to tick
-  // it. Return true if any animations need to be ticked.
-  bool Tick(TickState&);
+  // Tick animations and may remove them from the list if we don't need to
+  // tick it. Return true if any animations need to be ticked.
+  bool Tick();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -137,14 +124,14 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
 
   // Animations observing this timeline
   //
-  // We store them in (a) a hashset for quick lookup, and (b) a LinkedList to
-  // maintain a fixed sampling order. Animations that are hidden by
+  // We store them in (a) a hashset for quick lookup, and (b) a LinkedList
+  // to maintain a fixed sampling order. Animations that are hidden by
   // `content-visibility` are not sampled and will only be in the hashset.
   // The LinkedList should always be a subset of the hashset.
   //
   // The hashset keeps a strong reference to each animation since
   // dealing with addref/release with LinkedList is difficult.
-  using AnimationSet = nsTHashSet<nsRefPtrHashKey<dom::Animation>>;
+  typedef nsTHashSet<nsRefPtrHashKey<dom::Animation>> AnimationSet;
   AnimationSet mAnimations;
   LinkedList<dom::Animation> mAnimationOrder;
 
