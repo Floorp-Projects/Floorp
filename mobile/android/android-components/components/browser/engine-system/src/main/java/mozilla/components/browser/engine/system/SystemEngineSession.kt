@@ -482,7 +482,7 @@ class SystemEngineSession(
     }
 
     /**
-     * See [EngineSession.requestAnalysisStatus]
+     * See [EngineSession.sendImpressionAttributionEvent]
      */
     override fun sendImpressionAttributionEvent(
         aid: String,
@@ -490,6 +490,17 @@ class SystemEngineSession(
         onException: (Throwable) -> Unit,
     ) {
         throw UnsupportedOperationException("Sending impression attribution event is not available in this engine")
+    }
+
+    /**
+     * See [EngineSession.sendPlacementAttributionEvent]
+     */
+    override fun sendPlacementAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Sending placement attribution event is not available in this engine")
     }
 
     /**

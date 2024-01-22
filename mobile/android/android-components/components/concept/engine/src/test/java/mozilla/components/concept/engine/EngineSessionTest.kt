@@ -1051,6 +1051,12 @@ open class DummyEngineSession : EngineSession() {
         onException: (Throwable) -> Unit,
     ) {}
 
+    override fun sendPlacementAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {}
+
     override fun reportBackInStock(
         url: String,
         onResult: (String) -> Unit,

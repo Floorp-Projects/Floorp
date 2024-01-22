@@ -970,6 +970,18 @@ abstract class EngineSession(
     )
 
     /**
+     * Sends a placement attribution event for a given product aid.
+     *
+     * @param onResult callback invoked if the engine API returns a valid response.
+     * @param onException callback invoked if there was an error getting the response.
+     */
+    abstract fun sendPlacementAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
      * Reports when a product is back in stock.
      *
      * @param onResult callback invoked if the engine API returns a valid response.

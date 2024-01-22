@@ -111,14 +111,19 @@ class EngineObserverTest {
                 onResult: (Boolean) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
-            override fun reportBackInStock(
-                url: String,
-                onResult: (String) -> Unit,
-                onException: (Throwable) -> Unit,
-            ) {}
             override fun sendImpressionAttributionEvent(
                 aid: String,
                 onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendPlacementAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun reportBackInStock(
+                url: String,
+                onResult: (String) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
             override fun requestTranslate(
@@ -232,6 +237,11 @@ class EngineObserverTest {
                 onResult: (Boolean) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
+            override fun sendPlacementAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun reportBackInStock(
                 url: String,
                 onResult: (String) -> Unit,
@@ -341,6 +351,11 @@ class EngineObserverTest {
                 onException: (Throwable) -> Unit,
             ) {}
             override fun sendImpressionAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendPlacementAttributionEvent(
                 aid: String,
                 onResult: (Boolean) -> Unit,
                 onException: (Throwable) -> Unit,

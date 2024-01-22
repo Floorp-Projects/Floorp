@@ -112,6 +112,8 @@ typealias GeckoAntiTracking = ContentBlocking.AntiTracking
 typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
 typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 
+private const val AID = "AID"
+
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionTest {
@@ -2771,14 +2773,13 @@ class GeckoEngineSessionTest {
         var onResultCalled = false
         var onExceptionCalled = false
 
-        val mAid = "AID"
         val geckoResult = GeckoResult<Boolean?>()
         geckoResult.complete(true)
-        whenever(geckoSession.sendClickAttributionEvent(mAid))
+        whenever(geckoSession.sendClickAttributionEvent(AID))
             .thenReturn(geckoResult)
 
         engineSession.sendClickAttributionEvent(
-            mAid,
+            aid = AID,
             onResult = { onResultCalled = true },
             onException = { onExceptionCalled = true },
         )
@@ -2794,13 +2795,12 @@ class GeckoEngineSessionTest {
         var onResultCalled = false
         var onExceptionCalled = false
 
-        val mAid = "AID"
         val geckoResult = GeckoResult<Boolean?>()
-        whenever(geckoSession.sendClickAttributionEvent(mAid))
+        whenever(geckoSession.sendClickAttributionEvent(AID))
             .thenReturn(geckoResult)
 
         engineSession.sendClickAttributionEvent(
-            mAid,
+            aid = AID,
             onResult = { onResultCalled = true },
             onException = { onExceptionCalled = true },
         )
@@ -2818,14 +2818,13 @@ class GeckoEngineSessionTest {
         var onResultCalled = false
         var onExceptionCalled = false
 
-        val mAid = "AID"
         val geckoResult = GeckoResult<Boolean?>()
         geckoResult.complete(true)
-        whenever(geckoSession.sendImpressionAttributionEvent(mAid))
+        whenever(geckoSession.sendImpressionAttributionEvent(AID))
             .thenReturn(geckoResult)
 
         engineSession.sendImpressionAttributionEvent(
-            mAid,
+            aid = AID,
             onResult = { onResultCalled = true },
             onException = { onExceptionCalled = true },
         )
@@ -2841,13 +2840,57 @@ class GeckoEngineSessionTest {
         var onResultCalled = false
         var onExceptionCalled = false
 
-        val mAid = "AID"
         val geckoResult = GeckoResult<Boolean?>()
-        whenever(geckoSession.sendImpressionAttributionEvent(mAid))
+        whenever(geckoSession.sendImpressionAttributionEvent(AID))
             .thenReturn(geckoResult)
 
         engineSession.sendImpressionAttributionEvent(
-            mAid,
+            aid = AID,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        geckoResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(onResultCalled)
+        assertTrue(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session sendPlacementAttributionEvent is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val geckoResult = GeckoResult<Boolean?>()
+        geckoResult.complete(true)
+        whenever(geckoSession.sendPlacementAttributionEvent(AID))
+            .thenReturn(geckoResult)
+
+        engineSession.sendPlacementAttributionEvent(
+            aid = AID,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session sendPlacementAttributionEvent is not successful THEN onException callback for error is called`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val geckoResult = GeckoResult<Boolean?>()
+        whenever(geckoSession.sendPlacementAttributionEvent(AID))
+            .thenReturn(geckoResult)
+
+        engineSession.sendPlacementAttributionEvent(
+            aid = AID,
             onResult = { onResultCalled = true },
             onException = { onExceptionCalled = true },
         )
