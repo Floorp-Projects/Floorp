@@ -70,54 +70,6 @@ export function getImageUrl(icon, targetURI) {
   return icon ? lazy.PlacesUIUtils.getImageURL(icon) : `page-icon:${targetURI}`;
 }
 
-export function onToggleContainer(detailsContainer) {
-  const doc = detailsContainer.ownerDocument;
-  // Ignore early `toggle` events, which may either be fired because the
-  // UI sections update visibility on component connected (based on persisted
-  // UI state), or because <details> elements fire `toggle` events when added
-  // to the DOM with the "open" attribute set. In either case, we don't want
-  // to record telemetry as these events aren't the result of user action.
-  if (doc.readyState != "complete") {
-    return;
-  }
-
-  const isOpen = detailsContainer.open;
-  const isTabPickup = detailsContainer.id === "tab-pickup-container";
-
-  const newFluentString = isOpen
-    ? "firefoxview-collapse-button-hide"
-    : "firefoxview-collapse-button-show";
-
-  doc.l10n.setAttributes(
-    detailsContainer.querySelector(".twisty"),
-    newFluentString
-  );
-
-  if (isTabPickup) {
-    Services.telemetry.recordEvent(
-      "firefoxview",
-      "tab_pickup_open",
-      "tabs",
-      isOpen.toString()
-    );
-    Services.prefs.setBoolPref(
-      "browser.tabs.firefox-view.ui-state.tab-pickup.open",
-      isOpen
-    );
-  } else {
-    Services.telemetry.recordEvent(
-      "firefoxview",
-      "closed_tabs_open",
-      "tabs",
-      isOpen.toString()
-    );
-    Services.prefs.setBoolPref(
-      "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open",
-      isOpen
-    );
-  }
-}
-
 /**
  * This function doesn't just copy the link to the clipboard, it creates a
  * URL object on the clipboard, so when it's pasted into an application that
