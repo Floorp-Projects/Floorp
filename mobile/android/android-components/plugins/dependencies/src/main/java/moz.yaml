@@ -1,0 +1,73 @@
+#
+# moz.yaml file to configure updatebot to perform version bumps for
+# nightly application-services builds; the version bump occurs in
+# ApplicationServices.kt.
+#
+# Note that application-services is not really vendored here: All the
+# normal vendoring steps are skipped and a custom action is used to
+# do the version bump. This allows us to drive version bumps in updatebot
+# and leverage updatebot's bug and patch creation.
+#
+
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Fenix
+  component: "General"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: android nightly application-services version bump
+
+  description: android nightly application-services version bump
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/mozilla/application-services
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: 1
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 1
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MPL-2.0
+  license-file: LICENSE
+
+updatebot:
+    maintainer-phab: gbrown
+    maintainer-bz: gbrown@mozilla.com
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: every
+    fuzzy-query: "'test-components | 'test-apk"
+
+vendoring:
+  url: https://github.com/mozilla/application-services
+  source-hosting: github
+
+  skip-vendoring-steps:
+    - fetch
+    - keep
+    - include
+    - exclude
+    - move-contents
+    - update-moz-yaml
+    - update-moz-build
+
+  update-actions:
+    - action: run-script
+      script: '{yaml_dir}/appservices_version_bump.py'
+      cwd: '.'
+      args: []
