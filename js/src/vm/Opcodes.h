@@ -2579,10 +2579,6 @@
      *
      * Implements: [*ThrowStatement* Evaluation][1], step 3.
      *
-     * This is also used in for-of loops. If the body of the loop throws an
-     * exception, we catch it, close the iterator, then use `JSOp::Throw` to
-     * rethrow.
-     *
      * [1]: https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation
      *
      *   Category: Control flow
@@ -2591,6 +2587,25 @@
      *   Stack: exc =>
      */ \
     MACRO(Throw, throw_, NULL, 1, 1, 0, JOF_BYTE) \
+    /*
+     * Throw `exc`. (ノಠ益ಠ)ノ彡┴──┴
+     *
+     * This sets the pending exception to `exc`, the pending exception stack
+     * to `stack`, and then jumps to error-handling code. If we're in a `try`
+     * block, error handling adjusts the stack and environment chain and resumes
+     * execution at the top of the `catch` or `finally` block. Otherwise it
+     * starts unwinding the stack.
+     *
+     * This is used in for-of loops. If the body of the loop throws an
+     * exception, we catch it, close the iterator, then use
+     * `JSOp::ThrowWithStack` to rethrow.
+     *
+     *   Category: Control flow
+     *   Type: Exceptions
+     *   Operands:
+     *   Stack: exc, stack =>
+     */ \
+    MACRO(ThrowWithStack, throw_with_stack, NULL, 1, 2, 0, JOF_BYTE) \
     /*
      * Create and throw an Error object.
      *
@@ -2651,8 +2666,7 @@
      * `JSTRY_CATCH` span (see "Bytecode Invariants" above), as that's the only
      * way instructions would run with an exception pending.
      *
-     * Used to implement catch-blocks, including the implicit ones generated as
-     * part of for-of iteration.
+     * Used to implement catch-blocks.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2660,6 +2674,22 @@
      *   Stack: => exception
      */ \
     MACRO(Exception, exception, NULL, 1, 0, 1, JOF_BYTE) \
+    /*
+     * Push and clear the pending exception. ┬──┬◡ﾉ(° -°ﾉ)
+     *
+     * This must be used only in the fixed sequence of instructions following a
+     * `JSTRY_CATCH` span (see "Bytecode Invariants" above), as that's the only
+     * way instructions would run with an exception pending.
+     *
+     * Used to implement implicit catch-blocks generated as part of for-of
+     * iteration.
+     *
+     *   Category: Control flow
+     *   Type: Exceptions
+     *   Operands:
+     *   Stack: => exception, stack
+     */ \
+    MACRO(ExceptionAndStack, exception_and_stack, NULL, 1, 0, 2, JOF_BYTE) \
     /*
      * No-op instruction that marks the start of a `finally` block.
      *
@@ -3585,15 +3615,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(237))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(238))     \
-  MACRO(239)                                   \
-  MACRO(240)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(239))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(240))     \
   MACRO(241)                                   \
   MACRO(242)                                   \
   MACRO(243)                                   \

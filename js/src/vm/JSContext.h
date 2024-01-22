@@ -704,8 +704,23 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return JS::IsCatchableExceptionStatus(status);
   }
 
+  /**
+   * Return the pending exception and wrap it into the current compartment.
+   */
   [[nodiscard]] bool getPendingException(JS::MutableHandleValue rval);
 
+  /**
+   * Return the pending exception stack and wrap it into the current
+   * compartment. Return |JS::NullValue| when the pending exception has no stack
+   * attached.
+   */
+  [[nodiscard]] bool getPendingExceptionStack(JS::MutableHandleValue rval);
+
+  /**
+   * Return the pending exception stack, but does not wrap it into the current
+   * compartment. Return |nullptr| when the pending exception has no stack
+   * attached.
+   */
   js::SavedFrame* getPendingExceptionStack();
 
   bool isThrowingDebuggeeWouldRun();
