@@ -33,12 +33,14 @@ const PREF_FEATURES = [
     description: "Test feature that sets a pref on the default branch.",
     owner: "test@test.test",
     hasExposure: false,
-    isEarlyStartup: false,
     variables: {
       foo: {
         type: "string",
         description: "Test variable",
-        setPref: "nimbus.test-only.foo",
+        setPref: {
+          branch: "default",
+          pref: "nimbus.test-only.foo",
+        },
       },
     },
   }),
@@ -51,7 +53,10 @@ const PREF_FEATURES = [
       bar: {
         type: "string",
         description: "Test variable",
-        setPref: "nimbus.test-only.bar",
+        setPref: {
+          branch: "user",
+          pref: "nimbus.test-only.bar",
+        },
       },
     },
   }),
@@ -2596,17 +2601,23 @@ add_task(async function test_prefChanged_noPrefSet() {
   const featureId = "test-set-pref-2";
   const pref = "nimbus.test-only.baz";
 
-  function featureFactory(isEarlyStartup) {
+  function featureFactory(prefBranch) {
+    if (![USER, DEFAULT].includes(prefBranch)) {
+      Assert.ok(false, `invalid branch ${prefBranch}`);
+    }
+
     return new ExperimentFeature(featureId, {
       description: "Test feature that sets a pref",
       owner: "test@test.test",
       hasExposure: false,
-      isEarlyStartup,
       variables: {
         baz: {
           type: "string",
           description: "Test variable",
-          setPref: pref,
+          setPref: {
+            branch: prefBranch,
+            pref,
+          },
         },
         qux: {
           type: "string",
@@ -2623,8 +2634,8 @@ add_task(async function test_prefChanged_noPrefSet() {
     },
   };
 
-  for (const isEarlyStartup of [true, false]) {
-    const feature = featureFactory(isEarlyStartup);
+  for (const prefBranch of [USER, DEFAULT]) {
+    const feature = featureFactory(prefBranch);
     const cleanupFeature = ExperimentTestUtils.addTestFeatures(feature);
 
     const store = ExperimentFakes.store();
@@ -2737,17 +2748,23 @@ add_task(async function test_restorePrefs_manifestChanged() {
   const pref = "nimbus.test-only.baz";
 
   // Return a new object so we can modified the returned value.
-  function featureFactory(isEarlyStartup) {
+  function featureFactory(prefBranch) {
+    if (![USER, DEFAULT].includes(prefBranch)) {
+      Assert.ok(false, `invalid branch ${prefBranch}`);
+    }
+
     return new ExperimentFeature(featureId, {
       description: "Test feature that sets a pref on the default branch.",
       owner: "test@test.test",
       hasExposure: false,
-      isEarlyStartup,
       variables: {
         baz: {
           type: "string",
           description: "Test variable",
-          setPref: pref,
+          setPref: {
+            branch: prefBranch,
+            pref,
+          },
         },
         qux: {
           type: "string",
@@ -2820,7 +2837,7 @@ add_task(async function test_restorePrefs_manifestChanged() {
       /* clear = */ true
     );
 
-    const feature = featureFactory(branch === USER);
+    const feature = featureFactory(branch);
     const cleanupFeatures = ExperimentTestUtils.addTestFeatures(feature);
 
     setPrefs(pref, { defaultBranchValue, userBranchValue });
@@ -3178,17 +3195,22 @@ add_task(async function test_nested_prefs_enroll_both() {
     description: "Nested prefs",
     owner: "test@test.test",
     hasExposure: false,
-    isEarlyStartup: false,
     variables: {
       enabled: {
         type: "boolean",
         description: "enable this feature",
-        setPref: "nimbus.test-only.nested",
+        setPref: {
+          branch: "default",
+          pref: "nimbus.test-only.nested",
+        },
       },
       setting: {
         type: "string",
         description: "a nested setting",
-        setPref: "nimbus.test-only.nested.setting",
+        setPref: {
+          branch: "default",
+          pref: "nimbus.test-only.nested.setting",
+        },
       },
     },
   });

@@ -63,8 +63,21 @@
               "description": "A pref that provides the default value for a feature when none is present"
             },
             "setPref": {
-              "type": "string",
-              "description": "A pref that should be set to the value of this variable when enrolling in experiments."
+              "description": "A pref that should be set to the value of this variable when enrolling in experiments.",
+              "type": "object",
+              "properties": {
+                "branch": {
+                  "type": "string",
+                  "enum": ["default", "user"],
+                  "description": "The branch the pref will be set on."
+                },
+                "pref": {
+                  "type": "string",
+                  "description": "The name of the pref."
+                }
+              },
+              "required": ["branch", "pref"],
+              "additionalProperties": false
             },
             "enum": {
               "description": "Validate feature value using a list of possible options (for string only values)."

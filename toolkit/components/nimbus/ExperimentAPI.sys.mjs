@@ -338,6 +338,12 @@ export class _ExperimentFeature {
   }
 
   getSetPrefName(variable) {
+    const setPref = this.manifest?.variables?.[variable]?.setPref;
+
+    return setPref?.pref ?? setPref ?? undefined;
+  }
+
+  getSetPref(variable) {
     return this.manifest?.variables?.[variable]?.setPref;
   }
 
