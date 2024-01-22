@@ -381,6 +381,8 @@ JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 
 [[nodiscard]] bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
                               uint32_t* code);
+[[nodiscard]] bool CodePointAt(JSContext* cx, HandleString str, int32_t index,
+                               uint32_t* code);
 JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code);
 JSLinearString* LinearizeForCharAccessPure(JSString* str);
 JSLinearString* LinearizeForCharAccess(JSContext* cx, JSString* str);

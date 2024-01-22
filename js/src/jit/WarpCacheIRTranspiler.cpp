@@ -2164,6 +2164,17 @@ bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitLinearizeForCodePointAccess(
+    StringOperandId strId, Int32OperandId indexId, StringOperandId resultId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MLinearizeForCodePointAccess::New(alloc(), str, index);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
                                                      Int32OperandId indexId,
                                                      bool handleOOB) {
@@ -2222,6 +2233,34 @@ bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(StringOperandId strId,
   add(charCode);
 
   pushResult(charCode);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadStringCodePointResult(
+    StringOperandId strId, Int32OperandId indexId, bool handleOOB) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  if (handleOOB) {
+    auto* codePoint = MCodePointAtOrNegative::New(alloc(), str, index);
+    add(codePoint);
+
+    auto* ins = MNegativeToUndefined::New(alloc(), codePoint);
+    add(ins);
+
+    pushResult(ins);
+    return true;
+  }
+
+  auto* length = MStringLength::New(alloc(), str);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* codePoint = MCodePointAt::New(alloc(), str, index);
+  add(codePoint);
+
+  pushResult(codePoint);
   return true;
 }
 

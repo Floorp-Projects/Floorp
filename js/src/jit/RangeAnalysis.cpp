@@ -21,6 +21,7 @@
 #include "js/Conversions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/CheckedArithmetic.h"
+#include "util/Unicode.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
@@ -1319,7 +1320,11 @@ void MConstant::computeRange(TempAllocator& alloc) {
 
 void MCharCodeAt::computeRange(TempAllocator& alloc) {
   // ECMA 262 says that the integer will be non-negative and at most 65535.
-  setRange(Range::NewInt32Range(alloc, 0, 65535));
+  setRange(Range::NewInt32Range(alloc, 0, unicode::UTF16Max));
+}
+
+void MCodePointAt::computeRange(TempAllocator& alloc) {
+  setRange(Range::NewInt32Range(alloc, 0, unicode::NonBMPMax));
 }
 
 void MClampToUint8::computeRange(TempAllocator& alloc) {
