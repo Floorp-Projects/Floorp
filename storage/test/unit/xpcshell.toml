@@ -36,6 +36,8 @@ skip-if = ["debug"]
 
 ["test_connection_interrupt.js"]
 
+["test_connection_online_backup.js"]
+
 ["test_default_journal_size_limit.js"]
 
 ["test_js_helpers.js"]

@@ -1163,6 +1163,33 @@ ConnectionData.prototype = Object.freeze({
       Cu.now() + Sqlite.TRANSACTIONS_TIMEOUT_MS * 0.2;
     return this._timeoutPromise;
   },
+
+  /**
+   * Asynchronously makes a copy of the SQLite database while there may still be
+   * open connections on it.
+   *
+   * @param {string} destFilePath
+   *   The path on the local filesystem to write the database copy. Any existing
+   *   file at this path will be overwritten.
+   * @return Promise<undefined, nsresult>
+   */
+  async backupToFile(destFilePath) {
+    if (!this._dbConn) {
+      return Promise.reject(
+        new Error("No opened database connection to create a backup from.")
+      );
+    }
+    let destFile = await IOUtils.getFile(destFilePath);
+    return new Promise((resolve, reject) => {
+      this._dbConn.backupToFileAsync(destFile, result => {
+        if (Components.isSuccessCode(result)) {
+          resolve();
+        } else {
+          reject(result);
+        }
+      });
+    });
+  },
 });
 
 /**
@@ -1954,6 +1981,19 @@ OpenedConnection.prototype = Object.freeze({
    */
   interrupt() {
     this._connectionData.interrupt();
+  },
+
+  /**
+   * Asynchronously makes a copy of the SQLite database while there may still be
+   * open connections on it.
+   *
+   * @param {string} destFilePath
+   *   The path on the local filesystem to write the database copy. Any existing
+   *   file at this path will be overwritten.
+   * @return Promise<undefined, nsresult>
+   */
+  backup(destFilePath) {
+    return this._connectionData.backupToFile(destFilePath);
   },
 });
 

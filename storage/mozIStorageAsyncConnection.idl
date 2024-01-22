@@ -132,7 +132,7 @@ interface mozIStorageAsyncConnection : nsISupports {
   [noscript] void spinningSynchronousClose();
 
   /**
-   * Clone a database and make the clone read only if needed.
+   * Clone a database connection and make the clone read only if needed.
    * SQL Functions and attached on-disk databases are applied to the new clone.
    *
    * @param aReadOnly
@@ -368,4 +368,38 @@ interface mozIStorageAsyncConnection : nsISupports {
    * @return previous registered handler.
    */
   mozIStorageProgressHandler removeProgressHandler();
+
+  /**
+   * Makes a copy of a database asynchronously. This method can do an online
+   * backup of the database file, even if there are open connections actively
+   * using it (as a normal file copy can only be made if no connections are
+   * open on the database).
+   *
+   * While the copy is in the process of being made, the destination file
+   * will have a .tmp extension appended to it. In the event of a crash
+   * during the copy, this .tmp file will continue to exist, but will be
+   * an unusable partial copy.
+   *
+   * Once the copy has been completed, this method will automatically remove
+   * the .tmp extension.
+   *
+   * @param aDestinationFile
+   *        The destination on the file system to write the database copy.
+   * @param aCallback
+   *        A callback that will be notified when the operation is complete,
+   *        with the following arguments:
+   *        - status: the status of the operation, use this to check if making
+   *                  the copy was successful.
+   *        - value: unused.
+   * @throws NS_ERROR_ABORT
+   *         If the application has begun the process of shutting down already.
+   * @throws NS_ERROR_NOT_INITIALIZED
+   *         If the connection has already started or completed closing.
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If the database does not support asynchronous operations.
+   * @throws NS_ERROR_NOT_INITIALIZED
+   *         If the execution thread cannot be acquired.
+   */
+  void backupToFileAsync(in nsIFile aDestinationFile,
+                         in mozIStorageCompletionCallback aCallback);
 };
