@@ -227,6 +227,11 @@ clang_checkers:
     reliability: high
   - name: performance-unnecessary-value-param
     reliability: high
+    config:
+      - key: AllowedTypes
+        # Allow EnumSet because it only has a non-trivial copy constructor
+        # in debug builds.
+        value: ::mozilla::EnumSet
   - name: readability-braces-around-statements
     reliability: high
     config:
