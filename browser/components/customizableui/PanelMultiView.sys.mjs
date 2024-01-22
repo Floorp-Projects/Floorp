@@ -1219,7 +1219,13 @@ export var PanelMultiView = class extends AssociatedToNode {
     // this value will be easy to adjust.
     const EXTRA_MARGIN_PX = 20;
     maxHeight -= EXTRA_MARGIN_PX;
-    return maxHeight;
+
+    // if zoom factor is applied by touchmode then max-height will be zoomed
+    // too, which we do not want.
+    let zoomFactor = Number(
+      this._panel.ownerGlobal.getComputedStyle(this._panel).zoom ?? 1
+    );
+    return maxHeight / zoomFactor;
   }
 
   handleEvent(aEvent) {
