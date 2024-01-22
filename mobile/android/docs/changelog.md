@@ -4,14 +4,20 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 123.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v122..main)
+# 124.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v123..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+# 123.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v122..releases_v123)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/.config.yml)
+
 * **feature-customtabs**
- * Sharing a URL from a custom tab always uses the current url of the session. [bug #1831803](https://bugzilla.mozilla.org/show_bug.cgi?id=1831803)
+ * Sharing a URL from a custom tab always uses the current url of the session. [Bug 1831803](https://bugzilla.mozilla.org/show_bug.cgi?id=1831803)
 
 # 122.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..releases_v122)
@@ -93,7 +99,7 @@ permalink: /changelog/
   * Removed deprecated `TabsUseCases.AddNewPrivateTabUseCase`. [Bug 1853070](https://bugzilla.mozilla.org/show_bug.cgi?id=1853070)
 
 * **lib-crash-sentry**
-  * `SentryService.initIfNeeded` is now public. [bug #1851676](https://bugzilla.mozilla.org/show_bug.cgi?id=1851676)
+  * `SentryService.initIfNeeded` is now public. [Bug 1851676](https://bugzilla.mozilla.org/show_bug.cgi?id=1851676)
 
 * **feature-downloads**
   * Added a custom permission `${applicationId}.permission.RECEIVE_DOWNLOAD_BROADCAST` that needs to be used by apps in order to receive download related broadcasts
@@ -115,8 +121,8 @@ permalink: /changelog/
     * User plans to upgrade from v95 to v119 or above
 
 * **support-webextensions**
-  * ⚠️ **This is a breaking change**: Renamed `WebExtensionPopupFeature` to `WebExtensionPopupObserver` [bug #1852335](https://bugzilla.mozilla.org/show_bug.cgi?id=1852335)
-  * Added `ExtensionProcessDisabledPopupObserver` to display to the user a dialog when the extensions process spawning has been disabled. [bug #1846979](https://bugzilla.mozilla.org/show_bug.cgi?id=1846979)
+  * ⚠️ **This is a breaking change**: Renamed `WebExtensionPopupFeature` to `WebExtensionPopupObserver` [Bug 1852335](https://bugzilla.mozilla.org/show_bug.cgi?id=1852335)
+  * Added `ExtensionProcessDisabledPopupObserver` to display to the user a dialog when the extensions process spawning has been disabled. [Bug 1846979](https://bugzilla.mozilla.org/show_bug.cgi?id=1846979)
 
 * **concept-engine**
   * 🌟️️ Add `reanalyzeProduct` API to `EngineSession` to allow reanalyzing product from the engine. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
