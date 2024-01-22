@@ -13,6 +13,7 @@ transforms:
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
+    - build-fat-aar
 
 
 job-defaults:
@@ -23,11 +24,14 @@ job-defaults:
     # TODO port this in transforms
     dependencies:
         external-gradle-dependencies: external-gradle-dependencies-test-components
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
     fetches:
         toolchain:
             - android-sdk-linux
         external-gradle-dependencies:
             - external-gradle-dependencies.tar.xz
+        build-fat-aar:
+            - target.maven.tar.xz
     run:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']

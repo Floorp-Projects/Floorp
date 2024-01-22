@@ -18,12 +18,15 @@ job-defaults:
         code-review: true
     dependencies:
         external-gradle-dependencies: external-gradle-dependencies-lint-components
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
     fetches:
         toolchain:
             - android-sdk-linux
             - linux64-jdk-repack
         external-gradle-dependencies:
             - external-gradle-dependencies.tar.xz
+        build-fat-aar:
+            - target.maven.tar.xz
     platform: 'lint/opt'
     treeherder:
         kind: test

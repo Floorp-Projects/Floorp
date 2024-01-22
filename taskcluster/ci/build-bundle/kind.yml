@@ -13,6 +13,7 @@ transforms:
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
+    - build-fat-aar
 
 job-defaults:
     aab-artifact-template:
@@ -32,6 +33,7 @@ jobs:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Focus debug AAB build from source code'
         run:
             gradle-build-type: debug
@@ -48,6 +50,7 @@ jobs:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Klar debug AAB build from source code'
         run:
             gradle-build-type: debug
@@ -64,6 +67,7 @@ jobs:
             shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Fenix debug AAB build from source code'
         run:
             gradle-build-type: debug
@@ -81,6 +85,7 @@ jobs:
         shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Focus release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
@@ -101,6 +106,7 @@ jobs:
         shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Klar release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
@@ -121,6 +127,7 @@ jobs:
         shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Fenix release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
@@ -140,6 +147,7 @@ jobs:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Focus nightly AAB build from source code'
         include-shippable-secrets: true
         include-nightly-version: true
@@ -158,6 +166,7 @@ jobs:
             shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Fenix nightly AAB build from source code'
         include-shippable-secrets: true
         include-nightly-version: true
@@ -177,6 +186,7 @@ jobs:
         shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Focus beta AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
@@ -197,6 +207,7 @@ jobs:
         shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
         description: 'Fenix beta AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true

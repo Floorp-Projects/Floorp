@@ -17,6 +17,7 @@ kind-dependencies:
     - toolchain
     - build
     - external-gradle-dependencies
+    - build-fat-aar
 
 jobs-from:
     - android-compare-locales.yml

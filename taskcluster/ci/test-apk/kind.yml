@@ -13,15 +13,20 @@ transforms:
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
+    - build-fat-aar
 
 job-defaults:
     attributes:
         retrigger: true
+    dependencies:
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
     fetches:
         toolchain:
             - android-sdk-linux
         external-gradle-dependencies:
             - external-gradle-dependencies.tar.xz
+        build-fat-aar:
+            - target.maven.tar.xz
     optimization:
         skip-unless-changed: []  # Paths are dynamically added by transforms
     run:
