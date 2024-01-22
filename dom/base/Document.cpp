@@ -7717,15 +7717,8 @@ bool Document::ContainsMSEContent() {
 
 static void NotifyActivityChangedCallback(nsISupports* aSupports) {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
+  if (auto* mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     mediaElem->NotifyOwnerDocumentActivityChanged();
-  }
-  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(
-      do_QueryInterface(aSupports));
-  if (objectLoadingContent) {
-    nsObjectLoadingContent* olc =
-        static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
-    olc->NotifyOwnerDocumentActivityChanged();
   }
   nsCOMPtr<nsIDocumentActivity> objectDocumentActivity(
       do_QueryInterface(aSupports));
@@ -7735,7 +7728,8 @@ static void NotifyActivityChangedCallback(nsISupports* aSupports) {
     nsCOMPtr<nsIImageLoadingContent> imageLoadingContent(
         do_QueryInterface(aSupports));
     if (imageLoadingContent) {
-      auto ilc = static_cast<nsImageLoadingContent*>(imageLoadingContent.get());
+      auto* ilc =
+          static_cast<nsImageLoadingContent*>(imageLoadingContent.get());
       ilc->NotifyOwnerDocumentActivityChanged();
     }
   }

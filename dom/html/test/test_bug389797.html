@@ -50,15 +50,11 @@ function HTML_TAG(aTagName, aImplClass) {
 }
 
 const objectIfaces = [
-    "imgINotificationObserver", "nsIRequestObserver", "nsIStreamListener",
-    "nsIObjectLoadingContent", "nsIChannelEventSink"
-  ];
-
-var objectIfaces2 = [];
-for (var iface of objectIfaces) {
-  objectIfaces2.push(iface);
-}
-objectIfaces2.push("nsIImageLoadingContent");
+  "nsIRequestObserver",
+  "nsIStreamListener",
+  "nsIObjectLoadingContent",
+  "nsIChannelEventSink",
+];
 
 /* List copy/pasted from nsHTMLTagList.h, with the second field modified to the
    correct classinfo (instead of the impl class) in the following cases:
@@ -159,8 +155,7 @@ HTML_TAG("nobr", "");
 HTML_TAG("noembed", "");
 HTML_TAG("noframes", "");
 HTML_TAG("noscript", "");
-HTML_TAG("object", "Object", [],
-                             objectIfaces.concat([ "nsIImageLoadingContent" ]));
+HTML_TAG("object", "Object", [], objectIfaces);
 HTML_TAG("ol", "OList");
 HTML_TAG("optgroup", "OptGroup");
 HTML_TAG("option", "Option");

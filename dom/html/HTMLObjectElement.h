@@ -33,11 +33,11 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLObjectElement, object)
   int32_t TabIndexDefault() override;
 
+  // nsObjectLoadingContent
+  const Element* AsElement() const final { return this; }
+
   // Element
   bool IsInteractiveHTMLContent() const override;
-
-  // EventTarget
-  void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
@@ -167,9 +167,6 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   void StartObjectLoad(bool aNotify, bool aForceLoad);
 
  protected:
-  // Override for nsImageLoadingContent.
-  nsIContent* AsContent() override { return this; }
-
   void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
