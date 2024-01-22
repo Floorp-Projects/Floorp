@@ -1266,7 +1266,7 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
     masm.Push(scratch1);
 
     using Fn = JSLinearString* (*)(JSContext*, int32_t);
-    callVM<Fn, jit::StringFromCharCode>(masm);
+    callVM<Fn, js::StringFromCharCode>(masm);
 
     stubFrame.leave(masm);
 
@@ -1319,10 +1319,10 @@ bool BaselineCacheIRCompiler::emitStringFromCodeResult(Int32OperandId codeId,
 
     if (stringCode == StringCode::CodeUnit) {
       using Fn = JSLinearString* (*)(JSContext*, int32_t);
-      callVM<Fn, jit::StringFromCharCode>(masm);
+      callVM<Fn, js::StringFromCharCode>(masm);
     } else {
-      using Fn = JSString* (*)(JSContext*, int32_t);
-      callVM<Fn, jit::StringFromCodePoint>(masm);
+      using Fn = JSLinearString* (*)(JSContext*, char32_t);
+      callVM<Fn, js::StringFromCodePoint>(masm);
     }
 
     stubFrame.leave(masm);

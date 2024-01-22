@@ -720,16 +720,6 @@ bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
   return true;
 }
 
-JSLinearString* StringFromCharCode(JSContext* cx, int32_t code) {
-  char16_t c = char16_t(code);
-
-  if (StaticStrings::hasUnit(c)) {
-    return cx->staticStrings().getUnit(c);
-  }
-
-  return NewInlineString<CanGC>(cx, {c}, 1);
-}
-
 JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -740,15 +730,6 @@ JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
   }
 
   return NewInlineString<NoGC>(cx, {c}, 1);
-}
-
-JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint) {
-  RootedValue rval(cx, Int32Value(codePoint));
-  if (!str_fromCodePoint_one_arg(cx, rval, &rval)) {
-    return nullptr;
-  }
-
-  return rval.toString();
 }
 
 JSLinearString* LinearizeForCharAccessPure(JSString* str) {
