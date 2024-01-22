@@ -108,12 +108,6 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   readonly attribute unsigned long displayedType;
 
-  [ChromeOnly]
-  sequence<MozPluginParameter> getPluginAttributes();
-
-  [ChromeOnly]
-  sequence<MozPluginParameter> getPluginParameters();
-
   /**
    * Forces a re-evaluation and reload of the tag, optionally invalidating its
    * click-to-play state.  This can be used when the MIME type that provides a
@@ -138,15 +132,6 @@ interface mixin MozObjectLoadingContent {
 
   [ChromeOnly, Throws, NeedsCallerType]
   readonly attribute unsigned long runID;
-};
-
-/**
- * Name:Value pair type used for passing parameters to NPAPI or javascript
- * plugins.
- */
-dictionary MozPluginParameter {
-  DOMString name = "";
-  DOMString value = "";
 };
 
 HTMLObjectElement includes MozImageLoadingContent;
