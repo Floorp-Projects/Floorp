@@ -340,7 +340,7 @@ class AnimationEventDispatcher final {
   void ScheduleDispatch();
 
   nsPresContext* mPresContext;
-  using EventArray = nsTArray<AnimationEventInfo>;
+  typedef nsTArray<AnimationEventInfo> EventArray;
   EventArray mPendingEvents;
   bool mIsSorted;
   bool mIsObserving;
