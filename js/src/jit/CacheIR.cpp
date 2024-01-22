@@ -333,6 +333,11 @@ static ProxyStubType GetProxyStubType(JSContext* cx, HandleObject obj,
     return ProxyStubType::Generic;
   }
 
+  // Private fields are defined on a separate expando object.
+  if (id.isPrivateName()) {
+    return ProxyStubType::Generic;
+  }
+
   DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, proxy, id);
   if (shadows == DOMProxyShadowsResult::ShadowCheckFailed) {
     cx->clearPendingException();
