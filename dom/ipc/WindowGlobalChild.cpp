@@ -615,7 +615,7 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   }
 
   mDocumentURI = aDocumentURI;
-  SendUpdateDocumentURI(aDocumentURI);
+  SendUpdateDocumentURI(WrapNotNull(aDocumentURI));
 }
 
 void WindowGlobalChild::SetDocumentPrincipal(

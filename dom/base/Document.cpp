@@ -9033,7 +9033,7 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
   MOZ_ALWAYS_SUCCEEDS(NodePrincipal()->SetDomain(newURI));
   MOZ_ALWAYS_SUCCEEDS(PartitionedPrincipal()->SetDomain(newURI));
   if (WindowGlobalChild* wgc = GetWindowGlobalChild()) {
-    wgc->SendSetDocumentDomain(newURI);
+    wgc->SendSetDocumentDomain(WrapNotNull(newURI));
   }
 }
 

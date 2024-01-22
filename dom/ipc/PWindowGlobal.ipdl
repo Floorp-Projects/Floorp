@@ -109,7 +109,7 @@ parent:
   async InternalLoad(nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
-  [LazySend] async UpdateDocumentURI(nullable nsIURI aUri);
+  [LazySend] async UpdateDocumentURI(nsIURI aUri);
 
   // We expose frameAncestors to web-extensions and they extract URIs from the
   // principals collected. In order to be compatible with that API, we need to
@@ -196,7 +196,7 @@ parent:
    */
   async SetSingleChannelId(uint64_t? singleChannelId);
 
-  async SetDocumentDomain(nullable nsIURI aDomain);
+  async SetDocumentDomain(nsIURI aDomain);
 
   async Destroy();
 
