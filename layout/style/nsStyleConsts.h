@@ -389,19 +389,14 @@ enum class StyleVisibility : uint8_t {
 };
 
 // See nsStyleText
-enum class StyleWhiteSpaceCollapse : uint8_t {
-  Collapse = 0,
-  // TODO: Discard not yet supported
-  Preserve,
-  PreserveBreaks,
-  PreserveSpaces,
-  BreakSpaces,
-};
-
-// See nsStyleText
-enum class StyleTextWrapMode : uint8_t {
-  Wrap = 0,
+enum class StyleWhiteSpace : uint8_t {
+  Normal = 0,
+  Pre,
   Nowrap,
+  PreWrap,
+  PreLine,
+  PreSpace,
+  BreakSpaces,
 };
 
 // See nsStyleText
@@ -409,7 +404,7 @@ enum class StyleTextWrapMode : uint8_t {
 // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1758391) and
 // white-space (https://bugzilla.mozilla.org/show_bug.cgi?id=1852478)
 // into shorthands.
-enum class StyleTextWrapStyle : uint8_t {
+enum class StyleTextWrap : uint8_t {
   Auto = 0,
   Stable,
   Balance,
