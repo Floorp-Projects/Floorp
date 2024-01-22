@@ -2791,6 +2791,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextAlign(StyleTextAlign::Start),
       mTextAlignLast(StyleTextAlignLast::Auto),
       mTextJustify(StyleTextJustify::Auto),
+      mWhiteSpace(StyleWhiteSpace::Normal),
       mHyphens(StyleHyphens::Manual),
       mRubyAlign(StyleRubyAlign::SpaceAround),
       mRubyPosition(StyleRubyPosition::AlternateOver),
@@ -2827,8 +2828,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextAlign(aSource.mTextAlign),
       mTextAlignLast(aSource.mTextAlignLast),
       mTextJustify(aSource.mTextJustify),
-      mWhiteSpaceCollapse(aSource.mWhiteSpaceCollapse),
-      mTextWrapMode(aSource.mTextWrapMode),
+      mWhiteSpace(aSource.mWhiteSpace),
       mLineBreak(aSource.mLineBreak),
       mWordBreak(aSource.mWordBreak),
       mOverflowWrap(aSource.mOverflowWrap),
@@ -2855,7 +2855,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextEmphasisStyle(aSource.mTextEmphasisStyle),
       mHyphenateCharacter(aSource.mHyphenateCharacter),
       mWebkitTextSecurity(aSource.mWebkitTextSecurity),
-      mTextWrapStyle(aSource.mTextWrapStyle) {
+      mTextWrap(aSource.mTextWrap) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
@@ -2875,8 +2875,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
   if ((mTextAlign != aNewData.mTextAlign) ||
       (mTextAlignLast != aNewData.mTextAlignLast) ||
       (mTextTransform != aNewData.mTextTransform) ||
-      (mWhiteSpaceCollapse != aNewData.mWhiteSpaceCollapse) ||
-      (mTextWrapMode != aNewData.mTextWrapMode) ||
+      (mWhiteSpace != aNewData.mWhiteSpace) ||
       (mLineBreak != aNewData.mLineBreak) ||
       (mWordBreak != aNewData.mWordBreak) ||
       (mOverflowWrap != aNewData.mOverflowWrap) ||
@@ -2890,7 +2889,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mTabSize != aNewData.mTabSize) ||
       (mHyphenateCharacter != aNewData.mHyphenateCharacter) ||
       (mWebkitTextSecurity != aNewData.mWebkitTextSecurity) ||
-      (mTextWrapStyle != aNewData.mTextWrapStyle)) {
+      (mTextWrap != aNewData.mTextWrap)) {
     return NS_STYLE_HINT_REFLOW;
   }
 

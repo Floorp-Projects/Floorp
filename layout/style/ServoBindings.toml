@@ -137,8 +137,7 @@ rusty-enums = [
     "mozilla::StyleListStylePosition",
     "mozilla::StylePointerEvents",
     "mozilla::StyleScrollbarWidth",
-    "mozilla::StyleWhiteSpaceCollapse",
-    "mozilla::StyleTextWrapMode",
+    "mozilla::StyleWhiteSpace",
     "mozilla::StyleTextRendering",
     "mozilla::StyleFlexDirection",
     "mozilla::StyleStrokeLinecap",
@@ -177,7 +176,7 @@ rusty-enums = [
     "mozilla::StyleBlend",
     "mozilla::StyleMaskComposite",
     "mozilla::StyleWritingModeProperty",
-    "mozilla::StyleTextWrapStyle",
+    "mozilla::StyleTextWrap",
     "StyleFontVariantEmoji",
 ]
 allowlist-vars = [
