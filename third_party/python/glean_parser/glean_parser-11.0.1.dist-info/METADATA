@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 10.0.3
+Version: 11.0.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -10,11 +10,11 @@ Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
 Description-Content-Type: text/markdown
 License-File: LICENSE
 License-File: AUTHORS.md
@@ -43,7 +43,7 @@ code for various integrations, linting and coverage testing.
 
 ## Requirements
 
--   Python 3.7 (or later)
+-   Python 3.8 (or later)
 
 The following library requirements are installed automatically when
 `glean_parser` is installed by `pip`.
@@ -78,6 +78,18 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 11.0.1
+
+- Fix javascript_server template to include non-event metric parameters in #record call for event metrics ([#643](https://github.com/mozilla/glean_parser/pull/643))
+- events: Increase extra key limit to 50 ([Bug 1869429](https://bugzilla.mozilla.org/show_bug.cgi?id=1869429))
+
+## 11.0.0
+
+- Add updated logging logic for Ruby Server ([#642](https://github.com/mozilla/glean_parser/pull/642))
+- Add support for event metric type in server-side JavaScript outputter ([DENG-1736](https://mozilla-hub.atlassian.net/browse/DENG-1736))
+- BREAKING CHANGE: Dropped support for Python 3.7 ([#638](https://github.com/mozilla/glean_parser/pull/638))
+- Add official support for Python 3.11+ ([#638](https://github.com/mozilla/glean_parser/pull/638))
 
 ## 10.0.3
 

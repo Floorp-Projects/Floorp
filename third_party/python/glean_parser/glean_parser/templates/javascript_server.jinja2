@@ -17,19 +17,27 @@ import mozlog{% if lang == "typescript" %}, { Logger }{% endif %} from 'mozlog';
 const GLEAN_EVENT_MOZLOG_TYPE = 'glean-server-event';
 {% if lang == "typescript" %}
 type LoggerOptions = { app: string; fmt?: 'heka' };
+{% if event_metric_exists %}
+type Event = {
+  category: string;
+  name: string;
+  extra: Record<string, any>;
+  timestamp?: number;
+};
+{% endif %}
 {% endif %}
 
 let _logger{% if lang == "typescript" %}: Logger{% endif %};
 
 {% for ping, metrics_by_type in pings.items() %}
-class {{ ping|event_class_name }} {
+class {{ ping|event_class_name(event_metric_exists) }} {
   {% if lang == "typescript" %}
   _applicationId: string;
   _appDisplayVersion: string;
   _channel: string;
   {% endif %}
   /**
-   * Create {{ ping|event_class_name }} instance.
+   * Create {{ ping|event_class_name(event_metric_exists) }} instance.
    *
    * @param {string} applicationId - The application ID.
    * @param {string} appDisplayVersion - The application display version.
@@ -64,6 +72,9 @@ class {{ ping|event_class_name }} {
       {% endif %}
     }
   }
+  {% if event_metric_exists %}
+  #record({
+  {% else %}
   /**
    * Record and submit a server event object.
    * Event is logged using internal mozlog logger.
@@ -73,40 +84,60 @@ class {{ ping|event_class_name }} {
    *                              information and scrubbed at ingestion.
    {% for metric_type, metrics in metrics_by_type.items() %}
    {% for metric in metrics %}
-   * @param { {{-metric|js_metric_type-}} } {{ metric|metric_argument_name }} - {{ metric|metric_argument_description }}.
+   * @param { {{-metric|js_metric_type-}} } {{ metric|metric_argument_name }} - {{ metric.description|clean_string }}.
    {% endfor %}
    {% endfor %}
    */
   record({
+  {% endif %}
     user_agent,
     ip_address,
     {% for metric_type, metrics in metrics_by_type.items() %}
+    {% if metric_type != 'event' %}
     {% for metric in metrics %}
     {{ metric|metric_argument_name }},
     {% endfor %}
+    {% endif %}
     {% endfor %}
+    {% if event_metric_exists %}
+    event,
+    {% endif %}
   {% if lang == "typescript" %}
   }: {
     user_agent: string,
     ip_address: string,
     {% for metric_type, metrics in metrics_by_type.items() %}
+    {% if metric_type != 'event' %}
     {% for metric in metrics %}
-    {{ metric|metric_argument_name }}: {{ metric|js_metric_type }};
+    {{ metric|metric_argument_name }}: {{ metric|js_metric_type }},
     {% endfor %}
+    {% endif %}
     {% endfor %}
+    {% if event_metric_exists %}
+    event: Event
+    {% endif %}
   {% endif %}
   }) {
-    const timestamp = new Date().toISOString();
+    const now = new Date();
+    const timestamp = now.toISOString();
+    {% if event_metric_exists %}
+    event.timestamp = now.getTime();
+    {% endif %}
     const eventPayload = {
       metrics: {
         {% for metric_type, metrics in metrics_by_type.items() %}
+        {% if metric_type != 'event' %}
         {{ metric_type }}: {
           {% for metric in metrics %}
           '{{ metric|metric_name }}': {{ metric|metric_argument_name }},
           {% endfor %}
         },
+        {% endif %}
         {% endfor %}
       },
+      {% if event_metric_exists %}
+      events: [event],
+      {% endif %}
       ping_info: {
         seq: 0, // this is required, however doesn't seem to be useful in server context
         start_time: timestamp,
@@ -140,11 +171,98 @@ class {{ ping|event_class_name }} {
     // this is similar to how FxA currently logs with mozlog: https://github.com/mozilla/fxa/blob/4c5c702a7fcbf6f8c6b1f175e9172cdd21471eac/packages/fxa-auth-server/lib/log.js#L289
     _logger.info(GLEAN_EVENT_MOZLOG_TYPE, ping);
   }
+  {% if event_metric_exists %}
+  {% for event in metrics_by_type["event"] %}
+  /**
+   * Record and submit a {{ event.category }}_{{ event.name }} event:
+   * {{ event.description|clean_string }}
+   * Event is logged using internal mozlog logger.
+   *
+   * @param {string} user_agent - The user agent.
+   * @param {string} ip_address - The IP address. Will be used to decode Geo
+   *                              information and scrubbed at ingestion.
+   {% for metric_type, metrics in metrics_by_type.items() %}
+   {% if metric_type != 'event' %}
+   {% for metric in metrics %}
+   * @param { {{-metric|js_metric_type-}} } {{ metric|metric_argument_name }} - {{ metric.description|clean_string }}.
+   {% endfor %}
+   {% endif %}
+   {% endfor %}
+   {% if event.extra_keys %}
+   {% for extra, metadata in event.extra_keys.items() %}
+   * @param { {{-metadata.type-}} } {{ extra }} - {{ metadata.description|clean_string }}.
+   {% endfor %}
+   {% endif %}
+   */
+  {{ event|event_metric_record_function_name }}({
+    user_agent,
+    ip_address,
+    {% for metric_type, metrics in metrics_by_type.items() %}
+    {% if metric_type != 'event' %}
+    {% for metric in metrics %}
+    {{ metric|metric_argument_name }},
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+    {% for extra, metadata in event.extra_keys.items() %}
+    {{ extra }},
+    {% endfor %}
+  {% if lang == "typescript" %}
+  }: {
+    user_agent: string,
+    ip_address: string,
+    {% for metric_type, metrics in metrics_by_type.items() %}
+    {% if metric_type != 'event' %}
+    {% for metric in metrics %}
+    {{ metric|metric_argument_name }}: {{ metric|js_metric_type }},
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+    {% for extra, metadata in event.extra_keys.items() %}
+    {{ extra }}: {{metadata.type}},
+    {% endfor %}
+  {% endif %}
+  }) {
+    let event = {
+      'category': '{{ event.category }}',
+      'name': '{{ event.name }}',
+      {% if event.extra_keys %}
+      'extra': {
+        {% for extra, metadata in event.extra_keys.items() %}
+        '{{ extra }}': {{ extra }},
+        {% endfor %}
+      },
+      {% endif %}
+    };
+    this.#record({
+      user_agent,
+      ip_address,
+      {% for metric_type, metrics in metrics_by_type.items() %}
+      {% if metric_type != 'event' %}
+      {% for metric in metrics %}
+      {{ metric|metric_argument_name }},
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      event
+    });
+  }
+  {% endfor %}
+  {% endif %}
 }
 {% endfor %}
 {% for ping in pings %}
 
-export const {{ ping|factory_method }} = function ({
+/**
+ * Factory function that creates an instance of Glean Server Event Logger to
+ * record `{{ ping }}` ping events.
+ * @param {string} applicationId - The application ID.
+ * @param {string} appDisplayVersion - The application display version.
+ * @param {string} channel - The channel.
+ * @param {Object} logger_options - The logger options.
+ * @returns {EventsServerEventLogger} An instance of EventsServerEventLogger.
+ */
+export const {{ ping|factory_method(event_metric_exists) }} = function ({
   applicationId,
   appDisplayVersion,
   channel,
@@ -157,7 +275,7 @@ export const {{ ping|factory_method }} = function ({
   logger_options: LoggerOptions;
 {% endif %}
 }) {
-  return new {{ ping|event_class_name }}(
+  return new {{ ping|event_class_name(event_metric_exists) }}(
     applicationId,
     appDisplayVersion,
     channel,

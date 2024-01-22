@@ -368,7 +368,7 @@ definitions:
         description: |
           The acceptable keys on the "extra" object sent with events. This is an
           object mapping the key to an object containing metadata about the key.
-          A maximum of 15 extra keys is allowed.
+          A maximum of 50 extra keys is allowed.
           This metadata object has the following keys:
 
             - `description`: **Required.** A description of the key.
@@ -390,7 +390,7 @@ definitions:
                 - quantity
           required:
             - description
-        maxProperties: 15
+        maxProperties: 50
         default: {}
 
       gecko_datapoint:
