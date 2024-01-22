@@ -2527,12 +2527,6 @@ nsresult LaunchChild(bool aBlankCommandLine, bool aTryExec) {
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
 
-#if defined(MOZ_WAYLAND)
-  // Shut down Wayland proxy before exec and restore WAYLAND_DISPLAY
-  // env variable.
-  gWaylandProxy = nullptr;
-#endif
-
 #ifdef MOZ_JPROF
   // make sure JPROF doesn't think we're E10s
   unsetenv("JPROF_ISCHILD");
@@ -4740,13 +4734,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
         WaylandProxy::SetVerbose(true);
       }
 #    endif
-      // Wayland proxy may be already running by update, no need to terminate
-      // it and start again.
-      if (!gWaylandProxy) {
-        gWaylandProxy = WaylandProxy::Create();
-        if (gWaylandProxy) {
-          gWaylandProxy->RunThread();
-        }
+      gWaylandProxy = WaylandProxy::Create();
+      if (gWaylandProxy) {
+        gWaylandProxy->RunThread();
       }
     }
 #  endif
