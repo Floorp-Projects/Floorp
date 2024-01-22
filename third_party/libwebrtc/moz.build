@@ -417,6 +417,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/config_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/core_headers_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/log_severity_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/nullability_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/raw_logging_internal_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/throw_delegate_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_gn",
