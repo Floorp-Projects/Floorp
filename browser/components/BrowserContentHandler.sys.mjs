@@ -60,39 +60,76 @@ function shouldLoadURI(aURI) {
   return false;
 }
 
-function resolveURIInternal(aCmdLine, aArgument) {
+function validateFirefoxProtocol(aCmdLine, launchedWithArg_osint) {
+  let paramCount = 0;
+  // Only accept one parameter when we're handling the protocol.
+  for (let i = 0; i < aCmdLine.length; i++) {
+    if (!aCmdLine.getArgument(i).startsWith("-")) {
+      paramCount++;
+    }
+    if (paramCount > 1) {
+      return false;
+    }
+  }
+  // `-osint` and handling registered file types and protocols is Windows-only.
+  return AppConstants.platform != "win" || launchedWithArg_osint;
+}
+
+function resolveURIInternal(
+  aCmdLine,
+  aArgument,
+  launchedWithArg_osint = false
+) {
+  let principal = lazy.gSystemPrincipal;
+
   // If using Firefox protocol handler remove it from URI
   // at this stage. This is before we would otherwise
   // record telemetry so do that here.
-  if (aArgument.startsWith("firefox:")) {
-    aArgument = aArgument.substring("firefox:".length);
-    Services.telemetry.keyedScalarAdd(
-      "os.environment.launched_to_handle",
-      "firefox",
-      1
-    );
-  }
-  if (aArgument.startsWith("firefox-private:")) {
-    aArgument = aArgument.substring("firefox-private:".length);
-    Services.telemetry.keyedScalarAdd(
-      "os.environment.launched_to_handle",
-      "firefox-private",
-      1
-    );
-  }
+  let handleFirefoxProtocol = protocol => {
+    let protocolWithColon = protocol + ":";
+    if (aArgument.startsWith(protocolWithColon)) {
+      if (!validateFirefoxProtocol(aCmdLine, launchedWithArg_osint)) {
+        throw new Error(
+          "Invalid use of Firefox and Firefox-private protocols."
+        );
+      }
+      aArgument = aArgument.substring(protocolWithColon.length);
+
+      if (
+        !aArgument.startsWith("http://") &&
+        !aArgument.startsWith("https://")
+      ) {
+        throw new Error(
+          "Firefox and Firefox-private protocols can only be used in conjunction with http and https urls."
+        );
+      }
+
+      principal = Services.scriptSecurityManager.createNullPrincipal({});
+      Services.telemetry.keyedScalarAdd(
+        "os.environment.launched_to_handle",
+        protocol,
+        1
+      );
+    }
+  };
+
+  handleFirefoxProtocol("firefox");
+  handleFirefoxProtocol("firefox-private");
+
   var uri = aCmdLine.resolveURI(aArgument);
   var uriFixup = Services.uriFixup;
 
   if (!(uri instanceof Ci.nsIFileURL)) {
-    return Services.uriFixup.getFixupURIInfo(
+    let prefURI = Services.uriFixup.getFixupURIInfo(
       aArgument,
       uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
     ).preferredURI;
+    return { uri: prefURI, principal };
   }
 
   try {
     if (uri.file.exists()) {
-      return uri;
+      return { uri, principal };
     }
   } catch (e) {
     console.error(e);
@@ -107,7 +144,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
     console.error(e);
   }
 
-  return uri;
+  return { uri, principal };
 }
 
 let gKiosk = false;
@@ -445,11 +482,11 @@ nsBrowserContentHandler.prototype = {
     var uriparam;
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
-        let uri = resolveURIInternal(cmdLine, uriparam);
+        let { uri, principal } = resolveURIInternal(cmdLine, uriparam);
         if (!shouldLoadURI(uri)) {
           continue;
         }
-        openBrowserWindow(cmdLine, lazy.gSystemPrincipal, uri.spec);
+        openBrowserWindow(cmdLine, principal, uri.spec);
         cmdLine.preventDefault = true;
       }
     } catch (e) {
@@ -458,13 +495,13 @@ nsBrowserContentHandler.prototype = {
 
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
-        let uri = resolveURIInternal(cmdLine, uriparam);
+        let { uri, principal } = resolveURIInternal(cmdLine, uriparam);
         handURIToExistingBrowser(
           uri,
           Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
           cmdLine,
           false,
-          lazy.gSystemPrincipal
+          principal
         );
         cmdLine.preventDefault = true;
       }
@@ -483,7 +520,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       } else {
         try {
-          let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
+          let { uri: resolvedURI } = resolveURIInternal(cmdLine, chromeParam);
           let isLocal = uri => {
             let localSchemes = new Set(["chrome", "file", "resource"]);
             if (uri instanceof Ci.nsINestedURI) {
@@ -539,26 +576,40 @@ nsBrowserContentHandler.prototype = {
         url = cmdLine.getArgument(urlFlagIdx + 1);
       }
       if (privateWindowParam || url?.startsWith("firefox-private:")) {
+        // Check if the osint flag is present on Windows
+        let launchedWithArg_osint =
+          AppConstants.platform == "win" &&
+          cmdLine.findFlag("osint", false) == 0;
         let forcePrivate = true;
-        let resolvedURI;
+        let resolvedInfo;
         if (!lazy.PrivateBrowsingUtils.enabled) {
           // Load about:privatebrowsing in a normal tab, which will display an error indicating
           // access to private browsing has been disabled.
           forcePrivate = false;
-          resolvedURI = Services.io.newURI("about:privatebrowsing");
+          resolvedInfo = {
+            uri: Services.io.newURI("about:privatebrowsing"),
+            principal: lazy.gSystemPrincipal,
+          };
         } else if (url?.startsWith("firefox-private:")) {
-          // We can safely remove the flag and parameter now.
           cmdLine.removeArguments(urlFlagIdx, urlFlagIdx + 1);
-          resolvedURI = resolveURIInternal(cmdLine, url);
+          resolvedInfo = resolveURIInternal(
+            cmdLine,
+            url,
+            launchedWithArg_osint
+          );
         } else {
-          resolvedURI = resolveURIInternal(cmdLine, privateWindowParam);
+          resolvedInfo = resolveURIInternal(
+            cmdLine,
+            privateWindowParam,
+            launchedWithArg_osint
+          );
         }
         handURIToExistingBrowser(
-          resolvedURI,
+          resolvedInfo.uri,
           Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
           cmdLine,
           forcePrivate,
-          lazy.gSystemPrincipal
+          resolvedInfo.principal
         );
         cmdLine.preventDefault = true;
       }
@@ -1059,6 +1110,7 @@ nsDefaultCommandLineHandler.prototype = {
   /* nsICommandLineHandler */
   handle: function dch_handle(cmdLine) {
     var urilist = [];
+    var principalList = [];
 
     if (cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
       // Since the purpose of this is to record early in startup,
@@ -1158,7 +1210,10 @@ nsDefaultCommandLineHandler.prototype = {
           if (notificationData?.launchUrl && !opaqueRelaunchData) {
             // Unprivileged Web Notifications contain a launch URL and are handled
             // slightly differently than privileged notifications with actions.
-            let uri = resolveURIInternal(cmdLine, notificationData.launchUrl);
+            let { uri, principal } = resolveURIInternal(
+              cmdLine,
+              notificationData.launchUrl
+            );
             if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
               // Try to find an existing window and load our URI into the current
               // tab, new tab, or new window as prefs determine.
@@ -1168,14 +1223,14 @@ nsDefaultCommandLineHandler.prototype = {
                   Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
                   cmdLine,
                   false,
-                  lazy.gSystemPrincipal
+                  principal
                 );
                 return;
               } catch (e) {}
             }
 
             if (shouldLoadURI(uri)) {
-              openBrowserWindow(cmdLine, lazy.gSystemPrincipal, [uri.spec]);
+              openBrowserWindow(cmdLine, principal, [uri.spec]);
             }
           } else if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
             // No URL provided, but notification was interacted with while the
@@ -1285,8 +1340,13 @@ nsDefaultCommandLineHandler.prototype = {
     try {
       var ar;
       while ((ar = cmdLine.handleFlagWithParam("url", false))) {
-        var uri = resolveURIInternal(cmdLine, ar);
+        let { uri, principal } = resolveURIInternal(
+          cmdLine,
+          ar,
+          launchedWithArg_osint
+        );
         urilist.push(uri);
+        principalList.push(principal);
 
         if (launchedWithArg_osint) {
           launchedWithArg_osint = false;
@@ -1326,9 +1386,11 @@ nsDefaultCommandLineHandler.prototype = {
         )
       );
       urilist.push(thanksURI);
+      principalList.push(lazy.gSystemPrincipal);
     }
 
     if (cmdLine.findFlag("screenshot", true) != -1) {
+      // Shouldn't have to push principal here with the screenshot flag
       lazy.HeadlessShell.handleCmdLineArgs(
         cmdLine,
         urilist.filter(shouldLoadURI).map(u => u.spec)
@@ -1345,7 +1407,9 @@ nsDefaultCommandLineHandler.prototype = {
         ++i;
       } else {
         try {
-          urilist.push(resolveURIInternal(cmdLine, curarg));
+          let { uri, principal } = resolveURIInternal(cmdLine, curarg);
+          urilist.push(uri);
+          principalList.push(principal);
         } catch (e) {
           console.error(
             `Error opening URI ${curarg} from the command line:`,
@@ -1368,12 +1432,16 @@ nsDefaultCommandLineHandler.prototype = {
             Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
             cmdLine,
             false,
-            lazy.gSystemPrincipal
+            principalList[0] ?? lazy.gSystemPrincipal
           );
           return;
         } catch (e) {}
       }
 
+      // Can't open multiple URLs without using system principal.
+      // The firefox and firefox-private protocols should only
+      // accept a single URL due to using the -osint option
+      // so this isn't very relevant.
       var URLlist = urilist.filter(shouldLoadURI).map(u => u.spec);
       if (URLlist.length) {
         openBrowserWindow(cmdLine, lazy.gSystemPrincipal, URLlist);
