@@ -1760,17 +1760,50 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
   return AttachDecision::Attach;
 }
 
+// Emit CacheIR to guard the DOM proxy doesn't shadow |id|. There are two types
+// of DOM proxies:
+//
+// (a) DOM proxies marked LegacyOverrideBuiltIns in WebIDL, for example
+//     HTMLDocument or HTMLFormElement. These proxies look up properties in this
+//     order:
+//
+//       (1) The expando object.
+//       (2) The proxy's named-property handler.
+//       (3) The prototype chain.
+//
+//     To optimize properties on the prototype chain, we have to guard that (1)
+//     and (2) don't shadow (3). We handle (1) by either emitting a shape guard
+//     for the expando object or by guarding the proxy has no expando object. To
+//     efficiently handle (2), the proxy must have an ExpandoAndGeneration*
+//     stored as PrivateValue. We guard on its generation field to ensure the
+//     set of names hasn't changed.
+//
+// (b) Other DOM proxies. These proxies look up properties in this
+//     order:
+//
+//       (1) The expando object.
+//       (2) The prototype chain.
+//       (3) The proxy's named-property handler.
+//
+//     To optimize properties on the prototype chain, we only have to guard the
+//     expando object doesn't shadow it.
+//
+// See also:
+// * DOMProxyShadows in DOMJSProxyHandler.cpp
+// * https://webidl.spec.whatwg.org/#dfn-named-property-visibility (the Note at
+//   the end)
+//
 // Callers are expected to have already guarded on the shape of the
 // object, which guarantees the object is a DOM proxy.
-static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
-                                              ProxyObject* obj, jsid id,
-                                              ObjOperandId objId) {
+static void CheckDOMProxyDoesNotShadow(CacheIRWriter& writer, ProxyObject* obj,
+                                       jsid id, ObjOperandId objId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   Value expandoVal = GetProxyPrivate(obj);
 
   ValOperandId expandoId;
   if (!expandoVal.isObject() && !expandoVal.isUndefined()) {
+    // Case (a).
     auto expandoAndGeneration =
         static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
     uint64_t generation = expandoAndGeneration->generation;
@@ -1778,6 +1811,7 @@ static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
         objId, expandoAndGeneration, generation);
     expandoVal = expandoAndGeneration->expando;
   } else {
+    // Case (b).
     expandoId = writer.loadDOMExpandoValue(objId);
   }
 
@@ -1800,25 +1834,26 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     ValOperandId receiverId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-  JSObject* checkObj = obj->staticPrototype();
-  if (!checkObj) {
+  JSObject* protoObj = obj->staticPrototype();
+  if (!protoObj) {
     return AttachDecision::NoAction;
   }
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
   NativeGetPropKind kind =
-      CanAttachNativeGetProp(cx_, checkObj, id, &holder, &prop, pc_);
+      CanAttachNativeGetProp(cx_, protoObj, id, &holder, &prop, pc_);
   if (kind == NativeGetPropKind::None) {
     return AttachDecision::NoAction;
   }
-  auto* nativeCheckObj = &checkObj->as<NativeObject>();
+  auto* nativeProtoObj = &protoObj->as<NativeObject>();
 
   maybeEmitIdGuard(id);
 
-  // Guard that our expando object hasn't started shadowing this property.
+  // Guard that our proxy (expando) object hasn't started shadowing this
+  // property.
   TestMatchingProxyReceiver(writer, obj, objId);
-  CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
+  CheckDOMProxyDoesNotShadow(writer, obj, id, objId);
 
   if (holder) {
     // Found the property on the prototype chain. Treat it like a native
@@ -1842,7 +1877,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       MOZ_ASSERT(!isSuper());
       EmitGuardGetterSetterSlot(writer, holder, *prop, holderId,
                                 /* holderIsConstant = */ true);
-      EmitCallGetterResultNoGuards(cx_, writer, kind, nativeCheckObj, holder,
+      EmitCallGetterResultNoGuards(cx_, writer, kind, nativeProtoObj, holder,
                                    *prop, receiverId);
     }
   } else {
@@ -4862,9 +4897,10 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 
   maybeEmitIdGuard(id);
 
-  // Guard that our expando object hasn't started shadowing this property.
+  // Guard that our proxy (expando) object hasn't started shadowing this
+  // property.
   TestMatchingProxyReceiver(writer, obj, objId);
-  CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
+  CheckDOMProxyDoesNotShadow(writer, obj, id, objId);
 
   GeneratePrototypeGuards(writer, obj, holder, objId);
 
