@@ -143,7 +143,7 @@ Reduce the coupling of the `Activity`s. Establish `HomeActivity` as the *main* `
 
 7. Rename `HomeActivity` to be explicit that this is the *main* `Activity`. For info, the Focus application uses a `MainActivity`, the Reference Browser application uses a `BrowserActivity`.
 
-The next steps are less cleary defined and require more investigation on the completion of the above tasks.
+The next steps are less clearly defined and require more investigation on the completion of the above tasks.
 
 * Explore alternatives to the current Inheritance structure. E.g. Kotlin Delegation methods, an alternative 'base' `Activity` model or consolidating `ExternalAppBrowserActivity` & `HomeActivity` into a single `Activity`.
 * Prevent unnecessary checks being carried out by `ExternalAppBrowserActivity` in `HomeActivity` lifecycle related functions.
