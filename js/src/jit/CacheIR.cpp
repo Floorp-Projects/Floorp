@@ -1778,6 +1778,9 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
 //     stored as PrivateValue. We guard on its generation field to ensure the
 //     set of names hasn't changed.
 //
+//     Missing properties can be optimized in a similar way by emitting shape
+//     guards for the prototype chain.
+//
 // (b) Other DOM proxies. These proxies look up properties in this
 //     order:
 //
@@ -1788,6 +1791,10 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
 //     To optimize properties on the prototype chain, we only have to guard the
 //     expando object doesn't shadow it.
 //
+//     Missing properties can't be optimized in this case because we don't have
+//     an efficient way to guard against the proxy handler shadowing the
+//     property (there's no ExpandoAndGeneration*).
+//
 // See also:
 // * DOMProxyShadows in DOMJSProxyHandler.cpp
 // * https://webidl.spec.whatwg.org/#dfn-named-property-visibility (the Note at
@@ -1796,7 +1803,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
 // Callers are expected to have already guarded on the shape of the
 // object, which guarantees the object is a DOM proxy.
 static void CheckDOMProxyDoesNotShadow(CacheIRWriter& writer, ProxyObject* obj,
-                                       jsid id, ObjOperandId objId) {
+                                       jsid id, ObjOperandId objId,
+                                       bool* canOptimizeMissing) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   Value expandoVal = GetProxyPrivate(obj);
@@ -1810,9 +1818,11 @@ static void CheckDOMProxyDoesNotShadow(CacheIRWriter& writer, ProxyObject* obj,
     expandoId = writer.loadDOMExpandoValueGuardGeneration(
         objId, expandoAndGeneration, generation);
     expandoVal = expandoAndGeneration->expando;
+    *canOptimizeMissing = true;
   } else {
     // Case (b).
     expandoId = writer.loadDOMExpandoValue(objId);
+    *canOptimizeMissing = false;
   }
 
   if (expandoVal.isUndefined()) {
@@ -1853,7 +1863,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // Guard that our proxy (expando) object hasn't started shadowing this
   // property.
   TestMatchingProxyReceiver(writer, obj, objId);
-  CheckDOMProxyDoesNotShadow(writer, obj, id, objId);
+  bool canOptimizeMissing = false;
+  CheckDOMProxyDoesNotShadow(writer, obj, id, objId, &canOptimizeMissing);
 
   if (holder) {
     // Found the property on the prototype chain. Treat it like a native
@@ -1881,11 +1892,17 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
                                    *prop, receiverId);
     }
   } else {
-    // Property was not found on the prototype chain. Deoptimize down to
-    // proxy get call.
+    // Property was not found on the prototype chain.
     MOZ_ASSERT(kind == NativeGetPropKind::Missing);
-    MOZ_ASSERT(!isSuper());
-    writer.proxyGetResult(objId, id);
+    if (canOptimizeMissing) {
+      // We already guarded on the proxy's shape, so now shape guard the proto
+      // chain.
+      ObjOperandId protoId = writer.loadObject(nativeProtoObj);
+      EmitMissingPropResult(writer, nativeProtoObj, protoId);
+    } else {
+      MOZ_ASSERT(!isSuper());
+      writer.proxyGetResult(objId, id);
+    }
     writer.returnFromIC();
   }
 
@@ -4900,7 +4917,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // Guard that our proxy (expando) object hasn't started shadowing this
   // property.
   TestMatchingProxyReceiver(writer, obj, objId);
-  CheckDOMProxyDoesNotShadow(writer, obj, id, objId);
+  bool canOptimizeMissing = false;
+  CheckDOMProxyDoesNotShadow(writer, obj, id, objId, &canOptimizeMissing);
 
   GeneratePrototypeGuards(writer, obj, holder, objId);
 
