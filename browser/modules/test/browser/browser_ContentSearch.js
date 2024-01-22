@@ -436,7 +436,6 @@ async function waitForNewEngine(browser, basename) {
   // There are two events triggerd by engine-added and engine-loaded
   let statePromise = await waitForTestMsg(browser, "CurrentState", 2);
 
-  // Wait for addOpenSearchEngine().
   let engine = await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + basename,
   });

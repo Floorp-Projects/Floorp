@@ -231,11 +231,10 @@ add_task(async function test_defaultPrivateEngine() {
 });
 
 add_task(async function test_telemetry_private_empty_submission_url() {
-  let engine = await Services.search.addOpenSearchEngine(
-    gDataUrl + "simple.xml",
-    null
-  );
-  Services.search.defaultPrivateEngine = engine;
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}simple.xml`,
+    setAsDefaultPrivate: true,
+  });
 
   await assertGleanDefaultEngine({
     normal: {

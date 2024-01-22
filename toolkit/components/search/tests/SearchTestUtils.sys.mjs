@@ -45,6 +45,8 @@ export var SearchTestUtils = {
    *   Whether or not to set the engine as default automatically for private mode.
    *   If this is true, the engine will be set as default, and the previous default
    *   engine will be restored when the test exits.
+   * @param {boolean} [options.skipReset]
+   *   Skips resetting the default engine at the end of the test.
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
@@ -52,6 +54,7 @@ export var SearchTestUtils = {
     url,
     setAsDefault = false,
     setAsDefaultPrivate = false,
+    skipReset = false,
   }) {
     // OpenSearch engines can only be added via http protocols.
     url = url.replace("chrome://mochitests/content", "https://example.com");
@@ -71,13 +74,13 @@ export var SearchTestUtils = {
       );
     }
     gTestScope.registerCleanupFunction(async () => {
-      if (setAsDefault) {
+      if (setAsDefault && !skipReset) {
         await Services.search.setDefault(
           previousEngine,
           Ci.nsISearchService.CHANGE_REASON_UNKNOWN
         );
       }
-      if (setAsDefaultPrivate) {
+      if (setAsDefaultPrivate && !skipReset) {
         await Services.search.setDefaultPrivate(
           previousPrivateEngine,
           Ci.nsISearchService.CHANGE_REASON_UNKNOWN

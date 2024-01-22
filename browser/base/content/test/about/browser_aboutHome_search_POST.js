@@ -20,50 +20,12 @@ add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
     async browser => {
-      let observerPromise = new Promise(resolve => {
-        let searchObserver = async function search_observer(
-          subject,
-          topic,
-          data
-        ) {
-          let engine = subject.QueryInterface(Ci.nsISearchEngine);
-          info("Observer: " + data + " for " + engine.name);
-
-          if (data != "engine-added") {
-            return;
-          }
-
-          if (engine.name != "POST Search") {
-            return;
-          }
-
-          Services.obs.removeObserver(
-            searchObserver,
-            "browser-search-engine-modified"
-          );
-
-          resolve(engine);
-        };
-
-        Services.obs.addObserver(
-          searchObserver,
-          "browser-search-engine-modified"
-        );
-      });
-
       let engine;
       await promiseContentSearchChange(browser, async () => {
-        Services.search.addOpenSearchEngine(
-          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-          "http://test:80/browser/browser/base/content/test/about/POSTSearchEngine.xml",
-          null
-        );
-
-        engine = await observerPromise;
-        Services.search.setDefault(
-          engine,
-          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-        );
+        engine = await SearchTestUtils.promiseNewSearchEngine({
+          url: "https://example.com/browser/browser/base/content/test/about/POSTSearchEngine.xml",
+          setAsDefault: true,
+        });
         return engine.name;
       });
 
