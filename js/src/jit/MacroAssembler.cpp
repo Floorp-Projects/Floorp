@@ -1444,17 +1444,59 @@ void MacroAssembler::storeDependentStringBase(Register base, Register str) {
   storePtr(base, Address(str, JSDependentString::offsetOfBase()));
 }
 
-void MacroAssembler::loadRopeChild(Register str, Register index,
-                                   Register output, Label* isLinear) {
+void MacroAssembler::branchIfMaybeSplitSurrogatePair(Register leftChild,
+                                                     Register index,
+                                                     Register scratch,
+                                                     Label* maybeSplit,
+                                                     Label* notSplit) {
+  // If |index| is the last character of the left child and the left child
+  // is a two-byte string, it's possible that a surrogate pair is split
+  // between the left and right child of a rope.
+
+  // Can't be a split surrogate when the left child is a Latin-1 string.
+  branchLatin1String(leftChild, notSplit);
+
+  // Can't be a split surrogate when |index + 1| is in the left child.
+  add32(Imm32(1), index, scratch);
+  branch32(Assembler::Above, Address(leftChild, JSString::offsetOfLength()),
+           scratch, notSplit);
+
+  // Load the character at |index|.
+  loadStringChars(leftChild, scratch, CharEncoding::TwoByte);
+  loadChar(scratch, index, scratch, CharEncoding::TwoByte);
+
+  // Jump to |maybeSplit| if the last character is a lead surrogate.
+  branchIfLeadSurrogate(scratch, scratch, maybeSplit);
+}
+
+void MacroAssembler::loadRopeChild(CharKind kind, Register str, Register index,
+                                   Register output, Register maybeScratch,
+                                   Label* isLinear, Label* splitSurrogate) {
   // This follows JSString::getChar.
   branchIfNotRope(str, isLinear);
 
   loadRopeLeftChild(str, output);
 
-  // Check if the index is contained in the leftChild.
   Label loadedChild;
-  branch32(Assembler::Above, Address(output, JSString::offsetOfLength()), index,
-           &loadedChild);
+  if (kind == CharKind::CharCode) {
+    // Check if |index| is contained in the left child.
+    branch32(Assembler::Above, Address(output, JSString::offsetOfLength()),
+             index, &loadedChild);
+  } else {
+    MOZ_ASSERT(maybeScratch != InvalidReg);
+
+    // Check if |index| is contained in the left child.
+    Label loadRight;
+    branch32(Assembler::BelowOrEqual,
+             Address(output, JSString::offsetOfLength()), index, &loadRight);
+    {
+      // Handle possible split surrogate pairs.
+      branchIfMaybeSplitSurrogatePair(output, index, maybeScratch,
+                                      splitSurrogate, &loadedChild);
+      jump(&loadedChild);
+    }
+    bind(&loadRight);
+  }
 
   // The index must be in the rightChild.
   loadRopeRightChild(str, output);
@@ -1462,19 +1504,29 @@ void MacroAssembler::loadRopeChild(Register str, Register index,
   bind(&loadedChild);
 }
 
-void MacroAssembler::branchIfCanLoadStringChar(Register str, Register index,
-                                               Register scratch, Label* label) {
-  loadRopeChild(str, index, scratch, label);
+void MacroAssembler::branchIfCanLoadStringChar(CharKind kind, Register str,
+                                               Register index, Register scratch,
+                                               Register maybeScratch,
+                                               Label* label) {
+  Label splitSurrogate;
+  loadRopeChild(kind, str, index, scratch, maybeScratch, label,
+                &splitSurrogate);
 
   // Branch if the left resp. right side is linear.
   branchIfNotRope(scratch, label);
+
+  if (kind == CharKind::CodePoint) {
+    bind(&splitSurrogate);
+  }
 }
 
-void MacroAssembler::branchIfNotCanLoadStringChar(Register str, Register index,
+void MacroAssembler::branchIfNotCanLoadStringChar(CharKind kind, Register str,
+                                                  Register index,
                                                   Register scratch,
+                                                  Register maybeScratch,
                                                   Label* label) {
   Label done;
-  loadRopeChild(str, index, scratch, &done);
+  loadRopeChild(kind, str, index, scratch, maybeScratch, &done, label);
 
   // Branch if the left or right side is another rope.
   branchIfRope(scratch, label);
@@ -1482,12 +1534,13 @@ void MacroAssembler::branchIfNotCanLoadStringChar(Register str, Register index,
   bind(&done);
 }
 
-void MacroAssembler::loadStringChar(Register str, Register index,
+void MacroAssembler::loadStringChar(CharKind kind, Register str, Register index,
                                     Register output, Register scratch1,
                                     Register scratch2, Label* fail) {
   MOZ_ASSERT(str != output);
   MOZ_ASSERT(str != index);
   MOZ_ASSERT(index != output);
+  MOZ_ASSERT_IF(kind == CharKind::CodePoint, index != scratch1);
   MOZ_ASSERT(output != scratch1);
   MOZ_ASSERT(output != scratch2);
 
@@ -1507,6 +1560,10 @@ void MacroAssembler::loadStringChar(Register str, Register index,
   Label loadedChild, notInLeft;
   spectreBoundsCheck32(scratch1, Address(output, JSString::offsetOfLength()),
                        scratch2, &notInLeft);
+  if (kind == CharKind::CodePoint) {
+    branchIfMaybeSplitSurrogatePair(output, scratch1, scratch2, fail,
+                                    &loadedChild);
+  }
   jump(&loadedChild);
 
   // The index must be in the rightChild.
@@ -1522,16 +1579,54 @@ void MacroAssembler::loadStringChar(Register str, Register index,
   bind(&notRope);
 
   Label isLatin1, done;
-  // We have to check the left/right side for ropes,
-  // because a TwoByte rope might have a Latin1 child.
   branchLatin1String(output, &isLatin1);
-  loadStringChars(output, scratch2, CharEncoding::TwoByte);
-  loadChar(scratch2, scratch1, output, CharEncoding::TwoByte);
-  jump(&done);
+  {
+    loadStringChars(output, scratch2, CharEncoding::TwoByte);
 
+    if (kind == CharKind::CharCode) {
+      loadChar(scratch2, scratch1, output, CharEncoding::TwoByte);
+    } else {
+      // Load the first character.
+      addToCharPtr(scratch2, scratch1, CharEncoding::TwoByte);
+      loadChar(Address(scratch2, 0), output, CharEncoding::TwoByte);
+
+      // If the first character isn't a lead surrogate, go to |done|.
+      branchIfNotLeadSurrogate(output, &done);
+
+      // branchIfMaybeSplitSurrogatePair ensures that the surrogate pair can't
+      // split between two rope children. So if |index + 1 < str.length|, then
+      // |index| and |index + 1| are in the same rope child.
+      //
+      // NB: We use the non-adjusted |index| and |str| inputs, because |output|
+      // was overwritten and no longer contains the rope child.
+
+      // If |index + 1| is a valid index into |str|.
+      add32(Imm32(1), index, scratch1);
+      spectreBoundsCheck32(scratch1, Address(str, JSString::offsetOfLength()),
+                           InvalidReg, &done);
+
+      // Then load the next character at |scratch2 + sizeof(char16_t)|.
+      loadChar(Address(scratch2, sizeof(char16_t)), scratch1,
+               CharEncoding::TwoByte);
+
+      // If the next character isn't a trail surrogate, go to |done|.
+      branchIfNotTrailSurrogate(scratch1, scratch2, &done);
+
+      // Inlined unicode::UTF16Decode(char16_t, char16_t).
+      lshift32(Imm32(10), output);
+      add32(Imm32(unicode::NonBMPMin - (unicode::LeadSurrogateMin << 10) -
+                  unicode::TrailSurrogateMin),
+            scratch1);
+      add32(scratch1, output);
+    }
+
+    jump(&done);
+  }
   bind(&isLatin1);
-  loadStringChars(output, scratch2, CharEncoding::Latin1);
-  loadChar(scratch2, scratch1, output, CharEncoding::Latin1);
+  {
+    loadStringChars(output, scratch2, CharEncoding::Latin1);
+    loadChar(scratch2, scratch1, output, CharEncoding::Latin1);
+  }
 
   bind(&done);
 }
