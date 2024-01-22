@@ -19,6 +19,7 @@ task-defaults:
     attributes:
         build-type: debug
         code-review: true
+        retrigger: true
     # TODO port this in transforms
     dependencies:
         external-gradle-dependencies: external-gradle-dependencies-test-components
