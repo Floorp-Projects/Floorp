@@ -6616,6 +6616,45 @@ networking:
       - 'main'
       - 'socket'
 
+  captive_portal_banner_displayed:
+    bug_numbers:
+      - 1868145
+    description: >
+      Number of times the captive portal banner was displayed in this session.
+    expires: never
+    release_channel_collection: opt-out
+    keyed: false
+    kind: uint
+    notification_emails:
+      - necko@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+
+  captive_portal_banner_display_time:
+    bug_numbers:
+      - 1868145
+    description: >
+      Number of seconds the captive portal banner was displayed for, keyed by close reason:
+        "success" - the portal login was completed
+        "abort"   - the portal login was aborted (e.g. loss of network)
+        "dismiss" - the user dismissed the banner
+    expires: never
+    release_channel_collection: opt-out
+    keyed: true
+    keys:
+      - 'success'
+      - 'abort'
+      - 'dismiss'
+    kind: uint
+    notification_emails:
+      - necko@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+
   http3_enabled:
     bug_numbers:
       - 1652104
