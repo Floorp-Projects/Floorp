@@ -867,7 +867,8 @@ export var Sanitizer = {
               Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-              Ci.nsIClearDataService.CLEAR_AUTH_CACHE
+              Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         } else {
           // Not on shutdown
@@ -877,7 +878,8 @@ export var Sanitizer = {
               Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-              Ci.nsIClearDataService.CLEAR_AUTH_CACHE
+              Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);

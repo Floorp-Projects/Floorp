@@ -1388,6 +1388,22 @@ nsRFPService::CleanRandomKeyByOriginAttributesPattern(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRFPService::TestGenerateRandomKey(nsIChannel* aChannel,
+                                    nsTArray<uint8_t>& aKey) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  NS_ENSURE_ARG_POINTER(aChannel);
+
+  Maybe<nsTArray<uint8_t>> key = GenerateKey(aChannel);
+
+  if (!key) {
+    return NS_OK;
+  }
+
+  aKey = key.ref().Clone();
+  return NS_OK;
+}
+
 // static
 nsresult nsRFPService::GenerateCanvasKeyFromImageData(
     nsICookieJarSettings* aCookieJarSettings, uint8_t* aImageData,

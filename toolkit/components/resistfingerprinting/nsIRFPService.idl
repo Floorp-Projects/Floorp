@@ -6,6 +6,7 @@
 #include "nsIFingerprintingWebCompatService.idl"
 
 interface nsIPrincipal;
+interface nsIChannel;
 
 /**
  * The singleton serivce which handles fingerprinting protection stuffs.
@@ -70,4 +71,10 @@ interface nsIRFPService : nsISupports
    * OriginAttributesPattern.
    */
   void cleanRandomKeyByOriginAttributesPattern(in AString aPattern);
+
+  /**
+   * Test function for generating and return the fingerprinting randomization
+   * key for the given channel.
+   */
+  Array<uint8_t> testGenerateRandomKey(in nsIChannel aChannel);
 };

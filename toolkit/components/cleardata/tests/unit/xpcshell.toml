@@ -15,6 +15,8 @@ support-files = ""
 
 ["test_downloads.js"]
 
+["test_fingerprinting_protection_state.js"]
+
 ["test_identity_credential_storage.js"]
 
 ["test_network_cache.js"]
