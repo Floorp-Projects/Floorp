@@ -19,10 +19,6 @@ export const baseKeys = {
   user_prefs: Joi.number().integer().required(),
 };
 
-export const BasePing = Joi.object()
-  .keys(baseKeys)
-  .options({ allowUnknown: true });
-
 export const eventsTelemetryExtraKeys = Joi.object()
   .keys({
     session_id: baseKeys.session_id.required(),
@@ -32,25 +28,6 @@ export const eventsTelemetryExtraKeys = Joi.object()
     action_position: Joi.string().optional(),
   })
   .options({ allowUnknown: false });
-
-export const UserEventPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    session_id: baseKeys.session_id.required(),
-    page: baseKeys.page.required(),
-    source: Joi.string(),
-    event: Joi.string().required(),
-    action: Joi.valid("activity_stream_user_event").required(),
-    metadata_source: Joi.string(),
-    highlight_type: Joi.valid(["bookmarks", "recommendation", "history"]),
-    recommender_type: Joi.string(),
-    value: Joi.object().keys({
-      newtab_url_category: Joi.string(),
-      newtab_extension_id: Joi.string(),
-      home_url_category: Joi.string(),
-      home_extension_id: Joi.string(),
-    }),
-  })
-);
 
 export const UTUserEventPing = Joi.array().items(
   Joi.string().required().valid("activity_stream"),
@@ -157,94 +134,6 @@ export const TileSchema = Joi.object().keys({
   id: Joi.number().integer().required(),
   pos: Joi.number().integer(),
 });
-
-export const SessionPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    session_id: baseKeys.session_id.required(),
-    page: baseKeys.page.required(),
-    session_duration: Joi.number().integer(),
-    action: Joi.valid("activity_stream_session").required(),
-    profile_creation_date: Joi.number().integer(),
-    perf: Joi.object()
-      .keys({
-        // How long it took in ms for data to be ready for display.
-        highlights_data_late_by_ms: Joi.number().positive(),
-
-        // Timestamp of the action perceived by the user to trigger the load
-        // of this page.
-        //
-        // Not required at least for the error cases where the
-        // observer event doesn't fire
-        load_trigger_ts: Joi.number()
-          .integer()
-          .notes(["server counter", "server counter alert"]),
-
-        // What was the perceived trigger of the load action?
-        //
-        // Not required at least for the error cases where the observer event
-        // doesn't fire
-        load_trigger_type: Joi.valid([
-          "first_window_opened",
-          "menu_plus_or_keyboard",
-          "unexpected",
-        ])
-          .notes(["server counter", "server counter alert"])
-          .required(),
-
-        // How long it took in ms for data to be ready for display.
-        topsites_data_late_by_ms: Joi.number().positive(),
-
-        // When did the topsites element finish painting?  Note that, at least for
-        // the first tab to be loaded, and maybe some others, this will be before
-        // topsites has yet to receive screenshots updates from the add-on code,
-        // and is therefore just showing placeholder screenshots.
-        topsites_first_painted_ts: Joi.number()
-          .integer()
-          .notes(["server counter", "server counter alert"]),
-
-        // Information about the quality of TopSites images and icons.
-        topsites_icon_stats: Joi.object().keys({
-          custom_screenshot: Joi.number(),
-          rich_icon: Joi.number(),
-          screenshot: Joi.number(),
-          screenshot_with_icon: Joi.number(),
-          tippytop: Joi.number(),
-          no_image: Joi.number(),
-        }),
-
-        // The count of pinned Top Sites.
-        topsites_pinned: Joi.number(),
-
-        // The count of search shortcut Top Sites.
-        topsites_search_shortcuts: Joi.number(),
-
-        // When the page itself receives an event that document.visibilityState
-        // == visible.
-        //
-        // Not required at least for the (error?) case where the
-        // visibility_event doesn't fire.  (It's not clear whether this
-        // can happen in practice, but if it does, we'd like to know about it).
-        visibility_event_rcvd_ts: Joi.number()
-          .integer()
-          .notes(["server counter", "server counter alert"]),
-
-        // The boolean to signify whether the page is preloaded or not.
-        is_preloaded: Joi.bool().required(),
-      })
-      .required(),
-  })
-);
-
-export const ASRouterEventPing = Joi.object()
-  .keys({
-    addon_version: Joi.string().required(),
-    locale: Joi.string().required(),
-    message_id: Joi.string().required(),
-    event: Joi.string().required(),
-    client_id: Joi.string(),
-    impression_id: Joi.string(),
-  })
-  .or("client_id", "impression_id");
 
 export const UTSessionPing = Joi.array().items(
   Joi.string().required().valid("activity_stream"),

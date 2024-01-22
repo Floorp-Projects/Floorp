@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "browser/components/newtab/test/schemas/session_ping.schema.json",
+  "title": "Session PingCentre ping",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "addon_version": {
+      "type": "string"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "page": {
+      "type": "string",
+      "enum": ["about:home", "about:newtab", "about:welcome", "both", "unknown"]
+    },
+    "user_prefs": {
+      "type": "integer"
+    },
+    "session_duration": {
+      "type": "integer"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["activity_stream_session"]
+    },
+    "profile_creation_date": {
+      "type": "integer"
+    },
+    "perf": {
+      "type": "object",
+      "properties": {
+        "highlights_data_late_by_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "How long it took in ms for data to be ready for display."
+        },
+        "load_trigger_ts": {
+          "type": "integer",
+          "description": "Timestamp of the action perceived by the user to trigger the load of this page. Not required at least for the error cases where the observer event doesn't fire."
+        },
+        "load_trigger_type": {
+          "type": "string",
+          "enum": [
+            "first_window_opened",
+            "menu_plus_or_keyboard",
+            "unexpected"
+          ],
+          "description": "What was the perceived trigger of the load action? Not required at least for the error cases where the observer event doesn't fire."
+        },
+        "topsites_data_late_by_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "How long it took in ms for data to be ready for display."
+        },
+        "topsites_first_painted_ts": {
+          "type": "integer",
+          "description": "When did the topsites element finish painting?  Note that, at least for the first tab to be loaded, and maybe some others, this will be before topsites has yet to receive screenshots updates from the add-on code, and is therefore just showing placeholder screenshots."
+        },
+        "topsites_icon_stats": {
+          "type": "object",
+          "properties": {
+            "custom_screenshot": {
+              "type": "number"
+            },
+            "rich_icon": {
+              "type": "number"
+            },
+            "screenshot": {
+              "type": "number"
+            },
+            "screenshot_with_icon": {
+              "type": "number"
+            },
+            "tippytop": {
+              "type": "number"
+            },
+            "no_image": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Information about the quality of TopSites images and icons."
+        },
+        "topsites_pinned": {
+          "type": "number",
+          "description": "The count of pinned Top Sites."
+        },
+        "topsites_search_shortcuts": {
+          "type": "number",
+          "description": "The count of search shortcut Top Sites."
+        },
+        "visibility_event_rcvd_ts": {
+          "type": "integer",
+          "description": "When the page itself receives an event that document.visibilityState == visible. Not required at least for the (error?) case where the visibility_event doesn't fire.  (It's not clear whether this can happen in practice, but if it does, we'd like to know about it)."
+        },
+        "is_preloaded": {
+          "type": "boolean",
+          "description": "The boolean to signify whether the page is preloaded or not."
+        }
+      },
+      "required": ["load_trigger_type", "is_preloaded"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "addon_version",
+    "locale",
+    "session_id",
+    "page",
+    "user_prefs",
+    "action",
+    "perf"
+  ],
+  "additionalProperties": false
+}
