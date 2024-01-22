@@ -673,6 +673,10 @@ async function autoTranslatePage(options) {
 }
 
 /**
+ * @typedef {ReturnType<createAttachmentMock>} AttachmentMock
+ */
+
+/**
  * @param {RemoteSettingsClient} client
  * @param {string} mockedCollectionName - The name of the mocked collection without
  *  the incrementing "id" part. This is provided so that attachments can be asserted
