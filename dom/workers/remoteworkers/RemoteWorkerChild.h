@@ -60,6 +60,8 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
   void ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
                                     bool aIsErrorEvent);
 
+  void CSPViolationPropagationOnMainThread(const nsAString& aJSON);
+
   void NotifyLock(bool aCreated);
 
   void NotifyWebTransport(bool aCreated);

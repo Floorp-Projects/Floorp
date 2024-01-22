@@ -115,9 +115,14 @@ struct ErrorData {
   ErrorDataNote[] notes;
 };
 
+struct CSPViolation {
+  nsString json;
+};
+
 union ErrorValue {
   nsresult;
   ErrorData;
+  CSPViolation;
   void_t;
 };
 
