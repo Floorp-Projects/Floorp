@@ -61,7 +61,7 @@ try:
         TESTRAIL_USERNAME = secret["username"]
         TESTRAIL_PASSWORD = secret["password"]
 except json.JSONDecodeError as e:
-    raise ValueError("Failed to load testrail credentials : {e}")
+    raise ValueError(f"Failed to load testrail credentials : {e}")
 
 try:
     PRODUCT_TYPE = os.environ["PRODUCT_TYPE"]
