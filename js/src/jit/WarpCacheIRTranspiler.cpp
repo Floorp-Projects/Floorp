@@ -2175,6 +2175,21 @@ bool WarpCacheIRTranspiler::emitLinearizeForCodePointAccess(
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitToRelativeStringIndex(Int32OperandId indexId,
+                                                      StringOperandId strId,
+                                                      Int32OperandId resultId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* length = MStringLength::New(alloc(), str);
+  add(length);
+
+  auto* ins = MToRelativeStringIndex::New(alloc(), index, length);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
                                                      Int32OperandId indexId,
                                                      bool handleOOB) {
@@ -2186,6 +2201,39 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
     add(charCode);
 
     auto* fromCharCode = MFromCharCodeEmptyIfNegative::New(alloc(), charCode);
+    add(fromCharCode);
+
+    pushResult(fromCharCode);
+    return true;
+  }
+
+  auto* length = MStringLength::New(alloc(), str);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* charCode = MCharCodeAt::New(alloc(), str, index);
+  add(charCode);
+
+  auto* fromCharCode = MFromCharCode::New(alloc(), charCode);
+  add(fromCharCode);
+
+  pushResult(fromCharCode);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadStringAtResult(StringOperandId strId,
+                                                   Int32OperandId indexId,
+                                                   bool handleOOB) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  if (handleOOB) {
+    auto* charCode = MCharCodeAtOrNegative::New(alloc(), str, index);
+    add(charCode);
+
+    auto* fromCharCode =
+        MFromCharCodeUndefinedIfNegative::New(alloc(), charCode);
     add(fromCharCode);
 
     pushResult(fromCharCode);

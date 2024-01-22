@@ -2192,7 +2192,7 @@
 
 - name: ToRelativeStringIndex
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     index: Int32Id
@@ -2210,7 +2210,7 @@
 
 - name: LoadStringAtResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     str: StringId

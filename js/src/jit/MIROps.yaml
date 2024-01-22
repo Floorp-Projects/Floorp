@@ -941,6 +941,16 @@
   # Strings are immutable, so there is no implicit dependency.
   alias_set: none
 
+- name: ToRelativeStringIndex
+  operands:
+    index: Int32
+    length: Int32
+  result_type: Int32
+  movable: true
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
+
 - name: CharCodeAt
   operands:
     string: String
@@ -1028,6 +1038,15 @@
   alias_set: none
   can_recover: true
   clone: true
+
+# Similar to FromCharCode, but returns the |undefined| if the input is negative.
+- name: FromCharCodeUndefinedIfNegative
+  operands:
+    code: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: FromCodePoint
   operands:
