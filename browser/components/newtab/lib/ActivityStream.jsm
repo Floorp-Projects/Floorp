@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
+  TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
 });
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
@@ -60,11 +61,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "SystemTickFeed",
   "resource://activity-stream/lib/SystemTickFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryFeed",
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

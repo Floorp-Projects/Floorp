@@ -10,8 +10,8 @@ const EXPORTED_SYMBOLS = ["ASRouterDefaultConfig"];
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { TelemetryFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
+const { TelemetryFeed } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
 );
 const { ASRouterParentProcessMessageHandler } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterParentProcessMessageHandler.jsm"

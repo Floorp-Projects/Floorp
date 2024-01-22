@@ -2,21 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
 
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/ActorConstants.sys.mjs"
-);
 
-const { actionTypes: at, actionUtils: au } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { Prefs } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
-);
+import { MESSAGE_TYPE_HASH as msg } from "resource://activity-stream/common/ActorConstants.sys.mjs";
+import {
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+
 const { classifySite } = ChromeUtils.import(
   "resource://activity-stream/lib/SiteClassifier.jsm"
 );
@@ -56,7 +59,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 // This is a mapping table between the user preferences and its encoding code
-const USER_PREFS_ENCODING = {
+export const USER_PREFS_ENCODING = {
   showSearch: 1 << 0,
   "feeds.topsites": 1 << 1,
   "feeds.section.topstories": 1 << 2,
@@ -67,9 +70,9 @@ const USER_PREFS_ENCODING = {
   showSponsoredTopSites: 1 << 8,
 };
 
-const PREF_IMPRESSION_ID = "impressionId";
-const TELEMETRY_PREF = "telemetry";
-const EVENTS_TELEMETRY_PREF = "telemetry.ut.events";
+export const PREF_IMPRESSION_ID = "impressionId";
+export const TELEMETRY_PREF = "telemetry";
+export const EVENTS_TELEMETRY_PREF = "telemetry.ut.events";
 
 // Used as the missing value for timestamps in the session ping
 const TIMESTAMP_MISSING_VALUE = -1;
@@ -112,7 +115,7 @@ const NEWTAB_PING_PREFS = {
 };
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
-class TelemetryFeed {
+export class TelemetryFeed {
   constructor() {
     this.sessions = new Map();
     this._prefs = new Prefs();
@@ -1115,11 +1118,3 @@ class TelemetryFeed {
     // TODO: Send any unfinished sessions
   }
 }
-
-const EXPORTED_SYMBOLS = [
-  "TelemetryFeed",
-  "USER_PREFS_ENCODING",
-  "PREF_IMPRESSION_ID",
-  "TELEMETRY_PREF",
-  "EVENTS_TELEMETRY_PREF",
-];
