@@ -2190,9 +2190,27 @@
     index: Int32Id
     result: StringId
 
+- name: ToRelativeStringIndex
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    index: Int32Id
+    str: StringId
+    result: Int32Id
+
 - name: LoadStringCharResult
   shared: false
   transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    index: Int32Id
+    handleOOB: BoolImm
+
+- name: LoadStringAtResult
+  shared: false
+  transpile: false
   cost_estimate: 5
   args:
     str: StringId

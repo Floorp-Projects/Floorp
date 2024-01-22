@@ -108,6 +108,10 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   enum class StringCode { CodeUnit, CodePoint };
   bool emitStringFromCodeResult(Int32OperandId codeId, StringCode stringCode);
 
+  enum class StringCharOutOfBounds { Failure, EmptyString, UndefinedValue };
+  bool emitLoadStringCharResult(StringOperandId strId, Int32OperandId indexId,
+                                StringCharOutOfBounds outOfBounds);
+
   void emitAtomizeString(Register str, Register temp, Label* failure);
 
   bool emitCallScriptedGetterShared(ValOperandId receiverId,

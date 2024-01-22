@@ -1207,10 +1207,9 @@ bool BaselineCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
-                                                       Int32OperandId indexId,
-                                                       bool handleOOB) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+bool BaselineCacheIRCompiler::emitLoadStringCharResult(
+    StringOperandId strId, Int32OperandId indexId,
+    StringCharOutOfBounds outOfBounds) {
   AutoOutputRegister output(*this);
   Register str = allocator.useRegister(masm, strId);
   Register index = allocator.useRegister(masm, indexId);
@@ -1220,16 +1219,17 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
 
   // Bounds check, load string char.
   Label done;
+  Label tagResult;
   Label loadFailed;
-  if (!handleOOB) {
+  if (outOfBounds == StringCharOutOfBounds::Failure) {
     FailurePath* failure;
     if (!addFailurePath(&failure)) {
       return false;
     }
 
     masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                              scratch1, failure->label());
-    masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
+                              scratch3, failure->label());
+    masm.loadStringChar(str, index, scratch2, scratch1, scratch3,
                         failure->label());
 
     allocator.discardStack(masm);
@@ -1237,22 +1237,27 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
     // Discard the stack before jumping to |done|.
     allocator.discardStack(masm);
 
-    // Return the empty string for out-of-bounds access.
-    masm.movePtr(ImmGCPtr(cx_->names().empty_), scratch2);
+    if (outOfBounds == StringCharOutOfBounds::EmptyString) {
+      // Return the empty string for out-of-bounds access.
+      masm.movePtr(ImmGCPtr(cx_->names().empty_), scratch1);
+    } else {
+      // Return |undefined| for out-of-bounds access.
+      masm.moveValue(UndefinedValue(), output.valueReg());
+    }
 
     // This CacheIR op is always preceded by |LinearizeForCharAccess|, so we're
     // guaranteed to see no nested ropes.
     masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                              scratch1, &done);
-    masm.loadStringChar(str, index, scratch1, scratch2, scratch3, &loadFailed);
+                              scratch3, &done);
+    masm.loadStringChar(str, index, scratch2, scratch1, scratch3, &loadFailed);
   }
 
   // Load StaticString for this char. For larger code units perform a VM call.
   Label vmCall;
-  masm.lookupStaticString(scratch1, scratch2, cx_->staticStrings(), &vmCall);
-  masm.jump(&done);
+  masm.lookupStaticString(scratch2, scratch1, cx_->staticStrings(), &vmCall);
+  masm.jump(&tagResult);
 
-  if (handleOOB) {
+  if (outOfBounds != StringCharOutOfBounds::Failure) {
     masm.bind(&loadFailed);
     masm.assumeUnreachable("loadStringChar can't fail for linear strings");
   }
@@ -1261,21 +1266,46 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
     masm.bind(&vmCall);
 
     AutoStubFrame stubFrame(*this);
-    stubFrame.enter(masm, scratch2);
+    stubFrame.enter(masm, scratch3);
 
-    masm.Push(scratch1);
+    masm.Push(scratch2);
 
     using Fn = JSLinearString* (*)(JSContext*, int32_t);
     callVM<Fn, js::StringFromCharCode>(masm);
 
     stubFrame.leave(masm);
 
-    masm.storeCallPointerResult(scratch2);
+    masm.storeCallPointerResult(scratch1);
   }
 
-  masm.bind(&done);
-  masm.tagValue(JSVAL_TYPE_STRING, scratch2, output.valueReg());
+  if (outOfBounds != StringCharOutOfBounds::UndefinedValue) {
+    masm.bind(&tagResult);
+    masm.bind(&done);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch1, output.valueReg());
+  } else {
+    masm.bind(&tagResult);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch1, output.valueReg());
+    masm.bind(&done);
+  }
   return true;
+}
+
+bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
+                                                       Int32OperandId indexId,
+                                                       bool handleOOB) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  auto outOfBounds = handleOOB ? StringCharOutOfBounds::EmptyString
+                               : StringCharOutOfBounds::Failure;
+  return emitLoadStringCharResult(strId, indexId, outOfBounds);
+}
+
+bool BaselineCacheIRCompiler::emitLoadStringAtResult(StringOperandId strId,
+                                                     Int32OperandId indexId,
+                                                     bool handleOOB) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  auto outOfBounds = handleOOB ? StringCharOutOfBounds::UndefinedValue
+                               : StringCharOutOfBounds::Failure;
+  return emitLoadStringCharResult(strId, indexId, outOfBounds);
 }
 
 bool BaselineCacheIRCompiler::emitStringFromCodeResult(Int32OperandId codeId,

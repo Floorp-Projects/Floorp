@@ -2602,13 +2602,16 @@ static AttachStringChar CanAttachStringChar(const Value& val,
     return AttachStringChar::No;
   }
 
+  JSString* str = val.toString();
   int32_t index = idVal.toInt32();
-  if (index < 0) {
-    return AttachStringChar::OutOfBounds;
+
+  if (index < 0 && kind == StringChar::At) {
+    static_assert(JSString::MAX_LENGTH <= INT32_MAX,
+                  "string length fits in int32");
+    index += int32_t(str->length());
   }
 
-  JSString* str = val.toString();
-  if (size_t(index) >= str->length()) {
+  if (index < 0 || size_t(index) >= str->length()) {
     return AttachStringChar::OutOfBounds;
   }
 
@@ -7336,7 +7339,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   // Initialize the input operand.
   initializeInputOperand();
 
-  // Guard callee is the 'charCodeAt', 'codePointAt', or 'charAt' native
+  // Guard callee is the 'charCodeAt', 'codePointAt', 'charAt', or 'at' native
   // function.
   emitNativeCalleeGuard();
 
@@ -7350,6 +7353,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
 
+  // Handle relative string indices, if necessary.
+  if (kind == StringChar::At) {
+    int32IndexId = writer.toRelativeStringIndex(int32IndexId, strId);
+  }
+
   // Linearize the string.
   //
   // AttachStringChar doesn't have a separate state when OOB access happens on
@@ -7360,6 +7368,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
     switch (kind) {
       case StringChar::CharCodeAt:
       case StringChar::CharAt:
+      case StringChar::At:
         strId = writer.linearizeForCharAccess(strId, int32IndexId);
         break;
       case StringChar::CodePointAt:
@@ -7379,6 +7388,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
     case StringChar::CharAt:
       writer.loadStringCharResult(strId, int32IndexId, handleOOB);
       break;
+    case StringChar::At:
+      writer.loadStringAtResult(strId, int32IndexId, handleOOB);
+      break;
   }
 
   writer.returnFromIC();
@@ -7392,6 +7404,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
       break;
     case StringChar::CharAt:
       trackAttached("StringCharAt");
+      break;
+    case StringChar::At:
+      trackAttached("StringAt");
       break;
   }
 
@@ -7408,6 +7423,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringCodePointAt() {
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringCharAt() {
   return tryAttachStringChar(StringChar::CharAt);
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachStringAt() {
+  return tryAttachStringChar(StringChar::At);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode() {
@@ -11196,6 +11215,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachStringCodePointAt();
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt();
+    case InlinableNative::StringAt:
+      return tryAttachStringAt();
     case InlinableNative::StringFromCharCode:
       return tryAttachStringFromCharCode();
     case InlinableNative::StringFromCodePoint:
