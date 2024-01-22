@@ -24,6 +24,10 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   });
 });
 
+// The default engine update interval, in days. This is only used if an engine
+// specifies an updateURL, but not an updateInterval.
+const OPENSEARCH_DEFAULT_UPDATE_INTERVAL = 7;
+
 /**
  * OpenSearchEngine represents an OpenSearch base search engine.
  */
@@ -65,6 +69,7 @@ export class OpenSearchEngine extends SearchEngine {
 
     this._shouldPersist = options.shouldPersist ?? true;
   }
+
   /**
    * Creates a JavaScript object that represents this engine.
    *
@@ -89,11 +94,120 @@ export class OpenSearchEngine extends SearchEngine {
   async install(uri) {
     let loadURI =
       uri instanceof Ci.nsIURI ? uri : lazy.SearchUtils.makeURI(uri);
-    let data = await lazy.loadAndParseOpenSearchEngine(
-      loadURI,
-      this._engineToUpdate?.getAttr("updatelastmodified")
+    let data = await lazy.loadAndParseOpenSearchEngine(loadURI);
+
+    this.#setEngineData(data);
+
+    this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
+      lazy.SearchUtils.sanitizeName(this.name),
+      loadURI
+    );
+    this.setAttr(
+      "loadPathHash",
+      lazy.SearchUtils.getVerificationHash(this._loadPath)
     );
 
+    if (this._shouldPersist) {
+      // Notify the search service of the successful load. It will deal with
+      // updates by checking this._engineToUpdate.
+      lazy.SearchUtils.notifyAction(
+        this,
+        lazy.SearchUtils.MODIFIED_TYPE.LOADED
+      );
+    }
+
+    if (this.hasUpdates) {
+      this.#setNextUpdateTime();
+    }
+  }
+
+  /**
+   * Determines if this search engine has updates url.
+   *
+   * @returns {boolean}
+   *   Returns true if this search engine may update itself.
+   */
+  get hasUpdates() {
+    // Whether or not the engine has an update URL
+    let selfURL = this._getURLOfType(
+      lazy.SearchUtils.URL_TYPE.OPENSEARCH,
+      "self"
+    );
+    return !!(this._updateURL || this._iconUpdateURL || selfURL);
+  }
+
+  /**
+   * Returns the engine's updateURI if it exists and returns null otherwise
+   *
+   * @returns {?string}
+   */
+  get updateURI() {
+    let updateURL = this._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
+    let updateURI =
+      updateURL && updateURL._hasRelation("self")
+        ? updateURL.getSubmission("", this).uri
+        : lazy.SearchUtils.makeURI(this._updateURL);
+    return updateURI;
+  }
+
+  /**
+   * Considers if this engine needs to be updated, and updates it if necessary.
+   */
+  async maybeUpdate() {
+    if (!this.hasUpdates) {
+      return;
+    }
+
+    let currentTime = Date.now();
+
+    let expireTime = this.getAttr("updateexpir");
+
+    if (!expireTime || !(expireTime <= currentTime)) {
+      lazy.logConsole.debug(this.name, "Skipping update, not expired yet.");
+      return;
+    }
+
+    await this.#update();
+
+    this.#setNextUpdateTime();
+  }
+
+  /**
+   * Updates the OpenSearch engine details from the server.
+   */
+  async #update() {
+    let updateURI = this.updateURI;
+    if (updateURI) {
+      let data = await lazy.loadAndParseOpenSearchEngine(
+        updateURI,
+        this.getAttr("updatelastmodified")
+      );
+
+      this.#setEngineData(data);
+
+      lazy.SearchUtils.notifyAction(
+        this,
+        lazy.SearchUtils.MODIFIED_TYPE.CHANGED
+      );
+
+      // Keep track of the last modified date, so that we can make conditional
+      // server requests for future updates.
+      this.setAttr("updatelastmodified", new Date().toUTCString());
+    }
+
+    if (this._iconUpdateURL) {
+      // Force update of the icon from the icon URL.
+      this._setIcon(this._iconUpdateURL, true);
+    }
+  }
+
+  /**
+   * Sets the data for this engine based on the OpenSearch properties.
+   *
+   * @param {OpenSearchProperties} data
+   *   The OpenSearch data.
+   */
+  #setEngineData(data) {
     let name = data.name.trim();
     if (!this._engineToUpdate) {
       if (Services.search.getEngineByName(name)) {
@@ -136,74 +250,32 @@ export class OpenSearchEngine extends SearchEngine {
       this._urls.push(engineURL);
     }
 
-    if (this._engineToUpdate) {
-      let engineToUpdate = this._engineToUpdate.wrappedJSObject;
-
-      // Preserve metadata and loadPath.
-      Object.keys(engineToUpdate._metaData).forEach(key => {
-        this.setAttr(key, engineToUpdate.getAttr(key));
-      });
-      this._loadPath = engineToUpdate._loadPath;
-
-      // Keep track of the last modified date, so that we can make conditional
-      // requests for future updates.
-      this.setAttr("updatelastmodified", new Date().toUTCString());
-
-      // Set the new engine's icon, if it doesn't yet have one.
-      if (!this._iconURI && engineToUpdate._iconURI) {
-        this._iconURI = engineToUpdate._iconURI;
-      }
-    } else {
-      this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-        lazy.SearchUtils.sanitizeName(this.name),
-        loadURI
-      );
-      this.setAttr(
-        "loadPathHash",
-        lazy.SearchUtils.getVerificationHash(this._loadPath)
-      );
-    }
-
     for (let image of data.images) {
       this._setIcon(image.url, image.isPrefered, image.width, image.height);
     }
-
-    if (this._shouldPersist) {
-      // Notify the search service of the successful load. It will deal with
-      // updates by checking this._engineToUpdate.
-      lazy.SearchUtils.notifyAction(
-        this,
-        lazy.SearchUtils.MODIFIED_TYPE.LOADED
-      );
-    }
-  }
-
-  get _hasUpdates() {
-    // Whether or not the engine has an update URL
-    let selfURL = this._getURLOfType(
-      lazy.SearchUtils.URL_TYPE.OPENSEARCH,
-      "self"
-    );
-    return !!(this._updateURL || this._iconUpdateURL || selfURL);
   }
 
   /**
-   * Returns the engine's updateURI if it exists and returns null otherwise
-   *
-   * @returns {string?}
+   * Sets the next update time for this engine.
    */
-  get _updateURI() {
-    let updateURL = this._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);
-    let updateURI =
-      updateURL && updateURL._hasRelation("self")
-        ? updateURL.getSubmission("", this).uri
-        : lazy.SearchUtils.makeURI(this._updateURL);
-    return updateURI;
+  #setNextUpdateTime() {
+    var interval = this._updateInterval || OPENSEARCH_DEFAULT_UPDATE_INTERVAL;
+    var milliseconds = interval * 86400000; // |interval| is in days
+    this.setAttr("updateexpir", Date.now() + milliseconds);
   }
 
-  // This indicates where we found the .xml file to load the engine,
-  // and attempts to hide user-identifiable data (such as username).
-  static getAnonymizedLoadPath(shortName, uri) {
-    return `[${uri.scheme}]${uri.host}/${shortName}.xml`;
+  /**
+   * This indicates where we found the .xml file to load the engine,
+   * and attempts to hide user-identifiable data (such as username).
+   *
+   * @param {string} sanitizedName
+   *   The sanitized name of the engine.
+   * @param {nsIURI} uri
+   *   The uri the engine was loaded from.
+   * @returns {string}
+   *   A load path with reduced data.
+   */
+  static getAnonymizedLoadPath(sanitizedName, uri) {
+    return `[${uri.scheme}]${uri.host}/${sanitizedName}.xml`;
   }
 }
