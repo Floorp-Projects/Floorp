@@ -59,6 +59,7 @@ SimpleTest.waitForFocus(async () => {
     set: [
       ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", false],
       ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
     ],
   });
 
@@ -99,6 +100,7 @@ SimpleTest.waitForFocus(async () => {
     set: [
       ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", false],
       ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", true],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
     ],
   });
 
@@ -139,6 +141,7 @@ SimpleTest.waitForFocus(async () => {
     set: [
       ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
       ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
     ],
   });
 
@@ -222,6 +225,7 @@ SimpleTest.waitForFocus(async () => {
     set: [
       ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", false],
       ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
     ],
   });
   iframe.focus();
@@ -249,6 +253,7 @@ SimpleTest.waitForFocus(async () => {
     set: [
       ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
       ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
     ],
   });
   doc.designMode = "on";
@@ -260,6 +265,120 @@ SimpleTest.waitForFocus(async () => {
     "Right click in a selection range in a sub-editable-document should not cause collapsing selection"
   );
   doc.designMode = "off";
+
+  // If selection is collapsed and `ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node` is
+  // false, the caret should be moved at clicked point.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
+    ],
+  });
+  editableDiv.innerHTML = "<b>Bold text</b><i>Italic text</i>";
+  editableDiv.focus();
+  getSelection().collapse(
+    editableDiv.querySelector("b").firstChild,
+    "Bold".length
+  );
+  synthesizeMouseAtCenter(editableDiv.querySelector("i"), {button: 2});
+  ok(
+    getSelection().isCollapsed,
+    "Right clicking in editable <div> should keep Selection collapsed if the pref is unset"
+  );
+  is(
+    getSelection().focusNode.parentNode,
+    editableDiv.querySelector("i"),
+    `Right clicking in editable <div> should collapse Selection at the clicked point (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    }) if the pref is unset`
+  );
+
+  input.focus();
+  input.setSelectionRange(0, 0);
+  synthesizeMouseAtCenter(input, {button: 2});
+  ok(
+    input.selectionStart == input.selectionEnd,
+    "Right click in <input> should keep Selection collapsed if the pref is unset"
+  );
+  ok(
+    input.selectionStart > 0,
+    "Right click in <input> should move caret if the pref is unset"
+  );
+  input.blur();
+
+  // If selection is collapsed and `ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node` is
+  // true, the caret should not be moved at clicked point unless focus is changed by the click.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", true],
+    ],
+  });
+  editableDiv.innerHTML = "<b>Bold text</b><i>Italic text</i>";
+  editableDiv.focus();
+  getSelection().collapse(
+    editableDiv.querySelector("b").firstChild,
+    "Bold".length
+  );
+  synthesizeMouseAtCenter(editableDiv.querySelector("i"), {button: 2});
+  ok(
+    getSelection().isCollapsed,
+    "Right clicking in editable <div> should keep Selection collapsed even if the pref is set"
+  );
+  is(
+    getSelection().focusNode.parentNode,
+    editableDiv.querySelector("b"),
+    `Right clicking in editable <div> should not move caret to the clicked point (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    }) if the pref is set`
+  );
+
+  input.focus();
+  input.setSelectionRange(0, 0);
+  synthesizeMouseAtCenter(input, {button: 2});
+  ok(
+    input.selectionStart == input.selectionEnd,
+    "Right click in <input> should keep Selection collapsed even if the pref is set"
+  );
+  is(
+    input.selectionStart,
+    0,
+    "Right click in <input> should not move caret if the pref is set"
+  );
+  input.blur();
+
+  input.setSelectionRange(0, 0);
+  editableDiv.focus();
+  synthesizeMouseAtCenter(input, {button: 2});
+  ok(
+    input.selectionStart == input.selectionEnd,
+    "Right click in <input> which is not focused should keep Selection collapsed"
+  );
+  ok(
+    input.selectionStart > 0,
+    "Right click in <input> which is not focused should move caret"
+  );
+
+  editableDiv.focus();
+  getSelection().collapse(
+    editableDiv.querySelector("b").firstChild,
+    "Bold".length
+  );
+  input.focus();
+  synthesizeMouseAtCenter(editableDiv.querySelector("i"), {button: 2});
+  ok(
+    getSelection().isCollapsed,
+    "Right clicking in editable <div> which is not focused should collapse selection"
+  );
+  is(
+    getSelection().focusNode.parentNode,
+    editableDiv.querySelector("i"),
+    `Right clicking in editable <div> which is not focused should collapse Selection at the clicked point (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    })`
+  );
 
   SimpleTest.finish();
 });
