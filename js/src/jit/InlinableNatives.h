@@ -136,6 +136,7 @@
   _(StringToString)                                \
   _(StringValueOf)                                 \
   _(StringCharCodeAt)                              \
+  _(StringCodePointAt)                             \
   _(StringFromCharCode)                            \
   _(StringFromCodePoint)                           \
   _(StringCharAt)                                  \

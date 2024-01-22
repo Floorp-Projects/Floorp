@@ -3842,7 +3842,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("toUpperCase", str_toUpperCase, 0, 0, StringToUpperCase),
     JS_INLINABLE_FN("charAt", str_charAt, 1, 0, StringCharAt),
     JS_INLINABLE_FN("charCodeAt", str_charCodeAt, 1, 0, StringCharCodeAt),
-    JS_FN("codePointAt", str_codePointAt, 1, 0),
+    JS_INLINABLE_FN("codePointAt", str_codePointAt, 1, 0, StringCodePointAt),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2, 0),
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2, 0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
