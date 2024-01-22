@@ -5256,7 +5256,6 @@ static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
   if (!args[0].isObject()) {
     JS_ReportErrorASCII(cx,
                         "instantiateModuleStencil: Stencil object expected");
-    return false;
   }
   Rooted<js::StencilObject*> stencilObj(
       cx, args[0].toObject().maybeUnwrapIf<js::StencilObject>());
@@ -5327,14 +5326,14 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
   /* Prepare the input byte array. */
   if (!args[0].isObject()) {
     JS_ReportErrorASCII(
-        cx, "instantiateModuleStencilXDR: Stencil XDR object expected");
+        cx, "instantiateModuleStencilXDR: stencil XDR object expected");
     return false;
   }
   Rooted<StencilXDRBufferObject*> xdrObj(
       cx, args[0].toObject().maybeUnwrapIf<StencilXDRBufferObject>());
   if (!xdrObj) {
     JS_ReportErrorASCII(
-        cx, "instantiateModuleStencilXDR: Stencil XDR object expected");
+        cx, "instantiateModuleStencilXDR: stencil XDR object expected");
     return false;
   }
   MOZ_ASSERT(xdrObj->hasBuffer());
