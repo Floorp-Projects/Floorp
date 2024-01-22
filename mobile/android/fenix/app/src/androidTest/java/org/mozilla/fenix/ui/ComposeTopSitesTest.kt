@@ -66,8 +66,12 @@ class ComposeTopSitesTest {
     fun addAWebsiteAsATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(true)
@@ -84,8 +88,12 @@ class ComposeTopSitesTest {
     fun openTopSiteInANewTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(true)
@@ -112,8 +120,12 @@ class ComposeTopSitesTest {
     fun openTopSiteInANewPrivateTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(true)
@@ -135,6 +147,9 @@ class ComposeTopSitesTest {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
         val newPageTitle = generateRandomString(5)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             waitForPageToLoad()
@@ -159,8 +174,12 @@ class ComposeTopSitesTest {
     fun removeTopSiteUsingMenuButtonTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(true)
@@ -186,8 +205,12 @@ class ComposeTopSitesTest {
     fun removeTopSiteFromMainMenuTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreenWithComposeTopSites(composeTestRule) {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(true)

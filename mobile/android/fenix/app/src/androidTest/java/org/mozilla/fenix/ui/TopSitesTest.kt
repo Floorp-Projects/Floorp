@@ -61,8 +61,12 @@ class TopSitesTest {
     fun addAWebsiteAsATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(shouldExist = true)
@@ -79,8 +83,12 @@ class TopSitesTest {
     fun openTopSiteInANewTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(shouldExist = true)
@@ -107,8 +115,12 @@ class TopSitesTest {
     fun openTopSiteInANewPrivateTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(shouldExist = true)
@@ -130,6 +142,9 @@ class TopSitesTest {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
         val newPageTitle = generateRandomString(5)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             waitForPageToLoad()
@@ -154,8 +169,12 @@ class TopSitesTest {
     fun removeTopSiteUsingMenuButtonTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(shouldExist = true)
@@ -181,8 +200,12 @@ class TopSitesTest {
     fun removeTopSiteFromMainMenuTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
+        homeScreen {
+            verifyExistingTopSitesList()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             expandMenu()
             verifyAddToShortcutsButton(shouldExist = true)

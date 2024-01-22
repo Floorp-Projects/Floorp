@@ -16,14 +16,12 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
-import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.home.topsites.TopSitesTestTag
 
@@ -34,13 +32,13 @@ class ComposeTopSitesRobot(private val composeTestRule: HomeActivityComposeTestR
 
     @OptIn(ExperimentalTestApi::class)
     fun verifyExistingTopSitesList() {
-        composeTestRule.waitUntilExactlyOneExists(hasTestTag(TopSitesTestTag.topSites), timeoutMillis = waitingTime)
+        composeTestRule.waitUntilAtLeastOneExists(hasTestTag(TopSitesTestTag.topSites), timeoutMillis = waitingTime)
     }
 
     @OptIn(ExperimentalTestApi::class)
     fun verifyExistingTopSiteItem(vararg titles: String) {
         titles.forEach { title ->
-            mDevice.findObject(UiSelector().textContains(title)).waitForExists(waitingTimeShort)
+            composeTestRule.waitUntilAtLeastOneExists(hasText(title), timeoutMillis = waitingTime)
             composeTestRule.topSiteItem(title).assertExists()
         }
     }
