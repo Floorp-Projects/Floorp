@@ -562,9 +562,6 @@ export class SearchEngine {
   _loadPath = null;
   // The engine's description
   _description = "";
-  // Used to store the engine to replace, if we're an update to an existing
-  // engine.
-  _engineToUpdate = null;
   // Set to true if the engine has a preferred icon (an icon that should not be
   // overridden by a non-preferred icon).
   _hasPreferredIcon = null;
@@ -800,10 +797,7 @@ export class SearchEngine {
         let listener = new lazy.SearchUtils.LoadListener(
           chan,
           /^image\//,
-          // If we're currently acting as an "update engine", then the callback
-          // should set the icon on the engine we're updating and not us, since
-          // |this| might be gone by the time the callback runs.
-          iconLoadCallback.bind(this._engineToUpdate || this)
+          iconLoadCallback.bind(this)
         );
         chan.notificationCallbacks = listener;
         chan.asyncOpen(listener);

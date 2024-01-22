@@ -50,10 +50,6 @@ const QUIT_APPLICATION_TOPIC = "quit-application";
 const OPENSEARCH_UPDATE_TIMER_TOPIC = "search-engine-update-timer";
 const OPENSEARCH_UPDATE_TIMER_INTERVAL = 60 * 60 * 24;
 
-// The default engine update interval, in days. This is only used if an engine
-// specifies an updateURL, but not an updateInterval.
-const OPENSEARCH_DEFAULT_UPDATE_INTERVAL = 7;
-
 // This is the amount of time we'll be idle for before applying any configuration
 // changes.
 const RECONFIG_IDLE_TIME_SEC = 5 * 60;
@@ -944,38 +940,12 @@ export class SearchService {
     lazy.logConsole.debug("notify: checking for updates");
 
     // Walk the engine list, looking for engines whose update time has expired.
-    var currentTime = Date.now();
-    lazy.logConsole.debug("currentTime:" + currentTime);
     for (let engine of this._engines.values()) {
-      if (!(engine instanceof lazy.OpenSearchEngine && engine._hasUpdates)) {
+      if (!(engine instanceof lazy.OpenSearchEngine)) {
         continue;
       }
-
-      var expirTime = engine.getAttr("updateexpir");
-      lazy.logConsole.debug(
-        engine.name,
-        "expirTime:",
-        expirTime,
-        "updateURL:",
-        engine._updateURL,
-        "iconUpdateURL:",
-        engine._iconUpdateURL
-      );
-
-      var engineExpired = expirTime <= currentTime;
-
-      if (!expirTime || !engineExpired) {
-        lazy.logConsole.debug("skipping engine");
-        continue;
-      }
-
-      lazy.logConsole.debug(engine.name, "has expired");
-
-      await engineUpdateService.update(engine);
-
-      // Schedule the next update
-      engineUpdateService.scheduleNextUpdate(engine);
-    } // end engine iteration
+      await engine.maybeUpdate();
+    }
   }
 
   #currentEngine;
@@ -2149,77 +2119,28 @@ export class SearchService {
 
     lazy.logConsole.debug("#addEngineToStore: Adding engine:", engine.name);
 
-    // See if there is an existing engine with the same name. However, if this
-    // engine is updating another engine, it's allowed to have the same name.
-    var hasSameNameAsUpdate =
-      engine._engineToUpdate && engine.name == engine._engineToUpdate.name;
-    if (
-      !skipDuplicateCheck &&
-      this.#getEngineByName(engine.name) &&
-      !hasSameNameAsUpdate
-    ) {
+    // See if there is an existing engine with the same name.
+    if (!skipDuplicateCheck && this.#getEngineByName(engine.name)) {
       lazy.logConsole.debug(
         "#addEngineToStore: Duplicate engine found, aborting!"
       );
       return;
     }
 
-    if (engine._engineToUpdate) {
-      // Update the old engine by copying over the properties of the new engine
-      // that is loaded. It is necessary to copy over all the "private"
-      // properties (those without a getter or setter) from one object to the
-      // other. Other callers may hold a reference to the old engine, therefore,
-      // anywhere else that has a reference to the old engine will receive
-      // the properties that are updated because those other callers
-      // are referencing the same nsISearchEngine object in memory.
-      for (let p in engine) {
-        if (
-          !(
-            Object.getOwnPropertyDescriptor(engine, p)?.get ||
-            Object.getOwnPropertyDescriptor(engine, p)?.set
-          )
-        ) {
-          engine._engineToUpdate[p] = engine[p];
-        }
-      }
-
-      // The old engine is now updated
-      engine = engine._engineToUpdate;
-      engine._engineToUpdate = null;
-
-      // Update the engine Map with the updated engine
-      this._engines.set(engine.id, engine);
-
-      lazy.SearchUtils.notifyAction(
-        engine,
-        lazy.SearchUtils.MODIFIED_TYPE.CHANGED
-      );
-    } else {
-      // Not an update, just add the new engine.
-      this._engines.set(engine.id, engine);
-      // Only add the engine to the list of sorted engines if the initial list
-      // has already been built (i.e. if this._cachedSortedEngines is non-null). If
-      // it hasn't, we're loading engines from disk and the sorted engine list
-      // will be built once we need it.
-      if (this._cachedSortedEngines && !this.#dontSetUseSavedOrder) {
-        this._cachedSortedEngines.push(engine);
-        this.#saveSortedEngineList();
-      }
-      lazy.SearchUtils.notifyAction(
-        engine,
-        lazy.SearchUtils.MODIFIED_TYPE.ADDED
-      );
+    // Not an update, just add the new engine.
+    this._engines.set(engine.id, engine);
+    // Only add the engine to the list of sorted engines if the initial list
+    // has already been built (i.e. if this._cachedSortedEngines is non-null). If
+    // it hasn't, we're loading engines from disk and the sorted engine list
+    // will be built once we need it.
+    if (this._cachedSortedEngines && !this.#dontSetUseSavedOrder) {
+      this._cachedSortedEngines.push(engine);
+      this.#saveSortedEngineList();
     }
+    lazy.SearchUtils.notifyAction(engine, lazy.SearchUtils.MODIFIED_TYPE.ADDED);
 
     // Let the engine know it can start notifying new updates.
     engine._engineAddedToStore = true;
-
-    if (engine._hasUpdates) {
-      // Schedule the engine's next update, if it isn't already.
-      if (!engine.getAttr("updateexpir")) {
-        engineUpdateService.scheduleNextUpdate(engine);
-      }
-    }
   }
 
   #loadEnginesMetadataFromSettings(engineSettings) {
@@ -2644,7 +2565,7 @@ export class SearchService {
       engine = elem[1];
       if (engine instanceof lazy.OpenSearchEngine) {
         searchURI = engine.searchURLWithNoTerms;
-        updateURI = engine._updateURI;
+        updateURI = engine.updateURI;
 
         if (lazy.SearchUtils.isSecureURIForOpenSearch(searchURI)) {
           totalSecure++;
@@ -3676,8 +3597,8 @@ export class SearchService {
       return;
     }
 
-    let engineWithUpdates = [...this._engines.values()].find(
-      engine => engine instanceof lazy.OpenSearchEngine && engine._hasUpdates
+    let engineWithUpdates = [...this._engines.values()].some(
+      engine => engine instanceof lazy.OpenSearchEngine && engine.hasUpdates
     );
 
     if (engineWithUpdates) {
@@ -3692,49 +3613,6 @@ export class SearchService {
     }
   }
 } // end SearchService class
-
-var engineUpdateService = {
-  scheduleNextUpdate(engine) {
-    var interval = engine._updateInterval || OPENSEARCH_DEFAULT_UPDATE_INTERVAL;
-    var milliseconds = interval * 86400000; // |interval| is in days
-    engine.setAttr("updateexpir", Date.now() + milliseconds);
-  },
-
-  async update(engine) {
-    engine = engine.wrappedJSObject;
-    lazy.logConsole.debug("update called for", engine._name);
-    if (
-      !Services.prefs.getBoolPref(
-        lazy.SearchUtils.BROWSER_SEARCH_PREF + "update",
-        true
-      ) ||
-      !engine._hasUpdates
-    ) {
-      return;
-    }
-
-    let testEngine = null;
-    let updateURI = engine._updateURI;
-    if (updateURI) {
-      lazy.logConsole.debug("updating", engine.name, updateURI.spec);
-      testEngine = new lazy.OpenSearchEngine();
-      testEngine._engineToUpdate = engine;
-      try {
-        await testEngine.install(updateURI);
-      } catch (ex) {
-        lazy.logConsole.error("Failed to update", engine.name, ex);
-      }
-    } else {
-      lazy.logConsole.debug("invalid updateURI");
-    }
-
-    if (engine._iconUpdateURL) {
-      // If we're updating the engine too, use the new engine object,
-      // otherwise use the existing engine object.
-      (testEngine || engine)._setIcon(engine._iconUpdateURL, true);
-    }
-  },
-};
 
 XPCOMUtils.defineLazyServiceGetter(
   SearchService.prototype,
