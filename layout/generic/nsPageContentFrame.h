@@ -46,13 +46,6 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
 
   void EnsurePageName();
 
-  // The default implementation of FirstContinuation in nsSplittableFrame is
-  // implemented in linear time, walking back through the linked list of
-  // continuations via mPrevContinuation.
-  // For nsPageContentFrames, we can find the first continuation through the
-  // frame tree structure in constant time.
-  nsIFrame* FirstContinuation() const final;
-
 #ifdef DEBUG_FRAME_DUMP
   // Debugging
   nsresult GetFrameName(nsAString& aResult) const override;

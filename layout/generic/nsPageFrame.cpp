@@ -802,35 +802,6 @@ double nsPageFrame::GetPageOrientationRotation(nsSharedPageData* aPD) const {
   return 0.0;
 }
 
-nsIFrame* nsPageFrame::FirstContinuation() const {
-  // Walk up to our grandparent, and then to down the grandparent's first
-  // child, and then that frame's first child.
-  // At every step we assert the frames are the type we expect them to be.
-  const nsContainerFrame* const parent = GetParent();
-  MOZ_ASSERT(parent && parent->IsPrintedSheetFrame(),
-             "Parent of nsPageFrame should be PrintedSheetFrame");
-  const nsContainerFrame* const pageSequenceFrame = parent->GetParent();
-  MOZ_ASSERT(pageSequenceFrame && pageSequenceFrame->IsPageSequenceFrame(),
-             "Parent of PrintedSheetFrame should be nsPageSequenceFrame");
-  const nsIFrame* const firstPrintedSheetFrame =
-      pageSequenceFrame->PrincipalChildList().FirstChild();
-  MOZ_ASSERT(
-      firstPrintedSheetFrame && firstPrintedSheetFrame->IsPrintedSheetFrame(),
-      "Should have at least one child in nsPageSequenceFrame, and all "
-      "children of nsPageSequenceFrame should be PrintedSheetFrames");
-  nsIFrame* const firstPageFrame =
-      static_cast<const nsContainerFrame*>(firstPrintedSheetFrame)
-          ->PrincipalChildList()
-          .FirstChild();
-  MOZ_ASSERT(firstPageFrame && firstPageFrame->IsPageFrame(),
-             "Should have at least one child in PrintedSheetFrame, and all "
-             "children of PrintedSheetFrame should be nsPageFrames");
-  MOZ_ASSERT(!firstPageFrame->GetPrevContinuation(),
-             "First descendent of nsPageSequenceFrame should not have a "
-             "previous continuation");
-  return firstPageFrame;
-}
-
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                    const nsDisplayListSet& aLists) {
   nsDisplayList content(aBuilder);
