@@ -1418,6 +1418,14 @@ static nsresult ManageShortcutTaskbarPins(bool aCheckOnly, bool aPinType,
     }
   };
 
+  HRESULT hr = CoInitialize(nullptr);
+  if (FAILED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+  const struct ComUninitializer {
+    ~ComUninitializer() { CoUninitialize(); }
+  } kCUi;
+
   mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
       ILCreateFromPathW(nsString(aShortcutPath).get()));
   if (NS_WARN_IF(!path)) {
@@ -1425,8 +1433,8 @@ static nsresult ManageShortcutTaskbarPins(bool aCheckOnly, bool aPinType,
   }
 
   IPinnedList3* pinnedList = nullptr;
-  HRESULT hr = CoCreateInstance(CLSID_TaskbandPin, NULL, CLSCTX_INPROC_SERVER,
-                                IID_IPinnedList3, (void**)&pinnedList);
+  hr = CoCreateInstance(CLSID_TaskbandPin, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IPinnedList3, (void**)&pinnedList);
   if (FAILED(hr) || !pinnedList) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1457,144 +1465,6 @@ nsWindowsShellService::UnpinShortcutFromTaskbar(
   const bool pinType = false;  // false means unpin
   const bool runInTestMode = false;
   return ManageShortcutTaskbarPins(runInTestMode, pinType, aShortcutPath);
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::GetTaskbarTabShortcutPath(const nsAString& aShortcutName,
-                                                 nsAString& aRetPath) {
-  // The taskbar tab shortcut will always be in
-  // %APPDATA%\Microsoft\Windows\Start Menu\Programs
-  RefPtr<IKnownFolderManager> fManager;
-  RefPtr<IKnownFolder> progFolder;
-  LPWSTR progFolderW;
-  nsString progFolderNS;
-  HRESULT hr =
-      CoCreateInstance(CLSID_KnownFolderManager, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_IKnownFolderManager, getter_AddRefs(fManager));
-  if (NS_WARN_IF(FAILED(hr))) {
-    return NS_ERROR_ABORT;
-  }
-  fManager->GetFolder(FOLDERID_Programs, progFolder.StartAssignment());
-  hr = progFolder->GetPath(0, &progFolderW);
-  if (FAILED(hr)) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-  progFolderNS.Assign(progFolderW);
-  aRetPath = progFolderNS + u"\\"_ns + aShortcutName + u".lnk"_ns;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::GetTaskbarTabPins(nsTArray<nsString>& aShortcutPaths) {
-  aShortcutPaths.Clear();
-
-  // Get AppData\\Roaming folder using a known folder ID
-  RefPtr<IKnownFolderManager> fManager;
-  RefPtr<IKnownFolder> roamingAppData;
-  LPWSTR roamingAppDataW;
-  nsString roamingAppDataNS;
-  HRESULT hr =
-      CoCreateInstance(CLSID_KnownFolderManager, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_IKnownFolderManager, getter_AddRefs(fManager));
-  if (NS_WARN_IF(FAILED(hr))) {
-    return NS_ERROR_ABORT;
-  }
-  fManager->GetFolder(FOLDERID_RoamingAppData,
-                      roamingAppData.StartAssignment());
-  hr = roamingAppData->GetPath(0, &roamingAppDataW);
-  if (FAILED(hr)) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-
-  // Append taskbar pins folder to AppData\\Roaming
-  roamingAppDataNS.Assign(roamingAppDataW);
-  CoTaskMemFree(roamingAppDataW);
-  nsString taskbarFolder =
-      roamingAppDataNS + u"\\Microsoft\\Windows\\Start Menu\\Programs"_ns;
-  nsString taskbarFolderWildcard = taskbarFolder + u"\\*.lnk"_ns;
-
-  // Get known path for binary file for later comparison with shortcuts.
-  // Returns lowercase file path which should be fine for Windows as all
-  // directories and files are case-insensitive by default.
-  RefPtr<nsIFile> binFile;
-  nsString binPath;
-  nsresult rv = XRE_GetBinaryPath(binFile.StartAssignment());
-  if (NS_WARN_IF(FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = binFile->GetPath(binPath);
-  if (NS_WARN_IF(FAILED(rv))) {
-    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-  }
-
-  // Check for if first file exists with a shortcut extension (.lnk)
-  WIN32_FIND_DATAW ffd;
-  HANDLE fileHandle = INVALID_HANDLE_VALUE;
-  fileHandle = FindFirstFileW(taskbarFolderWildcard.get(), &ffd);
-  if (fileHandle == INVALID_HANDLE_VALUE) {
-    // This means that no files were found in the folder which
-    // doesn't imply an error.
-    return NS_OK;
-  }
-
-  do {
-    // Extract shortcut target path from every
-    // shortcut in the taskbar pins folder.
-    nsString fileName(ffd.cFileName);
-    RefPtr<IShellLinkW> link;
-    RefPtr<IPersistFile> ppf;
-    RefPtr<IPropertyStore> pps;
-    nsString target;
-    target.SetLength(MAX_PATH);
-    hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
-                          IID_IShellLinkW, getter_AddRefs(link));
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-    nsString filePath = taskbarFolder + u"\\"_ns + fileName;
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-
-    // After loading shortcut, search through arguments to find if
-    // it is a taskbar tab shortcut.
-    hr = SHGetPropertyStoreFromParsingName(filePath.get(), nullptr,
-                                           GPS_READWRITE, IID_IPropertyStore,
-                                           getter_AddRefs(pps));
-    if (NS_WARN_IF(FAILED(hr)) || pps == nullptr) {
-      continue;
-    }
-    PROPVARIANT propVar;
-    PropVariantInit(&propVar);
-    auto cleanupPropVariant =
-        MakeScopeExit([&] { PropVariantClear(&propVar); });
-    // Get the PKEY_Link_Arguments property
-    hr = pps->GetValue(PKEY_Link_Arguments, &propVar);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-    // Check if the argument matches
-    if (!(propVar.vt == VT_LPWSTR && propVar.pwszVal != nullptr &&
-          wcsstr(propVar.pwszVal, L"-taskbar-tab") != nullptr)) {
-      continue;
-    }
-
-    hr = link->GetPath(target.get(), MAX_PATH, nullptr, 0);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-
-    // If shortcut target matches known binary file value
-    // then add the path to the shortcut as a valid
-    // shortcut. This has to be a substring search as
-    // the user could have added unknown command line arguments
-    // to the shortcut.
-    if (_wcsnicmp(target.get(), binPath.get(), binPath.Length()) == 0) {
-      aShortcutPaths.AppendElement(filePath);
-    }
-  } while (FindNextFile(fileHandle, &ffd) != 0);
-  FindClose(fileHandle);
-  return NS_OK;
 }
 
 static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
