@@ -773,8 +773,7 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
                                 "browsing-context-did-set-embedder", nullptr);
     }
 
-    if (nsContentUtils::ShouldHideObjectOrEmbedImageDocument() &&
-        IsEmbedderTypeObjectOrEmbed()) {
+    if (IsEmbedderTypeObjectOrEmbed()) {
       Unused << SetSyntheticDocumentContainer(true);
     }
   }

@@ -17397,11 +17397,9 @@ Selection* Document::GetSelection(ErrorResult& aRv) {
 }
 
 void Document::MakeBrowsingContextNonSynthetic() {
-  if (nsContentUtils::ShouldHideObjectOrEmbedImageDocument()) {
-    if (BrowsingContext* bc = GetBrowsingContext()) {
-      if (bc->GetSyntheticDocumentContainer()) {
-        Unused << bc->SetSyntheticDocumentContainer(false);
-      }
+  if (BrowsingContext* bc = GetBrowsingContext()) {
+    if (bc->GetSyntheticDocumentContainer()) {
+      Unused << bc->SetSyntheticDocumentContainer(false);
     }
   }
 }
