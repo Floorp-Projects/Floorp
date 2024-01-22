@@ -5,7 +5,6 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
-  EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
 });
 
 /**
@@ -23,13 +22,12 @@ export class AboutTranslationsParent extends JSWindowActorParent {
     switch (name) {
       case "AboutTranslations:GetTranslationsPort": {
         const { fromLanguage, toLanguage } = data;
-        const translationsEngineParent =
-          await lazy.EngineProcess.getTranslationsEngineParent();
+        const engineProcess = await lazy.TranslationsParent.getEngineProcess();
         if (this.#isDestroyed) {
           return undefined;
         }
         const { port1, port2 } = new MessageChannel();
-        translationsEngineParent.startTranslation(
+        engineProcess.actor.startTranslation(
           fromLanguage,
           toLanguage,
           port1,

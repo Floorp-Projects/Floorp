@@ -274,9 +274,6 @@ var allowlist = [
   // find the references)
   { file: "chrome://browser/content/screenshots/copied-notification.svg" },
 
-  // Bug 1875361
-  { file: "chrome://global/content/ml/SummarizerModel.sys.mjs" },
-
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 
