@@ -2162,14 +2162,12 @@
      */ \
     MACRO(AsyncAwait, async_await, NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * Resolve or reject the current async function's result promise with
-     * 'valueOrReason'.
+     * Resolve the current async function's result promise with 'value'.
      *
      * This instruction must appear only in non-generator async function
      * scripts. `gen` must be the internal generator object for the current
      * frame. This instruction must run at most once per async function call,
-     * as resolving/rejecting an already resolved/rejected promise is not
-     * permitted.
+     * as resolving an already resolved/rejected promise is not permitted.
      *
      * The result `promise` is the async function's result promise,
      * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
@@ -2180,10 +2178,10 @@
      *
      *   Category: Functions
      *   Type: Generators and async functions
-     *   Operands: AsyncFunctionResolveKind fulfillOrReject
-     *   Stack: valueOrReason, gen => promise
+     *   Operands:
+     *   Stack: value, gen => promise
      */ \
-    MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
+    MACRO(AsyncResolve, async_resolve, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Reject the current async function's result promise with 'reason'.
      *

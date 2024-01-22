@@ -18819,15 +18819,13 @@ void CodeGenerator::visitGenerator(LGenerator* lir) {
 
 void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
   Register generator = ToRegister(lir->generator());
-  ValueOperand valueOrReason = ToValue(lir, LAsyncResolve::ValueOrReasonIndex);
-  AsyncFunctionResolveKind resolveKind = lir->mir()->resolveKind();
+  ValueOperand value = ToValue(lir, LAsyncResolve::ValueIndex);
 
-  pushArg(Imm32(static_cast<int32_t>(resolveKind)));
-  pushArg(valueOrReason);
+  pushArg(value);
   pushArg(generator);
 
   using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue, AsyncFunctionResolveKind);
+                           HandleValue);
   callVM<Fn, js::AsyncFunctionResolve>(lir);
 }
 
