@@ -48,6 +48,7 @@
 #include "mozilla/Printf.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
 #include "nsStringFwd.h"
 #include "nsURLHelper.h"
@@ -582,6 +583,199 @@ class AsyncVacuumEvent final : public Runnable {
   int32_t mSetPageSize;
   Atomic<nsresult> mStatus;
 };
+
+/**
+ * A runnable to perform an SQLite database backup when there may be one or more
+ * open connections on that database.
+ */
+class AsyncBackupDatabaseFile final : public Runnable, public nsITimerCallback {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  /**
+   * @param aConnection The connection to the database being backed up.
+   * @param aNativeConnection The native connection to the database being backed
+   *                          up.
+   * @param aDestinationFile The destination file for the created backup.
+   * @param aCallback A callback to trigger once the backup process has
+   *                  completed. The callback will be supplied with an nsresult
+   *                  indicating whether or not the backup was successfully
+   *                  created. This callback will be called on the
+   *                  mConnection->eventTargetOpenedOn thread.
+   * @throws
+   */
+  AsyncBackupDatabaseFile(Connection* aConnection, sqlite3* aNativeConnection,
+                          nsIFile* aDestinationFile,
+                          mozIStorageCompletionCallback* aCallback)
+      : Runnable("storage::AsyncBackupDatabaseFile"),
+        mConnection(aConnection),
+        mNativeConnection(aNativeConnection),
+        mDestinationFile(aDestinationFile),
+        mCallback(aCallback),
+        mBackupFile(nullptr),
+        mBackupHandle(nullptr) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    nsAutoString path;
+    nsresult rv = mDestinationFile->GetPath(path);
+    if (NS_FAILED(rv)) {
+      return Dispatch(rv, nullptr);
+    }
+    // Put a .tmp on the end of the destination while the backup is underway.
+    // This extension will be stripped off after the backup successfully
+    // completes.
+    path.AppendLiteral(".tmp");
+
+    int srv = ::sqlite3_open(NS_ConvertUTF16toUTF8(path).get(), &mBackupFile);
+    if (srv != SQLITE_OK) {
+      return Dispatch(NS_ERROR_FAILURE, nullptr);
+    }
+
+    static const char* mainDBName = "main";
+
+    mBackupHandle = ::sqlite3_backup_init(mBackupFile, mainDBName,
+                                          mNativeConnection, mainDBName);
+    if (!mBackupHandle) {
+      MOZ_ALWAYS_TRUE(::sqlite3_close(mBackupFile) == SQLITE_OK);
+      return Dispatch(NS_ERROR_FAILURE, nullptr);
+    }
+
+    return DoStep();
+  }
+
+  NS_IMETHOD
+  Notify(nsITimer* aTimer) override { return DoStep(); }
+
+ private:
+  nsresult DoStep() {
+#define DISPATCH_AND_RETURN_IF_FAILED(rv) \
+  if (NS_FAILED(rv)) {                    \
+    return Dispatch(rv, nullptr);         \
+  }
+
+    // This guard is used to close the backup database in the event of
+    // some failure throughout this process. We release the exit guard
+    // only if we complete the backup successfully, or defer to another
+    // later call to DoStep.
+    auto guard = MakeScopeExit([&]() {
+      MOZ_ALWAYS_TRUE(::sqlite3_close(mBackupFile) == SQLITE_OK);
+      mBackupFile = nullptr;
+    });
+
+    MOZ_ASSERT(!NS_IsMainThread());
+    nsAutoString originalPath;
+    nsresult rv = mDestinationFile->GetPath(originalPath);
+    DISPATCH_AND_RETURN_IF_FAILED(rv);
+
+    nsAutoString tempPath = originalPath;
+    tempPath.AppendLiteral(".tmp");
+
+    nsCOMPtr<nsIFile> file =
+        do_CreateInstance("@mozilla.org/file/local;1", &rv);
+    DISPATCH_AND_RETURN_IF_FAILED(rv);
+
+    rv = file->InitWithPath(tempPath);
+    DISPATCH_AND_RETURN_IF_FAILED(rv);
+
+    // The number of milliseconds to wait between each batch of copies.
+    static constexpr uint32_t STEP_DELAY_MS = 250;
+    // The number of pages to copy per step
+    static constexpr int COPY_PAGES = 5;
+
+    int srv = ::sqlite3_backup_step(mBackupHandle, COPY_PAGES);
+    if (srv == SQLITE_OK || srv == SQLITE_BUSY || srv == SQLITE_LOCKED) {
+      // We're continuing the backup later. Release the guard to avoid closing
+      // the database.
+      guard.release();
+      // Queue up the next step
+      return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this,
+                                     STEP_DELAY_MS, nsITimer::TYPE_ONE_SHOT,
+                                     GetCurrentSerialEventTarget());
+    }
+#ifdef DEBUG
+    if (srv != SQLITE_DONE) {
+      nsCString warnMsg;
+      warnMsg.AppendLiteral(
+          "The SQLite database copy could not be completed due to an error: ");
+      warnMsg.Append(::sqlite3_errmsg(mBackupFile));
+      NS_WARNING(warnMsg.get());
+    }
+#endif
+
+    (void)::sqlite3_backup_finish(mBackupHandle);
+    MOZ_ALWAYS_TRUE(::sqlite3_close(mBackupFile) == SQLITE_OK);
+    mBackupFile = nullptr;
+
+    // The database is already closed, so we can release this guard now.
+    guard.release();
+
+    if (srv != SQLITE_DONE) {
+      NS_WARNING("Failed to create database copy.");
+
+      // The partially created database file is not useful. Let's remove it.
+      rv = file->Remove(false);
+      if (NS_FAILED(rv)) {
+        NS_WARNING(
+            "Removing a partially backed up SQLite database file failed.");
+      }
+
+      return Dispatch(convertResultCode(srv), nullptr);
+    }
+
+    // Now that we've successfully created the copy, we'll strip off the .tmp
+    // extension.
+
+    nsAutoString leafName;
+    rv = mDestinationFile->GetLeafName(leafName);
+    DISPATCH_AND_RETURN_IF_FAILED(rv);
+
+    rv = file->RenameTo(nullptr, leafName);
+    DISPATCH_AND_RETURN_IF_FAILED(rv);
+
+#undef DISPATCH_AND_RETURN_IF_FAILED
+    return Dispatch(NS_OK, nullptr);
+  }
+
+  nsresult Dispatch(nsresult aResult, nsISupports* aValue) {
+    RefPtr<CallbackComplete> event =
+        new CallbackComplete(aResult, aValue, mCallback.forget());
+    return mConnection->eventTargetOpenedOn->Dispatch(event,
+                                                      NS_DISPATCH_NORMAL);
+  }
+
+  ~AsyncBackupDatabaseFile() override {
+    nsresult rv;
+    nsCOMPtr<nsIThread> thread =
+        do_QueryInterface(mConnection->eventTargetOpenedOn, &rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    // Handle ambiguous nsISupports inheritance.
+    NS_ProxyRelease("AsyncBackupDatabaseFile::mConnection", thread,
+                    mConnection.forget());
+    NS_ProxyRelease("AsyncBackupDatabaseFile::mDestinationFile", thread,
+                    mDestinationFile.forget());
+
+    // Generally, the callback will be released by CallbackComplete.
+    // However, if for some reason Run() is not executed, we still
+    // need to ensure that it is released here.
+    NS_ProxyRelease("AsyncInitializeClone::mCallback", thread,
+                    mCallback.forget());
+  }
+
+  RefPtr<Connection> mConnection;
+  sqlite3* mNativeConnection;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIFile> mDestinationFile;
+  nsCOMPtr<mozIStorageCompletionCallback> mCallback;
+  sqlite3* mBackupFile;
+  sqlite3_backup* mBackupHandle;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED(AsyncBackupDatabaseFile, Runnable, nsITimerCallback)
 
 }  // namespace
 
@@ -2751,6 +2945,37 @@ uint32_t Connection::IncreaseTransactionNestingLevel(
 uint32_t Connection::DecreaseTransactionNestingLevel(
     const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
   return --mTransactionNestingLevel;
+}
+
+NS_IMETHODIMP
+Connection::BackupToFileAsync(nsIFile* aDestinationFile,
+                              mozIStorageCompletionCallback* aCallback) {
+  NS_ENSURE_ARG(aDestinationFile);
+  NS_ENSURE_ARG(aCallback);
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
+
+  // Abort if we're shutting down.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return NS_ERROR_ABORT;
+  }
+  // Check if AsyncClose or Close were already invoked.
+  if (!connectionReady()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsresult rv = ensureOperationSupported(ASYNCHRONOUS);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsIEventTarget* asyncThread = getAsyncExecutionTarget();
+  if (!asyncThread) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Create and dispatch our backup event to the execution thread.
+  nsCOMPtr<nsIRunnable> backupEvent =
+      new AsyncBackupDatabaseFile(this, mDBConn, aDestinationFile, aCallback);
+  rv = asyncThread->Dispatch(backupEvent, NS_DISPATCH_NORMAL);
+  return rv;
 }
 
 }  // namespace mozilla::storage
