@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Bug 1873417: Test if import-maps will block module script execution</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+   (function () {
+       const script = document.createElement('script');
+       script.type = 'importmap';
+       script.textContent = '{}';
+       document.head.appendChild(script);
+   }());
+</script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script>
+let hasError = false;
+var state;
+
+SimpleTest.waitForExplicitFinish();
+
+function scriptError() {
+  hasError = true;
+}
+
+function testLoaded() {
+  ok(!hasError, 'module script should be loaded');
+  info("state:" + state);
+  ok(state === "loaded", "'state' should be set to 'loaded'");
+  SimpleTest.finish();
+}
+
+</script>
+
+<body onload="testLoaded()">
+<script src="bug_1873417.mjs" type="module" onerror="scriptError()"></script>
+</body>
+

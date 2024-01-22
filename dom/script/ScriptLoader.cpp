@@ -1143,9 +1143,14 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   }
 
   if (request && request->IsModuleRequest() &&
-      mModuleLoader->HasImportMapRegistered()) {
+      mModuleLoader->HasImportMapRegistered() &&
+      request->mState > ScriptLoadRequest::State::Fetching) {
     // We don't preload module scripts after seeing an import map but a script
     // can dynamically insert an import map after preloading has happened.
+    //
+    // In the case of an import map is inserted after preloading has happened,
+    // We also check if the request is fetched, if not then we can reuse the
+    // preloaded request.
     request->Cancel();
     request = nullptr;
   }
