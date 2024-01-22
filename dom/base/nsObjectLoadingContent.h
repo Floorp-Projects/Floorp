@@ -53,8 +53,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   enum ObjectType {
     // Loading, type not yet known. We may be waiting for a channel to open.
     eType_Loading = TYPE_LOADING,
-    // Content is a *non-svg* image
-    eType_Image = TYPE_IMAGE,
     // Content is a "special" plugin.  Plugins are removed but these MIME
     // types display an transparent region in their place.
     // (Special plugins that have an HTML fallback are eType_Null)

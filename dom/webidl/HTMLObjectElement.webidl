@@ -86,8 +86,6 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   const unsigned long TYPE_LOADING     = 0;
   [ChromeOnly]
-  const unsigned long TYPE_IMAGE       = 1;
-  [ChromeOnly]
   const unsigned long TYPE_FALLBACK    = 2;
   [ChromeOnly]
   const unsigned long TYPE_FAKE_PLUGIN = 3;
