@@ -78,22 +78,23 @@ TEST_P(TlsKeyExchangeTest13, Tls12ServerXyber768d00NotSupported) {
             ssl_sig_rsa_pss_rsae_sha256);
 }
 
-TEST_P(TlsKeyExchangeTest13, Xyber768d00DisabledByPolicy) {
+TEST_P(TlsKeyExchangeTest13, Xyber768d00ClientDisabledByPolicy) {
   EnsureKeyShareSetup();
+  client_->SetPolicy(SEC_OID_XYBER768D00, 0, NSS_USE_ALG_IN_SSL_KX);
   ConfigNamedGroups({ssl_grp_kem_xyber768d00, ssl_grp_ec_secp256r1});
-
-  ASSERT_EQ(SECSuccess, NSS_SetAlgorithmPolicy(SEC_OID_XYBER768D00, 0,
-                                               NSS_USE_ALG_IN_SSL_KX));
-  ASSERT_EQ(SECSuccess, NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY,
-                                               NSS_USE_POLICY_IN_SSL, 0));
 
   Connect();
   CheckKEXDetails({ssl_grp_ec_secp256r1}, {ssl_grp_ec_secp256r1});
+}
 
-  ASSERT_EQ(SECSuccess, NSS_SetAlgorithmPolicy(SEC_OID_XYBER768D00,
-                                               NSS_USE_ALG_IN_SSL_KX, 0));
-  ASSERT_EQ(SECSuccess, NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY,
-                                               NSS_USE_POLICY_IN_SSL, 0));
+TEST_P(TlsKeyExchangeTest13, Xyber768d00ServerDisabledByPolicy) {
+  EnsureKeyShareSetup();
+  server_->SetPolicy(SEC_OID_XYBER768D00, 0, NSS_USE_ALG_IN_SSL_KX);
+  ConfigNamedGroups({ssl_grp_kem_xyber768d00, ssl_grp_ec_secp256r1});
+
+  Connect();
+  CheckKEXDetails({ssl_grp_kem_xyber768d00, ssl_grp_ec_secp256r1},
+                  {ssl_grp_kem_xyber768d00}, ssl_grp_ec_secp256r1);
 }
 
 class XyberShareDamager : public TlsExtensionFilter {

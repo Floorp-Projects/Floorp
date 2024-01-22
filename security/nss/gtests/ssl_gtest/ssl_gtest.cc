@@ -40,6 +40,10 @@ int main(int argc, char** argv) {
   if (NSS_SetDomesticPolicy() != SECSuccess) {
     return 1;
   }
+  if (NSS_SetAlgorithmPolicy(SEC_OID_XYBER768D00, NSS_USE_ALG_IN_SSL_KX, 0) !=
+      SECSuccess) {
+    return 1;
+  }
   int rv = RUN_ALL_TESTS();
 
   if (NSS_Shutdown() != SECSuccess) {
