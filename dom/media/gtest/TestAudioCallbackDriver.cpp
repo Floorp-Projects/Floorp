@@ -137,19 +137,22 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   auto graph = MakeRefPtr<NiceMock<MockGraphInterface>>(aRate);
   EXPECT_CALL(*graph, NotifyInputStopped).Times(0);
 
+  auto* mainThread = AbstractThread::GetCurrent();
   Maybe<int64_t> audioStart;
   Maybe<uint32_t> alreadyBuffered;
   int64_t inputFrameCount = 0;
-  int64_t processedFrameCount = 0;
+  int64_t processedFrameCount = -1;
   ON_CALL(*graph, NotifyInputData)
       .WillByDefault([&](const AudioDataValue*, size_t aFrames, TrackRate,
                          uint32_t, uint32_t aAlreadyBuffered) {
         if (!audioStart) {
           audioStart = Some(graph->StateComputedTime());
           alreadyBuffered = Some(aAlreadyBuffered);
-          // Reset processedFrameCount to ignore frames processed while waiting
-          // for the fallback driver to stop.
-          processedFrameCount = 0;
+          mainThread->Dispatch(NS_NewRunnableFunction(__func__, [&] {
+            // Start processedFrameCount now, ignoring frames processed while
+            // waiting for the fallback driver to stop.
+            processedFrameCount = 0;
+          }));
         }
         EXPECT_NEAR(inputFrameCount,
                     static_cast<int64_t>(graph->StateComputedTime() -
@@ -194,15 +197,17 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     return graph->IterationCount() >= fallbackIterations;
   });
 
-  MediaEventListener processedListener = stream->FramesProcessedEvent().Connect(
-      AbstractThread::GetCurrent(),
-      [&](uint32_t aFrames) { processedFrameCount += aFrames; });
+  MediaEventListener processedListener =
+      stream->FramesProcessedEvent().Connect(mainThread, [&](uint32_t aFrames) {
+        if (processedFrameCount >= 0) {
+          processedFrameCount += aFrames;
+        }
+      });
   stream->Thaw();
 
   SpinEventLoopUntil(
-      "processed at least 100ms of audio data from stream callback"_ns, [&] {
-        return inputFrameCount != 0 && processedFrameCount >= aRate / 10;
-      });
+      "processed at least 100ms of audio data from stream callback"_ns,
+      [&] { return processedFrameCount >= aRate / 10; });
 
   // This will block untill all events have been executed.
   MOZ_KnownLive(driver)->Shutdown();
