@@ -17,7 +17,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   getTimeoutMultiplier: "chrome://remote/content/shared/AppInfo.sys.mjs",
-  Log: "chrome://remote/content/shared/Log.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   registerNavigationId:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
@@ -39,10 +38,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
 });
-
-ChromeUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
-);
 
 // Maximal window dimension allowed when emulating a viewport.
 const MAX_WINDOW_SIZE = 10000000;
@@ -415,11 +410,10 @@ class BrowsingContextModule extends Module {
     }
 
     if (lazy.TabManager.getTabCount() === 1) {
-      // The behavior when closing the last tab is currently unspecified.
-      // Warn the consumer about potential issues
-      lazy.logger.warn(
-        `Closing the last open tab (Browsing Context id ${contextId}), expect inconsistent behavior across platforms`
-      );
+      // The behavior when closing the very last tab is currently unspecified.
+      // As such behave like Marionette and don't allow closing it.
+      // See: https://github.com/w3c/webdriver-bidi/issues/187
+      return;
     }
 
     const tab = lazy.TabManager.getTabForBrowsingContext(context);

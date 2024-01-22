@@ -145,9 +145,6 @@ const COMMON_PREFERENCES = new Map([
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
 
-  // Do not close the window when the last tab gets closed
-  ["browser.tabs.closeWindowWithLastTab", false],
-
   // Don't unload tabs when available memory is running low
   ["browser.tabs.unloadOnLowMemory", false],
 
