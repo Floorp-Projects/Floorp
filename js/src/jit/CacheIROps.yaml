@@ -2181,6 +2181,15 @@
     index: Int32Id
     result: StringId
 
+- name: LinearizeForCodePointAccess
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    str: StringId
+    index: Int32Id
+    result: StringId
+
 - name: LoadStringCharResult
   shared: false
   transpile: true
@@ -2193,6 +2202,15 @@
 - name: LoadStringCharCodeResult
   shared: true
   transpile: true
+  cost_estimate: 3
+  args:
+    str: StringId
+    index: Int32Id
+    handleOOB: BoolImm
+
+- name: LoadStringCodePointResult
+  shared: true
+  transpile: false
   cost_estimate: 3
   args:
     str: StringId

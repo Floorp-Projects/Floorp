@@ -2596,7 +2596,8 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
 enum class AttachStringChar { No, Yes, Linearize, OutOfBounds };
 
 static AttachStringChar CanAttachStringChar(const Value& val,
-                                            const Value& idVal) {
+                                            const Value& idVal,
+                                            StringChar kind) {
   if (!val.isString() || !idVal.isInt32()) {
     return AttachStringChar::No;
   }
@@ -2616,6 +2617,18 @@ static AttachStringChar CanAttachStringChar(const Value& val,
     JSRope* rope = &str->asRope();
     if (size_t(index) < rope->leftChild()->length()) {
       str = rope->leftChild();
+
+      // MacroAssembler::loadStringChar doesn't support surrogate pairs which
+      // are split between the left and right child of a rope.
+      if (kind == StringChar::CodePointAt &&
+          size_t(index) + 1 == str->length() && str->isLinear()) {
+        // Linearize the string when the last character of the left child is a
+        // a lead surrogate.
+        char16_t ch = str->asLinear().latin1OrTwoByteChar(index);
+        if (unicode::IsLeadSurrogate(ch)) {
+          return AttachStringChar::Linearize;
+        }
+      }
     } else {
       str = rope->rightChild();
     }
@@ -2632,7 +2645,7 @@ AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
                                                        ValOperandId indexId) {
   MOZ_ASSERT(idVal_.isInt32());
 
-  auto attach = CanAttachStringChar(val_, idVal_);
+  auto attach = CanAttachStringChar(val_, idVal_, StringChar::CharAt);
   if (attach == AttachStringChar::No) {
     return AttachDecision::NoAction;
   }
@@ -7313,7 +7326,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
     return AttachDecision::NoAction;
   }
 
-  auto attach = CanAttachStringChar(thisval_, args_[0]);
+  auto attach = CanAttachStringChar(thisval_, args_[0], kind);
   if (attach == AttachStringChar::No) {
     return AttachDecision::NoAction;
   }
@@ -7323,7 +7336,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   // Initialize the input operand.
   initializeInputOperand();
 
-  // Guard callee is the 'charCodeAt' or 'charAt' native function.
+  // Guard callee is the 'charCodeAt', 'codePointAt', or 'charAt' native
+  // function.
   emitNativeCalleeGuard();
 
   // Guard this is a string.
@@ -7343,33 +7357,57 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   // for out-of-bounds accesses.
   if (attach == AttachStringChar::Linearize ||
       attach == AttachStringChar::OutOfBounds) {
-    strId = writer.linearizeForCharAccess(strId, int32IndexId);
+    switch (kind) {
+      case StringChar::CharCodeAt:
+      case StringChar::CharAt:
+        strId = writer.linearizeForCharAccess(strId, int32IndexId);
+        break;
+      case StringChar::CodePointAt:
+        strId = writer.linearizeForCodePointAccess(strId, int32IndexId);
+        break;
+    }
   }
 
   // Load string char or code.
-  if (kind == StringChar::CodeAt) {
-    writer.loadStringCharCodeResult(strId, int32IndexId, handleOOB);
-  } else {
-    writer.loadStringCharResult(strId, int32IndexId, handleOOB);
+  switch (kind) {
+    case StringChar::CharCodeAt:
+      writer.loadStringCharCodeResult(strId, int32IndexId, handleOOB);
+      break;
+    case StringChar::CodePointAt:
+      writer.loadStringCodePointResult(strId, int32IndexId, handleOOB);
+      break;
+    case StringChar::CharAt:
+      writer.loadStringCharResult(strId, int32IndexId, handleOOB);
+      break;
   }
 
   writer.returnFromIC();
 
-  if (kind == StringChar::CodeAt) {
-    trackAttached("StringCharCodeAt");
-  } else {
-    trackAttached("StringCharAt");
+  switch (kind) {
+    case StringChar::CharCodeAt:
+      trackAttached("StringCharCodeAt");
+      break;
+    case StringChar::CodePointAt:
+      trackAttached("StringCodePointAt");
+      break;
+    case StringChar::CharAt:
+      trackAttached("StringCharAt");
+      break;
   }
 
   return AttachDecision::Attach;
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringCharCodeAt() {
-  return tryAttachStringChar(StringChar::CodeAt);
+  return tryAttachStringChar(StringChar::CharCodeAt);
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachStringCodePointAt() {
+  return tryAttachStringChar(StringChar::CodePointAt);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringCharAt() {
-  return tryAttachStringChar(StringChar::At);
+  return tryAttachStringChar(StringChar::CharAt);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode() {
@@ -11154,6 +11192,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachStringToStringValueOf();
     case InlinableNative::StringCharCodeAt:
       return tryAttachStringCharCodeAt();
+    case InlinableNative::StringCodePointAt:
+      return tryAttachStringCodePointAt();
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt();
     case InlinableNative::StringFromCharCode:
