@@ -72,6 +72,11 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9-]*$"
     },
+    "clickUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "The url used to for reporting clicks."
+    },
     "urls": {
       "$ref": "#/definitions/urls"
     }
