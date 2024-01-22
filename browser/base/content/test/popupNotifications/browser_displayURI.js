@@ -32,20 +32,10 @@ async function check(contentTask, options = {}) {
       let panel = await popupShownPromise;
       let notification = panel.children[0];
       let body = notification.querySelector(".popup-notification-body");
-      if (
-        notification.id == "geolocation-notification" ||
-        notification.id == "xr-notification"
-      ) {
-        ok(
-          body.innerHTML.includes("local file"),
-          `file:// URIs should be displayed as local file.`
-        );
-      } else {
-        ok(
-          body.innerHTML.includes("Unknown origin"),
-          "file:// URIs should be displayed as unknown origin."
-        );
-      }
+      ok(
+        body.innerHTML.includes("local file"),
+        `file:// URIs should be displayed as local file.`
+      );
     }
   );
 
