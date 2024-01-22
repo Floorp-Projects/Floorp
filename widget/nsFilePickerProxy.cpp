@@ -12,6 +12,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 
 using namespace mozilla::dom;
@@ -25,7 +26,8 @@ nsFilePickerProxy::~nsFilePickerProxy() = default;
 
 NS_IMETHODIMP
 nsFilePickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                        nsIFilePicker::Mode aMode) {
+                        nsIFilePicker::Mode aMode,
+                        BrowsingContext* aBrowsingContext) {
   BrowserChild* browserChild = BrowserChild::GetFrom(aParent);
   if (!browserChild) {
     return NS_ERROR_FAILURE;

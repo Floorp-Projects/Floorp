@@ -11,11 +11,12 @@
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/FileBlobImpl.h"
-#include "mozilla/dom/FileSystemSecurity.h"
+#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/FileBlobImpl.h"
+#include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 
 using mozilla::Unused;
@@ -223,7 +224,9 @@ bool FilePickerParent::CreateFilePicker() {
     return false;
   }
 
-  Element* element = BrowserParent::GetFrom(Manager())->GetOwnerElement();
+  auto* browserParent = BrowserParent::GetFrom(Manager());
+  auto* browsingContext = browserParent->GetBrowsingContext();
+  Element* element = browserParent->GetOwnerElement();
   if (!element) {
     return false;
   }
@@ -233,7 +236,8 @@ bool FilePickerParent::CreateFilePicker() {
     return false;
   }
 
-  return NS_SUCCEEDED(mFilePicker->Init(window, mTitle, mMode));
+  return NS_SUCCEEDED(
+      mFilePicker->Init(window, mTitle, mMode, browsingContext));
 }
 
 mozilla::ipc::IPCResult FilePickerParent::RecvOpen(

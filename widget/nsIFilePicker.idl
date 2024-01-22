@@ -10,6 +10,7 @@ interface nsIFile;
 interface nsIURI;
 interface mozIDOMWindowProxy;
 interface nsISimpleEnumerator;
+webidl BrowsingContext;
 
 // Declared in this file, below.
 interface nsIFilePickerShownCallback;
@@ -69,9 +70,15 @@ interface nsIFilePicker : nsISupports
   *                      on this parent. parent must be non-null.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
-  *
+  * @param      browsingContext [optional]
+  *             The context in which the file picker is being shown. This is
+  *             used for content analysis and can be omitted if chrome is
+  *             showing the file picker.
   */
-  void init(in mozIDOMWindowProxy parent, in AString title, in nsIFilePicker_Mode mode);
+  void init(in mozIDOMWindowProxy parent,
+            in AString title,
+            in nsIFilePicker_Mode mode,
+            [optional] in BrowsingContext browsingContext);
 
   /**
    * Returns a Promise that resolves to true if the passed nsIFilePicker mode
