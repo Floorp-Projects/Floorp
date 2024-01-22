@@ -30,7 +30,10 @@ async function waitForProtectionsPanelToast() {
     gProtectionsHandler._protectionsPopup,
     "popupshown"
   );
-  Assert.ok(gProtectionsHandler._protectionsPopup.hasAttribute("toast"), "Protections panel toast is shown.");
+  Assert.ok(
+    gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
+    "Protections panel toast is shown."
+  );
 
   await BrowserTestUtils.waitForEvent(
     gProtectionsHandler._protectionsPopup,
@@ -49,6 +52,13 @@ async function openProtectionsPanel(toast, win = window) {
     "tracking-protection-icon-container"
   );
 
+  // Register a promise to wait for the tooltip to be shown.
+  let tooltip = win.document.getElementById("tracking-protection-icon-tooltip");
+  let tooltipShownPromise = BrowserTestUtils.waitForPopupEvent(
+    tooltip,
+    "shown"
+  );
+
   // Move out than move over the shield icon to trigger the hover event in
   // order to fetch tracker count.
   EventUtils.synthesizeMouseAtCenter(
@@ -65,6 +75,9 @@ async function openProtectionsPanel(toast, win = window) {
     },
     win
   );
+
+  // Wait for the tooltip to be shown.
+  await tooltipShownPromise;
 
   if (!toast) {
     EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {}, win);
