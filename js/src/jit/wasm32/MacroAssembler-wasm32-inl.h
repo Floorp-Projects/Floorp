@@ -895,6 +895,11 @@ void MacroAssembler::spectreBoundsCheckPtr(Register index,
   MOZ_CRASH();
 }
 
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Imm32 rhs,
+                                 const Address& src, Register dest) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::cmp32LoadPtr(Condition cond, const Address& lhs, Imm32 rhs,
                                   const Address& src, Register dest) {
   MOZ_CRASH();
