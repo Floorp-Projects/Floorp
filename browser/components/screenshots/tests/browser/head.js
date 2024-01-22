@@ -711,7 +711,8 @@ async function safeSynthesizeMouseEventInContentPage(
 add_setup(async () => {
   CustomizableUI.addWidgetToArea(
     "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
+    CustomizableUI.AREA_NAVBAR,
+    0
   );
   let screenshotBtn = document.getElementById("screenshot-button");
   Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
