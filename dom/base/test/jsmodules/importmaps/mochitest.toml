@@ -2,6 +2,7 @@
 support-files = [
   "bug_1865410_module_a.mjs",
   "bug_1865410_module_b.mjs",
+  "bug_1873417.mjs",
   "module_importMap_with_external_script_0.mjs",
   "module_importMap_with_external_script_1.mjs",
   "module_importMap_with_external_script_2.mjs",
@@ -28,3 +29,5 @@ support-files = [
 ["test_importMap_with_external_script.html"]
 
 ["test_bug_1865410.html"]
+
+["test_bug_1873417.html"]
