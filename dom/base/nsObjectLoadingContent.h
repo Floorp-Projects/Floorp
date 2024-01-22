@@ -13,15 +13,12 @@
 #ifndef NSOBJECTLOADINGCONTENT_H_
 #define NSOBJECTLOADINGCONTENT_H_
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIFrame.h"  // for WeakFrame only
-#include "nsImageLoadingContent.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsIRunnable.h"
 #include "nsFrameLoaderOwner.h"
 
 class nsStopPluginRunnable;
@@ -39,8 +36,7 @@ class WindowProxyHolder;
 class XULFrameElement;
 }  // namespace mozilla::dom
 
-class nsObjectLoadingContent : public nsImageLoadingContent,
-                               public nsIStreamListener,
+class nsObjectLoadingContent : public nsIStreamListener,
                                public nsFrameLoaderOwner,
                                public nsIObjectLoadingContent,
                                public nsIChannelEventSink {
@@ -80,12 +76,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   void SetIsNetworkCreated(bool aNetworkCreated) {
     mNetworkCreated = aNetworkCreated;
   }
-
-  /**
-   * Notify this class the document state has changed
-   * Called by Document so we may suspend plugins in inactive documents)
-   */
-  void NotifyOwnerDocumentActivityChanged();
 
   // Helper for WebIDL NeedResolve
   bool DoResolve(
@@ -228,16 +218,18 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   void CreateStaticClone(nsObjectLoadingContent* aDest) const;
 
-  nsresult BindToTree(mozilla::dom::BindContext& aCxt, nsINode& aParent) {
-    nsImageLoadingContent::BindToTree(aCxt, aParent);
-    return NS_OK;
-  }
   void UnbindFromTree(bool aNullParent = true);
 
   /**
    * Return the content policy type used for loading the element.
    */
   virtual nsContentPolicyType GetContentPolicyType() const = 0;
+
+  virtual const mozilla::dom::Element* AsElement() const = 0;
+  mozilla::dom::Element* AsElement() {
+    return const_cast<mozilla::dom::Element*>(
+        const_cast<const nsObjectLoadingContent*>(this)->AsElement());
+  }
 
   /**
    * Decides whether we should load <embed>/<object> node content.

@@ -28,14 +28,10 @@ HTMLEmbedElement::HTMLEmbedElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
-  RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 }
 
-HTMLEmbedElement::~HTMLEmbedElement() {
-  UnregisterActivityObserver();
-  nsImageLoadingContent::Destroy();
-}
+HTMLEmbedElement::~HTMLEmbedElement() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEmbedElement)
 
@@ -52,19 +48,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
     HTMLEmbedElement, nsGenericHTMLElement, nsIRequestObserver,
     nsIStreamListener, nsFrameLoaderOwner, nsIObjectLoadingContent,
-    imgINotificationObserver, nsIImageLoadingContent, nsIChannelEventSink)
+    nsIChannelEventSink)
 
 NS_IMPL_ELEMENT_CLONE(HTMLEmbedElement)
 
-void HTMLEmbedElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
-  nsImageLoadingContent::AsyncEventRunning(aEvent);
-}
-
 nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {

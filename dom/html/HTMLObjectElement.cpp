@@ -30,25 +30,17 @@ HTMLObjectElement::HTMLObjectElement(
     : nsGenericHTMLFormControlElement(std::move(aNodeInfo),
                                       FormControlType::Object),
       mIsDoneAddingChildren(!aFromParser) {
-  RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 
   // <object> is always barred from constraint validation.
   SetBarredFromConstraintValidation(true);
 }
 
-HTMLObjectElement::~HTMLObjectElement() {
-  UnregisterActivityObserver();
-  nsImageLoadingContent::Destroy();
-}
+HTMLObjectElement::~HTMLObjectElement() = default;
 
 bool HTMLObjectElement::IsInteractiveHTMLContent() const {
   return HasAttr(nsGkAtoms::usemap) ||
          nsGenericHTMLFormControlElement::IsInteractiveHTMLContent();
-}
-
-void HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
-  nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
 void HTMLObjectElement::DoneAddingChildren(bool aHaveNotified) {
@@ -76,9 +68,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLObjectElement,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
-    HTMLObjectElement, nsGenericHTMLFormControlElement,
-    imgINotificationObserver, nsIRequestObserver, nsIStreamListener,
-    nsFrameLoaderOwner, nsIObjectLoadingContent, nsIImageLoadingContent,
+    HTMLObjectElement, nsGenericHTMLFormControlElement, nsIRequestObserver,
+    nsIStreamListener, nsFrameLoaderOwner, nsIObjectLoadingContent,
     nsIChannelEventSink, nsIConstraintValidation)
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
@@ -86,9 +77,6 @@ NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   nsresult rv = nsGenericHTMLFormControlElement::BindToTree(aContext, aParent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we already have all the children, start the load.

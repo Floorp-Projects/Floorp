@@ -13,15 +13,11 @@
 #include "imgLoader.h"
 #include "nsIClassOfService.h"
 #include "nsIConsoleService.h"
-#include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIExternalProtocolHandler.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
@@ -29,12 +25,9 @@
 #include "nsINestedURI.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIURILoader.h"
-#include "nsIURL.h"
 #include "nsIScriptChannel.h"
-#include "nsIBlocklistService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
-#include "nsIXULRuntime.h"
 #include "nsIScriptError.h"
 #include "nsSubDocumentFrame.h"
 
@@ -44,32 +37,24 @@
 #include "prenv.h"
 #include "mozilla/Logging.h"
 
-#include "nsCURILoader.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
-#include "nsDocShellCID.h"
 #include "nsDocShellLoadState.h"
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsStyleUtil.h"
-#include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsSandboxFlags.h"
 #include "nsQueryObject.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
 
 #include "nsObjectLoadingContent.h"
-#include "mozAutoDocUpdate.h"
-#include "nsWrapperCacheInlines.h"
-#include "nsDOMJSUtils.h"
 #include "js/Object.h"  // JS::GetClass
 
 #include "nsWidgetsCID.h"
-#include "nsContentCID.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Components.h"
 #include "mozilla/LoadInfo.h"
@@ -82,7 +67,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/widget/IMEData.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
@@ -94,7 +78,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/StaticPrefs_security.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 #include "ReferrerInfo.h"
@@ -206,12 +189,7 @@ static bool inline URIEquals(nsIURI* a, nsIURI* b) {
 
 // Helper to spawn the frameloader.
 void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
-
-  mFrameLoader =
-      nsFrameLoader::Create(thisContent->AsElement(), mNetworkCreated);
+  mFrameLoader = nsFrameLoader::Create(AsElement(), mNetworkCreated);
   MOZ_ASSERT(mFrameLoader, "nsFrameLoader::Create failed");
 }
 
@@ -250,9 +228,6 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
 }
 
 void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
-  nsImageLoadingContent::UnbindFromTree(aNullParent);
-
-  // nsImageLoadingContent handles the image case.
   // Reset state and clear pending events
   /// XXX(johns): The implementation for GenericFrame notes that ideally we
   ///             would keep the docshell around, but trash the frameloader
@@ -281,15 +256,6 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
         "Should not be tearing down frame loaders at this point");
     mFrameLoader->Destroy();
   }
-
-  nsImageLoadingContent::Destroy();
-}
-
-void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
-  // XXX(johns): We cannot touch plugins or run arbitrary script from this call,
-  //             as Document is in a non-reentrant state.
-
-  nsImageLoadingContent::NotifyOwnerDocumentActivityChanged();
 }
 
 // nsIRequestObserver
@@ -557,16 +523,6 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(
 void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
                                                       nsIURI* aBaseURI,
                                                       nsIURI** aRewrittenURI) {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "Must be an instance of content");
-
-  // We're only interested in switching out embed and object tags
-  if (!thisContent->NodeInfo()->Equals(nsGkAtoms::embed) &&
-      !thisContent->NodeInfo()->Equals(nsGkAtoms::object)) {
-    return;
-  }
-
   nsCOMPtr<nsIEffectiveTLDService> tldService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   // If we can't analyze the URL, just pass on through.
@@ -619,9 +575,10 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
     }
   }
 
+  Document* doc = AsElement()->OwnerDoc();
   // If we've made it this far, we've got a rewritable embed. Log it in
   // telemetry.
-  thisContent->OwnerDoc()->SetUseCounter(eUseCounter_custom_YouTubeFlashEmbed);
+  doc->SetUseCounter(eUseCounter_custom_YouTubeFlashEmbed);
 
   // If we're pref'd off, return after telemetry has been logged.
   if (!Preferences::GetBool(kPrefYoutubeRewrite)) {
@@ -641,8 +598,8 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   // video loading.
   uri.ReplaceSubstring("/v/"_ns, "/embed/"_ns);
   nsAutoString utf16URI = NS_ConvertUTF8toUTF16(uri);
-  rv = nsContentUtils::NewURIWithDocumentCharset(
-      aRewrittenURI, utf16URI, thisContent->OwnerDoc(), aBaseURI);
+  rv = nsContentUtils::NewURIWithDocumentCharset(aRewrittenURI, utf16URI, doc,
+                                                 aBaseURI);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -655,9 +612,9 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   } else {
     msgName = "RewriteYouTubeEmbedPathParams";
   }
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, "Plugins"_ns, thisContent->OwnerDoc(),
-      nsContentUtils::eDOM_PROPERTIES, msgName, params);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Plugins"_ns,
+                                  doc, nsContentUtils::eDOM_PROPERTIES, msgName,
+                                  params);
 }
 
 bool nsObjectLoadingContent::CheckLoadPolicy(int16_t* aContentPolicy) {
@@ -666,19 +623,16 @@ bool nsObjectLoadingContent::CheckLoadPolicy(int16_t* aContentPolicy) {
     return false;
   }
 
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "Must be an instance of content");
-
-  Document* doc = thisContent->OwnerDoc();
+  Element* el = AsElement();
+  Document* doc = el->OwnerDoc();
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
 
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new LoadInfo(
-      doc->NodePrincipal(),  // loading principal
-      doc->NodePrincipal(),  // triggering principal
-      thisContent, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-      contentPolicyType);
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+      new LoadInfo(doc->NodePrincipal(),  // loading principal
+                   doc->NodePrincipal(),  // triggering principal
+                   el, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                   contentPolicyType);
 
   *aContentPolicy = nsIContentPolicy::ACCEPT;
   nsresult rv =
@@ -700,11 +654,8 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
     return false;
   }
 
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "Must be an instance of content");
-
-  Document* doc = thisContent->OwnerDoc();
+  Element* el = AsElement();
+  Document* doc = el->OwnerDoc();
 
   nsContentPolicyType objectType;
   switch (mType) {
@@ -725,8 +676,7 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new LoadInfo(
       doc->NodePrincipal(),  // loading principal
       doc->NodePrincipal(),  // triggering principal
-      thisContent, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-      objectType);
+      el, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, objectType);
 
   *aContentPolicy = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentProcessPolicy(
@@ -744,9 +694,7 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
 
 nsObjectLoadingContent::ParameterUpdateFlags
 nsObjectLoadingContent::UpdateObjectParameters() {
-  nsCOMPtr<Element> thisElement =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  MOZ_ASSERT(thisElement, "Must be an Element");
+  Element* el = AsElement();
 
   uint32_t caps = GetCapabilities();
   LOG(("OBJLC [%p]: Updating object parameters", this));
@@ -776,15 +724,12 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   /// Initial MIME Type
   ///
 
-  if (caps & eFallbackIfClassIDPresent) {
-    nsAutoString classIDAttr;
-    thisElement->GetAttr(nsGkAtoms::classid, classIDAttr);
+  if (caps & eFallbackIfClassIDPresent &&
+      el->HasNonEmptyAttr(nsGkAtoms::classid)) {
     // We don't support class ID plugin references, so we should always treat
     // having class Ids as attributes as invalid, and fallback accordingly.
-    if (!classIDAttr.IsEmpty()) {
-      newMime.Truncate();
-      stateInvalid = true;
-    }
+    newMime.Truncate();
+    stateInvalid = true;
   }
 
   ///
@@ -792,13 +737,12 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   ///
 
   nsAutoString codebaseStr;
-  nsIURI* docBaseURI = thisElement->GetBaseURI();
-  thisElement->GetAttr(nsGkAtoms::codebase, codebaseStr);
+  nsIURI* docBaseURI = el->GetBaseURI();
+  el->GetAttr(nsGkAtoms::codebase, codebaseStr);
 
   if (!codebaseStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(newBaseURI), codebaseStr, thisElement->OwnerDoc(),
-        docBaseURI);
+        getter_AddRefs(newBaseURI), codebaseStr, el->OwnerDoc(), docBaseURI);
     if (NS_FAILED(rv)) {
       // Malformed URI
       LOG(
@@ -814,7 +758,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   }
 
   nsAutoString rawTypeAttr;
-  thisElement->GetAttr(nsGkAtoms::type, rawTypeAttr);
+  el->GetAttr(nsGkAtoms::type, rawTypeAttr);
   if (!rawTypeAttr.IsEmpty()) {
     typeAttr = rawTypeAttr;
     nsAutoString params;
@@ -829,10 +773,10 @@ nsObjectLoadingContent::UpdateObjectParameters() {
 
   nsAutoString uriStr;
   // Different elements keep this in various locations
-  if (thisElement->NodeInfo()->Equals(nsGkAtoms::object)) {
-    thisElement->GetAttr(nsGkAtoms::data, uriStr);
-  } else if (thisElement->NodeInfo()->Equals(nsGkAtoms::embed)) {
-    thisElement->GetAttr(nsGkAtoms::src, uriStr);
+  if (el->NodeInfo()->Equals(nsGkAtoms::object)) {
+    el->GetAttr(nsGkAtoms::data, uriStr);
+  } else if (el->NodeInfo()->Equals(nsGkAtoms::embed)) {
+    el->GetAttr(nsGkAtoms::src, uriStr);
   } else {
     MOZ_ASSERT_UNREACHABLE("Unrecognized plugin-loading tag");
   }
@@ -842,7 +786,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   // not change.
   if (!uriStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(newURI), uriStr, thisElement->OwnerDoc(), newBaseURI);
+        getter_AddRefs(newURI), uriStr, el->OwnerDoc(), newBaseURI);
     nsCOMPtr<nsIURI> rewrittenURI;
     MaybeRewriteYoutubeEmbed(newURI, newBaseURI, getter_AddRefs(rewrittenURI));
     if (rewrittenURI) {
@@ -1030,8 +974,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   }
 
   mLoadingSyntheticDocument =
-      newType == eType_Document &&
-      imgLoader::SupportImageWithMimeType(newMime);
+      newType == eType_Document && imgLoader::SupportImageWithMimeType(newMime);
 
   ///
   /// Handle existing channels
@@ -1127,10 +1070,8 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad) {
 
 nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
                                             nsIRequest* aLoadingChannel) {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
-  Document* doc = thisContent->OwnerDoc();
+  Element* el = AsElement();
+  Document* doc = el->OwnerDoc();
   nsresult rv = NS_OK;
 
   // Per bug 1318303, if the parent document is not active, load the alternative
@@ -1479,10 +1420,8 @@ bool nsObjectLoadingContent::IsAboutBlankLoadOntoInitialAboutBlank(
 }
 
 nsresult nsObjectLoadingContent::OpenChannel() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
-  Document* doc = thisContent->OwnerDoc();
+  Element* el = AsElement();
+  Document* doc = el->OwnerDoc();
   NS_ASSERTION(doc, "No owner document?");
 
   nsresult rv;
@@ -1499,10 +1438,10 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       new ObjectInterfaceRequestorShim(this);
 
   bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
-      thisContent->NodePrincipal(),  // aLoadState->PrincipalToInherit()
-      mURI,                          // aLoadState->URI()
-      true,                          // aInheritForAboutBlank
-      false);                        // aForceInherit
+      el->NodePrincipal(),  // aLoadState->PrincipalToInherit()
+      mURI,                 // aLoadState->URI()
+      true,                 // aInheritForAboutBlank
+      false);               // aForceInherit
 
   bool inheritPrincipal = inheritAttrs && !SchemeIsData(mURI);
 
@@ -1538,7 +1477,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   RefPtr<LoadInfo> loadInfo = new LoadInfo(
       /*aLoadingPrincipal = aLoadingContext->NodePrincipal() */ nullptr,
       /*aTriggeringPrincipal = aLoadingPrincipal */ nullptr,
-      /*aLoadingContext = */ thisContent,
+      /*aLoadingContext = */ el,
       /*aSecurityFlags = */ securityFlags,
       /*aContentPolicyType = */ contentPolicyType,
       /*aLoadingClientInfo = */ Nothing(),
@@ -1546,7 +1485,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       /*aSandboxFlags = */ sandboxFlags);
 
   if (inheritAttrs) {
-    loadInfo->SetPrincipalToInherit(thisContent->NodePrincipal());
+    loadInfo->SetPrincipalToInherit(el->NodePrincipal());
   }
 
   if (cspToInherit) {
@@ -1555,10 +1494,10 @@ nsresult nsObjectLoadingContent::OpenChannel() {
 
   if (DocumentChannel::CanUseDocumentChannel(mURI) &&
       !IsAboutBlankLoadOntoInitialAboutBlank(mURI, inheritPrincipal,
-                                             thisContent->NodePrincipal())) {
+                                             el->NodePrincipal())) {
     // --- Create LoadState
     RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(mURI);
-    loadState->SetPrincipalToInherit(thisContent->NodePrincipal());
+    loadState->SetPrincipalToInherit(el->NodePrincipal());
     loadState->SetTriggeringPrincipal(loadInfo->TriggeringPrincipal());
     if (cspToInherit) {
       loadState->SetCsp(cspToInherit);
@@ -1589,7 +1528,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
 
     if (inheritAttrs) {
       nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
-      loadinfo->SetPrincipalToInherit(thisContent->NodePrincipal());
+      loadinfo->SetPrincipalToInherit(el->NodePrincipal());
     }
 
     // For object loads we store the CSP that potentially needs to
@@ -1616,7 +1555,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChan));
     if (timedChannel) {
-      timedChannel->SetInitiatorType(thisContent->LocalName());
+      timedChannel->SetInitiatorType(el->LocalName());
     }
 
     nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(httpChan));
@@ -1652,8 +1591,6 @@ void nsObjectLoadingContent::Destroy() {
   // Reset state so that if the element is re-appended to tree again (e.g.
   // adopting to another document), it will reload resource again.
   UnloadObject();
-
-  nsImageLoadingContent::Destroy();
 }
 
 /* static */
@@ -1671,9 +1608,6 @@ void nsObjectLoadingContent::Unlink(nsObjectLoadingContent* tmp) {
 }
 
 void nsObjectLoadingContent::UnloadObject(bool aResetState) {
-  // Don't notify in CancelImageRequests until we transition to a new loaded
-  // state, but not if we've loaded the image in a synthetic browsing context.
-  CancelImageRequests(false);
   if (mFrameLoader) {
     mFrameLoader->Destroy();
     mFrameLoader = nullptr;
@@ -1701,7 +1635,7 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
   LOG(("OBJLC [%p]: NotifyStateChanged: (%u) -> (%u) (notify %i)", this,
        aOldType, mType, aNotify));
 
-  dom::Element* thisEl = AsContent()->AsElement();
+  dom::Element* thisEl = AsElement();
   // Non-images are always not broken.
   // XXX: I assume we could just remove this completely?
   thisEl->RemoveStates(ElementState::BROKEN, aNotify);
@@ -1726,9 +1660,8 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 
 nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
     const nsCString& aMIMEType, bool aNoFakePlugin) {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
+  Element* el = AsElement();
+  NS_ASSERTION(el, "must be a content");
 
   // Images, documents and (fake) plugins are always supported.
   MOZ_ASSERT(GetCapabilities() &
@@ -1736,8 +1669,8 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
 
   LOG(
       ("OBJLC [%p]: calling HtmlObjectContentTypeForMIMEType: aMIMEType: %s - "
-       "thisContent: %p\n",
-       this, aMIMEType.get(), thisContent.get()));
+       "el: %p\n",
+       this, aMIMEType.get(), el));
   auto ret =
       static_cast<ObjectType>(nsContentUtils::HtmlObjectContentTypeForMIMEType(
           aMIMEType, aNoFakePlugin));
@@ -1747,15 +1680,12 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
 
 void nsObjectLoadingContent::CreateStaticClone(
     nsObjectLoadingContent* aDest) const {
+  MOZ_ASSERT(aDest->AsElement()->OwnerDoc()->IsStaticDocument());
   aDest->mType = mType;
 
   if (mFrameLoader) {
-    nsCOMPtr<nsIContent> content =
-        do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
-    Document* doc = content->OwnerDoc();
-    if (doc->IsStaticDocument()) {
-      doc->AddPendingFrameStaticClone(aDest, mFrameLoader);
-    }
+    aDest->AsElement()->OwnerDoc()->AddPendingFrameStaticClone(aDest,
+                                                               mFrameLoader);
   }
 }
 
@@ -1774,9 +1704,7 @@ void nsObjectLoadingContent::ConfigureFallback() {
   // (e.g. unknown MIME type).
   MOZ_ASSERT(mType == eType_Fallback || mType == eType_Null);
 
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
+  Element* el = AsElement();
 
   // There are two types of fallback:
   // 1. HTML fallbacks are children of the <object> or <embed> DOM element.
@@ -1786,11 +1714,11 @@ void nsObjectLoadingContent::ConfigureFallback() {
   // If our type is eType_Null (e.g. unknown MIME type) then we use
   // #1, otherwise the element has no size.
   bool hasHtmlFallback = false;
-  if (thisContent->IsHTMLElement(nsGkAtoms::object)) {
+  if (el->IsHTMLElement(nsGkAtoms::object)) {
     // Do a depth-first traverse of node tree with the current element as root,
     // looking for non-<param> elements.  If we find some then we have an HTML
     // fallback for this element.
-    for (nsIContent* child = thisContent->GetFirstChild(); child;) {
+    for (nsIContent* child = el->GetFirstChild(); child;) {
       hasHtmlFallback =
           hasHtmlFallback || (!child->IsHTMLElement(nsGkAtoms::param) &&
                               nsStyleUtil::IsSignificantChild(child, false));
@@ -1798,16 +1726,16 @@ void nsObjectLoadingContent::ConfigureFallback() {
       // <object> and <embed> elements in the fallback need to StartObjectLoad.
       // Their children should be ignored since they are part of those
       // element's fallback.
-      if (auto embed = HTMLEmbedElement::FromNode(child)) {
+      if (auto* embed = HTMLEmbedElement::FromNode(child)) {
         embed->StartObjectLoad(true, true);
         // Skip the children
-        child = child->GetNextNonChildNode(thisContent);
-      } else if (auto object = HTMLObjectElement::FromNode(child)) {
+        child = child->GetNextNonChildNode(el);
+      } else if (auto* object = HTMLObjectElement::FromNode(child)) {
         object->StartObjectLoad(true, true);
         // Skip the children
-        child = child->GetNextNonChildNode(thisContent);
+        child = child->GetNextNonChildNode(el);
       } else {
-        child = child->GetNextNode(thisContent);
+        child = child->GetNextNode(el);
       }
     }
   }
@@ -1896,24 +1824,18 @@ uint32_t nsObjectLoadingContent::GetRunID(SystemCallerGuarantee,
 }
 
 bool nsObjectLoadingContent::ShouldBlockContent() {
-  if (mContentBlockingEnabled && mURI && IsFlashMIME(mContentType) &&
-      StaticPrefs::browser_safebrowsing_blockedURIs_enabled()) {
-    return true;
-  }
-
-  return false;
+  return mContentBlockingEnabled && mURI && IsFlashMIME(mContentType) &&
+         StaticPrefs::browser_safebrowsing_blockedURIs_enabled();
 }
 
 Document* nsObjectLoadingContent::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  if (!thisContent->IsInComposedDoc()) {
+  Element* el = AsElement();
+  if (!el->IsInComposedDoc()) {
     return nullptr;
   }
 
-  Document* sub_doc = thisContent->OwnerDoc()->GetSubDocumentFor(thisContent);
+  Document* sub_doc = el->OwnerDoc()->GetSubDocumentFor(el);
   if (!sub_doc) {
     return nullptr;
   }
@@ -1943,25 +1865,23 @@ void nsObjectLoadingContent::GetOwnPropertyNames(
     bool /* unused */, ErrorResult& aRv) {}
 
 void nsObjectLoadingContent::MaybeFireErrorEvent() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  Element* el = AsElement();
   // Queue a task to fire an error event if we're an <object> element.  The
   // queueing is important, since then we don't have to worry about reentry.
-  if (thisContent->IsHTMLElement(nsGkAtoms::object)) {
+  if (el->IsHTMLElement(nsGkAtoms::object)) {
     RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
-        new LoadBlockingAsyncEventDispatcher(
-            thisContent, u"error"_ns, CanBubble::eNo, ChromeOnlyDispatch::eNo);
+        new LoadBlockingAsyncEventDispatcher(el, u"error"_ns, CanBubble::eNo,
+                                             ChromeOnlyDispatch::eNo);
     loadBlockingAsyncDispatcher->PostDOMEvent();
   }
 }
 
 bool nsObjectLoadingContent::BlockEmbedOrObjectContentLoading() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  Element* el = AsElement();
 
   // Traverse up the node tree to see if we have any ancestors that may block us
   // from loading
-  for (nsIContent* parent = thisContent->GetParent(); parent;
+  for (nsIContent* parent = el->GetParent(); parent;
        parent = parent->GetParent()) {
     if (parent->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio)) {
       return true;
@@ -1990,7 +1910,7 @@ void nsObjectLoadingContent::SubdocumentIntrinsicSizeOrRatioChanged(
   mSubdocumentIntrinsicSize = aIntrinsicSize;
   mSubdocumentIntrinsicRatio = aIntrinsicRatio;
 
-  if (nsSubDocumentFrame* sdf = do_QueryFrame(AsContent()->GetPrimaryFrame())) {
+  if (nsSubDocumentFrame* sdf = do_QueryFrame(AsElement()->GetPrimaryFrame())) {
     sdf->SubdocumentIntrinsicSizeOrRatioChanged();
   }
 }
@@ -2028,13 +1948,12 @@ void nsObjectLoadingContent::MaybeStoreCrossOriginFeaturePolicy() {
     return;
   }
 
-  nsCOMPtr<nsIContent> thisContent = AsContent();
-
-  if (!thisContent->IsInComposedDoc()) {
+  Element* el = AsElement();
+  if (!el->IsInComposedDoc()) {
     return;
   }
 
-  FeaturePolicy* featurePolicy = thisContent->OwnerDoc()->FeaturePolicy();
+  FeaturePolicy* featurePolicy = el->OwnerDoc()->FeaturePolicy();
 
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     Unused << cc->SendSetContainerFeaturePolicy(browsingContext, featurePolicy);
