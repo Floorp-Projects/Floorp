@@ -1860,6 +1860,46 @@ bool js::str_charCodeAt(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ * 22.1.3.4 String.prototype.codePointAt ( pos )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
+static bool str_codePointAt(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "codePointAt");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  RootedString str(cx,
+                   ToStringForStringFunction(cx, "codePointAt", args.thisv()));
+  if (!str) {
+    return false;
+  }
+
+  // Step 3.
+  mozilla::Maybe<size_t> index{};
+  if (!ToStringIndex(cx, args.get(0), str->length(), &index)) {
+    return false;
+  }
+
+  // Steps 4-5.
+  if (index.isNothing()) {
+    args.rval().setUndefined();
+    return true;
+  }
+  MOZ_ASSERT(*index < str->length());
+
+  // Step 6.
+  char32_t codePoint;
+  if (!str->getCodePoint(cx, *index, &codePoint)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(codePoint);
+  return true;
+}
+
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.
  * The patlen argument must be positive and no greater than sBMHPatLenMax.
@@ -3802,10 +3842,10 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("toUpperCase", str_toUpperCase, 0, 0, StringToUpperCase),
     JS_INLINABLE_FN("charAt", str_charAt, 1, 0, StringCharAt),
     JS_INLINABLE_FN("charCodeAt", str_charCodeAt, 1, 0, StringCharCodeAt),
+    JS_FN("codePointAt", str_codePointAt, 1, 0),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2, 0),
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2, 0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
-    JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1, 0),
     JS_INLINABLE_FN("includes", str_includes, 1, 0, StringIncludes),
     JS_INLINABLE_FN("indexOf", str_indexOf, 1, 0, StringIndexOf),
     JS_INLINABLE_FN("lastIndexOf", str_lastIndexOf, 1, 0, StringLastIndexOf),

@@ -717,44 +717,6 @@ function String_slice(start, end) {
 SetIsInlinableLargeFunction(String_slice);
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
-// 21.1.3.3 String.prototype.codePointAt ( pos )
-function String_codePointAt(pos) {
-  // Step 1.
-  if (IsNullOrUndefined(this)) {
-    ThrowIncompatibleMethod("codePointAt", this);
-  }
-
-  // Step 2.
-  var S = ToString(this);
-
-  // Step 3.
-  var position = ToInteger(pos);
-
-  // Step 4.
-  var size = S.length;
-
-  // Step 5.
-  if (position < 0 || position >= size) {
-    return undefined;
-  }
-
-  // Steps 6-7.
-  var first = callFunction(std_String_charCodeAt, S, position);
-  if (first < 0xd800 || first > 0xdbff || position + 1 === size) {
-    return first;
-  }
-
-  // Steps 8-9.
-  var second = callFunction(std_String_charCodeAt, S, position + 1);
-  if (second < 0xdc00 || second > 0xdfff) {
-    return first;
-  }
-
-  // Step 10.
-  return (first - 0xd800) * 0x400 + (second - 0xdc00) + 0x10000;
-}
-
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 21.1.3.16 String.prototype.repeat ( count )
 function String_repeat(count) {
   // Step 1.
