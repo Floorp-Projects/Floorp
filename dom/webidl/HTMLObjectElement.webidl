@@ -110,15 +110,6 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   readonly attribute unsigned long displayedType;
 
-  /**
-   * Gets the content type that corresponds to the give MIME type.  See the
-   * constants above for the list of possible values.  If nothing else fits,
-   * TYPE_NULL will be returned.
-   */
-  [ChromeOnly]
-  unsigned long getContentTypeForMIMEType(DOMString aMimeType);
-
-
   [ChromeOnly]
   sequence<MozPluginParameter> getPluginAttributes();
 

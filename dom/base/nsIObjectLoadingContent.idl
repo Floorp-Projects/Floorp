@@ -55,13 +55,6 @@ interface nsIObjectLoadingContent : nsISupports
   readonly attribute unsigned long displayedType;
 
   /**
-   * Gets the content type that corresponds to the give MIME type.  See the
-   * constants above for the list of possible values.  If nothing else fits,
-   * TYPE_FALLBACK will be returned.
-   */
-  unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
-
-  /**
    * Forces a re-evaluation and reload of the tag, optionally invalidating its
    * click-to-play state.  This can be used when the MIME type that provides a
    * type has changed, for instance, to force the tag to re-evalulate the

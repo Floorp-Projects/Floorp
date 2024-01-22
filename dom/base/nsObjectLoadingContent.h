@@ -126,9 +126,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
     CopyUTF8toUTF16(mContentType, aType);
   }
   uint32_t DisplayedType() const { return mType; }
-  uint32_t GetContentTypeForMIMEType(const nsAString& aMIMEType) {
-    return GetTypeOfContent(NS_ConvertUTF16toUTF8(aMIMEType), false);
-  }
   void Reload(bool aClearActivation, mozilla::ErrorResult& aRv) {
     aRv = Reload(aClearActivation);
   }

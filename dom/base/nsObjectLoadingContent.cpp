@@ -583,13 +583,6 @@ nsObjectLoadingContent::GetDisplayedType(uint32_t* aType) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
-                                                  uint32_t* aType) {
-  *aType = GetTypeOfContent(PromiseFlatCString(aMIMEType), false);
-  return NS_OK;
-}
-
 // nsIInterfaceRequestor
 // We use a shim class to implement this so that JS consumers still
 // see an interface requestor even though WebIDL bindings don't expose
