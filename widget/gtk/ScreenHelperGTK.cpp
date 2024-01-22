@@ -246,6 +246,12 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
   }
 
   uint32_t pixelDepth = GetGTKPixelDepth();
+  if (pixelDepth == 32) {
+    // If a device uses 32 bits per pixel, it's still only using 8 bits
+    // per color component, which is what our callers want to know.
+    // (Some devices report 32 and some devices report 24.)
+    pixelDepth = 24;
+  }
 
   CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor);
 
