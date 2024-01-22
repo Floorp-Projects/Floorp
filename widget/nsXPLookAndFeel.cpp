@@ -620,7 +620,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
     case ColorID::Accentcolortext:
       return widget::sDefaultAccentText.ToABGR();
       COLOR(SpellCheckerUnderline, 0xff, 0x00, 0x00)
-      COLOR(TextSelectDisabledBackground, 0xaa, 0xaa, 0xaa)
+      COLOR(TextSelectDisabledBackground, 0xAA, 0xAA, 0xAA)
 
       // Titlebar colors
       COLOR(Activeborder, 0xB4, 0xB4, 0xB4)
@@ -633,15 +633,17 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       // CSS 2 colors:
       COLOR(Appworkspace, 0xAB, 0xAB, 0xAB)
       COLOR(Background, 0x00, 0x00, 0x00)
-      COLOR(Buttonhighlight, 0xFF, 0xFF, 0xFF)
-      COLOR(Buttonshadow, 0xA0, 0xA0, 0xA0)
+      // deprecated in CSS Color Level 4, same as Buttonface:
+      COLOR(Buttonhighlight, 0xE9, 0xE9, 0xED)
+      // deprecated in CSS Color Level 4, same as Buttonface:
+      COLOR(Buttonshadow, 0xE9, 0xE9, 0xED)
 
       // Buttons and comboboxes should be kept in sync since they are drawn with
       // the same colors by the non-native theme.
-      COLOR(Buttonface, 0xe9, 0xe9, 0xed)
-      COLORA(MozButtondisabledface, 0xe9, 0xe9, 0xed, 128)
+      COLOR(Buttonface, 0xE9, 0xE9, 0xED)
+      COLORA(MozButtondisabledface, 0xE9, 0xE9, 0xED, 128)
 
-      COLOR(MozCombobox, 0xe9, 0xe9, 0xed)
+      COLOR(MozCombobox, 0xE9, 0xE9, 0xED)
 
       COLOR(Buttontext, 0x00, 0x00, 0x00)
       COLOR(MozComboboxtext, 0x00, 0x00, 0x00)
@@ -1248,6 +1250,10 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(MozButtonhovertext) | BIT_FOR(MozButtonactiveface) |
     BIT_FOR(MozButtonactivetext) | BIT_FOR(MozButtondisabledface) |
     BIT_FOR(Buttonborder) |
+    // Per spec, ButtonHighlight and ButtonShadow should match ButtonFace, see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-buttonhighlight and
+    // https://drafts.csswg.org/css-color-4/#valdef-color-buttonshadow
+    BIT_FOR(Buttonhighlight) | BIT_FOR(Buttonshadow) |
     // Used by select elements.
     BIT_FOR(MozCombobox) | BIT_FOR(MozComboboxtext) |
     BIT_FOR(Threedlightshadow) |
@@ -1260,8 +1266,9 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
-    // Also, per spec these should match Canvas/CanvasText, see
-    // https://drafts.csswg.org/css-color-4/#window
+    // Also, per spec, these should match Canvas/CanvasText, see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-window and
+    // https://drafts.csswg.org/css-color-4/#valdef-color-windowtext
     BIT_FOR(Window) | BIT_FOR(Windowtext)};
 #undef BIT_FOR
 
