@@ -18,6 +18,8 @@ const { CustomizableUITestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
+requestLongerTimeout(3);
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -198,20 +200,12 @@ add_task(async function testToggleSwitch() {
   // We need to wait toast's popup shown and popup hidden events. It won't fire
   // the popup shown event if we open the protections panel while the toast is
   // opening.
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopup,
-    "popupshown"
-  );
-  popuphiddenPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopup,
-    "popuphidden"
-  );
+  let toastShown = waitForProtectionsPanelToast();
 
   await browserLoadedPromise;
 
-  // Wait until the toast is shown and hidden.
-  await popupShownPromise;
-  await popuphiddenPromise;
+  // Wait until the ETP state confirmation toast is shown and hides itself.
+  await toastShown;
 
   await openProtectionsPanel();
   ok(
@@ -249,6 +243,12 @@ add_task(async function testToggleSwitch() {
   // Click the TP switch again and check the visibility of the 'Site not
   // Working?'. It should be hidden after toggling the TP switch.
   browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    gProtectionsHandler._protectionsPopup,
+    "popuphidden"
+  );
+
   await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
 
   ok(
@@ -265,7 +265,17 @@ add_task(async function testToggleSwitch() {
     "The 'Site Fixed?' link should be hidden."
   );
 
+  // Wait for the protections panel to be hidden as the result of the ETP toggle
+  // on action.
+  await popuphiddenPromise;
+
+  toastShown = waitForProtectionsPanelToast();
+
   await browserLoadedPromise;
+
+  // Wait until the ETP state confirmation toast is shown and hides itself.
+  await toastShown;
+
   checkClickTelemetry("etp_toggle_on");
 
   ContentBlockingAllowList.remove(tab.linkedBrowser);
@@ -339,6 +349,7 @@ add_task(async function testTrackingProtectionLabel() {
 
   Services.prefs.setStringPref("browser.contentblocking.category", "strict");
   await openProtectionsPanel();
+
   is(
     trackingProtectionLabel.textContent,
     "Strict",
@@ -714,8 +725,6 @@ add_task(async function testSubViewTelemetry() {
  * tab after toggling the TP switch.
  */
 add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
-  requestLongerTimeout(3);
-
   const FIRST_TEST_SITE = "https://example.com/";
   const SECOND_TEST_SITE = "https://example.org/";
 
