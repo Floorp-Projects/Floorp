@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>browserSettings.overrideDocumentColors</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+add_setup(async () => {
+  // Set some defaults to make it easier to test the baseline behavior.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.display.background_color", "#010203"], // rgb(1, 2, 3)
+      ["browser.display.foreground_color", "#fefd00"], // rgb(254, 253, 00)
+      ["browser.display.use_system_colors", false],
+    ],
+  });
+});
+
+async function with_overrideDocumentColors(value, callbackAfterOverride) {
+  async function background(value) {
+    await browser.browserSettings.overrideDocumentColors.set({ value });
+    browser.test.sendMessage("settings_set");
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      permissions: ["browserSettings"],
+    },
+    background: `(${background})(${JSON.stringify(value)})`,
+  });
+  await extension.startup();
+  await extension.awaitMessage("settings_set");
+
+  await callbackAfterOverride();
+
+  await extension.unload();
+}
+
+async function testGetExtensionColors({ useCssLayers, useImportant } = {}) {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      // Note: using manifest_version: 2, because browser_style has been dropped
+      // from manifest_version: 3, which would result in all tests passing
+      // trivially because MV3 does not have style overrides.
+      browser_action: {
+        default_popup: "test.html",
+        browser_style: true,
+      },
+    },
+    files: {
+      "test.html": `<!DOCTYPE html>
+        <style id="extStyle">
+        ${useCssLayers ? "@layer {" : ""}
+        body {
+          background-color: rgb(12, 34, 56)${useImportant ? " !important": ""};
+          color: rgb(98, 76, 54) ${useImportant ? " !important": ""};
+        }
+        ${useCssLayers ? "}" : ""}
+        </style>
+        <body><script src="test.js"><\/script>`,
+      "test.js": () => {
+        let {
+          backgroundColor: bgColor,
+          color: fgColor,
+        } = window.getComputedStyle(document.body);
+
+        document.getElementById("extStyle").disabled = true;
+
+        let { color: defaultFgColor } = window.getComputedStyle(document.body);
+
+        browser.test.sendMessage("test_result", {
+          bgColor,
+          fgColor,
+          defaultFgColor,
+        });
+      },
+    },
+  });
+  await extension.startup();
+  await AppTestDelegate.clickBrowserAction(window, extension);
+  let result = await extension.awaitMessage("test_result");
+  await AppTestDelegate.closeBrowserAction(window, extension);
+  await extension.unload();
+  return result;
+}
+
+add_task(async function overrideDocumentColors_always() {
+  let result;
+  await with_overrideDocumentColors("always", async () => {
+    result = await testGetExtensionColors();
+  });
+  // Note: these colors are from add_setup. The colors from test.html should
+  // be ignored.
+  is(result.bgColor, "rgb(1, 2, 3)", "Bg color from user");
+  is(result.fgColor, "rgb(254, 253, 0)", "Fg color from user");
+  is(result.defaultFgColor, "rgb(254, 253, 0)", "Default fg color from user");
+});
+
+add_task(async function overrideDocumentColors_never() {
+  let result;
+  await with_overrideDocumentColors("never", async () => {
+    result = await testGetExtensionColors();
+  });
+  // Note: these colors are from test.html in testGetExtensionColors
+  is(result.bgColor, "rgb(12, 34, 56)", "Bg color from extension");
+  is(result.fgColor, "rgb(98, 76, 54)", "Fg color from extension");
+  if (AppConstants.platform === "android") {
+    is(
+      result.defaultFgColor,
+      "rgb(0, 0, 0)", // = default font color without extension.css
+      "Default fg color is from the UA (extension.css unavailable)"
+    );
+  } else {
+    is(
+      result.defaultFgColor,
+      "rgb(34, 36, 38)", // = "color: #222426;" from extension.css
+      "Default fg color is from browser_style's extension.css"
+    );
+  }
+});
+
+add_task(async function with_css_cascade_layers() {
+  if (AppConstants.platform === "android") {
+    // extension.css does not exist on Android, so overrideDocumentColors_never
+    // already covers this case.
+    info("Skipping - already covered by overrideDocumentColors_never");
+    return;
+  }
+  let result;
+  await with_overrideDocumentColors("never", async () => {
+    result = await testGetExtensionColors({ useCssLayers: true });
+  });
+  // Ideally, the results are equivalent to overrideDocumentColors_never,
+  // because we tried really hard to ensure that extension.css has the least
+  // precedence and CSS specificity. The implementation has one limitation:
+  // Layered selectors from extension themselves are always lower precedence
+  // than the browser_style stylesheet. This is not ideal but has minimal impact
+  // due to the minimal use of @layer in the wild:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1873024#c4
+  // Besides, the same observation is true in Chrome: @layer in extensions have
+  // lower precedence than the chrome_style stylesheet.
+  //
+  // Extensions have the following work-arounds (covered by tests):
+  // - Do not use @layer (overrideDocumentColors_never)
+  // - Use !important (with_css_cascade_layers_and_important)
+  // - disable browser_style (browser_ext_optionsPage_browser_style.js)
+  is(
+    result.fgColor,
+    "rgb(34, 36, 38)", // = "color: #222426;" from extension.css
+    "Fg color from extension.css takes precedence over @layer from extension"
+  );
+});
+
+add_task(async function with_css_cascade_layers_and_important() {
+  let result;
+  await with_overrideDocumentColors("never", async () => {
+    result = await testGetExtensionColors({
+      useCssLayers: true,
+      useImportant: true,
+    });
+  });
+  is(result.fgColor, "rgb(98, 76, 54)", "important color from extension");
+});
+
+</script>
+</body>
+</html>

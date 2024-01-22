@@ -2995,7 +2995,9 @@ const stylesheetMap = new DefaultMap(url => {
   let uri = Services.io.newURI(url);
   return lazy.styleSheetService.preloadSheet(
     uri,
-    lazy.styleSheetService.AGENT_SHEET
+    // Note: keep in sync with ext-browser-content.js. This used to be
+    // AGENT_SHEET, but changed to AUTHOR_SHEET, see bug 1873024.
+    lazy.styleSheetService.AUTHOR_SHEET
   );
 });
 
