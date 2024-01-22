@@ -355,8 +355,7 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   activitiesPerformed = MaybeShowNotification(
       browserInfo, PromiseFlatString(aUniqueToken).get(), aForce);
 
-  HRESULT hr =
-      SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed, "C++"_ns);
+  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed);
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -417,8 +416,7 @@ DefaultAgent::SendPing(const nsAString& aDefaultBrowser,
   NotificationActivities activitiesPerformed = {NotificationType::Initial,
                                                 shown, action};
 
-  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed,
-                                    "JavaScript"_ns);
+  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed);
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
