@@ -10,7 +10,9 @@
 #include <windows.h>
 
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "nsIContentAnalysis.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
@@ -106,7 +108,8 @@ class nsFilePicker final : public nsBaseWinFilePicker {
       HWND aParent, nsTArray<Command> const& commands);
 
   void ClearFiles();
-  RefPtr<mozilla::GenericPromise> CheckContentAnalysisService();
+  using ContentAnalysisResponse = mozilla::MozPromise<bool, nsresult, true>;
+  RefPtr<ContentAnalysisResponse> CheckContentAnalysisService();
 
  protected:
   void RememberLastUsedDirectory();
