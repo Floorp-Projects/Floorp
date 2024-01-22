@@ -1780,6 +1780,13 @@ const KEYBOARD_LAYOUT_NORWEGIAN = {
   hasAltGrOnWin: true,
 };
 _defineConstant("KEYBOARD_LAYOUT_NORWEGIAN", KEYBOARD_LAYOUT_NORWEGIAN);
+const KEYBOARD_LAYOUT_RUSSIAN = {
+  name: "Russian",
+  Mac: null,
+  Win: 0x00000419,
+  hasAltGrOnWin: true, // No AltGr, but Ctrl + Alt + Digit8 introduces a char
+};
+_defineConstant("KEYBOARD_LAYOUT_RUSSIAN", KEYBOARD_LAYOUT_RUSSIAN);
 const KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC = {
   name: "Russian - Mnemonic",
   Mac: null,

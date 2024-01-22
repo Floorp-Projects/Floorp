@@ -22,7 +22,8 @@
   <key id="question" key='?' modifiers="accel" command="unexpectedCommand"/>
   <key id="unshiftedX" key="x" modifiers="accel" command="unexpectedCommand"/>
   <key id="shiftedX" key="X" modifiers="accel,shift" command="unexpectedCommand"/>
-  <key id="ctrlAltA" key="A" modifiers="accel,alt" command="unexpectedCommand"/>
+  <key id="ctrlAltA" key="a" modifiers="accel,alt" command="unexpectedCommand"/>
+  <key id="ctrlAltShiftA" key="A" modifiers="accel,alt,shift" command="unexpectedCommand"/>
   <key id="unshiftedPlus" key="+" modifiers="accel" command="unexpectedCommand"/>
   <key id="reservedUnshiftedKey" key="'" modifiers="accel" command="unexpectedCommand"/>
   <key id="reservedShiftedKey" key='"' modifiers="accel" command="unexpectedCommand"/>
@@ -50,8 +51,7 @@ const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 const IS_WIN = navigator.platform.indexOf("Win") == 0;
 const OS_VERSION =
   IS_WIN  ? parseFloat(Services.sysinfo.getProperty("version")) : 0;
-const WIN7 = 6.1;
-const WIN8 = 6.2;
+const WIN8 = 6.2; // Can remove once bug 1594270 is closed
 
 function isModifierKeyEvent(aEvent)
 {
@@ -4450,32 +4450,30 @@ function* runKeyEventTests()
                   "'", "Backslash", KeyboardEvent.DOM_VK_HASH, "'", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // Khmer
-    if (OS_VERSION >= WIN7) {
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{}, chars:"\u17E2"},
-                    "\u17E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{shiftKey:1}, chars:"\u17D7"},
-                    "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+2 should cause inputting Euro sign.
-                     modifiers:{ctrlKey:1}, chars:"\u20AC", isInputtingCharacters:true},
-                    "\u20AC", "Digit2", KeyboardEvent.DOM_VK_2, "\u20AC", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+Shift+2 shouldn't cause any input.
-                     modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
-                    "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{altKey:1}, chars:"\u17E2"},
-                    "\u17E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{altKey:1, shiftKey:1}, chars:"\u17D7"},
-                    "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{altGrKey:1}, chars:"2"},
-                    "2", "Digit2", KeyboardEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
-                     modifiers:{altGrKey:1, shiftKey:1}, chars:"\u19E2"},
-                    "\u19E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u19E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    }
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{}, chars:"\u17E2"},
+                  "\u17E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{shiftKey:1}, chars:"\u17D7"},
+                  "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+2 should cause inputting Euro sign.
+                    modifiers:{ctrlKey:1}, chars:"\u20AC", isInputtingCharacters:true},
+                  "\u20AC", "Digit2", KeyboardEvent.DOM_VK_2, "\u20AC", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+Shift+2 shouldn't cause any input.
+                    modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{altKey:1}, chars:"\u17E2"},
+                  "\u17E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{altKey:1, shiftKey:1}, chars:"\u17D7"},
+                  "\u17D7", "Digit2", KeyboardEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{altGrKey:1}, chars:"2"},
+                  "2", "Digit2", KeyboardEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                    modifiers:{altGrKey:1, shiftKey:1}, chars:"\u19E2"},
+                  "\u19E2", "Digit2", KeyboardEvent.DOM_VK_2, "\u19E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // Norwegian
     yield testKey({layout:KEYBOARD_LAYOUT_NORWEGIAN, keyCode:WIN_VK_OEM_5,
@@ -4714,6 +4712,19 @@ function* runKeyEventTests()
                      modifiers:{}, chars:"\u0449"},
                     ["\u0449", "\u0449", "\u0446"], "KeyC", KeyboardEvent.DOM_VK_C, "\u0449", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     }
+
+    yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1,ctrlKey:1}, chars:""},
+                   "\u0444", "KeyA", KeyboardEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1,ctrlKey:1,shiftKey:1}, chars:""},
+                   "\u0424", "KeyA", KeyboardEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_T,
+                   modifiers:{altKey:1,ctrlKey:1}, chars:""},
+                   "\u0435", "KeyT", KeyboardEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_T,
+                   modifiers:{altKey:1,ctrlKey:1,shiftKey:1}, chars:""},
+                   "\u0415", "KeyT", KeyboardEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // When Alt key is pressed, dead key sequence is generated with WM_SYSKEYDOWN, WM_SYSDEADCHAR, WM_SYSCHAR and WM_SYSKEYUP.
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
@@ -5173,6 +5184,16 @@ function* runXULKeyTests()
     yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
                           modifiers:{ctrlKey:1, altKey:1, altGrKey:1}, chars:""},
                          "");
+  }
+
+  // bug 1874727
+  if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_A,
+                          modifiers:{altKey:1, ctrlKey:1}, chars:""},
+                         "ctrlAltA");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_RUSSIAN, keyCode:WIN_VK_A,
+                          modifiers:{altKey:1, ctrlKey:1, shiftKey:1}, chars:""},
+                         "ctrlAltShiftA");
   }
 
   for (id in commandElements) {
