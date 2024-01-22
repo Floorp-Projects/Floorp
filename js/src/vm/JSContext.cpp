@@ -1155,6 +1155,34 @@ bool JSContext::getPendingException(MutableHandleValue rval) {
   return true;
 }
 
+bool JSContext::getPendingExceptionStack(MutableHandleValue rval) {
+  MOZ_ASSERT(isExceptionPending());
+
+  Rooted<SavedFrame*> exceptionStack(this, unwrappedExceptionStack());
+  if (!exceptionStack) {
+    rval.setNull();
+    return true;
+  }
+  if (zone()->isAtomsZone()) {
+    rval.setObject(*exceptionStack);
+    return true;
+  }
+
+  RootedValue stack(this, ObjectValue(*exceptionStack));
+  RootedValue exception(this, unwrappedException());
+  JS::ExceptionStatus prevStatus = status;
+  clearPendingException();
+  if (!compartment()->wrap(this, &stack)) {
+    return false;
+  }
+  this->check(stack);
+  setPendingException(exception, exceptionStack);
+  status = prevStatus;
+
+  rval.set(stack);
+  return true;
+}
+
 SavedFrame* JSContext::getPendingExceptionStack() {
   return unwrappedExceptionStack();
 }

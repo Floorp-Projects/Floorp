@@ -3139,10 +3139,30 @@ bool WarpBuilder::build_Exception(BytecodeLocation) {
   MOZ_CRASH("Unreachable because we skip catch-blocks");
 }
 
+bool WarpBuilder::build_ExceptionAndStack(BytecodeLocation) {
+  MOZ_CRASH("Unreachable because we skip catch-blocks");
+}
+
 bool WarpBuilder::build_Throw(BytecodeLocation loc) {
   MDefinition* def = current->pop();
 
   MThrow* ins = MThrow::New(alloc(), def);
+  current->add(ins);
+  if (!resumeAfter(ins, loc)) {
+    return false;
+  }
+
+  // Terminate the block.
+  current->end(MUnreachable::New(alloc()));
+  setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::build_ThrowWithStack(BytecodeLocation loc) {
+  MDefinition* stack = current->pop();
+  MDefinition* value = current->pop();
+
+  auto* ins = MThrowWithStack::New(alloc(), value, stack);
   current->add(ins);
   if (!resumeAfter(ins, loc)) {
     return false;

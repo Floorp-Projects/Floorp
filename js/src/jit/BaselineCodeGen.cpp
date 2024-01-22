@@ -4565,6 +4565,19 @@ bool BaselineCodeGen<Handler>::emit_Throw() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ThrowWithStack() {
+  // Keep value to throw in R0 and the stack in R1.
+  frame.popRegsAndSync(2);
+
+  prepareVMCall();
+  pushArg(R1);
+  pushArg(R0);
+
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue);
+  return callVM<Fn, js::ThrowWithStackOperation>();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Try() {
   return true;
 }
@@ -4859,6 +4872,40 @@ bool BaselineCodeGen<Handler>::emit_Exception() {
   }
 
   frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ExceptionAndStack() {
+  // First call into the VM to store the exception stack.
+  {
+    prepareVMCall();
+
+    using Fn = bool (*)(JSContext*, MutableHandleValue);
+    if (!callVM<Fn, GetPendingExceptionStack>()) {
+      return false;
+    }
+
+    frame.push(R0);
+  }
+
+  // Now get the actual exception value and clear the exception state.
+  {
+    prepareVMCall();
+
+    using Fn = bool (*)(JSContext*, MutableHandleValue);
+    if (!callVM<Fn, GetAndClearException>()) {
+      return false;
+    }
+
+    frame.push(R0);
+  }
+
+  // Finally swap the stack and the exception.
+  frame.popRegsAndSync(2);
+  frame.push(R1);
+  frame.push(R0);
+
   return true;
 }
 
