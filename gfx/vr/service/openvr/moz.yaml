@@ -1,0 +1,50 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: WebVR
+
+origin:
+  name: openvr
+  description: OpenVR API interface
+
+  url: https://github.com/ValveSoftware/openvr
+
+  release: v1.11.11 (2020-04-23T17:06:49-08:00).
+  revision: v1.11.11
+
+  license: BSD-3-Clause
+
+vendoring:
+  url: https://github.com/ValveSoftware/openvr
+  source-hosting: github
+  tracking: tag
+
+  exclude:
+    - "**"
+
+  include:
+    - LICENSE
+    - README.md
+    - headers/openvr.h
+    - src/README
+    - src/*.h
+    - src/*.cpp
+    - src/vrcommon
+
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/src/vrcommon'
+      to: '{vendor_dir}/src'
+
+    # The "src/jsoncpp.cpp" file and the "src/json" directory can be skipped. OpenVR
+    # uses the jsoncpp library, which we have already imported elsewhere. If
+    # warnings about using deprecated jsoncpp classes show up during compilation
+    # you might need to reapply the patch in bug 1598288. It replaces uses of the
+    # `Json::Reader` and `Json::StyledWriter` classes with the more modern
+    # `Json::CharReaderBuilder` and `Json::StreamWriterBuilder`.
+    - action: delete-path
+      path: '{vendor_dir}/src/jsoncpp.cpp'
+
+  patches:
+    - "mozilla.patch"

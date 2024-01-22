@@ -798,7 +798,7 @@ bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const cha
 #define FILE_URL_PREFIX "file://"
 #endif
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // ----------------------------------------------------------------------------------------------------------------------------
 // Purpose: Turns a path to a file on disk into a URL (or just returns the value if it's already a URL)
 // ----------------------------------------------------------------------------------------------------------------------------
@@ -827,7 +827,7 @@ bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const cha
 // 	}
 // }
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // -----------------------------------------------------------------------------------------------------
 // Purpose: Strips off file:// off a URL and returns the path. For other kinds of URLs an empty string is returned
 // -----------------------------------------------------------------------------------------------------

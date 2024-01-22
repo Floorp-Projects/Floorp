@@ -14,7 +14,7 @@ bool StringHasPrefixCaseSensitive( const std::string & sString, const std::strin
 bool StringHasSuffix( const std::string &sString, const std::string &sSuffix );
 bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string &sSuffix );
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 #if defined( _WIN32 )
 /** converts a UTF-16 string to a UTF-8 string */
 std::string UTF16to8( const wchar_t * in );
@@ -111,7 +111,7 @@ inline uint64_t strtoull(const char *str, char **endptr, int base) { return _str
 uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t unBufferLen );
 
 /** Returns a std::string from a uint64_t */
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 //std::string Uint64ToString( uint64_t ulValue );
 
 /** returns a uint64_t from a string */

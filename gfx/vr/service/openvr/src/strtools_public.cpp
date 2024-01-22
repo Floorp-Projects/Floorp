@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // #include <codecvt>
 #include <iostream>
 #include <functional>
@@ -58,10 +58,10 @@ bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 //typedef std::codecvt_utf8< wchar_t > convert_type;
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 #if defined( _WIN32 )
 std::string UTF16to8(const wchar_t * in)
 {
@@ -94,7 +94,7 @@ std::string UTF16to8(const wchar_t * in)
 
 std::string UTF16to8( const std::wstring & in ) { return UTF16to8( in.c_str() ); }
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 std::wstring UTF8to16(const char * in)
 {
 	int retLength = ::MultiByteToWideChar(CP_UTF8, 0, in, -1, nullptr, 0);
@@ -208,7 +208,7 @@ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t 
 
 
 /** Returns a std::string from a uint64_t */
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // std::string Uint64ToString( uint64_t ulValue )
 // {
 // 	char buf[ 22 ];
@@ -487,7 +487,7 @@ std::vector<std::string> TokenizeString( const std::string & sString, char cToke
 	return vecStrings;
 }
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 //-----------------------------------------------------------------------------
 // Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
 //-----------------------------------------------------------------------------
