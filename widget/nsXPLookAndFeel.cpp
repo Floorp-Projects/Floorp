@@ -1260,10 +1260,6 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(MozButtonhovertext) | BIT_FOR(MozButtonactiveface) |
     BIT_FOR(MozButtonactivetext) | BIT_FOR(MozButtondisabledface) |
     BIT_FOR(Buttonborder) |
-    // Per spec, ButtonHighlight and ButtonShadow should match ButtonFace, see
-    // https://drafts.csswg.org/css-color-4/#valdef-color-buttonhighlight and
-    // https://drafts.csswg.org/css-color-4/#valdef-color-buttonshadow
-    BIT_FOR(Buttonhighlight) | BIT_FOR(Buttonshadow) |
     // Used by select elements.
     BIT_FOR(MozCombobox) | BIT_FOR(MozComboboxtext) |
     BIT_FOR(Threedlightshadow) |
@@ -1273,28 +1269,20 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(Threedface) |
     // Used by input / textarea.
     BIT_FOR(Field) | BIT_FOR(Fieldtext) |
-    // Used by inactive window caption.
-    // Per spec, InactiveCaptionText should match GrayText, see
-    // https://drafts.csswg.org/css-color-4/#valdef-color-inactivecaptiontext
-    BIT_FOR(Inactivecaptiontext) |
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
-    // Per spec, Activecaption, AppWorkspace, Background, InactiveCaption, Menu,
-    // Scrollbar should match Canvas/Window, see
-    // https://drafts.csswg.org/css-color-4/#valdef-color-activecaptiontext,
-    // https://drafts.csswg.org/css-color-4/#valdef-color-appworkspace,
-    // https://drafts.csswg.org/css-color-4/#valdef-color-background,
-    // https://drafts.csswg.org/css-color-4/#valdef-color-inactivecaption,
-    // https://drafts.csswg.org/css-color-4/#valdef-color-menu, and
-    // https://drafts.csswg.org/css-color-4/#valdef-color-scrollbar
-    BIT_FOR(Activecaption) | BIT_FOR(Appworkspace) | BIT_FOR(Background) |
-    BIT_FOR(Inactivecaption) | BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
-    // Per spec, CaptionText, InfoText, and MenuText should match
-    // CanvasText/WindowText, see
-    // https://drafts.csswg.org/css-color-4/#valdef-color-captiontext,
-    // https://drafts.csswg.org/css-color-4/#valdef-color-infotext, and
-    // https://drafts.csswg.org/css-color-4/#valdef-color-menutext
-    BIT_FOR(Captiontext) | BIT_FOR(Infotext) | BIT_FOR(Menutext) |
+    // Per spec, the following colors are deprecated, see
+    // https://drafts.csswg.org/css-color-4/#deprecated-system-colors
+    // should match ButtonFace:
+    BIT_FOR(Buttonhighlight) | BIT_FOR(Buttonshadow) |
+    // should match GrayText:
+    BIT_FOR(Inactivecaptiontext) |
+    // should match Canvas/Window:
+    BIT_FOR(Appworkspace) | BIT_FOR(Background) | BIT_FOR(Inactivecaption) |
+    BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
+    // should match CanvasText/WindowText:
+    BIT_FOR(Activecaption) | BIT_FOR(Captiontext) | BIT_FOR(Infotext) |
+    BIT_FOR(Menutext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
     // Also, per spec, these should match Canvas/CanvasText, see
     // https://drafts.csswg.org/css-color-4/#valdef-color-window and
