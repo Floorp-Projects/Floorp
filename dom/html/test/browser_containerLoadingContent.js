@@ -3,11 +3,6 @@
 
 "use strict";
 
-const syntheticBrowsingContexts = SpecialPowers.getBoolPref(
-  "browser.opaqueResponseBlocking.syntheticBrowsingContext",
-  false
-);
-
 const DIRPATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
   ""
@@ -92,26 +87,22 @@ add_task(async function test_iframeImageDocument() {
   await runTest(iframe, TABURL, IMAGEURL, CROSSIMAGEURL, checkImage);
 });
 
-if (syntheticBrowsingContexts) {
-  add_task(async function test_embedImageDocument() {
-    await runTest(embed, TABURL, IMAGEURL, CROSSIMAGEURL, checkImage);
-  });
+add_task(async function test_embedImageDocument() {
+  await runTest(embed, TABURL, IMAGEURL, CROSSIMAGEURL, checkImage);
+});
 
-  add_task(async function test_objectImageDocument() {
-    await runTest(object, TABURL, IMAGEURL, CROSSIMAGEURL, checkImage);
-  });
-}
+add_task(async function test_objectImageDocument() {
+  await runTest(object, TABURL, IMAGEURL, CROSSIMAGEURL, checkImage);
+});
 
 add_task(async function test_iframeDocument() {
   await runTest(iframe, TABURL, DOCUMENTURL, CROSSDOCUMENTURL, checkDocument);
 });
 
-if (syntheticBrowsingContexts) {
-  add_task(async function test_embedDocument() {
-    await runTest(embed, TABURL, DOCUMENTURL, CROSSDOCUMENTURL, checkDocument);
-  });
+add_task(async function test_embedDocument() {
+  await runTest(embed, TABURL, DOCUMENTURL, CROSSDOCUMENTURL, checkDocument);
+});
 
-  add_task(async function test_objectDocument() {
-    await runTest(object, TABURL, DOCUMENTURL, CROSSDOCUMENTURL, checkDocument);
-  });
-}
+add_task(async function test_objectDocument() {
+  await runTest(object, TABURL, DOCUMENTURL, CROSSDOCUMENTURL, checkDocument);
+});
