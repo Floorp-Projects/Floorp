@@ -8844,6 +8844,11 @@
   value: 32
   mirror: always
 
+- name: layout.cursor.disable-for-popups
+  type: bool
+  value: true
+  mirror: always
+
 - name: layout.display-list.build-twice
   type: RelaxedAtomicBool
   value: false

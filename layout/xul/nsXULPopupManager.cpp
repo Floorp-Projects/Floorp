@@ -209,7 +209,44 @@ UniquePtr<nsMenuChainItem> nsMenuChainItem::Detach() {
   return std::move(mParent);
 }
 
+void nsXULPopupManager::AddMenuChainItem(UniquePtr<nsMenuChainItem> aItem) {
+  PopupType popupType = aItem->Frame()->GetPopupType();
+  if (StaticPrefs::layout_cursor_disable_for_popups() &&
+      popupType != PopupType::Tooltip) {
+    nsPresContext* rootPresContext =
+        aItem->Frame()->PresContext()->GetRootPresContext();
+    if (nsCOMPtr<nsIWidget> rootWidget = rootPresContext->GetRootWidget()) {
+      rootWidget->SetCustomCursorAllowed(false);
+    }
+  }
+
+  // popups normally hide when an outside click occurs. Panels may use
+  // the noautohide attribute to disable this behaviour. It is expected
+  // that the application will hide these popups manually. The tooltip
+  // listener will handle closing the tooltip also.
+  nsIContent* oldmenu = nullptr;
+  if (mPopups) {
+    oldmenu = mPopups->Element();
+  }
+  aItem->SetParent(std::move(mPopups));
+  mPopups = std::move(aItem);
+  SetCaptureState(oldmenu);
+}
+
 void nsXULPopupManager::RemoveMenuChainItem(nsMenuChainItem* aItem) {
+  nsPresContext* presContext =
+      aItem->Frame()->PresContext()->GetRootPresContext();
+  auto matcher = [&](nsMenuChainItem* aChainItem) -> bool {
+    return aChainItem != aItem &&
+           presContext ==
+               aChainItem->Frame()->PresContext()->GetRootPresContext();
+  };
+  nsCOMPtr<nsIWidget> rootWidget =
+      presContext->GetRootPresContext()->GetRootWidget();
+  if (!FirstMatchingPopup(matcher) && rootWidget) {
+    rootWidget->SetCustomCursorAllowed(true);
+  }
+
   auto parent = aItem->Detach();
   if (auto* child = aItem->GetChild()) {
     MOZ_ASSERT(aItem != mPopups,
@@ -223,6 +260,17 @@ void nsXULPopupManager::RemoveMenuChainItem(nsMenuChainItem* aItem) {
                "Unexpected - popup with no child not at end of chain");
     mPopups = std::move(parent);
   }
+}
+
+nsMenuChainItem* nsXULPopupManager::FirstMatchingPopup(
+    mozilla::FunctionRef<bool(nsMenuChainItem*)> aMatcher) const {
+  for (nsMenuChainItem* popup = mPopups.get(); popup;
+       popup = popup->GetParent()) {
+    if (aMatcher(popup)) {
+      return popup;
+    }
+  }
+  return nullptr;
 }
 
 void nsMenuChainItem::UpdateFollowAnchor() {
@@ -1140,17 +1188,7 @@ void nsXULPopupManager::ShowPopupCallback(Element* aPopup,
 
   item->UpdateFollowAnchor();
 
-  // popups normally hide when an outside click occurs. Panels may use
-  // the noautohide attribute to disable this behaviour. It is expected
-  // that the application will hide these popups manually. The tooltip
-  // listener will handle closing the tooltip also.
-  nsIContent* oldmenu = nullptr;
-  if (mPopups) {
-    oldmenu = mPopups->Element();
-  }
-  item->SetParent(std::move(mPopups));
-  mPopups = std::move(item);
-  SetCaptureState(oldmenu);
+  AddMenuChainItem(std::move(item));
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   RefPtr popup = &aPopupFrame->PopupElement();
@@ -1166,12 +1204,10 @@ void nsXULPopupManager::ShowPopupCallback(Element* aPopup,
 }
 
 nsMenuChainItem* nsXULPopupManager::FindPopup(Element* aPopup) const {
-  for (nsMenuChainItem* item = mPopups.get(); item; item = item->GetParent()) {
-    if (item->Frame()->GetContent() == aPopup) {
-      return item;
-    }
-  }
-  return nullptr;
+  auto matcher = [&](nsMenuChainItem* aItem) -> bool {
+    return aItem->Frame()->GetContent() == aPopup;
+  };
+  return FirstMatchingPopup(matcher);
 }
 
 void nsXULPopupManager::HidePopup(Element* aPopup, HidePopupOptions aOptions,
