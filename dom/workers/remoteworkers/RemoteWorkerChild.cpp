@@ -129,6 +129,28 @@ class MessagePortIdentifierRunnable final : public WorkerRunnable {
   UniqueMessagePortId mPortIdentifier;
 };
 
+// This is used to propagate the CSP violation when loading the SharedWorker
+// main-script and nothing else.
+class RemoteWorkerCSPEventListener final : public nsICSPEventListener {
+ public:
+  NS_DECL_ISUPPORTS
+
+  explicit RemoteWorkerCSPEventListener(RemoteWorkerChild* aActor)
+      : mActor(aActor){};
+
+  NS_IMETHOD OnCSPViolationEvent(const nsAString& aJSON) override {
+    mActor->CSPViolationPropagationOnMainThread(aJSON);
+    return NS_OK;
+  }
+
+ private:
+  ~RemoteWorkerCSPEventListener() = default;
+
+  RefPtr<RemoteWorkerChild> mActor;
+};
+
+NS_IMPL_ISUPPORTS(RemoteWorkerCSPEventListener, nsICSPEventListener)
+
 }  // anonymous namespace
 
 RemoteWorkerChild::RemoteWorkerChild(const RemoteWorkerData& aData)
@@ -335,6 +357,14 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
         info.mResolvedScriptURI, aData.type(), aData.credentials(), clientInfo,
         nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER, info.mCookieJarSettings,
         info.mReferrerInfo, getter_AddRefs(info.mChannel));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsILoadInfo> loadInfo = info.mChannel->LoadInfo();
+
+    auto* cspEventListener = new RemoteWorkerCSPEventListener(this);
+    rv = loadInfo->SetCspEventListener(cspEventListener);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -572,6 +602,21 @@ void RemoteWorkerChild::ErrorPropagationOnMainThread(
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "RemoteWorkerChild::ErrorPropagationOnMainThread",
       [self = std::move(self), value]() { self->ErrorPropagation(value); });
+
+  GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+}
+
+void RemoteWorkerChild::CSPViolationPropagationOnMainThread(
+    const nsAString& aJSON) {
+  AssertIsOnMainThread();
+
+  RefPtr<RemoteWorkerChild> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "RemoteWorkerChild::ErrorPropagationDispatch",
+      [self = std::move(self), json = nsString(aJSON)]() {
+        CSPViolation violation(json);
+        self->ErrorPropagation(violation);
+      });
 
   GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
