@@ -146,20 +146,6 @@ interface nsIWinTaskbar : nsISupports
    */
 
   /**
-   * Get the grouping id for a window.
-   *
-   * The runtime sets a default, global grouping id for all windows on startup.
-   * getGroupIdForWindow allows finding the grouping of individual windows
-   * on the taskbar.
-   *
-   * @throw NS_ERROR_INVALID_ARG if the window is not a valid top level window
-   * associated with a widget.
-   * @throw NS_ERROR_FAILURE if the property on the window could not be set.
-   * @throw NS_ERROR_UNEXPECTED for general failures.
-   */
-  AString getGroupIdForWindow(in mozIDOMWindow aParent);
-
-  /**
    * Set the grouping id for a window.
    *
    * The runtime sets a default, global grouping id for all windows on startup.
