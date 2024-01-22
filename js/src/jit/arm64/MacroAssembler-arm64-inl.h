@@ -258,6 +258,10 @@ void MacroAssembler::add32(Imm32 imm, Register dest) {
   Add(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
 }
 
+void MacroAssembler::add32(Imm32 imm, Register src, Register dest) {
+  Add(ARMRegister(dest, 32), ARMRegister(src, 32), Operand(imm.value));
+}
+
 void MacroAssembler::add32(Imm32 imm, const Address& dest) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch32 = temps.AcquireW();

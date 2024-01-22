@@ -163,6 +163,10 @@ void MacroAssembler::add32(Register src, Register dest) { addl(src, dest); }
 
 void MacroAssembler::add32(Imm32 imm, Register dest) { addl(imm, dest); }
 
+void MacroAssembler::add32(Imm32 imm, Register src, Register dest) {
+  leal(Operand(src, imm.value), dest);
+}
+
 void MacroAssembler::add32(Imm32 imm, const Address& dest) {
   addl(imm, Operand(dest));
 }
