@@ -7218,13 +7218,13 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   /* Prepare the input byte array. */
   if (!args[0].isObject()) {
-    JS_ReportErrorASCII(cx, "evalStencil: Stencil object expected");
+    JS_ReportErrorASCII(cx, "evalStencil: Object expected");
     return false;
   }
   Rooted<js::StencilObject*> stencilObj(
       cx, args[0].toObject().maybeUnwrapIf<js::StencilObject>());
   if (!stencilObj) {
-    JS_ReportErrorASCII(cx, "evalStencil: Stencil object expected");
+    JS_ReportErrorASCII(cx, "evalStencil: Stencil expected");
     return false;
   }
 
@@ -7395,13 +7395,12 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   /* Prepare the input byte array. */
   if (!args[0].isObject()) {
-    JS_ReportErrorASCII(cx, "evalStencilXDR: Stencil XDR object expected");
-    return false;
+    JS_ReportErrorASCII(cx, "evalStencilXDR: stencil XDR object expected");
   }
   Rooted<StencilXDRBufferObject*> xdrObj(
       cx, args[0].toObject().maybeUnwrapIf<StencilXDRBufferObject>());
   if (!xdrObj) {
-    JS_ReportErrorASCII(cx, "evalStencilXDR: Stencil XDR object expected");
+    JS_ReportErrorASCII(cx, "evalStencilXDR: stencil XDR object expected");
     return false;
   }
   MOZ_ASSERT(xdrObj->hasBuffer());
