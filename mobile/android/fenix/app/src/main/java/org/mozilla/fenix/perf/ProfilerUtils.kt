@@ -23,6 +23,9 @@ private const val PROFILER_SERVER_HEADER = "application/vnd.firefox-profiler+jso
 private const val TOKEN = "profileToken"
 private const val PROFILER_DATA_URL = "https://profiler.firefox.com/public/"
 
+// IMPORTANT NOTE: Please keep the profiler presets in sync with their Firefox Desktop counterparts:
+// https://searchfox.org/mozilla-central/rev/c130c69b7b863d5e28ab9524b65c27c7a9507c48/devtools/client/performance-new/shared/background.jsm.js#121
+
 private val firefox_features = arrayOf(
     "screenshots",
     "js",
