@@ -105,7 +105,15 @@ export class LinkHandlerParent extends JSWindowActorParent {
   setIconFromLink(
     gBrowser,
     browser,
-    { pageURL, originalURL, canUseForTab, expiration, iconURL, canStoreIcon }
+    {
+      pageURL,
+      originalURL,
+      canUseForTab,
+      expiration,
+      iconURL,
+      canStoreIcon,
+      beforePageShow,
+    }
   ) {
     let tab = gBrowser.getTabForBrowser(browser);
     if (!tab) {
@@ -150,7 +158,7 @@ export class LinkHandlerParent extends JSWindowActorParent {
     }
 
     if (canUseForTab) {
-      gBrowser.setIcon(tab, iconURL, originalURL);
+      gBrowser.setIcon(tab, iconURL, originalURL, null, beforePageShow);
     }
   }
 }

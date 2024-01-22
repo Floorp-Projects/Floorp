@@ -547,6 +547,7 @@ class IconLoader {
         expiration: undefined,
         iconURL: iconInfo.iconUri.spec,
         canStoreIcon: iconInfo.beforePageShow,
+        beforePageShow: iconInfo.beforePageShow,
       });
       return;
     }
@@ -568,6 +569,7 @@ class IconLoader {
         expiration,
         iconURL: dataURL,
         canStoreIcon,
+        beforePageShow: iconInfo.beforePageShow,
       });
     } catch (e) {
       if (e.result != Cr.NS_BINDING_ABORTED) {
