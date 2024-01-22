@@ -269,14 +269,14 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target,
         TryFinallyControl& finallyControl = control->as<TryFinallyControl>();
         if (finallyControl.emittingSubroutine()) {
           /*
-           * There's a [resume-index-or-exception, throwing] pair on
-           * the stack that we need to pop. If the script is not a
+           * There's a [resume-index-or-exception, exception-stack, throwing]
+           * triple on the stack that we need to pop. If the script is not a
            * noScriptRval script, we also need to pop the cached rval.
            */
           if (bce_->sc->noScriptRval()) {
-            npops += 2;
-          } else {
             npops += 3;
+          } else {
+            npops += 4;
           }
         } else {
           jumpingToFinally = true;

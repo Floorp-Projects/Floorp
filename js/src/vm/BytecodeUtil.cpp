@@ -915,13 +915,14 @@ bool BytecodeParser::parse() {
                 return false;
               }
             } else if (tn.kind() == TryNoteKind::Finally) {
-              // Two additional values will be on the stack at the beginning
-              // of the finally block: the exception/resume index, and the
-              // |throwing| value. For the benefit of the decompiler, point
-              // them at this Try.
+              // Three additional values will be on the stack at the beginning
+              // of the finally block: the exception/resume index, the exception
+              // stack, and the |throwing| value. For the benefit of the
+              // decompiler, point them at this Try.
               offsetStack[stackDepth].set(offset, 0);
               offsetStack[stackDepth + 1].set(offset, 1);
-              if (!addJump(catchOffset, stackDepth + 2, offsetStack, pc,
+              offsetStack[stackDepth + 2].set(offset, 2);
+              if (!addJump(catchOffset, stackDepth + 3, offsetStack, pc,
                            JumpKind::TryFinally)) {
                 return false;
               }
@@ -1999,7 +2000,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         if (defIndex == 0) {
           return write("PC");
         }
-        MOZ_ASSERT(defIndex == 1);
+        if (defIndex == 1) {
+          return write("STACK");
+        }
+        MOZ_ASSERT(defIndex == 2);
         return write("THROWING");
 
       case JSOp::FunctionThis:
