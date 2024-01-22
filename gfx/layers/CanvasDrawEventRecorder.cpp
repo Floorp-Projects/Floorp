@@ -61,7 +61,7 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
   mHeader->writerWaitCount = 0;
   mHeader->writerState = State::Processing;
   mHeader->processedCount = 0;
-  mHeader->readerState = State::Processing;
+  mHeader->readerState = State::Paused;
 
   // We always keep at least two buffers. This means that when we
   // have to add a new buffer, there is at least a full buffer that requires
