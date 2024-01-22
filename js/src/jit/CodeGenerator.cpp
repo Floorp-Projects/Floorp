@@ -12223,8 +12223,8 @@ void CodeGenerator::visitFromCharCode(LFromCharCode* lir) {
   Register output = ToRegister(lir->output());
 
   using Fn = JSLinearString* (*)(JSContext*, int32_t);
-  OutOfLineCode* ool = oolCallVM<Fn, jit::StringFromCharCode>(
-      lir, ArgList(code), StoreRegisterTo(output));
+  auto* ool = oolCallVM<Fn, js::StringFromCharCode>(lir, ArgList(code),
+                                                    StoreRegisterTo(output));
 
   // OOL path if code >= UNIT_STATIC_LIMIT.
   masm.lookupStaticString(code, output, gen->runtime->staticStrings(),
@@ -12239,8 +12239,8 @@ void CodeGenerator::visitFromCharCodeEmptyIfNegative(
   Register output = ToRegister(lir->output());
 
   using Fn = JSLinearString* (*)(JSContext*, int32_t);
-  auto* ool = oolCallVM<Fn, jit::StringFromCharCode>(lir, ArgList(code),
-                                                     StoreRegisterTo(output));
+  auto* ool = oolCallVM<Fn, js::StringFromCharCode>(lir, ArgList(code),
+                                                    StoreRegisterTo(output));
 
   // Return the empty string for negative inputs.
   const JSAtomState& names = gen->runtime->names();
@@ -12262,9 +12262,9 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
   LSnapshot* snapshot = lir->snapshot();
 
   // The OOL path is only taken when we can't allocate the inline string.
-  using Fn = JSString* (*)(JSContext*, int32_t);
-  OutOfLineCode* ool = oolCallVM<Fn, jit::StringFromCodePoint>(
-      lir, ArgList(codePoint), StoreRegisterTo(output));
+  using Fn = JSLinearString* (*)(JSContext*, char32_t);
+  auto* ool = oolCallVM<Fn, js::StringFromCodePoint>(lir, ArgList(codePoint),
+                                                     StoreRegisterTo(output));
 
   Label isTwoByte;
   Label* done = ool->rejoin();

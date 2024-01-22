@@ -303,8 +303,8 @@ namespace jit {
     js::jit::StringBigIntCompare<js::jit::ComparisonKind::LessThan>)           \
   _(StringEndsWith, js::StringEndsWith)                                        \
   _(StringFlatReplaceString, js::StringFlatReplaceString)                      \
-  _(StringFromCharCode, js::jit::StringFromCharCode)                           \
-  _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
+  _(StringFromCharCode, js::StringFromCharCode)                                \
+  _(StringFromCodePoint, js::StringFromCodePoint)                              \
   _(StringIncludes, js::StringIncludes)                                        \
   _(StringIndexOf, js::StringIndexOf)                                          \
   _(StringLastIndexOf, js::StringLastIndexOf)                                  \

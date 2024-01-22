@@ -13,6 +13,8 @@
 #if JS_HAS_INTL_API
 #  include "mozilla/intl/String.h"
 #endif
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/SIMD.h"
@@ -384,7 +386,8 @@ static const JSFunctionSpec string_functions[] = {
     JS_FN("decodeURIComponent", str_decodeURI_Component, 1, JSPROP_RESOLVING),
     JS_FN("encodeURIComponent", str_encodeURI_Component, 1, JSPROP_RESOLVING),
 
-    JS_FS_END};
+    JS_FS_END,
+};
 
 static const unsigned STRING_ELEMENT_ATTRS =
     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
@@ -1756,101 +1759,105 @@ static bool str_toWellFormed(JSContext* cx, unsigned argc, Value* vp) {
 
 static const JSFunctionSpec wellFormed_functions[] = {
     JS_FN("isWellFormed", str_isWellFormed, 0, 0),
-    JS_FN("toWellFormed", str_toWellFormed, 0, 0), JS_FS_END};
+    JS_FN("toWellFormed", str_toWellFormed, 0, 0),
+    JS_FS_END,
+};
 
+static MOZ_ALWAYS_INLINE bool ToStringIndex(JSContext* cx, Handle<Value> value,
+                                            size_t length,
+                                            mozilla::Maybe<size_t>* result) {
+  // Handle the common case of int32 indices first.
+  if (MOZ_LIKELY(value.isInt32())) {
+    size_t index = size_t(value.toInt32());
+    if (index < length) {
+      *result = mozilla::Some(index);
+    }
+    return true;
+  }
+
+  double index = 0.0;
+  if (!ToInteger(cx, value, &index)) {
+    return false;
+  }
+  if (0 <= index && index < length) {
+    *result = mozilla::Some(size_t(index));
+  }
+  return true;
+}
+
+/**
+ * 22.1.3.2 String.prototype.charAt ( pos )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 static bool str_charAt(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "charAt");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedString str(cx);
-  size_t i;
-  if (args.thisv().isString() && args.length() != 0 && args[0].isInt32()) {
-    str = args.thisv().toString();
-    i = size_t(args[0].toInt32());
-    if (i >= str->length()) {
-      goto out_of_range;
-    }
-  } else {
-    str = ToStringForStringFunction(cx, "charAt", args.thisv());
-    if (!str) {
-      return false;
-    }
-
-    double d = 0.0;
-    if (args.length() > 0 && !ToInteger(cx, args[0], &d)) {
-      return false;
-    }
-
-    if (d < 0 || str->length() <= d) {
-      goto out_of_range;
-    }
-    i = size_t(d);
-  }
-
-  str = cx->staticStrings().getUnitStringForElement(cx, str, i);
+  // Steps 1-2.
+  RootedString str(cx, ToStringForStringFunction(cx, "charAt", args.thisv()));
   if (!str) {
     return false;
   }
-  args.rval().setString(str);
-  return true;
 
-out_of_range:
-  args.rval().setString(cx->runtime()->emptyString);
-  return true;
-}
-
-bool js::str_charCodeAt_impl(JSContext* cx, HandleString string,
-                             HandleValue index, MutableHandleValue res) {
-  size_t i;
-  if (index.isInt32()) {
-    i = index.toInt32();
-    if (i >= string->length()) {
-      goto out_of_range;
-    }
-  } else {
-    double d = 0.0;
-    if (!ToInteger(cx, index, &d)) {
-      return false;
-    }
-    // check whether d is negative as size_t is unsigned
-    if (d < 0 || string->length() <= d) {
-      goto out_of_range;
-    }
-    i = size_t(d);
-  }
-  char16_t c;
-  if (!string->getChar(cx, i, &c)) {
+  // Step 3.
+  mozilla::Maybe<size_t> index{};
+  if (!ToStringIndex(cx, args.get(0), str->length(), &index)) {
     return false;
   }
-  res.setInt32(c);
-  return true;
 
-out_of_range:
-  res.setNaN();
+  // Steps 4-5.
+  if (index.isNothing()) {
+    args.rval().setString(cx->runtime()->emptyString);
+    return true;
+  }
+  MOZ_ASSERT(*index < str->length());
+
+  // Step 6.
+  auto* result = cx->staticStrings().getUnitStringForElement(cx, str, *index);
+  if (!result) {
+    return false;
+  }
+  args.rval().setString(result);
   return true;
 }
 
+/**
+ * 22.1.3.3 String.prototype.charCodeAt ( pos )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 bool js::str_charCodeAt(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "charCodeAt");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedString str(cx);
-  RootedValue index(cx);
-  if (args.thisv().isString()) {
-    str = args.thisv().toString();
-  } else {
-    str = ToStringForStringFunction(cx, "charCodeAt", args.thisv());
-    if (!str) {
-      return false;
-    }
-  }
-  if (args.length() != 0) {
-    index = args[0];
-  } else {
-    index.setInt32(0);
+  // Steps 1-2.
+  RootedString str(cx,
+                   ToStringForStringFunction(cx, "charCodeAt", args.thisv()));
+  if (!str) {
+    return false;
   }
 
-  return js::str_charCodeAt_impl(cx, str, index, args.rval());
+  // Step 3.
+  mozilla::Maybe<size_t> index{};
+  if (!ToStringIndex(cx, args.get(0), str->length(), &index)) {
+    return false;
+  }
+
+  // Steps 4-5.
+  if (index.isNothing()) {
+    args.rval().setNaN();
+    return true;
+  }
+  MOZ_ASSERT(*index < str->length());
+
+  // Step 6.
+  char16_t c;
+  if (!str->getChar(cx, *index, &c)) {
+    return false;
+  }
+  args.rval().setInt32(c);
+  return true;
 }
 
 /*
@@ -3891,6 +3898,34 @@ bool js::StringConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static inline JSLinearString* CodeUnitToString(JSContext* cx, char16_t code) {
+  if (StaticStrings::hasUnit(code)) {
+    return cx->staticStrings().getUnit(code);
+  }
+  return NewInlineString<CanGC>(cx, {code}, 1);
+}
+
+JSLinearString* js::StringFromCharCode(JSContext* cx, int32_t charCode) {
+  return CodeUnitToString(cx, char16_t(charCode));
+}
+
+JSLinearString* js::StringFromCodePoint(JSContext* cx, char32_t codePoint) {
+  MOZ_ASSERT(codePoint <= unicode::NonBMPMax);
+
+  if (!unicode::IsSupplementary(codePoint)) {
+    return CodeUnitToString(cx, char16_t(codePoint));
+  }
+
+  char16_t chars[] = {unicode::LeadSurrogate(codePoint),
+                      unicode::TrailSurrogate(codePoint)};
+  return NewInlineString<CanGC>(cx, chars, 2);
+}
+
+/**
+ * 22.1.2.1 String.fromCharCode ( ...codeUnits )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 bool js::str_fromCharCode(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3898,7 +3933,18 @@ bool js::str_fromCharCode(JSContext* cx, unsigned argc, Value* vp) {
 
   // Optimize the single-char case.
   if (args.length() == 1) {
-    return str_fromCharCode_one_arg(cx, args[0], args.rval());
+    uint16_t code;
+    if (!ToUint16(cx, args[0], &code)) {
+      return false;
+    }
+
+    JSString* str = CodeUnitToString(cx, char16_t(code));
+    if (!str) {
+      return false;
+    }
+
+    args.rval().setString(str);
+    return true;
   }
 
   // Optimize the case where the result will definitely fit in an inline
@@ -3930,53 +3976,34 @@ bool js::str_fromCharCode(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static inline bool CodeUnitToString(JSContext* cx, uint16_t ucode,
-                                    MutableHandleValue rval) {
-  if (StaticStrings::hasUnit(ucode)) {
-    rval.setString(cx->staticStrings().getUnit(ucode));
-    return true;
-  }
-
-  char16_t c = char16_t(ucode);
-  JSString* str = NewInlineString<CanGC>(cx, {c}, 1);
-  if (!str) {
-    return false;
-  }
-
-  rval.setString(str);
-  return true;
-}
-
-bool js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code,
-                                  MutableHandleValue rval) {
-  uint16_t ucode;
-
-  if (!ToUint16(cx, code, &ucode)) {
-    return false;
-  }
-
-  return CodeUnitToString(cx, ucode, rval);
-}
-
+/**
+ * 22.1.2.2 String.fromCodePoint ( ...codePoints )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 static MOZ_ALWAYS_INLINE bool ToCodePoint(JSContext* cx, HandleValue code,
                                           char32_t* codePoint) {
-  // String.fromCodePoint, Steps 5.a-b.
+  // String.fromCodePoint, Steps 2.a-d.
 
   // Fast path for the common case - the input is already an int32.
   if (code.isInt32()) {
+    // Step 2.a.
     int32_t nextCP = code.toInt32();
-    if (nextCP >= 0 && nextCP <= int32_t(unicode::NonBMPMax)) {
+
+    // Steps 2.b-d.
+    if (MOZ_LIKELY(uint32_t(nextCP) <= unicode::NonBMPMax)) {
       *codePoint = char32_t(nextCP);
       return true;
     }
   }
 
+  // Step 2.a.
   double nextCP;
   if (!ToNumber(cx, code, &nextCP)) {
     return false;
   }
 
-  // String.fromCodePoint, Steps 5.c-d.
+  // Steps 2.b-c.
   if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 ||
       nextCP > unicode::NonBMPMax) {
     ToCStringBuf cbuf;
@@ -3987,58 +4014,36 @@ static MOZ_ALWAYS_INLINE bool ToCodePoint(JSContext* cx, HandleValue code,
     return false;
   }
 
+  // Steps 2.d.
   *codePoint = char32_t(nextCP);
   return true;
 }
 
-bool js::str_fromCodePoint_one_arg(JSContext* cx, HandleValue code,
-                                   MutableHandleValue rval) {
-  // Steps 1-4 (omitted).
-
-  // Steps 5.a-d.
-  char32_t codePoint;
-  if (!ToCodePoint(cx, code, &codePoint)) {
-    return false;
-  }
-
-  // Steps 5.e, 6.
-  if (!unicode::IsSupplementary(codePoint)) {
-    return CodeUnitToString(cx, uint16_t(codePoint), rval);
-  }
-
-  char16_t chars[] = {unicode::LeadSurrogate(codePoint),
-                      unicode::TrailSurrogate(codePoint)};
-  JSString* str = NewInlineString<CanGC>(cx, chars, 2);
-  if (!str) {
-    return false;
-  }
-
-  rval.setString(str);
-  return true;
-}
-
+/**
+ * 22.1.2.2 String.fromCodePoint ( ...codePoints )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 static bool str_fromCodePoint_few_args(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(args.length() <= JSFatInlineString::MAX_LENGTH_TWO_BYTE / 2);
 
-  // Steps 1-2 (omitted).
-
-  // Step 3.
+  // Step 1.
   char16_t elements[JSFatInlineString::MAX_LENGTH_TWO_BYTE];
 
-  // Steps 4-5.
+  // Step 2.
   unsigned length = 0;
   for (unsigned nextIndex = 0; nextIndex < args.length(); nextIndex++) {
-    // Steps 5.a-d.
+    // Steps 2.a-c.
     char32_t codePoint;
     if (!ToCodePoint(cx, args[nextIndex], &codePoint)) {
       return false;
     }
 
-    // Step 5.e.
+    // Step 2.d.
     unicode::UTF16Encode(codePoint, elements, &length);
   }
 
-  // Step 6.
+  // Steps 3-4.
   JSString* str = NewStringCopyN<CanGC>(cx, elements, length);
   if (!str) {
     return false;
@@ -4048,14 +4053,32 @@ static bool str_fromCodePoint_few_args(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-// ES2017 draft rev 40edb3a95a475c1b251141ac681b8793129d9a6d
-// 21.1.2.2 String.fromCodePoint(...codePoints)
+/**
+ * 22.1.2.2 String.fromCodePoint ( ...codePoints )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
 bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Optimize the single code-point case.
   if (args.length() == 1) {
-    return str_fromCodePoint_one_arg(cx, args[0], args.rval());
+    // Step 1. (Omitted)
+
+    // Step 2.
+    char32_t codePoint;
+    if (!ToCodePoint(cx, args[0], &codePoint)) {
+      return false;
+    }
+
+    // Steps 3-4.
+    JSString* str = StringFromCodePoint(cx, codePoint);
+    if (!str) {
+      return false;
+    }
+
+    args.rval().setString(str);
+    return true;
   }
 
   // Optimize the case where the result will definitely fit in an inline
@@ -4067,9 +4090,7 @@ bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
     return str_fromCodePoint_few_args(cx, args);
   }
 
-  // Steps 1-2 (omitted).
-
-  // Step 3.
+  // Step 1.
   static_assert(
       ARGS_LENGTH_MAX < std::numeric_limits<decltype(args.length())>::max() / 2,
       "|args.length() * 2| does not overflow");
@@ -4079,20 +4100,20 @@ bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Steps 4-5.
+  // Steps 2.
   unsigned length = 0;
   for (unsigned nextIndex = 0; nextIndex < args.length(); nextIndex++) {
-    // Steps 5.a-d.
+    // Steps 2.a-c.
     char32_t codePoint;
     if (!ToCodePoint(cx, args[nextIndex], &codePoint)) {
       return false;
     }
 
-    // Step 5.e.
+    // Step 2.d.
     unicode::UTF16Encode(codePoint, elements.get(), &length);
   }
 
-  // Step 6.
+  // Steps 3-4.
   JSString* str = NewString<CanGC>(cx, std::move(elements), length);
   if (!str) {
     return false;
@@ -4108,7 +4129,9 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_INLINABLE_FN("fromCodePoint", js::str_fromCodePoint, 1, 0,
                     StringFromCodePoint),
 
-    JS_SELF_HOSTED_FN("raw", "String_static_raw", 1, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("raw", "String_static_raw", 1, 0),
+    JS_FS_END,
+};
 
 /* static */
 SharedShape* StringObject::assignInitialShape(JSContext* cx,

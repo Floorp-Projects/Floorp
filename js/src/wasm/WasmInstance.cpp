@@ -2031,13 +2031,13 @@ int32_t Instance::stringToWTF16Array(Instance* instance, void* stringArg,
 void* Instance::stringFromCharCode(Instance* instance, uint32_t charCode) {
   JSContext* cx = instance->cx();
 
-  RootedValue rval(cx, NumberValue(charCode));
-  if (!str_fromCharCode_one_arg(cx, rval, &rval)) {
+  JSString* str = StringFromCharCode(cx, int32_t(charCode));
+  if (!str) {
     MOZ_ASSERT(cx->isThrowingOutOfMemory());
     return nullptr;
   }
 
-  return AnyRef::fromJSString(rval.toString()).forCompiledCode();
+  return AnyRef::fromJSString(str).forCompiledCode();
 }
 
 void* Instance::stringFromCodePoint(Instance* instance, uint32_t codePoint) {
@@ -2045,18 +2045,18 @@ void* Instance::stringFromCodePoint(Instance* instance, uint32_t codePoint) {
 
   // Check for any error conditions before calling fromCodePoint so we report
   // the correct error
-  if (codePoint > int32_t(unicode::NonBMPMax)) {
+  if (codePoint > unicode::NonBMPMax) {
     ReportTrapError(cx, JSMSG_WASM_BAD_CODEPOINT);
     return nullptr;
   }
 
-  RootedValue rval(cx, Int32Value(codePoint));
-  if (!str_fromCodePoint_one_arg(cx, rval, &rval)) {
+  JSString* str = StringFromCodePoint(cx, char32_t(codePoint));
+  if (!str) {
     MOZ_ASSERT(cx->isThrowingOutOfMemory());
     return nullptr;
   }
 
-  return AnyRef::fromJSString(rval.toString()).forCompiledCode();
+  return AnyRef::fromJSString(str).forCompiledCode();
 }
 
 int32_t Instance::stringCharCodeAt(Instance* instance, void* stringArg,

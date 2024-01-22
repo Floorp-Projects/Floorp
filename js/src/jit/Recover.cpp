@@ -1016,12 +1016,18 @@ bool MCharCodeAt::writeRecoverData(CompactBufferWriter& writer) const {
 RCharCodeAt::RCharCodeAt(CompactBufferReader& reader) {}
 
 bool RCharCodeAt::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString lhs(cx, iter.read().toString());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  RootedString string(cx, iter.read().toString());
+  int32_t index = iter.read().toInt32();
 
-  if (!js::str_charCodeAt_impl(cx, lhs, rhs, &result)) {
-    return false;
+  RootedValue result(cx);
+  if (0 <= index && size_t(index) < string->length()) {
+    char16_t c;
+    if (!string->getChar(cx, index, &c)) {
+      return false;
+    }
+    result.setInt32(c);
+  } else {
+    result.setNaN();
   }
 
   iter.storeInstructionResult(result);
@@ -1037,15 +1043,14 @@ bool MFromCharCode::writeRecoverData(CompactBufferWriter& writer) const {
 RFromCharCode::RFromCharCode(CompactBufferReader& reader) {}
 
 bool RFromCharCode::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  int32_t charCode = iter.read().toInt32();
 
-  MOZ_ASSERT(operand.isInt32());
-  if (!js::str_fromCharCode_one_arg(cx, operand, &result)) {
+  JSString* str = StringFromCharCode(cx, charCode);
+  if (!str) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(StringValue(str));
   return true;
 }
 
@@ -1062,19 +1067,19 @@ RFromCharCodeEmptyIfNegative::RFromCharCodeEmptyIfNegative(
 
 bool RFromCharCodeEmptyIfNegative::recover(JSContext* cx,
                                            SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  int32_t charCode = iter.read().toInt32();
 
-  MOZ_ASSERT(operand.isInt32());
-  if (operand.toInt32() < 0) {
-    result.setString(cx->emptyString());
+  JSString* str;
+  if (charCode < 0) {
+    str = cx->emptyString();
   } else {
-    if (!js::str_fromCharCode_one_arg(cx, operand, &result)) {
+    str = StringFromCharCode(cx, charCode);
+    if (!str) {
       return false;
     }
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(StringValue(str));
   return true;
 }
 

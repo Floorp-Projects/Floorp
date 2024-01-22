@@ -20,17 +20,11 @@ class GlobalObject;
 /* Initialize the String class, returning its prototype object. */
 extern JSObject* InitStringClass(JSContext* cx, Handle<GlobalObject*> global);
 
+// String methods exposed so they can be installed in the self-hosting global.
+
 extern bool str_fromCharCode(JSContext* cx, unsigned argc, Value* vp);
 
-extern bool str_fromCharCode_one_arg(JSContext* cx, HandleValue code,
-                                     MutableHandleValue rval);
-
 extern bool str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool str_fromCodePoint_one_arg(JSContext* cx, HandleValue code,
-                                      MutableHandleValue rval);
-
-// String methods exposed so they can be installed in the self-hosting global.
 
 extern bool str_includes(JSContext* cx, unsigned argc, Value* vp);
 
@@ -39,9 +33,6 @@ extern bool str_indexOf(JSContext* cx, unsigned argc, Value* vp);
 extern bool str_startsWith(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_toString(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool str_charCodeAt_impl(JSContext* cx, HandleString string,
-                                HandleValue index, MutableHandleValue res);
 
 extern bool str_charCodeAt(JSContext* cx, unsigned argc, Value* vp);
 
@@ -112,6 +103,10 @@ extern bool StringConstructor(JSContext* cx, unsigned argc, Value* vp);
 extern bool FlatStringMatch(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool FlatStringSearch(JSContext* cx, unsigned argc, Value* vp);
+
+extern JSLinearString* StringFromCharCode(JSContext* cx, int32_t charCode);
+
+extern JSLinearString* StringFromCodePoint(JSContext* cx, char32_t codePoint);
 
 } /* namespace js */
 
