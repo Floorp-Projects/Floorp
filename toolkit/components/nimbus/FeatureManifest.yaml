@@ -992,7 +992,6 @@ cfr:
   owner: omc@mozilla.com
   hasExposure: true
   exposureDescription: "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1004,7 +1003,6 @@ cfr:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1016,7 +1014,6 @@ infobar:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1028,7 +1025,6 @@ spotlight:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1042,7 +1038,6 @@ featureCallout:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1105,7 +1100,6 @@ fxms-message-1:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1117,7 +1111,6 @@ fxms-message-2:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1129,7 +1122,6 @@ fxms-message-3:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1141,7 +1133,6 @@ fxms-message-4:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1153,7 +1144,6 @@ fxms-message-5:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1165,7 +1155,6 @@ fxms-message-6:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1177,7 +1166,6 @@ fxms-message-7:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1189,7 +1177,6 @@ fxms-message-8:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1201,7 +1188,6 @@ fxms-message-9:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1213,7 +1199,6 @@ fxms-message-10:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1225,7 +1210,6 @@ fxms-message-11:
   hasExposure: true
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1237,7 +1221,6 @@ pbNewtab:
   hasExposure: true
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
@@ -1251,7 +1234,6 @@ backgroundTaskMessage:
   hasExposure: true
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
-  isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json"
@@ -1263,7 +1245,6 @@ backgroundUpdateAutomaticRestart:
   applications:
     - firefox-desktop-background-task
   hasExposure: false
-  isEarlyStartup: false
   variables:
     enabled:
       type: boolean
@@ -2325,7 +2306,6 @@ mailto:
   exposureDescription: >-
     The exposure event is sent when a webmail site calls the
     registerProtocolHandler function and when users use mailto links in Firefox.
-  isEarlyStartup: false
   variables:
     dualPrompt:
       type: boolean
