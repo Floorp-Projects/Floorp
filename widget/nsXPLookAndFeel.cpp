@@ -662,6 +662,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Infotext, 0x00, 0x00, 0x00)
       // deprecated in CSS Color Level 4, same as Canvas/Window:
       COLOR(Menu, 0xFF, 0xFF, 0xFF)
+      // deprecated in CSS Color Level 4, same as Canvastext/Windowtext:
       COLOR(Menutext, 0x00, 0x00, 0x00)
       // deprecated in CSS Color Level 4, same as Canvas/Window:
       COLOR(Scrollbar, 0xFF, 0xFF, 0xFF)
@@ -1288,10 +1289,12 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     // https://drafts.csswg.org/css-color-4/#valdef-color-scrollbar
     BIT_FOR(Activecaption) | BIT_FOR(Appworkspace) | BIT_FOR(Background) |
     BIT_FOR(Inactivecaption) | BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
-    // Per spec, CaptionText and InfoText should match CanvasText/WindowText,
-    // see https://drafts.csswg.org/css-color-4/#valdef-color-captiontext and
-    // https://drafts.csswg.org/css-color-4/#valdef-color-infotext
-    BIT_FOR(Captiontext) | BIT_FOR(Infotext) |
+    // Per spec, CaptionText, InfoText, and MenuText should match
+    // CanvasText/WindowText, see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-captiontext,
+    // https://drafts.csswg.org/css-color-4/#valdef-color-infotext, and
+    // https://drafts.csswg.org/css-color-4/#valdef-color-menutext
+    BIT_FOR(Captiontext) | BIT_FOR(Infotext) | BIT_FOR(Menutext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
     // Also, per spec, these should match Canvas/CanvasText, see
     // https://drafts.csswg.org/css-color-4/#valdef-color-window and
