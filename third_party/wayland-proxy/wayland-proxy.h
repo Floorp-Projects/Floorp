@@ -27,7 +27,7 @@ class WaylandProxy {
 
   // Set original Wayland display env variable and clear
   // proxy display file.
-  void SetWaylandDisplay();
+  void RestoreWaylandDisplay();
 
   static void SetVerbose(bool aVerbose);
 
