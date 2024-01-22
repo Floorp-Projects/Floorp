@@ -874,6 +874,12 @@ void nsXULPopupManager::ShowPopupAtScreen(Element* aPopup, int32_t aXPos,
   BeginShowingPopup(pendingPopup, aIsContextMenu, false);
 }
 
+void ToggleTouchMode(const PendingPopup& aPopup) {
+  aPopup.mPopup->SetBoolAttr(
+      nsGkAtoms::touchmode,
+      aPopup.MouseInputSource() == MouseEvent_Binding::MOZ_SOURCE_TOUCH);
+}
+
 bool nsXULPopupManager::ShowPopupAsNativeMenu(Element* aPopup, int32_t aXPos,
                                               int32_t aYPos,
                                               bool aIsContextMenu,
@@ -1616,6 +1622,8 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
                               NS_FRAME_IS_DIRTY);
 
   PopupType popupType = popupFrame->GetPopupType();
+
+  ToggleTouchMode(aPendingPopup);
 
   nsEventStatus status = FirePopupShowingEvent(aPendingPopup, presContext);
 

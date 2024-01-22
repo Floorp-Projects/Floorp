@@ -1955,7 +1955,6 @@ var gBrowserInit = {
     }
 
     FullScreen.init();
-    MenuTouchModeObserver.init();
 
     if (AppConstants.MOZ_DATA_REPORTING) {
       gDataNotificationInfoBar.init();
@@ -2569,7 +2568,6 @@ var gBrowserInit = {
       );
       Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
-      MenuTouchModeObserver.uninit();
       BrowserOffline.uninit();
       CanvasPermissionPromptHelper.uninit();
       WebAuthnPromptHelper.uninit();
@@ -8722,27 +8720,6 @@ var RestoreLastSessionObserver = {
     "nsIObserver",
     "nsISupportsWeakReference",
   ]),
-};
-
-/* Observes menus and adjusts their size for better
- * usability when opened via a touch screen. */
-var MenuTouchModeObserver = {
-  init() {
-    window.addEventListener("popupshowing", this, true);
-  },
-
-  handleEvent(event) {
-    let target = event.originalTarget;
-    if (event.inputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
-      target.setAttribute("touchmode", "true");
-    } else {
-      target.removeAttribute("touchmode");
-    }
-  },
-
-  uninit() {
-    window.removeEventListener("popupshowing", this, true);
-  },
 };
 
 // Prompt user to restart the browser in safe mode
