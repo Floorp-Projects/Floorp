@@ -409,7 +409,7 @@ enum class StyleTextWrapMode : uint8_t {
 // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1758391) and
 // white-space (https://bugzilla.mozilla.org/show_bug.cgi?id=1852478)
 // into shorthands.
-enum class StyleTextWrap : uint8_t {
+enum class StyleTextWrapStyle : uint8_t {
   Auto = 0,
   Stable,
   Balance,

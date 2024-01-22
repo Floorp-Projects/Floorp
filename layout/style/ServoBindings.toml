@@ -177,7 +177,7 @@ rusty-enums = [
     "mozilla::StyleBlend",
     "mozilla::StyleMaskComposite",
     "mozilla::StyleWritingModeProperty",
-    "mozilla::StyleTextWrap",
+    "mozilla::StyleTextWrapStyle",
     "StyleFontVariantEmoji",
 ]
 allowlist-vars = [
