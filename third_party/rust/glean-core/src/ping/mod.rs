@@ -309,28 +309,6 @@ impl PingMaker {
         })
     }
 
-    /// Collects a snapshot for the given ping from storage and attach required meta information.
-    ///
-    /// # Arguments
-    ///
-    /// * `glean` - the [`Glean`] instance to collect data from.
-    /// * `ping` - the ping to collect for.
-    /// * `reason` - an optional reason code to include in the ping.
-    ///
-    /// # Returns
-    ///
-    /// A fully assembled ping payload in a string encoded as JSON.
-    /// If there is no data stored for the ping, `None` is returned.
-    pub fn collect_string(
-        &self,
-        glean: &Glean,
-        ping: &PingType,
-        reason: Option<&str>,
-    ) -> Option<String> {
-        self.collect(glean, ping, reason, "", "")
-            .map(|ping| ::serde_json::to_string_pretty(&ping.content).unwrap())
-    }
-
     /// Gets the path to a directory for ping storage.
     ///
     /// The directory will be created inside the `data_path`.

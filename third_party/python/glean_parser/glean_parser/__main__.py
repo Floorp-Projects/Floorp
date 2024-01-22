@@ -303,12 +303,14 @@ def coverage(coverage_file, metrics_files, format, output, allow_reserved):
 )
 def data_review_request(bug, metrics_files):
     """
-    Generate a skeleton Data Review Request for all metrics in metrics_files
-    whose bug_numbers fields contain the provided bug string.
+    Generate a skeleton Data Review Request for all metrics in METRICS_FILES
+    whose bug_numbers fields contain the provided BUG string.
+
     For example, providing "1694739" matches
     "https://bugzilla.mozilla.org/show_bug.cgi?id=1694739".
     To ensure substrings don't match, the provided bug string will match only
     if it is bounded by non-word characters.
+
     Prints to stdout.
     """
     sys.exit(mod_data_review.generate(bug, [Path(x) for x in metrics_files]))
