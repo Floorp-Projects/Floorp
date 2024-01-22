@@ -797,8 +797,8 @@ nsresult Database::BackupAndReplaceDatabaseFile(
     }
 
     nsCOMPtr<nsIFile> backup;
-    Unused << aStorage->BackupDatabaseFile(databaseFile, corruptFilename,
-                                           profDir, getter_AddRefs(backup));
+    Unused << BackupDatabaseFile(databaseFile, corruptFilename, profDir,
+                                 getter_AddRefs(backup));
   }
 
   // If anything fails from this point on, we have a stale connection or

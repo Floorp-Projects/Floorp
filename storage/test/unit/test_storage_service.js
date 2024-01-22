@@ -6,8 +6,6 @@
 // openSpecialDatabase, which is tested by test_storage_service_special.js and
 // openUnsharedDatabase, which is tested by test_storage_service_unshared.js.
 
-const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
-
 function test_openDatabase_null_file() {
   try {
     Services.storage.openDatabase(null);
@@ -93,45 +91,6 @@ function test_fake_db_throws_with_openDatabase() {
     TELEMETRY_VALUES.corrupt,
     1
   );
-}
-
-function test_backup_not_new_filename() {
-  const fname = getTestDB().leafName;
-
-  var backup = Services.storage.backupDatabaseFile(getTestDB(), fname);
-  Assert.notEqual(fname, backup.leafName);
-
-  backup.remove(false);
-}
-
-function test_backup_new_filename() {
-  var backup = Services.storage.backupDatabaseFile(
-    getTestDB(),
-    BACKUP_FILE_NAME
-  );
-  Assert.equal(BACKUP_FILE_NAME, backup.leafName);
-
-  backup.remove(false);
-}
-
-function test_backup_new_folder() {
-  var parentDir = getTestDB().parent;
-  parentDir.append("test_storage_temp");
-  if (parentDir.exists()) {
-    parentDir.remove(true);
-  }
-  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  Assert.ok(parentDir.exists());
-
-  var backup = Services.storage.backupDatabaseFile(
-    getTestDB(),
-    BACKUP_FILE_NAME,
-    parentDir
-  );
-  Assert.equal(BACKUP_FILE_NAME, backup.leafName);
-  Assert.ok(parentDir.equals(backup.parent));
-
-  parentDir.remove(true);
 }
 
 function test_openDatabase_directory() {
@@ -286,9 +245,6 @@ var tests = [
   test_openDatabase_file_exists,
   test_corrupt_db_throws_with_openDatabase,
   test_fake_db_throws_with_openDatabase,
-  test_backup_not_new_filename,
-  test_backup_new_filename,
-  test_backup_new_folder,
   test_openDatabase_directory,
   test_read_gooddb,
   test_read_baddb,

@@ -281,27 +281,6 @@ interface mozIStorageService : nsISupports {
   mozIStorageConnection openDatabaseWithFileURL(
       in nsIFileURL aFileURL, [optional] in ACString aTelemetryFilename,
       [optional] in unsigned long aConnectionFlags);
-
-  /*
-   * Utilities
-   */
-
-  /**
-   * Copies the specified database file to the specified parent directory with
-   * the specified file name.  If the parent directory is not specified, it
-   * places the backup in the same directory as the current file.  This
-   * function ensures that the file being created is unique.
-   *
-   * @param aDBFile
-   *        The database file that will be backed up.
-   * @param aBackupFileName
-   *        The name of the new backup file to create.
-   * @param [optional] aBackupParentDirectory
-   *        The directory you'd like the backup file to be placed.
-   * @return The nsIFile representing the backup file.
-   */
-  nsIFile backupDatabaseFile(in nsIFile aDBFile, in AString aBackupFileName,
-                             [optional] in nsIFile aBackupParentDirectory);
 };
 
 %{C++
