@@ -401,10 +401,10 @@ class EditorUtils final {
   }
 
   /**
-   * Get computed white-space style of aContent.
+   * Get the two longhands that make up computed white-space style of aContent.
    */
-  static Maybe<StyleWhiteSpace> GetComputedWhiteSpaceStyle(
-      const nsIContent& aContent);
+  static Maybe<std::pair<StyleWhiteSpaceCollapse, StyleTextWrapMode>>
+  GetComputedWhiteSpaceStyles(const nsIContent& aContent);
 
   /**
    * IsWhiteSpacePreformatted() checks the style info for the node for the
@@ -421,7 +421,7 @@ class EditorUtils final {
   /**
    * IsOnlyNewLinePreformatted() checks whether the linefeed characters are
    * preformated but white-spaces are collapsed, or otherwise.  I.e., this
-   * returns true only when `white-space:pre-line`.
+   * returns true only when `white-space-collapse:pre-line`.
    */
   static bool IsOnlyNewLinePreformatted(const nsIContent& aContent);
 
