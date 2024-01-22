@@ -5440,9 +5440,9 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
  *
  * Steps 4.f-g.
  */
-[[nodiscard]] bool js::AsyncFunctionThrown(JSContext* cx,
-                                           Handle<PromiseObject*> resultPromise,
-                                           HandleValue reason) {
+[[nodiscard]] bool js::AsyncFunctionThrown(
+    JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue reason,
+    JS::Handle<SavedFrame*> unwrappedRejectionStack) {
   if (resultPromise->state() != JS::PromiseState::Pending) {
     // OOM after resolving promise.
     // Report a warning and ignore the result.
@@ -5460,7 +5460,8 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
   //              ! Call(promiseCapability.[[Reject]], undefined,
   //                 « result.[[Value]] »).
   // Step 4.g. Return.
-  return RejectPromiseInternal(cx, resultPromise, reason);
+  return RejectPromiseInternal(cx, resultPromise, reason,
+                               unwrappedRejectionStack);
 }
 
 /**

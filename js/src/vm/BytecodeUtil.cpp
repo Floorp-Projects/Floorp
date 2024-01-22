@@ -2103,6 +2103,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOp::AsyncAwait:
       case JSOp::AsyncResolve:
+      case JSOp::AsyncReject:
         return write("PROMISE");
 
       case JSOp::CanSkipAwait:

@@ -2185,6 +2185,27 @@
      */ \
     MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
     /*
+     * Reject the current async function's result promise with 'reason'.
+     *
+     * This instruction must appear only in non-generator async function
+     * scripts. `gen` must be the internal generator object for the current
+     * frame. This instruction must run at most once per async function call,
+     * as rejecting an already resolved/rejected promise is not permitted.
+     *
+     * The result `promise` is the async function's result promise,
+     * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
+     *
+     * Implements: [AsyncFunctionStart][1], step 4.d.i. and 4.e.i.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
+     *
+     *   Category: Functions
+     *   Type: Generators and async functions
+     *   Operands:
+     *   Stack: reason, stack, gen => promise
+     */ \
+    MACRO(AsyncReject, async_reject, NULL, 1, 3, 1, JOF_BYTE) \
+    /*
      * Suspend the current frame for an `await` expression.
      *
      * This instruction must appear only in scripts for async functions and
@@ -3615,14 +3636,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(237))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(238))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(239))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(240))     \
-  MACRO(241)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(241))     \
   MACRO(242)                                   \
   MACRO(243)                                   \
   MACRO(244)                                   \

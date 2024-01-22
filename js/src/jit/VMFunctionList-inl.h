@@ -59,6 +59,7 @@ namespace jit {
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
   _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
+  _(AsyncFunctionReject, js::AsyncFunctionReject)                              \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
   _(AtomicsAdd64, js::jit::AtomicsAdd64)                                       \
   _(AtomicsAnd64, js::jit::AtomicsAnd64)                                       \
