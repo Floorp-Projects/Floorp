@@ -94,11 +94,6 @@ panel {
       padding: 0;
     }
   }
-
-  /* Make menu items larger when opened through touch. */
-  &[touchmode] {
-    zoom: 1.3;
-  }
 }
 
 menupopup {
