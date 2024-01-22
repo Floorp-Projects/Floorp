@@ -12,6 +12,7 @@ browser.jar:
    content/browser/preferences/search.js
    content/browser/preferences/privacy.js
    content/browser/preferences/containers.js
+   content/browser/preferences/translations.js
    content/browser/preferences/sync.js
    content/browser/preferences/experimental.js
    content/browser/preferences/moreFromMozilla.js

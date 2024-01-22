@@ -1376,3 +1376,30 @@ async function waitForViewShown(callback) {
   await promise;
   await new Promise(resolve => setTimeout(resolve, 0));
 }
+
+/**
+ * Opens the Translation Settings page by clicking the settings button sent in the argument.
+ *
+ * @param  {HTMLElement} settingsButton
+ * @returns {Element}
+ */
+async function openAboutPreferencesTranslationsSettingsPane(settingsButton) {
+  const document = gBrowser.selectedBrowser.contentDocument;
+
+  const promise = BrowserTestUtils.waitForEvent(
+    document,
+    "paneshown",
+    false,
+    event => event.detail.category === "paneTranslations"
+  );
+
+  click(settingsButton, "Click settings button");
+  await promise;
+
+  const elements = {
+    backButton: document.getElementById("translations-settings-back-button"),
+    header: document.getElementById("translations-settings-header"),
+  };
+
+  return elements;
+}

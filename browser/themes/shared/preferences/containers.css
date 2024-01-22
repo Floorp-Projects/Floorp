@@ -4,10 +4,6 @@
 
 @import url("chrome://browser/content/usercontext/usercontext.css");
 
-#category-containers {
-  display: none;
-}
-
 .container-header-links {
   margin-block-end: 15px;
 }

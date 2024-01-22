@@ -26,6 +26,10 @@
   />
   <link
     rel="stylesheet"
+    href="chrome://browser/skin/preferences/translations.css"
+  />
+  <link
+    rel="stylesheet"
     href="chrome://browser/content/preferences/dialogs/handlers.css"
   />
   <link
@@ -63,6 +67,7 @@
   <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
   <link rel="localization" href="browser/sanitize.ftl"/>
   <link rel="localization" href="browser/translations.ftl"/>
+  <link rel="localization" href="preview/translations.ftl"/>
   <link rel="localization" href="preview/enUS-searchFeatures.ftl"/>
   <link rel="localization" href="security/certificates/certManager.ftl"/>
   <link rel="localization" href="security/certificates/deviceManager.ftl"/>
@@ -127,13 +132,6 @@
           <label class="category-name" flex="1" data-l10n-id="pane-search-title"></label>
         </richlistitem>
 
-        <!-- hidden with CSS; this is only here to allow the containers pane to
-             be switched to using the URL or the "Settings..." button. -->
-        <richlistitem id="category-containers"
-                      class="category"
-                      value="paneContainers"
-                      helpTopic="prefs-containers"/>
-
         <richlistitem id="category-privacy"
                       class="category"
                       value="panePrivacy"
@@ -178,6 +176,25 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="more-from-moz-title"></label>
         </richlistitem>
+
+        <!-- The following <richlistitem> elements are hidden from the list of items via the hidden-category class.
+            The intent is that they act as sub-pages, accessible from the UI of one of the main pages, but are
+            not listed as primary pages themselves via the selector.
+            These elements need to be hidden with CSS, rather than the "hidden" property, otherwise their
+            functionality will be disabled.
+            In the future, we may want to determine a way to support sub-pages in a first-class fashion, rather
+            than creating them as hidden primary pages like this. For now, any further pages of this kind should
+            be added in this fashion. -->
+        <richlistitem
+                      class="category hidden-category"
+                      value="paneContainers"
+                      helpTopic="prefs-containers"/>
+
+        <richlistitem
+                      class="category hidden-category"
+                      value="paneTranslations"
+                      helpTopic="prefs-translations"/>
+
       </richlistbox>
 
       <spacer flex="1"/>
@@ -225,6 +242,7 @@
 #include search.inc.xhtml
 #include privacy.inc.xhtml
 #include containers.inc.xhtml
+#include translations.inc.xhtml
 #include sync.inc.xhtml
 #include experimental.inc.xhtml
 #include moreFromMozilla.inc.xhtml

@@ -7,6 +7,7 @@
 /* import-globals-from home.js */
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
+/* import-globals-from translations.js */
 /* import-globals-from privacy.js */
 /* import-globals-from sync.js */
 /* import-globals-from experimental.js */
@@ -203,6 +204,7 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
+  register_module("paneTranslations", gTranslationsPane);
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
     document.getElementById("category-experimental").hidden =
@@ -412,6 +414,16 @@ async function gotoPref(
     "show",
     aShowReason,
     category
+  );
+
+  document.dispatchEvent(
+    new CustomEvent("paneshown", {
+      bubbles: true,
+      cancelable: true,
+      detail: {
+        category,
+      },
+    })
   );
 }
 

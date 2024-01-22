@@ -1484,6 +1484,9 @@ richlistitem .text-link:hover {
   margin: 16px 0;
 }
 
+.hidden-category {
+  display: none;
+}
 /* Platform-specific tweaks & overrides */
 
 @media (-moz-platform: macos) {
