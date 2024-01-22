@@ -113,10 +113,10 @@ function getBrowser(panel) {
       true
     );
 
-    let options =
-      panel.browserStyle !== false
-        ? { stylesheets: ExtensionParent.extensionStylesheets }
-        : {};
+    let options = {};
+    if (panel.browserStyle) {
+      options.stylesheets = ["chrome://browser/content/extension.css"];
+    }
     browser.messageManager.sendAsyncMessage("Extension:InitBrowser", options);
     return browser;
   };

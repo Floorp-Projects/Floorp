@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
@@ -37,19 +36,6 @@ function promisePopupShown(popup) {
     }
   });
 }
-
-ChromeUtils.defineLazyGetter(lazy, "standaloneStylesheets", () => {
-  let stylesheets = [];
-
-  if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac-panel.css");
-  } else if (AppConstants.platform === "win") {
-    stylesheets.push("chrome://browser/content/extension-win-panel.css");
-  } else if (AppConstants.platform === "linux") {
-    stylesheets.push("chrome://browser/content/extension-linux-panel.css");
-  }
-  return stylesheets;
-});
 
 const REMOTE_PANEL_ID = "webextension-remote-preload-panel";
 
@@ -171,10 +157,10 @@ export class BasePopup {
     let sheets = [];
 
     if (this.browserStyle) {
-      sheets.push(...lazy.ExtensionParent.extensionStylesheets);
+      sheets.push("chrome://browser/content/extension.css");
     }
     if (!this.fixedWidth) {
-      sheets.push(...lazy.standaloneStylesheets);
+      sheets.push("chrome://browser/content/extension-popup-panel.css");
     }
 
     return sheets;

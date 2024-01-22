@@ -2293,18 +2293,3 @@ ChromeUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
     })(),
   });
 });
-
-/**
- * Retreives the browser_style stylesheets needed for extension popups and sidebars.
- *
- * @returns {Array<string>} an array of stylesheets needed for the current platform.
- */
-ChromeUtils.defineLazyGetter(ExtensionParent, "extensionStylesheets", () => {
-  let stylesheets = ["chrome://browser/content/extension.css"];
-
-  if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac.css");
-  }
-
-  return stylesheets;
-});
