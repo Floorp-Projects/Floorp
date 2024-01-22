@@ -64,6 +64,7 @@ void AssertMainThread() { MOZ_ASSERT(NS_IsMainThread()); }
 bool InSandbox() { return GeckoProcessType_Content == XRE_GetProcessType(); }
 
 bool WindowIsActive(nsPIDOMWindowInner* aWindow) {
+  NS_ENSURE_TRUE(aWindow, false);
   dom::Document* document = aWindow->GetDoc();
   NS_ENSURE_TRUE(document, false);
   return !document->Hidden();
