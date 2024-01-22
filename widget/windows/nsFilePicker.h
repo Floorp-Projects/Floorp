@@ -102,6 +102,8 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   static FPPromise<nsString> ShowFolderPickerLocal(
       HWND aParent, nsTArray<Command> const& commands);
 
+  void ClearFiles();
+
  protected:
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();
