@@ -3389,13 +3389,6 @@ class nsContentUtils {
   static bool ShouldHideObjectOrEmbedImageDocument();
 
   /**
-   * Returns the object type that the object loading content will actually use
-   * to load the resource. Used for ORB and loading images into synthetic
-   * documents.
-   */
-  static uint32_t ResolveObjectType(uint32_t aType);
-
-  /**
    * Create and load the string bundle for the 'aFile'.
    * This API is used to preload the string bundle on the main thread so later
    * other thread could access it.
