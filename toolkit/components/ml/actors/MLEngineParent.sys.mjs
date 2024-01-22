@@ -20,6 +20,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @typedef {import("../../translations/translations").WasmRecord} WasmRecord
  */
 
+const DEFAULT_CACHE_TIMEOUT_MS = 15_000;
+
 /**
  * The ML engine is in its own content process. This actor handles the
  * marshalling of the data such as the engine payload.
@@ -67,15 +69,33 @@ export class MLEngineParent extends JSWindowActorParent {
   }
 
   /**
-   * @param {Promise<ArrayBuffer>} modelPromise
+   * @param {string} engineName
+   * @param {() => Promise<ArrayBuffer>} getModel
+   * @param {number} cacheTimeoutMS - How long the engine cache remains alive between
+   *   uses, in milliseconds. In automation the engine is manually created and destroyed
+   *   to avoid timing issues.
+   * @returns {MLEngine}
    */
-  static async getEngine(modelPromise) {
-    // TODO - This will be expanded in a following patch:
+  getEngine(engineName, getModel, cacheTimeoutMS = DEFAULT_CACHE_TIMEOUT_MS) {
+    return new MLEngine(this, engineName, getModel, cacheTimeoutMS);
+  }
 
-    // eslint-disable-next-line no-unused-vars
-    const wasm = await MLEngineParent.getWasmArrayBuffer();
-    // eslint-disable-next-line no-unused-vars
-    const model = await modelPromise;
+  // eslint-disable-next-line consistent-return
+  async receiveMessage({ name, data }) {
+    switch (name) {
+      case "MLEngine:Ready":
+        if (lazy.TranslationsParent.resolveEngine) {
+          // TODO(next patch) - This will be centralized into the EngineProcess component.
+          lazy.TranslationsParent.resolveEngine(this);
+        } else {
+          lazy.console.error(
+            "Expected #resolveEngine to exist when then ML Engine is ready."
+          );
+        }
+        break;
+      case "MLEngine:GetWasmArrayBuffer":
+        return MLEngineParent.getWasmArrayBuffer();
+    }
   }
 
   /**
@@ -183,5 +203,179 @@ export class MLEngineParent extends JSWindowActorParent {
     });
 
     return client;
+  }
+}
+
+/**
+ * This contains all of the information needed to perform a translation request.
+ *
+ * @typedef {object} TranslationRequest
+ * @property {Node} node
+ * @property {string} sourceText
+ * @property {boolean} isHTML
+ * @property {Function} resolve
+ * @property {Function} reject
+ */
+
+/**
+ * The interface to communicate to an MLEngine in the parent process. The engine manages
+ * its own lifetime, and is kept alive with a timeout. A reference to this engine can
+ * be retained, but once idle, the engine will be destroyed. If a new request to run
+ * is sent, the engine will be recreated on demand. This balances the cost of retaining
+ * potentially large amounts of memory to run models, with the speed and ease of running
+ * the engine.
+ *
+ * @template Request
+ * @template Response
+ */
+class MLEngine {
+  /**
+   * @type {MessagePort | null}
+   */
+  #port = null;
+
+  #nextRequestId = 0;
+
+  /**
+   * Tie together a message id to a resolved response.
+   *
+   * @type {Map<number, PromiseWithResolvers<Request>>}
+   */
+  #requests = new Map();
+
+  /**
+   * @type {"uninitialized" | "ready" | "error" | "closed"}
+   */
+  engineStatus = "uninitialized";
+
+  /**
+   * @param {MLEngineParent} mlEngineParent
+   * @param {string} engineName
+   * @param {() => Promise<ArrayBuffer>} getModel
+   * @param {number} timeoutMS
+   */
+  constructor(mlEngineParent, engineName, getModel, timeoutMS) {
+    /** @type {MLEngineParent} */
+    this.mlEngineParent = mlEngineParent;
+    /** @type {string} */
+    this.engineName = engineName;
+    /** @type {() => Promise<ArrayBuffer>} */
+    this.getModel = getModel;
+    /** @type {number} */
+    this.timeoutMS = timeoutMS;
+
+    this.#setupPortCommunication();
+  }
+
+  /**
+   * Create a MessageChannel to communicate with the engine directly.
+   */
+  #setupPortCommunication() {
+    const { port1: childPort, port2: parentPort } = new MessageChannel();
+    const transferables = [childPort];
+    this.#port = parentPort;
+
+    this.#port.onmessage = this.handlePortMessage;
+    this.mlEngineParent.sendAsyncMessage(
+      "MLEngine:NewPort",
+      {
+        port: childPort,
+        engineName: this.engineName,
+        timeoutMS: this.timeoutMS,
+      },
+      transferables
+    );
+  }
+
+  handlePortMessage = ({ data }) => {
+    switch (data.type) {
+      case "EnginePort:ModelRequest": {
+        if (this.#port) {
+          this.getModel().then(
+            model => {
+              this.#port.postMessage({
+                type: "EnginePort:ModelResponse",
+                model,
+                error: null,
+              });
+            },
+            error => {
+              this.#port.postMessage({
+                type: "EnginePort:ModelResponse",
+                model: null,
+                error,
+              });
+              if (
+                // Ignore intentional errors in tests.
+                !error?.message.startsWith("Intentionally")
+              ) {
+                lazy.console.error("Failed to get the model", error);
+              }
+            }
+          );
+        } else {
+          lazy.console.error(
+            "Expected a port to exist during the EnginePort:GetModel event"
+          );
+        }
+        break;
+      }
+      case "EnginePort:RunResponse": {
+        const { response, error, requestId } = data;
+        const request = this.#requests.get(requestId);
+        if (request) {
+          if (response) {
+            request.resolve(response);
+          } else {
+            request.reject(error);
+          }
+        } else {
+          lazy.console.error(
+            "Could not resolve response in the MLEngineParent",
+            data
+          );
+        }
+        this.#requests.delete(requestId);
+        break;
+      }
+      case "EnginePort:EngineTerminated": {
+        // The engine was terminated, and if a new run is needed a new port
+        // will need to be requested.
+        this.engineStatus = "closed";
+        this.discardPort();
+        break;
+      }
+      default:
+        lazy.console.error("Unknown port message from engine", data);
+        break;
+    }
+  };
+
+  discardPort() {
+    if (this.#port) {
+      this.#port.postMessage({ type: "EnginePort:Discard" });
+      this.#port.close();
+      this.#port = null;
+    }
+  }
+
+  terminate() {
+    this.#port.postMessage({ type: "EnginePort:Terminate" });
+  }
+
+  /**
+   * @param {Request} request
+   * @returns {Promise<Response>}
+   */
+  run(request) {
+    const resolvers = Promise.withResolvers();
+    const requestId = this.#nextRequestId++;
+    this.#requests.set(requestId, resolvers);
+    this.#port.postMessage({
+      type: "EnginePort:Run",
+      requestId,
+      request,
+    });
+    return resolvers.promise;
   }
 }
