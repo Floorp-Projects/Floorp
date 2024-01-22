@@ -1,0 +1,621 @@
+Legacy steps to update the library:
+
+- Update the "strtools_public.h" and "strtools_public.cpp" files, commenting out
+  the "Uint64ToString", "wcsncpy_s", and "strncpy_s" functions.
+  The "Uint64ToString" function name conflicts with another used in Gecko and
+  the "errno_t" return type returned by the other functions is not defined in
+  Mozilla's macOS continuous integration build environments.  Fortunately, the
+  OpenVR SDK does not use these functions.
+
+- Replace the #define VR_INTERFACE in openvr.h to avoid extern'ing the functions.
+  Unlike the usual OpenVR API builds, we are not building a separate dll.
+
+- Add explicit in CVRSettingHelper constructor.
+
+- In strtools_public.cpp/.h, ensure that UTF16to8 and UTF8to16 are only
+  compiled under
+      #if defined( _WIN32 )
+  and redefine those functions to use ::WideCharToMultiByte and
+  MultiByteToWideChar, respectively. These are modified because the original
+  implementations contain unsupported try-catch.
+
+- In strtools_public.cpp, remove the definition of convert_type.
+
+- In strtools_public.cpp, remove the include of <codecvt>, as this causes
+  problems in compiling on Linux.
+
+- In pathtools_public.cpp/.h, comment out Path_UrlToFilePath and
+  Path_FilePathToUrl to avoid a compile error because 'alloca' isn't defined.
+
+- In vrpathregistry_public.cpp, CVRPathRegistry_Public::BLoadFromFile contains
+  a try-catch, which is not permitted. This code is simply commented out, but
+      Bug 1640068 - OpenVR code can fail JSON parsing and raise exceptions
+  is filed to address a safe fallback in the error condition.
+
+diff --git a/headers/openvr.h b/headers/openvr.h
+index ec26ef41564b9..b95fb1db7e0fe 100644
+--- a/headers/openvr.h
++++ b/headers/openvr.h
+@@ -1932,30 +1932,33 @@ struct ImuSample_t
+ 
+ #pragma pack( pop )
+ 
++#define VR_INTERFACE
++
++// Mozilla: see mozilla.patch for more details
+ // figure out how to import from the VR API dll
+-#if defined(_WIN32)
+-
+-  #if !defined(OPENVR_BUILD_STATIC)
+-    #ifdef VR_API_EXPORT
+-      #define VR_INTERFACE extern "C" __declspec( dllexport )
+-    #else
+-      #define VR_INTERFACE extern "C" __declspec( dllimport )
+-    #endif
+-  #else
+-    #define VR_INTERFACE extern "C"
+-  #endif
+-
+-#elif defined(__GNUC__) || defined(COMPILER_GCC) || defined(__APPLE__)
+-
+-#ifdef VR_API_EXPORT
+-  #define VR_INTERFACE extern "C" __attribute__((visibility("default")))
+-#else
+-  #define VR_INTERFACE extern "C" 
+-#endif
++// #if defined(_WIN32)
+ 
+-#else
+-  #error "Unsupported Platform."
+-#endif
++//   #if !defined(OPENVR_BUILD_STATIC)
++//     #ifdef VR_API_EXPORT
++//       #define VR_INTERFACE extern "C" __declspec( dllexport )
++//     #else
++//       #define VR_INTERFACE extern "C" __declspec( dllimport )
++//     #endif
++//   #else
++//     #define VR_INTERFACE extern "C"
++//   #endif
++
++// #elif defined(__GNUC__) || defined(COMPILER_GCC) || defined(__APPLE__)
++
++// #ifdef VR_API_EXPORT
++//   #define VR_INTERFACE extern "C" __attribute__((visibility("default")))
++// #else
++//   #define VR_INTERFACE extern "C" 
++// #endif
++
++// #else
++//   #error "Unsupported Platform."
++// #endif
+ 
+ 
+ #if defined( _WIN32 )
+@@ -2557,7 +2560,8 @@ namespace vr
+ 	{
+ 		IVRSettings *m_pSettings;
+ 	public:
+-		CVRSettingHelper( IVRSettings *pSettings ) 
++	  // Mozilla: see mozilla.patch for more details
++		explicit CVRSettingHelper( IVRSettings *pSettings ) 
+ 		{ 
+ 			m_pSettings = pSettings; 
+ 		}
+diff --git a/src/pathtools_public.cpp b/src/pathtools_public.cpp
+index eb1373a57b1a5..e7f6d6ca1bf45 100644
+--- a/src/pathtools_public.cpp
++++ b/src/pathtools_public.cpp
+@@ -798,52 +798,54 @@ bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const cha
+ #define FILE_URL_PREFIX "file://"
+ #endif
+ 
++// Mozilla: see mozilla.patch for more details
+ // ----------------------------------------------------------------------------------------------------------------------------
+ // Purpose: Turns a path to a file on disk into a URL (or just returns the value if it's already a URL)
+ // ----------------------------------------------------------------------------------------------------------------------------
+-std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath )
+-{
+-	if ( StringHasPrefix( sRelativePath, "http://" )
+-		|| StringHasPrefix( sRelativePath, "https://" )
+-		|| StringHasPrefix( sRelativePath, "vr-input-workshop://" )
+-		|| StringHasPrefix( sRelativePath, "file://" )
+-	   )
+-	{
+-		return sRelativePath;
+-	}
+-	else
+-	{
+-		std::string sAbsolute = Path_MakeAbsolute( sRelativePath, sBasePath );
+-		if ( sAbsolute.empty() )
+-			return sAbsolute;
+-		sAbsolute = Path_FixSlashes( sAbsolute, '/' );
+-
+-		size_t unBufferSize = sAbsolute.length() * 3;
+-		char *pchBuffer = (char *)alloca( unBufferSize );
+-		V_URLEncodeFullPath( pchBuffer, (int)unBufferSize, sAbsolute.c_str(), (int)sAbsolute.length() );
+-
+-		return std::string( FILE_URL_PREFIX ) + pchBuffer;
+-	}
+-}
+-
++// std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath )
++// {
++// 	if ( StringHasPrefix( sRelativePath, "http://" )
++// 		|| StringHasPrefix( sRelativePath, "https://" )
++// 		|| StringHasPrefix( sRelativePath, "vr-input-workshop://" )
++// 		|| StringHasPrefix( sRelativePath, "file://" )
++// 	   )
++// 	{
++// 		return sRelativePath;
++// 	}
++// 	else
++// 	{
++// 		std::string sAbsolute = Path_MakeAbsolute( sRelativePath, sBasePath );
++// 		if ( sAbsolute.empty() )
++// 			return sAbsolute;
++// 		sAbsolute = Path_FixSlashes( sAbsolute, '/' );
++
++// 		size_t unBufferSize = sAbsolute.length() * 3;
++// 		char *pchBuffer = (char *)alloca( unBufferSize );
++// 		V_URLEncodeFullPath( pchBuffer, (int)unBufferSize, sAbsolute.c_str(), (int)sAbsolute.length() );
++
++// 		return std::string( FILE_URL_PREFIX ) + pchBuffer;
++// 	}
++// }
++
++// Mozilla: see mozilla.patch for more details
+ // -----------------------------------------------------------------------------------------------------
+ // Purpose: Strips off file:// off a URL and returns the path. For other kinds of URLs an empty string is returned
+ // -----------------------------------------------------------------------------------------------------
+-std::string Path_UrlToFilePath( const std::string & sFileUrl )
+-{
+-	if ( !strnicmp( sFileUrl.c_str(), FILE_URL_PREFIX, strlen( FILE_URL_PREFIX ) ) )
+-	{
+-		char *pchBuffer = (char *)alloca( sFileUrl.length() );
+-		V_URLDecodeNoPlusForSpace( pchBuffer, (int)sFileUrl.length(), 
+-			sFileUrl.c_str() + strlen( FILE_URL_PREFIX ), (int)( sFileUrl.length() - strlen( FILE_URL_PREFIX ) ) );
+-
+-		return Path_FixSlashes( pchBuffer );
+-	}
+-	else
+-	{
+-		return "";
+-	}
+-}
++// std::string Path_UrlToFilePath( const std::string & sFileUrl )
++// {
++// 	if ( !strnicmp( sFileUrl.c_str(), FILE_URL_PREFIX, strlen( FILE_URL_PREFIX ) ) )
++// 	{
++// 		char *pchBuffer = (char *)alloca( sFileUrl.length() );
++// 		V_URLDecodeNoPlusForSpace( pchBuffer, (int)sFileUrl.length(), 
++// 			sFileUrl.c_str() + strlen( FILE_URL_PREFIX ), (int)( sFileUrl.length() - strlen( FILE_URL_PREFIX ) ) );
++
++// 		return Path_FixSlashes( pchBuffer );
++// 	}
++// 	else
++// 	{
++// 		return "";
++// 	}
++// }
+ 
+ 
+ // -----------------------------------------------------------------------------------------------------
+diff --git a/src/pathtools_public.h b/src/pathtools_public.h
+index 9a120f43d6a57..33688fba2f4ad 100644
+--- a/src/pathtools_public.h
++++ b/src/pathtools_public.h
+@@ -98,8 +98,9 @@ std::string Path_ReadTextFile( const std::string &strFilename );
+ bool Path_WriteStringToTextFile( const std::string &strFilename, const char *pchData );
+ bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const char *pchData );
+ 
++// Mozilla: see mozilla.patch for more details
+ /** Returns a file:// url for paths, or an http or https url if that's what was provided */
+-std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath );
++// std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath );
+ 
+ /** Strips off file:// off a URL and returns the path. For other kinds of URLs an empty string is returned */
+ std::string Path_UrlToFilePath( const std::string & sFileUrl );
+diff --git a/src/strtools_public.cpp b/src/strtools_public.cpp
+index f9ce0fd5ea799..f52f8e9004982 100644
+--- a/src/strtools_public.cpp
++++ b/src/strtools_public.cpp
+@@ -4,11 +4,12 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <sstream>
+-#include <codecvt>
++// Mozilla: see mozilla.patch for more details
++// #include <codecvt>
+ #include <iostream>
+ #include <functional>
+ #include <locale>
+-#include <codecvt>
++// #include <codecvt>
+ 
+ #if defined( _WIN32 )
+ #include <windows.h>
+@@ -57,40 +58,74 @@ bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string
+ //-----------------------------------------------------------------------------
+ // Purpose:
+ //-----------------------------------------------------------------------------
+-typedef std::codecvt_utf8< wchar_t > convert_type;
++// Mozilla: see mozilla.patch for more details
++//typedef std::codecvt_utf8< wchar_t > convert_type;
+ 
++// Mozilla: see mozilla.patch for more details
++#if defined( _WIN32 )
+ std::string UTF16to8(const wchar_t * in)
+ {
+-	static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
+-
+-	try
+-	{
+-		return s_converter.to_bytes( in );
+-	}
+-	catch ( ... )
++	int retLength = ::WideCharToMultiByte(CP_UTF8, 0, in, -1, nullptr, 0, nullptr, nullptr);
++	if (retLength == 0)
+ 	{
+ 		return std::string();
+ 	}
++
++	char* retString = new char[retLength];
++	::WideCharToMultiByte(CP_UTF8, 0, in, -1, retString, retLength, nullptr, nullptr);
++
++	std::string retStringValue(retString);
++
++	delete[] retString;
++
++	return retStringValue;
++
++	// static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
++
++	// try
++	// {
++	// 	return s_converter.to_bytes( in );
++	// }
++	// catch ( ... )
++	// {
++	// 	return std::string();
++	// }
+ }
+ 
+ std::string UTF16to8( const std::wstring & in ) { return UTF16to8( in.c_str() ); }
+ 
+-
++// Mozilla: see mozilla.patch for more details
+ std::wstring UTF8to16(const char * in)
+ {
+-	static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
+-
+-	try
+-	{
+-		return s_converter.from_bytes( in );
+-	}
+-	catch ( ... )
++	int retLength = ::MultiByteToWideChar(CP_UTF8, 0, in, -1, nullptr, 0);
++	if (retLength == 0)
+ 	{
+ 		return std::wstring();
+ 	}
++
++	wchar_t* retString = new wchar_t[retLength];
++	::MultiByteToWideChar(CP_UTF8, 0, in, -1, retString, retLength);
++
++	std::wstring retStringValue(retString);
++
++	delete[] retString;
++
++	return retStringValue;
++
++	//static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
++
++	//try
++	//{
++	//	return s_converter.from_bytes( in );
++	//}
++	//catch ( ... )
++	//{
++	//	return std::wstring();
++	//}
+ }
+ 
+ std::wstring UTF8to16( const std::string & in ) { return UTF8to16( in.c_str() ); }
++#endif
+ 
+ 
+ #if defined( _WIN32 )
+@@ -173,16 +208,17 @@ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t
+ 
+ 
+ /** Returns a std::string from a uint64_t */
+-std::string Uint64ToString( uint64_t ulValue )
+-{
+-	char buf[ 22 ];
+-#if defined( _WIN32 )
+-	sprintf_s( buf, "%llu", ulValue );
+-#else
+-    snprintf( buf, sizeof( buf ), "%llu", (long long unsigned int ) ulValue );
+-#endif
+-	return buf;
+-}
++// Mozilla: see mozilla.patch for more details
++// std::string Uint64ToString( uint64_t ulValue )
++// {
++// 	char buf[ 22 ];
++// #if defined( _WIN32 )
++// 	sprintf_s( buf, "%llu", ulValue );
++// #else
++//     snprintf( buf, sizeof( buf ), "%llu", (long long unsigned int ) ulValue );
++// #endif
++// 	return buf;
++// }
+ 
+ 
+ /** returns a uint64_t from a string */
+@@ -451,84 +487,85 @@ std::vector<std::string> TokenizeString( const std::string & sString, char cToke
+ 	return vecStrings;
+ }
+ 
++// Mozilla: see mozilla.patch for more details
+ //-----------------------------------------------------------------------------
+ // Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
+ //-----------------------------------------------------------------------------
+-bool RepairUTF8( const char *pbegin, const char *pend, std::string & sOutputUtf8 )
+-{
+-	typedef std::codecvt_utf8<char32_t> facet_type;
+-	facet_type myfacet;
+-
+-	std::mbstate_t mystate = std::mbstate_t();
+-
+-	sOutputUtf8.clear();
+-	sOutputUtf8.reserve( pend - pbegin );
+-	bool bSqueakyClean = true;
+-
+-	const char *pmid = pbegin;
+-	while ( pmid != pend )
+-	{
+-		bool bHasError = false;
+-		bool bHasValidData = false;
+-
+-		char32_t out = 0xdeadbeef, *pout;
+-		pbegin = pmid;
+-		switch ( myfacet.in( mystate, pbegin, pend, pmid, &out, &out + 1, pout ) )
+-		{
+-		case facet_type::ok:
+-			bHasValidData = true;
+-			break;
+-
+-		case facet_type::noconv:
+-			// unexpected! always converting type
+-			bSqueakyClean = false;
+-			break;
+-
+-		case facet_type::partial:
+-			bHasError = pbegin == pmid;
+-			if ( bHasError )
+-			{
+-				bSqueakyClean = false;
+-			}
+-			else
+-			{
+-				bHasValidData = true;
+-			}
+-			break;
+-
+-		case facet_type::error:
+-			bHasError = true;
+-			bSqueakyClean = false;
+-			break;
+-		}
+-
+-		if ( bHasValidData )
+-		{
+-			// could convert back, but no need
+-			for ( const char *p = pbegin; p != pmid; ++p )
+-			{
+-				sOutputUtf8 += *p;
+-			}
+-		}
+-
+-		if ( bHasError )
+-		{
+-			sOutputUtf8 += '?';
+-		}
+-
+-		if ( pmid == pbegin )
+-		{
+-			pmid++;
+-		}
+-	}
+-
+-	return bSqueakyClean;
+-}
+-
+-//-----------------------------------------------------------------------------
+-// Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
+-//-----------------------------------------------------------------------------
+-bool RepairUTF8( const std::string & sInputUtf8, std::string & sOutputUtf8 )
+-{
+-	return RepairUTF8( sInputUtf8.data(), sInputUtf8.data() + sInputUtf8.size(), sOutputUtf8 );
+-}
++// bool RepairUTF8( const char *pbegin, const char *pend, std::string & sOutputUtf8 )
++// {
++// 	typedef std::codecvt_utf8<char32_t> facet_type;
++// 	facet_type myfacet;
++
++// 	std::mbstate_t mystate = std::mbstate_t();
++
++// 	sOutputUtf8.clear();
++// 	sOutputUtf8.reserve( pend - pbegin );
++// 	bool bSqueakyClean = true;
++
++// 	const char *pmid = pbegin;
++// 	while ( pmid != pend )
++// 	{
++// 		bool bHasError = false;
++// 		bool bHasValidData = false;
++
++// 		char32_t out = 0xdeadbeef, *pout;
++// 		pbegin = pmid;
++// 		switch ( myfacet.in( mystate, pbegin, pend, pmid, &out, &out + 1, pout ) )
++// 		{
++// 		case facet_type::ok:
++// 			bHasValidData = true;
++// 			break;
++
++// 		case facet_type::noconv:
++// 			// unexpected! always converting type
++// 			bSqueakyClean = false;
++// 			break;
++
++// 		case facet_type::partial:
++// 			bHasError = pbegin == pmid;
++// 			if ( bHasError )
++// 			{
++// 				bSqueakyClean = false;
++// 			}
++// 			else
++// 			{
++// 				bHasValidData = true;
++// 			}
++// 			break;
++
++// 		case facet_type::error:
++// 			bHasError = true;
++// 			bSqueakyClean = false;
++// 			break;
++// 		}
++
++// 		if ( bHasValidData )
++// 		{
++// 			// could convert back, but no need
++// 			for ( const char *p = pbegin; p != pmid; ++p )
++// 			{
++// 				sOutputUtf8 += *p;
++// 			}
++// 		}
++
++// 		if ( bHasError )
++// 		{
++// 			sOutputUtf8 += '?';
++// 		}
++
++// 		if ( pmid == pbegin )
++// 		{
++// 			pmid++;
++// 		}
++// 	}
++
++// 	return bSqueakyClean;
++// }
++
++// //-----------------------------------------------------------------------------
++// // Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
++// //-----------------------------------------------------------------------------
++// bool RepairUTF8( const std::string & sInputUtf8, std::string & sOutputUtf8 )
++// {
++// 	return RepairUTF8( sInputUtf8.data(), sInputUtf8.data() + sInputUtf8.size(), sOutputUtf8 );
++// }
+diff --git a/src/strtools_public.h b/src/strtools_public.h
+index 349b5b38fd387..067bbe1b1b074 100644
+--- a/src/strtools_public.h
++++ b/src/strtools_public.h
+@@ -14,6 +14,8 @@ bool StringHasPrefixCaseSensitive( const std::string & sString, const std::strin
+ bool StringHasSuffix( const std::string &sString, const std::string &sSuffix );
+ bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string &sSuffix );
+ 
++// Mozilla: see mozilla.patch for more details
++#if defined( _WIN32 )
+ /** converts a UTF-16 string to a UTF-8 string */
+ std::string UTF16to8( const wchar_t * in );
+ std::string UTF16to8( const std::wstring & in );
+@@ -22,6 +24,7 @@ std::string UTF16to8( const std::wstring & in );
+ std::wstring UTF8to16(const char * in);
+ std::wstring UTF8to16( const std::string & in );
+ #define Utf16FromUtf8 UTF8to16
++#endif
+ 
+ #if defined( _WIN32 )
+ std::string DefaultACPtoUTF8( const char *pszStr );
+@@ -69,15 +72,15 @@ inline int strnicmp( const char *pStr1, const char *pStr2, size_t unBufferLen )
+ #if defined( OSX )
+ // behaviors ensure NULL-termination at least as well as _TRUNCATE does, but
+ // wcsncpy_s/strncpy_s can non-NULL-terminate, wcslcpy/strlcpy can not.
+-inline errno_t wcsncpy_s(wchar_t *strDest, size_t numberOfElements, const wchar_t *strSource, size_t count)
+-{
+-	return wcslcpy(strDest, strSource, numberOfElements);
+-}
++// inline errno_t wcsncpy_s(wchar_t *strDest, size_t numberOfElements, const wchar_t *strSource, size_t count)
++// {
++// 	return wcslcpy(strDest, strSource, numberOfElements);
++// }
+ 
+-inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
+-{
+-	return strlcpy(strDest, strSource, numberOfElements);
+-}
++// inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
++// {
++// 	return strlcpy(strDest, strSource, numberOfElements);
++// }
+ 
+ #endif
+ 
+@@ -108,7 +111,8 @@ inline uint64_t strtoull(const char *str, char **endptr, int base) { return _str
+ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t unBufferLen );
+ 
+ /** Returns a std::string from a uint64_t */
+-std::string Uint64ToString( uint64_t ulValue );
++// Mozilla: see mozilla.patch for more details
++//std::string Uint64ToString( uint64_t ulValue );
+ 
+ /** returns a uint64_t from a string */
+ uint64_t StringToUint64( const std::string & sValue );
+diff --git a/src/vrpathregistry_public.cpp b/src/vrpathregistry_public.cpp
+index 6a7f457bbacf3..f40fc1cda1acd 100644
+--- a/src/vrpathregistry_public.cpp
++++ b/src/vrpathregistry_public.cpp
+@@ -208,7 +208,7 @@ bool CVRPathRegistry_Public::ToJsonString( std::string &sJsonString )
+ 	return true;
+ }
+ 
+-
++// Mozilla: see mozilla.patch for more details
+ // ---------------------------------------------------------------------------
+ // Purpose: Loads the config file from its well known location
+ // ---------------------------------------------------------------------------
+@@ -239,7 +239,8 @@ bool CVRPathRegistry_Public::BLoadFromFile( std::string *psLoadError )
+ 	std::istringstream istream( sRegistryContents );
+ 	std::string sErrors;
+ 
+-	try {
++// try
++	{
+ 		if ( !parseFromStream( builder, istream, &root, &sErrors ) )
+ 		{
+ 			if ( psLoadError )
+@@ -257,14 +258,14 @@ bool CVRPathRegistry_Public::BLoadFromFile( std::string *psLoadError )
+ 			ParseStringListFromJson( &m_vecExternalDrivers, root, "external_drivers" );
+ 		}
+ 	}
+-	catch ( ... )
+-	{
+-		if ( psLoadError )
+-		{
+-			*psLoadError = "Unable to parse " + sRegPath + ": exception thrown in JSON library";
+-		}
+-		return false;
+-	}
++// catch ( ... )
++// {
++// 	if ( psLoadError )
++// 	{
++// 		*psLoadError = "Unable to parse " + sRegPath + ": exception thrown in JSON library";
++// 	}
++// 	return false;
++// }
+ 
+ 	return true;
+ }

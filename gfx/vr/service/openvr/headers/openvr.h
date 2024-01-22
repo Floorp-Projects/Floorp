@@ -1934,7 +1934,7 @@ struct ImuSample_t
 
 #define VR_INTERFACE
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // figure out how to import from the VR API dll
 // #if defined(_WIN32)
 
@@ -2560,7 +2560,7 @@ namespace vr
 	{
 		IVRSettings *m_pSettings;
 	public:
-	  // Mozilla: see README.mozilla for more details
+	  // Mozilla: see mozilla.patch for more details
 		explicit CVRSettingHelper( IVRSettings *pSettings ) 
 		{ 
 			m_pSettings = pSettings; 

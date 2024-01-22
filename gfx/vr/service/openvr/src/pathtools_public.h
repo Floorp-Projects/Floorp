@@ -98,7 +98,7 @@ std::string Path_ReadTextFile( const std::string &strFilename );
 bool Path_WriteStringToTextFile( const std::string &strFilename, const char *pchData );
 bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const char *pchData );
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 /** Returns a file:// url for paths, or an http or https url if that's what was provided */
 // std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath );
 

@@ -208,7 +208,7 @@ bool CVRPathRegistry_Public::ToJsonString( std::string &sJsonString )
 	return true;
 }
 
-// Mozilla: see README.mozilla for more details
+// Mozilla: see mozilla.patch for more details
 // ---------------------------------------------------------------------------
 // Purpose: Loads the config file from its well known location
 // ---------------------------------------------------------------------------
