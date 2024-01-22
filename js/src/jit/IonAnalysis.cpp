@@ -2843,6 +2843,13 @@ bool TypeAnalyzer::propagateUnbox() {
         continue;
       }
 
+      // Ignore unbox to floating point types, because propagating boxed Int32
+      // values as Double can lead to repeated bailouts when later instructions
+      // expect Int32 inputs.
+      if (IsFloatingPointType(unbox->type())) {
+        continue;
+      }
+
       // Inspect other uses of |input| to propagate the unboxed type information
       // from |unbox|.
       for (auto uses = input->usesBegin(); uses != input->usesEnd();) {
