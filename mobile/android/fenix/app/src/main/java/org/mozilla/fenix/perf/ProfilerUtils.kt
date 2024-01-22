@@ -31,7 +31,6 @@ private val firefox_features = arrayOf(
     "java",
     "processcpu",
     "ipcmessages",
-    "java",
 )
 private val firefox_threads = arrayOf(
     "GeckoMain",
