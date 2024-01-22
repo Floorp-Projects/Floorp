@@ -260,30 +260,11 @@ add_task(async function test_defaultSearchEngine() {
       resolve
     );
   });
-  let engine = await new Promise((resolve, reject) => {
-    Services.obs.addObserver(function obs(obsSubject, obsTopic, obsData) {
-      try {
-        let searchEngine = obsSubject.QueryInterface(Ci.nsISearchEngine);
-        info("Observed " + obsData + " for " + searchEngine.name);
-        if (
-          obsData != "engine-added" ||
-          searchEngine.name != "engine-telemetry"
-        ) {
-          return;
-        }
-
-        Services.obs.removeObserver(obs, "browser-search-engine-modified");
-        resolve(searchEngine);
-      } catch (ex) {
-        reject(ex);
-      }
-    }, "browser-search-engine-modified");
-    Services.search.addOpenSearchEngine(gDataRoot + "/engine.xml", null);
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: gDataRoot + "engine.xml",
+    setAsDefault: true,
+    skipReset: true,
   });
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   await promise;
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
   let data = TelemetryEnvironment.currentEnvironment;
@@ -311,7 +292,6 @@ add_task(async function test_defaultSearchEngine() {
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
   data = TelemetryEnvironment.currentEnvironment;
   Assert.equal(data.settings.defaultSearchEngineData.origin, "invalid");
-  await Services.search.removeEngine(engine);
 
   const SEARCH_ENGINE_ID = "telemetry_default";
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;

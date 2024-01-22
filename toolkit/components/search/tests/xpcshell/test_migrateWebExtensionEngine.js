@@ -13,10 +13,11 @@ add_setup(async function () {
 });
 
 add_task(async function test_migrateLegacyEngine() {
-  await Services.search.addOpenSearchEngine(gDataUrl + "simple.xml", null);
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: gDataUrl + "simple.xml",
+  });
 
   // Modify the loadpath so it looks like a legacy plugin loadpath
-  let engine = Services.search.getEngineByName("simple");
   engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
   engine.wrappedJSObject._extensionID = null;
 
@@ -49,10 +50,11 @@ add_task(async function test_migrateLegacyEngine() {
 });
 
 add_task(async function test_migrateLegacyEngineDifferentName() {
-  await Services.search.addOpenSearchEngine(gDataUrl + "simple.xml", null);
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: gDataUrl + "simple.xml",
+  });
 
   // Modify the loadpath so it looks like an legacy plugin loadpath
-  let engine = Services.search.getEngineByName("simple");
   engine.wrappedJSObject._loadPath = `jar:[profile]/extensions/${kExtensionID}.xpi!/simple.xml`;
   engine.wrappedJSObject._extensionID = null;
 

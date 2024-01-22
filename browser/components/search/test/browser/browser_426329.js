@@ -62,65 +62,12 @@ function getMenuEntries() {
 var searchBar;
 var searchButton;
 var searchEntries = ["test"];
-function promiseSetEngine() {
-  return new Promise(resolve => {
-    let ss = Services.search;
-
-    function observer(aSub, aTopic, aData) {
-      switch (aData) {
-        case "engine-added":
-          let engine = ss.getEngineByName("Bug 426329");
-          ok(engine, "Engine was added.");
-          ss.defaultEngine = engine;
-          break;
-        case "engine-default":
-          ok(ss.defaultEngine.name == "Bug 426329", "defaultEngine set");
-          searchBar = BrowserSearch.searchBar;
-          searchButton = searchBar.querySelector(".search-go-button");
-          ok(searchButton, "got search-go-button");
-
-          Services.obs.removeObserver(
-            observer,
-            "browser-search-engine-modified"
-          );
-          resolve();
-          break;
-      }
-    }
-
-    Services.obs.addObserver(observer, "browser-search-engine-modified");
-    ss.addOpenSearchEngine(
-      "http://mochi.test:8888/browser/browser/components/search/test/browser/426329.xml",
-      "data:image/x-icon,%00"
-    );
-  });
-}
-
-function promiseRemoveEngine() {
-  return new Promise(resolve => {
-    let ss = Services.search;
-
-    function observer(aSub, aTopic, aData) {
-      if (aData == "engine-removed") {
-        Services.obs.removeObserver(observer, "browser-search-engine-modified");
-        resolve();
-      }
-    }
-
-    Services.obs.addObserver(observer, "browser-search-engine-modified");
-    let engine = ss.getEngineByName("Bug 426329");
-    ss.removeEngine(engine);
-  });
-}
-
 var preSelectedBrowser;
 var preTabNo;
-async function prepareTest() {
-  await Services.search.init();
 
+async function prepareTest() {
   preSelectedBrowser = gBrowser.selectedBrowser;
   preTabNo = gBrowser.tabs.length;
-  searchBar = BrowserSearch.searchBar;
 
   await SimpleTest.promiseFocus();
 
@@ -135,15 +82,35 @@ async function prepareTest() {
 }
 
 add_setup(async function () {
+  await Services.search.init();
+
   await gCUITestUtils.addSearchBar();
+
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: "http://mochi.test:8888/browser/browser/components/search/test/browser/426329.xml",
+    setAsDefault: true,
+  });
+
+  searchBar = BrowserSearch.searchBar;
+  searchBar.value = "test";
+  searchButton = searchBar.querySelector(".search-go-button");
+
   registerCleanupFunction(() => {
+    searchBar.value = "";
+    while (gBrowser.tabs.length != 1) {
+      gBrowser.removeTab(gBrowser.tabs[0], { animate: false });
+    }
+    BrowserTestUtils.startLoadingURIString(
+      gBrowser.selectedBrowser,
+      "about:blank",
+      {
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+          {}
+        ),
+      }
+    );
     gCUITestUtils.removeSearchBar();
   });
-});
-
-add_task(async function testSetupEngine() {
-  await promiseSetEngine();
-  searchBar.value = "test";
 });
 
 add_task(async function testReturn() {
@@ -261,7 +228,7 @@ add_task(async function testRightClick() {
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
       resolve();
-    }, 5000);
+    }, 2000);
     simulateClick({ button: 2 }, searchButton);
   });
   // The click in the searchbox focuses it, which opens the suggestion
@@ -317,23 +284,6 @@ add_task(async function testClearHistory() {
     textbox.getAttribute("autocompletesearchparam")
   );
   ok(count == 0, "History cleared");
-});
-
-add_task(async function asyncCleanup() {
-  searchBar.value = "";
-  while (gBrowser.tabs.length != 1) {
-    gBrowser.removeTab(gBrowser.tabs[0], { animate: false });
-  }
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser.selectedBrowser,
-    "about:blank",
-    {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-        {}
-      ),
-    }
-  );
-  await promiseRemoveEngine();
 });
 
 function promiseObserver(topic) {
