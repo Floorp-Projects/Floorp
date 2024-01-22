@@ -12,6 +12,8 @@
 
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
+#include "js/Wrapper.h"
+#include "proxy/DeadObjectProxy.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
@@ -216,6 +218,23 @@ JSObject* js::AsyncFunctionResolve(
     if (!AsyncFunctionThrown(cx, promise, valueOrReason)) {
       return nullptr;
     }
+  }
+  return promise;
+}
+
+JSObject* js::AsyncFunctionReject(
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue reason, HandleValue stack) {
+  MOZ_ASSERT(stack.isObjectOrNull());
+  Rooted<PromiseObject*> promise(cx, generator->promise());
+  Rooted<SavedFrame*> unwrappedRejectionStack(cx);
+  if (stack.isObject()) {
+    MOZ_ASSERT(UncheckedUnwrap(&stack.toObject())->is<SavedFrame>() ||
+               IsDeadProxyObject(&stack.toObject()));
+    unwrappedRejectionStack = stack.toObject().maybeUnwrapIf<SavedFrame>();
+  }
+  if (!AsyncFunctionThrown(cx, promise, reason, unwrappedRejectionStack)) {
+    return nullptr;
   }
   return promise;
 }

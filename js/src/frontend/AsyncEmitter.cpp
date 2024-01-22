@@ -178,18 +178,17 @@ bool AsyncEmitter::emitFinalYield() {
 }
 
 bool AsyncEmitter::emitRejectCatch() {
-  if (!rejectTryCatch_->emitCatch()) {
-    //              [stack] EXC
+  if (!rejectTryCatch_->emitCatch(TryEmitter::ExceptionStack::Yes)) {
+    //              [stack] EXC STACK
     return false;
   }
 
   if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-    //              [stack] EXC GEN
+    //              [stack] EXC STACK GEN
     return false;
   }
 
-  if (!bce_->emit2(JSOp::AsyncResolve,
-                   uint8_t(AsyncFunctionResolveKind::Reject))) {
+  if (!bce_->emit1(JSOp::AsyncReject)) {
     //              [stack] PROMISE
     return false;
   }
