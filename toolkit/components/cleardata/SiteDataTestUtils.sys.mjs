@@ -401,7 +401,8 @@ export var SiteDataTestUtils = {
           Ci.nsIClearDataService.CLEAR_EME |
           Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
           Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION |
-          Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
+          Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
+          Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE,
         resolve
       );
     });

@@ -286,6 +286,34 @@ const CookieBannerExecutedRecordCleaner = {
   },
 };
 
+// A cleaner for cleaning fingerprinting protection states.
+const FingerprintingProtectionStateCleaner = {
+  async deleteAll() {
+    Services.rfp.cleanAllRandomKeys();
+  },
+
+  async deleteByPrincipal(aPrincipal) {
+    Services.rfp.cleanRandomKeyByPrincipal(aPrincipal);
+  },
+
+  async deleteByBaseDomain(aDomain) {
+    Services.rfp.cleanRandomKeyByDomain(aDomain);
+  },
+
+  async deleteByHost(aHost, aOriginAttributesPattern) {
+    Services.rfp.cleanRandomKeyByHost(
+      aHost,
+      JSON.stringify(aOriginAttributesPattern)
+    );
+  },
+
+  async deleteByOriginAttributes(aOriginAttributesString) {
+    Services.rfp.cleanRandomKeyByOriginAttributesPattern(
+      aOriginAttributesString
+    );
+  },
+};
+
 const CertCleaner = {
   async deleteByHost(aHost, aOriginAttributes) {
     let overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
@@ -1742,6 +1770,11 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
     cleaners: [CookieBannerExecutedRecordCleaner],
+  },
+
+  {
+    flag: Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE,
+    cleaners: [FingerprintingProtectionStateCleaner],
   },
 ];
 

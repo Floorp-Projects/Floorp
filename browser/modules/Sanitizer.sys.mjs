@@ -424,14 +424,16 @@ export var Sanitizer = {
             progress,
             principalsForShutdownClearing,
             Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         } else {
           // Not on shutdown
           await clearData(
             range,
             Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
@@ -451,14 +453,16 @@ export var Sanitizer = {
             progress,
             principalsForShutdownClearing,
             Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         } else {
           // Not on shutdown
           await clearData(
             range,
             Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
+              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
           );
         }
       },
@@ -594,7 +598,8 @@ export var Sanitizer = {
             Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE |
             Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS |
             Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE |
-            Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION
+            Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION |
+            Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE
         );
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       },
