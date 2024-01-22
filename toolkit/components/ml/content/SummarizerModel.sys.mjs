@@ -13,7 +13,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
-  MLEngineParent: "resource://gre/actors/MLEngineParent.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -24,24 +23,6 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
 });
 
 export class SummarizerModel {
-  /**
-   * Summarize some text.
-   *
-   * @param {string} text
-   * @returns {Promise<string>}
-   */
-  static async summarize(text) {
-    // TODO - This will be expanded in a following patch:
-
-    // eslint-disable-next-line no-unused-vars
-    const engine = await lazy.MLEngineParent.getEngine(
-      SummarizerModel.getModel()
-    );
-
-    // Simulate summarization by cutting the text in half.
-    return text.slice(0, Math.floor(text.length / 2));
-  }
-
   /**
    * The RemoteSettingsClient that downloads the summarizer model.
    *
@@ -67,14 +48,18 @@ export class SummarizerModel {
    * Remote settings isn't available in tests, so provide mocked responses.
    */
   static mockRemoteSettings(remoteClient) {
+    lazy.console.log("Mocking remote client in SummarizerModel.");
     SummarizerModel.#remoteClient = remoteClient;
+    SummarizerModel.#modelRecord = null;
   }
 
   /**
    * Remove anything that could have been mocked.
    */
   static removeMocks() {
+    lazy.console.log("Removing mocked remote client in SummarizerModel.");
     SummarizerModel.#remoteClient = null;
+    SummarizerModel.#modelRecord = null;
   }
   /**
    * Download or load the model from remote settings.

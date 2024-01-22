@@ -372,6 +372,22 @@ let JSWINDOWACTORS = {
     },
   },
 
+  // A single process (shared with translations) that manages machine learning engines.
+  MLEngine: {
+    parent: {
+      esModuleURI: "resource://gre/actors/MLEngineParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/MLEngineChild.sys.mjs",
+      events: {
+        DOMContentLoaded: { createActor: true },
+      },
+    },
+    includeChrome: true,
+    matches: ["chrome://global/content/ml/MLEngine.html"],
+    enablePreference: "browser.ml.enable",
+  },
+
   NetError: {
     parent: {
       esModuleURI: "resource://gre/actors/NetErrorParent.sys.mjs",
