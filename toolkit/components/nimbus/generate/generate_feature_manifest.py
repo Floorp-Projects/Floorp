@@ -39,6 +39,10 @@ def validate_feature_manifest(schema_path, manifest_path, manifest):
 
             for variable, variable_def in feature_def.get("variables", {}).items():
                 set_pref = variable_def.get("setPref")
+
+                if isinstance(set_pref, dict):
+                    set_pref = set_pref.get("pref")
+
                 if set_pref is not None:
                     if set_pref in set_prefs:
                         other_feature = set_prefs[set_pref][0]

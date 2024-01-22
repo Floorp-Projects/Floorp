@@ -896,13 +896,12 @@ export class _ExperimentManager {
       // need to check if we have another enrollment for the same feature.
       const conflictingEnrollment = getConflictingEnrollment(featureId);
 
-      const prefBranch =
-        feature.manifest.isEarlyStartup ?? false ? "user" : "default";
-
       for (const [variable, value] of Object.entries(featureValue)) {
-        const prefName = feature.getSetPrefName(variable);
+        const setPref = feature.getSetPref(variable);
 
-        if (prefName) {
+        if (setPref) {
+          const { pref: prefName, branch: prefBranch } = setPref;
+
           let originalValue;
           const conflictingPref = conflictingEnrollment?.prefs?.find(
             p => p.name === prefName
@@ -935,7 +934,11 @@ export class _ExperimentManager {
 
           // An experiment takes precedence if there is already a pref set.
           if (!isRollout || !conflictingPref) {
-            prefsToSet.push({ name: prefName, value, prefBranch });
+            prefsToSet.push({
+              name: prefName,
+              value,
+              prefBranch,
+            });
           }
         }
       }
@@ -1134,7 +1137,12 @@ export class _ExperimentManager {
       }
 
       // If the variable is setting a different preference, unenroll.
-      if (variableDef.setPref !== name) {
+      const prefName =
+        typeof variableDef.setPref === "object"
+          ? variableDef.setPref.pref
+          : variableDef.setPref;
+
+      if (prefName !== name) {
         this._unenroll(enrollment, {
           reason: "pref-variable-changed",
           duringRestore: true,
