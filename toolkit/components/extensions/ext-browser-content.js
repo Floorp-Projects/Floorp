@@ -86,7 +86,7 @@ const BrowserListener = {
     for (let url of this.stylesheets) {
       windowUtils.addSheet(
         ExtensionCommon.stylesheetMap.get(url),
-        windowUtils.AGENT_SHEET
+        windowUtils.AUTHOR_SHEET
       );
     }
   },
