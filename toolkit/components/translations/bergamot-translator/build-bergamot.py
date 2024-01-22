@@ -168,7 +168,9 @@ def build_bergamot(args: ArgNamespace):
             flags = "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
 
         print("\n 🏃 Running CMake for Bergamot\n")
-        run_shell(f"emcmake cmake -DCOMPILE_WASM=on {flags} {BERGAMOT_PATH}")
+        run_shell(
+            f"emcmake cmake -DCOMPILE_WASM=on -DWORMHOLE=off {flags} {BERGAMOT_PATH}"
+        )
 
         print("\n 🏃 Building Bergamot with emmake\n")
         run_shell(f"emmake make -j {multiprocessing.cpu_count()}")
