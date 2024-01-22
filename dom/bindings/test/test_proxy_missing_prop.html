@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1863543
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1863543</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1863543">Mozilla Bug 1863543</a>
+<p id="display"></p>
+<pre id="test">
+<script>
+// Test for JIT IC guards for missing properties on the HTMLDocument DOM proxy.
+function testMissingProps() {
+  var doc = document;
+  var docProto = Object.getPrototypeOf(doc);
+
+  for (var i = 0; i < 30; i++) {
+    if (i === 15) {
+      // Add shadowing expando property.
+      doc.unusedPropName1 = 12;
+    }
+    if (i === 20) {
+      // Add prototype property.
+      docProto.unusedPropName2 = 34;
+    }
+    if (i == 25) {
+      // Add shadowing element.
+      var el = document.createElement("object");
+      el.id = "unusedPropName3";
+      document.body.appendChild(el);
+    }
+    var v1 = doc.unusedPropName1;
+    var v2 = doc.unusedPropName2;
+    var v3 = doc.unusedPropName3;
+    is(v1, i >= 15 ? 12 : undefined);
+    is(v2, i >= 20 ? 34 : undefined);
+    is(v3, i >= 25 ? el : undefined);
+  }
+}
+testMissingProps();
+</script>
+</pre>
+</body>
+</html>
