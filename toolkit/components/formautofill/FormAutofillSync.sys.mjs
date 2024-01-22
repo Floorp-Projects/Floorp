@@ -114,6 +114,19 @@ FormAutofillStore.prototype = {
       return;
     }
 
+    // Records from the remote might come from an older device. To ensure that
+    // remote records from older devices can still sync with the local records,
+    // we migrate the remote records. This enables the merging of older records
+    // with newer records.
+    //
+    // Currently, this migration is only used for converting `*-name` fields to `name` fields.
+    // The migration process involves:
+    // 1. Generating a `name` field so we don't assume the `name` field is empty, thereby
+    //    avoiding erasing its value.
+    // 2. Removing deprecated *-name fields from the remote record because the autofill storage
+    //    does not expect to see those fields.
+    this.storage.migrateRemoteRecord(remoteRecord.entry);
+
     if (await this.itemExists(remoteRecord.id)) {
       // We will never get a tombstone here, so we are updating a real record.
       await this._doUpdateRecord(remoteRecord);

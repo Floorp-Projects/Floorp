@@ -145,6 +145,9 @@ skip-if = [
   "apple_silicon", # bug 1729554
 ]
 
+["test_sync_deprecate_address_x_name_fields.js"]
+head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
+
 ["test_toOneLineAddress.js"]
 
 ["test_transformFields.js"]

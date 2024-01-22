@@ -203,23 +203,18 @@ const ADDRESS_NORMALIZE_TESTCASES = [
       name: "Timothy John Berners-Lee",
     },
     expectedResult: {
-      "given-name": "Timothy",
-      "additional-name": "John",
-      "family-name": "Berners-Lee",
+      name: "Timothy John Berners-Lee",
     },
   },
   {
     description: 'Has both "name" and split names',
     address: {
-      name: "John Doe",
-      "given-name": "Timothy",
-      "additional-name": "John",
-      "family-name": "Berners-Lee",
+      name: "Timothy John Berners-Lee",
+      "given-name": "John",
+      "family-name": "Doe",
     },
     expectedResult: {
-      "given-name": "Timothy",
-      "additional-name": "John",
-      "family-name": "Berners-Lee",
+      name: "Timothy John Berners-Lee",
     },
   },
   {
@@ -229,8 +224,38 @@ const ADDRESS_NORMALIZE_TESTCASES = [
       "given-name": "Timothy",
     },
     expectedResult: {
+      name: "John Doe",
+    },
+  },
+  {
+    description: 'Does not have "name", and has split names',
+    address: {
       "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+    },
+    expectedResult: {
+      name: "Timothy John Berners-Lee",
+    },
+  },
+  {
+    description: 'Does not have "name", and has some split names',
+    address: {
+      "given-name": "John",
       "family-name": "Doe",
+    },
+    expectedResult: {
+      name: "John Doe",
+    },
+  },
+  {
+    description: 'Does not have "name" and split names',
+    address: {
+      organization: "Mozilla",
+    },
+    expectedResult: {
+      name: undefined,
+      organization: "Mozilla",
     },
   },
 

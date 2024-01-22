@@ -27,15 +27,16 @@ const ADDRESS_TESTCASES = [
     record: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "John", // The cached name field doesn't align "given-name" but it
+      // The cached address-line1 field doesn't align "street-address" but it
       // won't be recomputed because the migration isn't invoked.
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -44,14 +45,14 @@ const ADDRESS_TESTCASES = [
     record: {
       guid: "test-guid",
       version: 99,
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
     },
     expectedResult: {
       guid: "test-guid",
       version: 99,
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -60,14 +61,14 @@ const ADDRESS_TESTCASES = [
     record: {
       guid: "test-guid",
       version: 0,
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "Timothy",
+      "address-line1": "32 Vassar Street",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -75,15 +76,15 @@ const ADDRESS_TESTCASES = [
       "The record version is omitted. The migration should be invoked.",
     record: {
       guid: "test-guid",
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "Timothy",
+      "address-line1": "32 Vassar Street",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
   },
@@ -93,15 +94,15 @@ const ADDRESS_TESTCASES = [
     record: {
       guid: "test-guid",
       version: "ABCDE",
-      "given-name": "Timothy",
-      name: "John",
+      "address-line1": "Some Address",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "Timothy",
+      "address-line1": "32 Vassar Street",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
   },
@@ -111,13 +112,13 @@ const ADDRESS_TESTCASES = [
     record: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
+      "street-address": "32 Vassar Street",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
-      "given-name": "Timothy",
-      name: "Timothy",
+      "address-line1": "32 Vassar Street",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -135,6 +136,98 @@ const ADDRESS_TESTCASES = [
       // Make sure no new fields are appended.
       version: undefined,
       name: undefined,
+    },
+  },
+
+  // Bug 1836438 - Migrate "*-name" to "name"
+  {
+    description:
+      "Migrate address - `given-name`, `additional-name`, and `family-name` should be migrated to `name`",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      name: "Timothy John Berners-Lee",
+    },
+  },
+  {
+    description: "Migrate address - `given-name` should be migrated to `name`",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      "given-name": "Timothy",
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      name: "Timothy",
+    },
+  },
+  {
+    description:
+      "Migrate address - `additional-name` should be migrated to `name`",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      "additional-name": "John",
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      name: "John",
+    },
+  },
+  {
+    description: "Migrate address - `family-name` should be migrated to `name`",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      "family-name": "Berners-Lee",
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      name: "Berners-Lee",
+    },
+  },
+  {
+    description:
+      "Migrate address - `name` should still be empty when there is no *-name fields in the record",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+    },
+  },
+  {
+    description:
+      "Migrate address - do not run migration as long as the name field exists",
+    record: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      // The cached field doesn't align "name" but it
+      // won't be recomputed because the migration isn't invoked.
+      "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+      name: "Jane",
+    },
+    expectedResult: {
+      guid: "test-guid",
+      version: ADDRESS_SCHEMA_VERSION,
+      "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+      name: "Jane",
     },
   },
 ];
