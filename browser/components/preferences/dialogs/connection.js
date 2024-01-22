@@ -83,7 +83,7 @@ var gConnectionsDialog = {
       "network.proxy.share_proxy_settings"
     );
 
-    // If the port is 0 and the proxy server is specified, focus on the port and cancel submission.
+    // If the proxy server (when specified) is invalid or the port is set to 0 then cancel submission.
     for (let prefName of ["http", "ssl", "socks"]) {
       let proxyPortPref = Preferences.get(
         "network.proxy." + prefName + "_port"
@@ -93,14 +93,21 @@ var gConnectionsDialog = {
       // all ports except the HTTP and SOCKS port
       if (
         proxyPref.value != "" &&
-        proxyPortPref.value == 0 &&
         (prefName == "http" || prefName == "socks" || !shareProxiesPref.value)
       ) {
-        document
-          .getElementById("networkProxy" + prefName.toUpperCase() + "_Port")
-          .focus();
-        event.preventDefault();
-        return;
+        if (proxyPortPref.value == 0) {
+          document
+            .getElementById("networkProxy" + prefName.toUpperCase() + "_Port")
+            .focus();
+          event.preventDefault();
+          return;
+        } else if (!Services.io.isValidHostname(proxyPref.value)) {
+          document
+            .getElementById("networkProxy" + prefName.toUpperCase())
+            .focus();
+          event.preventDefault();
+          return;
+        }
       }
     }
 

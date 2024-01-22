@@ -62,6 +62,8 @@ skip-if = ["verify && debug && (os == 'linux' || os == 'mac')"]
 
 ["browser_connection_bug388287.js"]
 
+["browser_connection_valid_hostname.js"]
+
 ["browser_containers_name_input.js"]
 
 ["browser_contentblocking.js"]

@@ -229,6 +229,14 @@ interface nsIIOService : nsISupports
     boolean hostnameIsSharedIPAddress(in nsIURI aURI);
 
     /**
+     * Checks if a hostname is valid.
+     *
+     * @param AUTF8String hostname is the hostname to validate
+     * @return true if the hostname is valid, else false
+     */
+    boolean isValidHostname(in AUTF8String hostname);
+
+    /**
      * While this is set, IOService will monitor an nsINetworkLinkService
      * (if available) and set its offline status to "true" whenever
      * isLinkUp is false.

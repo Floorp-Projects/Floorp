@@ -963,6 +963,13 @@ nsIOService::HostnameIsSharedIPAddress(nsIURI* aURI, bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsIOService::IsValidHostname(const nsACString& inHostname, bool* aResult) {
+  *aResult = net_IsValidHostName(inHostname);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsIOService::GetProtocolFlags(const char* scheme, uint32_t* flags) {
   NS_ENSURE_ARG_POINTER(scheme);
 
