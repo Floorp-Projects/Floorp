@@ -12,6 +12,7 @@ add_task(async function test_about_preferences_never_translate_site_settings() {
     cleanup,
     elements: { settingsButton },
   } = await setupAboutPreferences(LANGUAGE_PAIRS, {
+    prefs: [["browser.translations.newSettingsUI.enable", false]],
     permissionsUrls: [
       "https://example.com",
       "https://example.org",

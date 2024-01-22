@@ -120,6 +120,7 @@
   skin/classic/browser/preferences/category-search.svg         (../shared/preferences/category-search.svg)
   skin/classic/browser/preferences/category-sync.svg           (../shared/preferences/category-sync.svg)
   skin/classic/browser/preferences/containers.css              (../shared/preferences/containers.css)
+  skin/classic/browser/preferences/translations.css            (../shared/preferences/translations.css)
   skin/classic/browser/preferences/containers-dialog.css       (../shared/preferences/containers-dialog.css)
   skin/classic/browser/preferences/dialog.css                  (../shared/preferences/dialog.css)
   skin/classic/browser/preferences/fxaPairDevice.css           (../shared/preferences/fxaPairDevice.css)

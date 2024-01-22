@@ -1909,9 +1909,15 @@ var gMainPane = {
   },
 
   showTranslationsSettings() {
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/translations.xhtml"
-    );
+    if (
+      Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")
+    ) {
+      gotoPref("translations");
+    } else {
+      gSubDialog.open(
+        "chrome://browser/content/preferences/dialogs/translations.xhtml"
+      );
+    }
   },
 
   /**

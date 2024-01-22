@@ -30,7 +30,9 @@ add_task(async function test_about_preferences_manage_languages() {
       ukrainianDownload,
       ukrainianDelete,
     },
-  } = await setupAboutPreferences(LANGUAGE_PAIRS);
+  } = await setupAboutPreferences(LANGUAGE_PAIRS, {
+    prefs: [["browser.translations.newSettingsUI.enable", false]],
+  });
 
   is(
     downloadAllLabel.getAttribute("data-l10n-id"),
@@ -169,7 +171,9 @@ add_task(async function test_about_preferences_download_reject() {
     cleanup,
     remoteClients,
     elements: { document, frenchDownload },
-  } = await setupAboutPreferences(LANGUAGE_PAIRS);
+  } = await setupAboutPreferences(LANGUAGE_PAIRS, {
+    prefs: [["browser.translations.newSettingsUI.enable", false]],
+  });
 
   click(frenchDownload, "Downloading French");
 
