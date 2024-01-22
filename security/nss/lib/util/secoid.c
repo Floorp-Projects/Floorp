@@ -10,6 +10,7 @@
 #include "plhash.h"
 #include "nssrwlk.h"
 #include "nssutil.h"
+#include "secoidt.h"
 
 /* Library identity and versioning */
 
@@ -2090,6 +2091,9 @@ SECOID_Init(void)
     if (oidhash) {
         return SECSuccess; /* already initialized */
     }
+
+    /* xyber768d00 must be enabled explicitly */
+    xOids[SEC_OID_XYBER768D00].notPolicyFlags = NSS_USE_ALG_IN_SSL_KX;
 
     if (!PR_GetEnvSecure("NSS_ALLOW_WEAK_SIGNATURE_ALG")) {
         /* initialize any policy flags that are disabled by default */

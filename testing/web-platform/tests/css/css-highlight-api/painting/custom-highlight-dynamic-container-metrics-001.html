@@ -13,8 +13,6 @@
     iframe {
       width: 200px;
       height: 100px;
-      margin: 0px;
-      border: none;
     }
 
     iframe.resize {
@@ -25,12 +23,10 @@
 </head>
 <iframe id="iframe" src="resources/iframe-container.html"></iframe>
 <script>
-  let iframe = document.getElementById('iframe');
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      iframe.classList.add('resize');
-      requestAnimationFrame(() => takeScreenshot());
-    });
-  });
+  function runtest() {
+    iframe.classList.add('resize');
+    requestAnimationFrame(() => takeScreenshot());
+  }
+  iframe.onload = runtest;
 </script>
 </html>

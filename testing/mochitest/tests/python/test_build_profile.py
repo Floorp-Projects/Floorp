@@ -43,10 +43,7 @@ def profile_data_dir():
 
 
 def test_common_prefs_are_all_set(build_profile, profile_data_dir):
-    # We set e10s=False here because MochitestDesktop.buildProfile overwrites
-    # the value defined in the base profile.
-    # TODO stop setting browser.tabs.remote.autostart in the base profile
-    md, result = build_profile(e10s=False)
+    md, result = build_profile()
 
     with open(os.path.join(profile_data_dir, "profiles.json"), "r") as fh:
         base_profiles = json.load(fh)["mochitest"]

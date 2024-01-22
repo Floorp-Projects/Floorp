@@ -977,7 +977,8 @@
       aTab,
       aIconURL = "",
       aOriginalURL = aIconURL,
-      aLoadingPrincipal = null
+      aLoadingPrincipal = null,
+      aClearImageFirst = false
     ) {
       let makeString = url => (url instanceof Ci.nsIURI ? url.spec : url);
 
@@ -1001,7 +1002,9 @@
       browser.mIconURL = aIconURL;
 
       if (aIconURL != aTab.getAttribute("image")) {
-        aTab.removeAttribute("image");
+        if (aClearImageFirst) {
+          aTab.removeAttribute("image");
+        }
         if (aIconURL) {
           if (aLoadingPrincipal) {
             aTab.setAttribute("iconloadingprincipal", aLoadingPrincipal);
@@ -1010,6 +1013,7 @@
           }
           aTab.setAttribute("image", aIconURL);
         } else {
+          aTab.removeAttribute("image");
           aTab.removeAttribute("iconloadingprincipal");
         }
         this._tabAttrModified(aTab, ["image"]);

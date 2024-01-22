@@ -1,3 +1,15 @@
+1.3.14
+    . Bug fixes
+    . Allow features to be hidden (for aliases)
+    . Move to python3
+    . Rename doc files from .txt to .asc
+
+1.3.13
+    . Resolve minor spacing issue in rtl non-overlap kerning
+    . python3 for graphite.py
+    . Better fuzzing
+    . Better building on windows
+
 1.3.12
     . Graphite no longer does dumb rendering for fonts with no smarts
     . Segment caching code removed. Anything attempting to use the segment cache gets given a regular face instead

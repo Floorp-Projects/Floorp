@@ -2051,11 +2051,7 @@ def _run_desktop(
         extra_env["MOZ_CRASHREPORTER"] = "1"
 
     if disable_e10s:
-        version_file = os.path.join(
-            command_context.topsrcdir, "browser", "config", "version.txt"
-        )
-        f = open(version_file, "r")
-        extra_env["MOZ_FORCE_DISABLE_E10S"] = f.read().strip()
+        extra_env["MOZ_FORCE_DISABLE_E10S"] = "1"
 
     if disable_fission:
         extra_env["MOZ_FORCE_DISABLE_FISSION"] = "1"

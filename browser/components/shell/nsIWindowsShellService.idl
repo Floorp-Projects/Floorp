@@ -189,42 +189,6 @@ interface nsIWindowsShellService : nsISupports
    */
   void unpinShortcutFromTaskbar(in AString aShortcutPath);
 
-
-  /**
-   * Gets the full path of a taskbar tab shortcut.
-   *
-   * @param  aShortcutName
-   *         The name of the taskbar tab shortcut, excluding the file extension.
-   * @throws NS_ERROR_FAILURE
-   *         If the user token cannot be found.
-   * @throws NS_ERROR_ABORT
-   *         If converting the sid to a string fails.
-   *
-   * @return The full path of the taskbar tab shortcut
-   */
-  AString getTaskbarTabShortcutPath(in AString aShortcutName);
-
-  /*
-   * Searches the %USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start
-   * Menu\Programs folder and returns an array with the path of all
-   * shortcuts with a target matching the current Firefox install location
-   * and the -taskbar-tab argument.
-   *
-   * It is possible to return an empty array if no shortcuts are found.
-   *
-   * @return An array of paths for all taskbar tab shortcuts.
-   *
-   * @throws NS_ERROR_ABORT
-   *         if instance cannot be created.
-   * @throws NS_ERROR_FILE_NOT_FOUND
-   *         if %USERPROFILE%\AppData\Roaming\ cannot be opened.
-   * @throws NS_ERROR_FAILURE
-   *         if the executable file cannot be found.
-   * @throws NS_ERROR_FILE_UNRECOGNIZED_PATH
-   *         if the executable file cannot be converted into a string.
-   */
-  Array<AString> getTaskbarTabPins();
-
   /*
    * Determine where a given shortcut likely appears in the shell.
    *

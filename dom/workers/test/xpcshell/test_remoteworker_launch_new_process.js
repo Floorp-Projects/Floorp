@@ -28,12 +28,6 @@ server.registerPathHandler("/sw.js", (request, response) => {
 });
 
 add_task(async function setup_prefs() {
-  equal(
-    Services.prefs.getBoolPref("browser.tabs.remote.autostart"),
-    true,
-    "e10s is expected to be enabled"
-  );
-
   // Enable nsIServiceWorkerManager.registerForTest.
   Services.prefs.setBoolPref("dom.serviceWorkers.testing.enabled", true);
 
