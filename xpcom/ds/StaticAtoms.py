@@ -621,6 +621,7 @@ STATIC_ATOMS = [
     Atom("listitem", "listitem"),
     Atom("load", "load"),
     Atom("loading", "loading"),
+    Atom("touchmode", "touchmode"),
     Atom("triggeringprincipal", "triggeringprincipal"),
     Atom("localedir", "localedir"),
     Atom("localName", "local-name"),
