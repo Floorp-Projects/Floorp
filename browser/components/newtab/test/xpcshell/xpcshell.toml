@@ -30,6 +30,8 @@ skip-if = ["socketprocess_networking"] # Bug 1759035
 
 ["test_CFRMessageProvider.js"]
 
+["test_HighlightsFeed.js"]
+
 ["test_InflightAssetsMessageProvider.js"]
 
 ["test_NimbusRolloutMessageProvider.js"]
