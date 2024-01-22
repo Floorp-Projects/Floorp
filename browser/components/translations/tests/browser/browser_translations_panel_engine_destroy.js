@@ -22,7 +22,7 @@ add_task(async function test_translations_engine_destroy() {
   await assertPageIsTranslated("es", "en", runInPage);
 
   info("Destroy the engine process");
-  await TranslationsParent.destroyEngineProcess();
+  await EngineProcess.destroyTranslationsEngine();
 
   info("Mutate the page's content to re-trigger a translation.");
   await runInPage(async TranslationsTest => {
