@@ -21,15 +21,15 @@ const ADDRESS_RECONCILE_TESTCASES = [
       // So when we last wrote the record to the server, it had these values.
       guid: "2bbd2d8fbc6b",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     local: [
       {
         // The current local record - by comparing against parent we can see that
-        // only the given-name has changed locally.
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        // only the name has changed locally.
+        name: "Skip",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
@@ -38,13 +38,13 @@ const ADDRESS_RECONCILE_TESTCASES = [
       // can safely ignore the incoming record and write our local changes.
       guid: "2bbd2d8fbc6b",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     reconciled: {
       guid: "2bbd2d8fbc6b",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -52,25 +52,25 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "e3680e9f890d",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "e3680e9f890d",
       version: 1,
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
     },
     reconciled: {
       guid: "e3680e9f890d",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -78,26 +78,26 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "0cba738b1be0",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
         tel: "123456",
       },
     ],
     remote: {
       guid: "0cba738b1be0",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     reconciled: {
       guid: "0cba738b1be0",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
   },
@@ -106,26 +106,26 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "be3ef97f8285",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "be3ef97f8285",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
     reconciled: {
       guid: "be3ef97f8285",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
   },
@@ -134,27 +134,27 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "9627322248ec",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "9627322248ec",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
     reconciled: {
       guid: "9627322248ec",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -162,27 +162,27 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "7d7509f3eeb2",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
         tel: "123456",
       },
     ],
     remote: {
       guid: "7d7509f3eeb2",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     reconciled: {
       guid: "7d7509f3eeb2",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -191,17 +191,17 @@ const ADDRESS_RECONCILE_TESTCASES = [
       // The last time we wrote this to the server, country was NZ.
       guid: "e087a06dfc57",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "NZ",
       // We also had an unknown field we round-tripped
       foo: "bar",
     },
     local: [
       {
-        // The current local record - so locally we've changed given-name to Skip.
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        // The current local record - so locally we've changed name to Skip.
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         country: "NZ",
       },
     ],
@@ -209,16 +209,16 @@ const ADDRESS_RECONCILE_TESTCASES = [
       // Remotely, we've changed the country to AU.
       guid: "e087a06dfc57",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "AU",
       // This is a new unknown field that should send instead!
       "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       guid: "e087a06dfc57",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       country: "AU",
       // This is a new unknown field that should send instead!
       "unknown-1": "an unknown field from another client",
@@ -229,20 +229,20 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "340a078c596f",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
       country: "US",
     },
     local: [
       {
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         country: "US",
       },
       {
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         organization: "Mozilla",
         country: "US",
       },
@@ -250,15 +250,15 @@ const ADDRESS_RECONCILE_TESTCASES = [
     remote: {
       guid: "340a078c596f",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       tel: "123456",
       country: "AU",
     },
     reconciled: {
       guid: "340a078c596f",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       organization: "Mozilla",
       country: "AU",
     },
@@ -270,29 +270,29 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "0b3a72a1bea2",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       // unknown fields we previously roundtripped
       foo: "bar",
     },
     local: [
       {
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "0b3a72a1bea2",
       version: 1,
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       // New unknown field that should be the new round trip
       "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       guid: "0b3a72a1bea2",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -301,37 +301,37 @@ const ADDRESS_RECONCILE_TESTCASES = [
       // This is what we last wrote to the sync server.
       guid: "62068784d089",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
     local: [
       {
-        // The current version of the local record - the given-name has changed locally.
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        // The current version of the local record - the name has changed locally.
+        name: "Skip",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
-      // An incoming record has a different given-name than any of the above!
+      // An incoming record has a different name than any of the above!
       guid: "62068784d089",
       version: 1,
-      "given-name": "Kip",
-      "family-name": "Hammond",
+      name: "Kip",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
     forked: {
       // So we've forked the local record to a new GUID (and the next sync is
       // going to write this as a new record)
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       // And we've updated the local version of the record to be the remote version.
       guid: "62068784d089",
-      "given-name": "Kip",
-      "family-name": "Hammond",
+      name: "Kip",
+      "street-address": "32 Vassar Street",
       "unknown-1": "an unknown field from another client",
     },
   },
@@ -340,33 +340,33 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "244dbb692e94",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "NZ",
     },
     local: [
       {
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         country: "AU",
       },
     ],
     remote: {
       guid: "244dbb692e94",
       version: 1,
-      "given-name": "Kip",
-      "family-name": "Hammond",
+      name: "Kip",
+      "street-address": "32 Vassar Street",
       country: "CA",
     },
     forked: {
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       country: "AU",
     },
     reconciled: {
       guid: "244dbb692e94",
-      "given-name": "Kip",
-      "family-name": "Hammond",
+      name: "Kip",
+      "street-address": "32 Vassar Street",
       country: "CA",
     },
   },
@@ -375,31 +375,31 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "6fc45e03d19a",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "AU",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "6fc45e03d19a",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "NZ",
     },
     forked: {
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     reconciled: {
       guid: "6fc45e03d19a",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "NZ",
     },
   },
@@ -408,32 +408,32 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "fff9fa27fa18",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "AU",
     },
     local: [
       {
-        "given-name": "Mark",
-        "family-name": "Hammond",
+        name: "Mark Hammond",
+        "street-address": "32 Vassar Street",
         country: "NZ",
       },
     ],
     remote: {
       guid: "fff9fa27fa18",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
     forked: {
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       country: "NZ",
     },
     reconciled: {
       guid: "fff9fa27fa18",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     },
   },
   {
@@ -445,8 +445,8 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "5113f329c42f",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       timeCreated: 1234,
       timeLastModified: 5678,
       timeLastUsed: 5678,
@@ -456,8 +456,8 @@ const ADDRESS_RECONCILE_TESTCASES = [
     remote: {
       guid: "5113f329c42f",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       timeCreated: 1200,
       timeLastModified: 5700,
       timeLastUsed: 5700,
@@ -465,8 +465,8 @@ const ADDRESS_RECONCILE_TESTCASES = [
     },
     reconciled: {
       guid: "5113f329c42f",
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       timeCreated: 1200,
       timeLastModified: 5700,
       timeLastUsed: 5678,
@@ -481,8 +481,8 @@ const ADDRESS_RECONCILE_TESTCASES = [
     parent: {
       guid: "791e5608b80a",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       timeCreated: 1234,
       timeLastModified: 5678,
       timeLastUsed: 5678,
@@ -490,15 +490,15 @@ const ADDRESS_RECONCILE_TESTCASES = [
     },
     local: [
       {
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
       },
     ],
     remote: {
       guid: "791e5608b80a",
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       timeCreated: 1300,
       timeLastModified: 5000,
       timeLastUsed: 5000,
@@ -506,8 +506,8 @@ const ADDRESS_RECONCILE_TESTCASES = [
     },
     reconciled: {
       guid: "791e5608b80a",
-      "given-name": "Skip",
-      "family-name": "Hammond",
+      name: "Skip",
+      "street-address": "32 Vassar Street",
       timeCreated: 1234,
       timeLastUsed: 5678,
       timesUsed: 6,
@@ -1022,8 +1022,8 @@ add_task(async function test_reconcile_unknown_version() {
     profileStorage.addresses.reconcile({
       guid: "31d83d2725ec",
       version: 3,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
     }),
     /Got unknown record version/
   );
@@ -1037,24 +1037,24 @@ add_task(async function test_reconcile_idempotent() {
     {
       guid,
       version: 1,
-      "given-name": "Mark",
-      "family-name": "Hammond",
+      name: "Mark Hammond",
+      "street-address": "32 Vassar Street",
       // an unknown field from a previous sync
       foo: "bar",
     },
     { sourceSync: true }
   );
   await profileStorage.addresses.update(guid, {
-    "given-name": "Skip",
-    "family-name": "Hammond",
+    name: "Skip",
+    "street-address": "32 Vassar Street",
     organization: "Mozilla",
   });
 
   let remote = {
     guid,
     version: 1,
-    "given-name": "Mark",
-    "family-name": "Hammond",
+    name: "Mark Hammond",
+    "street-address": "32 Vassar Street",
     tel: "123456",
     "unknown-1": "an unknown field from another client",
   };
@@ -1069,8 +1069,8 @@ add_task(async function test_reconcile_idempotent() {
     ok(
       objectMatches(updatedRecord, {
         guid: "de1ba7b094fe",
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         organization: "Mozilla",
         tel: "123456",
         "unknown-1": "an unknown field from another client",
@@ -1089,8 +1089,8 @@ add_task(async function test_reconcile_idempotent() {
     ok(
       objectMatches(updatedRecord, {
         guid: "de1ba7b094fe",
-        "given-name": "Skip",
-        "family-name": "Hammond",
+        name: "Skip",
+        "street-address": "32 Vassar Street",
         organization: "Mozilla",
         tel: "123456",
         "unknown-1": "an unknown field from another client",
