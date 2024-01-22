@@ -3383,12 +3383,6 @@ class nsContentUtils {
                               OriginFormat aFormat = OriginFormat::Base64);
 
   /**
-   * Return true if we should hide the synthetic browsing context for <object>
-   * or <embed> images in synthetic documents.
-   */
-  static bool ShouldHideObjectOrEmbedImageDocument();
-
-  /**
    * Create and load the string bundle for the 'aFile'.
    * This API is used to preload the string bundle on the main thread so later
    * other thread could access it.

@@ -124,8 +124,7 @@ void WindowContext::AppendChildBrowsingContext(
   MOZ_DIAGNOSTIC_ASSERT(!mChildren.Contains(aBrowsingContext));
 
   mChildren.AppendElement(aBrowsingContext);
-  if (!nsContentUtils::ShouldHideObjectOrEmbedImageDocument() ||
-      !aBrowsingContext->IsEmbedderTypeObjectOrEmbed()) {
+  if (!aBrowsingContext->IsEmbedderTypeObjectOrEmbed()) {
     mNonSyntheticChildren.AppendElement(aBrowsingContext);
   }
 
@@ -153,7 +152,6 @@ void WindowContext::RemoveChildBrowsingContext(
 
 void WindowContext::UpdateChildSynthetic(BrowsingContext* aBrowsingContext,
                                          bool aIsSynthetic) {
-  MOZ_ASSERT(nsContentUtils::ShouldHideObjectOrEmbedImageDocument());
   if (aIsSynthetic) {
     mNonSyntheticChildren.RemoveElement(aBrowsingContext);
   } else {

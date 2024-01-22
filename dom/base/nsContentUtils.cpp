@@ -11276,14 +11276,6 @@ nsresult nsContentUtils::AnonymizeId(nsAString& aId,
   return NS_OK;
 }
 
-/* static */
-bool nsContentUtils::ShouldHideObjectOrEmbedImageDocument() {
-  return StaticPrefs::
-             browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup() &&
-         StaticPrefs::
-             browser_opaqueResponseBlocking_syntheticBrowsingContext_filter_AtStartup_DoNotUseDirectly();
-}
-
 void nsContentUtils::RequestGeckoTaskBurst() {
   nsCOMPtr<nsIAppShell> appShell = do_GetService(NS_APPSHELL_CID);
   if (appShell) {

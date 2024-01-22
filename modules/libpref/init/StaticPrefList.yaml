@@ -1768,16 +1768,6 @@
   value: true
   mirror: once
 
-# When this pref is enabled, <object> and <embed> elements will filter the
-# browsing contexts created for the synthetic browsing contexts for the
-# synthetic documents when browser.opaqueResponseBlocking.syntheticBrowsingContext
-# is enabled from `Window.frames`, `Window.length` and named targeting.
-- name: browser.opaqueResponseBlocking.syntheticBrowsingContext.filter
-  type: bool
-  value: true
-  mirror: once
-  do_not_use_directly: true
-
 # When true, zooming will be enabled on all sites, even ones that declare
 # user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable
