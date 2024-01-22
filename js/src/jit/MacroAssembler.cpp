@@ -33,6 +33,7 @@
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 #include "js/GCAPI.h"            // JS::AutoCheckCannotGC
 #include "js/ScalarType.h"       // js::Scalar::Type
+#include "util/Unicode.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/BoundFunctionObject.h"
@@ -1606,6 +1607,43 @@ void MacroAssembler::addToCharPtr(Register chars, Register index,
   } else {
     computeEffectiveAddress(BaseIndex(chars, index, TimesTwo), chars);
   }
+}
+
+void MacroAssembler::branchIfNotLeadSurrogate(Register src, Label* label) {
+  branch32(Assembler::Below, src, Imm32(unicode::LeadSurrogateMin), label);
+  branch32(Assembler::Above, src, Imm32(unicode::LeadSurrogateMax), label);
+}
+
+void MacroAssembler::branchSurrogate(Assembler::Condition cond, Register src,
+                                     Register scratch, Label* label,
+                                     SurrogateChar surrogateChar) {
+  // For TrailSurrogateMin ≤ x ≤ TrailSurrogateMax and
+  // LeadSurrogateMin ≤ x ≤ LeadSurrogateMax, the following equations hold.
+  //
+  //    SurrogateMin ≤ x ≤ SurrogateMax
+  // <> SurrogateMin ≤ x ≤ SurrogateMin + 2^10 - 1
+  // <> ((x - SurrogateMin) >>> 10) = 0    where >>> is an unsigned-shift
+  // See Hacker's Delight, section 4-1 for details.
+  //
+  //    ((x - SurrogateMin) >>> 10) = 0
+  // <> floor((x - SurrogateMin) / 1024) = 0
+  // <> floor((x / 1024) - (SurrogateMin / 1024)) = 0
+  // <> floor(x / 1024) = SurrogateMin / 1024
+  // <> floor(x / 1024) * 1024 = SurrogateMin
+  // <> (x >>> 10) << 10 = SurrogateMin
+  // <> x & ~(2^10 - 1) = SurrogateMin
+
+  constexpr char16_t SurrogateMask = 0xFC00;
+  char16_t SurrogateMin = surrogateChar == SurrogateChar::Lead
+                              ? unicode::LeadSurrogateMin
+                              : unicode::TrailSurrogateMin;
+
+  if (src != scratch) {
+    move32(src, scratch);
+  }
+
+  and32(Imm32(SurrogateMask), scratch);
+  branch32(cond, scratch, Imm32(SurrogateMin), label);
 }
 
 void MacroAssembler::loadStringFromUnit(Register unit, Register dest,
