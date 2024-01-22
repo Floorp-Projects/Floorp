@@ -1,7 +1,7 @@
 
 1 function with some indirect sub-type change:
 
-  [C]'function SECStatus NSS_GetAlgorithmPolicy(SECOidTag, PRUint32*)' at secoid.c:2265:1 has some indirect sub-type changes:
+  [C]'function SECStatus NSS_GetAlgorithmPolicy(SECOidTag, PRUint32*)' at secoid.c:2269:1 has some indirect sub-type changes:
     parameter 1 of type 'typedef SECOidTag' has sub-type changes:
       underlying type 'enum __anonymous_enum__' at secoidt.h:34:1 changed:
         type size hasn't changed
