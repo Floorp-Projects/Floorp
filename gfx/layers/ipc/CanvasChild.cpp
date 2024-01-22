@@ -403,7 +403,9 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
       MOZ_ASSERT(shmemPtr);
       mRecorder->RecordEvent(RecordedPrepareShmem(aTextureId));
       auto checkpoint = CreateCheckpoint();
-      mRecorder->WaitForCheckpoint(checkpoint);
+      if (NS_WARN_IF(!mRecorder->WaitForCheckpoint(checkpoint))) {
+        return nullptr;
+      }
       gfx::IntSize size = aSurface->GetSize();
       gfx::SurfaceFormat format = aSurface->GetFormat();
       auto stride = ImageDataSerializer::ComputeRGBStride(format, size.width);
@@ -422,9 +424,13 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     return nullptr;
   }
 
-  mDataSurfaceShmemAvailable = false;
   RecordEvent(RecordedGetDataForSurface(aSurface));
   auto checkpoint = CreateCheckpoint();
+  if (NS_WARN_IF(!mRecorder->WaitForCheckpoint(checkpoint))) {
+    return nullptr;
+  }
+
+  mDataSurfaceShmemAvailable = false;
   struct DataShmemHolder {
     RefPtr<ipc::SharedMemoryBasic> shmem;
     RefPtr<CanvasChild> canvasChild;
@@ -437,8 +443,6 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   RefPtr<gfx::DataSourceSurface> dataSurface =
       gfx::Factory::CreateWrappingDataSourceSurface(
           data, stride, ssSize, ssFormat, ReleaseDataShmemHolder, closure);
-
-  mRecorder->WaitForCheckpoint(checkpoint);
   return dataSurface.forget();
 }
 
