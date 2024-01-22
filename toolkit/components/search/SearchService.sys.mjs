@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/AppProvidedSearchEngine.sys.mjs",
   AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.sys.mjs",
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
+  loadAndParseOpenSearchEngine:
+    "resource://gre/modules/OpenSearchLoader.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
   PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.sys.mjs",
@@ -661,18 +663,22 @@ export class SearchService {
   }
 
   async addOpenSearchEngine(engineURL, iconURL) {
-    lazy.logConsole.debug("addEngine: Adding", engineURL);
+    lazy.logConsole.debug("addOpenSearchEngine: Adding", engineURL);
     await this.init();
+    let engine;
     try {
-      var engine = new lazy.OpenSearchEngine();
+      let engineData = await lazy.loadAndParseOpenSearchEngine(
+        Services.io.newURI(engineURL)
+      );
+      engine = new lazy.OpenSearchEngine({ engineData });
       engine._setIcon(iconURL, false);
-      await engine.install(engineURL);
     } catch (ex) {
       throw Components.Exception(
         "addEngine: Error adding engine:\n" + ex,
         ex.result || Cr.NS_ERROR_FAILURE
       );
     }
+    this.#addEngineToStore(engine);
     this.#maybeStartOpenSearchUpdateTimer();
     return engine;
   }
@@ -3435,16 +3441,6 @@ export class SearchService {
     switch (topic) {
       case lazy.SearchUtils.TOPIC_ENGINE_MODIFIED:
         switch (verb) {
-          case lazy.SearchUtils.MODIFIED_TYPE.LOADED:
-            engine = engine.QueryInterface(Ci.nsISearchEngine);
-            lazy.logConsole.debug(
-              "observe: Done installation of ",
-              engine.name
-            );
-            this.#addEngineToStore(engine.wrappedJSObject);
-            // The addition of the engine to the store always triggers an ADDED
-            // or a CHANGED notification, that will trigger the task below.
-            break;
           case lazy.SearchUtils.MODIFIED_TYPE.ADDED:
           case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
           case lazy.SearchUtils.MODIFIED_TYPE.REMOVED:

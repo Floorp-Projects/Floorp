@@ -48,6 +48,8 @@ const MOZSEARCH_LOCALNAME = "SearchPlugin";
  * @typedef {object} OpenSearchProperties
  * @property {string} name
  *   The display name of the engine.
+ * @property {nsIURI} installURL
+ *   The URL that the engine was initially loaded from.
  * @property {string} [description]
  *   The description of the engine.
  * @property {string} [queryCharset]
@@ -128,8 +130,9 @@ export async function loadAndParseOpenSearchEngine(sourceURI, lastModified) {
 
   lazy.logConsole.debug("Loading search plugin");
 
+  let engineData;
   try {
-    return processXMLDocument(xmlDocument);
+    engineData = processXMLDocument(xmlDocument);
   } catch (ex) {
     lazy.logConsole.error("parseData: Failed to init engine!", ex);
 
@@ -141,6 +144,9 @@ export async function loadAndParseOpenSearchEngine(sourceURI, lastModified) {
     }
     throw Components.Exception("", Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
   }
+
+  engineData.installURL = sourceURI;
+  return engineData;
 }
 
 /**

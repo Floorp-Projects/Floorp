@@ -27,10 +27,6 @@ add_task(async function () {
           url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
           setAsDefault: true,
         });
-        await Services.search.setDefault(
-          engine,
-          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-        );
         return engine.name;
       });
 

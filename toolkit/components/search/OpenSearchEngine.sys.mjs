@@ -48,26 +48,39 @@ export class OpenSearchEngine extends SearchEngine {
    *   The options object
    * @param {object} [options.json]
    *   An object that represents the saved JSON settings for the engine.
-   * @param {boolean} [options.shouldPersist]
-   *   A flag indicating whether the engine should be persisted to disk and made
-   *   available wherever engines are used (e.g. it can be set as the default
-   *   search engine, used for search shortcuts, etc.). Non-persisted engines
-   *   are intended for more limited or temporary use. Defaults to true.
+   * @param {OpenSearchProperties} [options.engineData]
+   *   The engine data for this search engine that will have been loaded via
+   *   `OpenSearchLoader`.
    */
   constructor(options = {}) {
     super({
-      // We don't know what this is until after it has loaded, so add a placeholder.
-      loadPath: options.json?._loadPath ?? "[opensearch]loading",
+      loadPath:
+        options.json?._loadPath ??
+        OpenSearchEngine.getAnonymizedLoadPath(
+          lazy.SearchUtils.sanitizeName(options.engineData.name),
+          options.engineData.installURL
+        ),
     });
 
-    if (options.json) {
+    if (options.engineData) {
+      this.#setEngineData(options.engineData);
+
+      // As this is a new engine, we must set the verification hash for the load
+      // path set in the constructor.
+      this.setAttr(
+        "loadPathHash",
+        lazy.SearchUtils.getVerificationHash(this._loadPath)
+      );
+
+      if (this.hasUpdates) {
+        this.#setNextUpdateTime();
+      }
+    } else {
       this._initWithJSON(options.json);
       this._updateInterval = options.json._updateInterval ?? null;
       this._updateURL = options.json._updateURL ?? null;
       this._iconUpdateURL = options.json._iconUpdateURL ?? null;
     }
-
-    this._shouldPersist = options.shouldPersist ?? true;
   }
 
   /**
@@ -82,43 +95,6 @@ export class OpenSearchEngine extends SearchEngine {
     json._updateURL = this._updateURL;
     json._iconUpdateURL = this._iconUpdateURL;
     return json;
-  }
-
-  /**
-   * Retrieves the engine data from a URI. Initializes the engine, flushes to
-   * disk, and notifies the search service once initialization is complete.
-   *
-   * @param {string|nsIURI} uri
-   *   The uri to load the search plugin from.
-   */
-  async install(uri) {
-    let loadURI =
-      uri instanceof Ci.nsIURI ? uri : lazy.SearchUtils.makeURI(uri);
-    let data = await lazy.loadAndParseOpenSearchEngine(loadURI);
-
-    this.#setEngineData(data);
-
-    this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-      lazy.SearchUtils.sanitizeName(this.name),
-      loadURI
-    );
-    this.setAttr(
-      "loadPathHash",
-      lazy.SearchUtils.getVerificationHash(this._loadPath)
-    );
-
-    if (this._shouldPersist) {
-      // Notify the search service of the successful load. It will deal with
-      // updates by checking this._engineToUpdate.
-      lazy.SearchUtils.notifyAction(
-        this,
-        lazy.SearchUtils.MODIFIED_TYPE.LOADED
-      );
-    }
-
-    if (this.hasUpdates) {
-      this.#setNextUpdateTime();
-    }
   }
 
   /**

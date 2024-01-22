@@ -207,9 +207,10 @@ add_task(async function badImage() {
   // If the bad image URI caused an exception to be thrown within ContentSearch,
   // then we'll hang waiting for the CurrentState responses triggered by the new
   // engine.  That's what we're testing, and obviously it shouldn't happen.
-  let vals = await waitForNewEngine(browser, "contentSearchBadImage.xml");
-  let engine = vals[0];
-  let finalCurrentStateMsg = vals[vals.length - 1];
+  let [engine, currentStateMsg] = await waitForNewEngine(
+    browser,
+    "contentSearchBadImage.xml"
+  );
   let expectedCurrentState = await currentStateObj();
   let expectedEngine = expectedCurrentState.engines.find(
     e => e.name == engine.name
@@ -221,7 +222,7 @@ add_task(async function badImage() {
     "Sanity check: icon of engine in expected state should be the placeholder: " +
       expectedEngine.iconData
   );
-  checkMsg(finalCurrentStateMsg, {
+  checkMsg(currentStateMsg, {
     type: "CurrentState",
     data: expectedCurrentState,
   });
@@ -237,8 +238,10 @@ add_task(
     let { browser } = await addTab();
 
     // Add the test engine that provides suggestions.
-    let vals = await waitForNewEngine(browser, "contentSearchSuggestions.xml");
-    let engine = vals[0];
+    let [engine] = await waitForNewEngine(
+      browser,
+      "contentSearchSuggestions.xml"
+    );
 
     let searchStr = "browser_ContentSearch.js-suggestions-";
 
@@ -391,40 +394,36 @@ function checkMsg(actualMsg, expectedMsgData) {
   checkArrayBuffers(actualMsg, expectedMsgData);
 }
 
-async function waitForTestMsg(browser, type, count = 1) {
+async function waitForTestMsg(browser, type) {
+  // We call SpecialPowers.spawn twice because we must let the first one
+  // complete so that the listener is added before we return from this function.
+  // In the second one, we wait for the signal that the expected message has
+  // been received.
   await SpecialPowers.spawn(
     browser,
-    [SERVICE_EVENT_TYPE, type, count],
-    (childEvent, childType, childCount) => {
-      content.eventDetails = [];
+    [SERVICE_EVENT_TYPE, type],
+    async (childEvent, childType) => {
       function listener(event) {
         if (event.detail.type != childType) {
           return;
         }
 
-        content.eventDetails.push(event.detail);
-
-        if (--childCount > 0) {
-          return;
-        }
-
+        content.eventDetails = event.detail;
         content.removeEventListener(childEvent, listener, true);
       }
+      // Ensure any previous details are cleared, so that we don't
+      // get the wrong ones by mistake.
+      content.eventDetails = undefined;
       content.addEventListener(childEvent, listener, true);
     }
   );
 
-  let donePromise = SpecialPowers.spawn(
-    browser,
-    [type, count],
-    async (childType, childCount) => {
-      await ContentTaskUtils.waitForCondition(() => {
-        return content.eventDetails.length == childCount;
-      }, "Expected " + childType + " event");
-
-      return childCount > 1 ? content.eventDetails : content.eventDetails[0];
-    }
-  );
+  let donePromise = SpecialPowers.spawn(browser, [type], async childType => {
+    await ContentTaskUtils.waitForCondition(() => {
+      return !!content.eventDetails;
+    }, "Expected " + childType + " event");
+    return content.eventDetails;
+  });
 
   return { donePromise };
 }
@@ -434,13 +433,12 @@ async function waitForNewEngine(browser, basename) {
 
   // Wait for the search events triggered by adding the new engine.
   // There are two events triggerd by engine-added and engine-loaded
-  let statePromise = await waitForTestMsg(browser, "CurrentState", 2);
+  let statePromise = await waitForTestMsg(browser, "CurrentState");
 
   let engine = await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + basename,
   });
-  let results = await statePromise.donePromise;
-  return [engine, ...results];
+  return [engine, await statePromise.donePromise];
 }
 
 async function addTab() {

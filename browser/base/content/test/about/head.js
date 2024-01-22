@@ -149,8 +149,8 @@ function promiseTabLoadEvent(tab, url) {
 }
 
 /**
- * Wait for the search engine to change. searchEngineChangeFn is a function
- * that will be called to change the search engine.
+ * Wait for the user's default search engine to change. searchEngineChangeFn is
+ * a function that will be called to change the search engine.
  */
 async function promiseContentSearchChange(browser, searchEngineChangeFn) {
   // Add an event listener manually then perform the action, rather than using
@@ -161,7 +161,7 @@ async function promiseContentSearchChange(browser, searchEngineChangeFn) {
     content._searchDetails = {
       defaultEnginesList: [],
       listener: event => {
-        if (event.detail.type == "CurrentState") {
+        if (event.detail.type == "CurrentEngine") {
           content._searchDetails.defaultEnginesList.push(
             content.wrappedJSObject.gContentSearchController.defaultEngine.name
           );
@@ -189,7 +189,8 @@ async function promiseContentSearchChange(browser, searchEngineChangeFn) {
           content._searchDetails.defaultEnginesList &&
           content._searchDetails.defaultEnginesList[
             content._searchDetails.defaultEnginesList.length - 1
-          ] == expectedEngineNameChild
+          ] == expectedEngineNameChild,
+        `Waiting for ${expectedEngineNameChild} to be set`
       );
       content.removeEventListener(
         "ContentSearchService",

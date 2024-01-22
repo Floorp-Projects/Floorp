@@ -12,6 +12,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
+  loadAndParseOpenSearchEngine:
+    "resource://gre/modules/OpenSearchLoader.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -255,9 +257,11 @@ class ProviderContextualSearch extends UrlbarProvider {
     // In cases where we don't have to create a new engine, navigation is
     // handled automatically by providing `shouldNavigate: true` in the result.
     if (result.payload.shouldAddEngine) {
-      let newEngine = new lazy.OpenSearchEngine({ shouldPersist: false });
+      let engineData = await lazy.loadAndParseOpenSearchEngine(
+        Services.io.newURI(result.payload.url)
+      );
+      let newEngine = new lazy.OpenSearchEngine({ engineData });
       newEngine._setIcon(result.payload.icon, false);
-      await newEngine.install(Services.io.newURI(result.payload.url));
       this.engines.set(result.payload.hostname, newEngine);
       const [url] = UrlbarUtils.getSearchQueryUrl(
         newEngine,
