@@ -51,7 +51,7 @@ add_task(async function test() {
       rbs.isURLInvalidMessageShown();
       rbs.isReasonNeededMessageShown();
 
-      rbs.close();
+      rbs.clickCancel();
     }
   });
 });
