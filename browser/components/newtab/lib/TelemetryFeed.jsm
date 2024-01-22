@@ -101,6 +101,17 @@ ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
   return _contextId;
 });
 
+const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
+const NEWTAB_PING_PREFS = {
+  showSearch: Glean.newtabSearch.enabled,
+  "feeds.topsites": Glean.topsites.enabled,
+  showSponsoredTopSites: Glean.topsites.sponsoredEnabled,
+  "feeds.section.topstories": Glean.pocket.enabled,
+  showSponsored: Glean.pocket.sponsoredStoriesEnabled,
+  topSitesRows: Glean.topsites.rows,
+};
+const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
+
 class TelemetryFeed {
   constructor() {
     this.sessions = new Map();
@@ -1018,73 +1029,74 @@ class TelemetryFeed {
   }
 
   _beginObservingNewtabPingPrefs() {
-    const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
-    const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
-    const NEWTAB_PING_PREFS = {
-      showSearch: Glean.newtabSearch.enabled,
-      "feeds.topsites": Glean.topsites.enabled,
-      showSponsoredTopSites: Glean.topsites.sponsoredEnabled,
-      "feeds.section.topstories": Glean.pocket.enabled,
-      showSponsored: Glean.pocket.sponsoredStoriesEnabled,
-      topSitesRows: Glean.topsites.rows,
-    };
-    const setNewtabPrefMetrics = (fullPrefName, isChanged) => {
-      const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
-      if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
-        return;
-      }
-      const metric = NEWTAB_PING_PREFS[pref];
-      switch (Services.prefs.getPrefType(fullPrefName)) {
-        case Services.prefs.PREF_BOOL:
-          metric.set(Services.prefs.getBoolPref(fullPrefName));
-          break;
+    Services.prefs.addObserver(ACTIVITY_STREAM_PREF_BRANCH, this);
 
-        case Services.prefs.PREF_INT:
-          metric.set(Services.prefs.getIntPref(fullPrefName));
-          break;
-      }
-      if (isChanged) {
-        switch (fullPrefName) {
-          case `${ACTIVITY_STREAM_PREF_BRANCH}feeds.topsites`:
-          case `${ACTIVITY_STREAM_PREF_BRANCH}showSponsoredTopSites`:
-            Glean.topsites.prefChanged.record({
-              pref_name: fullPrefName,
-              new_value: Services.prefs.getBoolPref(fullPrefName),
-            });
-            break;
-        }
-      }
-    };
-    Services.prefs.addObserver(
-      ACTIVITY_STREAM_PREF_BRANCH,
-      (subject, topic, data) => setNewtabPrefMetrics(data, true)
-    );
     for (const pref of Object.keys(NEWTAB_PING_PREFS)) {
       const fullPrefName = ACTIVITY_STREAM_PREF_BRANCH + pref;
-      setNewtabPrefMetrics(fullPrefName, false);
+      this._setNewtabPrefMetrics(fullPrefName, false);
     }
     Glean.pocket.isSignedIn.set(lazy.pktApi.isUserLoggedIn());
 
-    const setBlockedSponsorsMetrics = () => {
-      let blocklist;
-      try {
-        blocklist = JSON.parse(
-          Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
-        );
-      } catch (e) {}
-      if (blocklist) {
-        Glean.newtab.blockedSponsors.set(blocklist);
-      }
-    };
+    Services.prefs.addObserver(TOP_SITES_BLOCKED_SPONSORS_PREF, this);
+    this._setBlockedSponsorsMetrics();
+  }
 
-    Services.prefs.addObserver(
-      TOP_SITES_BLOCKED_SPONSORS_PREF,
-      setBlockedSponsorsMetrics
-    );
-    setBlockedSponsorsMetrics();
+  _stopObservingNewtabPingPrefs() {
+    Services.prefs.removeObserver(ACTIVITY_STREAM_PREF_BRANCH, this);
+    Services.prefs.removeObserver(TOP_SITES_BLOCKED_SPONSORS_PREF, this);
+  }
+
+  observe(subject, topic, data) {
+    if (data === TOP_SITES_BLOCKED_SPONSORS_PREF) {
+      this._setBlockedSponsorsMetrics();
+    } else {
+      this._setNewtabPrefMetrics(data, true);
+    }
+  }
+
+  _setNewtabPrefMetrics(fullPrefName, isChanged) {
+    const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
+    if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
+      return;
+    }
+    const metric = NEWTAB_PING_PREFS[pref];
+    switch (Services.prefs.getPrefType(fullPrefName)) {
+      case Services.prefs.PREF_BOOL:
+        metric.set(Services.prefs.getBoolPref(fullPrefName));
+        break;
+
+      case Services.prefs.PREF_INT:
+        metric.set(Services.prefs.getIntPref(fullPrefName));
+        break;
+    }
+    if (isChanged) {
+      switch (fullPrefName) {
+        case `${ACTIVITY_STREAM_PREF_BRANCH}feeds.topsites`:
+        case `${ACTIVITY_STREAM_PREF_BRANCH}showSponsoredTopSites`:
+          Glean.topsites.prefChanged.record({
+            pref_name: fullPrefName,
+            new_value: Services.prefs.getBoolPref(fullPrefName),
+          });
+          break;
+      }
+    }
+  }
+
+  _setBlockedSponsorsMetrics() {
+    let blocklist;
+    try {
+      blocklist = JSON.parse(
+        Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+      );
+    } catch (e) {}
+    if (blocklist) {
+      Glean.newtab.blockedSponsors.set(blocklist);
+    }
   }
 
   uninit() {
+    this._stopObservingNewtabPingPrefs();
+
     try {
       Services.obs.removeObserver(
         this.browserOpenNewtabStart,
