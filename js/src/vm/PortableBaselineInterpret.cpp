@@ -21,6 +21,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
+#include "builtin/String.h"
 #include "debugger/DebugAPI.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -1805,6 +1806,10 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(StringTrimResult)
   CACHEOP_CASE_UNIMPL(StringTrimStartResult)
   CACHEOP_CASE_UNIMPL(StringTrimEndResult)
+  CACHEOP_CASE_UNIMPL(LinearizeForCodePointAccess)
+  CACHEOP_CASE_UNIMPL(LoadStringAtResult)
+  CACHEOP_CASE_UNIMPL(LoadStringCodePointResult)
+  CACHEOP_CASE_UNIMPL(ToRelativeStringIndex)
   CACHEOP_CASE_UNIMPL(MathAbsInt32Result)
   CACHEOP_CASE_UNIMPL(MathAbsNumberResult)
   CACHEOP_CASE_UNIMPL(MathClz32Result)
