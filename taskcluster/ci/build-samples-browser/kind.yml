@@ -13,6 +13,7 @@ transforms:
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
+    - build-fat-aar
 
 
 job-defaults:
@@ -23,12 +24,15 @@ job-defaults:
         treeherder-group: samples-browser
     dependencies:
         external-gradle-dependencies: external-gradle-dependencies-samples-browser
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
     description: Execute Gradle tasks for component "{component}"
     fetches:
         toolchain:
             - android-sdk-linux
         external-gradle-dependencies:
             - external-gradle-dependencies.tar.xz
+        build-fat-aar:
+            - target.maven.tar.xz
     include-coverage: true
     run:
         pre-gradlew:
