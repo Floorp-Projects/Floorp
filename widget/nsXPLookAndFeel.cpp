@@ -628,7 +628,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Activecaption, 0xF0, 0xF0, 0xF4)
       COLOR(Inactivecaption, 0xF0, 0xF0, 0xF4)
       COLOR(Captiontext, 0x00, 0x00, 0x00)
-      COLOR(Inactivecaptiontext, 0x00, 0x00, 0x00)
+      // deprecated in CSS Color Level 4, same as Graytext:
+      COLOR(Inactivecaptiontext, 0x6D, 0x6D, 0x6D)
 
       // CSS 2 colors:
       COLOR(Appworkspace, 0xAB, 0xAB, 0xAB)
@@ -1263,6 +1264,10 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(Threedface) |
     // Used by input / textarea.
     BIT_FOR(Field) | BIT_FOR(Fieldtext) |
+    // Used by inactive window caption.
+    // Per spec, InactiveCaptionText should match GrayText, see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-inactivecaptiontext
+    BIT_FOR(Inactivecaptiontext) |
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
