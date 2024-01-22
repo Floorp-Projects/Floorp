@@ -2317,3 +2317,9 @@ bool IonCacheIRCompiler::emitRegExpHasCaptureGroupsResult(
     ObjOperandId regexpId, StringOperandId inputId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitLoadStringAtResult(StringOperandId strId,
+                                                Int32OperandId indexId,
+                                                bool handleOOB) {
+  MOZ_CRASH("Call ICs not used in ion");
+}

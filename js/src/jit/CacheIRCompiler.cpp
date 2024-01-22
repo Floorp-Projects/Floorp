@@ -3959,6 +3959,23 @@ bool CacheIRCompiler::emitLinearizeForCodePointAccess(
   return true;
 }
 
+bool CacheIRCompiler::emitToRelativeStringIndex(Int32OperandId indexId,
+                                                StringOperandId strId,
+                                                Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register index = allocator.useRegister(masm, indexId);
+  Register str = allocator.useRegister(masm, strId);
+  Register result = allocator.defineRegister(masm, resultId);
+
+  // If |index| is non-negative, it's an index relative to the start of the
+  // string. Otherwise it's an index relative to the end of the string.
+  masm.move32(Imm32(0), result);
+  masm.cmp32Load32(Assembler::LessThan, index, Imm32(0),
+                   Address(str, JSString::offsetOfLength()), result);
+  masm.add32(index, result);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

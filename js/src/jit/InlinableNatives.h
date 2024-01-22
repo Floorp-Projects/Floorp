@@ -140,6 +140,7 @@
   _(StringFromCharCode)                            \
   _(StringFromCodePoint)                           \
   _(StringCharAt)                                  \
+  _(StringAt)                                      \
   _(StringIncludes)                                \
   _(StringIndexOf)                                 \
   _(StringLastIndexOf)                             \
