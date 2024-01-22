@@ -1190,6 +1190,15 @@
     index: WordSized
   mir_op: true
 
+# Linearize a string before a code point access.
+- name: LinearizeForCodePointAccess
+  result_type: WordSized
+  operands:
+    str: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: true
+
 # Get uint16 character code from a string.
 - name: CharCodeAt
   result_type: WordSized
@@ -1206,8 +1215,30 @@
     index: WordSized
   num_temps: 2
 
+# Get uint32 code point from a string.
+- name: CodePointAt
+  result_type: WordSized
+  operands:
+    str: WordSized
+    index: WordSized
+  num_temps: 2
+
+# Get uint32 code point from a string. Return -1 on out-of-bounds.
+- name: CodePointAtOrNegative
+  result_type: WordSized
+  operands:
+    str: WordSized
+    index: WordSized
+  num_temps: 2
+
 # Box the input if non-negative. Otherwise return NaN.
 - name: NegativeToNaN
+  result_type: BoxedValue
+  operands:
+    input: WordSized
+
+# Box the input if non-negative. Otherwise return undefined.
+- name: NegativeToUndefined
   result_type: BoxedValue
   operands:
     input: WordSized

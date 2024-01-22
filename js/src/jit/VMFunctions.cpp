@@ -720,6 +720,16 @@ bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
   return true;
 }
 
+bool CodePointAt(JSContext* cx, HandleString str, int32_t index,
+                 uint32_t* code) {
+  char32_t codePoint;
+  if (!str->getCodePoint(cx, size_t(index), &codePoint)) {
+    return false;
+  }
+  *code = codePoint;
+  return true;
+}
+
 JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
   AutoUnsafeCallWithABI unsafe;
 

@@ -2183,7 +2183,7 @@
 
 - name: LinearizeForCodePointAccess
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     str: StringId
@@ -2210,7 +2210,7 @@
 
 - name: LoadStringCodePointResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     str: StringId
