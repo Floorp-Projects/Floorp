@@ -407,7 +407,7 @@ class SearchObserver {
 
     Services.obs.addObserver(this.observer, SearchUtils.TOPIC_ENGINE_MODIFIED);
 
-    this.timeout = setTimeout(this.handleTimeout.bind(this), 1000);
+    this.timeout = setTimeout(this.handleTimeout.bind(this), 5000);
   }
 
   get promise() {
