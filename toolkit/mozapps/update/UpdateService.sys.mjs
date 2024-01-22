@@ -21,7 +21,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
-  CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   UpdateLog: "resource://gre/modules/UpdateLog.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -5235,9 +5234,6 @@ export class CheckerService {
 
     let request = new XMLHttpRequest();
     request.open("GET", url, true);
-    request.channel.notificationCallbacks = new lazy.CertUtils.BadCertHandler(
-      false
-    );
     // Prevent the request from reading from the cache.
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to the cache.
