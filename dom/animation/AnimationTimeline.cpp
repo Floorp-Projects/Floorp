@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationTimeline.h"
+#include "mozilla/AnimationComparator.h"
 #include "mozilla/dom/Animation.h"
 
 namespace mozilla::dom {
@@ -37,7 +38,7 @@ AnimationTimeline::AnimationTimeline(nsIGlobalObject* aWindow,
 
 AnimationTimeline::~AnimationTimeline() { mAnimationOrder.clear(); }
 
-bool AnimationTimeline::Tick(TickState& aState) {
+bool AnimationTimeline::Tick() {
   bool needsTicks = false;
 
   nsTArray<Animation*> animationsToRemove;
@@ -64,7 +65,7 @@ bool AnimationTimeline::Tick(TickState& aState) {
     // Even if |animation| doesn't need future ticks, we should still
     // Tick it this time around since it might just need a one-off tick in
     // order to dispatch events.
-    animation->Tick(aState);
+    animation->Tick();
 
     if (!animation->NeedsTicks()) {
       animationsToRemove.AppendElement(animation);

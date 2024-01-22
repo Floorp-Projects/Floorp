@@ -165,9 +165,8 @@ class ScrollTimeline : public AnimationTimeline {
     // FIXME: Bug 1737927: Need to check the animation mutation observers for
     // animations with scroll timelines.
     // nsAutoAnimationMutationBatch mb(mDocument);
-    TickState state;
-    Tick(state);
-    // TODO: Do we need to synchronize scroll animations?
+
+    Tick();
   }
 
   // If the source of a ScrollTimeline is an element whose principal box does

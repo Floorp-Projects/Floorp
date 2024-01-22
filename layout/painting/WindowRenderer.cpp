@@ -195,6 +195,7 @@ bool FallbackRenderer::BeginTransaction(const nsCString& aURL) {
 void FallbackRenderer::EndTransactionWithColor(const nsIntRect& aRect,
                                                const gfx::DeviceColor& aColor) {
   mTarget->GetDrawTarget()->FillRect(Rect(aRect), ColorPattern(aColor));
+  mAnimationReadyTime = TimeStamp::Now();
 }
 
 void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
@@ -227,6 +228,7 @@ void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
                     DrawSurfaceOptions(),
                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   }
+  mAnimationReadyTime = TimeStamp::Now();
 }
 
 }  // namespace mozilla

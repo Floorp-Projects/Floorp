@@ -123,8 +123,8 @@ void CSSAnimation::PauseFromStyle() {
   }
 }
 
-void CSSAnimation::Tick(TickState& aState) {
-  Animation::Tick(aState);
+void CSSAnimation::Tick() {
+  Animation::Tick();
   QueueEvents();
 }
 
