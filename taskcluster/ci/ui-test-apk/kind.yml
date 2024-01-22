@@ -91,7 +91,7 @@ job-defaults:
                             "type": "section",
                             "text": {
                               "type": "mrkdwn",
-                              "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
+                              "text": "*Source*: <${task.payload.env.GECKO_BASE_REPOSITORY}/rev/${task.payload.env.GECKO_HEAD_REV}|Commit> :hg:"
                             }
                           },
                           {
