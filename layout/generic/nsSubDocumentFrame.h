@@ -96,6 +96,10 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   nsIDocShell* GetDocShell() const;
   nsresult BeginSwapDocShells(nsIFrame* aOther);
   void EndSwapDocShells(nsIFrame* aOther);
+
+  static void InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent);
+  static void EndSwapDocShellsForViews(nsView* aView);
+
   nsView* EnsureInnerView();
   nsPoint GetExtraOffset() const;
   nsIFrame* GetSubdocumentRootFrame();

@@ -1,0 +1,18 @@
+<!doctype html>
+<html class="reftest-wait">
+<script>
+  let loadedOnce = false;
+  function objectLoaded() {
+    let firstTime = !loadedOnce;
+    loadedOnce = true;
+    let object = document.querySelector("object");
+    if (!firstTime) {
+      document.documentElement.className = "";
+      return;
+    }
+    // The svgs used in this test are arbitrary, but should obviously match the
+    // reference and should be different from each other.
+    object.data = "243519-8.svg";
+  }
+</script>
+<object onload="objectLoaded()" type="image/svg+xml" data="315920-20.svg"></object>
