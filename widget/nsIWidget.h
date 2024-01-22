@@ -1014,6 +1014,8 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetCursor(const Cursor&) = 0;
 
+  virtual void SetCustomCursorAllowed(bool) = 0;
+
   static nsIntSize CustomCursorSize(const Cursor&);
 
   /**

@@ -701,6 +701,14 @@ void nsBaseWidget::MoveToWorkspace(const nsAString& workspaceID) {
 
 void nsBaseWidget::SetCursor(const Cursor& aCursor) { mCursor = aCursor; }
 
+void nsBaseWidget::SetCustomCursorAllowed(bool aIsAllowed) {
+  if (aIsAllowed != mCustomCursorAllowed) {
+    mCustomCursorAllowed = aIsAllowed;
+    mUpdateCursor = true;
+    SetCursor(mCursor);
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 // Window transparency methods
