@@ -328,7 +328,6 @@
   "resource://activity-stream/lib/Spotlight.jsm": "browser/components/newtab/lib/Spotlight.jsm",
   "resource://activity-stream/lib/Store.jsm": "browser/components/newtab/lib/Store.jsm",
   "resource://activity-stream/lib/SystemTickFeed.jsm": "browser/components/newtab/lib/SystemTickFeed.jsm",
-  "resource://activity-stream/lib/TelemetryFeed.jsm": "browser/components/newtab/lib/TelemetryFeed.jsm",
   "resource://activity-stream/lib/TippyTopProvider.jsm": "browser/components/newtab/lib/TippyTopProvider.jsm",
   "resource://activity-stream/lib/ToastNotification.jsm": "browser/components/newtab/lib/ToastNotification.jsm",
   "resource://activity-stream/lib/ToolbarBadgeHub.jsm": "browser/components/newtab/lib/ToolbarBadgeHub.jsm",

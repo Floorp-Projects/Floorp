@@ -15,6 +15,10 @@ const { updateAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
 
+const { TelemetryFeed, USER_PREFS_ENCODING } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -30,10 +34,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
 });
-
-const { TelemetryFeed, USER_PREFS_ENCODING } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
-);
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
   "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"

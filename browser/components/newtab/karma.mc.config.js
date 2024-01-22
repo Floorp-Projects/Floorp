@@ -101,9 +101,9 @@ module.exports = function (config) {
               branches: 33,
             },
             /**
-             * TelemetryFeed.jsm is tested via an xpcshell test
+             * TelemetryFeed.sys.mjs is tested via an xpcshell test
              */
-            "lib/TelemetryFeed.jsm": {
+            "lib/TelemetryFeed.sys.mjs": {
               statements: 10,
               lines: 10,
               functions: 9,

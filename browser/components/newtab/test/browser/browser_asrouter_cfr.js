@@ -9,8 +9,8 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
 
-const { TelemetryFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
+const { TelemetryFeed } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
 );
 
 const createDummyRecommendation = ({
