@@ -4,16 +4,7 @@
 
 browser.jar:
     content/browser/extension.css
-#ifdef XP_LINUX
-    content/browser/extension-linux-panel.css
-#endif
-#ifdef XP_MACOSX
-    content/browser/extension-mac.css
-    content/browser/extension-mac-panel.css
-#endif
-#ifdef XP_WIN
-    content/browser/extension-win-panel.css
-#endif
+    content/browser/extension-popup-panel.css
     content/browser/ext-browser.json
     content/browser/parent/ext-bookmarks.js (parent/ext-bookmarks.js)
     content/browser/parent/ext-browser.js (parent/ext-browser.js)
