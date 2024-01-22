@@ -1642,7 +1642,7 @@ void NativeKey::InitWithKeyOrChar() {
                  "The high surrogate input is discarded",
                  this));
       }
-    } else {
+    } else if (!mFollowingCharMsgs.IsEmpty()) {
       MOZ_LOG(gKeyLog, LogLevel::Warning,
               ("%p   NativeKey::InitWithKeyOrChar(), there is pending "
                "high surrogate input, but received 2 or more character input.  "
@@ -3439,7 +3439,7 @@ void NativeKey::ComputeInputtingStringWithKeyboardLayout() {
   mShiftedLatinChar = mUnshiftedLatinChar = 0;
 
   // XXX How about when Win key is pressed?
-  if (mModKeyState.IsControl() == mModKeyState.IsAlt()) {
+  if (!mModKeyState.IsControl() && !mModKeyState.IsAlt()) {
     return;
   }
 
