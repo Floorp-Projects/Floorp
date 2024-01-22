@@ -234,7 +234,14 @@ void CanvasTranslator::AddBuffer(ipc::SharedMemoryBasic::Handle&& aBufferHandle,
     return;
   }
 
-  MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
+  if (mHeader->readerState != State::Paused) {
+    gfxCriticalNote << "CanvasTranslator::AddBuffer bad state "
+                    << uint32_t(State(mHeader->readerState));
+    MOZ_DIAGNOSTIC_ASSERT(false, "mHeader->readerState == State::Paused");
+    Deactivate();
+    return;
+  }
+
   MOZ_ASSERT(mDefaultBufferSize != 0);
 
   // Check and signal the writer when we finish with a buffer, because it
