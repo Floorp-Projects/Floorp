@@ -460,7 +460,7 @@ export class TranslationsParent extends JSWindowActorParent {
     if (!lazy.automaticallyPopupPref) {
       return;
     }
-    if (lazy.BrowserHandler.kiosk) {
+    if (lazy.BrowserHandler?.kiosk) {
       // Pop-ups should not be shown in kiosk mode.
       return;
     }
