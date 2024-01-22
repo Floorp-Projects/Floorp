@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/StaticRangeBinding.h"
+#include "nsContentUtils.h"
 #include "nsINode.h"
 
 namespace mozilla::dom {
@@ -92,6 +93,15 @@ already_AddRefed<StaticRange> StaticRange::Create(
 
 StaticRange::~StaticRange() {
   DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr);
+}
+
+bool StaticRange::IsValid() const {
+  if (!mStart.IsSetAndValid() || !mEnd.IsSetAndValid()) {
+    return false;
+  }
+
+  const Maybe<int32_t> pointOrder = nsContentUtils::ComparePoints(mStart, mEnd);
+  return pointOrder.isSome() && *pointOrder <= 0;
 }
 
 template <typename SPT, typename SRT, typename EPT, typename ERT>
