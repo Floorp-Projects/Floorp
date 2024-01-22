@@ -208,7 +208,11 @@ function Substring(str, from, length) {
     "coercing |length| into int32 should not change the value"
   );
 
-  return SubstringKernel(str, from | 0, length | 0);
+  return SubstringKernel(
+    str,
+    std_Math_max(from, 0) | 0,
+    std_Math_max(length, 0) | 0
+  );
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.14.

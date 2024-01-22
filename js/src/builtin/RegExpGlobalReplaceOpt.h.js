@@ -77,7 +77,7 @@ function FUNC_NAME(
 
       // Steps 15.c-f.
       lastIndex = RegExpSearcherLastLimit(S);
-      var matched = SubstringKernel(S, position, lastIndex - position);
+      var matched = Substring(S, position, lastIndex - position);
       matchLength = matched.length;
 
       // Steps 15.g-l.
