@@ -285,122 +285,6 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
   nsImageLoadingContent::Destroy();
 }
 
-void nsObjectLoadingContent::GetPluginAttributes(
-    nsTArray<MozPluginParameter>& aAttributes) {
-  aAttributes = mCachedAttributes.Clone();
-}
-
-void nsObjectLoadingContent::GetPluginParameters(
-    nsTArray<MozPluginParameter>& aParameters) {
-  aParameters = mCachedParameters.Clone();
-}
-
-void nsObjectLoadingContent::GetNestedParams(
-    nsTArray<MozPluginParameter>& aParameters) {
-  nsCOMPtr<Element> ourElement =
-      do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
-
-  nsCOMPtr<nsIHTMLCollection> allParams;
-  constexpr auto xhtml_ns = u"http://www.w3.org/1999/xhtml"_ns;
-  ErrorResult rv;
-  allParams = ourElement->GetElementsByTagNameNS(xhtml_ns, u"param"_ns, rv);
-  if (rv.Failed()) {
-    return;
-  }
-  MOZ_ASSERT(allParams);
-
-  uint32_t numAllParams = allParams->Length();
-  for (uint32_t i = 0; i < numAllParams; i++) {
-    RefPtr<Element> element = allParams->Item(i);
-
-    nsAutoString name;
-    element->GetAttr(nsGkAtoms::name, name);
-
-    if (name.IsEmpty()) continue;
-
-    nsCOMPtr<nsIContent> parent = element->GetParent();
-    RefPtr<HTMLObjectElement> objectElement;
-    while (!objectElement && parent) {
-      objectElement = HTMLObjectElement::FromNode(parent);
-      parent = parent->GetParent();
-    }
-
-    if (objectElement) {
-      parent = objectElement;
-    } else {
-      continue;
-    }
-
-    if (parent == ourElement) {
-      MozPluginParameter param;
-      element->GetAttr(nsGkAtoms::name, param.mName);
-      element->GetAttr(nsGkAtoms::value, param.mValue);
-
-      param.mName.Trim(" \n\r\t\b", true, true, false);
-      param.mValue.Trim(" \n\r\t\b", true, true, false);
-
-      aParameters.AppendElement(param);
-    }
-  }
-}
-
-nsresult nsObjectLoadingContent::BuildParametersArray() {
-  if (mCachedAttributes.Length() || mCachedParameters.Length()) {
-    MOZ_ASSERT(false, "Parameters array should be empty.");
-    return NS_OK;
-  }
-
-  nsCOMPtr<Element> element =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  for (uint32_t i = 0; i != element->GetAttrCount(); i += 1) {
-    MozPluginParameter param;
-    const nsAttrName* attrName = element->GetAttrNameAt(i);
-    nsAtom* atom = attrName->LocalName();
-    element->GetAttr(attrName->NamespaceID(), atom, param.mValue);
-    atom->ToString(param.mName);
-    mCachedAttributes.AppendElement(param);
-  }
-
-  nsAutoCString wmodeOverride;
-  Preferences::GetCString("plugins.force.wmode", wmodeOverride);
-
-  for (uint32_t i = 0; i < mCachedAttributes.Length(); i++) {
-    if (!wmodeOverride.IsEmpty() &&
-        mCachedAttributes[i].mName.EqualsIgnoreCase("wmode")) {
-      CopyASCIItoUTF16(wmodeOverride, mCachedAttributes[i].mValue);
-      wmodeOverride.Truncate();
-    }
-  }
-
-  if (!wmodeOverride.IsEmpty()) {
-    MozPluginParameter param;
-    param.mName = u"wmode"_ns;
-    CopyASCIItoUTF16(wmodeOverride, param.mValue);
-    mCachedAttributes.AppendElement(param);
-  }
-
-  // Some plugins were never written to understand the "data" attribute of the
-  // OBJECT tag. Real and WMP will not play unless they find a "src" attribute,
-  // see bug 152334. Nav 4.x would simply replace the "data" with "src". Because
-  // some plugins correctly look for "data", lets instead copy the "data"
-  // attribute and add another entry to the bottom of the array if there isn't
-  // already a "src" specified.
-  if (element->IsHTMLElement(nsGkAtoms::object) &&
-      !element->HasAttr(nsGkAtoms::src)) {
-    MozPluginParameter param;
-    element->GetAttr(nsGkAtoms::data, param.mValue);
-    if (!param.mValue.IsEmpty()) {
-      param.mName = u"SRC"_ns;
-      mCachedAttributes.AppendElement(param);
-    }
-  }
-
-  GetNestedParams(mCachedParameters);
-
-  return NS_OK;
-}
-
 void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
   // XXX(johns): We cannot touch plugins or run arbitrary script from this call,
   //             as Document is in a non-reentrant state.
@@ -1427,12 +1311,6 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   /// Attempt to load new type
   ///
 
-  // Cache the current attributes and parameters.
-  if (mType == eType_Null) {
-    rv = BuildParametersArray();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // We don't set mFinalListener until OnStartRequest has been called, to
   // prevent re-entry ugliness with CloseChannel()
   nsCOMPtr<nsIStreamListener> finalListener;
@@ -1813,9 +1691,6 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
   mScriptRequested = false;
 
   mIsStopping = false;
-
-  mCachedAttributes.Clear();
-  mCachedParameters.Clear();
 
   mSubdocumentIntrinsicSize.reset();
   mSubdocumentIntrinsicRatio.reset();

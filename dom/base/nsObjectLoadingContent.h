@@ -32,7 +32,6 @@ namespace mozilla::dom {
 struct BindContext;
 template <typename T>
 class Sequence;
-struct MozPluginParameter;
 class HTMLIFrameElement;
 template <typename T>
 struct Nullable;
@@ -81,21 +80,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   void SetIsNetworkCreated(bool aNetworkCreated) {
     mNetworkCreated = aNetworkCreated;
   }
-
-  /**
-   * When the object is loaded, the attributes and all nested <param>
-   * elements are cached as name:value string pairs to be passed as
-   * parameters when instantiating the plugin.
-   *
-   * Note: these cached values can be overriden for different quirk cases.
-   */
-  // Returns the cached attributes array.
-  void GetPluginAttributes(
-      nsTArray<mozilla::dom::MozPluginParameter>& aAttributes);
-
-  // Returns the cached <param> array.
-  void GetPluginParameters(
-      nsTArray<mozilla::dom::MozPluginParameter>& aParameters);
 
   /**
    * Notify this class the document state has changed
@@ -288,22 +272,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
     // ContentType
     eParamContentTypeChanged = 1u << 2
   };
-
-  /**
-   * Getter for child <param> elements that are not nested in another plugin
-   * dom element.
-   * This is an internal helper function and should not be used directly for
-   * passing parameters to the plugin instance.
-   *
-   * See GetPluginParameters and GetPluginAttributes, which also handle
-   * quirk-overrides.
-   *
-   * @param aParameters     The array containing pairs of name/value strings
-   *                        from nested <param> objects.
-   */
-  void GetNestedParams(nsTArray<mozilla::dom::MozPluginParameter>& aParameters);
-
-  [[nodiscard]] nsresult BuildParametersArray();
 
   /**
    * Configure fallback for deprecated plugin and broken elements.
@@ -535,9 +503,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   bool mRewrittenYoutubeEmbed : 1;
 
   bool mLoadingSyntheticDocument : 1;
-
-  nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
-  nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
 
   // The intrinsic size and aspect ratio from a child SVG document that
   // we should use.  These are only set when we are an <object> or <embed>
