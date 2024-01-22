@@ -624,8 +624,7 @@ bool FunctionScriptEmitter::emitEndBody() {
         return false;
       }
 
-      if (!bce_->emit2(JSOp::AsyncResolve,
-                       uint8_t(AsyncFunctionResolveKind::Fulfill))) {
+      if (!bce_->emit1(JSOp::AsyncResolve)) {
         //          [stack] PROMISE
         return false;
       }

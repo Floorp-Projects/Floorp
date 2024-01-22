@@ -8,11 +8,10 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "frontend/BytecodeEmitter.h"     // BytecodeEmitter
-#include "frontend/NameOpEmitter.h"       // NameOpEmitter
-#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
-#include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
-#include "vm/Opcodes.h"                   // JSOp
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/NameOpEmitter.h"    // NameOpEmitter
+#include "frontend/ParserAtom.h"       // TaggedParserAtomIndex
+#include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
 using namespace js::frontend;
@@ -153,8 +152,7 @@ bool AsyncEmitter::emitFinalYield() {
     return false;
   }
 
-  if (!bce_->emit2(JSOp::AsyncResolve,
-                   uint8_t(AsyncFunctionResolveKind::Fulfill))) {
+  if (!bce_->emit1(JSOp::AsyncResolve)) {
     //              [stack] PROMISE
     return false;
   }

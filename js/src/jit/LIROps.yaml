@@ -3449,7 +3449,7 @@
   result_type: WordSized
   operands:
     generator: WordSized
-    valueOrReason: BoxedValue
+    value: BoxedValue
   call_instruction: true
   mir_op: true
 
