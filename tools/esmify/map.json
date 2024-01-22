@@ -302,7 +302,6 @@
   "resource://activity-stream/lib/FaviconFeed.jsm": "browser/components/newtab/lib/FaviconFeed.jsm",
   "resource://activity-stream/lib/FeatureCalloutMessages.jsm": "browser/components/newtab/lib/FeatureCalloutMessages.jsm",
   "resource://activity-stream/lib/FilterAdult.jsm": "browser/components/newtab/lib/FilterAdult.jsm",
-  "resource://activity-stream/lib/HighlightsFeed.jsm": "browser/components/newtab/lib/HighlightsFeed.jsm",
   "resource://activity-stream/lib/InfoBar.jsm": "browser/components/newtab/lib/InfoBar.jsm",
   "resource://activity-stream/lib/LinksCache.jsm": "browser/components/newtab/lib/LinksCache.jsm",
   "resource://activity-stream/lib/MomentsPageHub.jsm": "browser/components/newtab/lib/MomentsPageHub.jsm",

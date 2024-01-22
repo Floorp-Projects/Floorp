@@ -15,7 +15,7 @@ import { TelemetryFeed } from "lib/TelemetryFeed.sys.mjs";
 import { FaviconFeed } from "lib/FaviconFeed.jsm";
 import { TopSitesFeed } from "lib/TopSitesFeed.jsm";
 import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
-import { HighlightsFeed } from "lib/HighlightsFeed.jsm";
+import { HighlightsFeed } from "lib/HighlightsFeed.sys.mjs";
 import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
 
 import { LinksCache } from "lib/LinksCache.sys.mjs";
