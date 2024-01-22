@@ -625,8 +625,10 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       // Titlebar colors
       COLOR(Activeborder, 0xB4, 0xB4, 0xB4)
       COLOR(Inactiveborder, 0xB4, 0xB4, 0xB4)
-      COLOR(Activecaption, 0xF0, 0xF0, 0xF4)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Activecaption, 0xFF, 0xFF, 0xFF)
       COLOR(Inactivecaption, 0xF0, 0xF0, 0xF4)
+      // deprecated in CSS Color Level 4, same as Canvastext/Windowtext:
       COLOR(Captiontext, 0x00, 0x00, 0x00)
       // deprecated in CSS Color Level 4, same as Graytext:
       COLOR(Inactivecaptiontext, 0x6D, 0x6D, 0x6D)
@@ -655,6 +657,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Highlight, 0x33, 0x99, 0xFF)
       COLOR(Highlighttext, 0xFF, 0xFF, 0xFF)
       COLOR(Infobackground, 0xFF, 0xFF, 0xE1)
+      // deprecated in CSS Color Level 4, same as Canvastext/Windowtext:
       COLOR(Infotext, 0x00, 0x00, 0x00)
       // deprecated in CSS Color Level 4, same as Canvas/Window:
       COLOR(Menu, 0xFF, 0xFF, 0xFF)
@@ -1274,15 +1277,19 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(Inactivecaptiontext) |
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
-    // Per spec, AppWorkspace, Background, Menu, Scrollbar should match
-    // Canvas/Window,
-    // see
+    // Per spec, Activecaption, AppWorkspace, Background, Menu, Scrollbar should
+    // match Canvas/Window, see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-activecaptiontext,
     // https://drafts.csswg.org/css-color-4/#valdef-color-appworkspace,
     // https://drafts.csswg.org/css-color-4/#valdef-color-background,
     // https://drafts.csswg.org/css-color-4/#valdef-color-menu, and
     // https://drafts.csswg.org/css-color-4/#valdef-color-scrollbar
-    BIT_FOR(Appworkspace) | BIT_FOR(Background) | BIT_FOR(Menu) |
-    BIT_FOR(Scrollbar) |
+    BIT_FOR(Activecaption) | BIT_FOR(Appworkspace) | BIT_FOR(Background) |
+    BIT_FOR(Menu) | BIT_FOR(Scrollbar) |
+    // Per spec, CaptionText and InfoText should match CanvasText/WindowText,
+    // see https://drafts.csswg.org/css-color-4/#valdef-color-captiontext and
+    // https://drafts.csswg.org/css-color-4/#valdef-color-infotext
+    BIT_FOR(Captiontext) | BIT_FOR(Infotext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
     // Also, per spec, these should match Canvas/CanvasText, see
     // https://drafts.csswg.org/css-color-4/#valdef-color-window and
