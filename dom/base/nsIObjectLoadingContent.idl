@@ -27,7 +27,6 @@ interface nsIObjectLoadingContent : nsISupports
    * See notes in nsObjectLoadingContent.h
    */
   const unsigned long TYPE_LOADING     = 0;
-  const unsigned long TYPE_IMAGE       = 1;
   const unsigned long TYPE_FALLBACK    = 2;
   const unsigned long TYPE_FAKE_PLUGIN = 3;
   const unsigned long TYPE_DOCUMENT    = 4;

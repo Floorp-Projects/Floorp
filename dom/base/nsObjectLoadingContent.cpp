@@ -252,13 +252,11 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
 void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
   nsImageLoadingContent::UnbindFromTree(aNullParent);
 
-  if (mType != eType_Image) {
-    // nsImageLoadingContent handles the image case.
-    // Reset state and clear pending events
-    /// XXX(johns): The implementation for GenericFrame notes that ideally we
-    ///             would keep the docshell around, but trash the frameloader
-    UnloadObject();
-  }
+  // nsImageLoadingContent handles the image case.
+  // Reset state and clear pending events
+  /// XXX(johns): The implementation for GenericFrame notes that ideally we
+  ///             would keep the docshell around, but trash the frameloader
+  UnloadObject();
 }
 
 nsObjectLoadingContent::nsObjectLoadingContent()
@@ -826,9 +824,6 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
 
   nsContentPolicyType objectType;
   switch (mType) {
-    case eType_Image:
-      objectType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
-      break;
     case eType_Document:
       objectType = nsIContentPolicy::TYPE_DOCUMENT;
       break;
@@ -1274,15 +1269,8 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     return NS_OK;
   }
 
-  if (doc->IsLoadedAsData() && !doc->IsStaticDocument()) {
+  if (doc->IsLoadedAsData() || doc->IsStaticDocument()) {
     return NS_OK;
-  }
-  if (doc->IsStaticDocument()) {
-    // We only allow image loads in static documents, but we need to let the
-    // eType_Loading state go through too while we do so.
-    if (mType != eType_Image && mType != eType_Loading) {
-      return NS_OK;
-    }
   }
 
   LOG(("OBJLC [%p]: LoadObject called, notify %u, forceload %u, channel %p",
@@ -1449,17 +1437,6 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   // prevent re-entry ugliness with CloseChannel()
   nsCOMPtr<nsIStreamListener> finalListener;
   switch (mType) {
-    case eType_Image:
-      if (!mChannel) {
-        // We have a LoadImage() call, but UpdateObjectParameters requires a
-        // channel for images, so this is not a valid state.
-        MOZ_ASSERT_UNREACHABLE("Attempting to load image without a channel?");
-        rv = NS_ERROR_UNEXPECTED;
-        break;
-      }
-      rv = LoadImageWithChannel(mChannel, getter_AddRefs(finalListener));
-      // finalListener will receive OnStartRequest below
-      break;
     case eType_Document: {
       if (!mChannel) {
         // We could mFrameLoader->LoadURI(mURI), but UpdateObjectParameters
@@ -1850,10 +1827,9 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
        aOldType, mType, aNotify));
 
   dom::Element* thisEl = AsContent()->AsElement();
-  if (mType != eType_Image) {
-    // Non-images are always not broken.
-    thisEl->RemoveStates(ElementState::BROKEN, aNotify);
-  }
+  // Non-images are always not broken.
+  // XXX: I assume we could just remove this completely?
+  thisEl->RemoveStates(ElementState::BROKEN, aNotify);
 
   if (mType == aOldType) {
     return;
