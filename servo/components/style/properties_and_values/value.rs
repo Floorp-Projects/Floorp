@@ -205,8 +205,6 @@ impl SpecifiedValue {
             return Err(());
         };
 
-        // TODO(zrhoffman, bug 1856522): All font-* properties should already be applied before
-        // computing the value of the registered custom property.
         let value = value.to_computed_value(context);
         Ok(value.to_var(url_data))
     }
