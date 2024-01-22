@@ -79,6 +79,7 @@
 #include "nsILoadInfo.h"
 #include "nsIObserverService.h"
 #include "nsIRandomGenerator.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIUserIdleService.h"
 #include "nsIWebProgressListener.h"
 #include "nsIXULAppInfo.h"
@@ -301,18 +302,25 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
   if (strcmp(LAST_PB_SESSION_EXITED_TOPIC, aTopic) == 0) {
     // Clear the private session key when the private session ends so that we
     // can generate a new key for the new private session.
-    ClearSessionKey(true);
+    OriginAttributesPattern pattern;
+    pattern.mPrivateBrowsingId.Construct(1);
+    ClearBrowsingSessionKey(pattern);
   }
 
   if (!strcmp(OBSERVER_TOPIC_IDLE_DAILY, aTopic)) {
     if (StaticPrefs::
             privacy_resistFingerprinting_randomization_daily_reset_enabled()) {
-      ClearSessionKey(false);
+      OriginAttributesPattern pattern;
+      pattern.mPrivateBrowsingId.Construct(
+          nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID);
+      ClearBrowsingSessionKey(pattern);
     }
 
     if (StaticPrefs::
             privacy_resistFingerprinting_randomization_daily_reset_private_enabled()) {
-      ClearSessionKey(true);
+      OriginAttributesPattern pattern;
+      pattern.mPrivateBrowsingId.Construct(1);
+      ClearBrowsingSessionKey(pattern);
     }
   }
 
@@ -1122,15 +1130,19 @@ bool nsRFPService::GetSpoofedKeyCode(const dom::Document* aDoc,
 // ============================================================================
 // ============================================================================
 // Randomization Stuff
-nsresult nsRFPService::EnsureSessionKey(bool aIsPrivate) {
+nsresult nsRFPService::GetBrowsingSessionKey(
+    const OriginAttributes& aOriginAttributes, nsID& aBrowsingSessionKey) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  nsAutoCString oaSuffix;
+  aOriginAttributes.CreateSuffix(oaSuffix);
+
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Info,
-          ("Ensure the session key for %s browsing session\n",
-           aIsPrivate ? "private" : "normal"));
+          ("Get the browsing session key for the originAttributes: %s\n",
+           oaSuffix.get()));
 
   // If any fingerprinting randomization protection is enabled, we generate the
-  // session key.
+  // browsing session key.
   // Note that there is only canvas randomization protection currently.
   if (!nsContentUtils::ShouldResistFingerprinting(
           "Checking the target activation globally without local context",
@@ -1138,34 +1150,41 @@ nsresult nsRFPService::EnsureSessionKey(bool aIsPrivate) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Maybe<nsID>& sessionKey =
-      aIsPrivate ? mPrivateBrowsingSessionKey : mBrowsingSessionKey;
+  Maybe<nsID> sessionKey = mBrowsingSessionKeys.MaybeGet(oaSuffix);
 
   // The key has been generated, bail out earlier.
   if (sessionKey) {
-    MOZ_LOG(
-        gResistFingerprintingLog, LogLevel::Info,
-        ("The %s session key exists: %s\n", aIsPrivate ? "private" : "normal",
-         sessionKey.ref().ToString().get()));
+    MOZ_LOG(gResistFingerprintingLog, LogLevel::Info,
+            ("The browsing session key exists: %s\n",
+             sessionKey.ref().ToString().get()));
+    aBrowsingSessionKey = sessionKey.ref();
     return NS_OK;
   }
 
-  sessionKey.emplace(nsID::GenerateUUID());
+  nsID& newKey =
+      mBrowsingSessionKeys.InsertOrUpdate(oaSuffix, nsID::GenerateUUID());
 
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
-          ("Generated %s session key: %s\n", aIsPrivate ? "private" : "normal",
-           sessionKey.ref().ToString().get()));
+          ("Generated browsing session key: %s\n", newKey.ToString().get()));
+  aBrowsingSessionKey = newKey;
 
   return NS_OK;
 }
 
-void nsRFPService::ClearSessionKey(bool aIsPrivate) {
+void nsRFPService::ClearBrowsingSessionKey(
+    const OriginAttributesPattern& aPattern) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  Maybe<nsID>& sessionKey =
-      aIsPrivate ? mPrivateBrowsingSessionKey : mBrowsingSessionKey;
+  for (auto iter = mBrowsingSessionKeys.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString key(iter.Key());
+    OriginAttributes attrs;
+    Unused << attrs.PopulateFromSuffix(key);
 
-  sessionKey.reset();
+    // Remove the entry if the origin attributes pattern matches
+    if (aPattern.Matches(attrs)) {
+      iter.Remove();
+    }
+  }
 }
 
 // static
@@ -1184,16 +1203,28 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
 
   nsCOMPtr<nsIURI> topLevelURI;
   Unused << aChannel->GetURI(getter_AddRefs(topLevelURI));
-  bool isPrivate = NS_UsePrivateBrowsing(aChannel);
 
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
-          ("Generating %s randomization key for top-level URI: %s\n",
-           isPrivate ? "private" : "normal",
+          ("Generating the randomization key for top-level URI: %s\n",
            topLevelURI->GetSpecOrDefault().get()));
 
   RefPtr<nsRFPService> service = GetOrCreate();
 
-  if (NS_FAILED(service->EnsureSessionKey(isPrivate))) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  OriginAttributes attrs = loadInfo->GetOriginAttributes();
+
+  // Set the partitionKey using the top level URI to ensure that the key is
+  // specific to the top level site.
+  attrs.SetPartitionKey(topLevelURI);
+
+  nsAutoCString oaSuffix;
+  attrs.CreateSuffix(oaSuffix);
+
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
+          ("Get the key using OriginAttributes: %s\n", oaSuffix.get()));
+
+  nsID sessionKey = {};
+  if (NS_FAILED(service->GetBrowsingSessionKey(attrs, sessionKey))) {
     return Nothing();
   }
 
@@ -1206,16 +1237,7 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
           aChannel, RFPTarget::CanvasRandomization)) {
     return Nothing();
   }
-
-  const nsID& sessionKey = isPrivate ? service->mPrivateBrowsingSessionKey.ref()
-                                     : service->mBrowsingSessionKey.ref();
-
   auto sessionKeyStr = sessionKey.ToString();
-
-  // Using the OriginAttributes to get the site from the top-level URI. The site
-  // is composed of scheme, host, and port.
-  OriginAttributes attrs;
-  attrs.SetPartitionKey(topLevelURI);
 
   // Generate the key by using the hMAC. The key is based on the session key and
   // the partitionKey, i.e. top-level site.
@@ -1228,6 +1250,8 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
     return Nothing();
   }
 
+  // Using the OriginAttributes to get the top level site. The site is composed
+  // of scheme, host, and port.
   NS_ConvertUTF16toUTF8 topLevelSite(attrs.mPartitionKey);
   rv = hmac.Update(reinterpret_cast<const uint8_t*>(topLevelSite.get()),
                    topLevelSite.Length());

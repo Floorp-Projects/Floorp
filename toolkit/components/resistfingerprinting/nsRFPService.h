@@ -72,6 +72,8 @@ class nsIChannel;
 
 namespace mozilla {
 class WidgetKeyboardEvent;
+class OriginAttributes;
+class OriginAttributesPattern;
 namespace dom {
 class Document;
 enum class CanvasContextType : uint8_t;
@@ -419,8 +421,9 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
       uint32_t aSize, nsTArray<uint8_t>& aCanvasKey);
 
   // Generate the session key if it hasn't been generated.
-  nsresult EnsureSessionKey(bool aIsPrivate);
-  void ClearSessionKey(bool aIsPrivate);
+  nsresult GetBrowsingSessionKey(const OriginAttributes& aOriginAttributes,
+                                 nsID& aBrowsingSessionKey);
+  void ClearBrowsingSessionKey(const OriginAttributesPattern& aPattern);
 
   // The keys that represent the browsing session. The lifetime of the key ties
   // to the browsing session. For normal windows, the key is generated when
@@ -432,8 +435,7 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   // The key will be used to generate the randomization noise used to fiddle the
   // browser fingerprints. Note that this key lives and can only be accessed in
   // the parent process.
-  Maybe<nsID> mBrowsingSessionKey;
-  Maybe<nsID> mPrivateBrowsingSessionKey;
+  nsTHashMap<nsCStringHashKey, nsID> mBrowsingSessionKeys;
 
   nsCOMPtr<nsIFingerprintingWebCompatService> mWebCompatService;
   nsTHashMap<nsCStringHashKey, RFPTarget> mFingerprintingOverrides;
