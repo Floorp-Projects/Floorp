@@ -70,6 +70,7 @@
 #include "nsProxyRelease.h"
 #include "nsWeakReference.h"
 #include "nsIWebSocketImpl.h"
+#include "nsIURIMutator.h"
 
 #define OPEN_EVENT_STRING u"open"_ns
 #define MESSAGE_EVENT_STRING u"message"_ns
@@ -163,7 +164,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
                      const nsACString& aNegotiatedExtensions,
                      UniquePtr<SerializedStackHolder> aOriginStack);
 
-  nsresult ParseURL(const nsAString& aURL);
+  nsresult ParseURL(const nsAString& aURL, nsIURI* aBaseURI);
   nsresult InitializeConnection(nsIPrincipal* aPrincipal,
                                 nsICookieJarSettings* aCookieJarSettings);
 
@@ -1130,11 +1131,11 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
       return true;
     }
 
+    nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
     mErrorCode = mImpl->Init(
-        jsapi.cx(), mWorkerPrivate->GetPrincipal()->SchemeIs("https"),
-        doc->NodePrincipal(), mClientInfo, mWorkerPrivate->CSPEventListener(),
-        mIsServerSide, mURL, mProtocolArray, mScriptFile, mScriptLine,
-        mScriptColumn);
+        jsapi.cx(), principal->SchemeIs("https"), principal, mClientInfo,
+        mWorkerPrivate->CSPEventListener(), mIsServerSide, mURL, mProtocolArray,
+        mScriptFile, mScriptLine, mScriptColumn);
     return true;
   }
 
@@ -1650,7 +1651,8 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
   mIsChromeContext = aPrincipal->IsSystemPrincipal();
 
   // parses the url
-  rv = ParseURL(aURL);
+  nsCOMPtr<nsIURI> baseURI = aPrincipal->GetURI();
+  rv = ParseURL(aURL, baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Document> originDoc = mWebSocket->GetDocumentIfCurrent();
@@ -2100,7 +2102,7 @@ nsresult WebSocket::CreateAndDispatchCloseEvent(bool aWasClean, uint16_t aCode,
   return err.StealNSResult();
 }
 
-nsresult WebSocketImpl::ParseURL(const nsAString& aURL) {
+nsresult WebSocketImpl::ParseURL(const nsAString& aURL, nsIURI* aBaseURI) {
   AssertIsOnMainThread();
   NS_ENSURE_TRUE(!aURL.IsEmpty(), NS_ERROR_DOM_SYNTAX_ERR);
 
@@ -2112,20 +2114,34 @@ nsresult WebSocketImpl::ParseURL(const nsAString& aURL) {
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, aBaseURI);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   nsCOMPtr<nsIURL> parsedURL = do_QueryInterface(uri, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  bool hasRef;
-  rv = parsedURL->GetHasRef(&hasRef);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !hasRef, NS_ERROR_DOM_SYNTAX_ERR);
-
   nsAutoCString scheme;
   rv = parsedURL->GetScheme(scheme);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !scheme.IsEmpty(),
                  NS_ERROR_DOM_SYNTAX_ERR);
+
+  // If |urlRecord|'s [=url/scheme=] is "`http`", then set |urlRecord|'s
+  // [=url/scheme=] to "`ws`". Otherwise, if |urlRecord|'s [=url/scheme=] is
+  // "`https`", set |urlRecord|'s [=url/scheme=] to "`wss`".
+  // https://websockets.spec.whatwg.org/#dom-websocket-websocket
+
+  if (scheme == "http" || scheme == "https") {
+    scheme = scheme == "https" ? "wss"_ns : "ws"_ns;
+
+    NS_MutateURI mutator(parsedURL);
+    mutator.SetScheme(scheme);
+    rv = mutator.Finalize(parsedURL);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
+  }
+
+  bool hasRef;
+  rv = parsedURL->GetHasRef(&hasRef);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !hasRef, NS_ERROR_DOM_SYNTAX_ERR);
 
   nsAutoCString host;
   rv = parsedURL->GetAsciiHost(host);
