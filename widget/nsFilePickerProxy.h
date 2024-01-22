@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PFilePickerChild.h"
 #include "mozilla/dom/UnionTypes.h"
 
@@ -34,7 +35,8 @@ class nsFilePickerProxy : public nsBaseFilePicker,
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  nsIFilePicker::Mode aMode) override;
+                  nsIFilePicker::Mode aMode,
+                  mozilla::dom::BrowsingContext* aBrowsingContext) override;
   NS_IMETHOD AppendFilter(const nsAString& aTitle,
                           const nsAString& aFilter) override;
   NS_IMETHOD GetCapture(nsIFilePicker::CaptureTarget* aCapture) override;

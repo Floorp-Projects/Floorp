@@ -153,9 +153,10 @@ nsBaseFilePicker::nsBaseFilePicker()
 
 nsBaseFilePicker::~nsBaseFilePicker() = default;
 
-NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
-                                     const nsAString& aTitle,
-                                     nsIFilePicker::Mode aMode) {
+NS_IMETHODIMP nsBaseFilePicker::Init(
+    mozIDOMWindowProxy* aParent, const nsAString& aTitle,
+    nsIFilePicker::Mode aMode,
+    mozilla::dom::BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(aParent,
              "Null parent passed to filepicker, no file "
              "picker for you!");
@@ -165,6 +166,7 @@ NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(mParent);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
+  mBrowsingContext = aBrowsingContext;
   mMode = aMode;
   InitNative(widget, aTitle);
 

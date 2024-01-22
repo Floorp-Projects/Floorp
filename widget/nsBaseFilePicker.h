@@ -7,6 +7,7 @@
 #ifndef nsBaseFilePicker_h__
 #define nsBaseFilePicker_h__
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "nsISupports.h"
 #include "nsIFilePicker.h"
 #include "nsISimpleEnumerator.h"
@@ -28,7 +29,8 @@ class nsBaseFilePicker : public nsIFilePicker {
   virtual ~nsBaseFilePicker();
 
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  nsIFilePicker::Mode aMode) override;
+                  nsIFilePicker::Mode aMode,
+                  mozilla::dom::BrowsingContext* aBrowsingContext) override;
   NS_IMETHOD IsModeSupported(nsIFilePicker::Mode aMode, JSContext* aCx,
                              mozilla::dom::Promise** aPromise) override;
 #ifndef XP_WIN
@@ -68,6 +70,9 @@ class nsBaseFilePicker : public nsIFilePicker {
   nsString mDisplaySpecialDirectory;
 
   nsCOMPtr<nsPIDOMWindowOuter> mParent;
+  // The BrowsingContext from which the file picker is being opened.
+  // Used for content analysis.
+  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   nsIFilePicker::Mode mMode;
   nsString mOkButtonLabel;
   nsTArray<nsString> mRawFilters;

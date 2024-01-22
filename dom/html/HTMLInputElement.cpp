@@ -818,7 +818,8 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
     mode = nsIFilePicker::modeOpen;
   }
 
-  nsresult rv = filePicker->Init(win, title, mode);
+  nsresult rv =
+      filePicker->Init(win, title, mode, OwnerDoc()->GetBrowsingContext());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!okButtonLabel.IsEmpty()) {

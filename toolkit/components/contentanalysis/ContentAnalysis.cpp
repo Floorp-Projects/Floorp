@@ -244,7 +244,7 @@ nsresult ContentAnalysisRequest::GetFileDigest(const nsAString& aFilePath,
   PRInt32 bytesRead = PR_Read(fd, buffer.get(), kBufferSize);
   while (bytesRead != 0) {
     if (bytesRead == -1) {
-      return NS_ERROR_DOM_FILE_NOT_READABLE_ERR;
+      return NS_ErrorAccordingToNSPR();
     }
     digest.Update(mozilla::Span<const uint8_t>(buffer.get(), bytesRead));
     bytesRead = PR_Read(fd, buffer.get(), kBufferSize);

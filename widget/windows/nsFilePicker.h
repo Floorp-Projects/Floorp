@@ -10,6 +10,8 @@
 #include <windows.h>
 
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "nsIContentAnalysis.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
@@ -63,7 +65,8 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   nsFilePicker();
 
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  nsIFilePicker::Mode aMode) override;
+                  nsIFilePicker::Mode aMode,
+                  mozilla::dom::BrowsingContext* aBrowsingContext) override;
 
   NS_DECL_ISUPPORTS
 
@@ -103,6 +106,7 @@ class nsFilePicker final : public nsBaseWinFilePicker {
       HWND aParent, nsTArray<Command> const& commands);
 
   void ClearFiles();
+  RefPtr<mozilla::GenericPromise> CheckContentAnalysisService();
 
  protected:
   void RememberLastUsedDirectory();

@@ -14,8 +14,11 @@
 #include <winuser.h>
 #include <utility>
 
+#include "ContentAnalysis.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/Components.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ProfilerLabels.h"
@@ -24,6 +27,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIContentAnalysis.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -84,9 +88,10 @@ nsFilePicker::nsFilePicker() : mSelectedType(1) {}
 
 NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
-NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
-                                 const nsAString& aTitle,
-                                 nsIFilePicker::Mode aMode) {
+NS_IMETHODIMP nsFilePicker::Init(
+    mozIDOMWindowProxy* aParent, const nsAString& aTitle,
+    nsIFilePicker::Mode aMode,
+    mozilla::dom::BrowsingContext* aBrowsingContext) {
   // Don't attempt to open a real file-picker in headless mode.
   if (gfxPlatform::IsHeadless()) {
     return nsresult::NS_ERROR_NOT_AVAILABLE;
@@ -96,7 +101,7 @@ NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
   nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
   mLoadContext = do_QueryInterface(docShell);
 
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
+  return nsBaseFilePicker::Init(aParent, aTitle, aMode, aBrowsingContext);
 }
 
 namespace mozilla::detail {
@@ -191,10 +196,11 @@ static auto ShowRemote(HWND parent, ActionType&& action)
 
 // fd_async
 //
-// Wrapper-namespace for the AsyncExecute() function.
+// Wrapper-namespace for the AsyncExecute() and AsyncAll() functions.
 namespace fd_async {
 
-// Implementation details of, specifically, the AsyncExecute() function.
+// Implementation details of, specifically, the AsyncExecute() and AsyncAll()
+// functions.
 namespace details {
 // Helper for generically copying ordinary types and nsTArray (which lacks a
 // copy constructor) in the same breath.
@@ -232,6 +238,49 @@ static Strategy GetStrategy() {
       return Local;
 #endif
   }
+};
+
+template <typename T>
+class AsyncAllIterator final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(AsyncAllIterator)
+  AsyncAllIterator(
+      nsTArray<T> aItems,
+      std::function<RefPtr<mozilla::GenericPromise>(const T& item)> aPredicate,
+      RefPtr<mozilla::GenericPromise::Private> aPromise)
+      : mItems(std::move(aItems)),
+        mNextIndex(0),
+        mPredicate(std::move(aPredicate)),
+        mPromise(std::move(aPromise)) {}
+
+  void StartIterating() { ContinueIterating(); }
+
+ private:
+  ~AsyncAllIterator() = default;
+  void ContinueIterating() {
+    if (mNextIndex >= mItems.Length()) {
+      mPromise->Resolve(true, __func__);
+      return;
+    }
+    mPredicate(mItems.ElementAt(mNextIndex))
+        ->Then(
+            mozilla::GetMainThreadSerialEventTarget(), __func__,
+            [self = RefPtr{this}](bool aResult) {
+              if (!aResult) {
+                self->mPromise->Resolve(false, __func__);
+                return;
+              }
+              ++self->mNextIndex;
+              self->ContinueIterating();
+            },
+            [self = RefPtr{this}](nsresult aError) {
+              self->mPromise->Reject(aError, __func__);
+            });
+  }
+  nsTArray<T> mItems;
+  uint32_t mNextIndex;
+  std::function<RefPtr<mozilla::GenericPromise>(const T& item)> mPredicate;
+  RefPtr<mozilla::GenericPromise::Private> mPromise;
 };
 
 namespace telemetry {
@@ -348,8 +397,24 @@ static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args)
             });
       });
 }
+
+// Asynchronously invokes `aPredicate` on each member of `aItems`.
+// Yields `false` (and stops immediately) if any invocation of
+// `predicate` yielded `false`; otherwise yields `true`.
+template <typename T>
+static RefPtr<mozilla::GenericPromise> AsyncAll(
+    nsTArray<T> aItems,
+    std::function<RefPtr<mozilla::GenericPromise>(const T& item)> aPredicate) {
+  auto promise =
+      mozilla::MakeRefPtr<mozilla::GenericPromise::Private>(__func__);
+  auto iterator = mozilla::MakeRefPtr<details::AsyncAllIterator<T>>(
+      std::move(aItems), aPredicate, promise);
+  iterator->StartIterating();
+  return promise;
+}
 }  // namespace fd_async
 
+using fd_async::AsyncAll;
 using fd_async::AsyncExecute;
 
 }  // namespace mozilla::detail
@@ -614,6 +679,77 @@ void nsFilePicker::ClearFiles() {
   mFiles.Clear();
 }
 
+RefPtr<mozilla::GenericPromise> nsFilePicker::CheckContentAnalysisService() {
+  nsresult rv;
+  nsCOMPtr<nsIContentAnalysis> contentAnalysis =
+      mozilla::components::nsIContentAnalysis::Service(&rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return mozilla::GenericPromise::CreateAndReject(rv, __func__);
+  }
+  bool contentAnalysisIsActive = false;
+  rv = contentAnalysis->GetIsActive(&contentAnalysisIsActive);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return mozilla::GenericPromise::CreateAndReject(rv, __func__);
+  }
+  if (!contentAnalysisIsActive) {
+    return mozilla::GenericPromise::CreateAndResolve(true, __func__);
+  }
+  nsCOMArray<nsIFile> files;
+  if (!mUnicodeFile.IsEmpty()) {
+    nsCOMPtr<nsIFile> file;
+    rv = GetFile(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return mozilla::GenericPromise::CreateAndReject(rv, __func__);
+    }
+    files.AppendElement(file);
+  } else {
+    files.AppendElements(mFiles);
+  }
+  nsTArray<mozilla::PathString> paths(files.Length());
+  std::transform(files.begin(), files.end(), MakeBackInserter(paths),
+                 [](auto* entry) { return entry->NativePath(); });
+
+  RefPtr<nsIURI> uri = mBrowsingContext->Canonical()->GetCurrentURI();
+  nsCString uriCString;
+  rv = uri->GetSpec(uriCString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return mozilla::GenericPromise::CreateAndReject(rv, __func__);
+  }
+  nsString uriString = NS_ConvertUTF8toUTF16(uriCString);
+
+  auto promise = mozilla::detail::AsyncAll<mozilla::PathString>(
+      std::move(paths),
+      [self = RefPtr{this}, contentAnalysis = std::move(contentAnalysis),
+       uriString = std::move(uriString)](const mozilla::PathString& aItem) {
+        nsCString emptyDigestString;
+        auto* windowGlobal =
+            self->mBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+        nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest(
+            new mozilla::contentanalysis::ContentAnalysisRequest(
+                nsIContentAnalysisRequest::AnalysisType::eFileAttached, aItem,
+                true, std::move(emptyDigestString), uriString,
+                nsIContentAnalysisRequest::OperationType::eCustomDisplayString,
+                windowGlobal));
+
+        auto promise =
+            mozilla::MakeRefPtr<mozilla::GenericPromise::Private>(__func__);
+        auto contentAnalysisCallback = mozilla::MakeRefPtr<
+            mozilla::contentanalysis::ContentAnalysisCallback>(
+            [promise](nsIContentAnalysisResponse* aResponse) {
+              promise->Resolve(aResponse->GetShouldAllowContent(), __func__);
+            },
+            [promise](nsresult aError) { promise->Reject(aError, __func__); });
+
+        nsresult rv = contentAnalysis->AnalyzeContentRequestCallback(
+            contentAnalysisRequest, true, contentAnalysisCallback);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          promise->Reject(rv, __func__);
+        }
+        return promise;
+      });
+  return promise;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker impl.
 
@@ -664,6 +800,25 @@ nsresult nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
           if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(file->Exists(&flag)) && flag) {
             retValue = ResultCode::returnReplace;
           }
+        }
+
+        if (self->mBrowsingContext && !self->mBrowsingContext->IsChrome() &&
+            self->mMode != modeSave && retValue != ResultCode::returnCancel) {
+          self->CheckContentAnalysisService()->Then(
+              mozilla::GetMainThreadSerialEventTarget(), __func__,
+              [retValue, callback, self = RefPtr{self}](bool aAllowContent) {
+                if (aAllowContent) {
+                  callback->Done(retValue);
+                } else {
+                  self->ClearFiles();
+                  callback->Done(ResultCode::returnCancel);
+                }
+              },
+              [callback, self = RefPtr{self}](nsresult aError) {
+                self->ClearFiles();
+                callback->Done(ResultCode::returnCancel);
+              });
+          return;
         }
 
         callback->Done(retValue);
