@@ -9,10 +9,6 @@ job-defaults:
         gradlew: ['detekt']
         use-caches: false
     worker:
-        artifacts:
-            - name: public/github
-              path: /builds/worker/github
-              type: directory
         docker-image: {in-tree: lint}
         max-run-time: 1200
         env:

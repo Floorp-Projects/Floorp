@@ -63,9 +63,6 @@ jobs:
                 - name: public/reports/test
                   path: /builds/worker/checkouts/gecko/mobile/android/focus-android/app/build/reports/tests
                   type: directory
-                - name: public/github
-                  path: /builds/worker/github
-                  type: directory
 
     fenix-debug:
         dependencies:
@@ -91,9 +88,6 @@ jobs:
                   type: file
                 - name: public/reports/test
                   path: /builds/worker/checkouts/gecko/mobile/android/fenix/app/build/reports/tests
-                  type: directory
-                - name: public/github
-                  path: /builds/worker/github
                   type: directory
         routes:
             by-level:
