@@ -270,6 +270,10 @@ void MacroAssembler::add32(Imm32 imm, Register dest) {
   ma_add32(dest, dest, imm);
 }
 
+void MacroAssembler::add32(Imm32 imm, Register src, Register dest) {
+  ma_add32(dest, src, imm);
+}
+
 void MacroAssembler::add32(Imm32 imm, const Address& dest) {
   UseScratchRegisterScope temps(this);
   Register scratch2 = temps.Acquire();
