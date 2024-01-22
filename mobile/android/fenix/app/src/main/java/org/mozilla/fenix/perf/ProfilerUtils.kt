@@ -50,6 +50,7 @@ private val graphics_threads = arrayOf(
     "SceneBuilder",
     "WrWorker",
     "CanvasWorkers",
+    "TextureUpdate",
 )
 
 private val media_features = arrayOf(
@@ -65,7 +66,7 @@ private val media_threads = arrayOf(
     "cubeb", "audio", "BackgroundThreadPool", "camera", "capture", "Compositor", "decoder", "GeckoMain", "gmp",
     "graph", "grph", "InotifyEventThread", "IPDL Background", "media", "ModuleProcessThread", "PacerThread",
     "RemVidChild", "RenderBackend", "Renderer", "Socket Thread", "SwComposite",
-    "webrtc",
+    "webrtc", "TextureUpdate",
 )
 
 private val networking_features = arrayOf(
@@ -75,6 +76,7 @@ private val networking_features = arrayOf(
     "cpu",
     "java",
     "processcpu",
+    "bandwidth",
     "ipcmessages",
 )
 
