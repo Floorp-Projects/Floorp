@@ -632,8 +632,10 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Inactivecaptiontext, 0x6D, 0x6D, 0x6D)
 
       // CSS 2 colors:
-      COLOR(Appworkspace, 0xAB, 0xAB, 0xAB)
-      COLOR(Background, 0x00, 0x00, 0x00)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Appworkspace, 0xFF, 0xFF, 0xFF)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Background, 0xFF, 0xFF, 0xFF)
       // deprecated in CSS Color Level 4, same as Buttonface:
       COLOR(Buttonhighlight, 0xE9, 0xE9, 0xED)
       // deprecated in CSS Color Level 4, same as Buttonface:
@@ -654,9 +656,11 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Highlighttext, 0xFF, 0xFF, 0xFF)
       COLOR(Infobackground, 0xFF, 0xFF, 0xE1)
       COLOR(Infotext, 0x00, 0x00, 0x00)
-      COLOR(Menu, 0xF0, 0xF0, 0xF0)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Menu, 0xFF, 0xFF, 0xFF)
       COLOR(Menutext, 0x00, 0x00, 0x00)
-      COLOR(Scrollbar, 0xC8, 0xC8, 0xC8)
+      // deprecated in CSS Color Level 4, same as Canvas/Window:
+      COLOR(Scrollbar, 0xFF, 0xFF, 0xFF)
       COLOR(Threeddarkshadow, 0x69, 0x69, 0x69)
       COLOR(Threedface, 0xF0, 0xF0, 0xF0)
       COLOR(Threedhighlight, 0xFF, 0xFF, 0xFF)
@@ -1270,6 +1274,15 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     BIT_FOR(Inactivecaptiontext) |
     // Used by disabled form controls.
     BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
+    // Per spec, AppWorkspace, Background, Menu, Scrollbar should match
+    // Canvas/Window,
+    // see
+    // https://drafts.csswg.org/css-color-4/#valdef-color-appworkspace,
+    // https://drafts.csswg.org/css-color-4/#valdef-color-background,
+    // https://drafts.csswg.org/css-color-4/#valdef-color-menu, and
+    // https://drafts.csswg.org/css-color-4/#valdef-color-scrollbar
+    BIT_FOR(Appworkspace) | BIT_FOR(Background) | BIT_FOR(Menu) |
+    BIT_FOR(Scrollbar) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
     // Also, per spec, these should match Canvas/CanvasText, see
     // https://drafts.csswg.org/css-color-4/#valdef-color-window and
