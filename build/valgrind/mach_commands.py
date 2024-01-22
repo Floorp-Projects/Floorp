@@ -99,6 +99,7 @@ def valgrind_test(command_context, suppressions):
 
         env = os.environ.copy()
         env["G_SLICE"] = "always-malloc"
+        env["MOZ_FORCE_DISABLE_E10S"] = "1"
         env["MOZ_CC_RUN_DURING_SHUTDOWN"] = "1"
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
