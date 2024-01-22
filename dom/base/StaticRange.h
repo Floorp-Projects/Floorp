@@ -68,9 +68,7 @@ class StaticRange final : public AbstractRange {
    *
    * @see https://dom.spec.whatwg.org/#staticrange-valid
    */
-  bool IsValid() const {
-    return mStart.IsSetAndValid() && mEnd.IsSetAndValid();
-  }
+  bool IsValid() const;
 
  protected:
   explicit StaticRange(nsINode* aNode)
