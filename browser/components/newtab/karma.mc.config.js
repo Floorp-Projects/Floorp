@@ -100,11 +100,14 @@ module.exports = function (config) {
               functions: 76,
               branches: 33,
             },
+            /**
+             * TelemetryFeed.jsm is tested via an xpcshell test
+             */
             "lib/TelemetryFeed.jsm": {
-              statements: 98,
-              lines: 99,
-              functions: 98,
-              branches: 95,
+              statements: 10,
+              lines: 10,
+              functions: 9,
+              branches: 0,
             },
             "lib/ASRouterParentProcessMessageHandler.jsm": {
               statements: 98,
