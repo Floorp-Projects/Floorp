@@ -38,22 +38,22 @@ bool ForOfLoopControl::emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce) {
 }
 
 bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
-  if (!tryCatch_->emitCatch()) {
-    //              [stack] ITER ... EXCEPTION
+  if (!tryCatch_->emitCatch(TryEmitter::ExceptionStack::Yes)) {
+    //              [stack] ITER ... EXCEPTION STACK
     return false;
   }
 
   unsigned slotFromTop = bce->bytecodeSection().stackDepth() - iterDepth_;
   if (!bce->emitDupAt(slotFromTop)) {
-    //              [stack] ITER ... EXCEPTION ITER
+    //              [stack] ITER ... EXCEPTION STACK ITER
     return false;
   }
   if (!emitIteratorCloseInInnermostScopeWithTryNote(bce,
                                                     CompletionKind::Throw)) {
-    return false;  // ITER ... EXCEPTION
+    return false;  // ITER ... EXCEPTION STACK
   }
 
-  if (!bce->emit1(JSOp::Throw)) {
+  if (!bce->emit1(JSOp::ThrowWithStack)) {
     //              [stack] ITER ...
     return false;
   }
