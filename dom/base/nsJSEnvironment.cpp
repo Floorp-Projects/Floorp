@@ -1572,8 +1572,9 @@ void nsJSContext::EndCycleCollectionCallback(
         "A max duration ICC shouldn't reduce GC delay to 0");
 
     TimeDuration delay;
-    if (aResults.mFreedGCed > 10000) {
-      // If we collected lots of GCed objects, trigger the next GC sooner.
+    if (aResults.mFreedGCed > 10000 && aResults.mFreedRefCounted > 10000) {
+      // If we collected lots of objects, trigger the next GC sooner so that
+      // GC can cut JS-to-native edges and native objects can be then deleted.
       delay = TimeDuration::FromMilliseconds(
           StaticPrefs::javascript_options_gc_delay_interslice());
     } else {
