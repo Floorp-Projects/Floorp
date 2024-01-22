@@ -21,6 +21,15 @@ support-files = [
 ["browser_contentContextMenu.js"]
 support-files = ["browser_contentContextMenu.xhtml"]
 
+["browser_contentSearch.js"]
+support-files = [
+  "contentSearchBadImage.xml",
+  "contentSearchSuggestions.sjs",
+  "contentSearchSuggestions.xml",
+  "testEngine_chromeicon.xml",
+]
+skip-if = ["(debug && os == 'linux' && bits == 64 && os_version == '18.04')"] # Bug 1649755
+
 ["browser_contentSearchUI.js"]
 support-files = [
   "contentSearchUI.html",

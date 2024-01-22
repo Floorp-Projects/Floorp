@@ -243,7 +243,7 @@ add_task(
       "contentSearchSuggestions.xml"
     );
 
-    let searchStr = "browser_ContentSearch.js-suggestions-";
+    let searchStr = "browser_contentSearch.js-suggestions-";
 
     // Add a form history suggestion and wait for Satchel to notify about it.
     sendEventToContent(browser, {
