@@ -12,6 +12,11 @@
   target="_blank">Mozilla Bug 1254419</a>
 <div id="log"></div>
 <style>
+@property --my-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: "gold";
+}
 
 :root {
   --var-100px: 100px;
@@ -222,6 +227,12 @@ var gTests = [
                   values: [ valueFormat(0, '1', 'replace', 'linear'),
                             valueFormat(1, '1', 'replace') ] },
     ]
+  },
+  { desc:     'custom registered property',
+    frames:   { "--my-color": ['red', 'blue'] },
+    expected: [ { property: '--my-color',
+                  values: [ valueFormat(0, 'red', 'replace', 'linear'),
+                            valueFormat(1, 'blue', 'replace') ] } ]
   },
 
   // ---------------------------------------------------------------------
