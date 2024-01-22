@@ -1955,6 +1955,27 @@ MDefinition* MCodePointAt::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(first));
 }
 
+MDefinition* MToRelativeStringIndex::foldsTo(TempAllocator& alloc) {
+  MDefinition* index = this->index();
+  MDefinition* length = this->length();
+
+  if (!index->isConstant()) {
+    return this;
+  }
+  if (!length->isStringLength() && !length->isConstant()) {
+    return this;
+  }
+  MOZ_ASSERT_IF(length->isConstant(), length->toConstant()->toInt32() >= 0);
+
+  int32_t relativeIndex = index->toConstant()->toInt32();
+  if (relativeIndex >= 0) {
+    return index;
+  }
+
+  // Safe to truncate because |length| is never negative.
+  return MAdd::New(alloc, index, length, TruncateKind::Truncate);
+}
+
 template <size_t Arity>
 [[nodiscard]] static bool EnsureFloatInputOrConvert(
     MAryInstruction<Arity>* owner, TempAllocator& alloc) {

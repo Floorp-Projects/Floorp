@@ -2492,6 +2492,18 @@ void LIRGenerator::visitLinearizeForCodePointAccess(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitToRelativeStringIndex(MToRelativeStringIndex* ins) {
+  MDefinition* index = ins->index();
+  MDefinition* length = ins->length();
+
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+  MOZ_ASSERT(length->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LToRelativeStringIndex(useRegister(index), useRegister(length));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
   MDefinition* str = ins->string();
   MDefinition* idx = ins->index();
@@ -2576,6 +2588,17 @@ void LIRGenerator::visitFromCharCodeEmptyIfNegative(
 
   auto* lir = new (alloc()) LFromCharCodeEmptyIfNegative(useRegister(code));
   define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitFromCharCodeUndefinedIfNegative(
+    MFromCharCodeUndefinedIfNegative* ins) {
+  MDefinition* code = ins->code();
+
+  MOZ_ASSERT(code->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LFromCharCodeUndefinedIfNegative(useRegister(code));
+  defineBox(lir, ins);
   assignSafepoint(lir, ins);
 }
 

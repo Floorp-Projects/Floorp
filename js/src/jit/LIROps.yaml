@@ -1199,6 +1199,14 @@
   num_temps: 1
   mir_op: true
 
+# Compute the relative string index.
+- name: ToRelativeStringIndex
+  result_type: WordSized
+  operands:
+    index: WordSized
+    length: WordSized
+  mir_op: true
+
 # Get uint16 character code from a string.
 - name: CharCodeAt
   result_type: WordSized
@@ -1253,6 +1261,13 @@
 # input is negative, return the empty string.
 - name: FromCharCodeEmptyIfNegative
   result_type: WordSized
+  operands:
+    code: WordSized
+
+# Convert non-negative input as a uint16 character code to a string. If the
+# input is negative, return the undefined value.
+- name: FromCharCodeUndefinedIfNegative
+  result_type: BoxedValue
   operands:
     code: WordSized
 
