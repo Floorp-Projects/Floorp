@@ -1070,9 +1070,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
       overrideChannelType = true;
     } else if (binaryChannelType && typeHint != eType_Null) {
       if (typeHint == eType_Document) {
-        if (StaticPrefs::
-                browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup() &&
-            imgLoader::SupportImageWithMimeType(newMime)) {
+        if (imgLoader::SupportImageWithMimeType(newMime)) {
           LOG(
               ("OBJLC [%p]: Using type hint in favor of binary channel type "
                "(Image Document)",
@@ -1154,8 +1152,6 @@ nsObjectLoadingContent::UpdateObjectParameters() {
 
   mLoadingSyntheticDocument =
       newType == eType_Document &&
-      StaticPrefs::
-          browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup() &&
       imgLoader::SupportImageWithMimeType(newMime);
 
   ///

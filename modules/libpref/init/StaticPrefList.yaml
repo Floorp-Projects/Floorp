@@ -1761,13 +1761,6 @@
   mirror: always
   do_not_use_directly: true
 
-# When this pref is enabled, <object> and <embed> elements will create
-# synthetic documents when the resource type they're loading is an image.
-- name: browser.opaqueResponseBlocking.syntheticBrowsingContext
-  type: bool
-  value: true
-  mirror: once
-
 # When true, zooming will be enabled on all sites, even ones that declare
 # user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable

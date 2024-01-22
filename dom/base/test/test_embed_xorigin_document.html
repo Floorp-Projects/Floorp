@@ -6,19 +6,10 @@
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-
-
-
 <script>
 // Get the path of the current test, without hostname or filename.
 const testPath = window.location.href.replace("http://mochi.test:8888", "");
 const testDir = testPath.substring(0, testPath.lastIndexOf('/') + 1);
-const embedHasBrowsingContext = SpecialPowers.getBoolPref("browser.opaqueResponseBlocking.syntheticBrowsingContext", false);
-const imageTypeORB = embedHasBrowsingContext
-  ? SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_DOCUMENT
-  : SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_IMAGE;
-
-const imageTypeStringORB = embedHasBrowsingContext ? "document" : "image";
 
 add_task(async function() {
   // FIXME: Remove when bug 1658342 is fixed
@@ -35,17 +26,12 @@ add_task(async function() {
   await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
   is(
     SpecialPowers.wrap(embed).displayedType,
-    imageTypeORB,
-    `image load should have ${imageTypeStringORB} type`
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_DOCUMENT,
+    `image load should have document type`
   );
 
-  if (!embedHasBrowsingContext) {
-    ok(!SpecialPowers.wrap(embed).frameLoader, "should not have frameloader");
-    ok(!SpecialPowers.wrap(embed).browsingContext, "should not have bc");
-  } else {
-    ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
-    ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
-  }
+  ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
+  ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
 
   info("x-site document load from element");
   embed.setAttribute("src", "http://example.com" + testDir + "file_empty.html");
@@ -86,17 +72,12 @@ add_task(async function() {
   await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
   is(
     SpecialPowers.wrap(embed).displayedType,
-    imageTypeORB,
-    `image load should have ${imageTypeStringORB} type`
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_DOCUMENT,
+    `image load should have document type`
   );
 
-  if (!embedHasBrowsingContext) {
-    ok(!SpecialPowers.wrap(embed).frameLoader, "should not have frameloader");
-    ok(!SpecialPowers.wrap(embed).browsingContext, "should not have bc");
-  } else {
-    ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
-    ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
-  }
+  ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
+  ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
 });
 </script>
 </body>
