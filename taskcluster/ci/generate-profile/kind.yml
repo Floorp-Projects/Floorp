@@ -103,6 +103,7 @@ jobs:
             env:
                 WORKING_DIR: "/builds/worker"
                 MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
+                PYTHON: "/builds/worker/checkouts/gecko/mach python"
             artifacts:
                 - type: directory
                   name: public/build
@@ -142,6 +143,7 @@ jobs:
             env:
                 WORKING_DIR: "/builds/worker"
                 MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
+                PYTHON: "/builds/worker/checkouts/gecko/mach python"
             artifacts:
                 - type: directory
                   name: public/build
