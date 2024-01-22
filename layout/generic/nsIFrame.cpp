@@ -4890,35 +4890,56 @@ bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
     return false;
   }
 
-  Selection* selection = aFrameSelection.GetSelection(SelectionType::eNormal);
-  if (selection && !selection->IsCollapsed()) {
+  const bool contentIsEditable = aContentAtEventPoint.IsEditable();
+  const TextControlElement* const contentAsTextControl =
+      TextControlElement::FromNodeOrNull(
+          aContentAtEventPoint.IsTextControlElement()
+              ? &aContentAtEventPoint
+              : aContentAtEventPoint.GetClosestNativeAnonymousSubtreeRoot());
+  if (Selection* selection =
+          aFrameSelection.GetSelection(SelectionType::eNormal)) {
+    const bool selectionIsCollapsed = selection->IsCollapsed();
     // If right click in a selection range, we should not collapse selection.
-    if (nsContentUtils::IsPointInSelection(
+    if (!selectionIsCollapsed &&
+        nsContentUtils::IsPointInSelection(
             *selection, aContentAtEventPoint,
             static_cast<uint32_t>(aOffsetAtEventPoint))) {
       return false;
     }
-
-    if (StaticPrefs::
-            ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection()) {
+    const bool wantToPreventMoveCaret =
+        StaticPrefs::
+            ui_mouse_right_click_move_caret_stop_if_in_focused_editable_node() &&
+        selectionIsCollapsed && (contentIsEditable || contentAsTextControl);
+    const bool wantToPreventCollapseSelection =
+        StaticPrefs::
+            ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection() &&
+        !selectionIsCollapsed;
+    if (wantToPreventMoveCaret || wantToPreventCollapseSelection) {
       // If currently selection is limited in an editing host, we should not
-      // collapse selection if the clicked point is in the ancestor limiter.
-      // Otherwise, this mouse click moves focus from the editing host to
-      // different one or blur the editing host.  In this case, we need to
-      // update selection because keeping current selection in the editing
-      // host looks like it's not blurred.
+      // collapse selection nor move caret if the clicked point is in the
+      // ancestor limiter.  Otherwise, this mouse click moves focus from the
+      // editing host to different one or blur the editing host.  In this case,
+      // we need to update selection because keeping current selection in the
+      // editing host looks like it's not blurred.
       // FIXME: If the active editing host is the document element, editor
       // does not set ancestor limiter properly.  Fix it in the editor side.
       if (nsIContent* ancestorLimiter = selection->GetAncestorLimiter()) {
         MOZ_ASSERT(ancestorLimiter->IsEditable());
         return !aContentAtEventPoint.IsInclusiveDescendantOf(ancestorLimiter);
       }
-      // If currently selection is not limited in an editing host, we should
-      // collapse selection only when this click moves focus to an editing
-      // host because we need to update selection in this case.
-      if (!aContentAtEventPoint.IsEditable()) {
-        return false;
-      }
+    }
+    // If selection is editable and `stop_if_in_focused_editable_node` pref is
+    // set to true, user does not want to move caret to right click place if
+    // clicked in the focused text control element.
+    if (wantToPreventMoveCaret && contentAsTextControl &&
+        contentAsTextControl == nsFocusManager::GetFocusedElementStatic()) {
+      return false;
+    }
+    // If currently selection is not limited in an editing host, we should
+    // collapse selection only when this click moves focus to an editing
+    // host because we need to update selection in this case.
+    if (wantToPreventCollapseSelection && !contentIsEditable) {
+      return false;
     }
   }
 
@@ -4926,13 +4947,11 @@ bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
              ui_mouse_right_click_collapse_selection_stop_if_non_editable_node() ||
          // The user does not want to collapse selection into non-editable
          // content by a right button click.
-         aContentAtEventPoint.IsEditable() ||
+         contentIsEditable ||
          // Treat clicking in a text control as always clicked on editable
          // content because we want a hack only for clicking in normal text
          // nodes which is outside any editing hosts.
-         aContentAtEventPoint.IsTextControlElement() ||
-         TextControlElement::FromNodeOrNull(
-             aContentAtEventPoint.GetClosestNativeAnonymousSubtreeRoot());
+         contentAsTextControl;
 }
 
 nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
