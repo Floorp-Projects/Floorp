@@ -733,6 +733,12 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
           // May be shutting down
           return;
         }
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+        RefPtr<ContentAnalysisResponse> response =
+            ContentAnalysisResponse::FromAction(
+                nsIContentAnalysisResponse::Action::eCanceled, aRequestToken);
+        obsServ->NotifyObservers(response, "dlp-response", nullptr);
         nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder;
         {
           auto lock = owner->mCallbackMap.Lock();
