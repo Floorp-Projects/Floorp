@@ -11921,8 +11921,10 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "no-ggc", "Disable Generational GC") ||
       !op.addBoolOption('\0', "no-cgc", "Disable Compacting GC") ||
       !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC") ||
+      !op.addBoolOption('\0', "no-parallel-marking",
+                        "Disable GC parallel marking") ||
       !op.addBoolOption('\0', "enable-parallel-marking",
-                        "Turn on parallel marking") ||
+                        "Enable GC parallel marking") ||
       !op.addIntOption(
           '\0', "marking-threads", "COUNT",
           "Set the number of threads used for parallel marking to COUNT.", 0) ||
@@ -12888,9 +12890,19 @@ bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
   bool incrementalGC = !op.getBoolOption("no-incremental-gc");
   JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, incrementalGC);
 
+#ifndef ANDROID
+  bool parallelMarking = true;
+#else
+  bool parallelMarking = false;
+#endif
   if (op.getBoolOption("enable-parallel-marking")) {
-    JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, true);
+    parallelMarking = true;
   }
+  if (op.getBoolOption("no-parallel-marking")) {
+    parallelMarking = false;
+  }
+  JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, parallelMarking);
+
   int32_t markingThreads = op.getIntOption("marking-threads");
   if (markingThreads > 0) {
     JS_SetGCParameter(cx, JSGC_MARKING_THREAD_COUNT, markingThreads);
