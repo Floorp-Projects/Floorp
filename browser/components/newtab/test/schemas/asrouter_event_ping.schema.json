@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "browser/components/newtab/test/schemas/asrouter_event_ping.schema.json",
+  "title": "ASRouter event PingCentre ping",
+  "type": "object",
+  "properties": {
+    "addon_version": {
+      "type": "string"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "message_id": {
+      "type": "string"
+    },
+    "event": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "impression_id": {
+      "type": "string"
+    }
+  },
+  "required": ["addon_version", "locale", "message_id", "event"],
+  "additionalProperties": false,
+  "anyOf": [
+    {
+      "required": ["client_id"]
+    },
+    {
+      "required": ["impression_id"]
+    }
+  ]
+}

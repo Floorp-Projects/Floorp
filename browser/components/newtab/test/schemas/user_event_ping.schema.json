@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "browser/components/newtab/test/schemas/user_event_ping.schema.json",
+  "title": "User event PingCentre ping",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "addon_version": {
+      "type": "string"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "page": {
+      "type": "string",
+      "enum": ["about:home", "about:newtab", "about:welcome", "both", "unknown"]
+    },
+    "user_prefs": {
+      "type": "integer"
+    },
+    "source": {
+      "type": "string"
+    },
+    "event": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["activity_stream_user_event"]
+    },
+    "metadata_source": {
+      "type": "string"
+    },
+    "highlight_type": {
+      "type": "string",
+      "enum": ["bookmarks", "recommendation", "history"]
+    },
+    "recommender_type": {
+      "type": "string"
+    },
+    "value": {
+      "type": "object",
+      "properties": {
+        "newtab_url_category": {
+          "type": "string"
+        },
+        "newtab_extension_id": {
+          "type": "string"
+        },
+        "home_url_category": {
+          "type": "string"
+        },
+        "home_extension_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "addon_version",
+    "locale",
+    "session_id",
+    "page",
+    "user_prefs",
+    "event",
+    "action"
+  ],
+  "additionalProperties": false
+}

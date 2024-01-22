@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "browser/components/newtab/test/schemas/base_ping.schema.json",
+  "title": "Base PingCentre ping",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "addon_version": {
+      "type": "string"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "page": {
+      "type": ["array", "boolean", "number", "object", "string", "null"],
+      "enum": ["about:home", "about:newtab", "about:welcome", "both", "unknown"]
+    },
+    "user_prefs": {
+      "type": "integer"
+    }
+  },
+  "required": ["addon_version", "locale", "user_prefs"],
+  "additionalProperties": true
+}
