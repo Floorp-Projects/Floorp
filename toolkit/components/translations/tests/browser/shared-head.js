@@ -3,13 +3,6 @@
 
 "use strict";
 
-/**
- * @type {import("../../../ml/content/EngineProcess.sys.mjs")}
- */
-const { EngineProcess } = ChromeUtils.importESModule(
-  "chrome://global/content/ml/EngineProcess.sys.mjs"
-);
-
 // Avoid about:blank's non-standard behavior.
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
@@ -140,7 +133,7 @@ async function openAboutTranslations({
   BrowserTestUtils.removeTab(tab);
 
   await removeMocks();
-  await EngineProcess.destroyTranslationsEngine();
+  await TranslationsParent.destroyEngineProcess();
 
   await SpecialPowers.popPrefEnv();
 }
@@ -448,7 +441,7 @@ async function setupActorTest({
     actor,
     remoteClients,
     async cleanup() {
-      await EngineProcess.destroyTranslationsEngine();
+      await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
       BrowserTestUtils.removeTab(tab);
@@ -505,7 +498,7 @@ async function loadTestPage({
 }) {
   info(`Loading test page starting at url: ${page}`);
   // Ensure no engine is being carried over from a previous test.
-  await EngineProcess.destroyTranslationsEngine();
+  await TranslationsParent.destroyEngineProcess();
   Services.fog.testResetFOG();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -590,7 +583,7 @@ async function loadTestPage({
      * @returns {Promise<void>}
      */
     async cleanup() {
-      await EngineProcess.destroyTranslationsEngine();
+      await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
       await removeMocks();
@@ -678,10 +671,6 @@ async function autoTranslatePage(options) {
   await runInPage(options.runInPage);
   await cleanup();
 }
-
-/**
- * @typedef {ReturnType<createAttachmentMock>} AttachmentMock
- */
 
 /**
  * @param {RemoteSettingsClient} client
@@ -1054,7 +1043,7 @@ async function setupAboutPreferences(
   const elements = await selectAboutPreferencesElements();
 
   async function cleanup() {
-    await EngineProcess.destroyTranslationsEngine();
+    await TranslationsParent.destroyEngineProcess();
     await closeTranslationsPanelIfOpen();
     await closeContextMenuIfOpen();
     BrowserTestUtils.removeTab(tab);

@@ -3639,11 +3639,6 @@ pref("browser.translations.simulateUnsupportedEngine", false);
 pref("browser.translations.chaos.errors", false);
 pref("browser.translations.chaos.timeoutMS", 0);
 
-// Enable the experimental machine learning inference engine.
-pref("browser.ml.enable", false);
-// Set to "All" to see all logs, which are useful for debugging.
-pref("browser.ml.logLevel", "Error");
-
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
 // be blocked (automatically canceled) for that page. The counter resets
