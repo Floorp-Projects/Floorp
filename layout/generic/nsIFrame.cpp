@@ -9109,8 +9109,8 @@ nsresult nsIFrame::PeekOffsetForWord(PeekOffsetStruct* aPos, int32_t aOffset) {
       // significant.
       if (next.mJumpedLine && wordSelectEatSpace &&
           current.mFrame->HasSignificantTerminalNewline() &&
-          current.mFrame->StyleText()->mWhiteSpace !=
-              StyleWhiteSpace::PreLine) {
+          current.mFrame->StyleText()->mWhiteSpaceCollapse !=
+              StyleWhiteSpaceCollapse::PreserveBreaks) {
         current.mOffset -= 1;
       }
       break;
