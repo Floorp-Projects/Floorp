@@ -24,8 +24,14 @@ private const val TOKEN = "profileToken"
 private const val PROFILER_DATA_URL = "https://profiler.firefox.com/public/"
 
 private val firefox_features = arrayOf(
-    "screenshots", "js", "leaf", "stackwalk", "cpu", "java",
-    "processcpu", "ipcmessages", "java",
+    "screenshots",
+    "js",
+    "stackwalk",
+    "cpu",
+    "java",
+    "processcpu",
+    "ipcmessages",
+    "java",
 )
 private val firefox_threads = arrayOf(
     "GeckoMain",
@@ -49,7 +55,6 @@ private val graphics_threads = arrayOf(
 
 private val media_features = arrayOf(
     "js",
-    "leaf",
     "stackwalk",
     "cpu",
     "audiocallbacktracing",
@@ -67,7 +72,6 @@ private val media_threads = arrayOf(
 private val networking_features = arrayOf(
     "screenshots",
     "js",
-    "leaf",
     "stackwalk",
     "cpu",
     "java",
