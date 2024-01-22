@@ -14,11 +14,9 @@ server.registerDirectory("/data/", do_get_file("data"));
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function setup_test_environment() {
-  if (ExtensionTestUtils.remoteContentScripts) {
-    // Start with one content process so that we can increase the number
-    // later and test the behavior of a fresh content process.
-    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
-  }
+  // Start with one content process so that we can increase the number
+  // later and test the behavior of a fresh content process.
+  Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
 
   // Grant the optional permissions requested, without prompting.
   Services.prefs.setBoolPref(
@@ -277,10 +275,7 @@ add_task(async function test_userScripts_no_webext_apis() {
   await extension.awaitMessage("background-ready");
 
   let url = `${BASE_URL}/file_sample.html?testpage=1`;
-  let contentPage = await ExtensionTestUtils.loadContentPage(
-    url,
-    ExtensionTestUtils.remoteContentScripts ? { remote: true } : undefined
-  );
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
   let result = await contentPage.spawn([], async () => {
     return {
       textContent: this.content.document.body.textContent,
@@ -298,45 +293,39 @@ add_task(async function test_userScripts_no_webext_apis() {
     "The userScript executed on the expected url and no access to the WebExtensions APIs"
   );
 
-  // If the tests is running with "remote content process" mode, test that the userScript
-  // are being correctly registered in newly created processes (received as part of the sharedData).
-  if (ExtensionTestUtils.remoteContentScripts) {
-    info(
-      "Test content script are correctly created on a newly created process"
-    );
+  info("Test content script are correctly created on a newly created process");
 
-    await extension.sendMessage("register-new-script");
-    await extension.awaitMessage("script-registered");
+  await extension.sendMessage("register-new-script");
+  await extension.awaitMessage("script-registered");
 
-    // Update the process count preference, so that we can test that the newly registered user script
-    // is propagated as expected into the newly created process.
-    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 2);
+  // Update the process count preference, so that we can test that the newly registered user script
+  // is propagated as expected into the newly created process.
+  Services.prefs.setIntPref(PROCESS_COUNT_PREF, 2);
 
-    const url2 = `${BASE_URL}/file_sample.html?testpage=2`;
-    let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {
-      remote: true,
-    });
-    let result2 = await contentPage2.spawn([], async () => {
-      return {
-        textContent: this.content.document.body.textContent,
-        url: this.content.location.href,
-        readyState: this.content.document.readyState,
-      };
-    });
-    Assert.deepEqual(
-      result2,
-      {
-        textContent: "new userScript loaded - undefined",
-        url: url2,
-        readyState: "complete",
-      },
-      "The userScript executed on the expected url and no access to the WebExtensions APIs"
-    );
-
-    await contentPage2.close();
-  }
+  const url2 = `${BASE_URL}/file_sample.html?testpage=2`;
+  let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {
+    remote: true,
+  });
+  let result2 = await contentPage2.spawn([], async () => {
+    return {
+      textContent: this.content.document.body.textContent,
+      url: this.content.location.href,
+      readyState: this.content.document.readyState,
+    };
+  });
+  Assert.deepEqual(
+    result2,
+    {
+      textContent: "new userScript loaded - undefined",
+      url: url2,
+      readyState: "complete",
+    },
+    "The userScript executed on the expected url and no access to the WebExtensions APIs"
+  );
 
   await contentPage.close();
+
+  await contentPage2.close();
 
   await extension.unload();
 });

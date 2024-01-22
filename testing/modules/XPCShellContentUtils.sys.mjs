@@ -421,14 +421,6 @@ export var XPCShellContentUtils = {
     });
   },
 
-  get remoteContentScripts() {
-    return gRemoteContentScripts;
-  },
-
-  set remoteContentScripts(val) {
-    gRemoteContentScripts = !!val;
-  },
-
   async fetch(origin, url, options) {
     let fetchScopePromise = this.fetchScopes.get(origin);
     if (!fetchScopePromise) {
