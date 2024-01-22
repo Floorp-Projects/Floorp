@@ -171,6 +171,7 @@ tags = "remotesettings searchmain"
 support-files = [
   "opensearch/mozilla-ns.xml",
   "opensearch/post.xml",
+  "opensearch/searchform-invalid.xml",
   "opensearch/simple.xml",
   "opensearch/suggestion.xml",
   "opensearch/suggestion-alternate.xml",
