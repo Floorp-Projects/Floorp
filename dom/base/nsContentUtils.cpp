@@ -10543,7 +10543,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
   }
 
   if (imgLoader::SupportImageWithMimeType(aMIMEType)) {
-    return ResolveObjectType(nsIObjectLoadingContent::TYPE_IMAGE);
+    return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 
   // Faking support of the PDF content as a document for EMBED tags
@@ -11282,20 +11282,6 @@ bool nsContentUtils::ShouldHideObjectOrEmbedImageDocument() {
              browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup() &&
          StaticPrefs::
              browser_opaqueResponseBlocking_syntheticBrowsingContext_filter_AtStartup_DoNotUseDirectly();
-}
-
-/* static */
-uint32_t nsContentUtils::ResolveObjectType(uint32_t aType) {
-  if (!StaticPrefs::
-          browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup()) {
-    return aType;
-  }
-
-  if (aType != nsIObjectLoadingContent::TYPE_IMAGE) {
-    return aType;
-  }
-
-  return nsIObjectLoadingContent::TYPE_DOCUMENT;
 }
 
 void nsContentUtils::RequestGeckoTaskBurst() {
