@@ -1785,6 +1785,34 @@ static MOZ_ALWAYS_INLINE bool ToStringIndex(JSContext* cx, Handle<Value> value,
   return true;
 }
 
+static MOZ_ALWAYS_INLINE bool ToRelativeStringIndex(
+    JSContext* cx, Handle<Value> value, size_t length,
+    mozilla::Maybe<size_t>* result) {
+  // Handle the common case of int32 indices first.
+  if (MOZ_LIKELY(value.isInt32())) {
+    int32_t index = value.toInt32();
+    if (index < 0) {
+      index += int32_t(length);
+    }
+    if (size_t(index) < length) {
+      *result = mozilla::Some(size_t(index));
+    }
+    return true;
+  }
+
+  double index = 0.0;
+  if (!ToInteger(cx, value, &index)) {
+    return false;
+  }
+  if (index < 0) {
+    index += length;
+  }
+  if (0 <= index && index < length) {
+    *result = mozilla::Some(size_t(index));
+  }
+  return true;
+}
+
 /**
  * 22.1.3.2 String.prototype.charAt ( pos )
  *
@@ -1897,6 +1925,43 @@ static bool str_codePointAt(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 7.
   args.rval().setInt32(codePoint);
+  return true;
+}
+
+/**
+ * 22.1.3.1 String.prototype.at ( index )
+ *
+ * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
+ */
+static bool str_at(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "at");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  RootedString str(cx, ToStringForStringFunction(cx, "at", args.thisv()));
+  if (!str) {
+    return false;
+  }
+
+  // Steps 3-6.
+  mozilla::Maybe<size_t> index{};
+  if (!ToRelativeStringIndex(cx, args.get(0), str->length(), &index)) {
+    return false;
+  }
+
+  // Step 7.
+  if (index.isNothing()) {
+    args.rval().setUndefined();
+    return true;
+  }
+  MOZ_ASSERT(*index < str->length());
+
+  // Step 8.
+  auto* result = cx->staticStrings().getUnitStringForElement(cx, str, *index);
+  if (!result) {
+    return false;
+  }
+  args.rval().setString(result);
   return true;
 }
 
@@ -3843,6 +3908,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_INLINABLE_FN("charAt", str_charAt, 1, 0, StringCharAt),
     JS_INLINABLE_FN("charCodeAt", str_charCodeAt, 1, 0, StringCharCodeAt),
     JS_INLINABLE_FN("codePointAt", str_codePointAt, 1, 0, StringCodePointAt),
+    JS_FN("at", str_at, 1, 0),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2, 0),
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2, 0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
@@ -3880,8 +3946,6 @@ static const JSFunctionSpec string_methods[] = {
     /* Python-esque sequence methods. */
     JS_SELF_HOSTED_FN("concat", "String_concat", 1, 0),
     JS_SELF_HOSTED_FN("slice", "String_slice", 2, 0),
-
-    JS_SELF_HOSTED_FN("at", "String_at", 1, 0),
 
     /* HTML string methods. */
     JS_SELF_HOSTED_FN("bold", "String_bold", 0, 0),
