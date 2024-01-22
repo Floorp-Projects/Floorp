@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
 
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
@@ -13,13 +10,11 @@ const { shortURL } = ChromeUtils.import(
 const { SectionsManager } = ChromeUtils.import(
   "resource://activity-stream/lib/SectionsManager.jsm"
 );
-const { TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW } =
-  ChromeUtils.importESModule(
-    "resource://activity-stream/common/Reducers.sys.mjs"
-  );
-const { Dedupe } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Dedupe.sys.mjs"
-);
+import {
+  TOP_SITES_DEFAULT_ROWS,
+  TOP_SITES_MAX_SITES_PER_ROW,
+} from "resource://activity-stream/common/Reducers.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 
 const lazy = {};
 
@@ -45,16 +40,18 @@ ChromeUtils.defineModuleGetter(
 );
 
 const HIGHLIGHTS_MAX_LENGTH = 16;
-const MANY_EXTRA_LENGTH =
+
+export const MANY_EXTRA_LENGTH =
   HIGHLIGHTS_MAX_LENGTH * 5 +
   TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW;
-const SECTION_ID = "highlights";
-const SYNC_BOOKMARKS_FINISHED_EVENT = "weave:engine:sync:applied";
-const BOOKMARKS_RESTORE_SUCCESS_EVENT = "bookmarks-restore-success";
-const BOOKMARKS_RESTORE_FAILED_EVENT = "bookmarks-restore-failed";
+
+export const SECTION_ID = "highlights";
+export const SYNC_BOOKMARKS_FINISHED_EVENT = "weave:engine:sync:applied";
+export const BOOKMARKS_RESTORE_SUCCESS_EVENT = "bookmarks-restore-success";
+export const BOOKMARKS_RESTORE_FAILED_EVENT = "bookmarks-restore-failed";
 const RECENT_DOWNLOAD_THRESHOLD = 36 * 60 * 60 * 1000;
 
-class HighlightsFeed {
+export class HighlightsFeed {
   constructor() {
     this.dedupe = new Dedupe(this._dedupeKey);
     this.linksCache = new lazy.LinksCache(
@@ -339,12 +336,3 @@ class HighlightsFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = [
-  "HighlightsFeed",
-  "SECTION_ID",
-  "MANY_EXTRA_LENGTH",
-  "SYNC_BOOKMARKS_FINISHED_EVENT",
-  "BOOKMARKS_RESTORE_SUCCESS_EVENT",
-  "BOOKMARKS_RESTORE_FAILED_EVENT",
-];
