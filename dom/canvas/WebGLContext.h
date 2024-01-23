@@ -1266,6 +1266,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
       const webgl::SwapChainOptions& options,
       layers::RemoteTextureOwnerClient* ownerClient = nullptr);
 
+  void EnsureContextLostRemoteTextureOwner(
+      const webgl::SwapChainOptions& options);
+
   // --
 
   bool EnsureDefaultFB();
