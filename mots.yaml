@@ -335,10 +335,6 @@ people:
     bmo_id: 675384
     name: Evgeny Pavlov
     nick: epavlov
-  - &erahm
-    bmo_id: 496127
-    name: Eric Rahm
-    nick: erahm
   - &ErichDonGubler
     bmo_id: 713343
     name: Erich Gubler
@@ -2644,10 +2640,12 @@ modules:
       url: :ref:`String Guide`
       components:
         - Core::String
-    owners:
-      - *dbaron
-    peers:
-      - *erahm
+      owners_emeritus:
+        - David Baron
+      peers_emeritus:
+        - Eric Rahm
+    owners: []
+    peers: []
     machine_name: core_string
 
   - name: 'Core: Style System'
