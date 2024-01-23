@@ -1677,10 +1677,7 @@ already_AddRefed<Promise> SessionStoreUtils::InitializeRestore(
 void SessionStoreUtils::RestoreDocShellState(
     nsIDocShell* aDocShell, const DocShellRestoreState& aState) {
   if (aDocShell) {
-    nsCOMPtr<nsIURI> currentUri;
-    nsDocShell::Cast(aDocShell)->GetCurrentURI(getter_AddRefs(currentUri));
-    if (aState.URI() &&
-        (!currentUri || mozilla::net::SchemeIsAbout(currentUri))) {
+    if (aState.URI()) {
       aDocShell->SetCurrentURIForSessionStore(aState.URI());
     }
     RestoreDocShellCapabilities(aDocShell, aState.docShellCaps());
