@@ -6,8 +6,10 @@ function failureCallingTestFunction() {
        (tag $exn (export "exn"))
        (func $throwExn (export "throwExn")
          ;; Note that this does not fail if this function body is a plain (throw $exn).
-         (try
-           (do (throw $exn)))))`
+         try
+           (throw $exn)
+         end
+       ))`
   ).exports;
 
   let mod =
@@ -18,10 +20,11 @@ function failureCallingTestFunction() {
          (import "m" "throwExn" (func $throwExn (type $indirectFunctype)))
          (table funcref (elem $throwExn))
          (func (export "testFunc") (result i32)
-           (try
-             (do (call_indirect (type $indirectFunctype) (i32.const 0)))
-             (catch_all))
-           (i32.const 1)))`;
+           try
+             (call_indirect (type $indirectFunctype) (i32.const 0))
+           catch_all
+           end
+           i32.const 1))`;
 
   let testFunction = wasmEvalText(mod, { m : exports}).exports.testFunc;
   testFunction();
@@ -32,12 +35,16 @@ function failureRethrow1() {
     `(module
        (tag $exn (export "exn"))
        (func $throwExn (export "throwExn")
-         (try
-           (do (throw $exn))
-           (catch_all
-             (try
-               (do (throw $exn))
-               (catch_all (rethrow 1)))))))`
+         try
+           (throw $exn)
+         catch_all
+           try
+             throw $exn
+           catch_all
+             (rethrow 1)
+           end
+         end
+       ))`
   ).exports;
 
   let mod =
@@ -48,9 +55,10 @@ function failureRethrow1() {
          (import "m" "throwExn" (func $throwExn (type $indirectFunctype)))
          (table funcref (elem $throwExn))
          (func (export "testFunc") (result i32)
-           (try
-             (do (call_indirect (type $indirectFunctype) (i32.const 0)))
-             (catch_all))
+           try
+             (call_indirect (type $indirectFunctype) (i32.const 0))
+           catch_all
+           end
            (i32.const 1)))`;
 
   let testFunction = wasmEvalText(mod, { m : exports}).exports.testFunc;
