@@ -1018,10 +1018,6 @@ people:
     bmo_id: 415378
     name: Valentin Gosu
     nick: valentin
-  - &Waldo
-    bmo_id: 83595
-    name: Jeff Walden
-    nick: Waldo
   - &wchen
     bmo_id: 414438
     name: William Chen
@@ -2174,11 +2170,13 @@ modules:
       group: dev-platform
       components:
         - Core::MFBT
+      owners_emeritus:
+        - Jeff Walden
+      peers_emeritus:
+        - *Ms2ger
     owners:
-      - *Waldo
-    peers:
-      - *Ms2ger
       - *glandium
+    peers: []
     machine_name: core_mfbt
 
   - name: 'Core: Moz2D (Graphics submodule)'
