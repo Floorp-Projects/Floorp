@@ -41,7 +41,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
     await clickNeverTranslateSite();

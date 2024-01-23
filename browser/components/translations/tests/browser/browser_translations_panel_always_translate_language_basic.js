@@ -24,7 +24,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelDefaultView,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
   await clickAlwaysTranslateLanguage({
@@ -54,7 +54,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelRevisitView,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
   await clickAlwaysTranslateLanguage();

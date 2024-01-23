@@ -27,7 +27,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelDefaultView,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
   await assertIsAlwaysOfferTranslationsEnabled(false);
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {

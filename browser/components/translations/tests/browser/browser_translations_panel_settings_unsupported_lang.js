@@ -29,7 +29,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelDefaultView,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
   await clickAlwaysTranslateLanguage({

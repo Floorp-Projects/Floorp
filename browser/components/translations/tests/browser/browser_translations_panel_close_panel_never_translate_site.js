@@ -21,7 +21,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_site() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
   await waitForTranslationsPopupEvent("popuphidden", async () => {
@@ -52,7 +52,7 @@ add_task(
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
@@ -71,7 +71,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
@@ -106,7 +106,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await clickNeverTranslateLanguage();
@@ -116,7 +116,7 @@ add_task(
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });

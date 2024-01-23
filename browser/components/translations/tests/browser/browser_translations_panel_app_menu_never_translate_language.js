@@ -26,7 +26,7 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
     openFromAppMenu: true,
     onOpenPanel: assertPanelDefaultView,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateLanguage("es", { checked: true });
   await clickNeverTranslateLanguage();
