@@ -4,6 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Region } from "resource://gre/modules/Region.sys.mjs";
+import { AddressMetaDataLoader } from "resource://gre/modules/shared/AddressMetaDataLoader.sys.mjs";
 
 const AUTOFILL_ADDRESSES_AVAILABLE_PREF =
   "extensions.formautofill.addresses.supported";
@@ -279,17 +280,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   val => val?.split(",").filter(v => !!v)
 );
 
-// XXX: This should be invalidated on intl:app-locales-changed.
-ChromeUtils.defineLazyGetter(FormAutofill, "countries", () => {
-  let availableRegionCodes =
-    Services.intl.getAvailableLocaleDisplayNames("region");
-  let displayNames = Services.intl.getRegionDisplayNames(
-    undefined,
-    availableRegionCodes
-  );
-  let result = new Map();
-  for (let i = 0; i < availableRegionCodes.length; i++) {
-    result.set(availableRegionCodes[i].toUpperCase(), displayNames[i]);
-  }
-  return result;
-});
+ChromeUtils.defineLazyGetter(FormAutofill, "countries", () =>
+  AddressMetaDataLoader.getCountries()
+);

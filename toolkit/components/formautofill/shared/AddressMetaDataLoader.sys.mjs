@@ -21,6 +21,8 @@ export class AddressMetaDataLoader {
 
   static addressData = {};
 
+  static DATA_PREFIX = "data/";
+
   /**
    * Load address meta data and extension into one object.
    *
@@ -60,7 +62,7 @@ export class AddressMetaDataLoader {
       "sub_names",
       "sub_lnames",
     ];
-    for (let key of properties) {
+    for (const key of properties) {
       if (!data[key]) {
         continue;
       }
@@ -96,7 +98,7 @@ export class AddressMetaDataLoader {
       this.dataLoaded.country = true;
     }
     if (!level1) {
-      return this.#parse(this.addressData[`data/${country}`]);
+      return this.#parse(this.addressData[`${this.DATA_PREFIX}${country}`]);
     }
     // If level1 is set, load addressReferences under country folder with specific
     // country/level 1 for level 2 information.
@@ -104,7 +106,9 @@ export class AddressMetaDataLoader {
       Object.assign(this.addressData, this.loadAddressMetaData());
       this.dataLoaded.level1.add(country);
     }
-    return this.#parse(this.addressData[`data/${country}/${level1}`]);
+    return this.#parse(
+      this.addressData[`${this.DATA_PREFIX}${country}/${level1}`]
+    );
   }
 
   /**
@@ -115,22 +119,49 @@ export class AddressMetaDataLoader {
    * @returns {object} Return default locale and other locales metadata.
    */
   static getData(country, level1 = null) {
-    let defaultLocale = this.#loadData(country, level1);
+    const defaultLocale = this.#loadData(country, level1);
     if (!defaultLocale) {
       return null;
     }
 
-    let countryData = this.#parse(this.addressData[`data/${country}`]);
+    const countryData = this.#parse(
+      this.addressData[`${this.DATA_PREFIX}${country}`]
+    );
     let locales = [];
     // TODO: Should be able to support multi-locale level 1/ level 2 metadata query
     //      in Bug 1421886
     if (countryData.languages) {
-      let list = countryData.languages.filter(key => key !== countryData.lang);
+      const list = countryData.languages.filter(
+        key => key !== countryData.lang
+      );
       locales = list.map(key =>
         this.#parse(this.addressData[`${defaultLocale.id}--${key}`])
       );
     }
     return { defaultLocale, locales };
+  }
+
+  /**
+   * Return an array containing countries alpha2 codes.
+   *
+   * @returns {Array} Return an array containing countries alpha2 codes.
+   */
+  static get #countryCodes() {
+    return Object.keys(lazy.AddressMetaDataExtension).map(dataKey =>
+      dataKey.replace(this.DATA_PREFIX, "")
+    );
+  }
+
+  static getCountries(locales = []) {
+    const displayNames = new Intl.DisplayNames(locales, {
+      type: "region",
+      fallback: "none",
+    });
+    const countriesMap = new Map();
+    for (const countryCode of this.#countryCodes) {
+      countriesMap.set(countryCode, displayNames.of(countryCode));
+    }
+    return countriesMap;
   }
 }
 
