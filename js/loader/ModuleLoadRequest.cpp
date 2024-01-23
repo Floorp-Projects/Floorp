@@ -230,6 +230,16 @@ void ModuleLoadRequest::LoadFinished() {
   mLoader->OnModuleLoadComplete(request);
 }
 
+void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,
+                                         JS::Handle<JSString*> aSpecifier,
+                                         JS::Handle<JSObject*> aPromise) {
+  mDynamicReferencingScript = aReferencingScript;
+  mDynamicSpecifier = aSpecifier;
+  mDynamicPromise = aPromise;
+
+  mozilla::HoldJSObjects(this);
+}
+
 void ModuleLoadRequest::ClearDynamicImport() {
   mDynamicReferencingScript = nullptr;
   mDynamicSpecifier = nullptr;
