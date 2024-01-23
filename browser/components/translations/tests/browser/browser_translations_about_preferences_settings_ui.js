@@ -16,7 +16,9 @@ add_task(async function test_translations_settings_pane_elements() {
   );
 
   const { backButton, header } =
-    await openAboutPreferencesTranslationsSettingsPane(settingsButton);
+    await TranslationsSettingsTestUtils.openAboutPreferencesTranslationsSettingsPane(
+      settingsButton
+    );
 
   ok(
     BrowserTestUtils.isHidden(settingsButton),
