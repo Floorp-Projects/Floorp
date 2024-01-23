@@ -1317,8 +1317,9 @@ modules:
       - tools/rb/**/*
     meta:
       group: dev-performance
-    owners:
-      - *dbaron
+      owners_emeritus:
+        - David Baron
+    owners: []
     peers: []
     machine_name: core_code_analysis_and_debugging_tools
 
