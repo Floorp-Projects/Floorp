@@ -1163,7 +1163,7 @@ modules:
         - Erica Wright
         - Gary Chen
         - *baku
-        - *johannh
+        - Johann Hofmann
       group: dev-platform
       components:
         - 'Core::Privacy: Anti-Tracking'
