@@ -42,6 +42,9 @@ pub const DT_SYMTAB: usize = 6;
 pub const DT_RELA: usize = 7;
 pub const DT_RELASZ: usize = 8;
 pub const DT_RELAENT: usize = 9;
+pub const DT_REL: usize = 17;
+pub const DT_RELSZ: usize = 18;
+pub const DT_RELENT: usize = 19;
 pub const DT_SYMENT: usize = 11;
 pub const DT_VERSYM: usize = 0x6fff_fff0;
 pub const DT_VERDEF: usize = 0x6fff_fffc;
@@ -220,6 +223,34 @@ pub struct Elf_Rela {
 }
 
 impl Elf_Rela {
+    #[inline]
+    pub fn type_(&self) -> u32 {
+        #[cfg(target_pointer_width = "32")]
+        {
+            self.r_info & 0xff
+        }
+        #[cfg(target_pointer_width = "64")]
+        {
+            (self.r_info & 0xffff_ffff) as u32
+        }
+    }
+}
+
+#[cfg(target_pointer_width = "32")]
+#[repr(C)]
+pub struct Elf_Rel {
+    pub r_offset: usize,
+    pub r_info: u32,
+}
+
+#[cfg(target_pointer_width = "64")]
+#[repr(C)]
+pub struct Elf_Rel {
+    pub r_offset: usize,
+    pub r_info: u64,
+}
+
+impl Elf_Rel {
     #[inline]
     pub fn type_(&self) -> u32 {
         #[cfg(target_pointer_width = "32")]
