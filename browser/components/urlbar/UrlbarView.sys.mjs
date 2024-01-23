@@ -1372,10 +1372,6 @@ export class UrlbarView {
     noWrap.appendChild(action);
     item._elements.set("action", action);
 
-    let userContextBox = this.#createElement("span");
-    noWrap.appendChild(userContextBox);
-    item._elements.set("user-context", userContextBox);
-
     let url = this.#createElement("span");
     url.className = "urlbarView-url";
     item._content.appendChild(url);
@@ -1711,13 +1707,6 @@ export class UrlbarView {
     let favicon = item._elements.get("favicon");
     favicon.src = this.#iconForResult(result);
 
-    let userContextBox = item._elements.get("user-context");
-    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
-      this.#setResultUserContextBox(result, userContextBox);
-    } else if (userContextBox) {
-      this.#removeElementL10n(userContextBox);
-    }
-
     let title = item._elements.get("title");
     this.#setResultTitle(result, title);
 
@@ -1759,9 +1748,7 @@ export class UrlbarView {
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         actionSetter = () => {
-          this.#setElementL10n(action, {
-            id: "urlbar-result-action-switch-tab",
-          });
+          this.#setSwitchTabActionChiclet(result, action);
         };
         setURL = true;
         break;
@@ -2626,58 +2613,86 @@ export class UrlbarView {
   }
 
   /**
-   * Sets `result`'s userContext in `userContextNode`'s DOM.
+   * Sets the content of the 'Switch To Tab' chiclet.
    *
    * @param {UrlbarResult} result
    *   The result for which the userContext is being set.
-   * @param {Element} userContextNode
-   *   The DOM node for the result's userContext.
+   * @param {Element} actionNode
+   *   The DOM node for the result's action.
    */
-  #setResultUserContextBox(result, userContextNode) {
-    // clear the element
-    while (userContextNode.firstChild) {
-      userContextNode.firstChild.remove();
-    }
+  #setSwitchTabActionChiclet(result, actionNode) {
     if (
       lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
       result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
       result.payload.userContextId
     ) {
-      let userContextBox = this.#createElement("span");
-      userContextBox.classList.add("urlbarView-userContext-indicator");
+      let label = lazy.ContextualIdentityService.getUserContextLabel(
+        result.payload.userContextId
+      ).toLowerCase();
+      // To avoid flicker don't update the label unless necessary.
+      if (
+        actionNode.classList.contains("urlbarView-userContext") &&
+        label &&
+        actionNode.querySelector("span").innerText == label
+      ) {
+        return;
+      }
+      actionNode.innerHTML = "";
       let identity = lazy.ContextualIdentityService.getPublicIdentityFromId(
         result.payload.userContextId
       );
-      let label = lazy.ContextualIdentityService.getUserContextLabel(
-        result.payload.userContextId
-      );
       if (identity) {
-        userContextNode.classList.add("urlbarView-action");
-        let userContextLabel = this.#createElement("label");
-        userContextLabel.classList.add("urlbarView-userContext-label");
-        userContextBox.appendChild(userContextLabel);
+        actionNode.classList.add("urlbarView-userContext");
+        if (identity.color) {
+          actionNode.className = actionNode.className.replace(
+            /identity-color-\w*/g,
+            ""
+          );
+          actionNode.classList.add("identity-color-" + identity.color);
+        }
 
-        let userContextIcon = this.#createElement("img");
-        userContextIcon.classList.add("urlbarView-userContext-icons");
-        userContextBox.appendChild(userContextIcon);
+        let textModeLabel = this.#createElement("div");
+        textModeLabel.classList.add("urlbarView-userContext-textMode");
 
+        if (label) {
+          this.#setElementL10n(textModeLabel, {
+            id: "urlbar-result-action-switch-tab-with-container",
+            args: {
+              container: label.toLowerCase(),
+            },
+          });
+          actionNode.appendChild(textModeLabel);
+        }
+
+        let iconModeLabel = this.#createElement("div");
+        iconModeLabel.classList.add("urlbarView-userContext-iconMode");
+        actionNode.appendChild(iconModeLabel);
         if (identity.icon) {
+          let userContextIcon = this.#createElement("img");
+          userContextIcon.classList.add("urlbarView-userContext-icon");
+
           userContextIcon.classList.add("identity-icon-" + identity.icon);
           userContextIcon.src =
             "resource://usercontext-content/" + identity.icon + ".svg";
+          this.#setElementL10n(iconModeLabel, {
+            id: "urlbar-result-action-switch-tab",
+          });
+          iconModeLabel.appendChild(userContextIcon);
         }
-        if (identity.color) {
-          userContextBox.classList.add("identity-color-" + identity.color);
-        }
-        if (label) {
-          userContextLabel.setAttribute("value", label);
-          userContextLabel.innerText = label;
-        }
-        userContextBox.setAttribute("tooltiptext", label);
-        userContextNode.appendChild(userContextBox);
+        actionNode.setAttribute("tooltiptext", label);
       }
     } else {
-      userContextNode.classList.remove("urlbarView-action");
+      actionNode.classList.remove("urlbarView-userContext");
+      // identity needs to be removed as well..
+      actionNode
+        .querySelectorAll(
+          ".urlbarView-userContext-textMode, .urlbarView-userContext-iconMode"
+        )
+        .forEach(node => node.remove());
+
+      this.#setElementL10n(actionNode, {
+        id: "urlbar-result-action-switch-tab",
+      });
     }
   }
 
