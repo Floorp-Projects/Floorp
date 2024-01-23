@@ -251,10 +251,9 @@ add_task(async function test_tab() {
   await promise;
 
   // ... and move the focus out of the searchbox.
-  isnot(
-    Services.focus.focusedElement,
-    textbox.inputField,
-    "the search bar no longer be focused"
+  ok(
+    !Services.focus.focusedElement.classList.contains("searchbar-textbox"),
+    "the search input in the search bar should no longer be focused"
   );
 });
 
@@ -298,10 +297,9 @@ add_task(async function test_shift_tab() {
   await promise;
 
   // ... and move the focus out of the searchbox.
-  isnot(
-    Services.focus.focusedElement,
-    textbox.inputField,
-    "the search bar no longer be focused"
+  ok(
+    !Services.focus.focusedElement.classList.contains("searchbar-textbox"),
+    "the search input in the search bar should no longer be focused"
   );
 });
 

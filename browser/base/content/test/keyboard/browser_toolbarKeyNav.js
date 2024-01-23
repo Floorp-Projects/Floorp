@@ -554,6 +554,9 @@ add_task(async function testTabStopsAfterSearchBarAdded() {
     await expectFocusAfterKey("Tab", "searchbar", true);
     await expectFocusAfterKey("Tab", afterUrlBarButton);
     await expectFocusAfterKey("ArrowRight", "library-button");
+    await expectFocusAfterKey("ArrowLeft", afterUrlBarButton);
+    await expectFocusAfterKey("Shift+Tab", "searchbar", true);
+    await expectFocusAfterKey("Shift+Tab", gURLBar.inputField);
   });
   await SpecialPowers.popPrefEnv();
   RemoveOldMenuSideButtons();
