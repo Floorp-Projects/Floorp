@@ -22,7 +22,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await assertContextMenuTranslateSelectionItem(
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
         selectSpanishParagraph: false,
