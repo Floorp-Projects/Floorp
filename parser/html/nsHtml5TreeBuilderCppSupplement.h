@@ -1672,8 +1672,15 @@ nsIContentHandle* nsHtml5TreeBuilder::getShadowRootFromHost(
   }
 
   if (mBuilder) {
-    return nsContentUtils::AttachDeclarativeShadowRoot(
+    nsIContent* root = nsContentUtils::AttachDeclarativeShadowRoot(
         static_cast<nsIContent*>(aHost), mode, aShadowRootDelegatesFocus);
+    if (!root) {
+      nsContentUtils::LogSimpleConsoleError(
+          u"Failed to attach Declarative Shadow DOM."_ns, "DOM"_ns,
+          mBuilder->GetDocument()->IsInPrivateBrowsing(),
+          mBuilder->GetDocument()->IsInChromeDocShell());
+    }
+    return root;
   }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
