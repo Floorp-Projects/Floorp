@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use icu_properties::bidi::BidiClassAdapter;
+use icu_properties::maps;
+
 use unicode_bidi::level::Level;
 use unicode_bidi::utf16;
 use unicode_bidi::Direction;
@@ -38,8 +41,11 @@ impl UnicodeBidi<'_> {
         } else {
             None
         };
+        let adapter = BidiClassAdapter::new(maps::bidi_class());
         Box::new(UnicodeBidi {
-            paragraph_info: utf16::ParagraphBidiInfo::<'a>::new(text, level),
+            paragraph_info: utf16::ParagraphBidiInfo::<'a>::new_with_data_source(
+                &adapter, text, level,
+            ),
             resolved: None,
         })
     }
@@ -153,14 +159,15 @@ pub extern "C" fn bidi_get_base_direction(
     first_paragraph: bool,
 ) -> i8 {
     let text = unsafe { slice::from_raw_parts(text, length) };
+    let adapter = BidiClassAdapter::new(maps::bidi_class());
     if first_paragraph {
-        match unicode_bidi::get_base_direction(text) {
+        match unicode_bidi::get_base_direction_with_data_source(&adapter, text) {
             Direction::Mixed => 0,
             Direction::Ltr => 1,
             Direction::Rtl => -1,
         }
     } else {
-        match unicode_bidi::get_base_direction_full(text) {
+        match unicode_bidi::get_base_direction_full_with_data_source(&adapter, text) {
             Direction::Mixed => 0,
             Direction::Ltr => 1,
             Direction::Rtl => -1,
