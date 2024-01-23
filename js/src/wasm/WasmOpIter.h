@@ -1676,6 +1676,17 @@ inline bool OpIter<Policy>::readTryTable(ResultType* paramType,
       return fail("unable to read catch depth");
     }
 
+    // The target branch depth is relative to the control labels outside of
+    // this try_table. e.g. `0` is a branch to the control outside of this
+    // try_table, not to the try_table itself. However, we've already pushed
+    // the control block for the try_table, and users will read it after we've
+    // returned, so we need to return the relative depth adjusted by 1 to
+    // account for our own control block.
+    if (tryTableCatch.labelRelativeDepth == UINT32_MAX) {
+      return fail("catch depth out of range");
+    }
+    tryTableCatch.labelRelativeDepth += 1;
+
     // Tagged catches will unpack the exception package and pass it to the
     // branch
     if (tryTableCatch.tagIndex != CatchAllIndex) {
