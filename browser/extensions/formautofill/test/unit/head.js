@@ -275,7 +275,7 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
 }
 
 var FormAutofillHeuristics, LabelUtils;
-var AddressDataLoader, FormAutofillUtils;
+var AddressMetaDataLoader, FormAutofillUtils;
 
 function autofillFieldSelector(doc) {
   return doc.querySelectorAll("input, select");
