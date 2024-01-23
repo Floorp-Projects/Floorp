@@ -247,10 +247,10 @@ mod windows {
     use std::ptr;
 
     use windows_sys::Win32::{
-        Foundation::{CloseHandle, FALSE, INVALID_HANDLE_VALUE},
+        Foundation::{CloseHandle, FALSE, HANDLE, INVALID_HANDLE_VALUE},
         System::Memory::{
             CreateFileMappingA, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS,
-            MEMORYMAPPEDVIEW_HANDLE, PAGE_READWRITE,
+            MEMORY_MAPPED_VIEW_ADDRESS, PAGE_READWRITE,
         },
     };
 
@@ -259,7 +259,7 @@ mod windows {
     use super::*;
 
     pub struct SharedMem {
-        handle: MEMORYMAPPEDVIEW_HANDLE,
+        handle: HANDLE,
         view: SharedMemView,
     }
 
@@ -268,7 +268,9 @@ mod windows {
     impl Drop for SharedMem {
         fn drop(&mut self) {
             unsafe {
-                let ok = UnmapViewOfFile(self.view.ptr as _);
+                let ok = UnmapViewOfFile(MEMORY_MAPPED_VIEW_ADDRESS {
+                    Value: self.view.ptr,
+                });
                 assert_ne!(ok, FALSE);
                 let ok = CloseHandle(self.handle);
                 assert_ne!(ok, FALSE);
@@ -292,14 +294,14 @@ mod windows {
                 }
 
                 let ptr = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
-                if !valid_handle(ptr as _) {
+                if !valid_handle(ptr.Value) {
                     return Err(std::io::Error::last_os_error().into());
                 }
 
                 Ok(SharedMem {
                     handle,
                     view: SharedMemView {
-                        ptr: ptr as _,
+                        ptr: ptr.Value,
                         size,
                     },
                 })
@@ -313,13 +315,13 @@ mod windows {
         pub unsafe fn from(handle: PlatformHandle, size: usize) -> Result<SharedMem> {
             let handle = handle.into_raw();
             let ptr = MapViewOfFile(handle as _, FILE_MAP_ALL_ACCESS, 0, 0, size);
-            if !valid_handle(ptr as _) {
+            if !valid_handle(ptr.Value) {
                 return Err(std::io::Error::last_os_error().into());
             }
             Ok(SharedMem {
                 handle: handle as _,
                 view: SharedMemView {
-                    ptr: ptr as _,
+                    ptr: ptr.Value,
                     size,
                 },
             })

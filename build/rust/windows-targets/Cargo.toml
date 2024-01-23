@@ -1,6 +1,6 @@
 [package]
 name = "windows-targets"
-version = "0.48.999"
+version = "0.52.999"
 edition = "2018"
 license = "MIT OR Apache-2.0"
 

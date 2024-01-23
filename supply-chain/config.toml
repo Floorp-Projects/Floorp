@@ -108,6 +108,10 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "Version 0.6.23 is a local fork of upstream which just twiddles some dependencies."
 
+[policy."mio:0.8.8@git:9a2ef335c366044ffe73b1c4acabe50a1daefe05"]
+audit-as-crates-io = true
+notes = "This is 0.8.8 + https://github.com/tokio-rs/mio/commit/eea9e3e0c469480e5c59c01e6c3c7e5fd88f0848."
+
 [policy.mozbuild]
 audit-as-crates-io = false
 notes = "The crates.io version of this is just a placeholder to allow public crates to depend on mozbuild."

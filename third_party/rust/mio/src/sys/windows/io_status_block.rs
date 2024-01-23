@@ -1,12 +1,12 @@
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-use windows_sys::Win32::System::WindowsProgramming::IO_STATUS_BLOCK;
+use windows_sys::Win32::System::IO::IO_STATUS_BLOCK;
 
 pub struct IoStatusBlock(IO_STATUS_BLOCK);
 
 cfg_io_source! {
-    use windows_sys::Win32::System::WindowsProgramming::{IO_STATUS_BLOCK_0};
+    use windows_sys::Win32::System::IO::IO_STATUS_BLOCK_0;
 
     impl IoStatusBlock {
         pub fn zeroed() -> Self {

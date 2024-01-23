@@ -90,12 +90,12 @@ required-features = [
 version = "0.4.8"
 optional = true
 
+[dev-dependencies]
+rand = "0.8"
+
 [dev-dependencies.env_logger]
 version = "0.9.3"
 default-features = false
-
-[dev-dependencies.rand]
-version = "0.8"
 
 [features]
 default = ["log"]
@@ -107,18 +107,19 @@ os-ext = [
 ]
 os-poll = []
 
-[target."cfg(target_os = \"wasi\")".dependencies.libc]
-version = "0.2.121"
+[target."cfg(target_os = \"wasi\")".dependencies]
+libc = "0.2.121"
+wasi = "0.11.0"
 
-[target."cfg(target_os = \"wasi\")".dependencies.wasi]
-version = "0.11.0"
-
-[target."cfg(unix)".dependencies.libc]
-version = "0.2.121"
+[target."cfg(unix)".dependencies]
+libc = "0.2.121"
 
 [target."cfg(windows)".dependencies.windows-sys]
-version = "0.48"
+version = "0.52"
 features = [
+    "Wdk_Foundation",
+    "Wdk_Storage_FileSystem",
+    "Wdk_System_IO",
     "Win32_Foundation",
     "Win32_Networking_WinSock",
     "Win32_Storage_FileSystem",

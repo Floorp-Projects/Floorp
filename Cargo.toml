@@ -103,6 +103,10 @@ mozilla-central-workspace-hack = { path = "build/workspace-hack" }
 # windows-targets replacement. It avoids the large dependencies of the original
 # crate, which we don't really need as we require MSVC anyways.
 windows-targets = { path = "build/rust/windows-targets" }
+windows-targets_0_48 = { package = "windows-targets", path = "build/rust/windows-targets-0.48" }
+
+# Patch windows-sys from 0.48.0 to 0.52.0
+windows-sys = { path = "build/rust/windows-sys" }
 
 # Dummy oslog replacement. It's only used by glean in code that is not actually used.
 oslog = { path = "build/rust/oslog" }
@@ -209,6 +213,9 @@ sync15 = { git = "https://github.com/mozilla/application-services", rev = "63a62
 tabs = { git = "https://github.com/mozilla/application-services", rev = "63a6260c14847c21c5a1fa3003efaf0114a3e4e5" }
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "63a6260c14847c21c5a1fa3003efaf0114a3e4e5" }
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "63a6260c14847c21c5a1fa3003efaf0114a3e4e5" }
+
+# Patch mio 0.8.8 to use windows-sys 0.52 (backport https://github.com/tokio-rs/mio/commit/eea9e3e0c469480e5c59c01e6c3c7e5fd88f0848)
+mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

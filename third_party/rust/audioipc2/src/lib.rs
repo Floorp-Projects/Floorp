@@ -201,7 +201,7 @@ pub(crate) unsafe fn close_target_handle(
 #[cfg(windows)]
 pub fn server_platform_init() {
     unsafe {
-        let r = CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED);
+        let r = CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED as _);
         assert!(r == S_OK || r == S_FALSE);
     }
 }
