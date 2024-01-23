@@ -359,8 +359,10 @@ void nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
       line->SwitchToCounter();  // Avoid expensive has table removals.
     }
     while (line->GetChildCount() > 0) {
-      nsIFrame* child = aFrames->RemoveLastChild();
+      nsIFrame* child = aFrames->RemoveFirstChild();
       MOZ_DIAGNOSTIC_ASSERT(child->PresContext() == aPresContext);
+      MOZ_DIAGNOSTIC_ASSERT(child == line->mFirstChild, "Lines out of sync");
+      line->mFirstChild = aFrames->FirstChild();
       line->NoteFrameRemoved(child);
       child->Destroy(aContext);
     }
