@@ -110,8 +110,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   // Return the sum of inline-size of the scrollbar gutters (if any) at the
   // inline-start and inline-end edges of the scroll frame (for a potential
   // scrollbar that scrolls in the block axis).
-  nscoord IntrinsicScrollbarGutterSizeAtInlineEdges(
-      gfxContext* aRenderingContext);
+  nscoord IntrinsicScrollbarGutterSizeAtInlineEdges();
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const final;
