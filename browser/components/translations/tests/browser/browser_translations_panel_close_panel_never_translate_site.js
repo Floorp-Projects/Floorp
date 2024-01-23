@@ -27,9 +27,12 @@ add_task(async function test_panel_closes_on_toggle_never_translate_site() {
     SPANISH_PAGE_URL,
     { checked: false }
   );
-  await waitForTranslationsPopupEvent("popuphidden", async () => {
-    await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-  });
+  await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    "popuphidden",
+    async () => {
+      await FullPageTranslationsTestUtils.clickNeverTranslateSite();
+    }
+  );
 
   await cleanup();
 });
@@ -88,9 +91,12 @@ add_task(
       { checked: false }
     );
 
-    await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      async () => {
+        await FullPageTranslationsTestUtils.clickNeverTranslateSite();
+      }
+    );
 
     await cleanup();
   }
@@ -141,9 +147,12 @@ add_task(
       SPANISH_PAGE_URL,
       { checked: false }
     );
-    await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      async () => {
+        await FullPageTranslationsTestUtils.clickNeverTranslateSite();
+      }
+    );
 
     await cleanup();
   }
