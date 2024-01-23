@@ -173,7 +173,7 @@
   let {test} = wasmEvalText(`(module
     (import "" "tag" (tag $tag))
     (import "" "throwJS" (func $throwJS (param externref)))
-    (func (export "test") (param externref)
+    (func $innerRethrow (param externref)
       try_table (result exnref) (catch_ref $tag 0) (catch_all_ref 0)
         local.get 0
         call $throwJS
@@ -181,15 +181,17 @@
       end
       throw_ref
     )
+    (func (export "test") (param externref)
+      try_table (result exnref) (catch_ref $tag 0) (catch_all_ref 0)
+        local.get 0
+        call $innerRethrow
+        return
+      end
+      throw_ref
+    )
   )`, {"": {tag, throwJS}}).exports;
 
   for (let value of values) {
-    // TODO: A JS null value should become a non-null exnref that can be
-    // rethrown without a trap.
-    if (value === null) {
-      continue;
-    }
-
     try {
       test(value);
       assertEq(true, false);
@@ -197,4 +199,21 @@
       assertEq(thrownValue, value);
     }
   }
+}
+
+
+// Test catching an OOM exception
+{
+  let {test} = wasmEvalText(`(module
+    (import "" "oom" (func $oom))
+    (func (export "test") (result i32)
+      try_table (catch_all 0)
+        call $oom
+        (return i32.const 0)
+      end
+      (return i32.const 1)
+    )
+  )`, {"": {oom: throwOutOfMemory}}).exports;
+
+  assertEq(test(), 1);
 }

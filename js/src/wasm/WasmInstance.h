@@ -368,7 +368,7 @@ class alignas(16) Instance {
 
   // Exception handling support
 
-  void setPendingException(HandleAnyRef exn);
+  void setPendingException(Handle<WasmExceptionObject*> exn);
 
   // Constant expression support
 
