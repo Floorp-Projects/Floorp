@@ -58,6 +58,174 @@
     },
     {
       "schemaVersion": "1.12.0",
+      "slug": "beta-fx-122-android-set-to-default-notifications-timing-experiment",
+      "id": "beta-fx-122-android-set-to-default-notifications-timing-experiment",
+      "arguments": {},
+      "application": "org.mozilla.firefox",
+      "appName": "fenix",
+      "appId": "org.mozilla.firefox",
+      "channel": "release",
+      "userFacingName": "Fx 122 Android set to default notifications timing experiment",
+      "userFacingDescription": "Timing test for the set to default message on Firefox for Android (Fenix).",
+      "isEnrollmentPaused": false,
+      "isRollout": false,
+      "bucketConfig": {
+        "randomizationUnit": "nimbus_id",
+        "namespace": "fenix-messaging-release-19",
+        "start": 0,
+        "count": 10000,
+        "total": 10000
+      },
+      "featureIds": [
+        "messaging"
+      ],
+      "probeSets": [],
+      "outcomes": [
+        {
+          "slug": "default-browser",
+          "priority": "primary"
+        }
+      ],
+      "branches": [
+        {
+          "slug": "control",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "messaging",
+              "enabled": true,
+              "value": {
+                "messages": {
+                  "{experiment}-en": {
+                    "is-control": true,
+                    "surface": "notification",
+                    "style": "NOTIFICATION",
+                    "action": "MAKE_DEFAULT_BROWSER",
+                    "trigger": [
+                      "I_AM_NOT_DEFAULT_BROWSER"
+                    ],
+                    "experiment": "{experiment}"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "slug": "treatment-a",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "messaging",
+              "enabled": true,
+              "value": {
+                "messages": {
+                  "{experiment}-en": {
+                    "title": "Firefox is Fast and Private",
+                    "text": "Make Firefox your default browser",
+                    "surface": "notification",
+                    "style": "NOTIFICATION",
+                    "action": "MAKE_DEFAULT_BROWSER",
+                    "trigger": [
+                      "DAY_1_AFTER_INSTALL",
+                      "I_AM_NOT_DEFAULT_BROWSER"
+                    ],
+                    "experiment": "{experiment}"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "slug": "treatment-b",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "messaging",
+              "enabled": true,
+              "value": {
+                "messages": {
+                  "{experiment}-en": {
+                    "title": "Firefox is Fast and Private",
+                    "text": "Make Firefox your default browser",
+                    "surface": "notification",
+                    "style": "NOTIFICATION",
+                    "action": "MAKE_DEFAULT_BROWSER",
+                    "trigger": [
+                      "DAY_3_AFTER_INSTALL",
+                      "I_AM_NOT_DEFAULT_BROWSER"
+                    ],
+                    "experiment": "{experiment}"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "slug": "treatment-c",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "messaging",
+              "enabled": true,
+              "value": {
+                "messages": {
+                  "{experiment}-en": {
+                    "title": "Firefox is Fast and Private",
+                    "text": "Make Firefox your default browser",
+                    "surface": "notification",
+                    "style": "NOTIFICATION",
+                    "action": "MAKE_DEFAULT_BROWSER",
+                    "trigger": [
+                      "DAY_6_AFTER_INSTALL",
+                      "I_AM_NOT_DEFAULT_BROWSER"
+                    ],
+                    "experiment": "{experiment}"
+                  }
+                },
+                "triggers": {
+                  "DAY_6_AFTER_INSTALL": "days_since_install == 6"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('122.!') >= 0) && (language in ['en'])))",
+      "startDate": "2024-01-23",
+      "enrollmentEndDate": null,
+      "endDate": null,
+      "proposedDuration": 43,
+      "proposedEnrollment": 14,
+      "referenceBranch": "control",
+      "featureValidationOptOut": false,
+      "localizations": null,
+      "locales": null
+    },
+    {
+      "schemaVersion": "1.12.0",
       "slug": "splash-screen-test",
       "id": "splash-screen-test",
       "arguments": {},
