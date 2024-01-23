@@ -5,6 +5,10 @@ const { CustomizableUITestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+);
+
 const BASE_URL =
   "https://example.com/browser/browser/components/reportbrokensite/test/browser/";
 
@@ -12,7 +16,9 @@ const REPORTABLE_PAGE_URL = "https://example.com";
 
 const REPORTABLE_PAGE_URL2 = REPORTABLE_PAGE_URL.replace(".com", ".org");
 
-const NEW_REPORT_ENDPOINT_TEST_URL = `${BASE_URL}/sendMoreInfoTestEndpoint.html`;
+const REPORTABLE_PAGE_URL3 = `${BASE_URL}example_report_page.html`;
+
+const NEW_REPORT_ENDPOINT_TEST_URL = `${BASE_URL}sendMoreInfoTestEndpoint.html`;
 
 const PREFS = {
   DATAREPORTING_ENABLED: "datareporting.healthreport.uploadEnabled",
@@ -36,6 +42,60 @@ function add_common_setup() {
       }
     });
   });
+}
+
+function areObjectsEqual(actual, expected, path = "") {
+  if (typeof expected == "function") {
+    try {
+      const passes = expected(actual);
+      if (!passes) {
+        info(`${path} not pass check function: ${actual}`);
+      }
+      return passes;
+    } catch (e) {
+      info(`${path} threw exception:
+        got: ${typeof actual}, ${actual}
+        expected: ${typeof expected}, ${expected}
+        exception: ${e.message}
+          ${e.stack}`);
+      return false;
+    }
+  }
+
+  if (typeof actual != typeof expected) {
+    info(`${path} types do not match:
+      got: ${typeof actual}, ${actual}
+      expected: ${typeof expected}, ${expected}`);
+    return false;
+  }
+  if (typeof actual != "object" || actual === null || expected === null) {
+    if (actual !== expected) {
+      info(`${path} does not match
+        got: ${typeof actual}, ${actual}
+        expected: ${typeof expected}, ${expected}`);
+      return false;
+    }
+    return true;
+  }
+  const prefix = path ? `${path}.` : path;
+  for (const [key, val] of Object.entries(actual)) {
+    if (!(key in expected)) {
+      info(`Extra ${prefix}${key}: ${val}`);
+      return false;
+    }
+  }
+  let result = true;
+  for (const [key, expectedVal] of Object.entries(expected)) {
+    if (key in actual) {
+      if (!areObjectsEqual(actual[key], expectedVal, `${prefix}${key}`)) {
+        result = false;
+      }
+    } else {
+      info(`Missing ${prefix}${key} (${expectedVal})`);
+      result = false;
+    }
+  }
+  return result;
 }
 
 function clickAndAwait(toClick, evt, target) {
@@ -763,4 +823,46 @@ async function tabTo(match, win = window) {
     target = await pressKeyAndGetFocus("VK_TAB", config);
   } while (target && target !== initial);
   return undefined;
+}
+
+async function setupStrictETP(fn) {
+  await UrlClassifierTestUtils.addTestTrackers();
+  registerCleanupFunction(() => {
+    UrlClassifierTestUtils.cleanupTestTrackers();
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.mixed_content.block_active_content", true],
+      ["security.mixed_content.block_display_content", true],
+      ["security.mixed_content.upgrade_display_content", false],
+      [
+        "urlclassifier.trackingTable",
+        "content-track-digest256,mochitest2-track-simple",
+      ],
+    ],
+  });
+}
+
+// copied from browser/base/content/test/protectionsUI/head.js
+function waitForContentBlockingEvent(numChanges = 1, win = null) {
+  if (!win) {
+    win = window;
+  }
+  return new Promise(resolve => {
+    let n = 0;
+    let listener = {
+      onContentBlockingEvent(webProgress, request, event) {
+        n = n + 1;
+        info(
+          `Received onContentBlockingEvent event: ${event} (${n} of ${numChanges})`
+        );
+        if (n >= numChanges) {
+          win.gBrowser.removeProgressListener(listener);
+          resolve(n);
+        }
+      },
+    };
+    win.gBrowser.addProgressListener(listener);
+  });
 }

@@ -213,13 +213,6 @@ function getSysinfoProperty(propertyName, defaultValue) {
   return defaultValue;
 }
 
-function limitStringToLength(str, maxLength) {
-  if (typeof str !== "string") {
-    return null;
-  }
-  return str.substring(0, maxLength);
-}
-
 const BrowserInfo = {
   getAppInfo() {
     const { userAgent } = Cc[
@@ -272,39 +265,11 @@ const BrowserInfo = {
     return info;
   },
 
-  getSecurityInfo() {
-    if (AppConstants.platform != "win") {
-      return undefined;
-    }
-
-    const maxStringLength = 256;
-
-    const keys = [
-      ["registeredAntiVirus", "antivirus"],
-      ["registeredAntiSpyware", "antispyware"],
-      ["registeredFirewall", "firewall"],
-    ];
-
-    let result = {};
-
-    for (let [inKey, outKey] of keys) {
-      let prop = getSysinfoProperty(inKey, null);
-      if (prop) {
-        prop = limitStringToLength(prop, maxStringLength).split(";");
-      }
-
-      result[outKey] = prop;
-    }
-
-    return result;
-  },
-
   getAllData() {
     return {
       app: BrowserInfo.getAppInfo(),
       prefs: BrowserInfo.getPrefs(),
       platform: BrowserInfo.getPlatformInfo(),
-      security: BrowserInfo.getSecurityInfo(),
     };
   },
 };
@@ -318,11 +283,13 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
         SCREENSHOT_FORMAT
       ),
     ]).then(([consoleLog, infoFromParent]) => {
-      const { antitracking, graphics, locales, screenshot } = infoFromParent;
+      const { antitracking, graphics, locales, screenshot, security } =
+        infoFromParent;
 
       const browser = BrowserInfo.getAllData();
       browser.graphics = graphics;
       browser.locales = locales;
+      browser.security = security;
 
       const win = docShell.domWindow;
       const frameworks = FrameworkDetector.checkWindow(win);

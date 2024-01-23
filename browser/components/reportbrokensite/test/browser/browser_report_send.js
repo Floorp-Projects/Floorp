@@ -5,39 +5,18 @@
  * the Send and Cancel buttons work (as well as the Okay button)
  */
 
+/* import-globals-from send.js */
+
 "use strict";
+
+Services.scriptloader.loadSubScript(
+  getRootDirectory(gTestPath) + "send.js",
+  this
+);
 
 add_common_setup();
 
 requestLongerTimeout(10);
-
-async function testSend(menu, url, description = "any") {
-  let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
-
-  if (!url) {
-    url = menu.win.gBrowser.currentURI.spec;
-  }
-
-  const pingCheck = new Promise(resolve => {
-    GleanPings.brokenSiteReport.testBeforeNextSubmit(() => {
-      Assert.equal(Glean.brokenSiteReport.url.testGetValue(), url);
-      Assert.equal(
-        Glean.brokenSiteReport.description.testGetValue(),
-        description
-      );
-      resolve();
-    });
-  });
-
-  await rbs.clickSend();
-  await pingCheck;
-  await rbs.clickOkay();
-
-  // re-opening the panel, the url and description should be reset
-  rbs = await menu.openReportBrokenSite();
-  rbs.isMainViewResetToCurrentTab();
-  rbs.close();
-}
 
 async function testCancel(menu, url, description) {
   let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
@@ -52,26 +31,19 @@ async function testCancel(menu, url, description) {
 
 add_task(async function testSendButton() {
   ensureReportBrokenSitePreffedOn();
+  ensureReasonOptional();
 
   const tab1 = await openTab(REPORTABLE_PAGE_URL);
 
-  await testSend(AppMenu());
+  await testSend(tab1, AppMenu());
 
   const tab2 = await openTab(REPORTABLE_PAGE_URL);
 
-  await testSend(
-    ProtectionsPanel(),
-    "https://test.org/test/#fake",
-    "test description"
-  );
-
-  const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  const tab3 = await openTab(REPORTABLE_PAGE_URL2, win2);
-
-  await testSend(AppMenu(win2), null, "another test description");
-
-  closeTab(tab3);
-  await BrowserTestUtils.closeWindow(win2);
+  await testSend(tab2, ProtectionsPanel(), {
+    url: "https://test.org/test/#fake",
+    breakageCategory: "media",
+    description: "test description",
+  });
 
   closeTab(tab1);
   closeTab(tab2);

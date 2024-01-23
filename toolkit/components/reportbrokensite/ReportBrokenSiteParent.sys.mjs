@@ -5,6 +5,36 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+function getSysinfoProperty(propertyName, defaultValue) {
+  try {
+    return Services.sysinfo.getProperty(propertyName);
+  } catch (e) {}
+  return defaultValue;
+}
+
+function getSecurityInfo() {
+  const keys = [
+    ["registeredAntiVirus", "antivirus"],
+    ["registeredAntiSpyware", "antispyware"],
+    ["registeredFirewall", "firewall"],
+  ];
+
+  let result = {};
+
+  for (let [inKey, outKey] of keys) {
+    const str = getSysinfoProperty(inKey, null);
+    result[outKey] = !str ? null : str.split(";");
+  }
+
+  // Right now, security data is only available for Windows builds, and
+  // we might as well not return anything at all if no data is available.
+  if (!Object.values(result).filter(e => e).length) {
+    return undefined;
+  }
+
+  return result;
+}
+
 class DriverInfo {
   constructor(gl, ext) {
     try {
@@ -73,7 +103,7 @@ class DriverInfo {
 
     function tryDriver(type) {
       const driver = DriverInfo.getByType(type);
-      if (driver && !drivers.find(d => d.equals(driver))) {
+      if (driver) {
         drivers.push(driver);
       }
     }
@@ -165,25 +195,23 @@ export class ReportBrokenSiteParent extends JSWindowActorParent {
 
     const data = this.#getBasicGraphicsInfo(gfxInfo);
 
-    const drivers = DriverInfo.getAll();
-    if (drivers.length) {
-      data.drivers = drivers.map(({ renderer, version }) => {
-        return { renderer, version };
-      });
-    }
+    data.drivers = DriverInfo.getAll().map(({ renderer, vendor, version }) => {
+      return { renderer: `${vendor} -- ${renderer}`, version };
+    });
 
     try {
       const info = gfxInfo.CodecSupportInfo;
       if (info) {
         const codecs = {};
         for (const item of gfxInfo.CodecSupportInfo.split("\n")) {
-          const [codec, type] = item.split(" ");
+          const [codec, ...types] = item.split(" ");
           if (!codecs[codec]) {
-            codecs[codec] = { hw: false, sw: false };
+            codecs[codec] = { software: false, hardware: false };
           }
-          if (type == "SW") {
+          if (types.includes("SW")) {
             codecs[codec].software = true;
-          } else if (type == "HW") {
+          }
+          if (types.includes("HW")) {
             codecs[codec].hardware = true;
           }
         }
@@ -255,6 +283,7 @@ export class ReportBrokenSiteParent extends JSWindowActorParent {
           graphics: this.#getGraphicsInfo(),
           locales: Services.locale.availableLocales,
           screenshot,
+          security: getSecurityInfo(),
         };
       }
     }
