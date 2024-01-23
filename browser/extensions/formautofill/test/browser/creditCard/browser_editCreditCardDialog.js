@@ -27,7 +27,6 @@ add_task(async function test_saveCreditCard() {
         .textContent.includes("Add"),
       "Add card dialog title is correct"
     );
-
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -49,16 +48,11 @@ add_task(async function test_saveCreditCard() {
     );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
-    if (AppConstants.platform != "win") {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-    } else {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-    }
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     info("saving credit card");
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
   });
-
   let creditCards = await getCreditCards();
 
   is(creditCards.length, 1, "only one credit card is in storage");
@@ -90,12 +84,7 @@ add_task(async function test_saveCreditCardWithMaxYear() {
     );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-name"], {}, win);
-    if (AppConstants.platform != "win") {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-    } else {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-    }
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     info("saving credit card");
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
   });
@@ -140,9 +129,7 @@ add_task(async function test_saveCreditCardWithBillingAddress() {
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(billingAddress["given-name"], {}, win);
-    if (AppConstants.platform != "win") {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-    }
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     info("saving credit card");
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
   });
