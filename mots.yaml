@@ -672,10 +672,6 @@ people:
     bmo_id: 275214
     name: Matjaz Horvat
     nick: mathjazz
-  - &MatsPalmgrenbugz
-    bmo_id: 5168
-    name: Mats Palmgren
-    nick: MatsPalmgren_bugz
   - &MattN
     bmo_id: 305228
     name: Matthew N
@@ -1985,6 +1981,8 @@ modules:
       peers_emeritus:
         - Matt Woodrow
         - Boris Zbarsky
+        - Robert O'Callahan
+        - Mats Palmgren
       group: dev-platform
       url: https://wiki.mozilla.org/Gecko:Overview#Layout
       components:
@@ -2007,12 +2005,10 @@ modules:
     owners:
       - *dholbert
     peers:
-      - *roc
       - *jfkthame
       - *tnikkel
       - *xidorn
       - *emilio
-      - *MatsPalmgrenbugz
       - *TYLin
       - *jwatt
     machine_name: core_layout_engine
