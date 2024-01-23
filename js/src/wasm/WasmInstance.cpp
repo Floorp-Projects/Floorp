@@ -1957,7 +1957,7 @@ static WasmArrayObject* CastToI16Array(HandleAnyRef ref, bool needMutable) {
   }
   WasmArrayObject& array = object.as<WasmArrayObject>();
   const ArrayType& type = array.typeDef().arrayType();
-  if (type.elementType_ != FieldType::I16) {
+  if (type.elementType_ != StorageType::I16) {
     return nullptr;
   }
   if (needMutable && !type.isMutable_) {

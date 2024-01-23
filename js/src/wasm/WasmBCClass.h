@@ -1732,9 +1732,9 @@ struct BaseCompiler final {
   RegI32 emitGcArrayGetNumElements(RegRef rp);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements);
   template <typename T, typename NullCheckPolicy>
-  void emitGcGet(FieldType type, FieldWideningOp wideningOp, const T& src);
+  void emitGcGet(StorageType type, FieldWideningOp wideningOp, const T& src);
   template <typename T, typename NullCheckPolicy>
-  void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
+  void emitGcSetScalar(const T& dst, StorageType type, AnyReg value);
 
   // Common code for both old and new ref.test instructions.
   void emitRefTestCommon(RefType sourceType, RefType destType);
@@ -1753,7 +1753,7 @@ struct BaseCompiler final {
   // trashed.
   template <typename NullCheckPolicy>
   [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr areaBase,
-                                     uint32_t areaOffset, FieldType fieldType,
+                                     uint32_t areaOffset, StorageType type,
                                      AnyReg value,
                                      PreBarrierKind preBarrierKind);
 

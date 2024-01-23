@@ -7018,10 +7018,10 @@ void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements) {
 }
 
 template <typename T, typename NullCheckPolicy>
-void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
+void BaseCompiler::emitGcGet(StorageType type, FieldWideningOp wideningOp,
                              const T& src) {
   switch (type.kind()) {
-    case FieldType::I8: {
+    case StorageType::I8: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
       FaultingCodeOffset fco;
@@ -7034,7 +7034,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       pushI32(r);
       break;
     }
-    case FieldType::I16: {
+    case StorageType::I16: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
       FaultingCodeOffset fco;
@@ -7047,7 +7047,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       pushI32(r);
       break;
     }
-    case FieldType::I32: {
+    case StorageType::I32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI32 r = needI32();
       FaultingCodeOffset fco = masm.load32(src, r);
@@ -7055,7 +7055,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       pushI32(r);
       break;
     }
-    case FieldType::I64: {
+    case StorageType::I64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI64 r = needI64();
 #  ifdef JS_64BIT
@@ -7069,7 +7069,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       pushI64(r);
       break;
     }
-    case FieldType::F32: {
+    case StorageType::F32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF32 r = needF32();
       FaultingCodeOffset fco = masm.loadFloat32(src, r);
@@ -7077,7 +7077,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       pushF32(r);
       break;
     }
-    case FieldType::F64: {
+    case StorageType::F64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF64 r = needF64();
       FaultingCodeOffset fco = masm.loadDouble(src, r);
@@ -7086,7 +7086,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       break;
     }
 #  ifdef ENABLE_WASM_SIMD
-    case FieldType::V128: {
+    case StorageType::V128: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegV128 r = needV128();
       FaultingCodeOffset fco = masm.loadUnalignedSimd128(src, r);
@@ -7095,7 +7095,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
       break;
     }
 #  endif
-    case FieldType::Ref: {
+    case StorageType::Ref: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegRef r = needRef();
       FaultingCodeOffset fco = masm.loadPtr(src, r);
@@ -7110,24 +7110,25 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
 }
 
 template <typename T, typename NullCheckPolicy>
-void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
+void BaseCompiler::emitGcSetScalar(const T& dst, StorageType type,
+                                   AnyReg value) {
   switch (type.kind()) {
-    case FieldType::I8: {
+    case StorageType::I8: {
       FaultingCodeOffset fco = masm.store8(value.i32(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store8);
       break;
     }
-    case FieldType::I16: {
+    case StorageType::I16: {
       FaultingCodeOffset fco = masm.store16(value.i32(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store16);
       break;
     }
-    case FieldType::I32: {
+    case StorageType::I32: {
       FaultingCodeOffset fco = masm.store32(value.i32(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
       break;
     }
-    case FieldType::I64: {
+    case StorageType::I64: {
 #  ifdef JS_64BIT
       FaultingCodeOffset fco = masm.store64(value.i64(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
@@ -7139,18 +7140,18 @@ void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
 #  endif
       break;
     }
-    case FieldType::F32: {
+    case StorageType::F32: {
       FaultingCodeOffset fco = masm.storeFloat32(value.f32(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
       break;
     }
-    case FieldType::F64: {
+    case StorageType::F64: {
       FaultingCodeOffset fco = masm.storeDouble(value.f64(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
       break;
     }
 #  ifdef ENABLE_WASM_SIMD
-    case FieldType::V128: {
+    case StorageType::V128: {
       FaultingCodeOffset fco = masm.storeUnalignedSimd128(value.v128(), dst);
       NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store128);
       break;
@@ -7164,13 +7165,13 @@ void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
 
 template <typename NullCheckPolicy>
 bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr areaBase,
-                                   uint32_t areaOffset, FieldType fieldType,
+                                   uint32_t areaOffset, StorageType type,
                                    AnyReg value,
                                    PreBarrierKind preBarrierKind) {
   // Easy path if the field is a scalar
-  if (!fieldType.isRefRepr()) {
+  if (!type.isRefRepr()) {
     emitGcSetScalar<Address, NullCheckPolicy>(Address(areaBase, areaOffset),
-                                              fieldType, value);
+                                              type, value);
     freeAny(value);
     return true;
   }
@@ -7365,21 +7366,21 @@ bool BaseCompiler::emitStructNew() {
   uint32_t fieldIndex = structType.fields_.length();
   while (fieldIndex-- > 0) {
     const StructField& field = structType.fields_[fieldIndex];
-    FieldType fieldType = field.type;
+    StorageType type = field.type;
     uint32_t fieldOffset = field.offset;
 
     bool areaIsOutline;
     uint32_t areaOffset;
-    WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
+    WasmStructObject::fieldOffsetToAreaAndOffset(type, fieldOffset,
                                                  &areaIsOutline, &areaOffset);
 
     // Reserve the barrier reg if we might need it for this store
-    if (fieldType.isRefRepr()) {
+    if (type.isRefRepr()) {
       needPtr(RegPtr(PreBarrierReg));
     }
     AnyReg value = popAny();
     // Free the barrier reg now that we've loaded the value
-    if (fieldType.isRefRepr()) {
+    if (type.isRefRepr()) {
       freePtr(RegPtr(PreBarrierReg));
     }
 
@@ -7389,17 +7390,16 @@ bool BaseCompiler::emitStructNew() {
                    outlineBase);
 
       // Consumes value and outline data, object is preserved by this call.
-      if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset,
-                                        fieldType, value,
-                                        PreBarrierKind::None)) {
+      if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset, type,
+                                        value, PreBarrierKind::None)) {
         return false;
       }
     } else {
       // Consumes value. object is unchanged by this call.
       if (!emitGcStructSet<NoNullCheck>(
               object, RegPtr(object),
-              WasmStructObject::offsetOfInlineData() + areaOffset, fieldType,
-              value, PreBarrierKind::None)) {
+              WasmStructObject::offsetOfInlineData() + areaOffset, type, value,
+              PreBarrierKind::None)) {
         return false;
       }
     }
@@ -7453,7 +7453,7 @@ bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
   // Decide whether we're accessing inline or outline, and at what offset
-  FieldType fieldType = structType.fields_[fieldIndex].type;
+  StorageType fieldType = structType.fields_[fieldIndex].type;
   uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
 
   bool areaIsOutline;
@@ -7498,7 +7498,7 @@ bool BaseCompiler::emitStructSet() {
   const StructField& structField = structType.fields_[fieldIndex];
 
   // Decide whether we're accessing inline or outline, and at what offset
-  FieldType fieldType = structType.fields_[fieldIndex].type;
+  StorageType fieldType = structType.fields_[fieldIndex].type;
   uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
 
   bool areaIsOutline;
@@ -7949,7 +7949,7 @@ bool BaseCompiler::emitArrayFill() {
 
   const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
   const ArrayType& arrayType = typeDef.arrayType();
-  FieldType fieldType = arrayType.elementType_;
+  StorageType elementType = arrayType.elementType_;
 
   // On x86 (32-bit), we are very short of registers, hence the code
   // generation scheme is less straightforward than it might otherwise be.
@@ -8006,7 +8006,7 @@ bool BaseCompiler::emitArrayFill() {
 
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
-  if (fieldType.isRefRepr()) {
+  if (elementType.isRefRepr()) {
     needPtr(RegPtr(PreBarrierReg));
   }
 
@@ -8152,7 +8152,7 @@ bool BaseCompiler::emitArrayFill() {
   // 3: numElements rp rdata
 
   // Free the barrier reg after we've allocated all registers
-  if (fieldType.isRefRepr()) {
+  if (elementType.isRefRepr()) {
     freePtr(RegPtr(PreBarrierReg));
   }
 

@@ -440,11 +440,11 @@ extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
 //
 // [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
 template <typename Debug = NoDebug>
-extern bool ToJSValue(JSContext* cx, const void* src, FieldType type,
+extern bool ToJSValue(JSContext* cx, const void* src, StorageType type,
                       MutableHandleValue dst,
                       CoercionLevel level = CoercionLevel::Spec);
 template <typename Debug = NoDebug>
-extern bool ToJSValueMayGC(FieldType type);
+extern bool ToJSValueMayGC(StorageType type);
 template <typename Debug = NoDebug>
 extern bool ToJSValue(JSContext* cx, const void* src, ValType type,
                       MutableHandleValue dst,

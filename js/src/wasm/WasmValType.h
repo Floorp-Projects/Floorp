@@ -439,7 +439,7 @@ class RefType {
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
 };
 
-class FieldTypeTraits {
+class StorageTypeTraits {
  public:
   enum Kind {
     I8 = uint8_t(TypeCode::I8),
@@ -593,7 +593,7 @@ class ValTypeTraits {
 
 // The PackedType represents the storage type of a WebAssembly location, whether
 // parameter, local, field, or global. See specializations below for ValType and
-// FieldType.
+// StorageType.
 
 template <class T>
 class PackedType : public T {
@@ -862,9 +862,9 @@ class PackedType : public T {
     }
   }
 
-  PackedType<FieldTypeTraits> fieldType() const {
+  PackedType<StorageTypeTraits> storageType() const {
     MOZ_ASSERT(isValid());
-    return PackedType<FieldTypeTraits>(tc_);
+    return PackedType<StorageTypeTraits>(tc_);
   }
 
   static bool isSubTypeOf(PackedType subType, PackedType superType) {
@@ -901,7 +901,7 @@ class PackedType : public T {
 };
 
 using ValType = PackedType<ValTypeTraits>;
-using FieldType = PackedType<FieldTypeTraits>;
+using StorageType = PackedType<StorageTypeTraits>;
 
 // The dominant use of this data type is for locals and args, and profiling
 // with ZenGarden and Tanks suggests an initial size of 16 minimises heap
@@ -915,7 +915,7 @@ extern bool ToRefType(JSContext* cx, HandleValue v, RefType* out);
 
 extern UniqueChars ToString(RefType type, const TypeContext* types);
 extern UniqueChars ToString(ValType type, const TypeContext* types);
-extern UniqueChars ToString(FieldType type, const TypeContext* types);
+extern UniqueChars ToString(StorageType type, const TypeContext* types);
 extern UniqueChars ToString(const Maybe<ValType>& type,
                             const TypeContext* types);
 

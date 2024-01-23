@@ -500,9 +500,9 @@ class Decoder {
   [[nodiscard]] bool readValType(const TypeContext& types,
                                  const FeatureArgs& features, ValType* type);
 
-  [[nodiscard]] bool readFieldType(const TypeContext& types,
-                                   const FeatureArgs& features,
-                                   FieldType* type);
+  [[nodiscard]] bool readStorageType(const TypeContext& types,
+                                     const FeatureArgs& features,
+                                     StorageType* type);
 
   [[nodiscard]] bool readHeapType(const TypeContext& types,
                                   const FeatureArgs& features, bool nullable,
@@ -742,10 +742,10 @@ inline bool Decoder::readValType(const TypeContext& types,
   return readPackedType<ValType>(types, features, type);
 }
 
-inline bool Decoder::readFieldType(const TypeContext& types,
-                                   const FeatureArgs& features,
-                                   FieldType* type) {
-  return readPackedType<FieldType>(types, features, type);
+inline bool Decoder::readStorageType(const TypeContext& types,
+                                     const FeatureArgs& features,
+                                     StorageType* type) {
+  return readPackedType<StorageType>(types, features, type);
 }
 
 inline bool Decoder::readHeapType(const TypeContext& types,

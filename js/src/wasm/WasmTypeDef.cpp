@@ -283,7 +283,7 @@ static inline CheckedInt32 RoundUpToAlignment(CheckedInt32 address,
   return ((address + (align - 1)) / align) * align;
 }
 
-CheckedInt32 StructLayout::addField(FieldType type) {
+CheckedInt32 StructLayout::addField(StorageType type) {
   uint32_t fieldSize = type.size();
   uint32_t fieldAlignment = type.alignmentInStruct();
 

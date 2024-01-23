@@ -31,8 +31,8 @@ namespace wasm {
 extern void Dump(ValType type);
 extern void Dump(ValType type, GenericPrinter& out);
 
-extern void Dump(FieldType type);
-extern void Dump(FieldType type, GenericPrinter& out);
+extern void Dump(StorageType type);
+extern void Dump(StorageType type, GenericPrinter& out);
 
 extern void Dump(RefType type);
 extern void Dump(RefType type, GenericPrinter& out);
