@@ -33,6 +33,8 @@ android {
             }
         }
     }
+
+    namespace 'org.mozilla.geckoview.thirdparty'
 }
 
 apply plugin: 'maven-publish'
@@ -48,7 +50,7 @@ android.libraryVariants.all { variant ->
         destinationDirectory = javadoc.destinationDir
     }
     task("sourcesJar${name.capitalize()}", type: Jar) {
-        classifier 'sources'
+        archiveClassifier = 'sources'
         description = "Generate Javadoc for build variant $name"
         destinationDirectory =
                 file("${topobjdir}/mobile/android/geckoview-exoplayer2/sources/${variant.baseName}")

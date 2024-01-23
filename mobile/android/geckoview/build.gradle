@@ -149,6 +149,13 @@ android {
             }
         }
     }
+
+    buildFeatures {
+        buildConfig true
+        aidl = true
+    }
+
+    namespace 'org.mozilla.geckoview'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
@@ -352,7 +359,7 @@ android.libraryVariants.all { variant ->
     }
 
     def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
-        classifier 'sources'
+        archiveClassifier = 'sources'
         description = "Generate Javadoc for build variant $name"
         destinationDirectory =
             file("${topobjdir}/mobile/android/geckoview/sources/${variant.baseName}")

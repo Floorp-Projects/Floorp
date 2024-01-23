@@ -44,6 +44,12 @@ android {
 
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    namespace 'org.mozilla.geckoview_example'
 }
 
 dependencies {
