@@ -378,8 +378,8 @@ static Maybe<SimdPermuteOp> TryZeroExtend(SimdConstant* control) {
   uint32_t i = 0;
   for (; i <= 4 && lanes[i] == int8_t(i); i++) {
   }
-  // The length of the fragment has to be a power of 2.
-  if (!mozilla::IsPowerOfTwo(i)) {
+  // The length of the fragment has to be a power of 2, and next item is zero.
+  if (!mozilla::IsPowerOfTwo(i) || lanes[i] < 16) {
     return Nothing();
   }
   MOZ_ASSERT(i > 0 && i <= 4);
