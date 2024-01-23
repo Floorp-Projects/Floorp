@@ -325,14 +325,6 @@ class RemoteTextureMap {
                                           const RemoteTextureOwnerId aOwnerId,
                                           const base::ProcessId aForPid);
 
-  void RegisterRemoteTexturePushListener(const RemoteTextureOwnerId aOwnerId,
-                                         const base::ProcessId aForPid,
-                                         CompositableHost* aListener);
-
-  void UnregisterRemoteTexturePushListener(const RemoteTextureOwnerId aOwnerId,
-                                           const base::ProcessId aForPid,
-                                           CompositableHost* aListener);
-
   bool CheckRemoteTextureReady(
       const RemoteTextureInfo& aInfo,
       std::function<void(const RemoteTextureInfo&)>&& aCallback);
@@ -478,10 +470,6 @@ class RemoteTextureMap {
   std::map<std::pair<base::ProcessId, RemoteTextureId>,
            UniquePtr<RemoteTextureHostWrapperHolder>>
       mRemoteTextureHostWrapperHolders;
-
-  std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
-           RefPtr<CompositableHost>>
-      mRemoteTexturePushListeners;
 
   std::map<std::pair<base::ProcessId, RemoteTextureTxnType>,
            RemoteTextureTxnScheduler*>

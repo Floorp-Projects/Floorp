@@ -254,11 +254,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
                         const gfx::IntSize aSize,
                         const TextureFlags aFlags) override;
 
-  void EnableRemoteTexturePushCallback(CompositableClient* aCompositable,
-                                       const RemoteTextureOwnerId aOwnerId,
-                                       const gfx::IntSize aSize,
-                                       const TextureFlags aFlags) override;
-
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
 
   void ForgetImageContainer(const CompositableHandle& aHandle);

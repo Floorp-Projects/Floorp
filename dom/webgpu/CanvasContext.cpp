@@ -228,8 +228,7 @@ bool CanvasContext::UpdateWebRenderCanvasData(
   auto* renderer = aCanvasData->GetCanvasRenderer();
 
   if (renderer && mRemoteTextureOwnerId.isSome() &&
-      renderer->GetRemoteTextureOwnerIdOfPushCallback() ==
-          mRemoteTextureOwnerId) {
+      renderer->GetRemoteTextureOwnerId() == mRemoteTextureOwnerId) {
     return true;
   }
 
@@ -252,7 +251,7 @@ bool CanvasContext::InitializeCanvasRenderer(
   data.mContext = this;
   data.mSize = mCanvasSize;
   data.mIsOpaque = false;
-  data.mRemoteTextureOwnerIdOfPushCallback = mRemoteTextureOwnerId;
+  data.mRemoteTextureOwnerId = mRemoteTextureOwnerId;
 
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
