@@ -270,8 +270,7 @@ void nsContainerFrame::Destroy(DestroyContext& aContext) {
     });
 
     // Destroy frames on the auxiliary frame lists and delete the lists.
-    nsPresContext* pc = PresContext();
-    mozilla::PresShell* presShell = pc->PresShell();
+    mozilla::PresShell* presShell = PresShell();
     if (hasO) {
       SafelyDestroyFrameListProp(aContext, presShell, OverflowProperty());
     }

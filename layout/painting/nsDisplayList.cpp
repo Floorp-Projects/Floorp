@@ -5283,7 +5283,7 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
     const float resolution =
         IsScrollbarLayerForRoot()
             ? 1.0f
-            : mFrame->PresContext()->PresShell()->GetCumulativeResolution();
+            : mFrame->PresShell()->GetCumulativeResolution();
     LayerIntRect layerBounds =
         RoundedOut(bounds * LayoutDeviceToLayerScale(resolution));
     aLayerData->SetVisibleRect(layerBounds);

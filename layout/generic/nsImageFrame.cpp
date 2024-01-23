@@ -1347,7 +1347,7 @@ void nsImageFrame::MaybeDecodeForPredictedSize() {
   }
 
   // OK, we're ready to decode. Compute the scale to the screen...
-  mozilla::PresShell* presShell = PresContext()->PresShell();
+  mozilla::PresShell* presShell = PresShell();
   MatrixScales scale =
       ScaleFactor<UnknownUnits, UnknownUnits>(
           presShell->GetCumulativeResolution()) *

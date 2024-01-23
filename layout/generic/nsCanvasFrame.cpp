@@ -204,8 +204,7 @@ void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void nsCanvasFrame::Destroy(DestroyContext& aContext) {
-  nsIScrollableFrame* sf =
-      PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf = PresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
@@ -231,8 +230,7 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus) {
     PresShell()->GetRootFrame()->InvalidateFrameSubtree();
 
     if (!mAddedScrollPositionListener) {
-      nsIScrollableFrame* sf =
-          PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+      nsIScrollableFrame* sf = PresShell()->GetRootScrollFrameAsScrollable();
       if (sf) {
         sf->AddScrollPositionListener(this);
         mAddedScrollPositionListener = true;
@@ -506,8 +504,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
             aBuilder);
         if (displayData) {
-          nsPoint offset =
-              GetOffsetTo(PresContext()->GetPresShell()->GetRootFrame());
+          const nsPoint offset = GetOffsetTo(PresShell()->GetRootFrame());
           aBuilder->SetVisibleRect(displayData->mVisibleRect + offset);
           aBuilder->SetDirtyRect(displayData->mDirtyRect + offset);
 
@@ -796,7 +793,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
         // (0, 0). We only want to invalidate GetRect() since Get*OverflowRect()
         // could also include overflow to our top and left (out of the viewport)
         // which doesn't need to be painted.
-        nsIFrame* viewport = PresContext()->GetPresShell()->GetRootFrame();
+        nsIFrame* viewport = PresShell()->GetRootFrame();
         viewport->InvalidateFrame();
       }
 
