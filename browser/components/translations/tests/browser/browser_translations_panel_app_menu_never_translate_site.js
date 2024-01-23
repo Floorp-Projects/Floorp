@@ -27,7 +27,7 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
-  await clickNeverTranslateSite();
+  await FullPageTranslationsTestUtils.clickNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
@@ -37,7 +37,7 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
-  await clickNeverTranslateSite();
+  await FullPageTranslationsTestUtils.clickNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
   await cleanup();
@@ -76,7 +76,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
-    await clickNeverTranslateSite();
+    await FullPageTranslationsTestUtils.clickNeverTranslateSite();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
@@ -92,7 +92,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    await clickNeverTranslateSite();
+    await FullPageTranslationsTestUtils.clickNeverTranslateSite();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });

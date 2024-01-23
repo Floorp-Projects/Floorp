@@ -27,7 +27,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
-  await clickAlwaysTranslateLanguage({
+  await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
   });
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
@@ -57,7 +57,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
-  await clickAlwaysTranslateLanguage();
+  await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage();
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
   await FullPageTranslationsTestUtils.assertTranslationsButton(
