@@ -2680,11 +2680,12 @@ modules:
       url: https://developer.mozilla.org/docs/Web/SVG
       components:
         - Core::SVG
+      peers_emeritus:
+        - Robert O'Callahan
     owners:
       - *jwatt
     peers:
       - *longsonr
-      - *roc
       - *dholbert
       - *birtles
     machine_name: core_svg
