@@ -15,9 +15,10 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Range.h"
-#include "mozilla/SPSCQueue.h"
-#include "mozilla/Vector.h"
 #include "mozilla/Result.h"
+#include "mozilla/SPSCQueue.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/Vector.h"
 #include "mozilla/loader/AutoMemMap.h"
 #include "MainThreadUtils.h"
 #include "nsClassHashtable.h"
@@ -86,8 +87,8 @@ class ScriptPreloader : public nsIObserver,
  private:
   static StaticRefPtr<ScriptPreloader> gScriptPreloader;
   static StaticRefPtr<ScriptPreloader> gChildScriptPreloader;
-  static UniquePtr<AutoMemMap> gCacheData;
-  static UniquePtr<AutoMemMap> gChildCacheData;
+  static StaticAutoPtr<AutoMemMap> gCacheData;
+  static StaticAutoPtr<AutoMemMap> gChildCacheData;
 
  public:
   static ScriptPreloader& GetSingleton();

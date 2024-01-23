@@ -116,13 +116,13 @@ nsresult ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 StaticRefPtr<ScriptPreloader> ScriptPreloader::gScriptPreloader;
 StaticRefPtr<ScriptPreloader> ScriptPreloader::gChildScriptPreloader;
-UniquePtr<AutoMemMap> ScriptPreloader::gCacheData;
-UniquePtr<AutoMemMap> ScriptPreloader::gChildCacheData;
+StaticAutoPtr<AutoMemMap> ScriptPreloader::gCacheData;
+StaticAutoPtr<AutoMemMap> ScriptPreloader::gChildCacheData;
 
 ScriptPreloader& ScriptPreloader::GetSingleton() {
   if (!gScriptPreloader) {
     if (XRE_IsParentProcess()) {
-      gCacheData = MakeUnique<AutoMemMap>();
+      gCacheData = new AutoMemMap();
       gScriptPreloader = new ScriptPreloader(gCacheData.get());
       gScriptPreloader->mChildCache = &GetChildSingleton();
       Unused << gScriptPreloader->InitCache();
@@ -159,7 +159,7 @@ ScriptPreloader& ScriptPreloader::GetSingleton() {
 //  previous cache file, but I'd rather do that as a follow-up.
 ScriptPreloader& ScriptPreloader::GetChildSingleton() {
   if (!gChildScriptPreloader) {
-    gChildCacheData = MakeUnique<AutoMemMap>();
+    gChildCacheData = new AutoMemMap();
     gChildScriptPreloader = new ScriptPreloader(gChildCacheData.get());
     if (XRE_IsParentProcess()) {
       Unused << gChildScriptPreloader->InitCache(u"scriptCache-child"_ns);
