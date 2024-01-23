@@ -1022,7 +1022,7 @@ void PlatformOverrideChanged(const char* /* aPrefName */,
 } /* anonymous namespace */
 
 // This is only touched on the main thread. Initialized in Init() below.
-UniquePtr<JSSettings> RuntimeService::sDefaultJSSettings;
+StaticAutoPtr<JSSettings> RuntimeService::sDefaultJSSettings;
 
 RuntimeService::RuntimeService()
     : mMutex("RuntimeService::mMutex"),
@@ -1338,7 +1338,7 @@ nsresult RuntimeService::Init() {
   nsLayoutStatics::AddRef();
 
   // Initialize JSSettings.
-  sDefaultJSSettings = MakeUnique<JSSettings>();
+  sDefaultJSSettings = new JSSettings();
   SetDefaultJSGCSettings(JSGC_MAX_BYTES, Some(WORKER_DEFAULT_RUNTIME_HEAPSIZE));
   SetDefaultJSGCSettings(JSGC_ALLOCATION_THRESHOLD,
                          Some(WORKER_DEFAULT_ALLOCATION_THRESHOLD));
