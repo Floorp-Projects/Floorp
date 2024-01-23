@@ -611,7 +611,7 @@ impl NamedTempFile<File> {
     /// This is equivalent to:
     ///
     /// ```ignore
-    /// Builder::new().prefix(&prefix).tempfile()
+    /// Builder::new().tempfile_in(dir)
     /// ```
     ///
     /// See [`NamedTempFile::new()`] for details.
@@ -731,7 +731,7 @@ impl<F> NamedTempFile<F> {
     /// # Security
     ///
     /// This method persists the temporary file using its path and may not be
-    /// secure in the in all cases. Please read the security section on the top
+    /// secure in all cases. Please read the security section on the top
     /// level documentation of this type for details.
     ///
     /// # Errors
@@ -785,7 +785,7 @@ impl<F> NamedTempFile<F> {
     /// # Security
     ///
     /// This method persists the temporary file using its path and may not be
-    /// secure in the in all cases. Please read the security section on the top
+    /// secure in all cases. Please read the security section on the top
     /// level documentation of this type for details.
     ///
     /// # Errors

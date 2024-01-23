@@ -1,0 +1,40 @@
+
+[advisories]
+notice = "deny"
+unmaintained = "deny"
+vulnerability = "deny"
+yanked = "deny"
+ignore = []
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "MIT",
+]
+default = "deny"
+confidence-threshold = 1.0
+unlicensed = "deny"
+
+[bans]
+allow = []
+deny = []
+multiple-versions = "deny"
+skip = [
+    # Transitive dependency of both redox_syscall and rustix (rustix has newer).
+    #
+    # Only one version of bitflags ultimately gets compiled in due to OS-based feature flags in tempfile.
+    { name = "bitflags" },
+]
+skip-tree = []
+wildcards = "deny"
+
+[sources]
+allow-git = []
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+unknown-git = "deny"
+unknown-registry = "deny"
+
+[sources.allow-org]
+github = []
+gitlab = []
+bitbucket = []

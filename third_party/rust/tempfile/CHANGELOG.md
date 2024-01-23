@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.9.0
+
+- Updates windows-sys to 0.52
+- Updates minimum rustix version to 0.38.25
+
+## 3.8.1
+
+- Update rustix to fix a potential panic on `persist_noclobber` on android.
+- Update redox_syscall to 0.4 (on redox).
+- Fix some docs typos.
+
 ## 3.8.0
 
 - Added `with_prefix` and `with_prefix_in` to `TempDir` and `NamedTempFile` to make it easier to create temporary files/directories with nice prefixes.
