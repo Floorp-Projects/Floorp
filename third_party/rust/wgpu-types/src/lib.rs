@@ -155,7 +155,12 @@ bitflags::bitflags! {
         const METAL = 1 << Backend::Metal as u32;
         /// Supported on Windows 10
         const DX12 = 1 << Backend::Dx12 as u32;
-        /// Supported when targeting the web through webassembly
+        /// Supported when targeting the web through webassembly with the `webgpu` feature enabled.
+        ///
+        /// The WebGPU backend is special in several ways:
+        /// It is not not implemented by `wgpu_core` and instead by the higher level `wgpu` crate.
+        /// Whether WebGPU is targeted is decided upon the creation of the `wgpu::Instance`,
+        /// *not* upon adapter creation. See `wgpu::Instance::new`.
         const BROWSER_WEBGPU = 1 << Backend::BrowserWebGpu as u32;
         /// All the apis that wgpu offers first tier of support for.
         ///
@@ -4280,10 +4285,10 @@ impl Default for ColorWrites {
 /// Passed to `Device::poll` to control how and if it should block.
 #[derive(Clone)]
 pub enum Maintain<T> {
-    /// On native backends, block until the given submission has
+    /// On wgpu-core based backends, block until the given submission has
     /// completed execution, and any callbacks have been invoked.
     ///
-    /// On the web, this has no effect. Callbacks are invoked from the
+    /// On WebGPU, this has no effect. Callbacks are invoked from the
     /// window event loop.
     WaitForSubmissionIndex(T),
     /// Same as WaitForSubmissionIndex but waits for the most recent submission.
@@ -4293,6 +4298,22 @@ pub enum Maintain<T> {
 }
 
 impl<T> Maintain<T> {
+    /// Construct a wait variant
+    pub fn wait() -> Self {
+        // This function seems a little silly, but it is useful to allow
+        // <https://github.com/gfx-rs/wgpu/pull/5012> to be split up, as
+        // it has meaning in that PR.
+        Self::Wait
+    }
+
+    /// Construct a WaitForSubmissionIndex variant
+    pub fn wait_for(submission_index: T) -> Self {
+        // This function seems a little silly, but it is useful to allow
+        // <https://github.com/gfx-rs/wgpu/pull/5012> to be split up, as
+        // it has meaning in that PR.
+        Self::WaitForSubmissionIndex(submission_index)
+    }
+
     /// This maintain represents a wait of some kind.
     pub fn is_wait(&self) -> bool {
         match *self {
@@ -4311,6 +4332,29 @@ impl<T> Maintain<T> {
             Self::Wait => Maintain::Wait,
             Self::Poll => Maintain::Poll,
         }
+    }
+}
+
+/// Result of a maintain operation.
+pub enum MaintainResult {
+    /// There are no active submissions in flight as of the beginning of the poll call.
+    /// Other submissions may have been queued on other threads at the same time.
+    ///
+    /// This implies that the given poll is complete.
+    SubmissionQueueEmpty,
+    /// More information coming soon <https://github.com/gfx-rs/wgpu/pull/5012>
+    Ok,
+}
+
+impl MaintainResult {
+    /// Returns true if the result is [`Self::SubmissionQueueEmpty`]`.
+    pub fn is_queue_empty(&self) -> bool {
+        matches!(self, Self::SubmissionQueueEmpty)
+    }
+
+    /// Panics if the MaintainResult is not Ok.
+    pub fn panic_on_timeout(self) {
+        let _ = self;
     }
 }
 
@@ -5107,6 +5151,26 @@ pub struct SurfaceConfiguration<V> {
     /// AutoNoVsync will gracefully do a designed sets of fallbacks if their primary modes are
     /// unsupported.
     pub present_mode: PresentMode,
+    /// Desired maximum number of frames that the presentation engine should queue in advance.
+    ///
+    /// This is a hint to the backend implementation and will always be clamped to the supported range.
+    /// As a consequence, either the maximum frame latency is set directly on the swap chain,
+    /// or waits on present are scheduled to avoid exceeding the maximum frame latency if supported,
+    /// or the swap chain size is set to (max-latency + 1).
+    ///
+    /// Defaults to 2 when created via `wgpu::Surface::get_default_config`.
+    ///
+    /// Typical values range from 3 to 1, but higher values are possible:
+    /// * Choose 2 or higher for potentially smoother frame display, as it allows to be at least one frame
+    /// to be queued up. This typically avoids starving the GPU's work queue.
+    /// Higher values are useful for achieving a constant flow of frames to the display under varying load.
+    /// * Choose 1 for low latency from frame recording to frame display.
+    /// ⚠️ If the backend does not support waiting on present, this will cause the CPU to wait for the GPU
+    /// to finish all work related to the previous frame when calling `wgpu::Surface::get_current_texture`,
+    /// causing CPU-GPU serialization (i.e. when `wgpu::Surface::get_current_texture` returns, the GPU might be idle).
+    /// It is currently not possible to query this. See <https://github.com/gfx-rs/wgpu/issues/2869>.
+    /// * A value of 0 is generally not supported and always clamped to a higher value.
+    pub desired_maximum_frame_latency: u32,
     /// Specifies how the alpha channel of the textures should be handled during compositing.
     pub alpha_mode: CompositeAlphaMode,
     /// Specifies what view formats will be allowed when calling create_view() on texture returned by get_current_texture().
@@ -5126,6 +5190,7 @@ impl<V: Clone> SurfaceConfiguration<V> {
             width: self.width,
             height: self.height,
             present_mode: self.present_mode,
+            desired_maximum_frame_latency: self.desired_maximum_frame_latency,
             alpha_mode: self.alpha_mode,
             view_formats: fun(self.view_formats.clone()),
         }

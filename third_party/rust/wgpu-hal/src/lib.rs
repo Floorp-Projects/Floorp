@@ -52,30 +52,30 @@
 )]
 
 /// DirectX12 API internals.
-#[cfg(all(feature = "dx12", windows))]
+#[cfg(dx12)]
 pub mod dx12;
 /// A dummy API implementation.
 pub mod empty;
 /// GLES API internals.
-#[cfg(feature = "gles")]
+#[cfg(gles)]
 pub mod gles;
 /// Metal API internals.
-#[cfg(all(feature = "metal", any(target_os = "macos", target_os = "ios")))]
+#[cfg(metal)]
 pub mod metal;
 /// Vulkan API internals.
-#[cfg(all(feature = "vulkan", not(target_arch = "wasm32")))]
+#[cfg(vulkan)]
 pub mod vulkan;
 
 pub mod auxil;
 pub mod api {
-    #[cfg(all(feature = "dx12", windows))]
+    #[cfg(dx12)]
     pub use super::dx12::Api as Dx12;
     pub use super::empty::Api as Empty;
-    #[cfg(feature = "gles")]
+    #[cfg(gles)]
     pub use super::gles::Api as Gles;
-    #[cfg(all(feature = "metal", any(target_os = "macos", target_os = "ios")))]
+    #[cfg(metal)]
     pub use super::metal::Api as Metal;
-    #[cfg(all(feature = "vulkan", not(target_arch = "wasm32")))]
+    #[cfg(vulkan)]
     pub use super::vulkan::Api as Vulkan;
 }
 
@@ -463,7 +463,7 @@ pub trait CommandEncoder<A: Api>: WasmNotSendSync + fmt::Debug {
     /// Works with a single array layer.
     /// Note: `dst` current usage has to be `TextureUses::COPY_DST`.
     /// Note: the copy extent is in physical size (rounded to the block size)
-    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+    #[cfg(webgl)]
     unsafe fn copy_external_image_to_texture<T>(
         &mut self,
         src: &wgt::ImageCopyExternalImage,
@@ -922,11 +922,14 @@ pub struct SurfaceCapabilities {
     /// Must be at least one.
     pub formats: Vec<wgt::TextureFormat>,
 
-    /// Range for the swap chain sizes.
+    /// Range for the number of queued frames.
     ///
-    /// - `swap_chain_sizes.start` must be at least 1.
-    /// - `swap_chain_sizes.end` must be larger or equal to `swap_chain_sizes.start`.
-    pub swap_chain_sizes: RangeInclusive<u32>,
+    /// This adjusts either the swapchain frame count to value + 1 - or sets SetMaximumFrameLatency to the value given,
+    /// or uses a wait-for-present in the acquire method to limit rendering such that it acts like it's a value + 1 swapchain frame set.
+    ///
+    /// - `maximum_frame_latency.start` must be at least 1.
+    /// - `maximum_frame_latency.end` must be larger or equal to `maximum_frame_latency.start`.
+    pub maximum_frame_latency: RangeInclusive<u32>,
 
     /// Current extent of the surface, if known.
     pub current_extent: Option<wgt::Extent3d>,
@@ -1252,9 +1255,9 @@ pub struct RenderPipelineDescriptor<'a, A: Api> {
 
 #[derive(Debug, Clone)]
 pub struct SurfaceConfiguration {
-    /// Number of textures in the swap chain. Must be in
-    /// `SurfaceCapabilities::swap_chain_size` range.
-    pub swap_chain_size: u32,
+    /// Maximum number of queued frames. Must be in
+    /// `SurfaceCapabilities::maximum_frame_latency` range.
+    pub maximum_frame_latency: u32,
     /// Vertical synchronization mode.
     pub present_mode: wgt::PresentMode,
     /// Alpha composition mode.

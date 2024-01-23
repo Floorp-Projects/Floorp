@@ -518,6 +518,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.termcolor]]
+version = "1.4.1"
+when = "2024-01-10"
+user-id = 189
+user-login = "BurntSushi"
+user-name = "Andrew Gallant"
+
 [[publisher.thiserror]]
 version = "1.0.56"
 when = "2024-01-02"
@@ -1081,6 +1088,12 @@ and nothing suspicious.
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "1.0.58"
+
+[[audits.embark-studios.audits.cfg_aliases]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "0.1.1"
+notes = "No unsafe usage or ambient capabilities"
 
 [[audits.embark-studios.audits.derive_more]]
 who = "Johan Andersson <opensource@embark-studios.com>"

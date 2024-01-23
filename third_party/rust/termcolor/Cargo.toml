@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "termcolor"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = """
 A simple cross platform library for writing colored text to a terminal.

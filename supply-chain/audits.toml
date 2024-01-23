@@ -1281,9 +1281,10 @@ who = [
     "Erich Gubler <egubler@mozilla.com>",
     "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.7.0@git:c6eea50b04127abe2340b93141123312baf5414b"
+delta = "0.7.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 importable = false
 
 [[audits.darling]]
@@ -2568,9 +2569,10 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.14.2@git:c6eea50b04127abe2340b93141123312baf5414b"
+delta = "0.14.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 importable = false
 
 [[audits.net2]]
@@ -4344,9 +4346,10 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
+delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4397,9 +4400,10 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
+delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4450,9 +4454,10 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.18.0@git:c6eea50b04127abe2340b93141123312baf5414b"
+delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 importable = false
 
 [[audits.whatsys]]

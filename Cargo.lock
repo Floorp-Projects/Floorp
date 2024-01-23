@@ -706,6 +706,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cfg_aliases"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
+
+[[package]]
 name = "chardetng"
 version = "0.1.9"
 source = "git+https://github.com/hsivonen/chardetng?rev=3484d3e3ebdc8931493aa5df4d7ee9360a90e76b#3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
@@ -1150,8 +1156,8 @@ dependencies = [
 
 [[package]]
 name = "d3d12"
-version = "0.7.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=c6eea50b04127abe2340b93141123312baf5414b#c6eea50b04127abe2340b93141123312baf5414b"
+version = "0.19.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
  "bitflags 2.4.0",
  "libloading",
@@ -3788,9 +3794,10 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.14.2"
-source = "git+https://github.com/gfx-rs/wgpu?rev=c6eea50b04127abe2340b93141123312baf5414b#c6eea50b04127abe2340b93141123312baf5414b"
+version = "0.19.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
+ "arrayvec",
  "bit-set",
  "bitflags 2.4.0",
  "codespan-reporting",
@@ -5486,9 +5493,9 @@ dependencies = [
 
 [[package]]
 name = "termcolor"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff1bc3d3f05aff0403e8ac0d92ced918ec05b666a43f83297ccef5bea8a3d449"
+checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
 ]
@@ -6398,12 +6405,13 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=c6eea50b04127abe2340b93141123312baf5414b#c6eea50b04127abe2340b93141123312baf5414b"
+version = "0.19.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
  "arrayvec",
  "bit-vec",
  "bitflags 2.4.0",
+ "cfg_aliases",
  "codespan-reporting",
  "indexmap 2.999.999",
  "log",
@@ -6423,8 +6431,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=c6eea50b04127abe2340b93141123312baf5414b#c6eea50b04127abe2340b93141123312baf5414b"
+version = "0.19.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6432,6 +6440,7 @@ dependencies = [
  "bit-set",
  "bitflags 2.4.0",
  "block",
+ "cfg_aliases",
  "core-graphics-types",
  "d3d12",
  "gpu-alloc",
@@ -6460,8 +6469,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "0.18.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=c6eea50b04127abe2340b93141123312baf5414b#c6eea50b04127abe2340b93141123312baf5414b"
+version = "0.19.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
  "bitflags 2.4.0",
  "js-sys",
