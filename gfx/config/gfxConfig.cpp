@@ -3,8 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "gfxConfig.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GraphicsMessages.h"
@@ -13,7 +14,7 @@
 namespace mozilla {
 namespace gfx {
 
-static UniquePtr<gfxConfig> sConfig;
+static StaticAutoPtr<gfxConfig> sConfig;
 
 /* static */ FeatureState& gfxConfig::GetFeature(Feature aFeature) {
   return sConfig->GetState(aFeature);
@@ -277,7 +278,7 @@ void gfxConfig::ImportChange(Feature aFeature,
 }
 
 /* static */
-void gfxConfig::Init() { sConfig = mozilla::MakeUnique<gfxConfig>(); }
+void gfxConfig::Init() { sConfig = new gfxConfig(); }
 
 /* static */
 void gfxConfig::Shutdown() { sConfig = nullptr; }
