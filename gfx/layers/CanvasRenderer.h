@@ -48,7 +48,7 @@ struct CanvasRendererData final {
   gl::OriginPos mOriginPos = gl::OriginPos::TopLeft;
 
   // Used in remote texture push callback
-  Maybe<RemoteTextureOwnerId> mRemoteTextureOwnerIdOfPushCallback = Nothing();
+  Maybe<RemoteTextureOwnerId> mRemoteTextureOwnerId = Nothing();
 
   nsICanvasRenderingContextInternal* GetContext() const {
     return mContext.get();
@@ -126,8 +126,8 @@ class CanvasRenderer : public RefCounted<CanvasRenderer> {
   const gfx::IntSize& GetSize() const { return mData.mSize; }
   bool IsOpaque() const { return mData.mIsOpaque; }
   bool YIsDown() const { return mData.mOriginPos == gl::OriginPos::TopLeft; }
-  Maybe<RemoteTextureOwnerId> GetRemoteTextureOwnerIdOfPushCallback() {
-    return mData.mRemoteTextureOwnerIdOfPushCallback;
+  Maybe<RemoteTextureOwnerId> GetRemoteTextureOwnerId() {
+    return mData.mRemoteTextureOwnerId;
   }
 
   void SetDirty() { mDirty = true; }

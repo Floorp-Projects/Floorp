@@ -133,18 +133,6 @@ void ImageBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
       OpUseRemoteTexture(aTextureId, aOwnerId, aSize, aFlags)));
 }
 
-void ImageBridgeChild::EnableRemoteTexturePushCallback(
-    CompositableClient* aCompositable, const RemoteTextureOwnerId aOwnerId,
-    const gfx::IntSize aSize, const TextureFlags aFlags) {
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPCHandle());
-  MOZ_ASSERT(aCompositable->IsConnected());
-
-  mTxn->AddNoSwapEdit(CompositableOperation(
-      aCompositable->GetIPCHandle(),
-      OpEnableRemoteTexturePushCallback(aOwnerId, aSize, aFlags)));
-}
-
 void ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     TextureClient* aClient) {
   if (!aClient) {

@@ -95,16 +95,6 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
       host->UseRemoteTexture();
       break;
     }
-    case CompositableOperationDetail::TOpEnableRemoteTexturePushCallback: {
-      const OpEnableRemoteTexturePushCallback& op =
-          aDetail.get_OpEnableRemoteTexturePushCallback();
-
-      aCompositable->SetAsyncRef(
-          AsyncCompositableRef(GetChildProcessId(), aHandle));
-      aCompositable->EnableRemoteTexturePushCallback(
-          op.ownerId(), GetChildProcessId(), op.size(), op.textureFlags());
-      break;
-    }
     default: {
       MOZ_ASSERT(false, "bad type");
     }
