@@ -83,49 +83,51 @@ class FullPageTranslationsTestUtils {
       );
     });
   }
-}
 
-/**
- * Assert some property about the translations button.
- *
- * @param {Record<string, boolean>} visibleAssertions
- * @param {string} message The message for the assertion.
- * @returns {HTMLElement}
- */
-async function assertTranslationsButton(visibleAssertions, message) {
-  const elements = {
-    button: document.getElementById("translations-button"),
-    icon: document.getElementById("translations-button-icon"),
-    circleArrows: document.getElementById("translations-button-circle-arrows"),
-    locale: document.getElementById("translations-button-locale"),
-  };
+  /**
+   * Assert some property about the translations button.
+   *
+   * @param {Record<string, boolean>} visibleAssertions
+   * @param {string} message The message for the assertion.
+   * @returns {HTMLElement}
+   */
+  static async assertTranslationsButton(visibleAssertions, message) {
+    const elements = {
+      button: document.getElementById("translations-button"),
+      icon: document.getElementById("translations-button-icon"),
+      circleArrows: document.getElementById(
+        "translations-button-circle-arrows"
+      ),
+      locale: document.getElementById("translations-button-locale"),
+    };
 
-  for (const [name, element] of Object.entries(elements)) {
-    if (!element) {
-      throw new Error("Could not find the " + name);
-    }
-  }
-
-  try {
-    // Test that the visibilities match.
-    await waitForCondition(() => {
-      for (const [name, visible] of Object.entries(visibleAssertions)) {
-        if (elements[name].hidden === visible) {
-          return false;
-        }
+    for (const [name, element] of Object.entries(elements)) {
+      if (!element) {
+        throw new Error("Could not find the " + name);
       }
-      return true;
-    }, message);
-  } catch (error) {
-    // On a mismatch, report it.
-    for (const [name, expected] of Object.entries(visibleAssertions)) {
-      is(!elements[name].hidden, expected, `Visibility for "${name}"`);
     }
+
+    try {
+      // Test that the visibilities match.
+      await waitForCondition(() => {
+        for (const [name, visible] of Object.entries(visibleAssertions)) {
+          if (elements[name].hidden === visible) {
+            return false;
+          }
+        }
+        return true;
+      }, message);
+    } catch (error) {
+      // On a mismatch, report it.
+      for (const [name, expected] of Object.entries(visibleAssertions)) {
+        is(!elements[name].hidden, expected, `Visibility for "${name}"`);
+      }
+    }
+
+    ok(true, message);
+
+    return elements;
   }
-
-  ok(true, message);
-
-  return elements;
 }
 
 /**
@@ -170,10 +172,11 @@ async function openTranslationsPanelViaTranslationsButton({
   openWithKeyboard = false,
 }) {
   logAction();
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The translations button is visible."
-  );
+  const { button } =
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
+      { button: true },
+      "The translations button is visible."
+    );
   await waitForTranslationsPopupEvent(
     "popupshown",
     () => {
@@ -369,7 +372,7 @@ async function clickAlwaysTranslateLanguage({
     "translations-panel-settings-always-translate-language"
   );
   if (downloadHandler) {
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: true, locale: false, icon: true },
       "The icon presents the loading indicator."
     );
@@ -555,10 +558,11 @@ async function assertLangTagIsShownOnTranslationsButton(
   info(
     `Ensuring that the translations button displays the language tag "${toLanguage}"`
   );
-  const { button, locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
+  const { button, locale } =
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
+      { button: true, circleArrows: false, locale: true, icon: true },
+      "The icon presents the locale."
+    );
   is(
     locale.innerText,
     toLanguage,
@@ -636,7 +640,7 @@ async function clickTranslateButton({
   });
 
   if (downloadHandler) {
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: true, locale: false, icon: true },
       "The icon presents the loading indicator."
     );
@@ -880,7 +884,7 @@ async function navigate(
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     if (downloadHandler) {
-      await assertTranslationsButton(
+      await FullPageTranslationsTestUtils.assertTranslationsButton(
         { button: true, circleArrows: true, locale: false, icon: true },
         "The icon presents the loading indicator."
       );

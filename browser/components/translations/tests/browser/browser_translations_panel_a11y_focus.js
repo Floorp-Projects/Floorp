@@ -12,7 +12,10 @@ add_task(async function test_translations_panel_a11y_focus() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await openTranslationsPanel({
     openWithKeyboard: true,

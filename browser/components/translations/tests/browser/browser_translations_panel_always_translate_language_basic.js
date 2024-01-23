@@ -14,7 +14,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The translations button is visible."
   );
@@ -56,7 +56,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await clickAlwaysTranslateLanguage();
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "Only the button appears"
   );

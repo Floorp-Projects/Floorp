@@ -17,7 +17,7 @@ add_task(
       languagePairs: LANGUAGE_PAIRS,
     });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The translations button is visible."
     );
@@ -61,7 +61,7 @@ add_task(
       { url: SPANISH_PAGE_URL_DOT_ORG }
     );
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true },
       "The translations button should be visible, because this content principal " +
         "has not been denied translations permissions"

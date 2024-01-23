@@ -18,7 +18,10 @@ add_task(async function test_translations_engine_destroy_pending() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   await clickTranslateButton({

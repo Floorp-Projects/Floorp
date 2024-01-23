@@ -12,7 +12,10 @@ add_task(async function test_translations_panel_switch_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 

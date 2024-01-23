@@ -14,7 +14,10 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     prefs: [["browser.translations.panelShown", false]],
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
@@ -100,7 +103,10 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     expectNewFlowId: false,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await cleanup();

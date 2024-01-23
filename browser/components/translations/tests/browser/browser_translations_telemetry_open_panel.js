@@ -16,7 +16,10 @@ add_task(async function test_translations_telemetry_open_panel() {
     expectedEventCount: 0,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 

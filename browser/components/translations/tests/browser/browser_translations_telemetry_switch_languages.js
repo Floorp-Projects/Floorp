@@ -12,7 +12,10 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
@@ -83,7 +86,10 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton({ button: true }, "The button is available.");
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
