@@ -856,8 +856,5 @@ group("poison_default_task_queue") {
 group("poison_default_echo_detector") {
 }
 
-group("poison_rtc_json") {
-}
-
 group("poison_software_video_codecs") {
 }

@@ -28,6 +28,7 @@
 #include "p2p/base/transport_description.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/network.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/numerics/event_based_exponential_moving_average.h"
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/system/rtc_export.h"
@@ -111,6 +112,7 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   bool connected() const;
   bool weak() const;
   bool active() const;
+  bool pending_delete() const { return !port_; }
 
   // A connection is dead if it can be safely deleted.
   bool dead(int64_t now) const;
@@ -145,7 +147,15 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   // Error if Send() returns < 0
   virtual int GetError() = 0;
 
+  // TODO(webrtc:11943): Remove SignalReadPacket once upstream projects have
+  // switched to use RegisterReceivedPacket.
   sigslot::signal4<Connection*, const char*, size_t, int64_t> SignalReadPacket;
+
+  // Register as a recipient of received packets. There can only be one.
+  void RegisterReceivedPacketCallback(
+      absl::AnyInvocable<void(Connection*, const rtc::ReceivedPacket&)>
+          received_packet_callback);
+  void DeregisterReceivedPacketCallback();
 
   sigslot::signal1<Connection*> SignalReadyToSend;
 
@@ -500,6 +510,8 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   absl::optional<
       std::function<void(webrtc::RTCErrorOr<const StunUInt64Attribute*>)>>
       goog_delta_ack_consumer_;
+  absl::AnyInvocable<void(Connection*, const rtc::ReceivedPacket&)>
+      received_packet_callback_;
 };
 
 // ProxyConnection defers all the interesting work to the port.

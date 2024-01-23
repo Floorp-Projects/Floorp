@@ -173,6 +173,10 @@ void RemoveSsrcsAndMsids(cricket::SessionDescription* desc);
 // endpoint that only signals a=msid lines to convey stream_ids.
 void RemoveSsrcsAndKeepMsids(cricket::SessionDescription* desc);
 
+// Replaces the stream's primary SSRC and updates the first SSRC of all
+// ssrc-groups.
+void ReplaceFirstSsrc(StreamParams& stream, uint32_t ssrc);
+
 int FindFirstMediaStatsIndexByKind(
     const std::string& kind,
     const std::vector<const webrtc::RTCInboundRtpStreamStats*>& inbound_rtps);

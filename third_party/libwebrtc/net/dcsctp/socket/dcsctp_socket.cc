@@ -1102,7 +1102,7 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
 
   if (tcb_->data_tracker().Observe(tsn, immediate_ack)) {
     tcb_->reassembly_queue().Add(tsn, std::move(data));
-    MaybeResetStreamsDeferredAndDeliverMessages();
+    MaybeDeliverMessages();
   }
 }
 
@@ -1453,12 +1453,7 @@ void DcSctpSocket::HandleCookieAck(
   callbacks_.OnConnected();
 }
 
-void DcSctpSocket::MaybeResetStreamsDeferredAndDeliverMessages() {
-  // As new data has been received, see if paused streams can be resumed, which
-  // results in even more data added to the reassembly queue.
-  tcb_->reassembly_queue().MaybeResetStreamsDeferred(
-      tcb_->data_tracker().last_cumulative_acked_tsn());
-
+void DcSctpSocket::MaybeDeliverMessages() {
   for (auto& message : tcb_->reassembly_queue().FlushMessages()) {
     ++metrics_.rx_messages_count;
     callbacks_.OnMessageReceived(std::move(message));
@@ -1571,6 +1566,10 @@ void DcSctpSocket::HandleReconfig(
     // If a response was processed, pending to-be-reset streams may now have
     // become unpaused. Try to send more DATA chunks.
     tcb_->SendBufferedPackets(now);
+
+    // If it leaves "deferred reset processing", there may be chunks to deliver
+    // that were queued while waiting for the stream to reset.
+    MaybeDeliverMessages();
   }
 }
 
@@ -1709,12 +1708,13 @@ void DcSctpSocket::HandleForwardTsnCommon(const AnyForwardTsnChunk& chunk) {
                        "Received a FORWARD_TSN without announced peer support");
     return;
   }
-  tcb_->data_tracker().HandleForwardTsn(chunk.new_cumulative_tsn());
-  tcb_->reassembly_queue().Handle(chunk);
+  if (tcb_->data_tracker().HandleForwardTsn(chunk.new_cumulative_tsn())) {
+    tcb_->reassembly_queue().HandleForwardTsn(chunk.new_cumulative_tsn(),
+                                              chunk.skipped_streams());
+  }
 
-  // A forward TSN - for ordered streams - may allow messages to be
-  // delivered.
-  MaybeResetStreamsDeferredAndDeliverMessages();
+  // A forward TSN - for ordered streams - may allow messages to be delivered.
+  MaybeDeliverMessages();
 }
 
 void DcSctpSocket::MaybeSendShutdownOrAck() {

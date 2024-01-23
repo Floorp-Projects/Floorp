@@ -73,25 +73,26 @@ bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
 
-BandwidthLimitedCause GetBandwidthLimitedCause(
-    LossBasedState loss_based_state,
-    bool is_rtt_above_limit,
-    BandwidthUsage bandwidth_usage,
-    bool not_probe_if_delay_increased) {
-  if (not_probe_if_delay_increased) {
-    if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
-        bandwidth_usage == BandwidthUsage::kBwUnderusing) {
-      return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
-    } else if (is_rtt_above_limit) {
-      return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
-    }
+BandwidthLimitedCause GetBandwidthLimitedCause(LossBasedState loss_based_state,
+                                               bool is_rtt_above_limit,
+                                               BandwidthUsage bandwidth_usage) {
+  if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+      bandwidth_usage == BandwidthUsage::kBwUnderusing) {
+    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  } else if (is_rtt_above_limit) {
+    return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
   }
   switch (loss_based_state) {
     case LossBasedState::kDecreasing:
-      return BandwidthLimitedCause::kLossLimitedBweDecreasing;
+      // Probes may not be sent in this state.
+      return BandwidthLimitedCause::kLossLimitedBwe;
+    case webrtc::LossBasedState::kIncreaseUsingPadding:
+      // Probes may not be sent in this state.
+      return BandwidthLimitedCause::kLossLimitedBwe;
     case LossBasedState::kIncreasing:
+      // Probes may be sent in this state.
       return BandwidthLimitedCause::kLossLimitedBweIncreasing;
-    default:
+    case LossBasedState::kDelayBasedEstimate:
       return BandwidthLimitedCause::kDelayBasedLimited;
   }
 }
@@ -112,8 +113,8 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
           key_value_config_,
           "WebRTC-Bwe-IgnoreProbesLowerThanNetworkStateEstimate")),
       limit_probes_lower_than_throughput_estimate_(
-          IsEnabled(key_value_config_,
-                    "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
+          IsNotDisabled(key_value_config_,
+                        "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
       rate_control_settings_(
           RateControlSettings::ParseFromKeyValueConfig(key_value_config_)),
       pace_at_max_of_bwe_and_lower_link_capacity_(
@@ -144,6 +145,7 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       last_loss_based_target_rate_(*config.constraints.starting_rate),
       last_pushback_target_rate_(last_loss_based_target_rate_),
       last_stable_target_rate_(last_loss_based_target_rate_),
+      last_loss_base_state_(LossBasedState::kDelayBasedEstimate),
       pacing_factor_(config.stream_based_config.pacing_factor.value_or(
           kDefaultPaceMultiplier)),
       min_total_allocated_bitrate_(
@@ -639,6 +641,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
   uint8_t fraction_loss = bandwidth_estimation_->fraction_loss();
   TimeDelta round_trip_time = bandwidth_estimation_->round_trip_time();
   DataRate loss_based_target_rate = bandwidth_estimation_->target_rate();
+  LossBasedState loss_based_state = bandwidth_estimation_->loss_based_state();
   DataRate pushback_target_rate = loss_based_target_rate;
 
   BWE_TEST_LOGGING_PLOT(1, "fraction_loss_%", at_time.ms(),
@@ -666,6 +669,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
   stable_target_rate = std::min(stable_target_rate, pushback_target_rate);
 
   if ((loss_based_target_rate != last_loss_based_target_rate_) ||
+      (loss_based_state != last_loss_base_state_) ||
       (fraction_loss != last_estimated_fraction_loss_) ||
       (round_trip_time != last_estimated_round_trip_time_) ||
       (pushback_target_rate != last_pushback_target_rate_) ||
@@ -675,6 +679,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
     last_estimated_fraction_loss_ = fraction_loss;
     last_estimated_round_trip_time_ = round_trip_time;
     last_stable_target_rate_ = stable_target_rate;
+    last_loss_base_state_ = loss_based_state;
 
     alr_detector_->SetEstimatedBitrate(loss_based_target_rate.bps());
 
@@ -698,11 +703,9 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     auto probes = probe_controller_->SetEstimatedBitrate(
         loss_based_target_rate,
-        GetBandwidthLimitedCause(
-            bandwidth_estimation_->loss_based_state(),
-            bandwidth_estimation_->IsRttAboveLimit(),
-            delay_based_bwe_->last_state(),
-            probe_controller_->DontProbeIfDelayIncreased()),
+        GetBandwidthLimitedCause(bandwidth_estimation_->loss_based_state(),
+                                 bandwidth_estimation_->IsRttAboveLimit(),
+                                 delay_based_bwe_->last_state()),
         at_time);
     update->probe_cluster_configs.insert(update->probe_cluster_configs.end(),
                                          probes.begin(), probes.end());
@@ -728,7 +731,10 @@ PacerConfig GoogCcNetworkController::GetPacingRates(Timestamp at_time) const {
         pacing_factor_;
   }
   DataRate padding_rate =
-      std::min(max_padding_rate_, last_pushback_target_rate_);
+      (last_loss_base_state_ == LossBasedState::kIncreaseUsingPadding)
+          ? std::max(max_padding_rate_, last_loss_based_target_rate_)
+          : max_padding_rate_;
+  padding_rate = std::min(padding_rate, last_pushback_target_rate_);
   PacerConfig msg;
   msg.at_time = at_time;
   msg.time_window = TimeDelta::Seconds(1);

@@ -82,9 +82,9 @@ class BaseChannel : public ChannelInterface,
 
   // Constructor for use when the MediaChannels are split
   BaseChannel(
-      rtc::Thread* worker_thread,
+      webrtc::TaskQueueBase* worker_thread,
       rtc::Thread* network_thread,
-      rtc::Thread* signaling_thread,
+      webrtc::TaskQueueBase* signaling_thread,
       std::unique_ptr<MediaSendChannelInterface> media_send_channel,
       std::unique_ptr<MediaReceiveChannelInterface> media_receive_channel,
       absl::string_view mid,
@@ -93,7 +93,7 @@ class BaseChannel : public ChannelInterface,
       rtc::UniqueRandomIdGenerator* ssrc_generator);
   virtual ~BaseChannel();
 
-  rtc::Thread* worker_thread() const { return worker_thread_; }
+  webrtc::TaskQueueBase* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() const { return network_thread_; }
   const std::string& mid() const override { return demuxer_criteria_.mid(); }
   // TODO(deadbeef): This is redundant; remove this.
@@ -206,7 +206,7 @@ class BaseChannel : public ChannelInterface,
   }
 
   bool enabled() const RTC_RUN_ON(worker_thread()) { return enabled_; }
-  rtc::Thread* signaling_thread() const { return signaling_thread_; }
+  webrtc::TaskQueueBase* signaling_thread() const { return signaling_thread_; }
 
   // Call to verify that:
   // * The required content description directions have been set.
@@ -311,9 +311,9 @@ class BaseChannel : public ChannelInterface,
   void DisconnectFromRtpTransport_n() RTC_RUN_ON(network_thread());
   void SignalSentPacket_n(const rtc::SentPacket& sent_packet);
 
-  rtc::Thread* const worker_thread_;
+  webrtc::TaskQueueBase* const worker_thread_;
   rtc::Thread* const network_thread_;
-  rtc::Thread* const signaling_thread_;
+  webrtc::TaskQueueBase* const signaling_thread_;
   rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_;
 
   std::function<void()> on_first_packet_received_
@@ -367,9 +367,9 @@ class BaseChannel : public ChannelInterface,
 class VoiceChannel : public BaseChannel {
  public:
   VoiceChannel(
-      rtc::Thread* worker_thread,
+      webrtc::TaskQueueBase* worker_thread,
       rtc::Thread* network_thread,
-      rtc::Thread* signaling_thread,
+      webrtc::TaskQueueBase* signaling_thread,
       std::unique_ptr<VoiceMediaSendChannelInterface> send_channel_impl,
       std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_channel_impl,
       absl::string_view mid,
@@ -414,7 +414,6 @@ class VoiceChannel : public BaseChannel {
   }
 
  private:
-  void InitCallback();
   // overrides from BaseChannel
   void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,
@@ -438,9 +437,9 @@ class VoiceChannel : public BaseChannel {
 class VideoChannel : public BaseChannel {
  public:
   VideoChannel(
-      rtc::Thread* worker_thread,
+      webrtc::TaskQueueBase* worker_thread,
       rtc::Thread* network_thread,
-      rtc::Thread* signaling_thread,
+      webrtc::TaskQueueBase* signaling_thread,
       std::unique_ptr<VideoMediaSendChannelInterface> media_send_channel,
       std::unique_ptr<VideoMediaReceiveChannelInterface> media_receive_channel,
       absl::string_view mid,

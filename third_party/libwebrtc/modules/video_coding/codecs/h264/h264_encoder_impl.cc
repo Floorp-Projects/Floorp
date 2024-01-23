@@ -565,10 +565,20 @@ int32_t H264EncoderImpl::Encode(
         codec_specific.codecSpecific.H264.base_layer_sync =
             tid > 0 && tid < tl0sync_limit_[i];
         if (svc_controllers_[i]) {
+          if (encoded_images_[i]._frameType == VideoFrameType::kVideoFrameKey) {
+            // Reset the ScalableVideoController on key frame
+            // to reset the expected dependency structure.
+            layer_frames =
+                svc_controllers_[i]->NextFrameConfig(/* restart= */ true);
+            RTC_CHECK_EQ(layer_frames.size(), 1);
+            RTC_DCHECK_EQ(layer_frames[0].TemporalId(), 0);
+            RTC_DCHECK_EQ(layer_frames[0].IsKeyframe(), true);
+          }
+
           if (layer_frames[0].TemporalId() != tid) {
             RTC_LOG(LS_WARNING)
-                << "Encoder produced a frame for layer S" << (i + 1) << "T"
-                << tid + 1 << " that wasn't requested.";
+                << "Encoder produced a frame with temporal id " << tid
+                << ", expected " << layer_frames[0].TemporalId() << ".";
             continue;
           }
           encoded_images_[i].SetTemporalIndex(tid);

@@ -358,8 +358,11 @@ static bool ValidateStreamParams(const StreamParams& sp) {
     }
   }
   for (const auto& group : sp.ssrc_groups) {
-    if (group.semantics != kSimSsrcGroupSemantics)
+    if (!(group.semantics == kFidSsrcGroupSemantics ||
+          group.semantics == kSimSsrcGroupSemantics ||
+          group.semantics == kFecFrSsrcGroupSemantics)) {
       continue;
+    }
     for (uint32_t group_ssrc : group.ssrcs) {
       auto it = absl::c_find_if(sp.ssrcs, [&group_ssrc](uint32_t ssrc) {
         return ssrc == group_ssrc;
@@ -367,7 +370,7 @@ static bool ValidateStreamParams(const StreamParams& sp) {
       if (it == sp.ssrcs.end()) {
         RTC_LOG(LS_ERROR) << "SSRC '" << group_ssrc
                           << "' missing from StreamParams ssrcs with semantics "
-                          << kSimSsrcGroupSemantics << ": " << sp.ToString();
+                          << group.semantics << ": " << sp.ToString();
         return false;
       }
     }
@@ -740,6 +743,19 @@ void ExtractCodecInformation(
       raw_payload_types.insert(recv_codec.codec.id);
     }
   }
+}
+
+int ParseReceiveBufferSize(const webrtc::FieldTrialsView& trials) {
+  webrtc::FieldTrialParameter<int> size_bytes("size_bytes",
+                                              kVideoRtpRecvBufferSize);
+  webrtc::ParseFieldTrial({&size_bytes},
+                          trials.Lookup("WebRTC-ReceiveBufferSize"));
+  if (size_bytes.Get() < 10'000 || size_bytes.Get() > 10'000'000) {
+    RTC_LOG(LS_WARNING) << "WebRTC-ReceiveBufferSize out of bounds: "
+                        << size_bytes.Get();
+    return kVideoRtpRecvBufferSize;
+  }
+  return size_bytes.Get();
 }
 
 }  // namespace
@@ -1658,14 +1674,6 @@ void WebRtcVideoSendChannel::SetEncoderSelector(
   }
 }
 
-void WebRtcVideoSendChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  allow_codec_switching_ = enabled;
-  if (allow_codec_switching_) {
-    RTC_LOG(LS_INFO) << "Encoder switching enabled.";
-  }
-}
-
 WebRtcVideoSendChannel::WebRtcVideoSendStream::VideoSendStreamParameters::
     VideoSendStreamParameters(
         webrtc::VideoSendStream::Config config,
@@ -2220,7 +2228,20 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   // Ensure frame dropping is always enabled.
   encoder_config.frame_drop_enabled = true;
 
-  int max_qp = kDefaultQpMax;
+  int max_qp;
+  switch (encoder_config.codec_type) {
+    case webrtc::kVideoCodecH264:
+    case webrtc::kVideoCodecH265:
+      max_qp = kDefaultVideoMaxQpH26x;
+      break;
+    case webrtc::kVideoCodecVP8:
+    case webrtc::kVideoCodecVP9:
+    case webrtc::kVideoCodecAV1:
+    case webrtc::kVideoCodecGeneric:
+    case webrtc::kVideoCodecMultiplex:
+      max_qp = kDefaultVideoMaxQpVpx;
+      break;
+  }
   codec.GetParam(kCodecParamMaxQuantization, &max_qp);
   encoder_config.max_qp = max_qp;
 
@@ -2582,7 +2603,8 @@ WebRtcVideoReceiveChannel::WebRtcVideoReceiveChannel(
       discard_unknown_ssrc_packets_(
           IsEnabled(call_->trials(),
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
-      crypto_options_(crypto_options) {
+      crypto_options_(crypto_options),
+      receive_buffer_size_(ParseReceiveBufferSize(call_->trials())) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   rtcp_receiver_report_ssrc_ = kDefaultRtcpReceiverReportSsrc;
   recv_codecs_ = MapCodecs(GetPayloadTypesAndDefaultCodecs(
@@ -3179,7 +3201,7 @@ void WebRtcVideoReceiveChannel::SetInterface(
   MediaChannelUtil::SetInterface(iface);
   // Set the RTP recv/send buffer to a bigger size.
   MediaChannelUtil::SetOption(MediaChannelNetworkInterface::ST_RTP,
-                              rtc::Socket::OPT_RCVBUF, kVideoRtpRecvBufferSize);
+                              rtc::Socket::OPT_RCVBUF, receive_buffer_size_);
 }
 
 void WebRtcVideoReceiveChannel::SetFrameDecryptor(

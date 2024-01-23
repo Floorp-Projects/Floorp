@@ -105,7 +105,9 @@ webrtc::RTCError VerifyCandidates(const Candidates& candidates);
 // Information about ICE configuration.
 // TODO(deadbeef): Use absl::optional to represent unset values, instead of
 // -1.
-struct IceConfig {
+//
+// TODO(bugs.webrtc.org/15609): Define a public API for this.
+struct RTC_EXPORT IceConfig {
   // The ICE connection receiving timeout value in milliseconds.
   absl::optional<int> receiving_timeout;
   // Time interval in milliseconds to ping a backup connection when the ICE
@@ -234,6 +236,8 @@ enum class IceTransportState {
 // Once the public interface is supported,
 // (https://www.w3.org/TR/webrtc/#rtcicetransport)
 // the IceTransportInterface will be split from this class.
+//
+// TODO(bugs.webrtc.org/15609): Define a public API for this.
 class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
  public:
   IceTransportInternal();

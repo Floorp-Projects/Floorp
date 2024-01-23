@@ -138,6 +138,7 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
   ON_CALL(*mock_frame_transformer, Transform)
       .WillByDefault(
           [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
+            EXPECT_STRCASEEQ("video/Generic", frame->GetMimeType().c_str());
             callback->OnTransformedFrame(std::move(frame));
           });
   delegate->TransformFrame(CreateRtpFrameObject(RTPVideoHeader(), csrcs));

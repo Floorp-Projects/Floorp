@@ -56,6 +56,7 @@ class EglBase14Impl implements EglBase14 {
     private final EGLDisplay eglDisplay;
     private final EGLConfig eglConfig;
     private final RefCountDelegate refCountDelegate;
+    private EGLSurface currentSurface = EGL14.EGL_NO_SURFACE;
 
     public EglConnection(EGLContext sharedContext, int[] configAttributes) {
       eglDisplay = getEglDisplay();
@@ -73,6 +74,7 @@ class EglBase14Impl implements EglBase14 {
         }
         EGL14.eglReleaseThread();
         EGL14.eglTerminate(eglDisplay);
+        currentSurface = EGL14.EGL_NO_SURFACE;
       });
     }
 
@@ -107,6 +109,31 @@ class EglBase14Impl implements EglBase14 {
     @Override
     public EGLConfig getConfig() {
       return eglConfig;
+    }
+
+    public void makeCurrent(EGLSurface eglSurface) {
+      if (EGL14.eglGetCurrentContext() == eglContext && currentSurface == eglSurface) {
+        return;
+      }
+
+      synchronized (EglBase.lock) {
+        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
+          throw new GLException(EGL14.eglGetError(),
+              "eglMakeCurrent failed: 0x" + Integer.toHexString(EGL14.eglGetError()));
+        }
+      }
+      currentSurface = eglSurface;
+    }
+
+    public void detachCurrent() {
+      synchronized (EglBase.lock) {
+        if (!EGL14.eglMakeCurrent(
+                eglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)) {
+          throw new GLException(EGL14.eglGetError(),
+              "eglDetachCurrent failed: 0x" + Integer.toHexString(EGL14.eglGetError()));
+        }
+      }
+      currentSurface = EGL14.EGL_NO_SURFACE;
     }
   }
   // Create a new context with the specified config type, sharing data with sharedContext.
@@ -224,25 +251,13 @@ class EglBase14Impl implements EglBase14 {
     if (eglSurface == EGL14.EGL_NO_SURFACE) {
       throw new RuntimeException("No EGLSurface - can't make current");
     }
-    synchronized (EglBase.lock) {
-      if (!EGL14.eglMakeCurrent(
-              eglConnection.getDisplay(), eglSurface, eglSurface, eglConnection.getContext())) {
-        throw new GLException(EGL14.eglGetError(),
-            "eglMakeCurrent failed: 0x" + Integer.toHexString(EGL14.eglGetError()));
-      }
-    }
+    eglConnection.makeCurrent(eglSurface);
   }
 
   // Detach the current EGL context, so that it can be made current on another thread.
   @Override
   public void detachCurrent() {
-    synchronized (EglBase.lock) {
-      if (!EGL14.eglMakeCurrent(eglConnection.getDisplay(), EGL14.EGL_NO_SURFACE,
-              EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)) {
-        throw new GLException(EGL14.eglGetError(),
-            "eglDetachCurrent failed: 0x" + Integer.toHexString(EGL14.eglGetError()));
-      }
-    }
+    eglConnection.detachCurrent();
   }
 
   @Override

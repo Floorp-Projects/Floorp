@@ -180,9 +180,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   // sent and prints all chunks.
   void DebugPrintOutgoing(rtc::ArrayView<const uint8_t> payload);
   // Called whenever data has been received, or the cumulative acknowledgment
-  // TSN has moved, that may result in performing deferred stream resetting and
-  // delivering messages.
-  void MaybeResetStreamsDeferredAndDeliverMessages();
+  // TSN has moved, that may result in delivering messages.
+  void MaybeDeliverMessages();
   // Returns true if there is a TCB, and false otherwise (and reports an error).
   bool ValidateHasTCB();
 

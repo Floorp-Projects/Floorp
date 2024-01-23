@@ -956,11 +956,6 @@ bool TurnPort::AllowedTurnPort(int port,
   if (port == 53 || port == 80 || port == 443 || port >= 1024) {
     return true;
   }
-  // Allow any port if relevant field trial is set. This allows disabling the
-  // check.
-  if (field_trials && field_trials->IsEnabled("WebRTC-Turn-AllowSystemPorts")) {
-    return true;
-  }
   return false;
 }
 

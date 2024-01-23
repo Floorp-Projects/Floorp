@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
       {"sendside_bwe",
        {"outgoing_packet_sizes", "outgoing_bitrate", "outgoing_stream_bitrate",
         "simulated_sendside_bwe", "network_delay_feedback",
-        "fraction_loss_feedback"}},
+        "fraction_loss_feedback", "outgoing_twcc_loss"}},
       {"receiveside_bwe",
        {"incoming_packet_sizes", "incoming_delay", "incoming_loss_rate",
         "incoming_bitrate", "incoming_stream_bitrate",
@@ -376,6 +376,9 @@ int main(int argc, char* argv[]) {
   });
   plots.RegisterPlot("simulated_goog_cc", [&](Plot* plot) {
     analyzer.CreateGoogCcSimulationGraph(plot);
+  });
+  plots.RegisterPlot("outgoing_twcc_loss", [&](Plot* plot) {
+    analyzer.CreateOutgoingTWCCLossRateGraph(plot);
   });
   plots.RegisterPlot("network_delay_feedback", [&](Plot* plot) {
     analyzer.CreateNetworkDelayFeedbackGraph(plot);
@@ -610,9 +613,8 @@ int main(int argc, char* argv[]) {
 
   for (const auto& plot : plots) {
     if (plot.enabled) {
-      Plot* output = collection.AppendNewPlot();
+      Plot* output = collection.AppendNewPlot(plot.label);
       plot.plot_func(output);
-      output->SetId(plot.label);
     }
   }
 

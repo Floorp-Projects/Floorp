@@ -276,8 +276,10 @@ void P2PTransportChannel::AddConnection(Connection* connection) {
   connection->set_unwritable_timeout(config_.ice_unwritable_timeout);
   connection->set_unwritable_min_checks(config_.ice_unwritable_min_checks);
   connection->set_inactive_timeout(config_.ice_inactive_timeout);
-  connection->SignalReadPacket.connect(this,
-                                       &P2PTransportChannel::OnReadPacket);
+  connection->RegisterReceivedPacketCallback(
+      [&](Connection* connection, const rtc::ReceivedPacket& packet) {
+        OnReadPacket(connection, packet);
+      });
   connection->SignalReadyToSend.connect(this,
                                         &P2PTransportChannel::OnReadyToSend);
   connection->SignalStateChange.connect(
@@ -2151,6 +2153,7 @@ void P2PTransportChannel::RemoveConnection(Connection* connection) {
   RTC_DCHECK_RUN_ON(network_thread_);
   auto it = absl::c_find(connections_, connection);
   RTC_DCHECK(it != connections_.end());
+  connection->DeregisterReceivedPacketCallback();
   connections_.erase(it);
   connection->ClearStunDictConsumer();
   ice_controller_->OnConnectionDestroyed(connection);
@@ -2221,39 +2224,30 @@ bool P2PTransportChannel::PrunePort(PortInterface* port) {
 
 // We data is available, let listeners know
 void P2PTransportChannel::OnReadPacket(Connection* connection,
-                                       const char* data,
-                                       size_t len,
-                                       int64_t packet_time_us) {
+                                       const rtc::ReceivedPacket& packet) {
   RTC_DCHECK_RUN_ON(network_thread_);
-
-  if (connection == selected_connection_) {
-    // Let the client know of an incoming packet
-    packets_received_++;
-    bytes_received_ += len;
-    RTC_DCHECK(connection->last_data_received() >= last_data_received_ms_);
-    last_data_received_ms_ =
-        std::max(last_data_received_ms_, connection->last_data_received());
-    SignalReadPacket(this, data, len, packet_time_us, 0);
+  if (connection != selected_connection_ && !FindConnection(connection)) {
+    // Do not deliver, if packet doesn't belong to the correct transport
+    // channel.
+    RTC_DCHECK_NOTREACHED();
     return;
   }
 
-  // Do not deliver, if packet doesn't belong to the correct transport
-  // channel.
-  if (!FindConnection(connection))
-    return;
+    // Let the client know of an incoming packet
+    packets_received_++;
+    bytes_received_ += packet.payload().size();
+    RTC_DCHECK(connection->last_data_received() >= last_data_received_ms_);
+    last_data_received_ms_ =
+        std::max(last_data_received_ms_, connection->last_data_received());
 
-  packets_received_++;
-  bytes_received_ += len;
-  RTC_DCHECK(connection->last_data_received() >= last_data_received_ms_);
-  last_data_received_ms_ =
-      std::max(last_data_received_ms_, connection->last_data_received());
-
-  // Let the client know of an incoming packet
-  SignalReadPacket(this, data, len, packet_time_us, 0);
+    SignalReadPacket(
+        this, reinterpret_cast<const char*>(packet.payload().data()),
+        packet.payload().size(),
+        packet.arrival_time() ? packet.arrival_time()->us() : -1, 0);
 
   // May need to switch the sending connection based on the receiving media
   // path if this is the controlled side.
-  if (ice_role_ == ICEROLE_CONTROLLED) {
+  if (ice_role_ == ICEROLE_CONTROLLED && connection != selected_connection_) {
     ice_controller_->OnImmediateSwitchRequest(IceSwitchReason::DATA_RECEIVED,
                                               connection);
   }

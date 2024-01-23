@@ -24,7 +24,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index fbfbf84e14..f32f4a061b 100644
+index ddc3323df9..777cc6d4c1 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -431,7 +431,7 @@ ChannelSend::ChannelSend(
@@ -37,15 +37,15 @@ index fbfbf84e14..f32f4a061b 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index fa5d14d204..85297d9568 100644
+index 6b975edc6a..c0ee5a92f4 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -478,12 +478,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -473,12 +473,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
 +/* Mozilla: Avoid this since it could use GetRealTimeClock().
- Call* Call::Create(const Call::Config& config) {
+ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
    Clock* clock = Clock::GetRealTimeClock();
    return Create(config, clock,
                  RtpTransportControllerSendFactory().Create(
@@ -53,23 +53,23 @@ index fa5d14d204..85297d9568 100644
  }
 + */
  
- Call* Call::Create(const Call::Config& config,
-                    Clock* clock,
+ std::unique_ptr<Call> Call::Create(
+     const CallConfig& config,
 diff --git a/call/call_factory.cc b/call/call_factory.cc
-index 380e80ce12..253f8cd7de 100644
+index 043b11da37..78a4f1635f 100644
 --- a/call/call_factory.cc
 +++ b/call/call_factory.cc
-@@ -95,6 +95,9 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
+@@ -94,6 +94,9 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
  
    RtpTransportConfig transportConfig = config.ExtractTransportConfig();
  
 +  RTC_CHECK(false);
 +  return nullptr;
 +  /* Mozilla: Avoid this since it could use GetRealTimeClock().
-   Call* call =
+   std::unique_ptr<Call> call =
        Call::Create(config, Clock::GetRealTimeClock(),
                     config.rtp_transport_controller_send_factory->Create(
-@@ -107,6 +110,7 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
+@@ -106,6 +109,7 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
    }
  
    return call;

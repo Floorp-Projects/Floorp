@@ -244,7 +244,8 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   // Set to true if the generic descriptor should be authenticated.
   const bool generic_descriptor_auth_experiment_;
 
-  AbsoluteCaptureTimeSender absolute_capture_time_sender_;
+  AbsoluteCaptureTimeSender absolute_capture_time_sender_
+      RTC_GUARDED_BY(send_checker_);
   // Tracks updates to the active decode targets and decides when active decode
   // targets bitmask should be attached to the dependency descriptor.
   ActiveDecodeTargetsHelper active_decode_targets_tracker_;

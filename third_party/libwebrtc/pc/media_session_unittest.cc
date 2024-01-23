@@ -26,6 +26,7 @@
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/crypto_params.h"
+#include "api/rtp_parameters.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/test_utils.h"
@@ -35,6 +36,7 @@
 #include "p2p/base/transport_info.h"
 #include "pc/media_protocol_names.h"
 #include "pc/rtp_media_utils.h"
+#include "pc/rtp_parameters_conversion.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/fake_ssl_identity.h"
@@ -111,8 +113,16 @@ using ::testing::SizeIs;
 using webrtc::RtpExtension;
 using webrtc::RtpTransceiverDirection;
 
+static AudioCodec createRedAudioCodec(absl::string_view encoding_id) {
+  AudioCodec red = cricket::CreateAudioCodec(63, "red", 48000, 2);
+  red.SetParam(cricket::kCodecParamNotInNameValueFormat,
+               std::string(encoding_id) + '/' + std::string(encoding_id));
+  return red;
+}
+
 static const AudioCodec kAudioCodecs1[] = {
-    cricket::CreateAudioCodec(103, "ISAC", 16000, 1),
+    cricket::CreateAudioCodec(111, "opus", 48000, 2),
+    createRedAudioCodec("111"),
     cricket::CreateAudioCodec(102, "iLBC", 8000, 1),
     cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
     cricket::CreateAudioCodec(8, "PCMA", 8000, 1),
@@ -284,6 +294,7 @@ static const char* kMediaProtocolsDtls[] = {
 // default changes.
 static const char* kDefaultSrtpCryptoSuite = kCsAesCm128HmacSha1_80;
 static const char* kDefaultSrtpCryptoSuiteGcm = kCsAeadAes256Gcm;
+static const uint8_t kDefaultCryptoSuiteSize = 3U;
 
 // These constants are used to make the code using "AddMediaDescriptionOptions"
 // more readable.
@@ -622,9 +633,8 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
     ASSERT_TRUE(video_media_desc);
     EXPECT_TRUE(CompareCryptoParams(audio_media_desc->cryptos(),
                                     video_media_desc->cryptos()));
-    EXPECT_EQ(1u, audio_media_desc->cryptos().size());
-    EXPECT_EQ(kDefaultSrtpCryptoSuite,
-              audio_media_desc->cryptos()[0].crypto_suite);
+    ASSERT_CRYPTO(audio_media_desc, offer ? kDefaultCryptoSuiteSize : 1U,
+                  kDefaultSrtpCryptoSuite);
 
     // Verify the selected crypto is one from the reference audio
     // media content.
@@ -673,10 +683,7 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
   bool VerifyNoCNCodecs(const cricket::ContentInfo* content) {
     RTC_DCHECK(content);
     RTC_CHECK(content->media_description());
-    const cricket::AudioContentDescription* audio_desc =
-        content->media_description()->as_audio();
-    RTC_CHECK(audio_desc);
-    for (const cricket::AudioCodec& codec : audio_desc->codecs()) {
+    for (const cricket::Codec& codec : content->media_description()->codecs()) {
       if (codec.name == "CN") {
         return false;
       }
@@ -819,8 +826,67 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioOffer) {
   EXPECT_EQ(0U, acd->first_ssrc());             // no sender is attached.
   EXPECT_EQ(kAutoBandwidth, acd->bandwidth());  // default bandwidth (auto)
   EXPECT_TRUE(acd->rtcp_mux());                 // rtcp-mux defaults on
-  ASSERT_CRYPTO(acd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(acd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
   EXPECT_EQ(cricket::kMediaProtocolSavpf, acd->protocol());
+}
+
+// Create an offer with just Opus and RED.
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestCreateAudioOfferWithJustOpusAndRed) {
+  f1_.set_secure(SEC_ENABLED);
+  // First, prefer to only use opus and red.
+  std::vector<webrtc::RtpCodecCapability> preferences;
+  preferences.push_back(
+      webrtc::ToRtpCodecCapability(f1_.audio_sendrecv_codecs()[0]));
+  preferences.push_back(
+      webrtc::ToRtpCodecCapability(f1_.audio_sendrecv_codecs()[1]));
+  EXPECT_EQ("opus", preferences[0].name);
+  EXPECT_EQ("red", preferences[1].name);
+
+  auto opts = CreatePlanBMediaSessionOptions();
+  opts.media_description_options.at(0).codec_preferences = preferences;
+  std::unique_ptr<SessionDescription> offer =
+      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
+  ASSERT_TRUE(offer.get());
+  const ContentInfo* ac = offer->GetContentByName("audio");
+  const ContentInfo* vc = offer->GetContentByName("video");
+  ASSERT_TRUE(ac != NULL);
+  ASSERT_TRUE(vc == NULL);
+  EXPECT_EQ(MediaProtocolType::kRtp, ac->type);
+  const AudioContentDescription* acd = ac->media_description()->as_audio();
+  EXPECT_EQ(MEDIA_TYPE_AUDIO, acd->type());
+  EXPECT_EQ(2U, acd->codecs().size());
+  EXPECT_EQ("opus", acd->codecs()[0].name);
+  EXPECT_EQ("red", acd->codecs()[1].name);
+}
+
+// Create an offer with RED before Opus, which enables RED with Opus encoding.
+TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioOfferWithRedForOpus) {
+  f1_.set_secure(SEC_ENABLED);
+  // First, prefer to only use opus and red.
+  std::vector<webrtc::RtpCodecCapability> preferences;
+  preferences.push_back(
+      webrtc::ToRtpCodecCapability(f1_.audio_sendrecv_codecs()[1]));
+  preferences.push_back(
+      webrtc::ToRtpCodecCapability(f1_.audio_sendrecv_codecs()[0]));
+  EXPECT_EQ("red", preferences[0].name);
+  EXPECT_EQ("opus", preferences[1].name);
+
+  auto opts = CreatePlanBMediaSessionOptions();
+  opts.media_description_options.at(0).codec_preferences = preferences;
+  std::unique_ptr<SessionDescription> offer =
+      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
+  ASSERT_TRUE(offer.get());
+  const ContentInfo* ac = offer->GetContentByName("audio");
+  const ContentInfo* vc = offer->GetContentByName("video");
+  ASSERT_TRUE(ac != NULL);
+  ASSERT_TRUE(vc == NULL);
+  EXPECT_EQ(MediaProtocolType::kRtp, ac->type);
+  const AudioContentDescription* acd = ac->media_description()->as_audio();
+  EXPECT_EQ(MEDIA_TYPE_AUDIO, acd->type());
+  EXPECT_EQ(2U, acd->codecs().size());
+  EXPECT_EQ("red", acd->codecs()[0].name);
+  EXPECT_EQ("opus", acd->codecs()[1].name);
 }
 
 // Create a typical video offer, and ensure it matches what we expect.
@@ -844,14 +910,14 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateVideoOffer) {
   EXPECT_EQ(0U, acd->first_ssrc());             // no sender is attached
   EXPECT_EQ(kAutoBandwidth, acd->bandwidth());  // default bandwidth (auto)
   EXPECT_TRUE(acd->rtcp_mux());                 // rtcp-mux defaults on
-  ASSERT_CRYPTO(acd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(acd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
   EXPECT_EQ(cricket::kMediaProtocolSavpf, acd->protocol());
   EXPECT_EQ(MEDIA_TYPE_VIDEO, vcd->type());
   EXPECT_EQ(f1_.video_sendrecv_codecs(), vcd->codecs());
   EXPECT_EQ(0U, vcd->first_ssrc());             // no sender is attached
   EXPECT_EQ(kAutoBandwidth, vcd->bandwidth());  // default bandwidth (auto)
   EXPECT_TRUE(vcd->rtcp_mux());                 // rtcp-mux defaults on
-  ASSERT_CRYPTO(vcd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(vcd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
   EXPECT_EQ(cricket::kMediaProtocolSavpf, vcd->protocol());
 }
 
@@ -1298,7 +1364,6 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioAnswerGcm) {
   f1_.set_secure(SEC_ENABLED);
   f2_.set_secure(SEC_ENABLED);
   MediaSessionOptions opts = CreatePlanBMediaSessionOptions();
-  opts.crypto_options.srtp.enable_gcm_crypto_suites = true;
   std::unique_ptr<SessionDescription> offer =
       f1_.CreateOfferOrError(opts, nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
@@ -2475,11 +2540,11 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateMultiStreamVideoOffer) {
 
   EXPECT_EQ(kAutoBandwidth, acd->bandwidth());  // default bandwidth (auto)
   EXPECT_TRUE(acd->rtcp_mux());                 // rtcp-mux defaults on
-  ASSERT_CRYPTO(acd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(acd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
 
   EXPECT_EQ(MEDIA_TYPE_VIDEO, vcd->type());
   EXPECT_EQ(f1_.video_sendrecv_codecs(), vcd->codecs());
-  ASSERT_CRYPTO(vcd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(vcd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
 
   const StreamParamsVec& video_streams = vcd->streams();
   ASSERT_EQ(1U, video_streams.size());
@@ -2512,9 +2577,9 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateMultiStreamVideoOffer) {
   EXPECT_EQ(acd->codecs(), updated_acd->codecs());
   EXPECT_EQ(vcd->type(), updated_vcd->type());
   EXPECT_EQ(vcd->codecs(), updated_vcd->codecs());
-  ASSERT_CRYPTO(updated_acd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(updated_acd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
   EXPECT_TRUE(CompareCryptoParams(acd->cryptos(), updated_acd->cryptos()));
-  ASSERT_CRYPTO(updated_vcd, 1U, kDefaultSrtpCryptoSuite);
+  ASSERT_CRYPTO(updated_vcd, kDefaultCryptoSuiteSize, kDefaultSrtpCryptoSuite);
   EXPECT_TRUE(CompareCryptoParams(vcd->cryptos(), updated_vcd->cryptos()));
 
   const StreamParamsVec& updated_audio_streams = updated_acd->streams();
@@ -3881,8 +3946,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCryptoDtls) {
   ASSERT_TRUE(audio_media_desc);
   video_media_desc = offer->GetContentDescriptionByName("video");
   ASSERT_TRUE(video_media_desc);
-  EXPECT_EQ(1u, audio_media_desc->cryptos().size());
-  EXPECT_EQ(1u, video_media_desc->cryptos().size());
+  EXPECT_EQ(kDefaultCryptoSuiteSize, audio_media_desc->cryptos().size());
+  EXPECT_EQ(kDefaultCryptoSuiteSize, video_media_desc->cryptos().size());
 
   audio_trans_desc = offer->GetTransportDescriptionByName("audio");
   ASSERT_TRUE(audio_trans_desc);
@@ -4667,13 +4732,13 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestSetAudioCodecs) {
       MAKE_VECTOR(kAudioCodecsAnswer);
   const std::vector<AudioCodec> no_codecs;
 
-  RTC_CHECK_EQ(send_codecs[1].name, "iLBC")
+  RTC_CHECK_EQ(send_codecs[2].name, "iLBC")
       << "Please don't change shared test data!";
   RTC_CHECK_EQ(recv_codecs[2].name, "iLBC")
       << "Please don't change shared test data!";
   // Alter iLBC send codec to have zero channels, to test that that is handled
   // properly.
-  send_codecs[1].channels = 0;
+  send_codecs[2].channels = 0;
 
   // Alter iLBC receive codec to be lowercase, to test that case conversions
   // are handled properly.

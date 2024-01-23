@@ -633,7 +633,7 @@ void WebrtcGmpVideoEncoder::Encoded(
   unit.SetEncodedData(webrtc::EncodedImageBuffer::Create(
       aEncodedFrame->Buffer(), aEncodedFrame->Size()));
   unit._frameType = ft;
-  unit.SetTimestamp(timestamp);
+  unit.SetRtpTimestamp(timestamp);
   unit.capture_time_ms_ = capture_time.ms();
   unit._encodedWidth = aEncodedFrame->EncodedWidth();
   unit._encodedHeight = aEncodedFrame->EncodedHeight();
@@ -808,7 +808,7 @@ int32_t WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                : MediaInfoFlag::NonKeyFrame);
   flag |= MediaInfoFlag::SoftwareDecoding;
   flag |= MediaInfoFlag::VIDEO_H264;
-  mPerformanceRecorder.Start((aInputImage.Timestamp() * 1000ll) / 90,
+  mPerformanceRecorder.Start((aInputImage.RtpTimestamp() * 1000ll) / 90,
                              "WebrtcGmpVideoDecoder"_ns, mTrackingId, flag);
 
   // This is an ugly solution to asynchronous decoding errors
@@ -882,7 +882,7 @@ void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
 
   frame->SetEncodedWidth(aDecodeData->mImage._encodedWidth);
   frame->SetEncodedHeight(aDecodeData->mImage._encodedHeight);
-  frame->SetTimeStamp((aDecodeData->mImage.Timestamp() * 1000ll) /
+  frame->SetTimeStamp((aDecodeData->mImage.RtpTimestamp() * 1000ll) /
                       90);  // rounds down
   frame->SetCompleteFrame(
       true);  // upstream no longer deals with incomplete frames

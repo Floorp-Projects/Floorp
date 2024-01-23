@@ -518,9 +518,9 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
 
   metrics::Reset();
 
-  Call::Config send_config(send_event_log_.get());
+  CallConfig send_config(send_event_log_.get());
   test.ModifySenderBitrateConfig(&send_config.bitrate_config);
-  Call::Config recv_config(recv_event_log_.get());
+  CallConfig recv_config(recv_event_log_.get());
   test.ModifyReceiverBitrateConfig(&recv_config.bitrate_config);
 
   VideoEncoderConfig encoder_config_with_screenshare;

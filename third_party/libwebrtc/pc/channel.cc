@@ -78,12 +78,13 @@ struct StreamFinder {
 
 }  // namespace
 
-template <class Codec>
 void MediaChannelParametersFromMediaDescription(
-    const MediaContentDescriptionImpl<Codec>* desc,
+    const RtpMediaContentDescription* desc,
     const RtpHeaderExtensions& extensions,
     bool is_stream_active,
     MediaChannelParameters* params) {
+  RTC_DCHECK(desc->type() == MEDIA_TYPE_AUDIO ||
+             desc->type() == MEDIA_TYPE_VIDEO);
   params->is_stream_active = is_stream_active;
   params->codecs = desc->codecs();
   // TODO(bugs.webrtc.org/11513): See if we really need
@@ -95,9 +96,8 @@ void MediaChannelParametersFromMediaDescription(
   params->rtcp.remote_estimate = desc->remote_estimate();
 }
 
-template <class Codec>
 void RtpSendParametersFromMediaDescription(
-    const MediaContentDescriptionImpl<Codec>* desc,
+    const RtpMediaContentDescription* desc,
     webrtc::RtpExtension::Filter extensions_filter,
     SenderParameters* send_params) {
   RtpHeaderExtensions extensions =
@@ -112,9 +112,9 @@ void RtpSendParametersFromMediaDescription(
 }
 
 BaseChannel::BaseChannel(
-    rtc::Thread* worker_thread,
+    webrtc::TaskQueueBase* worker_thread,
     rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
+    webrtc::TaskQueueBase* signaling_thread,
     std::unique_ptr<MediaSendChannelInterface> send_media_channel_impl,
     std::unique_ptr<MediaReceiveChannelInterface> receive_media_channel_impl,
     absl::string_view mid,
@@ -819,9 +819,9 @@ void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
 }
 
 VoiceChannel::VoiceChannel(
-    rtc::Thread* worker_thread,
+    webrtc::TaskQueueBase* worker_thread,
     rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
+    webrtc::TaskQueueBase* signaling_thread,
     std::unique_ptr<VoiceMediaSendChannelInterface> media_send_channel,
     std::unique_ptr<VoiceMediaReceiveChannelInterface> media_receive_channel,
     absl::string_view mid,
@@ -844,19 +844,6 @@ VoiceChannel::~VoiceChannel() {
   DisableMedia_w();
 }
 
-void VoiceChannel::InitCallback() {
-  RTC_DCHECK_RUN_ON(worker_thread());
-  // TODO(bugs.webrtc.org/13931): Remove when values are set
-  // in a more sensible fashion
-  send_channel()->SetSendCodecChangedCallback([this]() {
-    RTC_DCHECK_RUN_ON(worker_thread());
-    // Adjust receive streams based on send codec.
-    receive_channel()->SetReceiveNackEnabled(
-        send_channel()->SendCodecHasNack());
-    receive_channel()->SetReceiveNonSenderRttEnabled(
-        send_channel()->SenderNonSenderRttEnabled());
-  });
-}
 void VoiceChannel::UpdateMediaSendRecvState_w() {
   // Render incoming data if we're the active call, and we have the local
   // content. We receive data on the default channel and multiplexed streams.
@@ -902,7 +889,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   bool criteria_modified = false;
   if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
-    for (const AudioCodec& codec : content->as_audio()->codecs()) {
+    for (const Codec& codec : content->codecs()) {
       if (MaybeAddHandledPayloadType(codec.id)) {
         criteria_modified = true;
       }
@@ -911,7 +898,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   last_recv_params_ = recv_params;
 
-  if (!UpdateLocalStreams_w(content->as_audio()->streams(), type, error_desc)) {
+  if (!UpdateLocalStreams_w(content->streams(), type, error_desc)) {
     RTC_DCHECK(!error_desc.empty());
     return false;
   }
@@ -965,9 +952,9 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
 }
 
 VideoChannel::VideoChannel(
-    rtc::Thread* worker_thread,
+    webrtc::TaskQueueBase* worker_thread,
     rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
+    webrtc::TaskQueueBase* signaling_thread,
     std::unique_ptr<VideoMediaSendChannelInterface> media_send_channel,
     std::unique_ptr<VideoMediaReceiveChannelInterface> media_receive_channel,
     absl::string_view mid,
@@ -1095,7 +1082,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   bool criteria_modified = false;
   if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
-    for (const VideoCodec& codec : content->as_video()->codecs()) {
+    for (const Codec& codec : content->codecs()) {
       if (MaybeAddHandledPayloadType(codec.id))
         criteria_modified = true;
     }

@@ -138,8 +138,7 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
       slice_reader.ConsumeBits(1);
     }
     // slice_type: ue(v)
-    uint32_t slice_type = 0;
-    slice_type = slice_reader.ReadExponentialGolomb();
+    uint32_t slice_type = slice_reader.ReadExponentialGolomb();
     IN_RANGE_OR_RETURN(slice_type, 0, 2);
     if (pps->output_flag_present_flag) {
       // pic_output_flag: u(1)
@@ -274,7 +273,7 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
       }
 
       uint32_t num_pic_total_curr = 0;
-      uint32_t curr_sps_idx;
+      uint32_t curr_sps_idx = 0;
       if (short_term_ref_pic_set_sps_flag) {
         curr_sps_idx = short_term_ref_pic_set_idx;
       } else {

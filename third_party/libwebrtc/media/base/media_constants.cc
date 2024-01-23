@@ -127,6 +127,11 @@ const char kH265FmtpTxMode[] = "tx-mode";
 const char kVP9ProfileId[] = "profile-id";
 
 const int kDefaultVideoMaxFramerate = 60;
+// Max encode quantizer for VP8/9 and AV1 encoders assuming libvpx/libaom API
+// range [0, 63]
+const int kDefaultVideoMaxQpVpx = 56;
+// Max encode quantizer for H264/5 assuming the bitstream range [0, 51].
+const int kDefaultVideoMaxQpH26x = 51;
 
 const size_t kConferenceMaxNumSpatialLayers = 3;
 const size_t kConferenceMaxNumTemporalLayers = 3;

@@ -22,6 +22,11 @@ SequenceCheckerImpl::SequenceCheckerImpl(bool attach_to_current_thread)
       valid_thread_(rtc::CurrentThreadRef()),
       valid_queue_(TaskQueueBase::Current()) {}
 
+SequenceCheckerImpl::SequenceCheckerImpl(TaskQueueBase* attached_queue)
+    : attached_(attached_queue != nullptr),
+      valid_thread_(rtc::PlatformThreadRef()),
+      valid_queue_(attached_queue) {}
+
 bool SequenceCheckerImpl::IsCurrent() const {
   const TaskQueueBase* const current_queue = TaskQueueBase::Current();
   const rtc::PlatformThreadRef current_thread = rtc::CurrentThreadRef();

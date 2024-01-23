@@ -6,16 +6,16 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
 ---
  call/BUILD.gn             |  6 ++++++
  call/call.cc              | 13 -------------
- call/call.h               | 13 ++-----------
+ call/call.h               | 12 ++----------
  call/call_basic_stats.cc  | 20 ++++++++++++++++++++
  call/call_basic_stats.h   | 21 +++++++++++++++++++++
  video/video_send_stream.h |  1 -
- 6 files changed, 49 insertions(+), 25 deletions(-)
+ 6 files changed, 49 insertions(+), 24 deletions(-)
  create mode 100644 call/call_basic_stats.cc
  create mode 100644 call/call_basic_stats.h
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 173c220b9b..161cce992f 100644
+index 825097e8d4..47018a570a 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
@@ -32,10 +32,10 @@ index 173c220b9b..161cce992f 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index 85297d9568..bca6072042 100644
+index c0ee5a92f4..0f3699501e 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -465,19 +465,6 @@ class Call final : public webrtc::Call,
+@@ -460,19 +460,6 @@ class Call final : public webrtc::Call,
  };
  }  // namespace internal
  
@@ -53,10 +53,10 @@ index 85297d9568..bca6072042 100644
 -}
 -
  /* Mozilla: Avoid this since it could use GetRealTimeClock().
- Call* Call::Create(const Call::Config& config) {
+ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
    Clock* clock = Clock::GetRealTimeClock();
 diff --git a/call/call.h b/call/call.h
-index 366978392e..42daa95a6c 100644
+index 6f8e4cd6d7..b36872f5b5 100644
 --- a/call/call.h
 +++ b/call/call.h
 @@ -21,6 +21,7 @@
@@ -75,11 +75,10 @@ index 366978392e..42daa95a6c 100644
  
  namespace webrtc {
  
-@@ -47,16 +47,7 @@ namespace webrtc {
+@@ -46,15 +46,7 @@ namespace webrtc {
+ 
  class Call {
   public:
-   using Config = CallConfig;
--
 -  struct Stats {
 -    std::string ToString(int64_t time_ms) const;
 -
@@ -91,8 +90,8 @@ index 366978392e..42daa95a6c 100644
 -  };
 +  using Stats = CallBasicStats;
  
-   static Call* Create(const Call::Config& config);
-   static Call* Create(const Call::Config& config,
+   static std::unique_ptr<Call> Create(const CallConfig& config);
+   static std::unique_ptr<Call> Create(
 diff --git a/call/call_basic_stats.cc b/call/call_basic_stats.cc
 new file mode 100644
 index 0000000000..74333a663b

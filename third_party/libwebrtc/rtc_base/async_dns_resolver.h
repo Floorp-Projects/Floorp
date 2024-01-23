@@ -16,6 +16,7 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -37,7 +38,7 @@ class AsyncDnsResolverResultImpl : public AsyncDnsResolverResult {
   int error_ RTC_GUARDED_BY(sequence_checker_);
 };
 
-class AsyncDnsResolver : public AsyncDnsResolverInterface {
+class RTC_EXPORT AsyncDnsResolver : public AsyncDnsResolverInterface {
  public:
   AsyncDnsResolver();
   ~AsyncDnsResolver();

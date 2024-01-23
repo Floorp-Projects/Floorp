@@ -925,6 +925,47 @@ TEST_F(PeerConnectionEncodingsIntegrationTest, VP9_TargetBitrate_StandardL1T3) {
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,
+       SimulcastProducesUniqueSsrcAndRtxSsrcs) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<cricket::SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   kLongTimeoutForRampingUp.ms());
+  // Verify SSRCs and RTX SSRCs.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+
+  std::set<uint32_t> ssrcs;
+  std::set<uint32_t> rtx_ssrcs;
+  for (const auto& outbound_rtp : outbound_rtps) {
+    ASSERT_TRUE(outbound_rtp->ssrc.has_value());
+    ASSERT_TRUE(outbound_rtp->rtx_ssrc.has_value());
+    ssrcs.insert(*outbound_rtp->ssrc);
+    rtx_ssrcs.insert(*outbound_rtp->rtx_ssrc);
+  }
+  EXPECT_EQ(ssrcs.size(), 3u);
+  EXPECT_EQ(rtx_ssrcs.size(), 3u);
+}
+
+TEST_F(PeerConnectionEncodingsIntegrationTest,
        EncodingParameterCodecIsEmptyWhenCreatedAudio) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
 
@@ -1635,6 +1676,67 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
 
   parameters = audio_transceiver->sender()->GetParameters();
   EXPECT_FALSE(parameters.encodings[0].codec);
+}
+
+TEST_F(PeerConnectionEncodingsIntegrationTest,
+       EncodingParametersRedEnabledBeforeNegotiationAudio) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<webrtc::RtpCodecCapability> send_codecs =
+      local_pc_wrapper->pc_factory()
+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_AUDIO)
+          .codecs;
+
+  absl::optional<webrtc::RtpCodecCapability> opus =
+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_AUDIO,
+                                                   "opus");
+  ASSERT_TRUE(opus);
+
+  absl::optional<webrtc::RtpCodecCapability> red =
+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_AUDIO,
+                                                   "red");
+  ASSERT_TRUE(red);
+
+  webrtc::RtpTransceiverInit init;
+  init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+  webrtc::RtpEncodingParameters encoding_parameters;
+  encoding_parameters.codec = opus;
+  init.send_encodings.push_back(encoding_parameters);
+
+  auto transceiver_or_error =
+      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_AUDIO, init);
+  ASSERT_TRUE(transceiver_or_error.ok());
+  rtc::scoped_refptr<RtpTransceiverInterface> audio_transceiver =
+      transceiver_or_error.MoveValue();
+
+  // Preferring RED over Opus should enable RED with Opus encoding.
+  send_codecs[0] = red.value();
+  send_codecs[1] = opus.value();
+
+  ASSERT_TRUE(audio_transceiver->SetCodecPreferences(send_codecs).ok());
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  webrtc::RtpParameters parameters =
+      audio_transceiver->sender()->GetParameters();
+  EXPECT_EQ(parameters.encodings[0].codec, opus);
+  EXPECT_EQ(parameters.codecs[0].payload_type, red->preferred_payload_type);
+  EXPECT_EQ(parameters.codecs[0].name, red->name);
+
+  // Check that it's possible to switch back to Opus without RED.
+  send_codecs[0] = opus.value();
+  send_codecs[1] = red.value();
+
+  ASSERT_TRUE(audio_transceiver->SetCodecPreferences(send_codecs).ok());
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+
+  parameters = audio_transceiver->sender()->GetParameters();
+  EXPECT_EQ(parameters.encodings[0].codec, opus);
+  EXPECT_EQ(parameters.codecs[0].payload_type, opus->preferred_payload_type);
+  EXPECT_EQ(parameters.codecs[0].name, opus->name);
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,

@@ -286,6 +286,17 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   RTCStatsMember<double> total_processing_delay;
   RTCStatsMember<double> total_assembly_time;
   RTCStatsMember<uint32_t> frames_assembled_from_multiple_packets;
+  // TODO(https://crbug.com/webrtc/15600): Implement framesRendered, which is
+  // incremented at the same time that totalInterFrameDelay and
+  // totalSquaredInterFrameDelay is incremented. (Dividing inter-frame delay by
+  // framesDecoded is slightly wrong.)
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-framesrendered
+  //
+  // TODO(https://crbug.com/webrtc/15601): Inter-frame, pause and freeze metrics
+  // all related to when the frame is rendered, but our implementation measures
+  // at delivery to sink, not at actual render time. When we have an actual
+  // frame rendered callback, move the calculating of these metrics to there in
+  // order to make them more accurate.
   RTCStatsMember<double> total_inter_frame_delay;
   RTCStatsMember<double> total_squared_inter_frame_delay;
   RTCStatsMember<uint32_t> pause_count;

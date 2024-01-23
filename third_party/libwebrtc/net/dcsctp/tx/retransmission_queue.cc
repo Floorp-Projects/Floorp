@@ -86,8 +86,8 @@ RetransmissionQueue::RetransmissionQueue(
           data_chunk_header_size_,
           tsn_unwrapper_.Unwrap(my_initial_tsn),
           tsn_unwrapper_.Unwrap(TSN(*my_initial_tsn - 1)),
-          [this](IsUnordered unordered, StreamID stream_id, MID message_id) {
-            return send_queue_.Discard(unordered, stream_id, message_id);
+          [this](StreamID stream_id, OutgoingMessageId message_id) {
+            return send_queue_.Discard(stream_id, message_id);
           }) {}
 
 bool RetransmissionQueue::IsConsistent() const {
@@ -491,7 +491,7 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
     rwnd_ -= chunk_size;
 
     absl::optional<UnwrappedTSN> tsn = outstanding_data_.Insert(
-        chunk_opt->data, now,
+        chunk_opt->message_id, chunk_opt->data, now,
         partial_reliability_ ? chunk_opt->max_retransmissions
                              : MaxRetransmits::NoLimit(),
         partial_reliability_ ? chunk_opt->expires_at : TimeMs::InfiniteFuture(),
