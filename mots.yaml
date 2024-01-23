@@ -2757,10 +2757,11 @@ modules:
         - 'Core::Layout: Web Painting'
       owners_emeritus:
         - Matt Woodrow
+      peers_emeritus:
+        - David Baron
+        - Robert O'Callahan
     owners:
     peers:
-      - *roc
-      - *dbaron
       - *tnikkel
       - *mstange
       - *mikokm
