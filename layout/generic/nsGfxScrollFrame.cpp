@@ -1158,9 +1158,8 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput& aState,
 
 void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
                                         const nsPoint& aScrollPosition) {
-  nsIFrame* scrolledFrame = mScrolledFrame;
   // Set the x,y of the scrolled frame to the correct value
-  scrolledFrame->SetPosition(ScrollPort().TopLeft() - aScrollPosition);
+  mScrolledFrame->SetPosition(ScrollPort().TopLeft() - aScrollPosition);
 
   // Recompute our scrollable overflow, taking perspective children into
   // account. Note that this only recomputes the overflow areas stored on the
@@ -1185,15 +1184,15 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
   // This needs to happen before SyncFrameViewAfterReflow so
   // HasOverflowRect() will return the correct value.
   OverflowAreas overflow(scrolledArea, scrolledArea);
-  scrolledFrame->FinishAndStoreOverflow(overflow, scrolledFrame->GetSize());
+  mScrolledFrame->FinishAndStoreOverflow(overflow, mScrolledFrame->GetSize());
 
   // Note that making the view *exactly* the size of the scrolled area
   // is critical, since the view scrolling code uses the size of the
   // scrolled view to clamp scroll requests.
-  // Normally the scrolledFrame won't have a view but in some cases it
+  // Normally the mScrolledFrame won't have a view but in some cases it
   // might create its own.
   nsContainerFrame::SyncFrameViewAfterReflow(
-      scrolledFrame->PresContext(), scrolledFrame, scrolledFrame->GetView(),
+      mScrolledFrame->PresContext(), mScrolledFrame, mScrolledFrame->GetView(),
       scrolledArea, ReflowChildFlags::Default);
 }
 
