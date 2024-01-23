@@ -284,10 +284,6 @@ people:
     bmo_id: 1537
     name: Dan Mosedale
     nick: dmosedale
-  - &dragana
-    bmo_id: 508195
-    name: Dragana Damjanovic
-    nick: dragana
   - &dveditz
     bmo_id: 1689
     name: Daniel Veditz
@@ -2468,11 +2464,11 @@ modules:
         - Lina Cambridge
       peers_emeritus:
         - Nikhil Marathe
+        - Dragana Damjanovic
       components:
         - 'Core::DOM: Notifications'
     peers:
       - *mt
-      - *dragana
     machine_name: core_push_notifications
 
   - name: 'Core: Sandboxing (Linux)'
