@@ -21,7 +21,7 @@ add_task(async function test_translations_panel_cancel() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await cleanup();
 });

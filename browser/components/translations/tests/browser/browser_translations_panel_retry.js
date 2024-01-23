@@ -23,7 +23,7 @@ add_task(async function test_translations_panel_retry() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
   });
 
@@ -39,7 +39,7 @@ add_task(async function test_translations_panel_retry() {
 
   FullPageTranslationsTestUtils.switchSelectedToLanguage("fr");
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
     pivotTranslation: true,
   });

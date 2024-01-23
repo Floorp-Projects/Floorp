@@ -360,6 +360,54 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Simulates clicking the cancel button.
+   */
+  static async clickCancelButton() {
+    logAction();
+    const { cancelButton } = TranslationsPanel.elements;
+    assertIsVisible(true, { element: cancelButton });
+    await waitForTranslationsPopupEvent("popuphidden", () => {
+      click(cancelButton, "Clicking the cancel button");
+    });
+  }
+
+  /**
+   * Simulates clicking the change-source-language button.
+   *
+   * @param {object} config
+   * @param {boolean} config.firstShow
+   *  - True if the first-show view should be expected
+   *    False if the default view should be expected
+   */
+  static async clickChangeSourceLanguageButton({ firstShow = false } = {}) {
+    logAction();
+    const { changeSourceLanguageButton } = TranslationsPanel.elements;
+    assertIsVisible(true, { element: changeSourceLanguageButton });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(
+          changeSourceLanguageButton,
+          "Click the change-source-language button"
+        );
+      },
+      firstShow ? assertPanelFirstShowView : assertPanelDefaultView
+    );
+  }
+
+  /**
+   * Simulates clicking the dismiss-error button.
+   */
+  static async clickDismissErrorButton() {
+    logAction();
+    const { dismissErrorButton } = TranslationsPanel.elements;
+    assertIsVisible(true, { element: dismissErrorButton });
+    await waitForTranslationsPopupEvent("popuphidden", () => {
+      click(dismissErrorButton, "Click the dismiss-error button");
+    });
+  }
+
+  /**
    * Simulates the effect of clicking the manage-languages menuitem.
    * Requires that the settings menu of the translations panel is open,
    * otherwise the test will fail.
@@ -395,6 +443,18 @@ class FullPageTranslationsTestUtils {
     );
   }
 
+  /**
+   * Simulates clicking the restore-page button.
+   */
+  static async clickRestoreButton() {
+    logAction();
+    const { restoreButton } = TranslationsPanel.elements;
+    assertIsVisible(true, { element: restoreButton });
+    await waitForTranslationsPopupEvent("popuphidden", () => {
+      click(restoreButton, "Click the restore-page button");
+    });
+  }
+
   /*
    * Simulates the effect of toggling a menu item in the translations panel
    * settings menu. Requires that the settings menu is currently open,
@@ -404,6 +464,38 @@ class FullPageTranslationsTestUtils {
     info(`Toggling the "${l10nId}" settings menu item.`);
     click(getByL10nId(l10nId), `Clicking the "${l10nId}" settings menu item.`);
     await closeSettingsMenuIfOpen();
+  }
+
+  /**
+   * Simulates clicking the translate button.
+   *
+   * @param {object} config
+   * @param {Function} config.downloadHandler
+   *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
+   *    Leave as null to test more granularly, such as testing opening the loading view,
+   *    or allowing for the automatic downloading of files.
+   * @param {boolean} config.pivotTranslation
+   *  - True if the expected translation is a pivot translation, otherwise false.
+   *    Affects the number of expected downloads.
+   */
+  static async clickTranslateButton({
+    downloadHandler = null,
+    pivotTranslation = false,
+  } = {}) {
+    logAction();
+    const { translateButton } = TranslationsPanel.elements;
+    assertIsVisible(true, { element: translateButton });
+    await waitForTranslationsPopupEvent("popuphidden", () => {
+      click(translateButton);
+    });
+
+    if (downloadHandler) {
+      await FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true, circleArrows: true, locale: false, icon: true },
+        "The icon presents the loading indicator."
+      );
+      await downloadHandler(pivotTranslation ? 2 : 1);
+    }
   }
 
   /**
@@ -583,98 +675,6 @@ function logAction(...params) {
       "chrome://mochitests/content/browser/",
       ""
     )}`
-  );
-}
-
-/**
- * Simulates clicking the cancel button.
- */
-async function clickCancelButton() {
-  logAction();
-  const { cancelButton } = TranslationsPanel.elements;
-  assertIsVisible(true, { element: cancelButton });
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(cancelButton, "Clicking the cancel button");
-  });
-}
-
-/**
- * Simulates clicking the restore-page button.
- */
-async function clickRestoreButton() {
-  logAction();
-  const { restoreButton } = TranslationsPanel.elements;
-  assertIsVisible(true, { element: restoreButton });
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(restoreButton, "Click the restore-page button");
-  });
-}
-
-/**
- * Simulates clicking the dismiss-error button.
- */
-async function clickDismissErrorButton() {
-  logAction();
-  const { dismissErrorButton } = TranslationsPanel.elements;
-  assertIsVisible(true, { element: dismissErrorButton });
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(dismissErrorButton, "Click the dismiss-error button");
-  });
-}
-
-/**
- * Simulates clicking the translate button.
- *
- * @param {object} config
- * @param {Function} config.downloadHandler
- *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
- *    Leave as null to test more granularly, such as testing opening the loading view,
- *    or allowing for the automatic downloading of files.
- * @param {boolean} config.pivotTranslation
- *  - True if the expected translation is a pivot translation, otherwise false.
- *    Affects the number of expected downloads.
- */
-async function clickTranslateButton({
-  downloadHandler = null,
-  pivotTranslation = false,
-} = {}) {
-  logAction();
-  const { translateButton } = TranslationsPanel.elements;
-  assertIsVisible(true, { element: translateButton });
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(translateButton);
-  });
-
-  if (downloadHandler) {
-    await FullPageTranslationsTestUtils.assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-    await downloadHandler(pivotTranslation ? 2 : 1);
-  }
-}
-
-/**
- * Simulates clicking the change-source-language button.
- *
- * @param {object} config
- * @param {boolean} config.firstShow
- *  - True if the first-show view should be expected
- *    False if the default view should be expected
- */
-async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
-  logAction();
-  const { changeSourceLanguageButton } = TranslationsPanel.elements;
-  assertIsVisible(true, { element: changeSourceLanguageButton });
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(
-        changeSourceLanguageButton,
-        "Click the change-source-language button"
-      );
-    },
-    firstShow ? assertPanelFirstShowView : assertPanelDefaultView
   );
 }
 

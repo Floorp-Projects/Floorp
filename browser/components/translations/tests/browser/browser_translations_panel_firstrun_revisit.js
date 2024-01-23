@@ -25,13 +25,13 @@ add_task(async function test_translations_panel_firstrun() {
     onOpenPanel: assertPanelFirstShowView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelFirstShowView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await navigate("Navigate to a different website", {
     url: SPANISH_PAGE_URL_DOT_ORG,
@@ -41,7 +41,7 @@ add_task(async function test_translations_panel_firstrun() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await navigate("Navigate back to the first website", {
     url: SPANISH_PAGE_URL,
@@ -51,7 +51,7 @@ add_task(async function test_translations_panel_firstrun() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await cleanup();
 });

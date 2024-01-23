@@ -13,7 +13,7 @@ add_task(async function test_translations_panel_auto_offer() {
     autoOffer: true,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -53,7 +53,7 @@ add_task(async function test_translations_panel_auto_offer() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,

@@ -27,7 +27,7 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     onOpenPanel: assertPanelFirstShowView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -60,7 +60,7 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     onOpenPanel: assertPanelFirstShowView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,

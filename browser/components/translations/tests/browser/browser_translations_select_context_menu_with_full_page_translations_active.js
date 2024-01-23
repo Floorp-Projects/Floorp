@@ -39,7 +39,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await clickTranslateButton({
+    await FullPageTranslationsTestUtils.clickTranslateButton({
       downloadHandler: resolveDownloads,
     });
 
@@ -63,7 +63,7 @@ add_task(
       onOpenPanel: assertPanelRevisitView,
     });
 
-    await clickRestoreButton();
+    await FullPageTranslationsTestUtils.clickRestoreButton();
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
@@ -118,7 +118,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await clickTranslateButton({
+    await FullPageTranslationsTestUtils.clickTranslateButton({
       downloadHandler: resolveDownloads,
     });
 
@@ -142,7 +142,7 @@ add_task(
       onOpenPanel: assertPanelRevisitView,
     });
 
-    await clickRestoreButton();
+    await FullPageTranslationsTestUtils.clickRestoreButton();
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 

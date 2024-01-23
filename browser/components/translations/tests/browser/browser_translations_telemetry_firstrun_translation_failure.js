@@ -41,7 +41,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     ],
   });
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: rejectDownloads,
     onOpenPanel: assertPanelFirstShowErrorView,
   });
@@ -97,7 +97,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.cancelButton,
@@ -129,7 +129,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     ],
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.cancelButton,

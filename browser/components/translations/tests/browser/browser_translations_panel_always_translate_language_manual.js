@@ -26,7 +26,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await clickTranslateButton({
+    await FullPageTranslationsTestUtils.clickTranslateButton({
       downloadHandler: resolveDownloads,
     });
 

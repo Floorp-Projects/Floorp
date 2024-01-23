@@ -31,7 +31,7 @@ add_task(async function test_translations_panel_basics() {
   ok(label, "The a11y label for the panel can be found.");
   assertIsVisible(true, { element: label });
 
-  await clickTranslateButton();
+  await FullPageTranslationsTestUtils.clickTranslateButton();
 
   await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: true, locale: false, icon: true },
@@ -42,7 +42,7 @@ add_task(async function test_translations_panel_basics() {
     onOpenPanel: assertPanelLoadingView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await resolveDownloads(1);
 
@@ -56,7 +56,7 @@ add_task(async function test_translations_panel_basics() {
     onOpenPanel: assertPanelRevisitView,
   });
 
-  await clickRestoreButton();
+  await FullPageTranslationsTestUtils.clickRestoreButton();
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 

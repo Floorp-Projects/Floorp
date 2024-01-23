@@ -56,7 +56,7 @@ add_task(async function test_translations_panel_switch_language() {
 
   ok(!translateButton.disabled, "The translate button can now be used");
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
   });
 

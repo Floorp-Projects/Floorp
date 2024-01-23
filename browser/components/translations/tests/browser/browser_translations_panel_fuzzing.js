@@ -100,7 +100,7 @@ add_task(async function test_translations_panel_fuzzing() {
           onOpenPanel: assertPanelDefaultView,
         });
 
-        await clickTranslateButton();
+        await FullPageTranslationsTestUtils.clickTranslateButton();
 
         await FullPageTranslationsTestUtils.assertTranslationsButton(
           { button: true, circleArrows: false, locale: true, icon: true },
@@ -199,7 +199,7 @@ add_task(async function test_translations_panel_fuzzing() {
           onOpenPanel: assertPanelRevisitView,
         });
 
-        await clickRestoreButton();
+        await FullPageTranslationsTestUtils.clickRestoreButton();
 
         await FullPageTranslationsTestUtils.assertPageIsUntranslated(
           runInSpanishPage

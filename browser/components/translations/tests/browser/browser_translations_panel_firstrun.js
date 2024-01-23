@@ -17,7 +17,7 @@ add_task(async function test_translations_panel_firstrun() {
     onOpenPanel: assertPanelFirstShowView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await navigate("Load a different page on the same site", {
     url: SPANISH_PAGE_URL_2,
@@ -27,7 +27,7 @@ add_task(async function test_translations_panel_firstrun() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickCancelButton();
+  await FullPageTranslationsTestUtils.clickCancelButton();
 
   await cleanup();
 });
