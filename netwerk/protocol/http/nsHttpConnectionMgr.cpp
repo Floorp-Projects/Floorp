@@ -1624,14 +1624,14 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
 
   auto recordPendingTimeForHTTPSRR = [&](nsCString& aKey) {
     uint32_t stage = trans->HTTPSSVCReceivedStage();
+    TimeDuration elapsed = TimeStamp::Now() - trans->GetPendingTime();
     if (HTTPS_RR_IS_USED(stage)) {
-      aKey.Append("_with_https_rr");
-    } else {
-      aKey.Append("_no_https_rr");
-    }
+      glean::networking::transaction_wait_time_https_rr.AccumulateRawDuration(
+          elapsed);
 
-    AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTPS_RR, aKey,
-                        trans->GetPendingTime(), TimeStamp::Now());
+    } else {
+      glean::networking::transaction_wait_time.AccumulateRawDuration(elapsed);
+    }
   };
 
   nsAutoCString httpVersionkey("h1"_ns);

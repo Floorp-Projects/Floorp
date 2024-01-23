@@ -2922,7 +2922,7 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "bug_numbers": [1697480],
-    "expires_in_version": "never",
+    "expires_in_version": "126",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 30000,
@@ -4386,17 +4386,6 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
   },
-  "HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "boolean",
-    "keyed": true,
-    "description": "Successfully started HTTP channels when HTTPS RR is used; Keyed by echConfig is used or not",
-    "bug_numbers": [1682552],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
-  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
@@ -4607,19 +4596,6 @@
     "high": 5000,
     "n_buckets": 100,
     "description": "Time from submission to dispatch of HTTP/3 transaction (ms)"
-  },
-  "TRANSACTION_WAIT_TIME_HTTPS_RR": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1697480],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 100,
-    "keyed": true,
-    "description": "Time from submission to dispatch of transaction when HTTPS RR is used (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3": {
     "record_in_processes": ["main", "socket"],
@@ -17893,36 +17869,6 @@
     "description": "TLS handshake with and without EchConfig success rate.",
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "bug_numbers": [1682555]
-  },
-  "HTTPS_RR_PRESENTED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1686421],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "boolean",
-    "description": "HTTPS RR is presented or not."
-  },
-  "HTTPS_RR_WITH_HTTP3_PRESENTED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1686421],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "boolean",
-    "description": "Whether an HTTPS RR indicates that HTTP3 should be used."
-  },
-  "HTTPS_UPGRADE_WITH_HTTPS_RR": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1686421],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "boolean",
-    "description": "Whether an HTTP request gets upgraded to HTTPS because HTTPS RR is presented"
   },
   "TEXT_RECOGNITION_API_PERFORMANCE": {
     "record_in_processes": ["main"],

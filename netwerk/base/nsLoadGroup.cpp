@@ -23,6 +23,7 @@
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
 #include "RequestContextService.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -999,6 +1000,24 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
                                                       : "no_https_rr_sub"_ns);
     Telemetry::AccumulateTimeDelta(Telemetry::HTTPS_RR_OPEN_TO_FIRST_SENT, key,
                                    asyncOpen, requestStart);
+    TimeDuration elapsed = requestStart - asyncOpen;
+    if (hasHTTPSRR) {
+      if (aDefaultRequest) {
+        glean::networking::http_channel_page_open_to_first_sent_https_rr
+            .AccumulateRawDuration(elapsed);
+      } else {
+        glean::networking::http_channel_sub_open_to_first_sent_https_rr
+            .AccumulateRawDuration(elapsed);
+      }
+    } else {
+      if (aDefaultRequest) {
+        glean::networking::http_channel_page_open_to_first_sent
+            .AccumulateRawDuration(elapsed);
+      } else {
+        glean::networking::http_channel_sub_open_to_first_sent
+            .AccumulateRawDuration(elapsed);
+      }
+    }
   }
 
 #undef HTTP_REQUEST_HISTOGRAMS

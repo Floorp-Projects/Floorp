@@ -839,3 +839,154 @@ networking:
     labels:
       - regular
       - private
+
+  https_rr_presented:
+    type: labeled_counter
+    description: >
+      HTTPS RR is presented or not
+    bugs:
+      - https://bugzilla.mozilla.org/1686421
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1686421
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    labels:
+      - presented
+      - presented_with_http3
+      - none
+
+  https_upgrade_with_https_rr:
+    type: labeled_counter
+    description: >
+      Whether an HTTP request gets upgraded to HTTPS because of HTTPS RR
+    bugs:
+      - https://bugzilla.mozilla.org/1686421
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1686421
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    labels:
+      - https_rr
+      - others
+
+  http_channel_onstart_success_https_rr:
+    type: labeled_counter
+    description: >
+      Successfully started HTTP channels when HTTPS RR is used
+    bugs:
+      - https://bugzilla.mozilla.org/1682552
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1682552
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    labels:
+      - success
+      - failure
+      - success_ech_used
+      - failure_ech_used
+
+  http_channel_page_open_to_first_sent:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time in milliseconds from AsyncOpen to first byte of request sent,
+      applicable for page loads without HTTPS RR
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+
+  http_channel_sub_open_to_first_sent:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time in milliseconds from AsyncOpen to first byte of request sent,
+      applicable for sub-resource loads without HTTPS RR
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+
+  http_channel_page_open_to_first_sent_https_rr:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time in milliseconds from AsyncOpen to first byte of request sent,
+      applicable for page loads with HTTPS RR
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+
+  http_channel_sub_open_to_first_sent_https_rr:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time in milliseconds from AsyncOpen to first byte of request sent,
+      applicable for sub-resource loads with HTTPS RR
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+
+  transaction_wait_time_https_rr:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time from submission to dispatch of transaction when HTTPS RR is used (ms)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+
+  transaction_wait_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time from submission to dispatch of transaction without HTTPS RR (ms)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1697480
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
