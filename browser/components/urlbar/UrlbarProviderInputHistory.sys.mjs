@@ -188,6 +188,8 @@ class ProviderInputHistory extends UrlbarProvider {
         );
       });
 
+      let isBlockable = resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY;
+
       let result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.URL,
         resultSource,
@@ -196,19 +198,14 @@ class ProviderInputHistory extends UrlbarProvider {
           title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
           tags: [resultTags, UrlbarUtils.HIGHLIGHT.TYPED],
           icon: UrlbarUtils.getIconForUrl(url),
-          isBlockable:
-            resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY
-              ? true
-              : undefined,
-          blockL10n:
-            resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY
-              ? { id: "urlbar-result-menu-remove-from-history" }
-              : undefined,
-          helpUrl:
-            resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY
-              ? Services.urlFormatter.formatURLPref("app.support.baseURL") +
-                "awesome-bar-result-menu"
-              : undefined,
+          isBlockable,
+          blockL10n: isBlockable
+            ? { id: "urlbar-result-menu-remove-from-history" }
+            : undefined,
+          helpUrl: isBlockable
+            ? Services.urlFormatter.formatURLPref("app.support.baseURL") +
+              "awesome-bar-result-menu"
+            : undefined,
         })
       );
 

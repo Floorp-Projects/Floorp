@@ -360,9 +360,9 @@ function makeUrlbarResult(tokens, info) {
   let source;
   let tags = [];
   let comment = info.comment;
-  let isBlockable = undefined;
-  let blockL10n = undefined;
-  let helpUrl = undefined;
+  let isBlockable;
+  let blockL10n;
+  let helpUrl;
 
   // The legacy autocomplete result may return "bookmark", "bookmark-tag" or
   // "tag". In the last case it should not be considered a bookmark, but an
