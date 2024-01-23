@@ -1737,6 +1737,7 @@ modules:
         - Vladimir Vukicevic
         - James Willcox(Android)
         - Nick Cameron
+        - *rhunt
       group: dev-platform
       url: https://wiki.mozilla.org/Platform/GFX https://wiki.mozilla.org/Gecko:Layers
         https://wiki.mozilla.org/Gecko:2DGraphicsSketch
@@ -1758,7 +1759,6 @@ modules:
       - *jfkthame
       - *sotaro
       - *jnicol
-      - *rhunt
       - *gw
       - *lsalzman
       - *aosmond
