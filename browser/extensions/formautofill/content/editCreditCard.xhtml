@@ -19,10 +19,6 @@
       rel="stylesheet"
       href="chrome://formautofill/content/skin/editDialog.css"
     />
-    <script
-      type="module"
-      src="chrome://global/content/elements/moz-button-group.mjs"
-    ></script>
     <script src="chrome://formautofill/content/editDialog.js"></script>
     <script src="chrome://formautofill/content/autofillEditForms.js"></script>
   </head>
@@ -88,10 +84,8 @@
       </div>
     </form>
     <div id="controls-container">
-      <moz-button-group>
-        <button id="cancel" data-l10n-id="autofill-cancel-button" />
-        <button id="save" class="primary" data-l10n-id="autofill-save-button" />
-      </moz-button-group>
+      <button id="cancel" data-l10n-id="autofill-cancel-button" />
+      <button id="save" class="primary" data-l10n-id="autofill-save-button" />
     </div>
     <script>
       <![CDATA[
