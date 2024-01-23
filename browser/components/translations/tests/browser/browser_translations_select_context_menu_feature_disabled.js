@@ -31,7 +31,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await assertContextMenuTranslateSelectionItem(
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
         selectSpanishParagraph: false,
@@ -66,7 +66,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await assertContextMenuTranslateSelectionItem(
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
         selectSpanishParagraph: true,
@@ -99,7 +99,7 @@ add_task(
       "The button is available."
     );
 
-    await assertContextMenuTranslateSelectionItem(
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
         selectSpanishParagraph: false,
