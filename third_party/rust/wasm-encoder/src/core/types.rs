@@ -255,8 +255,6 @@ impl ValType {
     pub const FUNCREF: ValType = ValType::Ref(RefType::FUNCREF);
     /// Alias for the `externref` type in WebAssembly
     pub const EXTERNREF: ValType = ValType::Ref(RefType::EXTERNREF);
-    /// Alias for the `exnref` type in WebAssembly
-    pub const EXNREF: ValType = ValType::Ref(RefType::EXNREF);
 }
 
 impl Encode for StorageType {
@@ -305,12 +303,6 @@ impl RefType {
     pub const EXTERNREF: RefType = RefType {
         nullable: true,
         heap_type: HeapType::Extern,
-    };
-
-    /// Alias for the `exnref` type in WebAssembly
-    pub const EXNREF: RefType = RefType {
-        nullable: true,
-        heap_type: HeapType::Exn,
     };
 }
 
@@ -401,9 +393,6 @@ pub enum HeapType {
     /// The unboxed `i31` heap type.
     I31,
 
-    /// The abstract` exception` heap type.
-    Exn,
-
     /// A concrete Wasm-defined type at the given index.
     Concrete(u32),
 }
@@ -421,7 +410,6 @@ impl Encode for HeapType {
             HeapType::Struct => sink.push(0x6B),
             HeapType::Array => sink.push(0x6A),
             HeapType::I31 => sink.push(0x6C),
-            HeapType::Exn => sink.push(0x69),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
             HeapType::Concrete(i) => i64::from(*i).encode(sink),
@@ -446,7 +434,6 @@ impl TryFrom<wasmparser::HeapType> for HeapType {
             wasmparser::HeapType::Struct => HeapType::Struct,
             wasmparser::HeapType::Array => HeapType::Array,
             wasmparser::HeapType::I31 => HeapType::I31,
-            wasmparser::HeapType::Exn => HeapType::Exn,
         })
     }
 }

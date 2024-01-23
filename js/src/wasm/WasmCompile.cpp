@@ -225,13 +225,6 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   return target;
 }
 
-void wasm::SetUseCountersForFeatureUsage(JSContext* cx, JSObject* object,
-                                         FeatureUsage usage) {
-  if (usage & FeatureUsage::LegacyExceptions) {
-    cx->runtime()->setUseCounter(object, JSUseCounter::WASM_LEGACY_EXCEPTIONS);
-  }
-}
-
 SharedCompileArgs CompileArgs::buildForAsmJS(ScriptedCaller&& scriptedCaller) {
   CompileArgs* target = js_new<CompileArgs>(std::move(scriptedCaller));
   if (!target) {

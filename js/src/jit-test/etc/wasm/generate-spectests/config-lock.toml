@@ -4,11 +4,15 @@ commit = 'b1fbe1a89'
 
 [[repos]]
 name = 'threads'
-commit = '85b562cd'
+commit = '85b562cd6'
 
 [[repos]]
 name = 'simd'
 commit = 'a78b98a6'
+
+[[repos]]
+name = 'exception-handling'
+commit = 'cfe863826'
 
 [[repos]]
 name = 'memory64'
@@ -35,9 +39,5 @@ name = 'function-references'
 commit = 'eab6b36ca'
 
 [[repos]]
-name = 'exception-handling'
-commit = '98e4eb60d'
-
-[[repos]]
 name = 'gc'
-commit = '207333efd'
+commit = 'dd08eeb34'

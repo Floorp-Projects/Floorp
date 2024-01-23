@@ -36,36 +36,15 @@ function generateLocalThrows(types, baseThrow) {
 
   // Basic throws;
   let catchlessTryThrow =
-      `try (param ${types})
-         ${baseThrow}
-       end`;
-
-  let catchlessThrowExnref =
-      `try_table (param ${types})
-         ${baseThrow}
-       end`;
+      `(try (param ${types})
+         (do ${baseThrow}))`;
 
   let catchAndThrow =
-      `try (param ${types})
-         ${baseThrow}
-       catch $exn
-         ${baseThrow}
-       catch_all
-       end`;
-
-  let catchAndThrowExnref =
-      `(block $join (param ${types})
-          (block $catch (param ${types}) (result ${types})
-            (block $catchAll (param ${types})
-              try_table (param ${types}) (catch $exn $catch) (catch_all $catchAll)
-                ${baseThrow}
-                unreachable
-              end
-            )
-            br $join
-          )
-          ${baseThrow}
-       )`;
+      `(try (param ${types})
+         (do ${baseThrow})
+         (catch $exn
+           ${baseThrow})
+         (catch_all))`;
 
   let blockThrow =
       `(block (param ${types})
@@ -81,22 +60,19 @@ function generateLocalThrows(types, baseThrow) {
 
   // Including try-delegate.
   let baseDelegate =
-      `try (param ${types})
-        ${baseThrow}
-       delegate 0`;
+      `(try (param ${types})
+         (do ${baseThrow})
+         (delegate 0))`;
 
   // Delegate just outside the block.
   let nestedDelegate1InBlock =
       `(block $label1 (param ${types})
-         try (param ${types})
-           ${baseThrow}
-         delegate $label1)`;
+         (try (param ${types})
+           (do ${baseThrow})
+           (delegate $label1)))`;
 
   let basicThrows = [catchlessTryThrow, blockThrow, conditionalThrow,
                      baseDelegate, nestedDelegate1InBlock];
-  if (wasmExnRefEnabled()) {
-    basicThrows = basicThrows.concat(catchlessThrowExnref, catchAndThrowExnref);
-  }
 
   // Secondary throws (will end up inside a catch block).
 
@@ -104,20 +80,20 @@ function generateLocalThrows(types, baseThrow) {
       `(rethrow 0)`;
 
   let nestedRethrow =
-      `try (param ${types})
-         ${baseThrow}
-       catch $exn
-         (rethrow 1)
-       catch_all
-         (rethrow 0)
-       end`;
+      `(try (param ${types})
+         (do
+           ${baseThrow})
+         (catch $exn
+           (rethrow 1))
+         (catch_all
+           (rethrow 0)))`;
 
   let catchAllRethrowOriginal =
-      `try (param ${types})
-         ${baseThrow}
-       catch_all
-         (rethrow 1)
-       end`;
+      `(try (param ${types})
+         (do
+           ${baseThrow})
+         (catch_all
+           (rethrow 1)))`;
 
   let secondaryThrows =
       [].concat(basicThrows,
@@ -126,24 +102,18 @@ function generateLocalThrows(types, baseThrow) {
   // Nestings.
 
   function basicNesting (basicThrow, secondaryThrow) {
-    return `try (param ${types})
-              ${basicThrow}
-            catch $exn
-              ${secondaryThrow}
-            catch_all
-            end`;
+    return `(try (param ${types})
+              (do ${basicThrow})
+              (catch $exn
+                ${secondaryThrow})
+              (catch_all))`;
   };
 
   let result = [];
 
   for (let basicThrow of basicThrows) {
     result.push(basicThrow);
-    let isExnref = basicThrow == catchlessThrowExnref || basicThrow == catchAndThrowExnref;
     for (let secondaryThrow of secondaryThrows) {
-      let isRethrow = secondaryThrow == baseRethrow || secondaryThrow == nestedRethrow || secondaryThrow == catchAllRethrowOriginal;
-      if (isExnref && isRethrow) {
-        continue;
-      }
       result.push(basicNesting(basicThrow, secondaryThrow));
     }
   }
@@ -232,20 +202,20 @@ function generateLocalThrows(types, baseThrow) {
                                    (result ${types} i32)
                                    (local $ifPredicate i32)
            (local.get $ifPredicate)
-           try (param i32) (result ${exntype})
-             (local.get $wrongRef)
-             (call $throwif) ;; Returns 1.
-             (call $doNothing) ;; Does nothing.
-             (local.get $correctRef)
-             (call $throwif) ;; Throws $exn.
-             (drop)
-             ${wrongValues} ;; Won't reach this point.
-             ${localThrow}
-             unreachable
-           catch $notThrownExn
-             ${wrongValues}
-           catch $exn
-           end
+           (try (param i32) (result ${exntype})
+             (do
+               (local.get $wrongRef)
+               (call $throwif) ;; Returns 1.
+               (call $doNothing) ;; Does nothing.
+               (local.get $correctRef)
+               (call $throwif) ;; Throws $exn.
+               (drop)
+               ${wrongValues} ;; Won't reach this point.
+               ${localThrow}
+               unreachable)
+             (catch $notThrownExn
+               ${wrongValues})
+             (catch $exn))
            ${checkV128Value}))`;
 
     function testDirectLocalCallsThrowing() {
@@ -384,35 +354,33 @@ function generateLocalThrows(types, baseThrow) {
                unreachable`;
 
     // Simple try indirect throw and catch.
-    let simpleTryIndirect = `
-            try (result ${exntype})
-              ${indirectThrow}
-              catch $emptyExn
-                 ${wrongValues}
-              catch $exn
-              catch_all
-                 ${wrongValues}
-            end
-            ${checkV128Value}`;
+    let simpleTryIndirect = `(try (result ${exntype})
+              (do ${indirectThrow})
+              (catch $emptyExn
+                 ${wrongValues})
+              (catch $exn)
+              (catch_all
+                 ${wrongValues}))
+              ${checkV128Value}`;
 
     // Indirect throw/catch_all, with a simple try indirect throw nested in the
     // catch_all.
     let nestedTryIndirect =
-        `try (result ${types} i32)
-           ${wrongValues}
-           ;; throwEmptyExn
-           (call_indirect (type $indirectFunctype) (i32.const 1))
-           drop ;; Drop the last v128 value.
-           (i32.const 0)
-         catch_all
-            ${simpleTryIndirect}
-         end`;
+        `(try (result ${types} i32)
+           (do
+             ${wrongValues}
+             ;; throwEmptyExn
+             (call_indirect (type $indirectFunctype) (i32.const 1))
+             drop ;; Drop the last v128 value.
+             (i32.const 0))
+           (catch_all
+             ${simpleTryIndirect}))`;
 
     let functionBodies = [simpleTryIndirect, nestedTryIndirect];
 
     // Test throwing from indirect calls.
     for (let functionBody of functionBodies) {
-      // console.log("functionBody = : " + functionBody); // Uncomment for debugging.
+      console.log("functionBody = : " + functionBody); // Uncomment for debugging.
 
       for (let mod of getModuleTextsForFunctionBody(functionBody)) {
         //console.log("mod = : " + mod); // Uncomment for debugging.
@@ -431,7 +399,7 @@ function generateLocalThrows(types, baseThrow) {
 
   for (let localThrow of localThrows) {
     // Uncomment for debugging.
-    // console.log("Testing with localThrow = " + localThrow);
+    //console.log("Testing with localThrow = " + localThrow);
 
     testDirectCallsThrowing(localThrow);
     testIndirectCallsThrowing(localThrow);

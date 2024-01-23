@@ -184,7 +184,7 @@ impl Module {
 
     fn encode_data_count(&self, module: &mut wasm_encoder::Module) {
         // Without bulk memory there's no need for a data count section,
-        if !self.config.bulk_memory_enabled {
+        if !self.config.bulk_memory_enabled() {
             return;
         }
         // ... and also if there's no data no need for a data count section.

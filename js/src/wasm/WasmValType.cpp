@@ -94,14 +94,6 @@ static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
     *out = RefType::extern_();
     return true;
   }
-#ifdef ENABLE_WASM_EXNREF
-  if (ExnRefAvailable(cx)) {
-    if (StringEqualsLiteral(typeLinearStr, "exnref")) {
-      *out = RefType::exn();
-      return true;
-    }
-  }
-#endif
 #ifdef ENABLE_WASM_GC
   if (GcAvailable(cx)) {
     if (StringEqualsLiteral(typeLinearStr, "anyref")) {
@@ -182,10 +174,6 @@ static RefTypeResult MaybeToRefType(JSContext* cx, HandleObject obj,
     *out = RefType::func();
   } else if (StringEqualsLiteral(typeLinearStr, "extern")) {
     *out = RefType::extern_();
-#  ifdef ENABLE_WASM_EXNREF
-  } else if (ExnRefAvailable(cx) && StringEqualsLiteral(typeLinearStr, "exn")) {
-    *out = RefType::exn();
-#  endif
 #  ifdef ENABLE_WASM_GC
   } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "any")) {
     *out = RefType::any();
