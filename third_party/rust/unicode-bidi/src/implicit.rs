@@ -14,15 +14,15 @@ use core::cmp::max;
 
 use super::char_data::BidiClass::{self, *};
 use super::level::Level;
-use super::prepare::{not_removed_by_x9, removed_by_x9, IsolatingRunSequence};
-use super::BidiDataSource;
+use super::prepare::{not_removed_by_x9, IsolatingRunSequence};
+use super::{BidiDataSource, TextSource};
 
 /// 3.3.4 Resolving Weak Types
 ///
 /// <http://www.unicode.org/reports/tr9/#Resolving_Weak_Types>
 #[cfg_attr(feature = "flame_it", flamer::flame)]
-pub fn resolve_weak(
-    text: &str,
+pub fn resolve_weak<'a, T: TextSource<'a> + ?Sized>(
+    text: &'a T,
     sequence: &IsolatingRunSequence,
     processing_classes: &mut [BidiClass],
 ) {
@@ -120,9 +120,9 @@ pub fn resolve_weak(
                     // See https://github.com/servo/unicode-bidi/issues/86 for improving this.
                     // We want to make sure we check the correct next character by skipping past the rest
                     // of this one.
-                    if let Some(ch) = text.get(i..).and_then(|s| s.chars().next()) {
+                    if let Some((_, char_len)) = text.char_at(i) {
                         let mut next_class = sequence
-                            .iter_forwards_from(i + ch.len_utf8(), run_index)
+                            .iter_forwards_from(i + char_len, run_index)
                             .map(|j| processing_classes[j])
                             // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
                             .find(not_removed_by_x9)
@@ -156,7 +156,7 @@ pub fn resolve_weak(
                                 }
                                 *class = ON;
                             }
-                            for idx in sequence.iter_forwards_from(i + ch.len_utf8(), run_index) {
+                            for idx in sequence.iter_forwards_from(i + char_len, run_index) {
                                 let class = &mut processing_classes[idx];
                                 if *class != BN {
                                     break;
@@ -248,8 +248,8 @@ pub fn resolve_weak(
 ///
 /// <http://www.unicode.org/reports/tr9/#Resolving_Neutral_Types>
 #[cfg_attr(feature = "flame_it", flamer::flame)]
-pub fn resolve_neutral<D: BidiDataSource>(
-    text: &str,
+pub fn resolve_neutral<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
+    text: &'a T,
     data_source: &D,
     sequence: &IsolatingRunSequence,
     levels: &[Level],
@@ -288,12 +288,13 @@ pub fn resolve_neutral<D: BidiDataSource>(
         let mut found_not_e = false;
         let mut class_to_set = None;
 
-        let start_len_utf8 = text[pair.start..].chars().next().unwrap().len_utf8();
+        let start_char_len =
+            T::char_len(text.subrange(pair.start..pair.end).chars().next().unwrap());
         // > Inspect the bidirectional types of the characters enclosed within the bracket pair.
         //
         // `pair` is [start, end) so we will end up processing the opening character but not the closing one.
         //
-        for enclosed_i in sequence.iter_forwards_from(pair.start + start_len_utf8, pair.start_run) {
+        for enclosed_i in sequence.iter_forwards_from(pair.start + start_char_len, pair.start_run) {
             if enclosed_i >= pair.end {
                 #[cfg(feature = "std")]
                 debug_assert!(
@@ -362,11 +363,12 @@ pub fn resolve_neutral<D: BidiDataSource>(
         if let Some(class_to_set) = class_to_set {
             // Update all processing classes corresponding to the start and end elements, as requested.
             // We should include all bytes of the character, not the first one.
-            let end_len_utf8 = text[pair.end..].chars().next().unwrap().len_utf8();
-            for class in &mut processing_classes[pair.start..pair.start + start_len_utf8] {
+            let end_char_len =
+                T::char_len(text.subrange(pair.end..text.len()).chars().next().unwrap());
+            for class in &mut processing_classes[pair.start..pair.start + start_char_len] {
                 *class = class_to_set;
             }
-            for class in &mut processing_classes[pair.end..pair.end + end_len_utf8] {
+            for class in &mut processing_classes[pair.end..pair.end + end_char_len] {
                 *class = class_to_set;
             }
             // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
@@ -382,7 +384,7 @@ pub fn resolve_neutral<D: BidiDataSource>(
 
             // This rule deals with sequences of NSMs, so we can just update them all at once, we don't need to worry
             // about character boundaries. We do need to be careful to skip the full set of bytes for the parentheses characters.
-            let nsm_start = pair.start + start_len_utf8;
+            let nsm_start = pair.start + start_char_len;
             for idx in sequence.iter_forwards_from(nsm_start, pair.start_run) {
                 let class = original_classes[idx];
                 if class == BidiClass::NSM || processing_classes[idx] == BN {
@@ -391,7 +393,7 @@ pub fn resolve_neutral<D: BidiDataSource>(
                     break;
                 }
             }
-            let nsm_end = pair.end + end_len_utf8;
+            let nsm_end = pair.end + end_char_len;
             for idx in sequence.iter_forwards_from(nsm_end, pair.end_run) {
                 let class = original_classes[idx];
                 if class == BidiClass::NSM || processing_classes[idx] == BN {
@@ -477,8 +479,8 @@ struct BracketPair {
 /// text source.
 ///
 /// <https://www.unicode.org/reports/tr9/#BD16>
-fn identify_bracket_pairs<D: BidiDataSource>(
-    text: &str,
+fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
+    text: &'a T,
     data_source: &D,
     run_sequence: &IsolatingRunSequence,
     original_classes: &[BidiClass],
@@ -487,27 +489,14 @@ fn identify_bracket_pairs<D: BidiDataSource>(
     let mut stack = vec![];
 
     for (run_index, level_run) in run_sequence.runs.iter().enumerate() {
-        let slice = if let Some(slice) = text.get(level_run.clone()) {
-            slice
-        } else {
-            #[cfg(feature = "std")]
-            std::debug_assert!(
-                false,
-                "Found broken indices in level run: found indices {}..{} for string of length {}",
-                level_run.start,
-                level_run.end,
-                text.len()
-            );
-            return ret;
-        };
-
-        for (i, ch) in slice.char_indices() {
+        for (i, ch) in text.subrange(level_run.clone()).char_indices() {
             let actual_index = level_run.start + i;
+
             // All paren characters are ON.
             // From BidiBrackets.txt:
             // > The Unicode property value stability policy guarantees that characters
             // > which have bpt=o or bpt=c also have bc=ON and Bidi_M=Y
-            if original_classes[level_run.start + i] != BidiClass::ON {
+            if original_classes[actual_index] != BidiClass::ON {
                 continue;
             }
 
