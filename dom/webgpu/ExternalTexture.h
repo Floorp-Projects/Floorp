@@ -34,17 +34,24 @@ class ExternalTexture {
 
   virtual void* GetExternalTextureHandle() { return nullptr; }
 
-  virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() = 0;
+  virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor(
+      Maybe<gfx::FenceInfo>& aFenceInfo) = 0;
 
   virtual void GetSnapshot(const ipc::Shmem& aDestShmem,
                            const gfx::IntSize& aSize) {}
 
   gfx::IntSize GetSize() { return gfx::IntSize(mWidth, mHeight); }
 
+  void SetSubmissionIndex(uint64_t aSubmissionIndex);
+  uint64_t GetSubmissionIndex() const { return mSubmissionIndex; }
+
   const uint32_t mWidth;
   const uint32_t mHeight;
   const struct ffi::WGPUTextureFormat mFormat;
   const ffi::WGPUTextureUsages mUsage;
+
+ protected:
+  uint64_t mSubmissionIndex = 0;
 };
 
 }  // namespace webgpu

@@ -187,6 +187,12 @@ RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
 }
 
 void CanvasContext::MaybeQueueSwapChainPresent() {
+  MOZ_ASSERT(mTexture);
+
+  if (mTexture) {
+    mBridge->NotifyWaitForSubmit(mTexture->mId);
+  }
+
   if (mPendingSwapChainPresent) {
     return;
   }

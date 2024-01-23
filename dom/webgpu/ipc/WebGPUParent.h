@@ -76,7 +76,8 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvCommandBufferDrop(RawId aCommandBufferId);
   ipc::IPCResult RecvRenderBundleDrop(RawId aBundleId);
   ipc::IPCResult RecvQueueSubmit(RawId aQueueId, RawId aDeviceId,
-                                 const nsTArray<RawId>& aCommandBuffers);
+                                 const nsTArray<RawId>& aCommandBuffers,
+                                 const nsTArray<RawId>& aTextureIds);
   ipc::IPCResult RecvQueueOnSubmittedWorkDone(
       RawId aQueueId, std::function<void(mozilla::void_t)>&& aResolver);
   ipc::IPCResult RecvQueueWriteAction(RawId aQueueId, RawId aDeviceId,
@@ -211,6 +212,9 @@ class WebGPUParent final : public PWebGPUParent {
   // Store a set of DeviceIds that have been SendDeviceLost. We use this to
   // limit each Device to one DeviceLost message.
   nsTHashSet<RawId> mLostDeviceIds;
+
+  // Shared handle of wgpu device's fence.
+  RefPtr<gfx::FileHandleWrapper> mFenceHandle;
 };
 
 }  // namespace webgpu

@@ -65,7 +65,7 @@ parent:
   async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDrop(RawId selfId);
   async RenderBundleDrop(RawId selfId);
-  async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
+  async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers, RawId[] textureIds);
   async QueueOnSubmittedWorkDone(RawId selfId) returns (void_t ok);
   async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, UnsafeSharedMemoryHandle shmem);
 

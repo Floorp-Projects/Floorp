@@ -260,4 +260,15 @@ void WebGPUChild::ActorDestroy(ActorDestroyReason) {
   }
 }
 
+void WebGPUChild::QueueSubmit(RawId aSelfId, RawId aDeviceId,
+                              nsTArray<RawId>& aCommandBuffers) {
+  SendQueueSubmit(aSelfId, aDeviceId, aCommandBuffers,
+                  mSwapChainTexturesWaitingForSubmit);
+  mSwapChainTexturesWaitingForSubmit.Clear();
+}
+
+void WebGPUChild::NotifyWaitForSubmit(RawId aTextureId) {
+  mSwapChainTexturesWaitingForSubmit.AppendElement(aTextureId);
+}
+
 }  // namespace mozilla::webgpu
