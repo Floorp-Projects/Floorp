@@ -1812,6 +1812,15 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_CODEGEN_ARM
+  // The ARM32 disassembler is currently not fuzzing-safe because it doesn't
+  // handle constant pools correctly (bug 1875363).
+  if (fuzzingSafe) {
+    JS_ReportErrorASCII(cx, "disnative is not fuzzing-safe on ARM32");
+    return false;
+  }
+#endif
+
   // Dump the raw code to a file before disassembling in case
   // finishString triggers a GC and discards the jitcode.
   if (!fuzzingSafe && args.length() > 1 && args[1].isString()) {
