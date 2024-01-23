@@ -26,6 +26,7 @@
 #include "mozilla/ipc/UtilityAudioDecoderChild.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
 #include "nsIObserver.h"
 #include "nsPrintfCString.h"
@@ -64,7 +65,7 @@ static EnumeratedArray<RemoteDecodeIn, RemoteDecodeIn::SENTINEL,
                        StaticRefPtr<RemoteDecoderManagerChild>>
     sRemoteDecoderManagerChildForProcesses;
 
-static UniquePtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
+static StaticAutoPtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
 
 // Used for protecting codec support information collected from different remote
 // processes.
@@ -119,7 +120,7 @@ void RemoteDecoderManagerChild::Init() {
 
     NS_ENSURE_SUCCESS_VOID(rv);
     *remoteDecoderManagerThread = childThread;
-    sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
+    sRecreateTasks = new nsTArray<RefPtr<Runnable>>();
     sObserver = new ShutdownObserver();
     nsContentUtils::RegisterShutdownObserver(sObserver);
   }
