@@ -9436,7 +9436,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // separate check for SHIP so that we know if there are ongoing requests
   // before calling Stop() below.
   if (mozilla::SessionHistoryInParent()) {
-    Document* document = GetDocument();
+    Document* document = GetExtantDocument();
     uint32_t flags = 0;
     if (document && !document->CanSavePresentation(nullptr, flags, true)) {
       // This forces some flags into the WindowGlobalParent's mBFCacheStatus,
