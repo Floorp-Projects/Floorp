@@ -6409,6 +6409,38 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   *aFoundValidLine = FindValidLine();
 }
 
+static bool StyleEstablishesBFC(const ComputedStyle* style) {
+  return style->StyleDisplay()->IsContainPaint() ||
+         style->StyleDisplay()->IsContainLayout();
+}
+
+void nsBlockFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsContainerFrame::DidSetComputedStyle(aOldStyle);
+  if (!aOldStyle) {
+    return;
+  }
+
+  // If NS_BLOCK_STATIC_BFC flag was set when the frame was initialized, it
+  // remains set during the lifetime of the frame and always forces it to be
+  // treated as a BFC, independently of the value of NS_BLOCK_DYNAMIC_BFC.
+  // Consequently, we don't bother invalidating or updating that latter flag.
+  if (HasAnyStateBits(NS_BLOCK_STATIC_BFC)) {
+    return;
+  }
+
+  bool isBFC = StyleEstablishesBFC(Style());
+  if (StyleEstablishesBFC(aOldStyle) != isBFC) {
+    if (MaybeHasFloats()) {
+      // If the frame contains floats, this update may change their float
+      // manager. Be safe by dirtying all descendant lines of the nearest
+      // ancestor's float manager.
+      RemoveStateBits(NS_BLOCK_DYNAMIC_BFC);
+      MarkSameFloatManagerLinesDirty(this);
+    }
+    AddOrRemoveStateBits(NS_BLOCK_DYNAMIC_BFC, isBFC);
+  }
+}
+
 void nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState) {
   nsIFrame* letterFrame = GetFirstLetter();
   if (!letterFrame) {
@@ -7760,7 +7792,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 
-  if (IsDynamicBFC()) {
+  if (StyleEstablishesBFC(Style())) {
     AddStateBits(NS_BLOCK_DYNAMIC_BFC);
   }
 

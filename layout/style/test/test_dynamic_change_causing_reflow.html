@@ -799,35 +799,34 @@ const gTestcases = [
     expectConstruction: false,
     expectReflow: true,
   },
-  // paint/layout containment boxes establish an independent formatting context,
-  // so need a re-frame to handle floated boxes.
-  // FIXME(bug 1874826): Try and avoid a full construction.
+  // paint/layout containment boxes establish an independent formatting context
+  // but floats and margin collapsing can be handled without reconstruction.
   {
     elem: containNodeWithFloatingChild,
     beforeStyle: "contain: none",
     afterStyle: "contain: paint",
-    expectConstruction: true,
+    expectConstruction: false,
     expectReflow: true,
   },
   {
     elem: containNodeWithFloatingChild,
     beforeStyle: "contain: paint",
     afterStyle: "contain: none",
-    expectConstruction: true,
+    expectConstruction: false,
     expectReflow: true,
   },
   {
     elem: containNodeWithFloatingChild,
     beforeStyle: "contain: none",
     afterStyle: "contain: layout",
-    expectConstruction: true,
+    expectConstruction: false,
     expectReflow: true,
   },
   {
     elem: containNodeWithFloatingChild,
     beforeStyle: "contain: layout",
     afterStyle: "contain: none",
-    expectConstruction: true,
+    expectConstruction: false,
     expectReflow: true,
   },
   {
@@ -844,7 +843,6 @@ const gTestcases = [
     expectConstruction: false,
     expectReflow: true,
   },
-  // However, a reflow is enough to update margin collapsing.
   {
     elem: containNodeWithMarginCollapsing,
     beforeStyle: "contain: none",
