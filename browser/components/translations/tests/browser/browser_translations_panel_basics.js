@@ -29,7 +29,7 @@ add_task(async function test_translations_panel_basics() {
   const panel = document.getElementById("translations-panel");
   const label = document.getElementById(panel.getAttribute("aria-labelledby"));
   ok(label, "The a11y label for the panel can be found.");
-  assertIsVisible(true, { element: label });
+  assertVisibility({ visible: { label } });
 
   await FullPageTranslationsTestUtils.clickTranslateButton();
 
