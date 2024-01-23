@@ -10,6 +10,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/StaticMutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
@@ -382,6 +383,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
     Deminiaturize,
     Zoom,
   };
+  void FinishCurrentTransition();
   void FinishCurrentTransitionIfMatching(const TransitionType& aTransition);
 
   // Called when something has happened that might cause us to update our
@@ -461,6 +463,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void ProcessTransitions();
 
   bool mInProcessTransitions = false;
+  bool mInLocalRunLoop = false;
 
   // While running an emulated fullscreen transition, we want to suppress
   // sending size mode events due to window resizing. We fix it up at the end
@@ -477,6 +480,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // period, we presume the window is visible, which prevents us from sending
   // unnecessary OcclusionStateChanged events.
   bool mHasStartedNativeFullscreen;
+
+  bool mWaitingOnFinishCurrentTransition = false;
 
   bool mModal;
   bool mFakeModal;
@@ -496,12 +501,13 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
  private:
   // This is class state for tracking which nsCocoaWindow, if any, is in the
   // middle of a native fullscreen transition.
-  static nsCocoaWindow* sWindowInNativeTransition;
+  static mozilla::StaticDataMutex<nsCocoaWindow*> sWindowInNativeTransition;
 
   // This function returns true if the caller has been able to claim the sole
   // permission to start a native transition. It must be followed by a call
   // to EndOurNativeTransition() when the native transition is complete.
   bool CanStartNativeTransition();
+  bool WeAreInNativeTransition();
   void EndOurNativeTransition();
 
   // true if Show() has been called.
