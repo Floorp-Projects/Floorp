@@ -212,6 +212,25 @@ TEST(SanitizeRenderer, TestAdreno512)
   EXPECT_EQ(sanitized, expectation);
 }
 
+TEST(SanitizeRenderer, TestIntelArcWindowsAngle)
+{
+  const std::string renderer(
+      "ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, "
+      "D3D11-31.0.101.5084)");
+  const std::string expectation(
+      "ANGLE (Intel, Intel(R) Arc(TM) A750 Graphics Direct3D11 vs_5_0 ps_5_0), "
+      "or similar");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+TEST(SanitizeRenderer, TestIntelArcWindowsGl)
+{
+  const std::string renderer("Intel(R) Arc(TM) A770 Graphics");
+  const std::string expectation("Intel(R) Arc(TM) A750 Graphics, or similar");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
 // -
 // Keep gtests for our known CI RENDERER strings (see
 // test_renderer_strings.html) otherwise the first time we know we messed up is
