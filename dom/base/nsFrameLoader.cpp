@@ -131,6 +131,7 @@
 
 #include "mozilla/ContentPrincipal.h"
 
+#include "nsSystemInfo.h"
 #include "nsXULPopupManager.h"
 
 #ifdef NS_PRINTING
@@ -3738,9 +3739,31 @@ void nsFrameLoader::SetWillChangeProcess() {
   docshell->SetWillChangeProcess();
 }
 
-static mozilla::Result<bool, nsresult> DidBuildIDChange() {
+static mozilla::Result<bool, nsresult> BuildIDMismatchMemoryAndDisk() {
   nsresult rv;
   nsCOMPtr<nsIFile> file;
+
+#if defined(ANDROID)
+  // Android packages on installation will stop existing instance, so we
+  // cannot run into this problem.
+  return false;
+#endif  // defined(ANDROID)
+
+#if defined(XP_WIN)
+  {
+    // Windows Store packages cannot run into this problem.
+    nsCOMPtr<nsIPropertyBag2> infoService =
+        do_GetService("@mozilla.org/system-info;1");
+    MOZ_ASSERT(infoService, "Could not find a system info service");
+    bool isMSIX;
+    nsresult rv = infoService->GetPropertyAsBool(u"isPackagedApp"_ns, &isMSIX);
+    if (NS_SUCCEEDED(rv)) {
+      if (isMSIX) {
+        return false;
+      }
+    }
+  }
+#endif
 
   rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
   MOZ_TRY(rv);
@@ -3802,7 +3825,7 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   // Fire the actual crashed event.
   nsString eventName;
   if (aChannel && !aChannel->DoBuildIDsMatch()) {
-    auto changedOrError = DidBuildIDChange();
+    auto changedOrError = BuildIDMismatchMemoryAndDisk();
     if (changedOrError.isErr()) {
       NS_WARNING("Error while checking buildid mismatch");
       eventName = u"oop-browser-buildid-mismatch"_ns;
