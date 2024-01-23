@@ -137,10 +137,6 @@ export const Services = withNotImplementedError({
   focus: withNotImplementedError({
     elementIsFocusable: checkFocusability,
   }),
-  intl: withNotImplementedError({
-    getAvailableLocaleDisplayNames: () => [],
-    getRegionDisplayNames: () => [],
-  }),
   locale: withNotImplementedError({ isAppLocaleRTL: false }),
   prefs: withNotImplementedError({ prefIsLocked: () => false }),
   strings: withNotImplementedError({
