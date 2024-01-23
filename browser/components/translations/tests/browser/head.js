@@ -28,25 +28,30 @@ const getIntlDisplayName = (() => {
 })();
 
 /**
- * Asserts that the Spanish test page is untranslated by checking
- * that the H1 element is still in its original Spanish form.
- *
- * @param {Function} runInPage - Allows running a closure in the content page.
- * @param {string} message - An optional message to log to info.
+ * A class containing test utility functions specific to testing full-page translations.
  */
-async function assertPageIsUntranslated(runInPage, message = null) {
-  if (message) {
-    info(message);
+class FullPageTranslationsTestUtils {
+  /**
+   * Asserts that the Spanish test page is untranslated by checking
+   * that the H1 element is still in its original Spanish form.
+   *
+   * @param {Function} runInPage - Allows running a closure in the content page.
+   * @param {string} message - An optional message to log to info.
+   */
+  static async assertPageIsUntranslated(runInPage, message = null) {
+    if (message) {
+      info(message);
+    }
+    info("Checking that the page is untranslated");
+    await runInPage(async TranslationsTest => {
+      const { getH1 } = TranslationsTest.getSelectors();
+      await TranslationsTest.assertTranslationResult(
+        "The page's H1 is untranslated and in the original Spanish.",
+        getH1,
+        "Don Quijote de La Mancha"
+      );
+    });
   }
-  info("Checking that the page is untranslated");
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is untranslated and in the original Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
 }
 
 /**

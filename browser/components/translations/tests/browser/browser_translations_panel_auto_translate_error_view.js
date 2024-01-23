@@ -68,7 +68,7 @@ add_task(
       onOpenPanel: assertPanelErrorView,
     });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }

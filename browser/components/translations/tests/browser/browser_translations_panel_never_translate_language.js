@@ -19,7 +19,7 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
     "The translations button is visible."
   );
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await openTranslationsSettingsMenu();
@@ -28,17 +28,17 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await clickNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", { checked: true });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await navigate("Navigate to a different Spanish page", {
     url: SPANISH_PAGE_URL_DOT_ORG,
   });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await cleanup();
 });
@@ -61,7 +61,7 @@ add_task(
       "The button is available."
     );
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
@@ -78,11 +78,11 @@ add_task(
     await clickNeverTranslateLanguage();
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }
@@ -133,11 +133,11 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }

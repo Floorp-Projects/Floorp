@@ -14,7 +14,7 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
@@ -73,7 +73,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await openTranslationsPanel({
       openFromAppMenu: true,

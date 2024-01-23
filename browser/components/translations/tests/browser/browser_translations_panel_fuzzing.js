@@ -193,7 +193,9 @@ add_task(async function test_translations_panel_fuzzing() {
 
         await clickRestoreButton();
 
-        await assertPageIsUntranslated(runInSpanishPage);
+        await FullPageTranslationsTestUtils.assertPageIsUntranslated(
+          runInSpanishPage
+        );
 
         await assertTranslationsButton(
           { button: true, circleArrows: false, locale: false, icon: true },

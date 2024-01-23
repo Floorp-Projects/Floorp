@@ -23,7 +23,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     "The button is available."
   );
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
@@ -44,7 +44,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     onOpenPanel: assertPanelFirstShowErrorView,
   });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,

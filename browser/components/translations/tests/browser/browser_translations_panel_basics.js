@@ -19,7 +19,7 @@ add_task(async function test_translations_panel_basics() {
 
   is(button.getAttribute("data-l10n-id"), "urlbar-translations-button2");
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
@@ -47,7 +47,7 @@ add_task(async function test_translations_panel_basics() {
 
   await clickRestoreButton();
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },

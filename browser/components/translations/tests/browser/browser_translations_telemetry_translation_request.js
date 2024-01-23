@@ -17,7 +17,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     "The button is available."
   );
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",

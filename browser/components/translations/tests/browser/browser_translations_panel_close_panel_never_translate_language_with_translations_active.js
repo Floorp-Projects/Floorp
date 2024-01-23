@@ -45,7 +45,7 @@ add_task(
       await clickNeverTranslateLanguage();
     });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
     await cleanup();
   }
 );
@@ -94,7 +94,7 @@ add_task(
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
     await clickNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await openTranslationsPanel({
       openFromAppMenu: true,
@@ -103,7 +103,7 @@ add_task(
     await openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await waitForTranslationsPopupEvent("popuphidden", async () => {
