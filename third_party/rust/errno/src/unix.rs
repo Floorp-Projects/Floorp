@@ -13,9 +13,7 @@
 // except according to those terms.
 
 use core::str;
-#[cfg(target_os = "dragonfly")]
-use errno_dragonfly::errno_location;
-use libc::{self, c_char, c_int, size_t, strlen};
+use libc::{self, c_int, size_t, strerror_r, strlen};
 
 use crate::Errno;
 
@@ -32,8 +30,13 @@ where
 {
     let mut buf = [0u8; 1024];
     let c_str = unsafe {
-        if strerror_r(err.0, buf.as_mut_ptr() as *mut _, buf.len() as size_t) < 0 {
-            let fm_err = errno();
+        let rc = strerror_r(err.0, buf.as_mut_ptr() as *mut _, buf.len() as size_t);
+        if rc != 0 {
+            // Handle negative return codes for compatibility with glibc < 2.13
+            let fm_err = match rc < 0 {
+                true => errno(),
+                false => Errno(rc),
+            };
             if fm_err != Errno(libc::ERANGE) {
                 return callback(Err(fm_err));
             }
@@ -57,9 +60,14 @@ pub fn set_errno(Errno(errno): Errno) {
 }
 
 extern "C" {
-    #[cfg(not(target_os = "dragonfly"))]
     #[cfg_attr(
-        any(target_os = "macos", target_os = "ios", target_os = "freebsd"),
+        any(
+            target_os = "macos",
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "freebsd"
+        ),
         link_name = "__error"
     )]
     #[cfg_attr(
@@ -68,7 +76,8 @@ extern "C" {
             target_os = "netbsd",
             target_os = "bitrig",
             target_os = "android",
-            target_os = "espidf"
+            target_os = "espidf",
+            target_env = "newlib"
         ),
         link_name = "__errno"
     )]
@@ -78,13 +87,15 @@ extern "C" {
     )]
     #[cfg_attr(target_os = "haiku", link_name = "_errnop")]
     #[cfg_attr(
-        any(target_os = "linux", target_os = "redox"),
+        any(
+            target_os = "linux",
+            target_os = "hurd",
+            target_os = "redox",
+            target_os = "dragonfly"
+        ),
         link_name = "__errno_location"
     )]
     #[cfg_attr(target_os = "aix", link_name = "_Errno")]
     #[cfg_attr(target_os = "nto", link_name = "__get_errno_ptr")]
     fn errno_location() -> *mut c_int;
-
-    #[cfg_attr(target_os = "linux", link_name = "__xpg_strerror_r")]
-    fn strerror_r(errnum: c_int, buf: *mut c_char, buflen: size_t) -> c_int;
 }
