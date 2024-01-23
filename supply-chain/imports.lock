@@ -379,6 +379,13 @@ user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
+[[publisher.parking_lot_core]]
+version = "0.9.9"
+when = "2023-10-17"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.paste]]
 version = "1.0.11"
 when = "2022-12-17"

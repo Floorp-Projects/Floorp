@@ -1476,7 +1476,7 @@ mod tests {
 
     test! {
         unpark_all_one_fast(
-            repeats: 10000, latches: 1, delay: 0, threads: 1, single_unparks: 0
+            repeats: 1000, latches: 1, delay: 0, threads: 1, single_unparks: 0
         );
         unpark_all_hundred_fast(
             repeats: 100, latches: 1, delay: 0, threads: 100, single_unparks: 0
