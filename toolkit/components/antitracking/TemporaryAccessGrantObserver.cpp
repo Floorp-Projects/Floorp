@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-UniquePtr<TemporaryAccessGrantObserver::ObserversTable>
+StaticAutoPtr<TemporaryAccessGrantObserver::ObserversTable>
     TemporaryAccessGrantObserver::sObservers;
 
 TemporaryAccessGrantObserver::TemporaryAccessGrantObserver(
@@ -34,7 +34,7 @@ void TemporaryAccessGrantObserver::Create(PermissionManager* aPM,
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!sObservers) {
-    sObservers = MakeUnique<ObserversTable>();
+    sObservers = new ObserversTable();
   }
   sObservers->LookupOrInsertWith(
       std::make_pair(nsCOMPtr<nsIPrincipal>(aPrincipal), nsCString(aType)),
@@ -84,7 +84,7 @@ TemporaryAccessGrantObserver::Observe(nsISupports* aSubject, const char* aTopic,
       mTimer->Cancel();
       mTimer = nullptr;
     }
-    sObservers.reset();
+    sObservers = nullptr;
   }
 
   return NS_OK;

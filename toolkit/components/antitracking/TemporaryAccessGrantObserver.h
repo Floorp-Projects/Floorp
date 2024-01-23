@@ -8,6 +8,7 @@
 #define mozilla_temporaryaccessgrantobserver_h
 
 #include "mozilla/PrincipalHashKey.h"
+#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsHashtablesFwd.h"
@@ -75,7 +76,7 @@ class TemporaryAccessGrantObserver final : public nsIObserver, public nsINamed {
  private:
   using ObserversTable =
       nsTHashMap<TemporaryAccessGrantCacheKey, nsCOMPtr<nsITimer>>;
-  static UniquePtr<ObserversTable> sObservers;
+  static StaticAutoPtr<ObserversTable> sObservers;
   nsCOMPtr<nsITimer> mTimer;
   RefPtr<PermissionManager> mPM;
   nsCOMPtr<nsIPrincipal> mPrincipal;
