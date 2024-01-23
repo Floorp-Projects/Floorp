@@ -533,10 +533,6 @@ people:
     bmo_id: 541747
     name: Jamie Nicol
     nick: jnicol
-  - &johannh
-    bmo_id: 522029
-    name: Johann Hofmann
-    nick: johannh
   - &jonalmeida
     bmo_id: 541581
     name: Jonathan Almeida
@@ -2367,7 +2363,7 @@ modules:
         - Shawn Wilsher
         - Honza Bambas
         - *baku
-        - *johannh
+        - Johann Hofmann
       group: dev-platform
       components:
         - 'Core :: Permission Manager'
