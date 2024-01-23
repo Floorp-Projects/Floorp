@@ -330,14 +330,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Mačči tura</string>
 
-    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nḥemmel ad teqqimeḍ d aɣellsan</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.\n\nIssin ugar ɣef tsertit-nneɣ n tbaḍnit.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.\n\nIssin ugar ɣef tsertit-nneɣ n tbaḍnit.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">tasertit n tbaḍnit</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">tasertit n tbaḍnit</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sbadu-t d iminig amezwer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -2292,6 +2292,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ldi aseɣwen i wakken ad tissineḍ ugar</string>
 
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">Iseɣwan</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
@@ -2329,6 +2332,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="translation_settings_toolbar_title">Tisuqilin</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Ismenyifen n tsuqilt</string>
+
+    <!-- Preference option for never translate. Radio button title text.-->
+    <string name="automatic_translation_option_never_translate_title_preference">Werǧin attsuqleḍ</string>
 
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
@@ -2373,6 +2379,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">Sefsex</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Inig ar deffir</string>
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title">Ifecka n yiccer</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal">Urmid</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->

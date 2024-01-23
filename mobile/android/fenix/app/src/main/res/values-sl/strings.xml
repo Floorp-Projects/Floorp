@@ -721,6 +721,8 @@
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Gesla</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Odprti zavihki</string>
     <!-- Preference for signing out -->
@@ -748,6 +750,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kreditne kartice</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Načini plačila</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Naslove</string>
 
@@ -1698,8 +1702,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave in gesla</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Gesla</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Shranjevanje prijav in gesel</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Shranjuj gesla</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Vprašaj pred shranjevanjem</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1718,16 +1726,27 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Dodaj prijavo</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Dodaj geslo</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sinhroniziraj gesla</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sinhroniziraj prijave med napravami</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sinhroniziraj gesla med napravami</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Shranjene prijave</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Shranjena gesla</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Tu se prikažejo prijave, ki jih shranite ali sinhronizirate v %s.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Več o Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Več o sinhronizaciji</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Izjeme</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1809,14 +1828,20 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Dodaj kreditno kartico</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Dodaj kartico</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Upravljanje shranjenih kartic</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Upravljanje kartic</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Dodaj naslov</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Upravljanje naslovov</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Shranjuj in samodejno izpolnjuj naslove</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Shranjuj in izpolnjuj naslove</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Vključi podatke, kot so številke, e-poštni naslovi in naslovi za dostavo</string>
 
@@ -1855,8 +1880,12 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Vnesite veljavno številko kreditne kartice</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Vnesite veljavno številko kartice</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Izpolnite to polje</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Dodajte ime</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Odklenite za ogled shranjenih kartic</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -2016,24 +2045,44 @@
     <string name="dialog_delete_negative">Prekliči</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Možnosti prijave</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti gesel</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Besedilno polje za urejanje spletnega naslova prijave.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Besedilno polje za urejanje naslova spletnega mesta, ki mu pripada geslo.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Besedilno polje za urejanje uporabniškega imena prijave.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Besedilno polje za urejanje uporabniškega imena, ki pripada geslu.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Besedilno polje za urejanje gesla prijave.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Besedilno polje za urejanje gesla.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Shrani spremembe v prijavo.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Shrani spremembe.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Urejanje</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Uredi geslo</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Dodaj novo prijavo</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Dodaj geslo</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Zahtevano je geslo</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Vnesite geslo</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Zahtevano je uporabniško ime</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Vnesite uporabniško ime</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Zahtevano je ime domene</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Vnesite spletni naslov</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Glasovno iskanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->

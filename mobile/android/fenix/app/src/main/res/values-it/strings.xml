@@ -729,6 +729,8 @@
     <string name="preferences_sync_bookmarks">Segnalibri</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Credenziali</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Password</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Schede aperte</string>
     <!-- Preference for signing out -->
@@ -755,6 +757,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Carte di credito</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Metodi di pagamento</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Indirizzi</string>
 
@@ -1726,8 +1730,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Credenziali e password</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Password</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Salva credenziali e password</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Salva password</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Chiedi prima di salvare</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1745,26 +1753,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Aggiungi credenziali</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Aggiungi password</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizza le credenziali</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sincronizza password</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sincronizza credenziali tra dispositivi</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sincronizza le password tra i tuoi dispositivi</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Credenziali salvate</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Password salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Le credenziali salvate o sincronizzate in %s verranno visualizzate qui.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Le password salvate o sincronizzate con %s verranno visualizzate qui. Tutte le password salvate sono crittate.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Ulteriori informazioni su Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Ulteriori informazioni sulla sincronizzazione</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eccezioni</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Le credenziali e le password non salvate verranno mostrate qui.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s non salverà le password per i siti elencati qui.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Le credenziali e le password non verranno salvate per questi siti.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s non salverà le password per questi siti.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Elimina tutte le eccezioni</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Cerca credenziali</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Cerca nelle password</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sito</string>
     <!-- The header for the username for a login -->
@@ -1793,10 +1820,16 @@
     <string name="saved_login_hide_password">Nascondi password</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Sblocca per visualizzare le credenziali salvate</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Sblocca per visualizzare le password salvate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Proteggi le credenziali di accesso</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Proteggi le password salvate</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le tue credenziali.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le password salvate.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Più tardi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1816,6 +1849,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordina il menu delle credenziali di accesso</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menu per ordinare le password</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Compilazione automatica</string>
@@ -1823,10 +1859,16 @@
     <string name="preferences_addresses">Indirizzi</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Carte di credito</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Metodi di pagamento</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Salvare e compilare automaticamente le carte</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Salva e compila i metodi di pagamento</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">I dati sono crittati</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s critta tutti i metodi di pagamento salvati</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizza le carte tra più dispositivi</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1834,16 +1876,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Aggiungi una carta di credito</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Aggiungi carta</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Gestione carte salvate</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Gestisci carte</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Aggiungi indirizzo</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gestione indirizzi</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Salvare e compilare automaticamente gli indirizzi</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Salva e compila indirizzi</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Includere informazioni come numeri, email e indirizzi di spedizione</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Include numeri di telefono e indirizzi email</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aggiungi carta</string>
@@ -1866,6 +1917,8 @@
     <string name="credit_cards_delete_card_button">Elimina carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Eliminare questa carta di credito?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Eliminare la carta?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Elimina</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1881,14 +1934,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Inserire un numero di carta di credito valido</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Inserisci un numero di carta valido</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Compilare questo campo</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Aggiungi un nome</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Sblocca per visualizzare le carte di credito salvate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Proteggi le tue carte di credito</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Proteggi i metodi di pagamento salvati</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le carte di credito salvate.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le carte di credito salvate.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Imposta adesso</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1899,6 +1960,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Sblocca per utilizzare le informazioni delle carte di credito salvate</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Sblocca per utilizzare i metodi di pagamento salvati</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Aggiungi indirizzo</string>
     <!-- Title of the "Edit address" screen -->
@@ -1937,6 +2000,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Eliminare questo indirizzo?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Eliminare questo indirizzo?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Elimina</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2035,30 +2100,52 @@
     <string name="login_menu_edit_button">Modifica</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Rimuovere queste credenziali?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Eliminare questa password?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Rimuovi</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annulla</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Opzioni credenziali</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opzioni password</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Il campo di testo modificabile per l’indirizzo web delle credenziali</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Il campo di testo modificabile per l’indirizzo del sito web della password.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Il campo di testo modificabile per il nome utente delle credenziali</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Il campo di testo modificabile per il nome utente.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Il campo di testo modificabile per la password delle credenziali</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Il campo di testo modificabile per la password.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Salva le modifiche alle credenziali.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Salva modifiche.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Modifica</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Modifica password</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Aggiungi nuove credenziali</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Aggiungi password</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password obbligatoria</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Inserisci una password</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Nome utente obbligatorio</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Inserisci un nome utente</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Nome server obbligatorio</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Inserisci un indirizzo web</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Ricerca vocale</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2438,6 +2525,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Non tradurre mai %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Non tradurre mai questo sito</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Sostituisce tutte le altre impostazioni</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Sostituisce la scelta relativa alla proposta di traduzione</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Impostazioni traduzione</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

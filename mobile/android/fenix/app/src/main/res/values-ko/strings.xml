@@ -732,6 +732,8 @@
     <string name="preferences_sync_bookmarks">북마크</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">로그인</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">비밀번호</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">열린 탭</string>
     <!-- Preference for signing out -->
@@ -758,6 +760,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">신용 카드</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">결제 방법</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">주소</string>
 
@@ -1737,8 +1741,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">로그인과 비밀번호</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">비밀번호</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">로그인과 비밀번호 저장</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">비밀번호 저장</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">저장할지 묻기</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1756,26 +1764,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">로그인 추가</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">비밀번호 추가</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync 로그인</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">비밀번호 동기화</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">기기 간에 로그인 동기화</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">기기 간에 비밀번호 동기화</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">저장된 로그인</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">저장된 비밀번호</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">%s에 저장하거나 동기화한 로그인이 여기에 표시됩니다.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%s에 저장하거나 동기화한 비밀번호는 여기에 나열됩니다. 저장한 모든 비밀번호는 암호화됩니다.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync에 대해 더 알아보기.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">동기화에 대해 더 알아보기</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">예외 목록</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">저장되지 않은 로그인과 비밀번호가 여기에 표시됩니다.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s는 여기에 나열된 사이트의 비밀번호를 저장하지 않습니다.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">이 사이트에 대한 로그인과 비밀번호는 저장되지 않습니다.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s는 이 사이트의 비밀번호를 저장하지 않습니다.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">모든 예외 삭제</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">로그인 검색</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">비밀번호 검색</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">사이트</string>
     <!-- The header for the username for a login -->
@@ -1803,11 +1830,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">비밀번호 숨기기</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">저장된 로그인을 보려면 잠금 해제</string>
+    <string name="logins_biometric_prompt_message">저장된 로그인을 보려면 잠금 해제하세요</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">저장된 비밀번호를 보려면 잠금 해제하세요</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">로그인과 비밀번호 보안</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">저장된 비밀번호를 보호하세요</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">다른 사람이 내 기기를 가지고 있는 경우, 저장된 로그인과 비밀번호에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">다른 사람이 내 기기를 가지고 있는 경우, 저장된 비밀번호에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">나중에</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1827,6 +1860,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">로그인 정렬 메뉴</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">비밀번호 정렬 메뉴</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">자동 채우기</string>
@@ -1834,10 +1870,16 @@
     <string name="preferences_addresses">주소</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">신용 카드</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">결제 방법</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">카드 저장 및 자동 채우기</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">결제 방법 저장 및 채우기</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">데이터가 암호화됨</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s는 저장한 모든 결제 방법을 암호화합니다</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">기기 간에 카드 동기화</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1845,8 +1887,12 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">신용 카드 추가</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">카드 추가</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">저장된 카드 관리</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">카드 관리</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">주소 추가</string>
     <!-- Preference option for managing saved addresses -->
@@ -1854,8 +1900,13 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">주소 저장 및 자동 채우기</string>
 
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">주소 저장 및 채우기</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">숫자, 이메일 및 배송 주소와 같은 정보 포함</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">전화번호와 이메일 주소가 포함됩니다</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">카드 추가</string>
@@ -1878,6 +1929,8 @@
     <string name="credit_cards_delete_card_button">카드 삭제</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">이 신용 카드를 삭제하시겠습니까?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">카드를 삭제하시겠습니까?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">삭제</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1893,14 +1946,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">유효한 신용 카드 번호를 입력해 주세요</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">유효한 카드 번호를 입력하세요</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">이 항목을 입력하세요.</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">이름 추가</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
-    <string name="credit_cards_biometric_prompt_message">저장된 카드를 보려면 잠금 해제</string>
+    <string name="credit_cards_biometric_prompt_message">저장된 카드를 보려면 잠금 해제하세요</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">신용 카드 보안</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">저장된 결제 수단을 보호하세요</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">다른 사람이 내 기기를 가지고 있는 경우, 저장된 신용 카드에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">다른 사람이 내 기기를 가지고 있는 경우, 저장된 카드에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">지금 설정</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1909,8 +1970,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">기기 잠금 해제</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">저장된 신용 카드 정보를 사용하려면 잠금 해제</string>
+    <string name="credit_cards_biometric_prompt_unlock_message">저장된 신용 카드 정보를 사용하려면 잠금 해제하세요</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">저장된 결제 방법을 사용하려면 잠금 해제하세요</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">주소 추가</string>
     <!-- Title of the "Edit address" screen -->
@@ -1948,6 +2011,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">이 주소를 삭제하시겠습니까?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">이 주소를 삭제하시겠습니까?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">삭제</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2047,30 +2112,52 @@
     <string name="login_menu_edit_button">편집</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">이 로그인을 삭제하시겠습니까?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">이 비밀번호를 삭제하시겠습니까?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">삭제</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">취소</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">로그인 옵션</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">비밀번호 옵션</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">로그인 웹 주소의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">비밀번호의 웹 사이트 주소에 대한 편집 가능한 텍스트 필드입니다.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">로그인 사용자 이름의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">비밀번호의 사용자 이름에 대한 편집 가능한 텍스트 필드입니다.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">로그인 비밀번호의 편집 가능한 텍스트 필드입니다.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">비밀번호에 대한 편집 가능한 텍스트 필드입니다.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">변경 내용을 로그인에 저장.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">변경 내용 저장.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">편집</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">비밀번호 수정</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">새 로그인 추가</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">비밀번호 추가</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">비밀번호 필요</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">비밀번호 입력</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">사용자 이름은 필수입니다</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">사용자 이름 입력</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">호스트 이름은 필수입니다</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">웹 주소 입력</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">음성 검색</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2447,6 +2534,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">항상 %1$s 번역 안 함</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">항상 이 사이트 번역 안 함</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">다른 모든 설정을 재정의</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">번역 제안을 재정의</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">번역 설정</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

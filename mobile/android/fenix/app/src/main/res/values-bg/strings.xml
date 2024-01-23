@@ -719,6 +719,8 @@
     <string name="preferences_sync_bookmarks">Отметки</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Регистрации</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Пароли</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Отворени раздели</string>
     <!-- Preference for signing out -->
@@ -744,6 +746,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Банкови карти</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Начини на плащане</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Адреси</string>
 
@@ -1700,8 +1704,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Регистрации и пароли</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Пароли</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Запазване на регистрации и пароли</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Запазване на пароли</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Питане за запазване</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1718,26 +1726,46 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Добавяне на регистрация</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Добавяне на парола</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Синхронизиране на регистрации</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Синхронизиране на пароли</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Синхронизиране на регистрации между устройства</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Синхронизиране на пароли между устройства</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Запазени регистрации</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Запазени пароли</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Тук се показват нещата, които запазвате или синхронизирате във %s.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Паролите, които запазите или синхронизирате с %s ще бъдат изброени тук. Всички запазени пароли са шифровани.
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Научете повече за Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Научете повече за синхронизирането</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Изключения</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Тук се показват регистрации и пароли, които не са запазени.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s няма да запазва пароли за сайтове, изброени тук.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Следните страници няма да запазват регистрации и пароли.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s няма да запази пароли за тези сайтове.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Изтриване на всички</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Търсене на регистрация</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Търсене на пароли</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Страница</string>
     <!-- The header for the username for a login -->
@@ -1767,10 +1795,16 @@
     <string name="saved_login_hide_password">Скриване на парола</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Отключете, за да видите запазените регистрации</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Отключете, за да видите запазените пароли</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Защитете вашите данни за вход</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Защитете запазените пароли</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените регистрации и пароли, в случай че някой друг има достъп до него.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените пароли от достъп, ако някой друг има вашето устройство.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">По-късно</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1788,6 +1822,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню за сортиране на регистрации</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Меню за сортиране на пароли</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Автоматично попълване</string>
@@ -1795,19 +1832,29 @@
     <string name="preferences_addresses">Адреси</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Банкови карти</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Начини на плащане</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Запазване и автоматично попълване на карти</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Запазване и попълване на начини на плащане</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Данните са криптирани</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s шифрова всички запазени от вас начини на плащане</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронизиране на карти между устройства</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Синхронизиране на карти</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Добавяне на карта</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Добавяне на карта</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Управление на карти</string>
 
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Управление на карти</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Добавяне на адрес</string>
     <!-- Preference option for managing saved addresses -->
@@ -1815,8 +1862,13 @@
 
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Запазване и попълване на адреси</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Запазване и попълване на адреси</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Включително номера, електронни адреси и адреси за доставка</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Включва телефонни номера и имейл адреси</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Добавяне на карта</string>
@@ -1838,6 +1890,8 @@
     <string name="credit_cards_delete_card_button">Изтриване на картата</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Сигурни ли сте, че искате да премахнете тази банкова карта?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Изтриване на картата?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Премахване</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1850,14 +1904,22 @@
     <string name="credit_cards_saved_cards">Запазени карти</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Моля, въведете валиден номер на банкова карта</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Въведете валиден номер на карта</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Попълнете полето</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Добавяне на име</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Отключете, за да видите запазените карти</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Защитете банковите си карти</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Защитете запазените начини на плащане</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените банкови карти, в случай че някой друг има достъп до него.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените карти от достъп, ако някой друг има вашето устройство.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Настройване</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1868,6 +1930,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Отключете, за да използвате запазената банкова карта</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Отключете, за да използвате запазените методи на плащане</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Добавяне на адрес</string>
     <!-- Title of the "Edit address" screen -->
@@ -1906,6 +1970,8 @@
     <string name="addressess_delete_address_button">Премахване на адреса</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Сигурни ли сте, че искате да премахнете този адрес?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Изтриване на този адрес?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Премахване</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2006,30 +2072,52 @@
     <string name="login_menu_edit_button">Редактиране</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Сигурни ли сте, че искате да изтриете тези данни за вход?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Сигурни ли сте, че искате да изтриете тази парола?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Изтриване</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Отказ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Настройки за вход</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Опции за парола</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Текстовото поле за редактиране на адреса на регистрация.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Текстовото поле за редактиране на адреса на уебсайта на паролата.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Текстовото поле за редактиране на потребителското име на регистрация.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Текстовото поле за редактиране на потребителското име на паролата.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Текстовото поле за редактиране на паролата на регистрация.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Текстовото поле за редактиране на паролата.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Запазване на промените на регистрацията.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Запазване на промените.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Редактиране</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Редактиране на паролата</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Добавете регистрация</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Добавяне на парола</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Паролата е задължителна</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Въведете парола</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Потребителското име е задължително</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Въведете потребителско име</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Името на хоста е задължително</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Въведете уеб адрес</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Гласово търсене</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2401,6 +2489,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Без превод на %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Без превод на този сайт</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Заменя всички останали настройки</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Заменя предложенията за превод</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Настройки на превода</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

@@ -326,13 +326,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">לא כעת</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">הצהרת הפרטיות של Firefox</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">אנחנו אוהבים לשמור עליך</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">הדפדפן שלנו שמגובה בקרן ללא מטרות רווח מסייע למנוע מחברות לעקוב אחריך בסתר ברחבי הרשת.\n\nמידע נוסף בהצהרת הפרטיות שלנו.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">הדפדפן שלנו שמגובה בקרן ללא מטרות רווח מסייע למנוע מחברות לעקוב אחריך בסתר ברחבי הרשת.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">הדפדפן שלנו שמגובה בקרן ללא מטרות רווח מסייע למנוע מחברות לעקוב אחריך בסתר ברחבי הרשת.\n\nמידע נוסף בהצהרת הפרטיות שלנו.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">הצהרת פרטיות</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">הצהרת פרטיות</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">הגדרה כדפדפן ברירת המחדל</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -714,6 +719,8 @@
     <string name="preferences_sync_bookmarks">סימניות</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">כניסות</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">ססמאות</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">לשוניות פתוחות</string>
     <!-- Preference for signing out -->
@@ -740,6 +747,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">כרטיסי אשראי</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">אמצעי תשלום</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">כתובות</string>
 
@@ -1684,8 +1693,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">ססמאות</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">שמירת כניסות וססמאות</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">שמירת ססמאות</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">לבקש לשמור</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1704,26 +1717,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">הוספת כניסה</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">הוספת ססמה</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">סנכרון כניסות</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">סנכרון ססמאות</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">סנכרון כניסות בין מכשירים</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">סנכרון ססמאות בין מכשירים</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">כניסות שמורות</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">ססמאות שמורות</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">הכניסות שיישמרו או יסתנכרנו אל %s יופיעו כאן.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">הססמאות שיישמרו או יסונכרנו עם %s יופיעו כאן. כל הססמאות השמורות הינן מוצפנות.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">מידע נוסף על Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">מידע נוסף על סנכרון</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">חריגות</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">כניסות וססמאות שאינן שמורות יופיעו כאן.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">‏%s לא ישמור ססמאות לאתרים המפורטים כאן.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">כניסות וססמאות לא יישמרו עבור אתרים אלו.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">‏%s לא ישמור ססמאות לאתרים אלו.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">מחיקת כל החריגות</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">חיפוש כניסות</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">חיפוש ססמאות</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">אתר</string>
     <!-- The header for the username for a login -->
@@ -1752,10 +1784,16 @@
     <string name="saved_login_hide_password">הסתרת ססמה</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להציג את הססמאות השמורות שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">שמירה מאובטחת של הכניסות והססמאות שלך</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">אבטחת הססמאות השמורות שלך</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על הססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">מאוחר יותר</string>
 
@@ -1775,6 +1813,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">תפריט מיון כניסות</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">תפריט מיון ססמאות</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">מילוי אוטומטי</string>
@@ -1782,10 +1823,16 @@
     <string name="preferences_addresses">כתובות</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">כרטיסי אשראי</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">אמצעי תשלום</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">שמירה ומילוי אוטומטי של כרטיסים</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">שמירה ומילוי אמצעי תשלום</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">הנתונים מוצפנים</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">‏%s מצפין את כל אמצעי התשלום השמורים</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">סנכרון כרטיסים בין מכשירים</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1793,8 +1840,12 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">הוספת כרטיס אשראי</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">הוספת כרטיס</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">ניהול כרטיסים שמורים</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">ניהול כרטיסים</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">הוספת כתובת</string>
     <!-- Preference option for managing saved addresses -->
@@ -1802,8 +1853,13 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">שמירה ומילוי אוטומטי של כתובות</string>
 
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">שמירה ומילוי כתובות</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">לכלול מידע כמו מספרים, כתובות דוא״ל וכתובות למשלוח</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">כולל מספרי טלפון וכתובות דוא״ל</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">הוספת כרטיס</string>
@@ -1825,6 +1881,8 @@
     <string name="credit_cards_delete_card_button">מחיקת כרטיס</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">האם ברצונך למחוק את כרטיס האשראי הזה?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">למחוק את הכרטיס?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">מחיקה</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1840,14 +1898,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">נא להכניס מספר כרטיס אשראי תקין</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">נא להכניס מספר כרטיס תקני</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">נא למלא שדה זה</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">הוספת שם</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכרטיסים השמורים שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">אבטחת כרטיסי האשראי שלך</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">אבטחת אמצעי התשלום השמורים שלך</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על כרטיסי האשראי השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על אמצעי התשלום השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">להגדיר כעת</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1858,6 +1924,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">יש לבטל את הנעילה כדי להשתמש בפרטי כרטיס האשראי השמור</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להשתמש באמצעי התשלום השמורים שלך</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">הוספת כתובת</string>
     <!-- Title of the "Edit address" screen -->
@@ -1894,6 +1962,8 @@
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">האם ברצונך למחוק את כתובת זו?</string>
 
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">למחוק את הכתובת הזאת?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">מחיקה</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1993,30 +2063,52 @@
     <string name="login_menu_edit_button">עריכה</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">האם ברצונך למחוק את כניסה זו?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">האם ברצונך למחוק ססמה זו?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">מחיקה</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ביטול</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">אפשרויות כניסה</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">אפשרויות ססמה</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">שדה הטקסט הניתן לעריכה עבור כתובת האינטרנט של הכניסה.</string>
+    <string name="saved_login_hostname_description">שדה הטקסט הניתן לעריכה עבור כתובת האתר של הכניסה.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור כתובת האתר של הססמה.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">שדה הטקסט הניתן לעריכה עבור שם המשתמש של הכניסה.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור שם המשתמש של הססמה.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">שדה הטקסט הניתן לעריכה עבור הססמה של הכניסה.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור הססמה.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">שמירת השינויים של הכניסה.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">שמירת שינויים.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">עריכה</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">עריכת הססמה</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">הוספת כניסה חדשה</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">הוספת ססמה</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">נדרשת ססמה</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">נא להכניס ססמה</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">דרוש שם משתמש</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">נא להכניס שם משתמש</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">דרוש שם מארח</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">נא להכניס כתובת אתר</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">חיפוש קולי</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2393,6 +2485,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">לעולם לא לתרגם מ%1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">לעולם לא לתרגם את אתר זה</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">עוקף את כל ההגדרות האחרות</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">עוקף הצעות לתרגום</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">הגדרות תרגום</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

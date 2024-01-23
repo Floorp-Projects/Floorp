@@ -729,6 +729,8 @@
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prihlasovacie údaje</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Heslá</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Otvorené karty</string>
     <!-- Preference for signing out -->
@@ -755,6 +757,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Platobné karty</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Spôsoby platby</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresy</string>
 
@@ -1701,8 +1705,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prihlasovacie údaje</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Heslá</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Ukladanie prihlasovacích údajov</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Ukladanie hesiel</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Pred uložením sa opýtať</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1719,26 +1727,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Pridať prihlasovacie údaje</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Pridať heslo</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronizácia prihlasovacích údajov</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Synchronizácia hesiel</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Synchronizovať prihlasovacie údaje medzi zariadeniami</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Synchronizovať heslá naprieč zariadeniami</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Uložené prihlasovacie údaje</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Uložené heslá</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Uložené alebo synchronizované údaje v aplikácii %s sa zobrazia tu.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Heslá, ktoré uložíte alebo synchronizujete do %su budú zobrazené tu. Všetky heslá sú šifrované.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Ďalšie informácie o službe Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Ďalšie informácie o synchronizácii</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Výnimky</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Tu sa zobrazia prihlasovacie údaje, ktoré sa nebudú ukladať.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s nebude ukladať heslá pre tu uvedené stránky.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Pre nasledujúce stránky sa nebudú ukladať prihlasovacie údaje.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s nebude ukladať heslá pre tieto stránky.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Odstrániť všetky výnimky</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Hľadať</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Hľadať v heslách</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stránka</string>
     <!-- The header for the username for a login -->
@@ -1767,10 +1794,16 @@
     <string name="saved_login_hide_password">Skryť heslo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Pre zobrazenie prihlasovacích údajov odomknite zariadenie</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Ak chcete zobraziť uložené heslá, odomknite zariadenie</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Zabezpečte svoje prihlasovacie údaje</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zabezpečte svoje heslá</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené prihlasovacie údaje v prípade, že vaše zariadenie bude používať niekto iný.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené heslá v prípade, že vaše zariadenie bude používať niekto iný.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Neskôr</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1789,6 +1822,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Zoradiť ponuku prihlasovacích údajov</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Ponuka pre zoradenie hesiel</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Automatické dopĺňanie</string>
@@ -1796,10 +1832,16 @@
     <string name="preferences_addresses">Adresy</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Platobné karty</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Spôsoby platby</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Ukladať a automaticky dopĺňať údaje o platobných kartách</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Ukladať a dopĺňať spôsoby platby</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Údaje sú šifrované</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s zašifruje všetky spôsoby platby, ktoré uložíte</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovať platobné karty naprieč zariadeniami</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1807,16 +1849,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Pridať platobnú kartu</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Pridať kartu</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Spravovať uložené karty</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Spravovať karty</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Pridať adresu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Spravovať adresy</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Ukladať a automaticky dopĺňať adresy</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Ukladať a dopĺňať adresy</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Zahŕňa informácie ako sú čísla, e‑mailové adresy a dodacie adresy</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Zahŕňa telefónne čísla a e‑mailové adresy</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Pridať kartu</string>
@@ -1838,6 +1889,8 @@
     <string name="credit_cards_delete_card_button">Odstrániť kartu</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Naozaj chcete odstrániť túto kreditnú kartu?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Odstrániť kartu?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Odstrániť</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1852,14 +1905,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Prosím, zadajte platné číslo platobnej karty</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Zadajte platné číslo karty</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Vyplňte toto pole</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Zadajte meno</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Odomknutím zobrazíte svoje uložené kreditné karty</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Zabezpečte svoje kreditné karty</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Zabezpečte svoje uložené spôsoby platby</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené kreditné karty v prípade, že vaše zariadenie bude používať niekto iný.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené karty v prípade, že vaše zariadenie bude používať niekto iný.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Nastaviť teraz</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1869,6 +1930,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Odomknutím použijete uložené informácie o kreditnej karte</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Ak chcete použiť uložené spôsoby platby, odomknite zariadenie</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Pridať adresu</string>
     <!-- Title of the "Edit address" screen -->
@@ -1906,6 +1969,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Naozaj chcete odstrániť túto adresu?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Chcete odstrániť túto adresu?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Odstrániť</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2004,30 +2069,52 @@
     <string name="login_menu_edit_button">Upraviť</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Naozaj chcete odstrániť tieto prihlasovacie údaje?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Naozaj chcete odstrániť toto heslo?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Odstrániť</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Zrušiť</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Možnosti prihlásenia</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti hesiel</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Upraviteľné textové pole pre webovú adresu.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Upraviteľné textové pole pre webovú stránku, kde používate toto heslo.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Upraviteľné textové pole pre používateľské meno.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Upraviteľné textové pole pre používateľské meno, ktoré používate s týmto heslom.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Upraviteľné textové pole pre heslo.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Upraviteľné textové pole pre heslo.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Uložiť zmeny prihlasovacích údajov.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Uložiť zmeny</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Upraviť</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Upraviť heslo</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Pridať nové prihlasovacie údaje</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Pridať heslo</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Vyžaduje sa heslo</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Zadajte heslo</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Vyžaduje sa používateľské meno</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Zadajte používateľské meno</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Vyžaduje sa názov hostiteľa</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Zadajte webovú stránku</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Hlasové vyhľadávanie</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2403,6 +2490,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Nikdy neprekladať z jazyka %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Nikdy neprekladať túto stránku</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Prepíše všetky ostatné nastavenia</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Prepíše ponuky na preklad</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Nastavenia prekladu</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
