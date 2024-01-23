@@ -235,7 +235,7 @@ load 448543-1.html
 load 448543-2.html
 load 448543-3.html
 load 450319-1.xhtml
-asserts(1) asserts-if(Android,1-2) load 453894-1.xhtml # Bug 398043
+asserts(5) asserts-if(Android,5-10) load 453894-1.xhtml # Bug 398043, plus crazy sizes during bidi reordering.
 skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/454751-1.xhtml
 load 455063-1.html
 load 455063-2.html

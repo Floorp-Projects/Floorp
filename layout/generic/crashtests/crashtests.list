@@ -333,7 +333,7 @@ load 476241-1.html
 load 477731-1.html
 load 477928.html
 load 478131-1.html
-load 478170-1.html
+asserts(4) load 478170-1.html # Big sizes
 asserts(1591-3980) load 478185-1.html
 load 478504.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
