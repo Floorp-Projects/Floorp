@@ -8,5 +8,5 @@ license = "MPL-2.0"
 [dependencies]
 libc = "^0.2.0"
 log = "0.4"
-rsdparsa = {package = "webrtc-sdp", version = "0.3.10"}
+rsdparsa = {package = "webrtc-sdp", version = "0.3.11"}
 nserror = { path = "../../../../../xpcom/rust/nserror" }
