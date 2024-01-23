@@ -9,7 +9,7 @@ use std::str::FromStr;
 fn test_sdp_parser_internal_error_unknown_address_type() {
     let error = SdpParserInternalError::UnknownAddressType("foo".to_string());
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!("{}: {}", INTERNAL_ERROR_MESSAGE_UNKNOWN_ADDRESS_TYPE, "foo")
     );
     assert!(error.source().is_none());
@@ -21,7 +21,7 @@ fn test_sdp_parser_internal_error_address_type_mismatch() {
         expected: AddressType::IpV6,
     };
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!(
             "{}: {}, {}",
             INTERNAL_ERROR_MESSAGE_ADDRESS_TYPE_MISMATCH,
@@ -35,7 +35,7 @@ fn test_sdp_parser_internal_error_address_type_mismatch() {
 #[test]
 fn test_sdp_parser_internal_error_generic() {
     let generic = SdpParserInternalError::Generic("generic message".to_string());
-    assert_eq!(format!("{}", generic), "Parsing error: generic message");
+    assert_eq!(format!("{generic}"), "Parsing error: generic message");
     assert!(generic.source().is_none());
 }
 
@@ -44,7 +44,7 @@ fn test_sdp_parser_internal_error_unsupported() {
     let unsupported =
         SdpParserInternalError::Unsupported("unsupported internal message".to_string());
     assert_eq!(
-        format!("{}", unsupported),
+        format!("{unsupported}"),
         "Unsupported parsing error: unsupported internal message"
     );
     assert!(unsupported.source().is_none());
@@ -57,10 +57,10 @@ fn test_sdp_parser_internal_error_integer() {
     assert!(integer.is_err());
     let int_err = SdpParserInternalError::Integer(integer.err().unwrap());
     assert_eq!(
-        format!("{}", int_err),
+        format!("{int_err}"),
         "Integer parsing error: invalid digit found in string"
     );
-    assert!(!int_err.source().is_none());
+    assert!(int_err.source().is_some());
 }
 
 #[test]
@@ -70,10 +70,10 @@ fn test_sdp_parser_internal_error_float() {
     assert!(float.is_err());
     let int_err = SdpParserInternalError::Float(float.err().unwrap());
     assert_eq!(
-        format!("{}", int_err),
+        format!("{int_err}"),
         "Float parsing error: invalid float literal"
     );
-    assert!(!int_err.source().is_none());
+    assert!(int_err.source().is_some());
 }
 
 #[test]
@@ -81,10 +81,10 @@ fn test_sdp_parser_internal_error_address() {
     let v = "127.0.0.500";
     let addr_err = Address::from_str(v).err().unwrap();
     assert_eq!(
-        format!("{}", addr_err),
+        format!("{addr_err}"),
         "Domain name parsing error: invalid IPv4 address"
     );
-    assert!(!addr_err.source().is_none());
+    assert!(addr_err.source().is_some());
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn test_sdp_parser_error_line() {
         line_number: 13,
     };
     assert_eq!(
-        format!("{}", line1),
+        format!("{line1}"),
         "Line error: Parsing error: test message in line(13): test line"
     );
     assert!(line1.source().is_some());
@@ -109,7 +109,7 @@ fn test_sdp_parser_error_unsupported() {
         line_number: 21,
     };
     assert_eq!(
-        format!("{}", unsupported1),
+        format!("{unsupported1}"),
         "Unsupported: Parsing error: unsupported value in line(21): unsupported line"
     );
     assert!(unsupported1.source().is_some());
@@ -122,7 +122,7 @@ fn test_sdp_parser_error_sequence() {
         line_number: 42,
     };
     assert_eq!(
-        format!("{}", sequence1),
+        format!("{sequence1}"),
         "Sequence error in line(42): sequence message"
     );
     assert!(sequence1.source().is_none());

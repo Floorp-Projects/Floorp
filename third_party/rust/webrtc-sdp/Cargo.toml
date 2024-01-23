@@ -11,7 +11,7 @@
 
 [package]
 name = "webrtc-sdp"
-version = "0.3.10"
+version = "0.3.11"
 authors = [
     "Nicolas Grunbaum <na-g+github@nostrum.com>",
     "Nils Ohlmeier <github@ohlmeier.org>",

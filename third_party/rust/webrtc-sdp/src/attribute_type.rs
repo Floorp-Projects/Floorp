@@ -221,7 +221,7 @@ impl fmt::Display for SdpAttributeCandidate {
             unknown = self
                 .unknown_extensions
                 .iter()
-                .map(|&(ref name, ref value)| format!(" {} {}", name, value))
+                .map(|(name, value)| format!(" {name} {value}"))
                 .collect::<String>()
         )
     }
@@ -308,9 +308,9 @@ pub enum SdpAttributeDtlsMessage {
 
 impl fmt::Display for SdpAttributeDtlsMessage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            SdpAttributeDtlsMessage::Client(ref msg) => format!("client {}", msg),
-            SdpAttributeDtlsMessage::Server(ref msg) => format!("server {}", msg),
+        match self {
+            SdpAttributeDtlsMessage::Client(msg) => format!("client {msg}"),
+            SdpAttributeDtlsMessage::Server(msg) => format!("server {msg}"),
         }
         .fmt(f)
     }
@@ -622,7 +622,7 @@ impl fmt::Display for SdpAttributeFmtpParameters {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(ref rtx) = self.rtx {
             // rtx
-            return write!(f, "{}", rtx);
+            return write!(f, "{rtx}");
         }
         if !self.dtmf_tones.is_empty() {
             // telephone-event
@@ -713,8 +713,7 @@ impl SdpAttributeFingerprintHashType {
             "sha-384" => Ok(Self::Sha384),
             "sha-512" => Ok(Self::Sha512),
             unknown => Err(SdpParserInternalError::Unsupported(format!(
-                "fingerprint contains an unsupported hash algorithm '{}'",
-                unknown
+                "fingerprint contains an unsupported hash algorithm '{unknown}'"
             ))),
         }
     }
@@ -786,8 +785,7 @@ impl TryFrom<(SdpAttributeFingerprintHashType, Vec<u8>)> for SdpAttributeFingerp
                 fingerprint,
             }),
             (a, b) => Err(SdpParserInternalError::Generic(format!(
-                "Hash algoritm expects {} fingerprint bytes not {}",
-                a, b
+                "Hash algoritm expects {a} fingerprint bytes not {b}",
             ))),
         }
     }
@@ -802,7 +800,7 @@ impl fmt::Display for SdpAttributeFingerprint {
             fp = self
                 .fingerprint
                 .iter()
-                .map(|byte| format!("{:02X}", byte))
+                .map(|byte| format!("{byte:02X}"))
                 .collect::<Vec<String>>()
                 .join(":")
         )
@@ -846,11 +844,11 @@ impl fmt::Display for SdpAttributeImageAttrXyRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SdpAttributeImageAttrXyRange::Range(ref min, ref max, ref step_opt) => {
-                write!(f, "[{}:", min)?;
+                write!(f, "[{min}:")?;
                 if step_opt.is_some() {
                     write!(f, "{}:", step_opt.unwrap())?;
                 }
-                write!(f, "{}]", max)
+                write!(f, "{max}]")
             }
             SdpAttributeImageAttrXyRange::DiscreteValues(ref values) => {
                 write!(f, "{}", imageattr_discrete_value_list_to_string(values))
@@ -868,9 +866,9 @@ pub enum SdpAttributeImageAttrSRange {
 
 impl fmt::Display for SdpAttributeImageAttrSRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            SdpAttributeImageAttrSRange::Range(ref min, ref max) => write!(f, "[{}-{}]", min, max),
-            SdpAttributeImageAttrSRange::DiscreteValues(ref values) => {
+        match self {
+            SdpAttributeImageAttrSRange::Range(min, max) => write!(f, "[{min}-{max}]"),
+            SdpAttributeImageAttrSRange::DiscreteValues(values) => {
                 write!(f, "{}", imageattr_discrete_value_list_to_string(values))
             }
         }
@@ -1110,7 +1108,7 @@ impl fmt::Display for SdpAttributeRid {
             .as_str()
             {
                 "" => "".to_string(),
-                x => format!(" {}", x),
+                x => format!(" {x}"),
             }
         )
     }
@@ -1195,7 +1193,7 @@ impl SdpAttributeSsrc {
     }
 
     fn set_attribute(&mut self, a: &str) {
-        if a.find(':') == None {
+        if a.find(':').is_none() {
             self.attribute = Some(a.to_string());
         } else {
             let v: Vec<&str> = a.splitn(2, ':').collect();
@@ -1415,8 +1413,7 @@ impl FromStr for SdpAttribute {
                 | "ice-mismatch" | "inactive" | "recvonly" | "rtcp-mux" | "rtcp-mux-only"
                 | "rtcp-rsize" | "sendonly" | "sendrecv" => {
                     return Err(SdpParserInternalError::Generic(format!(
-                        "{} attribute is not allowed to have a value",
-                        name
+                        "{name} attribute is not allowed to have a value",
                     )));
                 }
                 _ => (),
@@ -1466,8 +1463,7 @@ impl FromStr for SdpAttribute {
             "simulcast" => parse_simulcast(val),
             "ssrc" => parse_ssrc(val),
             _ => Err(SdpParserInternalError::Unsupported(format!(
-                "Unknown attribute type {}",
-                name
+                "Unknown attribute type {name}",
             ))),
         }
     }
@@ -1710,8 +1706,7 @@ fn parse_single_direction(to_parse: &str) -> Result<SdpSingleDirection, SdpParse
         "send" => Ok(SdpSingleDirection::Send),
         "recv" => Ok(SdpSingleDirection::Recv),
         x => Err(SdpParserInternalError::Generic(format!(
-            "Unknown direction description found: '{:}'",
-            x
+            "Unknown direction description found: '{x:}'"
         ))),
     }
 }
@@ -1736,8 +1731,7 @@ fn parse_ssrc_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErr
             "SIM" => SdpSsrcGroupSemantic::Sim,
             unknown => {
                 return Err(SdpParserInternalError::Unsupported(format!(
-                    "Unknown ssrc semantic '{:?}' found",
-                    unknown
+                    "Unknown ssrc semantic '{unknown:?}' found"
                 )));
             }
         },
@@ -1773,8 +1767,7 @@ fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
     let port = to_parse.parse()?;
     if port > 65535 {
         return Err(SdpParserInternalError::Generic(format!(
-            "Sctpport port {} can only be a bit 16bit number",
-            port
+            "Sctpport port {port} can only be a bit 16bit number"
         )));
     }
     Ok(SdpAttribute::SctpPort(port))
@@ -1948,8 +1941,7 @@ fn parse_dtls_message(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalE
         "server" => SdpAttributeDtlsMessage::Server(tokens[1].to_string()),
         e => {
             return Err(SdpParserInternalError::Generic(format!(
-                "dtls-message has unknown role token '{}'",
-                e
+                "dtls-message has unknown role token '{e}'"
             )));
         }
     }))
@@ -1991,7 +1983,7 @@ fn parse_extmap(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> 
     }
     let id: u16;
     let mut direction: Option<SdpAttributeDirection> = None;
-    if tokens[0].find('/') == None {
+    if tokens[0].find('/').is_none() {
         id = tokens[0].parse::<u16>()?;
     } else {
         let id_dir: Vec<&str> = tokens[0].splitn(2, '/').collect();
@@ -2121,8 +2113,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                             0 => Ok(false),
                             1 => Ok(true),
                             _ => Err(SdpParserInternalError::Generic(format!(
-                                "The fmtp parameter '{:}' must be 0 or 1",
-                                param_name
+                                "The fmtp parameter '{param_name:}' must be 0 or 1"
                             ))),
                         }
                     };
@@ -2300,8 +2291,7 @@ fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
             "BUNDLE" => SdpAttributeGroupSemantic::Bundle,
             unknown => {
                 return Err(SdpParserInternalError::Unsupported(format!(
-                    "Unknown group semantic '{:?}' found",
-                    unknown
+                    "Unknown group semantic '{unknown:?}' found",
                 )));
             }
         },
@@ -3052,8 +3042,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
             "transport-cc" => SdpAttributeRtcpFbType::TransCc,
             _ => {
                 return Err(SdpParserInternalError::Unsupported(format!(
-                    "Unknown rtcpfb feedback type: {:?}",
-                    x
+                    "Unknown rtcpfb feedback type: {x:?}"
                 )));
             }
         },
@@ -3071,8 +3060,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                 "rpsi" | "app" => (*x).to_string(),
                 _ => {
                     return Err(SdpParserInternalError::Unsupported(format!(
-                        "Unknown rtcpfb ack parameter: {:?}",
-                        x
+                        "Unknown rtcpfb ack parameter: {x:?}"
                     )));
                 }
             },
@@ -3087,8 +3075,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                 "fir" | "tmmbr" | "tstr" | "vbcm" => (*x).to_string(),
                 _ => {
                     return Err(SdpParserInternalError::Unsupported(format!(
-                        "Unknown rtcpfb ccm parameter: {:?}",
-                        x
+                        "Unknown rtcpfb ccm parameter: {x:?}"
                     )));
                 }
             },
@@ -3099,8 +3086,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                 "sli" | "pli" | "rpsi" | "app" => (*x).to_string(),
                 _ => {
                     return Err(SdpParserInternalError::Unsupported(format!(
-                        "Unknown rtcpfb nack parameter: {:?}",
-                        x
+                        "Unknown rtcpfb nack parameter: {x:?}"
                     )));
                 }
             },
@@ -3111,8 +3097,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                 _ if x.parse::<u32>().is_ok() => (*x).to_string(),
                 _ => {
                     return Err(SdpParserInternalError::Generic(format!(
-                        "Unknown rtcpfb trr-int parameter: {:?}",
-                        x
+                        "Unknown rtcpfb trr-int parameter: {x:?}"
                     )));
                 }
             },
@@ -3125,8 +3110,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
         SdpAttributeRtcpFbType::Remb | SdpAttributeRtcpFbType::TransCc => match tokens.get(2) {
             Some(x) => {
                 return Err(SdpParserInternalError::Unsupported(format!(
-                    "Unknown rtcpfb {} parameter: {:?}",
-                    feedback_type, x
+                    "Unknown rtcpfb {feedback_type} parameter: {x:?}"
                 )));
             }
             None => "".to_string(),
@@ -3213,8 +3197,7 @@ fn parse_simulcast_version_list(
                 descriptor_versionlist_pair.next().unwrap(),
             )),
             descriptor => Err(SdpParserInternalError::Generic(format!(
-                "Simulcast attribute has unknown list descriptor '{:?}'",
-                descriptor
+                "Simulcast attribute has unknown list descriptor '{descriptor:?}'"
             ))),
         }
     } else {
@@ -3249,7 +3232,7 @@ fn parse_simulcast_version_list(
 // ; rid-id defined in [I-D.ietf-mmusic-rid]
 fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     // TODO: Bug 1225877: Stop accepting all kinds of whitespace here, and only accept SP
-    let mut tokens = to_parse.trim().split_whitespace();
+    let mut tokens = to_parse.split_whitespace();
     let first_direction = match tokens.next() {
         Some(x) => parse_single_direction(x)?,
         None => {

@@ -58,7 +58,7 @@ impl fmt::Display for SdpBandwidth {
             SdpBandwidth::Tias(ref x) => ("TIAS", x),
             SdpBandwidth::Unknown(ref tp, ref x) => (&tp[..], x),
         };
-        write!(f, "{tp}:{val}", tp = tp_string, val = value)
+        write!(f, "{tp_string}:{value}")
     }
 }
 
@@ -292,8 +292,7 @@ impl SdpSession {
     pub fn add_attribute(&mut self, a: SdpAttribute) -> Result<(), SdpParserInternalError> {
         if !a.allowed_at_session_level() {
             return Err(SdpParserInternalError::Generic(format!(
-                "{} not allowed at session level",
-                a
+                "{a} not allowed at session level"
             )));
         };
         self.attribute.push(a);
@@ -312,7 +311,7 @@ impl SdpSession {
                     let _line_number = line.line_number;
                     self.add_attribute(a).map_err(|e: SdpParserInternalError| {
                         SdpParserError::Sequence {
-                            message: format!("{}", e),
+                            message: format!("{e}"),
                             line_number: _line_number,
                         }
                     })?
@@ -408,8 +407,7 @@ fn parse_version(value: &str) -> Result<SdpType, SdpParserInternalError> {
     let ver = value.parse::<u64>()?;
     if ver != 0 {
         return Err(SdpParserInternalError::Generic(format!(
-            "version type contains unsupported value {}",
-            ver
+            "version type contains unsupported value {ver}"
         )));
     };
     trace!("version: {}", ver);
@@ -493,7 +491,7 @@ fn parse_connection(value: &str) -> Result<SdpType, SdpParserInternalError> {
     let mut ttl = None;
     let mut amount = None;
     let mut addr_token = cv[2];
-    if addr_token.find('/') != None {
+    if addr_token.find('/').is_some() {
         let addr_tokens: Vec<&str> = addr_token.split('/').collect();
         if addr_tokens.len() >= 3 {
             amount = Some(addr_tokens[2].parse::<u32>()?);
@@ -544,7 +542,7 @@ fn parse_timing(value: &str) -> Result<SdpType, SdpParserInternalError> {
 }
 
 pub fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserError> {
-    if line.find('=') == None {
+    if line.find('=').is_none() {
         return Err(SdpParserError::Line {
             error: SdpParserInternalError::Generic("missing = character in line".to_string()),
             line: line.to_string(),
@@ -605,37 +603,30 @@ pub fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpPars
         "b" => parse_bandwidth(line_value),
         "c" => parse_connection(line_value),
         "e" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type email: {}",
-            line_value
+            "unsupported type email: {line_value}"
         ))),
         "i" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type information: {}",
-            line_value
+            "unsupported type information: {line_value}"
         ))),
         "k" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported insecure key exchange: {}",
-            line_value
+            "unsupported insecure key exchange: {line_value}"
         ))),
         "m" => parse_media(line_value),
         "o" => parse_origin(line_value),
         "p" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type phone: {}",
-            line_value
+            "unsupported type phone: {line_value}"
         ))),
         "r" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type repeat: {}",
-            line_value
+            "unsupported type repeat: {line_value}"
         ))),
         "s" => parse_session(untrimmed_line_value),
         "t" => parse_timing(line_value),
         "u" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type uri: {}",
-            line_value
+            "unsupported type uri: {line_value}"
         ))),
         "v" => parse_version(line_value),
         "z" => Err(SdpParserInternalError::Generic(format!(
-            "unsupported type zone: {}",
-            line_value
+            "unsupported type zone: {line_value}"
         ))),
         _ => Err(SdpParserInternalError::Generic(
             "unknown sdp type".to_string(),
@@ -749,7 +740,7 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
             }
         }
 
-        if let Some(&SdpAttribute::Simulcast(ref simulcast)) =
+        if let Some(SdpAttribute::Simulcast(simulcast)) =
             msection.get_attribute(SdpAttributeType::Simulcast)
         {
             let check_defined_rids =

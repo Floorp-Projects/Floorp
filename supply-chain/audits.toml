@@ -4286,6 +4286,11 @@ who = "Byron Campen <docfaraday@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.3.9 -> 0.3.10"
 
+[[audits.webrtc-sdp]]
+who = "Nicolas Grunbaum <ngrunbaum@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.10 -> 0.3.11"
+
 [[audits.weedle2]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"

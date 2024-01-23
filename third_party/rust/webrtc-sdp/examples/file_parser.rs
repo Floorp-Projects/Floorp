@@ -25,7 +25,7 @@ fn main() {
     let path = Path::new(filename.as_str());
     let display = path.display();
 
-    let mut file = match File::open(&path) {
+    let mut file = match File::open(path) {
         Err(why) => panic!("Failed to open {}: {}", display, why),
         Ok(file) => file,
     };
@@ -61,7 +61,7 @@ fn main() {
     let res = webrtc_sdp::parse_sdp(&s, true);
     match res {
         Err(why) => panic!("Failed to parse SDP with error: {}", why),
-        Ok(sdp) => println!("Parsed SDP structure:\n{:#?}", sdp),
+        Ok(sdp) => println!("Parsed SDP structure:\n{sdp:#?}"),
     }
 
     if expect_failure {

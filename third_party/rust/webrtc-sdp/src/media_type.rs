@@ -196,8 +196,7 @@ impl SdpMedia {
     pub fn add_attribute(&mut self, attr: SdpAttribute) -> Result<(), SdpParserInternalError> {
         if !attr.allowed_at_media_level() {
             return Err(SdpParserInternalError::Generic(format!(
-                "{} not allowed at media level",
-                attr
+                "{attr} not allowed at media level"
             )));
         }
         self.attribute.push(attr);
@@ -318,8 +317,7 @@ fn parse_media_token(value: &str) -> Result<SdpMediaValue, SdpParserInternalErro
         "application" => SdpMediaValue::Application,
         _ => {
             return Err(SdpParserInternalError::Unsupported(format!(
-                "unsupported media value: {}",
-                value
+                "unsupported media value: {value}"
             )));
         }
     })
@@ -340,8 +338,7 @@ fn parse_protocol_token(value: &str) -> Result<SdpProtocolValue, SdpParserIntern
         "TCP/DTLS/SCTP" => SdpProtocolValue::TcpDtlsSctp,
         _ => {
             return Err(SdpParserInternalError::Unsupported(format!(
-                "unsupported protocol value: {}",
-                value
+                "unsupported protocol value: {value}"
             )));
         }
     })
@@ -380,15 +377,11 @@ pub fn parse_media(value: &str) -> Result<SdpType, SdpParserInternalError> {
             let mut fmt_vec: Vec<u32> = vec![];
             for num in fmt_slice {
                 let fmt_num = num.parse::<u32>()?;
-                match fmt_num {
-                    0  |  // PCMU
-                    8  |  // PCMA
-                    9  |  // G722
-                    13 |  // Comfort Noise
-                    35 ..= 63 | 96 ..= 127 => (),  // dynamic range
-                    _ => return Err(SdpParserInternalError::Generic(
-                          "format number in media line is out of range".to_string()))
-                };
+                if matches!(fmt_num, 1 | 2 | 19 | 64..=95 | 128 .. ) {
+                    return Err(SdpParserInternalError::Generic(
+                        "format number in media line is out of range".to_string(),
+                    ));
+                }
                 fmt_vec.push(fmt_num);
             }
             SdpFormatList::Integers(fmt_vec)
@@ -459,7 +452,7 @@ pub fn parse_media_vector(lines: &mut Vec<SdpLine>) -> Result<Vec<SdpMedia>, Sdp
                     _ => sdp_media.add_attribute(a),
                 }
                 .map_err(|e: SdpParserInternalError| SdpParserError::Sequence {
-                    message: format!("{}", e),
+                    message: format!("{e}"),
                     line_number: _line_number,
                 })?
             }

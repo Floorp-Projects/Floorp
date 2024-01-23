@@ -1,4 +1,6 @@
 # Changelog
+## [0.3.11] - 2024-01-17
+- Permit a wider set of payload type numbers
 ## [0.3.10] - 2023-01-05
 - Permit inconsistent simulcast directions
 ## [0.3.9] - 2022-01-12

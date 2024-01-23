@@ -9,8 +9,8 @@ use std::str::FromStr;
 
 pub fn ip_address_to_string(addr: IpAddr) -> String {
     match addr {
-        IpAddr::V4(ipv4) => format!("IN IP4 {}", ipv4),
-        IpAddr::V6(ipv6) => format!("IN IP6 {}", ipv6),
+        IpAddr::V4(ipv4) => format!("IN IP4 {ipv4}"),
+        IpAddr::V6(ipv6) => format!("IN IP6 {ipv6}"),
     }
 }
 
