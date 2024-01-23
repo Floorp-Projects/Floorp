@@ -1196,8 +1196,7 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
       scrolledArea, ReflowChildFlags::Default);
 }
 
-nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
-    gfxContext* aRenderingContext) {
+nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() {
   const bool isVerticalWM = GetWritingMode().IsVertical();
   nsScrollbarFrame* inlineEndScrollbarBox =
       isVerticalWM ? mHScrollbarBox : mVScrollbarBox;
@@ -1231,7 +1230,6 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
     return 0;
   }
 
-  // No need to worry about reflow depth here since it's just for scrollbars.
   nsSize scrollbarPrefSize = inlineEndScrollbarBox->ScrollbarMinSize();
   const nscoord scrollbarSize =
       isVerticalWM ? scrollbarPrefSize.height : scrollbarPrefSize.width;
@@ -1268,7 +1266,7 @@ nscoord nsHTMLScrollFrame::GetMinISize(gfxContext* aRenderingContext) {
   }();
 
   DISPLAY_MIN_INLINE_SIZE(this, result);
-  return result + IntrinsicScrollbarGutterSizeAtInlineEdges(aRenderingContext);
+  return result + IntrinsicScrollbarGutterSizeAtInlineEdges();
 }
 
 /* virtual */
@@ -1278,8 +1276,8 @@ nscoord nsHTMLScrollFrame::GetPrefISize(gfxContext* aRenderingContext) {
                        ? *containISize
                        : mScrolledFrame->GetPrefISize(aRenderingContext);
   DISPLAY_PREF_INLINE_SIZE(this, result);
-  return NSCoordSaturatingAdd(
-      result, IntrinsicScrollbarGutterSizeAtInlineEdges(aRenderingContext));
+  return NSCoordSaturatingAdd(result,
+                              IntrinsicScrollbarGutterSizeAtInlineEdges());
 }
 
 // When we have perspective set on the outer scroll frame, and transformed
