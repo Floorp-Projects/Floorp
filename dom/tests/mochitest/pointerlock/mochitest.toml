@@ -12,6 +12,7 @@ tags = "fullscreen"
 skip-if = [
   "os == 'android'", # Bug 1612553
   "display == 'wayland' && os_version == '22.04'", # Bug 1857057
+  "!debug && !asan && !tsan && !ccov", # Bug 1833142
 ]
 support-files = [
   "file_pointerlock-api.html",
