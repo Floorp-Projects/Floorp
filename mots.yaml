@@ -2302,12 +2302,13 @@ modules:
       components:
         - Various
       url: 'https://wiki.mozilla.org/Firefox/firefox-dev, #nodejs on slack'
+      peers_emeritus:
+        - Kate Hudson
     owners:
       - *dmosedale
     peers:
       - *standard8
       - *dcoates
-      - *k88hudson
       - *ed
       - *mossop
     machine_name: core_nodejs_usage_tools_and_style
