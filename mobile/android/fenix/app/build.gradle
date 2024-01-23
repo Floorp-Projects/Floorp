@@ -82,6 +82,8 @@ android {
                 "targetActivity": targetActivity,
                 "deepLinkScheme": deepLinkSchemeValue
         ]
+
+        buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", getSupportedLocales()
     }
 
     def releaseTemplate = {
@@ -488,7 +490,6 @@ android.applicationVariants.configureEach { variant ->
     } else {
         buildConfigField "boolean", "LEAKCANARY", "false"
     }
-
 }
 
 // Generate Kotlin code for the Fenix Glean metrics.
@@ -819,25 +820,6 @@ tasks.register('printVariants') {
     }
 }
 
-tasks.register('buildTranslationArray') {
-    // This isn't running as a task, instead the array is build when the gradle file is parsed.
-    // https://github.com/mozilla-mobile/fenix/issues/14175
-    def foundLocales = new StringBuilder()
-    foundLocales.append("new String[]{")
-
-    fileTree("src/main/res").visit { FileVisitDetails details ->
-        if (details.file.path.endsWith("${File.separator}strings.xml")) {
-            def languageCode = details.file.parent.tokenize(File.separator).last().replaceAll('values-', '').replaceAll('-r', '-')
-            languageCode = (languageCode == "values") ? "en-US" : languageCode
-            foundLocales.append("\"").append(languageCode).append("\"").append(",")
-        }
-    }
-
-    foundLocales.append("}")
-    def foundLocalesString = foundLocales.toString().replaceAll(',}', '}')
-    android.defaultConfig.buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", foundLocalesString
-}
-
 afterEvaluate {
 
     // Format test output. Ported from AC #2401
@@ -902,6 +884,25 @@ android.applicationVariants.configureEach { variant ->
         apks = variant.outputs.collect { output -> output.outputFile.name }
         dependsOn "package${variant.name.capitalize()}"
     }
+}
+
+def getSupportedLocales() {
+    // This isn't running as a task, instead the array is build when the gradle file is parsed.
+    // https://github.com/mozilla-mobile/fenix/issues/14175
+    def foundLocales = new StringBuilder()
+    foundLocales.append("new String[]{")
+
+    fileTree("src/main/res").visit { FileVisitDetails details ->
+        if (details.file.path.endsWith("${File.separator}strings.xml")) {
+            def languageCode = details.file.parent.tokenize(File.separator).last().replaceAll('values-', '').replaceAll('-r', '-')
+            languageCode = (languageCode == "values") ? "en-US" : languageCode
+            foundLocales.append("\"").append(languageCode).append("\"").append(",")
+        }
+    }
+
+    foundLocales.append("}")
+    def foundLocalesString = foundLocales.toString().replaceAll(',}', '}')
+    return foundLocalesString
 }
 
 // Enable expiration by major version.
