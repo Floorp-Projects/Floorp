@@ -166,10 +166,9 @@ JSObject* XrayAwareCalleeGlobal(JSObject* fun);
 void TraceXPCGlobal(JSTracer* trc, JSObject* obj);
 
 /**
- * Creates a new global object using the given aCOMObj as the global
- * object. The object will be set up according to the flags (defined
- * below). If you do not pass INIT_JS_STANDARD_CLASSES, then aCOMObj
- * must implement nsIXPCScriptable so it can resolve the standard
+ * Creates a new global object using the given aCOMObj as the global object.
+ * The object will be set up according to the flags (defined below).
+ * aCOMObj must implement nsIXPCScriptable so it can resolve the standard
  * classes when asked by the JS engine.
  *
  * @param aJSContext the context to use while creating the global object.
@@ -186,9 +185,8 @@ nsresult InitClassesWithNewWrappedGlobal(
     JS::MutableHandle<JSObject*> aNewGlobal);
 
 enum InitClassesFlag {
-  INIT_JS_STANDARD_CLASSES = 1 << 0,
-  DONT_FIRE_ONNEWGLOBALHOOK = 1 << 1,
-  OMIT_COMPONENTS_OBJECT = 1 << 2,
+  DONT_FIRE_ONNEWGLOBALHOOK = 1 << 0,
+  OMIT_COMPONENTS_OBJECT = 1 << 1,
 };
 
 } /* namespace xpc */

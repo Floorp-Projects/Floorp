@@ -1428,7 +1428,6 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   static nsresult WrapNewGlobal(JSContext* cx, xpcObjectHelper& nativeHelper,
                                 nsIPrincipal* principal,
-                                bool initStandardClasses,
                                 JS::RealmOptions& aOptions,
                                 XPCWrappedNative** wrappedGlobal);
 

@@ -154,7 +154,6 @@ static nsresult FinishCreate(JSContext* cx, XPCWrappedNativeScope* Scope,
 nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
                                          xpcObjectHelper& nativeHelper,
                                          nsIPrincipal* principal,
-                                         bool initStandardClasses,
                                          JS::RealmOptions& aOptions,
                                          XPCWrappedNative** wrappedGlobal) {
   nsCOMPtr<nsISupports> identity = do_QueryInterface(nativeHelper.Object());
@@ -193,11 +192,6 @@ nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
   // Immediately enter the global's realm, so that everything else we
   // create ends up there.
   JSAutoRealm ar(cx, global);
-
-  // If requested, initialize the standard classes on the global.
-  if (initStandardClasses && !JS::InitRealmStandardClasses(cx)) {
-    return NS_ERROR_FAILURE;
-  }
 
   // Make a proto.
   XPCWrappedNativeProto* proto = XPCWrappedNativeProto::GetNewOrUsed(
