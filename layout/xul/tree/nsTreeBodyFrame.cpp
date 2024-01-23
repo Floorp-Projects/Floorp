@@ -579,10 +579,9 @@ Maybe<CSSIntRegion> nsTreeBodyFrame::GetSelectionRegion() {
     return Nothing();
   }
 
-  RefPtr<nsPresContext> presContext = PresContext();
   nsIntRect rect = mRect.ToOutsidePixels(AppUnitsPerCSSPixel());
 
-  nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
+  nsIFrame* rootFrame = PresShell()->GetRootFrame();
   nsPoint origin = GetOffsetTo(rootFrame);
 
   CSSIntRegion region;

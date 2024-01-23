@@ -630,8 +630,7 @@ nsTableCellMap* nsTableFrame::GetCellMap() const {
 
 nsTableColGroupFrame* nsTableFrame::CreateSyntheticColGroupFrame() {
   nsIContent* colGroupContent = GetContent();
-  nsPresContext* presContext = PresContext();
-  mozilla::PresShell* presShell = presContext->PresShell();
+  mozilla::PresShell* presShell = PresShell();
 
   RefPtr<ComputedStyle> colGroupStyle;
   colGroupStyle = presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(

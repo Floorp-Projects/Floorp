@@ -546,9 +546,8 @@ void ScrollAnchorContainer::ApplyAdjustments() {
           : ScrollOrigin::Relative);
   mApplyingAnchorAdjustment = false;
 
-  nsPresContext* pc = Frame()->PresContext();
   if (Frame()->mIsRoot) {
-    pc->PresShell()->RootScrollFrameAdjusted(physicalAdjustment.y);
+    Frame()->PresShell()->RootScrollFrameAdjusted(physicalAdjustment.y);
   }
 
   // The anchor position may not be in the same relative position after
