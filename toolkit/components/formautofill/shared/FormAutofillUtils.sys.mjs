@@ -12,7 +12,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+  AddressMetaData: "resource://gre/modules/shared/AddressMetaData.sys.mjs",
+  AddressMetaDataExtension:
+    "resource://gre/modules/shared/AddressMetaDataExtension.sys.mjs",
 });
+
 ChromeUtils.defineLazyGetter(
   lazy,
   "l10n",
@@ -24,10 +28,6 @@ ChromeUtils.defineLazyGetter(
 );
 
 export let FormAutofillUtils;
-
-const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
-const ADDRESS_REFERENCES = "addressReferences.js";
-const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
@@ -90,40 +90,23 @@ export let AddressDataLoader = {
   },
 
   /**
-   * Load address data and extension script into a sandbox from different paths.
+   * Load address meta data and extension into one object.
    *
-   * @param   {string} path
-   *          The path for address data and extension script. It could be root of the address
-   *          metadata folder(addressmetadata/) or under specific country(addressmetadata/TW/).
    * @returns {object}
-   *          A sandbox that contains address data object with properties from extension.
+   *          An object containing address data object with properties from extension.
    */
-  _loadScripts(path) {
-    let sandbox = {};
-    let extSandbox = {};
+  _loadAddressMetaData() {
+    const addressMetaData = lazy.AddressMetaData;
 
-    try {
-      sandbox = FormAutofillUtils.loadDataFromScript(path + ADDRESS_REFERENCES);
-      extSandbox = FormAutofillUtils.loadDataFromScript(
-        path + ADDRESS_REFERENCES_EXT
-      );
-    } catch (e) {
-      // Will return only address references if extension loading failed or empty sandbox if
-      // address references loading failed.
-      return sandbox;
-    }
-
-    if (extSandbox.addressDataExt) {
-      for (let key in extSandbox.addressDataExt) {
-        let addressDataForKey = sandbox.addressData[key];
-        if (!addressDataForKey) {
-          addressDataForKey = sandbox.addressData[key] = {};
-        }
-
-        Object.assign(addressDataForKey, extSandbox.addressDataExt[key]);
+    for (const key in lazy.AddressMetaDataExtension) {
+      let addressDataForKey = addressMetaData[key];
+      if (!addressDataForKey) {
+        addressDataForKey = addressMetaData[key] = {};
       }
+
+      Object.assign(addressDataForKey, lazy.AddressMetaDataExtension[key]);
     }
-    return sandbox;
+    return addressMetaData;
   },
 
   /**
@@ -177,7 +160,7 @@ export let AddressDataLoader = {
   _loadData(country, level1 = null) {
     // Load the addressData if needed
     if (!this._dataLoaded.country) {
-      this._addressData = this._loadScripts(ADDRESS_METADATA_PATH).addressData;
+      this._addressData = this._loadAddressMetaData();
       this._dataLoaded.country = true;
     }
     if (!level1) {
@@ -186,10 +169,7 @@ export let AddressDataLoader = {
     // If level1 is set, load addressReferences under country folder with specific
     // country/level 1 for level 2 information.
     if (!this._dataLoaded.level1.has(country)) {
-      Object.assign(
-        this._addressData,
-        this._loadScripts(`${ADDRESS_METADATA_PATH}${country}/`).addressData
-      );
+      Object.assign(this._addressData, this._loadAddressMetaData());
       this._dataLoaded.level1.add(country);
     }
     return this._parse(this._addressData[`data/${country}/${level1}`]);
