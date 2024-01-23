@@ -200,6 +200,12 @@ class ModuleLoaderBase : public nsISupports {
 
   virtual ~ModuleLoaderBase();
 
+#ifdef DEBUG
+  const ScriptLoadRequestList& DynamicImportRequests() const {
+    return mDynamicImportRequests;
+  }
+#endif
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
@@ -233,6 +239,9 @@ class ModuleLoaderBase : public nsISupports {
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
       JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) = 0;
+
+  // Called when dynamic import started successfully.
+  virtual void OnDynamicImportStarted(ModuleLoadRequest* aRequest) {}
 
   // Check whether we can load a module. May return false with |aRvOut| set to
   // NS_OK to abort load without returning an error.
@@ -298,7 +307,7 @@ class ModuleLoaderBase : public nsISupports {
   nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest,
                                    JS::ModuleErrorBehaviour errorBehaviour);
 
-  void StartDynamicImport(ModuleLoadRequest* aRequest);
+  nsresult StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
   void CancelAndClearDynamicImports();
 

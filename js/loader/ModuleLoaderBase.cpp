@@ -335,7 +335,11 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
     return false;
   }
 
-  loader->StartDynamicImport(request);
+  nsresult rv = loader->StartDynamicImport(request);
+  if (NS_SUCCEEDED(rv)) {
+    loader->OnDynamicImportStarted(request);
+  }
+
   return true;
 }
 
@@ -898,7 +902,7 @@ void ModuleLoadRequest::ChildLoadComplete(bool aSuccess) {
   }
 }
 
-void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
+nsresult ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
 
   LOG(("ScriptLoadRequest (%p): Start dynamic import", aRequest));
@@ -910,6 +914,7 @@ void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
     mLoader->ReportErrorToConsole(aRequest, rv);
     FinishDynamicImportAndReject(aRequest, rv);
   }
+  return rv;
 }
 
 void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
