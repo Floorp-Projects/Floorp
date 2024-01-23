@@ -10189,19 +10189,21 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   // This is now called FinishAndStoreOverflow() instead of
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
-  // If the overflow area width or height is nscoord_MAX, then a
-  // saturating union may have encounted an overflow, so the overflow may not
-  // contain the frame border-box. Don't warn in that case.
+  // If the overflow area width or height is nscoord_MAX, then a saturating
+  // union may have encountered an overflow, so the overflow may not contain the
+  // frame border-box. Don't warn in that case.
   // Don't warn for SVG either, since SVG doesn't need the overflow area
   // to contain the frame bounds.
+#ifdef DEBUG
   for (const auto otype : AllOverflowTypes()) {
-    DebugOnly<nsRect*> r = &aOverflowAreas.Overflow(otype);
+    const nsRect& r = aOverflowAreas.Overflow(otype);
     NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
-                     r->width == nscoord_MAX || r->height == nscoord_MAX ||
+                     r.width == nscoord_MAX || r.height == nscoord_MAX ||
                      HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
-                     r->Contains(nsRect(nsPoint(0, 0), aNewSize)),
+                     r.Contains(nsRect(nsPoint(), aNewSize)),
                  "Computed overflow area must contain frame bounds");
   }
+#endif
 
   // Overflow area must always include the frame's top-left and bottom-right,
   // even if the frame rect is empty (so we can scroll to those positions).
