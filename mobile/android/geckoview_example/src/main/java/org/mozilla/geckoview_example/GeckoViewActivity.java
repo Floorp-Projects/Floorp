@@ -1326,23 +1326,8 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.print_page:
         printPage(session);
         break;
-      case R.id.request_shopping_analysis:
-        requestAnalysis(session, mCurrentUri);
-        break;
-      case R.id.request_shopping_recommendations:
-        requestRecommendations(session, mCurrentUri);
-        break;
-      case R.id.create_shopping_analysis:
-        requestCreateAnalysis(session, mCurrentUri);
-        break;
-      case R.id.get_shopping_analysis_status:
-        requestAnalysisCreationStatus(session, mCurrentUri);
-        break;
-      case R.id.poll_shopping_analysis_status:
-        pollForAnalysisCompleted(session, mCurrentUri);
-        break;
-      case R.id.report_back_in_stock:
-        reportBackInStock(session, mCurrentUri);
+      case R.id.shopping_actions:
+        shoppingActions(session, mCurrentUri);
         break;
       case R.id.translate:
         translate(session);
@@ -2438,11 +2423,101 @@ public class GeckoViewActivity extends AppCompatActivity
     return null;
   }
 
+  public void shoppingActions(@NonNull final GeckoSession session, @NonNull final String url) {
+    Spinner actionSelect = new Spinner(this);
+    List<String> actions =
+        new ArrayList<>(
+            Arrays.asList(
+                new String[] {
+                  "Get Analysis",
+                  "Get Recommendations",
+                  "Create Analysis",
+                  "Get Analysis Status",
+                  "Poll Until Analysis Completed",
+                  "Report Back in Stock",
+                }));
+    ArrayAdapter<String> actionData =
+        new ArrayAdapter<String>(
+            this.getBaseContext(), android.R.layout.simple_spinner_item, actions);
+    actionSelect.setAdapter(actionData);
+
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle(R.string.shopping_actions);
+    builder.setView(
+        shoppingLayout(
+            actionSelect, R.string.shopping_manage_actions, R.string.shopping_display_log));
+    builder.setPositiveButton(
+        R.string.shopping_query,
+        (dialog, which) -> {
+          final String action = (String) actionSelect.getSelectedItem();
+          switch (action) {
+            case "Get Analysis":
+              requestAnalysis(session, url);
+              break;
+            case "Get Recommendations":
+              requestRecommendations(session, url);
+              break;
+            case "Create Analysis":
+              requestCreateAnalysis(session, url);
+              break;
+            case "Get Analysis Status":
+              requestAnalysisCreationStatus(session, url);
+              break;
+            case "Poll Until Analysis Completed":
+              pollForAnalysisCompleted(session, url);
+              break;
+            case "Report Back in Stock":
+              reportBackInStock(session, url);
+              break;
+            default:
+              throw new RuntimeException("Unknown action: " + action);
+          }
+        });
+    builder.setNegativeButton(
+        R.string.cancel,
+        (dialog, which) -> {
+          // Nothing to do
+        });
+
+    builder.show();
+  }
+
+  private RelativeLayout shoppingLayout(Spinner spinnerA, int labelA, int labelInfo) {
+    TextView fromLangLabel = new TextView(this);
+    fromLangLabel.setText(labelA);
+    LinearLayout action = new LinearLayout(this);
+    action.setId(View.generateViewId());
+    action.addView(fromLangLabel);
+    action.addView(spinnerA);
+    RelativeLayout.LayoutParams actionParams =
+        new RelativeLayout.LayoutParams(
+            RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+    actionParams.setMarginStart(30);
+
+    // Layout
+    RelativeLayout layout = new RelativeLayout(this);
+    layout.addView(action, actionParams);
+
+    // Hint
+    TextView info = new TextView(this);
+    if (labelInfo != -1) {
+      RelativeLayout.LayoutParams infoParams =
+          new RelativeLayout.LayoutParams(
+              RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+      infoParams.setMarginStart(30);
+      infoParams.addRule(RelativeLayout.BELOW, action.getId());
+      info.setText(labelInfo);
+      layout.addView(info, infoParams);
+    }
+
+    return layout;
+  }
+
   public void requestAnalysis(@NonNull final GeckoSession session, @NonNull final String url) {
     GeckoResult<GeckoSession.ReviewAnalysis> result = session.requestAnalysis(url);
     result.map(
         analysis -> {
-          Log.d(LOGTAG, "Requested shopping analysis: " + analysis);
+          Log.d(LOGTAG, "Shopping Action: Get analysis: " + analysis);
           return analysis;
         });
   }
@@ -2452,7 +2527,7 @@ public class GeckoViewActivity extends AppCompatActivity
     GeckoResult<String> result = session.requestCreateAnalysis(url);
     result.map(
         status -> {
-          Log.d(LOGTAG, "Started shopping analysis, status: " + status);
+          Log.d(LOGTAG, "Shopping Action: Create analysis, status: " + status);
           return status;
         });
   }
@@ -2462,29 +2537,29 @@ public class GeckoViewActivity extends AppCompatActivity
     GeckoResult<GeckoSession.AnalysisStatusResponse> result = session.requestAnalysisStatus(url);
     result.map(
         status -> {
-          Log.d(LOGTAG, "Shopping Analysis Status: " + status.status);
-          Log.d(LOGTAG, "Shopping Analysis Status Progress: " + status.progress);
+          Log.d(LOGTAG, "Shopping Action: Get analysis status: " + status.status);
+          Log.d(LOGTAG, "Shopping Action: Get analysis status Progress: " + status.progress);
           return status;
         });
   }
 
   public void pollForAnalysisCompleted(
       @NonNull final GeckoSession session, @NonNull final String url) {
-    Log.d(LOGTAG, "Start polling for shopping analysis to finish");
+    Log.d(LOGTAG, "Shopping Action: Poll until analysis completed");
     GeckoResult<String> result = session.pollForAnalysisCompleted(url);
     result.map(
         status -> {
-          Log.d(LOGTAG, "Shopping Analysis Status: " + status);
+          Log.d(LOGTAG, "Shopping Action: Get analysis status: " + status);
           return status;
         });
   }
 
   public void reportBackInStock(@NonNull final GeckoSession session, @NonNull final String url) {
-    Log.d(LOGTAG, "Report shopping product is back in stock");
+    Log.d(LOGTAG, "Shopping Action: Report back in stock");
     GeckoResult<String> result = session.reportBackInStock(url);
     result.map(
         message -> {
-          Log.d(LOGTAG, "Shopping Analysis back in stock status: " + message);
+          Log.d(LOGTAG, "Shopping Action: Back in stock status: " + message);
           return message;
         });
   }
@@ -2499,7 +2574,8 @@ public class GeckoViewActivity extends AppCompatActivity
             aids.add(recs.get(i).aid);
           }
           if (aids.size() >= 1) {
-            Log.d(LOGTAG, "Sending shopping attribution events to first AID: " + aids.get(0));
+            Log.d(
+                LOGTAG, "Shopping Action: Sending attribution events to first AID: " + aids.get(0));
             session
                 .sendClickAttributionEvent(aids.get(0))
                 .then(
@@ -2507,7 +2583,8 @@ public class GeckoViewActivity extends AppCompatActivity
                       @Override
                       public GeckoResult<Void> onValue(final Boolean isSuccessful) {
                         Log.d(
-                            LOGTAG, "Success of shopping click attribution event: " + isSuccessful);
+                            LOGTAG,
+                            "Shopping Action: Success of click attribution event: " + isSuccessful);
                         return null;
                       }
                     });
@@ -2519,7 +2596,8 @@ public class GeckoViewActivity extends AppCompatActivity
                       public GeckoResult<Void> onValue(final Boolean isSuccessful) {
                         Log.d(
                             LOGTAG,
-                            "Success of shopping impression attribution event: " + isSuccessful);
+                            "Shopping Action: Success of impression attribution event: "
+                                + isSuccessful);
                         return null;
                       }
                     });
@@ -2531,12 +2609,13 @@ public class GeckoViewActivity extends AppCompatActivity
                       public GeckoResult<Void> onValue(final Boolean isSuccessful) {
                         Log.d(
                             LOGTAG,
-                            "Success of shopping placement attribution event: " + isSuccessful);
+                            "Shopping Action: Success of placement attribution event: "
+                                + isSuccessful);
                         return null;
                       }
                     });
           } else {
-            Log.d(LOGTAG, "No shopping recommendations. No attribution events were sent.");
+            Log.d(LOGTAG, "Shopping Action: No recommendations. No attribution events were sent.");
           }
           return recs;
         });
@@ -2553,7 +2632,6 @@ public class GeckoViewActivity extends AppCompatActivity
       }
       mTrackingProtectionPermission = getTrackingProtectionPermission(perms);
       mCurrentUri = url;
-      requestAnalysis(session, url);
     }
 
     @Override

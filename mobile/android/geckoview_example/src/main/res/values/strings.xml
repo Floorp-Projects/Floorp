@@ -63,6 +63,10 @@
     <string name="translate_manage_operations">Operations</string>
     <string name="translate_display_hint">See Logcat for State</string>
     <string name="translate_manage_action">Update</string>
+    <string name="shopping_actions">Shopping Actions</string>
+    <string name="shopping_manage_actions">Actions</string>
+    <string name="shopping_display_log">See Logcat for "Shopping Action" Results</string>
+    <string name="shopping_query">Query</string>
 
 
     # Preferences
