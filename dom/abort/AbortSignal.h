@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_AbortSignal_h
 #define mozilla_dom_AbortSignal_h
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/AbortFollower.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -47,6 +48,10 @@ class AbortSignal : public DOMEventTargetHelper,
                                                uint64_t aMilliseconds,
                                                ErrorResult& aRv);
 
+  static already_AddRefed<AbortSignal> Any(
+      GlobalObject& aGlobal,
+      const Sequence<OwningNonNull<AbortSignal>>& aSignals);
+
   void ThrowIfAborted(JSContext* aCx, ErrorResult& aRv);
 
   // AbortSignalImpl
@@ -57,8 +62,17 @@ class AbortSignal : public DOMEventTargetHelper,
 
   virtual bool IsTaskSignal() const { return false; }
 
+  bool Dependent() const;
+
  protected:
   ~AbortSignal();
+
+  void MakeDependentOn(AbortSignal* aSignal);
+
+  nsTArray<WeakPtr<AbortSignal>> mSourceSignals;
+  nsTArray<RefPtr<AbortSignal>> mDependentSignals;
+
+  bool mDependent;
 };
 
 }  // namespace mozilla::dom

@@ -12,6 +12,7 @@ interface AbortSignal : EventTarget {
   [NewObject] static AbortSignal abort(optional any reason);
   [Exposed=(Window,Worker), NewObject, Throws]
   static AbortSignal timeout([EnforceRange] unsigned long long milliseconds);
+  [NewObject] static AbortSignal _any(sequence<AbortSignal> signals);
 
   readonly attribute boolean aborted;
   readonly attribute any reason;
