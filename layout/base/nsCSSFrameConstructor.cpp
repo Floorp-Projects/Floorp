@@ -2244,7 +2244,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
 
   nsTableFrame* tableFrame =
       static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
-  nsContainerFrame* newFrame;
+  nsContainerFrame* cellFrame;
   // <mtable> is border separate in mathml.css and the MathML code doesn't
   // implement border collapse. For those users who style <mtable> with border
   // collapse, give them the default non-MathML table frames that understand
@@ -2254,35 +2254,43 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
   // frames won't understand MathML attributes and will therefore miss the
   // special handling that the MathML code does.
   if (isMathMLContent && !tableFrame->IsBorderCollapse()) {
-    newFrame = NS_NewMathMLmtdFrame(mPresShell, computedStyle, tableFrame);
+    cellFrame = NS_NewMathMLmtdFrame(mPresShell, computedStyle, tableFrame);
   } else {
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
-    newFrame = NS_NewTableCellFrame(mPresShell, computedStyle, tableFrame);
+    cellFrame = NS_NewTableCellFrame(mPresShell, computedStyle, tableFrame);
   }
 
   // Initialize the table cell frame
-  InitAndRestoreFrame(aState, content, aParentFrame, newFrame);
-  newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+  InitAndRestoreFrame(aState, content, aParentFrame, cellFrame);
+  cellFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Resolve pseudo style and initialize the body cell frame
   RefPtr<ComputedStyle> innerPseudoStyle =
       mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
           PseudoStyleType::cellContent, computedStyle);
 
-  // Create a block frame that will format the cell's content
   nsContainerFrame* cellInnerFrame;
+  nsContainerFrame* scrollFrame = nullptr;
+  bool isScrollable = false;
+  // Create a block frame that will format the cell's content
   if (isMathMLContent) {
     cellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
   } else {
+    isScrollable = innerPseudoStyle->StyleDisplay()->IsScrollableOverflow();
+    if (isScrollable) {
+      innerPseudoStyle = BeginBuildingScrollFrame(
+          aState, content, innerPseudoStyle, cellFrame,
+          PseudoStyleType::scrolledContent, false, scrollFrame);
+    }
     cellInnerFrame = NS_NewBlockFormattingContext(mPresShell, innerPseudoStyle);
   }
-
-  InitAndRestoreFrame(aState, content, newFrame, cellInnerFrame);
+  auto* parent = scrollFrame ? scrollFrame : cellFrame;
+  InitAndRestoreFrame(aState, content, parent, cellInnerFrame);
 
   nsFrameConstructorSaveState absoluteSaveState;
-  MakeTablePartAbsoluteContainingBlock(aState, absoluteSaveState, newFrame);
+  MakeTablePartAbsoluteContainingBlock(aState, absoluteSaveState, cellFrame);
 
   nsFrameConstructorSaveState floatSaveState;
   aState.MaybePushFloatContainingBlock(cellInnerFrame, floatSaveState);
@@ -2301,9 +2309,13 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
 
   cellInnerFrame->SetInitialChildList(FrameChildListID::Principal,
                                       std::move(childList));
-  SetInitialSingleChild(newFrame, cellInnerFrame);
-  aFrameList.AppendFrame(nullptr, newFrame);
-  return newFrame;
+
+  if (isScrollable) {
+    FinishBuildingScrollFrame(scrollFrame, cellInnerFrame);
+  }
+  SetInitialSingleChild(cellFrame, scrollFrame ? scrollFrame : cellInnerFrame);
+  aFrameList.AppendFrame(nullptr, cellFrame);
+  return cellFrame;
 }
 
 static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
@@ -3172,7 +3184,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   // Create the inner ::-moz-fieldset-content frame.
   nsContainerFrame* contentFrameTop;
   nsContainerFrame* contentFrame;
-  auto parent = scrollFrame ? scrollFrame : fieldsetFrame;
+  auto* parent = scrollFrame ? scrollFrame : fieldsetFrame;
   MOZ_ASSERT(fieldsetContentDisplay->DisplayOutside() ==
              StyleDisplayOutside::Block);
   switch (fieldsetContentDisplay->DisplayInside()) {

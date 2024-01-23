@@ -53,6 +53,8 @@ class nsTableCellFrame : public nsContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTableCellFrame)
 
+  nsIScrollableFrame* GetScrollTargetFrame() const final;
+
   nsTableRowFrame* GetTableRowFrame() const {
     nsIFrame* parent = GetParent();
     MOZ_ASSERT(parent && parent->IsTableRowFrame());

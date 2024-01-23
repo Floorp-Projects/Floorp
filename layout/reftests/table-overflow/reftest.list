@@ -1,4 +1,4 @@
-skip-if(ThreadSanitizer) == bug785684-x.html bug785684-ref.html
-== bug785684-y.html bug785684-ref.html
+skip-if(ThreadSanitizer) == bug785684-x.html bug785684-x-ref.html
+== bug785684-y.html bug785684-y-ref.html
 == table-caption-scroll.html table-caption-scroll-ref.html
 == table-cell-block-overflow.html table-cell-block-overflow-ref.html
