@@ -69,6 +69,10 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   void SetReady() override;
   void Cancel() override;
+
+  void SetDynamicImport(LoadedScript* aReferencingScript,
+                        JS::Handle<JSString*> aSpecifier,
+                        JS::Handle<JSObject*> aPromise);
   void ClearDynamicImport();
 
   void ModuleLoaded();
