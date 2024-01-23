@@ -32,6 +32,37 @@ const getIntlDisplayName = (() => {
  */
 class FullPageTranslationsTestUtils {
   /**
+   * Asserts that the Spanish test page has been translated by checking
+   * that the H1 element has been modified from its original form.
+   *
+   * @param {string} fromLanguage - The BCP-47 language tag being translated from.
+   * @param {string} toLanguage - The BCP-47 language tag being translated into.
+   * @param {Function} runInPage - Allows running a closure in the content page.
+   * @param {string} message - An optional message to log to info.
+   */
+  static async assertPageIsTranslated(
+    fromLanguage,
+    toLanguage,
+    runInPage,
+    message = null
+  ) {
+    if (message) {
+      info(message);
+    }
+    info("Checking that the page is translated");
+    const callback = async (TranslationsTest, { fromLang, toLang }) => {
+      const { getH1 } = TranslationsTest.getSelectors();
+      await TranslationsTest.assertTranslationResult(
+        "The page's H1 is translated.",
+        getH1,
+        `DON QUIJOTE DE LA MANCHA [${fromLang} to ${toLang}, html]`
+      );
+    };
+    await runInPage(callback, { fromLang: fromLanguage, toLang: toLanguage });
+    await assertLangTagIsShownOnTranslationsButton(fromLanguage, toLanguage);
+  }
+
+  /**
    * Asserts that the Spanish test page is untranslated by checking
    * that the H1 element is still in its original Spanish form.
    *
@@ -52,37 +83,6 @@ class FullPageTranslationsTestUtils {
       );
     });
   }
-}
-
-/**
- * Asserts that the Spanish test page has been translated by checking
- * that the H1 element has been modified from its original form.
- *
- * @param {string} fromLanguage - The BCP-47 language tag being translated from.
- * @param {string} toLanguage - The BCP-47 language tag being translated into.
- * @param {Function} runInPage - Allows running a closure in the content page.
- * @param {string} message - An optional message to log to info.
- */
-async function assertPageIsTranslated(
-  fromLanguage,
-  toLanguage,
-  runInPage,
-  message = null
-) {
-  if (message) {
-    info(message);
-  }
-  info("Checking that the page is translated");
-  const callback = async (TranslationsTest, { fromLang, toLang }) => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is translated.",
-      getH1,
-      `DON QUIJOTE DE LA MANCHA [${fromLang} to ${toLang}, html]`
-    );
-  };
-  await runInPage(callback, { fromLang: fromLanguage, toLang: toLanguage });
-  await assertLangTagIsShownOnTranslationsButton(fromLanguage, toLanguage);
 }
 
 /**

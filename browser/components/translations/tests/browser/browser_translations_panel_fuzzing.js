@@ -105,7 +105,11 @@ add_task(async function test_translations_panel_fuzzing() {
           "Translations button is fully loaded."
         );
 
-        await assertPageIsTranslated("es", "en", runInSpanishPage);
+        await FullPageTranslationsTestUtils.assertPageIsTranslated(
+          "es",
+          "en",
+          runInSpanishPage
+        );
 
         isSpanishPageTranslated = true;
         isEngineMaybeDestroyed = false;

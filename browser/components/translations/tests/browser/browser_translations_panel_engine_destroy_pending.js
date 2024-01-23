@@ -25,7 +25,11 @@ add_task(async function test_translations_engine_destroy_pending() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertPageIsTranslated("es", "en", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "en",
+    runInPage
+  );
 
   const { removeTab: removeEnglishTab } = await addTab(
     ENGLISH_PAGE_URL,

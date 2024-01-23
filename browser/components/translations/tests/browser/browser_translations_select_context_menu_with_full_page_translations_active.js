@@ -41,7 +41,11 @@ add_task(
       downloadHandler: resolveDownloads,
     });
 
-    await assertPageIsTranslated("es", "en", runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
+      "es",
+      "en",
+      runInPage
+    );
 
     await assertContextMenuTranslateSelectionItem(
       runInPage,
@@ -112,7 +116,11 @@ add_task(
       downloadHandler: resolveDownloads,
     });
 
-    await assertPageIsTranslated("es", "en", runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
+      "es",
+      "en",
+      runInPage
+    );
 
     await assertContextMenuTranslateSelectionItem(
       runInPage,

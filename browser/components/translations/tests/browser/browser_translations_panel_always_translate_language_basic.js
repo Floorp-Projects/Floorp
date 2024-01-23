@@ -30,7 +30,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   });
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
-  await assertPageIsTranslated(
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
     "es",
     "en",
     runInPage,
@@ -42,7 +42,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertPageIsTranslated(
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
     "es",
     "en",
     runInPage,

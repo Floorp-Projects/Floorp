@@ -78,7 +78,11 @@ add_task(async function test_translations_persist_in_reader_mode() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertPageIsTranslated("es", "en", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "en",
+    runInPage
+  );
 
   await toggleReaderMode();
 

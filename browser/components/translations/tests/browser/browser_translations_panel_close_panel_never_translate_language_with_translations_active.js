@@ -28,7 +28,7 @@ add_task(
       downloadHandler: resolveDownloads,
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertPageIsTranslated(
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
       "es",
       "en",
       runInPage,
@@ -79,7 +79,7 @@ add_task(
       downloadHandler: resolveDownloads,
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertPageIsTranslated(
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
       "es",
       "en",
       runInPage,

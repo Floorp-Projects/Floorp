@@ -22,7 +22,11 @@ add_task(async function test_translations_panel_retry() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertPageIsTranslated("es", "en", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "en",
+    runInPage
+  );
 
   await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
@@ -33,7 +37,11 @@ add_task(async function test_translations_panel_retry() {
     pivotTranslation: true,
   });
 
-  await assertPageIsTranslated("es", "fr", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "fr",
+    runInPage
+  );
 
   await cleanup();
 });
