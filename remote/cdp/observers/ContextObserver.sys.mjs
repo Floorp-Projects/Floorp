@@ -34,8 +34,6 @@ export class ContextObserver {
     this.chromeEventHandler = chromeEventHandler;
     lazy.EventEmitter.decorate(this);
 
-    this._fissionEnabled = Services.appinfo.fissionAutostart;
-
     this.chromeEventHandler.addEventListener("DOMWindowCreated", this, {
       mozSystemGroup: true,
     });
@@ -51,11 +49,7 @@ export class ContextObserver {
     Services.obs.addObserver(this, "document-element-inserted");
     Services.obs.addObserver(this, "inner-window-destroyed");
 
-    // With Fission disabled the `DOMWindowCreated` event is fired too late.
-    // Use the `webnavigation-create` notification instead.
-    if (!this._fissionEnabled) {
-      Services.obs.addObserver(this, "webnavigation-create");
-    }
+    Services.obs.addObserver(this, "webnavigation-create");
     Services.obs.addObserver(this, "webnavigation-destroy");
   }
 
@@ -73,9 +67,7 @@ export class ContextObserver {
     Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
-    if (!this._fissionEnabled) {
-      Services.obs.removeObserver(this, "webnavigation-create");
-    }
+    Services.obs.removeObserver(this, "webnavigation-create");
     Services.obs.removeObserver(this, "webnavigation-destroy");
   }
 
@@ -90,13 +82,6 @@ export class ContextObserver {
         // that is destroyed. Instead, pass the frameId and let the listener figure out
         // what ExecutionContext(s) to destroy.
         this.emit("context-destroyed", { frameId });
-
-        // With Fission enabled the frame is attached early enough so that
-        // expected network requests and responses are handles afterward.
-        // Otherwise send the event when `webnavigation-create` is received.
-        if (this._fissionEnabled) {
-          this.emit("frame-attached", { frameId, window });
-        }
 
         break;
 
