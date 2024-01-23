@@ -305,6 +305,7 @@ class FunctionCompiler {
   BytecodeOffset bytecodeIfNotAsmJS() const {
     return moduleEnv_.isAsmJS() ? BytecodeOffset() : iter_.bytecodeOffset();
   }
+  FeatureUsage featureUsage() const { return iter_.featureUsage(); }
 
   // Try to get a free TryControl from the cache, or allocate a new one.
   [[nodiscard]] UniqueTryControl newTryControl() {
@@ -9407,6 +9408,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
       }
 
       f.finish();
+
+      // Record observed feature usage
+      code->featureUsage |= f.featureUsage();
     }
 
     // Compile MIR graph
