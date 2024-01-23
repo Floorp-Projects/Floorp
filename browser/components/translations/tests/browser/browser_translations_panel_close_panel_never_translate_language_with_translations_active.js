@@ -49,9 +49,12 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      async () => {
+        await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
+      }
+    );
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
     await cleanup();
@@ -133,9 +136,12 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      async () => {
+        await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
+      }
+    );
     await cleanup();
   }
 );

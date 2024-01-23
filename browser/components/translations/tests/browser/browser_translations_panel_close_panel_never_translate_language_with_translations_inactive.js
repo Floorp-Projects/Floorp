@@ -26,9 +26,12 @@ add_task(async function test_panel_closes_on_toggle_never_translate_language() {
   await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
     checked: false,
   });
-  await waitForTranslationsPopupEvent("popuphidden", async () => {
-    await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
-  });
+  await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    "popuphidden",
+    async () => {
+      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
+    }
+  );
   await cleanup();
 });
 
@@ -79,9 +82,12 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      async () => {
+        await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
+      }
+    );
     await cleanup();
   }
 );

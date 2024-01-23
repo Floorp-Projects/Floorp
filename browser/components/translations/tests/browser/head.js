@@ -574,9 +574,12 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { cancelButton } = TranslationsPanel.elements;
     assertIsVisible(true, { element: cancelButton });
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(cancelButton, "Clicking the cancel button");
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      () => {
+        click(cancelButton, "Clicking the cancel button");
+      }
+    );
   }
 
   /**
@@ -591,7 +594,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { changeSourceLanguageButton } = TranslationsPanel.elements;
     assertIsVisible(true, { element: changeSourceLanguageButton });
-    await waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
       "popupshown",
       () => {
         click(
@@ -612,9 +615,12 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { dismissErrorButton } = TranslationsPanel.elements;
     assertIsVisible(true, { element: dismissErrorButton });
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(dismissErrorButton, "Click the dismiss-error button");
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      () => {
+        click(dismissErrorButton, "Click the dismiss-error button");
+      }
+    );
   }
 
   /**
@@ -660,9 +666,12 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { restoreButton } = TranslationsPanel.elements;
     assertIsVisible(true, { element: restoreButton });
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(restoreButton, "Click the restore-page button");
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      () => {
+        click(restoreButton, "Click the restore-page button");
+      }
+    );
   }
 
   /*
@@ -695,9 +704,12 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { translateButton } = TranslationsPanel.elements;
     assertIsVisible(true, { element: translateButton });
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(translateButton);
-    });
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popuphidden",
+      () => {
+        click(translateButton);
+      }
+    );
 
     if (downloadHandler) {
       await FullPageTranslationsTestUtils.assertTranslationsButton(
@@ -771,7 +783,7 @@ class FullPageTranslationsTestUtils {
       "The app-menu translate button should be enabled"
     );
 
-    await waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
       "popupshown",
       () => {
         if (openWithKeyboard) {
@@ -803,7 +815,7 @@ class FullPageTranslationsTestUtils {
         { button: true },
         "The translations button is visible."
       );
-    await waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
       "popupshown",
       () => {
         if (openWithKeyboard) {
@@ -862,6 +874,39 @@ class FullPageTranslationsTestUtils {
     const { toMenuList } = TranslationsPanel.elements;
     toMenuList.value = langTag;
     toMenuList.dispatchEvent(new Event("command"));
+  }
+
+  /**
+   * XUL popups will fire the popupshown and popuphidden events. These will fire for
+   * any type of popup in the browser. This function waits for one of those events, and
+   * checks that the viewId of the popup is PanelUI-profiler
+   *
+   * @param {"popupshown" | "popuphidden"} eventName
+   * @param {Function} callback
+   * @param {Function} postEventAssertion
+   *   An optional assertion to be made immediately after the event occurs.
+   * @returns {Promise<void>}
+   */
+  static async waitForTranslationsPopupEvent(
+    eventName,
+    callback,
+    postEventAssertion = null
+  ) {
+    // De-lazify the panel elements.
+    TranslationsPanel.elements;
+    const panel = document.getElementById("translations-panel");
+    if (!panel) {
+      throw new Error("Unable to find the translations panel element.");
+    }
+    const promise = BrowserTestUtils.waitForEvent(panel, eventName);
+    await callback();
+    info("Waiting for the translations panel popup to be shown");
+    await promise;
+    if (postEventAssertion) {
+      postEventAssertion();
+    }
+    // Wait a single tick on the event loop.
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 }
 
@@ -924,7 +969,7 @@ async function navigate(
 
   info(`Loading url: "${url}"`);
   if (onOpenPanel) {
-    await waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
       "popupshown",
       loadTargetPage,
       onOpenPanel
@@ -1363,39 +1408,6 @@ function maybeGetByL10nId(l10nId, doc = document) {
     }
   }
   return null;
-}
-
-/**
- * XUL popups will fire the popupshown and popuphidden events. These will fire for
- * any type of popup in the browser. This function waits for one of those events, and
- * checks that the viewId of the popup is PanelUI-profiler
- *
- * @param {"popupshown" | "popuphidden"} eventName
- * @param {Function} callback
- * @param {Function} postEventAssertion
- *   An optional assertion to be made immediately after the event occurs.
- * @returns {Promise<void>}
- */
-async function waitForTranslationsPopupEvent(
-  eventName,
-  callback,
-  postEventAssertion = null
-) {
-  // De-lazify the panel elements.
-  TranslationsPanel.elements;
-  const panel = document.getElementById("translations-panel");
-  if (!panel) {
-    throw new Error("Unable to find the translations panel element.");
-  }
-  const promise = BrowserTestUtils.waitForEvent(panel, eventName);
-  await callback();
-  info("Waiting for the translations panel popup to be shown");
-  await promise;
-  if (postEventAssertion) {
-    postEventAssertion();
-  }
-  // Wait a single tick on the event loop.
-  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 /**
