@@ -157,33 +157,31 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
 
-  if (aFilteredFrame->GetPrevContinuation()) {
-    aInitialized = false;
-    return true;
-  }
+  nsIFrame* firstFrame =
+      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFilteredFrame);
+
   nsTArray<SVGFilterFrame*> filterFrames;
-  if (SVGObserverUtils::GetAndObserveFilters(aFilteredFrame, &filterFrames,
+  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, &filterFrames,
                                              aStyleFilterType) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
     aInitialized = false;
     return true;
   }
 
-  UniquePtr<UserSpaceMetrics> metrics =
-      UserSpaceMetricsForFrame(aFilteredFrame);
+  UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(firstFrame);
 
   // TODO: simply using an identity matrix here, was pulling the scale from a
   // gfx context for the non-wr path.
   gfxMatrix scaleMatrix;
   gfxMatrix scaleMatrixInDevUnits =
-      scaleMatrix * SVGUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
+      scaleMatrix * SVGUtils::GetCSSPxToDevPxMatrix(firstFrame);
 
   // Hardcode inputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  FilterInstance instance(
-      aFilteredFrame, aFilteredFrame->GetContent(), *metrics, aFilters,
-      filterFrames, /* inputIsTainted */ true, nullptr, scaleMatrixInDevUnits,
-      nullptr, nullptr, nullptr, nullptr);
+  FilterInstance instance(firstFrame, firstFrame->GetContent(), *metrics,
+                          aFilters, filterFrames, /* inputIsTainted */ true,
+                          nullptr, scaleMatrixInDevUnits, nullptr, nullptr,
+                          nullptr, nullptr);
 
   if (!instance.IsInitialized()) {
     aInitialized = false;
