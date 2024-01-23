@@ -552,6 +552,13 @@ gfxFontEntry* MacOSFontEntry::Clone() const {
 }
 
 CGFontRef MacOSFontEntry::GetFontRef() {
+  {
+    AutoReadLock lock(mLock);
+    if (mFontRefInitialized) {
+      return mFontRef;
+    }
+  }
+  AutoWriteLock lock(mLock);
   if (!mFontRefInitialized) {
     // Cache the CGFontRef, to be released by our destructor.
     mFontRef = CreateOrCopyFontRef();
@@ -616,7 +623,9 @@ class FontTableRec {
 }
 
 hb_blob_t* MacOSFontEntry::GetFontTable(uint32_t aTag) {
+  mLock.ReadLock();
   AutoCFRelease<CGFontRef> fontRef = CreateOrCopyFontRef();
+  mLock.ReadUnlock();
   if (!fontRef) {
     return nullptr;
   }
@@ -637,6 +646,16 @@ hb_blob_t* MacOSFontEntry::GetFontTable(uint32_t aTag) {
 }
 
 bool MacOSFontEntry::HasFontTable(uint32_t aTableTag) {
+  {
+    // If we've already initialized mAvailableTables, we can return without
+    // needing to take an exclusive lock.
+    AutoReadLock lock(mLock);
+    if (mAvailableTables.Count()) {
+      return mAvailableTables.GetEntry(aTableTag);
+    }
+  }
+
+  AutoWriteLock lock(mLock);
   if (mAvailableTables.Count() == 0) {
     nsAutoreleasePool localPool;
 
