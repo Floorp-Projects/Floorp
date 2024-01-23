@@ -555,6 +555,7 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/{product}-bin",
         "{product}/minidump-analyzer",
         "{product}/pingsender",
+        "{product}/platform.ini",
         "{product}/plugin-container",
         "{product}/updater",
         "{product}/glxtest",
@@ -718,6 +719,7 @@ class MacArtifactJob(ArtifactJob):
                         "gmp-clearkey/0.1/libclearkey.dylib",
                         # 'gmp-fake/1.0/libfake.dylib',
                         # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                        "platform.ini",
                     ],
                 )
             ]
@@ -769,6 +771,7 @@ class WinArtifactJob(ArtifactJob):
 
     _package_artifact_patterns = {
         "{product}/dependentlibs.list",
+        "{product}/platform.ini",
         "{product}/**/*.dll",
         "{product}/*.exe",
         "{product}/*.tlb",
