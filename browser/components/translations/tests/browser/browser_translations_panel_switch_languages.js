@@ -27,32 +27,32 @@ add_task(async function test_translations_panel_switch_language() {
 
   ok(!translateButton.disabled, "The translate button starts as enabled");
 
-  assertSelectedFromLanguage("es");
-  assertSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.assertSelectedFromLanguage("es");
+  FullPageTranslationsTestUtils.assertSelectedToLanguage("en");
 
-  switchSelectedFromLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
 
   ok(
     translateButton.disabled,
     "The translate button is disabled when the languages are the same"
   );
 
-  switchSelectedFromLanguage("es");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("es");
 
   ok(
     !translateButton.disabled,
     "When the languages are different it can be translated"
   );
 
-  switchSelectedFromLanguage("");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("");
 
   ok(
     translateButton.disabled,
     "The translate button is disabled nothing is selected."
   );
 
-  switchSelectedFromLanguage("en");
-  switchSelectedToLanguage("fr");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedToLanguage("fr");
 
   ok(!translateButton.disabled, "The translate button can now be used");
 
