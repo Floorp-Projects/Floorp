@@ -31,7 +31,8 @@ class ExternalTextureD3D11 final : public ExternalTexture {
 
   void* GetExternalTextureHandle() override;
 
-  Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
+  Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor(
+      Maybe<gfx::FenceInfo>& aFenceInfo) override;
 
   void GetSnapshot(const ipc::Shmem& aDestShmem,
                    const gfx::IntSize& aSize) override;

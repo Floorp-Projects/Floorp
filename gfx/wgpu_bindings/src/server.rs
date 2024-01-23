@@ -20,6 +20,7 @@ use std::borrow::Cow;
 #[allow(unused_imports)]
 use std::mem;
 use std::os::raw::c_void;
+use std::ptr;
 use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -28,6 +29,8 @@ use std::ffi::{c_long, c_ulong};
 use winapi::shared::dxgi;
 #[cfg(target_os = "windows")]
 use winapi::um::d3d12 as d3d12_ty;
+#[cfg(target_os = "windows")]
+use winapi::um::winnt::GENERIC_ALL;
 #[cfg(target_os = "windows")]
 use winapi::Interface;
 
@@ -524,6 +527,43 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
 
+#[allow(unused_variables)]
+#[no_mangle]
+pub extern "C" fn wgpu_server_get_device_fence_handle(global: &Global, device_id: id::DeviceId) -> *mut c_void {
+    assert!(device_id.backend() == wgt::Backend::Dx12);
+
+    #[cfg(target_os = "windows")]
+    if device_id.backend() == wgt::Backend::Dx12 {
+        let mut handle = ptr::null_mut();
+        let dx12_device = unsafe {
+            global.device_as_hal::<wgc::api::Dx12, _, d3d12::Device>(device_id, |hal_device| {
+                hal_device.unwrap().raw_device().clone()
+            })
+        };
+        let dx12_fence = unsafe {
+            global.device_fence_as_hal::<wgc::api::Dx12, _, d3d12::Fence>(device_id, |hal_fence| {
+                hal_fence.unwrap().raw_fence().clone()
+            })
+        };
+        let hr = unsafe {
+            dx12_device.CreateSharedHandle(
+                dx12_fence.as_mut_ptr() as *mut winapi::um::d3d12::ID3D12DeviceChild,
+                std::ptr::null(),
+                GENERIC_ALL,
+                std::ptr::null(),
+                &mut handle,
+            )
+        };
+
+        if hr != 0 {
+            return ptr::null_mut();
+        }
+
+        return handle;
+    }
+    ptr::null_mut()
+}
+
 extern "C" {
     #[allow(dead_code)]
     fn wgpu_server_use_external_texture_for_swap_chain(
@@ -1017,11 +1057,16 @@ pub unsafe extern "C" fn wgpu_server_queue_submit(
     command_buffer_ids: *const id::CommandBufferId,
     command_buffer_id_length: usize,
     mut error_buf: ErrorBuffer,
-) {
+) -> u64 {
     let command_buffers = slice::from_raw_parts(command_buffer_ids, command_buffer_id_length);
     let result = gfx_select!(self_id => global.queue_submit(self_id, command_buffers));
-    if let Err(err) = result {
-        error_buf.init(err);
+
+    match result {
+        Err(err) => {
+            error_buf.init(err);
+            return 0;
+        }
+        Ok(wrapped_index) => wrapped_index.index,
     }
 }
 

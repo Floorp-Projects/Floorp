@@ -87,6 +87,10 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void UnregisterDevice(RawId aId);
   void FreeUnregisteredInParentDevice(RawId aId);
 
+  void QueueSubmit(RawId aSelfId, RawId aDeviceId,
+                   nsTArray<RawId>& aCommandBuffers);
+  void NotifyWaitForSubmit(RawId aTextureId);
+
   static void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
 
  private:
@@ -94,6 +98,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   UniquePtr<ffi::WGPUClient> const mClient;
   std::unordered_map<RawId, WeakPtr<Device>> mDeviceMap;
+  nsTArray<RawId> mSwapChainTexturesWaitingForSubmit;
 
  public:
   ipc::IPCResult RecvUncapturedError(Maybe<RawId> aDeviceId,

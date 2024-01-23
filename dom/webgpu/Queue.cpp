@@ -45,7 +45,7 @@ void Queue::Submit(
     }
   }
 
-  mBridge->SendQueueSubmit(mId, mParent->mId, list);
+  mBridge->QueueSubmit(mId, mParent->mId, list);
 }
 
 already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {

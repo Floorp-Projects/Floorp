@@ -30,4 +30,10 @@ ExternalTexture::ExternalTexture(const uint32_t aWidth, const uint32_t aHeight,
 
 ExternalTexture::~ExternalTexture() {}
 
+void ExternalTexture::SetSubmissionIndex(uint64_t aSubmissionIndex) {
+  MOZ_ASSERT(aSubmissionIndex != 0);
+
+  mSubmissionIndex = aSubmissionIndex;
+}
+
 }  // namespace mozilla::webgpu

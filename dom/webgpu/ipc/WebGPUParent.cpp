@@ -7,6 +7,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/gfx/FileHandleWrapper.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
@@ -160,6 +161,8 @@ class PresentationData {
   const RawId mDeviceId;
   const RawId mQueueId;
   const layers::RGBDescriptor mDesc;
+
+  uint64_t mSubmissionIndex = 0;
 
   std::deque<std::shared_ptr<ExternalTexture>> mRecycledExternalTextures;
 
@@ -448,6 +451,15 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     mErrorScopeStackByDevice.insert({aDeviceId, {}});
     resolver(true);
   }
+
+#if defined(XP_WIN)
+  HANDLE handle =
+      wgpu_server_get_device_fence_handle(mContext.get(), aDeviceId);
+  if (handle) {
+    mFenceHandle = new gfx::FileHandleWrapper(UniqueFileHandle(handle));
+  }
+#endif
+
   return IPC_OK();
 }
 
@@ -777,11 +789,23 @@ ipc::IPCResult WebGPUParent::RecvRenderBundleDrop(RawId aBundleId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvQueueSubmit(
-    RawId aQueueId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers) {
+    RawId aQueueId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers,
+    const nsTArray<RawId>& aTextureIds) {
   ErrorBuffer error;
-  ffi::wgpu_server_queue_submit(mContext.get(), aQueueId,
-                                aCommandBuffers.Elements(),
-                                aCommandBuffers.Length(), error.ToFFI());
+  auto index = ffi::wgpu_server_queue_submit(
+      mContext.get(), aQueueId, aCommandBuffers.Elements(),
+      aCommandBuffers.Length(), error.ToFFI());
+  // Check if index is valid. 0 means error.
+  if (index != 0) {
+    for (const auto& textureId : aTextureIds) {
+      auto it = mExternalTextures.find(textureId);
+      if (it != mExternalTextures.end()) {
+        auto& externalTexture = it->second;
+
+        externalTexture->SetSubmissionIndex(index);
+      }
+    }
+  }
   ForwardError(aDeviceId, error);
   return IPC_OK();
 }
@@ -1072,8 +1096,16 @@ void WebGPUParent::PostExternalTexture(
 
   const auto surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
   const auto size = aExternalTexture->GetSize();
+  const auto index = aExternalTexture->GetSubmissionIndex();
+  MOZ_ASSERT(index != 0);
+
+  Maybe<gfx::FenceInfo> fenceInfo;
+  if (mFenceHandle) {
+    fenceInfo = Some(gfx::FenceInfo(mFenceHandle, index));
+  }
+
   Maybe<layers::SurfaceDescriptor> desc =
-      aExternalTexture->ToSurfaceDescriptor();
+      aExternalTexture->ToSurfaceDescriptor(fenceInfo);
   if (!desc) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
