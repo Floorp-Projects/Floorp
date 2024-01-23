@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-01-16T17:14:53.714398'
+updated_at: '2024-01-23T16:51:43.558054'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -165,10 +165,6 @@ people:
     bmo_id: 563604
     name: Robin Steuber
     nick: bytesized
-  - &bzbarsky
-    bmo_id: 20209
-    name: Boris Zbarsky
-    nick: bzbarsky
   - &calixte
     bmo_id: 560431
     name: Calixte Denizet
@@ -723,10 +719,6 @@ people:
     bmo_id: 91159
     name: Dave Townsend
     nick: mossop
-  - &mrbkap
-    bmo_id: 69426
-    name: Blake Kaplan
-    nick: mrbkap
   - &Ms2ger
     bmo_id: 302720
     name: ''
@@ -2429,6 +2421,7 @@ modules:
       - caps/**/*
     meta:
       peers_emeritus:
+        - Boris Zbarsky
         - Brendan Eich
         - Johnny Stenback
         - Dan Veditz
@@ -2439,7 +2432,6 @@ modules:
     owners:
       - *bholley
     peers:
-      - *bzbarsky
       - *ckerschb
     machine_name: core_privilege_manager
 
@@ -3100,6 +3092,8 @@ modules:
       - js/xpconnect/**/*
     meta:
       peers_emeritus:
+        - Boris Zbarsky
+        - Blake Kaplan
         - Andreas Gal
         - Johnny Stenback
         - Gabor Krizsanits
@@ -3108,9 +3102,7 @@ modules:
     owners:
       - *bholley
     peers:
-      - *bzbarsky
       - *peterv
-      - *mrbkap
       - *mccr8
       - *kmag
       - *nika
@@ -4243,5 +4235,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: fb060c17e3de2c36297486934de8c2bd6b42aaa3
-  export: ef436c78e9aaead2c41a6331db4800928d144df0
+  config: 44fcd2825d8bd84ce54bebe26c9260dc6d90a3b4
+  export: 707892ab2122417c049ab3b0215b6b663274f6bd
