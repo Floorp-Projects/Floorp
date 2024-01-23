@@ -622,4 +622,8 @@ export class AutofillTelemetry {
     const telemetry = this.#getTelemetryByType(type);
     telemetry.recordNumberOfUse(records);
   }
+
+  static recordFormSubmissionHeuristicCount(label) {
+    Glean.formautofill.formSubmissionHeuristic[label].add(1);
+  }
 }

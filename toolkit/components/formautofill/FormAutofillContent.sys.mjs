@@ -149,6 +149,10 @@ export var FormAutofillContent = {
   ) {
     this.debug(`Handling form submission - infered by ${formSubmissionReason}`);
 
+    lazy.AutofillTelemetry.recordFormSubmissionHeuristicCount(
+      formSubmissionReason
+    );
+
     if (!lazy.FormAutofill.isAutofillEnabled) {
       this.debug("Form Autofill is disabled");
       return;

@@ -258,3 +258,22 @@ formautofill.creditcards:
       field_name:
         description: Name of the field being affected by the event
         type: string
+
+formautofill:
+  form_submission_heuristic:
+    type: labeled_counter
+    description:
+      The heuristic that detected the form submission.
+    labels:
+      - form-submit-event
+      - form-removal-after-fetch
+      - page-navigation
+      - iframe-pagehide
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1874829
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1874829#c4
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: 130
