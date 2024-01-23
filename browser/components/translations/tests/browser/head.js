@@ -85,6 +85,36 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the selected from-language matches the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static assertSelectedFromLanguage(langTag) {
+    info(`Checking that the selected from-language matches ${langTag}`);
+    const { fromMenuList } = TranslationsPanel.elements;
+    is(
+      fromMenuList.value,
+      langTag,
+      "Expected selected from-language to match the given language tag"
+    );
+  }
+
+  /**
+   * Asserts that the selected to-language matches the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static assertSelectedToLanguage(langTag) {
+    info(`Checking that the selected to-language matches ${langTag}`);
+    const { toMenuList } = TranslationsPanel.elements;
+    is(
+      toMenuList.value,
+      langTag,
+      "Expected selected to-language to match the given language tag"
+    );
+  }
+
+  /**
    * Assert some property about the translations button.
    *
    * @param {Record<string, boolean>} visibleAssertions
@@ -260,6 +290,30 @@ class FullPageTranslationsTestUtils {
       return;
     }
   }
+
+  /**
+   * Switches the selected from-language to the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static switchSelectedFromLanguage(langTag) {
+    logAction(langTag);
+    const { fromMenuList } = TranslationsPanel.elements;
+    fromMenuList.value = langTag;
+    fromMenuList.dispatchEvent(new Event("command"));
+  }
+
+  /**
+   * Switches the selected to-language to the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static switchSelectedToLanguage(langTag) {
+    logAction(langTag);
+    const { toMenuList } = TranslationsPanel.elements;
+    toMenuList.value = langTag;
+    toMenuList.dispatchEvent(new Event("command"));
+  }
 }
 
 /**
@@ -282,60 +336,6 @@ function logAction(...params) {
       "chrome://mochitests/content/browser/",
       ""
     )}`
-  );
-}
-
-/**
- * Switches the selected from-language to the provided language tag.
- *
- * @param {string} langTag - A BCP-47 language tag.
- */
-function switchSelectedFromLanguage(langTag) {
-  logAction(langTag);
-  const { fromMenuList } = TranslationsPanel.elements;
-  fromMenuList.value = langTag;
-  fromMenuList.dispatchEvent(new Event("command"));
-}
-
-/**
- * Asserts that the selected from-language matches the provided language tag.
- *
- * @param {string} langTag - A BCP-47 language tag.
- */
-function assertSelectedFromLanguage(langTag) {
-  info(`Checking that the selected from-language matches ${langTag}`);
-  const { fromMenuList } = TranslationsPanel.elements;
-  is(
-    fromMenuList.value,
-    langTag,
-    "Expected selected from-language to match the given language tag"
-  );
-}
-
-/**
- * Switches the selected to-language to the provided language tag.
- *
- * @param {string} langTag - A BCP-47 language tag.
- */
-function switchSelectedToLanguage(langTag) {
-  logAction(langTag);
-  const { toMenuList } = TranslationsPanel.elements;
-  toMenuList.value = langTag;
-  toMenuList.dispatchEvent(new Event("command"));
-}
-
-/**
- * Asserts that the selected to-language matches the provided language tag.
- *
- * @param {string} langTag - A BCP-47 language tag.
- */
-function assertSelectedToLanguage(langTag) {
-  info(`Checking that the selected to-language matches ${langTag}`);
-  const { toMenuList } = TranslationsPanel.elements;
-  is(
-    toMenuList.value,
-    langTag,
-    "Expected selected to-language to match the given language tag"
   );
 }
 

@@ -23,8 +23,8 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  assertSelectedFromLanguage("es");
-  switchSelectedFromLanguage("en");
+  FullPageTranslationsTestUtils.assertSelectedFromLanguage("es");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -45,7 +45,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  switchSelectedFromLanguage("es");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("es");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -56,7 +56,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  switchSelectedFromLanguage("");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -65,7 +65,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  switchSelectedFromLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -99,8 +99,8 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  assertSelectedToLanguage("en");
-  switchSelectedToLanguage("fr");
+  FullPageTranslationsTestUtils.assertSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedToLanguage("fr");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -121,7 +121,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  switchSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedToLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
@@ -132,7 +132,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  switchSelectedToLanguage("");
+  FullPageTranslationsTestUtils.switchSelectedToLanguage("");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
@@ -141,7 +141,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  switchSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.switchSelectedToLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
