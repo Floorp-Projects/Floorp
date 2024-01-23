@@ -10,28 +10,22 @@ add_task(async function test_translations_settings_pane_elements() {
   } = await setupAboutPreferences(LANGUAGE_PAIRS, {
     prefs: [["browser.translations.newSettingsUI.enable", true]],
   });
-  ok(
-    BrowserTestUtils.isVisible(settingsButton),
-    "Expected the translations settings button to be visible"
-  );
+
+  assertVisibility({
+    message: "Expect paneGeneral elements to be visible.",
+    visible: { settingsButton },
+  });
 
   const { backButton, header } =
     await TranslationsSettingsTestUtils.openAboutPreferencesTranslationsSettingsPane(
       settingsButton
     );
 
-  ok(
-    BrowserTestUtils.isHidden(settingsButton),
-    "Translations settings, Settings Button is hidden"
-  );
-  ok(
-    BrowserTestUtils.isVisible(header),
-    "Translations settings Header is visible"
-  );
-  ok(
-    BrowserTestUtils.isVisible(backButton),
-    "Translations settings Back Button is visible"
-  );
+  assertVisibility({
+    message: "Expect paneTranslations elements to be visible.",
+    visible: { backButton, header },
+    hidden: { settingsButton },
+  });
 
   is(
     header.getAttribute("data-l10n-id"),

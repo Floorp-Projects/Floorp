@@ -971,13 +971,18 @@ function hitEnterKey(button, message) {
 }
 
 /**
+ * Similar to assertVisibility, but is asynchronous and attempts
+ * to wait for the elements to match the expected states if they
+ * do not already.
+ *
+ * @see assertVisibility
+ *
  * @param {Object} options
  * @param {string} options.message
  * @param {Record<string, Element[]>} options.visible
  * @param {Record<string, Element[]>} options.hidden
  */
-async function assertVisibility({ message, visible, hidden }) {
-  info(message);
+async function ensureVisibility({ message = null, visible = {}, hidden = {} }) {
   try {
     // First wait for the condition to be met.
     await waitForCondition(() => {
@@ -997,6 +1002,21 @@ async function assertVisibility({ message, visible, hidden }) {
     // Ignore, this will get caught below.
   }
   // Now report the conditions.
+  assertVisibility({ message, visible, hidden });
+}
+
+/**
+ * Asserts that the provided elements are either visible or hidden.
+ *
+ * @param {Object} options
+ * @param {string} options.message
+ * @param {Record<string, Element[]>} options.visible
+ * @param {Record<string, Element[]>} options.hidden
+ */
+function assertVisibility({ message = null, visible = {}, hidden = {} }) {
+  if (message) {
+    info(message);
+  }
   for (const [name, element] of Object.entries(visible)) {
     ok(BrowserTestUtils.isVisible(element), `${name} is visible.`);
   }
