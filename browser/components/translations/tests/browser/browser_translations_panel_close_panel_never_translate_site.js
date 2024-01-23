@@ -54,7 +54,7 @@ add_task(
     });
     await openTranslationsSettingsMenu();
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,

@@ -20,7 +20,7 @@ add_task(
       "The button is available."
     );
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
@@ -51,7 +51,7 @@ add_task(
       "Only the button appears"
     );
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }

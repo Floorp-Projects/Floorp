@@ -14,7 +14,7 @@ add_task(async function test_translations_button_hidden_when_cpu_unsupported() {
     prefs: [["browser.translations.simulateUnsupportedEngine", true]],
   });
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: false },
@@ -36,7 +36,7 @@ add_task(
       prefs: [["browser.translations.simulateUnsupportedEngine", true]],
     });
 
-    await assertPageIsUntranslated(runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     const appMenuButton = getById("PanelUI-menu-button");
 

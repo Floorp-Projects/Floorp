@@ -14,7 +14,7 @@ add_task(async function test_translations_panel_switch_language() {
 
   await assertTranslationsButton({ button: true }, "The button is available.");
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 

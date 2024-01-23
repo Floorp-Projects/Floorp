@@ -20,7 +20,7 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
     "The translations button is available"
   );
 
-  await assertPageIsUntranslated(runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await openTranslationsPanel({
     openFromAppMenu: true,
