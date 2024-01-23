@@ -1253,9 +1253,43 @@ pub fn get_base_direction<'a, T: TextSource<'a> + ?Sized>(text: &'a T) -> Direct
     get_base_direction_with_data_source(&HardcodedBidiData, text)
 }
 
+/// Get the base direction of the text provided according to the Unicode Bidirectional Algorithm,
+/// considering the full text if the first paragraph is all-neutral.
+///
+/// This is the same as get_base_direction except that it does not stop at the first block
+/// separator, but just resets the embedding level and continues to look for a strongly-
+/// directional character. So the result will be the base direction of the first paragraph
+/// that is not purely neutral characters.
+#[cfg(feature = "hardcoded-data")]
+#[inline]
+pub fn get_base_direction_full<'a, T: TextSource<'a> + ?Sized>(text: &'a T) -> Direction {
+    get_base_direction_full_with_data_source(&HardcodedBidiData, text)
+}
+
+#[inline]
 pub fn get_base_direction_with_data_source<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     data_source: &D,
     text: &'a T,
+) -> Direction {
+    get_base_direction_impl(data_source, text, false)
+}
+
+#[inline]
+pub fn get_base_direction_full_with_data_source<
+    'a,
+    D: BidiDataSource,
+    T: TextSource<'a> + ?Sized,
+>(
+    data_source: &D,
+    text: &'a T,
+) -> Direction {
+    get_base_direction_impl(data_source, text, true)
+}
+
+fn get_base_direction_impl<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
+    data_source: &D,
+    text: &'a T,
+    use_full_text: bool,
 ) -> Direction {
     let mut isolate_level = 0;
     for c in text.chars() {
@@ -1264,7 +1298,8 @@ pub fn get_base_direction_with_data_source<'a, D: BidiDataSource, T: TextSource<
             PDI if isolate_level > 0 => isolate_level = isolate_level - 1,
             L if isolate_level == 0 => return Direction::Ltr,
             R | AL if isolate_level == 0 => return Direction::Rtl,
-            B => break,
+            B if !use_full_text => break,
+            B if use_full_text => isolate_level = 0,
             _ => (),
         }
     }
@@ -2139,6 +2174,27 @@ mod tests {
             assert_eq!(get_base_direction(t.0), t.1);
             let text = &to_utf16(t.0);
             assert_eq!(get_base_direction(text.as_slice()), t.1);
+        }
+    }
+
+    #[test]
+    fn test_get_base_direction_full() {
+        let tests = vec![
+            ("", Direction::Mixed), // return Mixed if no strong character found
+            ("123[]-+\u{2019}\u{2060}\u{00bf}?", Direction::Mixed),
+            ("3.14\npi", Direction::Ltr), // direction taken from the second paragraph
+            ("3.14\n\u{05D0}", Direction::Rtl), // direction taken from the second paragraph
+            ("[123 'abc']", Direction::Ltr),
+            ("[123 '\u{0628}' abc", Direction::Rtl),
+            ("[123 '\u{2066}abc\u{2069}'\u{0628}]", Direction::Rtl), // embedded isolate is ignored
+            ("[123 '\u{2066}abc\u{2068}'\u{0628}]", Direction::Mixed),
+            ("[123 '\u{2066}abc\u{2068}'\n\u{0628}]", Direction::Rtl), // \n resets embedding level
+        ];
+
+        for t in tests {
+            assert_eq!(get_base_direction_full(t.0), t.1);
+            let text = &to_utf16(t.0);
+            assert_eq!(get_base_direction_full(text.as_slice()), t.1);
         }
     }
 }
