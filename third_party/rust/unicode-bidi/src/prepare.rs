@@ -59,17 +59,7 @@ pub fn isolating_run_sequences(
         assert!(!stack.is_empty());
 
         let start_class = original_classes[run.start];
-        // > In rule X10, [..] skip over any BNs when [..].
-        // > Do the same when determining if the last character of the sequence is an isolate initiator.
-        //
-        // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
-        let end_class = original_classes[run.start..run.end]
-            .iter()
-            .copied()
-            .rev()
-            .filter(not_removed_by_x9)
-            .next()
-            .unwrap_or(start_class);
+        let end_class = original_classes[run.end - 1];
 
         let mut sequence = if start_class == PDI && stack.len() > 1 {
             // Continue a previous sequence interrupted by an isolate.
@@ -176,6 +166,15 @@ pub fn isolating_run_sequences(
 }
 
 impl IsolatingRunSequence {
+    /// Returns the full range of text represented by this isolating run sequence
+    pub(crate) fn text_range(&self) -> Range<usize> {
+        if let (Some(start), Some(end)) = (self.runs.first(), self.runs.last()) {
+            start.start..end.end
+        } else {
+            return 0..0;
+        }
+    }
+
     /// Given a text-relative position `pos` and an index of the level run it is in,
     /// produce an iterator of all characters after and pos (`pos..`) that are in this
     /// run sequence
