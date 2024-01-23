@@ -13,7 +13,9 @@ add_task(async function test_translations_panel_firstrun() {
     prefs: [["browser.translations.panelShown", false]],
   });
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelFirstShowView,
+  });
 
   await clickCancelButton();
 
@@ -21,7 +23,9 @@ add_task(async function test_translations_panel_firstrun() {
     url: SPANISH_PAGE_URL_2,
   });
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   await clickCancelButton();
 

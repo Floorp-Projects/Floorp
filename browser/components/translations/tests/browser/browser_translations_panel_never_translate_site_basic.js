@@ -22,7 +22,9 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
   await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });

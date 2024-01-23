@@ -23,7 +23,9 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     "The button is available."
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelFirstShowView,
+  });
 
   await clickCancelButton();
 
@@ -54,7 +56,9 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     expectFirstInteraction: true,
   });
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelFirstShowView,
+  });
 
   await clickCancelButton();
 

@@ -22,7 +22,9 @@ add_task(async function test_translations_panel_basics() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   const panel = document.getElementById("translations-panel");
   const label = document.getElementById(panel.getAttribute("aria-labelledby"));
@@ -36,7 +38,9 @@ add_task(async function test_translations_panel_basics() {
     "The icon presents the loading indicator."
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelLoadingView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelLoadingView,
+  });
 
   await clickCancelButton();
 
@@ -48,7 +52,9 @@ add_task(async function test_translations_panel_basics() {
     runInPage
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelRevisitView,
+  });
 
   await clickRestoreButton();
 

@@ -29,7 +29,9 @@ add_task(
       "The translations button is visible."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
@@ -53,7 +55,7 @@ add_task(
       "The translations button should be unavailable."
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelUnsupportedLanguageView,
     });
@@ -69,7 +71,7 @@ add_task(
       runInPage
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelRevisitView,
     });

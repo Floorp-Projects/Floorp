@@ -19,7 +19,7 @@ add_task(
       prefs: [["browser.translations.panelShown", false]],
     });
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelUnsupportedLanguageView,
     });
@@ -80,7 +80,7 @@ add_task(
       expectFirstInteraction: true,
     });
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelUnsupportedLanguageView,
     });

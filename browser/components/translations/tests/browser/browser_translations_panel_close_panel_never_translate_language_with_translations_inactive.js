@@ -16,7 +16,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_language() {
     "The translations button is available"
   );
 
-  await openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
     openFromAppMenu: true,
     onOpenPanel: assertPanelDefaultView,
   });
@@ -47,7 +47,7 @@ add_task(
       "The translations button is available"
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
@@ -58,7 +58,7 @@ add_task(
     await clickNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });

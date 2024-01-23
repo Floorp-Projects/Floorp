@@ -21,7 +21,9 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelFirstShowView,
+  });
   await openTranslationsSettingsMenu();
   await clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
@@ -72,7 +74,9 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     }
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelRevisitView,
+  });
 
   await clickRestoreButton();
 

@@ -23,7 +23,9 @@ add_task(
       "The button is available."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
@@ -42,7 +44,9 @@ add_task(
       runInPage
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });

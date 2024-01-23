@@ -35,7 +35,9 @@ add_task(
       "The translate-selection context menu item should be available while full-page translations is inactive."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
 
     await clickTranslateButton({
       downloadHandler: resolveDownloads,
@@ -57,7 +59,9 @@ add_task(
       "The translate-selection context menu item should be unavailable while full-page translations is active."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
 
     await clickRestoreButton();
 
@@ -110,7 +114,9 @@ add_task(
       "The translate-selection context menu item should be available while full-page translations is inactive."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
 
     await clickTranslateButton({
       downloadHandler: resolveDownloads,
@@ -132,7 +138,9 @@ add_task(
       "The translate-selection context menu item should be unavailable while full-page translations is active."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
 
     await clickRestoreButton();
 

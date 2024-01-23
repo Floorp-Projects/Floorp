@@ -17,7 +17,7 @@ add_task(
       "The translations button is available"
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
@@ -35,7 +35,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
     await openTranslationsSettingsMenu();
@@ -68,7 +68,7 @@ add_task(
       "The translations button is available"
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
@@ -86,7 +86,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
     await openTranslationsSettingsMenu();
@@ -96,7 +96,7 @@ add_task(
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });

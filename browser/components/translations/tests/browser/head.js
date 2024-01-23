@@ -128,66 +128,114 @@ class FullPageTranslationsTestUtils {
 
     return elements;
   }
-}
 
-/**
- * Opens the translations panel.
- *
- * @param {object} config
- * @param {Function} config.onOpenPanel
- *  - A function to run as soon as the panel opens.
- * @param {boolean} config.openFromAppMenu
- *  - Open the panel from the app menu. If false, uses the translations button.
- * @param {boolean} config.openWithKeyboard
- *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
- */
-async function openTranslationsPanel({
-  onOpenPanel = null,
-  openFromAppMenu = false,
-  openWithKeyboard = false,
-}) {
-  logAction();
-  await closeTranslationsPanelIfOpen();
-  if (openFromAppMenu) {
-    await openTranslationsPanelViaAppMenu({ onOpenPanel, openWithKeyboard });
-  } else {
-    await openTranslationsPanelViaTranslationsButton({
-      onOpenPanel,
-      openWithKeyboard,
-    });
+  /**
+   * Opens the translations panel.
+   *
+   * @param {object} config
+   * @param {Function} config.onOpenPanel
+   *  - A function to run as soon as the panel opens.
+   * @param {boolean} config.openFromAppMenu
+   *  - Open the panel from the app menu. If false, uses the translations button.
+   * @param {boolean} config.openWithKeyboard
+   *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   */
+  static async openTranslationsPanel({
+    onOpenPanel = null,
+    openFromAppMenu = false,
+    openWithKeyboard = false,
+  }) {
+    logAction();
+    await closeTranslationsPanelIfOpen();
+    if (openFromAppMenu) {
+      await FullPageTranslationsTestUtils.#openTranslationsPanelViaAppMenu({
+        onOpenPanel,
+        openWithKeyboard,
+      });
+    } else {
+      await FullPageTranslationsTestUtils.#openTranslationsPanelViaTranslationsButton(
+        {
+          onOpenPanel,
+          openWithKeyboard,
+        }
+      );
+    }
   }
-}
 
-/**
- * Opens the translations panel via the translations button.
- *
- * @param {object} config
- * @param {Function} config.onOpenPanel
- *  - A function to run as soon as the panel opens.
- * @param {boolean} config.openWithKeyboard
- *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
- */
-async function openTranslationsPanelViaTranslationsButton({
-  onOpenPanel = null,
-  openWithKeyboard = false,
-}) {
-  logAction();
-  const { button } =
-    await FullPageTranslationsTestUtils.assertTranslationsButton(
-      { button: true },
-      "The translations button is visible."
+  /**
+   * Opens the translations panel via the app menu.
+   *
+   * @param {object} config
+   * @param {Function} config.onOpenPanel
+   *  - A function to run as soon as the panel opens.
+   * @param {boolean} config.openWithKeyboard
+   *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   */
+  static async #openTranslationsPanelViaAppMenu({
+    onOpenPanel = null,
+    openWithKeyboard = false,
+  }) {
+    logAction();
+    const appMenuButton = getById("PanelUI-menu-button");
+    if (openWithKeyboard) {
+      hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
+    } else {
+      click(appMenuButton, "Opening the app-menu button");
+    }
+    await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+
+    const translateSiteButton = getById("appMenu-translate-button");
+
+    is(
+      translateSiteButton.disabled,
+      false,
+      "The app-menu translate button should be enabled"
     );
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      if (openWithKeyboard) {
-        hitEnterKey(button, "Opening the popup with keyboard");
-      } else {
-        click(button, "Opening the popup");
-      }
-    },
-    onOpenPanel
-  );
+
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        if (openWithKeyboard) {
+          hitEnterKey(translateSiteButton, "Opening the popup with keyboard");
+        } else {
+          click(translateSiteButton, "Opening the popup");
+        }
+      },
+      onOpenPanel
+    );
+  }
+
+  /**
+   * Opens the translations panel via the translations button.
+   *
+   * @param {object} config
+   * @param {Function} config.onOpenPanel
+   *  - A function to run as soon as the panel opens.
+   * @param {boolean} config.openWithKeyboard
+   *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   */
+  static async #openTranslationsPanelViaTranslationsButton({
+    onOpenPanel = null,
+    openWithKeyboard = false,
+  }) {
+    logAction();
+    const { button } =
+      await FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true },
+        "The translations button is visible."
+      );
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        if (openWithKeyboard) {
+          hitEnterKey(button, "Opening the popup with keyboard");
+        } else {
+          click(button, "Opening the popup");
+        }
+      },
+      onOpenPanel
+    );
+  }
 }
 
 /**
@@ -235,49 +283,6 @@ async function openTranslationsSettingsMenu() {
     );
     return;
   }
-}
-
-/**
- * Opens the translations panel via the app menu.
- *
- * @param {object} config
- * @param {Function} config.onOpenPanel
- *  - A function to run as soon as the panel opens.
- * @param {boolean} config.openWithKeyboard
- *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
- */
-async function openTranslationsPanelViaAppMenu({
-  onOpenPanel = null,
-  openWithKeyboard = false,
-}) {
-  logAction();
-  const appMenuButton = getById("PanelUI-menu-button");
-  if (openWithKeyboard) {
-    hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
-  } else {
-    click(appMenuButton, "Opening the app-menu button");
-  }
-  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
-
-  const translateSiteButton = getById("appMenu-translate-button");
-
-  is(
-    translateSiteButton.disabled,
-    false,
-    "The app-menu translate button should be enabled"
-  );
-
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      if (openWithKeyboard) {
-        hitEnterKey(translateSiteButton, "Opening the popup with keyboard");
-      } else {
-        click(translateSiteButton, "Opening the popup");
-      }
-    },
-    onOpenPanel
-  );
 }
 
 /**
