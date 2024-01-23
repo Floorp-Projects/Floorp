@@ -46,17 +46,12 @@ class nsSplittableFrame : public nsIFrame {
   nsIFrame* GetPrevContinuation() const final;
   nsIFrame* GetNextContinuation() const final;
 
-  // Set a previous non-fluid continuation.
+  // Set a previous/next non-fluid continuation.
   void SetPrevContinuation(nsIFrame*) final;
-
-  // Set a next non-fluid continuation.
-  //
-  // WARNING: this method updates caches for next-continuations, so it has O(n)
-  // time complexity over the length of next-continuations in the chain.
   void SetNextContinuation(nsIFrame*) final;
 
   // Get the first/last continuation for this frame.
-  nsIFrame* FirstContinuation() const final;
+  nsIFrame* FirstContinuation() const override;
   nsIFrame* LastContinuation() const final;
 
 #ifdef DEBUG
@@ -69,13 +64,8 @@ class nsSplittableFrame : public nsIFrame {
   nsIFrame* GetPrevInFlow() const final;
   nsIFrame* GetNextInFlow() const final;
 
-  // Set a previous fluid continuation.
+  // Set a previous/next fluid continuation.
   void SetPrevInFlow(nsIFrame*) final;
-
-  // Set a next fluid continuation.
-  //
-  // WARNING: this method updates caches for next-continuations, so it has O(n)
-  // time complexity over the length of next-continuations in the chain.
   void SetNextInFlow(nsIFrame*) final;
 
   // Get the first/last frame in the current flow.
@@ -91,14 +81,6 @@ class nsSplittableFrame : public nsIFrame {
   nsSplittableFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                     ClassID aID)
       : nsIFrame(aStyle, aPresContext, aID) {}
-
-  // Update the first-continuation and first-in-flow cache for this frame and
-  // the next-continuations in the chain.
-  //
-  // Note: this function assumes that the first-continuation and first-in-flow
-  // caches are already up-to-date on this frame's
-  // prev-continuation/prev-in-flow frame (if there is such a frame).
-  void UpdateFirstContinuationAndFirstInFlowCache();
 
   /**
    * Return the sum of the block-axis content size of our previous
