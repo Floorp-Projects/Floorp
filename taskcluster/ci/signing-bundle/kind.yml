@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -10,27 +10,24 @@ transforms:
     - android_taskgraph.transforms.treeherder:transforms
     - android_taskgraph.transforms.signing_android_app:transforms
     - android_taskgraph.transforms.notify:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - build-bundle
 
-tasks:
+jobs:
     sign-bundle:
         description: Sign Android AABs
         from-deps:
             copy-attributes: true
-        worker: {}
+        worker:
+            implementation: scriptworker-signing
         signing-format:
             by-build-type:
                 (focus-.*|klar-.*): autograph_focus
                 default: autograph_apk
-        run-on-tasks-for:
-            by-build-type:
-                (focus-debug|fenix-debug): [github-push]
-                default: []
         treeherder:
-            job-symbol:
+            symbol:
                 by-build-type:
                     focus-(debug|nightly|beta|release)$: AABfs
                     klar-.*: AABkls
