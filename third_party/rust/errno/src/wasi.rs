@@ -13,7 +13,7 @@
 // except according to those terms.
 
 use core::str;
-use libc::{self, c_char, c_int, size_t, strlen};
+use libc::{self, c_int, size_t, strerror_r, strlen};
 
 use crate::Errno;
 
@@ -30,8 +30,9 @@ where
 {
     let mut buf = [0u8; 1024];
     let c_str = unsafe {
-        if strerror_r(err.0, buf.as_mut_ptr() as *mut _, buf.len() as size_t) < 0 {
-            let fm_err = errno();
+        let rc = strerror_r(err.0, buf.as_mut_ptr() as *mut _, buf.len() as size_t);
+        if rc != 0 {
+            let fm_err = Errno(rc);
             if fm_err != Errno(libc::ERANGE) {
                 return callback(Err(fm_err));
             }
@@ -56,5 +57,4 @@ pub fn set_errno(Errno(new_errno): Errno) {
 
 extern "C" {
     fn __errno_location() -> *mut c_int;
-    fn strerror_r(errnum: c_int, buf: *mut c_char, buflen: size_t) -> c_int;
 }

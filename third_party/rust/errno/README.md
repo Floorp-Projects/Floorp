@@ -1,6 +1,6 @@
 # errno [![CI](https://github.com/lambda-fairy/rust-errno/actions/workflows/main.yml/badge.svg)](https://github.com/lambda-fairy/rust-errno/actions/workflows/main.yml) [![Cargo](https://img.shields.io/crates/v/errno.svg)](https://crates.io/crates/errno)
 
-Cross-platform interface to the [`errno`][errno] variable. Works on Rust 1.48 or newer.
+Cross-platform interface to the [`errno`][errno] variable. Works on Rust 1.56 or newer.
 
 Documentation is available at <https://docs.rs/errno>.
 

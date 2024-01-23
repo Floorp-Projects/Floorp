@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.48"
+rust-version = "1.56"
 name = "errno"
-version = "0.3.3"
+version = "0.3.8"
 authors = ["Chris Wong <lambda.fairy@gmail.com>"]
 description = "Cross-platform interface to the `errno` variable."
 documentation = "https://docs.rs/errno"
@@ -29,9 +29,6 @@ repository = "https://github.com/lambda-fairy/rust-errno"
 default = ["std"]
 std = ["libc/std"]
 
-[target."cfg(target_os=\"dragonfly\")".dependencies.errno-dragonfly]
-version = "0.1.2"
-
 [target."cfg(target_os=\"hermit\")".dependencies.libc]
 version = "0.2"
 default-features = false
@@ -45,7 +42,7 @@ version = "0.2"
 default-features = false
 
 [target."cfg(windows)".dependencies.windows-sys]
-version = "0.48"
+version = "0.52"
 features = [
     "Win32_Foundation",
     "Win32_System_Diagnostics_Debug",
