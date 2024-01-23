@@ -107,15 +107,85 @@ add_task(async function() {
     lineNumber: 1,
     columnNumber: 1,
   });
+});
 
-  // Test dynamic import is not supported.
-  ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import.js");
-  const e = await ns.result;
+add_task(async function testDynamicImport() {
+  // Dynamic import while and after evaluating top-level script.
+  let ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import.js");
+  let ns2 = await ns.result;
+  Assert.equal(ns2.x, 10);
+
+  ns2 = await ns.doImport();
+  Assert.equal(ns2.y, 20);
+
+  // Dynamic import for statically imported module.
+  Assert.equal(ns.callGetCounter(), 1);
+  ns.callSetCounter(5);
+  Assert.equal(ns.callGetCounter(), 5);
+
+  const { getCounter, setCounter } = await ns.doImportStatic();
+  Assert.equal(getCounter(), 5);
+  setCounter(8);
+  Assert.equal(getCounter(), 8);
+  Assert.equal(ns.callGetCounter(), 8);
+
+  // Dynamic import for missing file.
+  ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import_missing.js");
+  let e = await ns.result;
   checkException(e, {
     type: "TypeError",
-    message: "not supported",
-    fileName: "resource://test/es6module_dynamic_import.js",
+    message: "error loading dynamically imported",
+    fileName: "resource://test/es6module_dynamic_import_missing.js",
     lineNumber: 5,
+    columnNumber: 1,
+  });
+
+  e = await ns.doImport();
+  checkException(e, {
+    type: "TypeError",
+    message: "error loading dynamically imported",
+    fileName: "resource://test/es6module_dynamic_import_missing.js",
+    lineNumber: 11,
+    columnNumber: 5,
+  });
+
+  // Syntax error in dynamic import.
+  ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import_syntax_error.js");
+  e = await ns.result;
+  checkException(e, {
+    type: "SyntaxError",
+    message: "unexpected token",
+    fileName: "resource://test/es6module_dynamic_import_syntax_error2.js",
+    lineNumber: 1,
+    columnNumber: 3,
+  });
+
+  e = await ns.doImport();
+  checkException(e, {
+    type: "SyntaxError",
+    message: "unexpected token",
+    fileName: "resource://test/es6module_dynamic_import_syntax_error3.js",
+    lineNumber: 1,
+    columnNumber: 4,
+  });
+
+  // Runtime error in dynamic import.
+  ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import_runtime_error.js");
+  e = await ns.result;
+  checkException(e, {
+    type: "ReferenceError",
+    message: "foo is not defined",
+    fileName: "resource://test/es6module_dynamic_import_runtime_error2.js",
+    lineNumber: 2,
+    columnNumber: 1,
+  });
+
+  e = await ns.doImport();
+  checkException(e, {
+    type: "ReferenceError",
+    message: "bar is not defined",
+    fileName: "resource://test/es6module_dynamic_import_runtime_error3.js",
+    lineNumber: 2,
     columnNumber: 1,
   });
 });
