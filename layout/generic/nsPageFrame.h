@@ -85,13 +85,6 @@ class nsPageFrame final : public nsContainerFrame {
   // the sheet (i.e. only print preview and save-to-PDF are supported).
   double GetPageOrientationRotation(nsSharedPageData* aPD) const;
 
-  // The default implementation of FirstContinuation in nsSplittableFrame is
-  // implemented in linear time, walking back through the linked list of
-  // continuations via mPrevContinuation.
-  // For nsPageFrames, we can find the first continuation through the frame
-  // tree structure in constant time.
-  nsIFrame* FirstContinuation() const final;
-
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();

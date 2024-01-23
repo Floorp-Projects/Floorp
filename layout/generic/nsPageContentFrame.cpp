@@ -421,21 +421,6 @@ void nsPageContentFrame::EnsurePageName() {
   SetComputedStyleWithoutNotification(pageContentPseudoStyle);
 }
 
-nsIFrame* nsPageContentFrame::FirstContinuation() const {
-  const nsContainerFrame* const parent = GetParent();
-  MOZ_ASSERT(parent && parent->IsPageFrame(),
-             "Parent of nsPageContentFrame should be nsPageFrame");
-  // static cast so the compiler has a chance to devirtualize the call.
-  const auto* const pageFrameParent = static_cast<const nsPageFrame*>(parent);
-  nsPageContentFrame* const pageContentFrame =
-      static_cast<const nsPageFrame*>(pageFrameParent->FirstContinuation())
-          ->PageContentFrame();
-  MOZ_ASSERT(pageContentFrame && !pageContentFrame->GetPrevContinuation(),
-             "First descendent of nsPageSequenceFrame should not have a "
-             "previous continuation");
-  return pageContentFrame;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageContentFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(u"PageContent"_ns, aResult);
