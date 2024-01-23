@@ -363,6 +363,7 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 NEED_WINDOW_MANAGER: 'true'
+                PYTHON: "/builds/worker/checkouts/gecko/mach python"
         dependencies:
             webrender-wrench-android-debug: webrender-wrench-android-debug
         fetches:
@@ -411,6 +412,7 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 NEED_WINDOW_MANAGER: 'true'
+                PYTHON: "/builds/worker/checkouts/gecko/mach python"
         dependencies:
             webrender-wrench-android-release: webrender-wrench-android-release
         fetches:
