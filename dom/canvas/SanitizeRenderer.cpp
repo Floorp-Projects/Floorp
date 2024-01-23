@@ -200,6 +200,13 @@ static std::optional<std::string> ChooseDeviceReplacement(
     static const std::string HD_GRAPHICS = "Intel(R) HD Graphics";
     static const std::string HD_GRAPHICS_400 = "Intel(R) HD Graphics 400";
     static const std::string INTEL_945GM = "Intel 945GM";
+    // Pick A750 to split the performance difference, but err optimistically on
+    // the high end.
+    static const std::string DGPU_ARC = "Intel(R) Arc(TM) A750 Graphics";
+
+    if (Contains(str, "Intel(R) Arc(TM)")) {
+      return DGPU_ARC;
+    }
 
     static const std::regex kIntelHD("Intel.*Graphics( P?([0-9][0-9][0-9]+))?");
     if (std::regex_search(str, m, kIntelHD)) {
