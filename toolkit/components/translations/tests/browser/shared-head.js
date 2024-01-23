@@ -130,6 +130,7 @@ async function openAboutTranslations({
     runInPage
   );
 
+  await loadBlankPage();
   BrowserTestUtils.removeTab(tab);
 
   await removeMocks();
@@ -441,6 +442,7 @@ async function setupActorTest({
     actor,
     remoteClients,
     async cleanup() {
+      await loadBlankPage();
       await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
@@ -583,6 +585,7 @@ async function loadTestPage({
      * @returns {Promise<void>}
      */
     async cleanup() {
+      await loadBlankPage();
       await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
@@ -1063,6 +1066,7 @@ async function setupAboutPreferences(
   const elements = await selectAboutPreferencesElements();
 
   async function cleanup() {
+    await loadBlankPage();
     await TranslationsParent.destroyEngineProcess();
     await closeTranslationsPanelIfOpen();
     await closeContextMenuIfOpen();
@@ -1423,4 +1427,16 @@ function promiseLoadSubDialog(aURL) {
       }
     );
   });
+}
+
+/**
+ * Loads the blank-page URL.
+ *
+ * This is useful for resetting the state during cleanup, and also
+ * before starting a test, to further help ensure that there is no
+ * unintentional state left over from test case.
+ */
+async function loadBlankPage() {
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, BLANK_PAGE);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
