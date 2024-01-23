@@ -4788,7 +4788,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             Argument("nsWrapperCache*", "aCache"),
             Argument("JS::RealmOptions&", "aOptions"),
             Argument("JSPrincipals*", "aPrincipal"),
-            Argument("bool", "aInitStandardClasses"),
             Argument("JS::MutableHandle<JSObject*>", "aReflector"),
         ]
         CGAbstractMethod.__init__(self, descriptor, "Wrap", "bool", args)
@@ -4836,7 +4835,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                                              sClass.ToJSClass(),
                                              aOptions,
                                              aPrincipal,
-                                             aInitStandardClasses,
                                              aReflector)) {
               $*{failureCode}
             }

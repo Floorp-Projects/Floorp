@@ -2053,7 +2053,7 @@ static nsresult CreateNativeGlobalForInner(
   flags |= xpc::DONT_FIRE_ONNEWGLOBALHOOK;
 
   if (!Window_Binding::Wrap(aCx, aNewInner, aNewInner, options,
-                            nsJSPrincipals::get(principal), false, aGlobal) ||
+                            nsJSPrincipals::get(principal), aGlobal) ||
       !xpc::InitGlobalObject(aCx, aGlobal, flags)) {
     return NS_ERROR_FAILURE;
   }

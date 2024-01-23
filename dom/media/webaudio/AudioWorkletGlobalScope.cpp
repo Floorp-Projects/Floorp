@@ -49,7 +49,7 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
 
   JS::RealmOptions options = CreateRealmOptions();
   return AudioWorkletGlobalScope_Binding::Wrap(
-      aCx, this, this, options, BasePrincipal::Cast(mImpl->Principal()), true,
+      aCx, this, this, options, BasePrincipal::Cast(mImpl->Principal()),
       aReflector);
 }
 

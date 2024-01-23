@@ -23,7 +23,7 @@ bool PaintWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   JS::RealmOptions options = CreateRealmOptions();
   return PaintWorkletGlobalScope_Binding::Wrap(
-      aCx, this, this, options, nsJSPrincipals::get(mImpl->Principal()), true,
+      aCx, this, this, options, nsJSPrincipals::get(mImpl->Principal()),
       aReflector);
 }
 

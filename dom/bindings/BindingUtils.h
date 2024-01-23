@@ -2911,7 +2911,7 @@ uint64_t GetWindowID(DedicatedWorkerGlobalScope* aGlobal);
 template <class T, ProtoHandleGetter GetProto>
 bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
                   const JSClass* aClass, JS::RealmOptions& aOptions,
-                  JSPrincipals* aPrincipal, bool aInitStandardClasses,
+                  JSPrincipals* aPrincipal,
                   JS::MutableHandle<JSObject*> aGlobal) {
   aOptions.creationOptions()
       .setTrace(CreateGlobalOptions<T>::TraceGlobal)
@@ -2948,11 +2948,6 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
           js::GetNonCCWObjectRealm(aGlobal),
           RTPCallerTypeToToken(aNative->GetRTPCallerType()));
     }
-  }
-
-  if (aInitStandardClasses && !JS::InitRealmStandardClasses(aCx)) {
-    NS_WARNING("Failed to init standard classes");
-    return false;
   }
 
   JS::Handle<JSObject*> proto = GetProto(aCx);

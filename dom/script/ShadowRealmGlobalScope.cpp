@@ -48,7 +48,7 @@ JSObject* NewShadowRealmGlobal(JSContext* aCx, JS::RealmOptions& aOptions,
 
     scope = new ShadowRealmGlobalScope(nsGlobal);
     ShadowRealmGlobalScope_Binding::Wrap(aCx, scope, scope, aOptions,
-                                         aPrincipals, true, &reflector);
+                                         aPrincipals, &reflector);
   }
 
   return reflector;
