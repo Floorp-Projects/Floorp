@@ -704,6 +704,8 @@ bool JsepTransport::GetTransportStats(DtlsTransportInternal* dtls_transport,
           &substats.ice_transport_stats)) {
     return false;
   }
+  substats.ssl_peer_signature_algorithm =
+      dtls_transport->GetSslPeerSignatureAlgorithm();
   stats->channel_stats.push_back(substats);
   return true;
 }

@@ -1,36 +1,36 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 30 Nov 2023 11:59:00 -0600
-Subject: Bug 1867099 - Cherry-pick upstream libwebrtc commit 5f78ed6eaf - only
- updates a comment.
+Date: Mon, 4 Dec 2023 12:57:00 -0600
+Subject: Bug 1867099 - (fix-66b7275561) disable wgc capture yellow-line
+ removal. r?ng!
 
-Upstream commit: https://webrtc.googlesource.com/src/+/5f78ed6eafa40451b61747978d134afda42ca4d6
-       Minor change in comment for use of an IGraphicsCaptureSession3 API
-
-       Makes it more clear that a certain API is only supported in Windows 11.
-
-       Bug: webrtc:15451
-       Change-Id: Ic3abfb2cbf0e30f9cb722ac843876f41279bf200
-       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323161
-       Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-       Commit-Queue: Henrik Andreassson <henrika@webrtc.org>
-       Cr-Commit-Position: refs/heads/main@{#40931}
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f88616ffaff5074d90963348ef0bc511b48a1c6d
+This code won't build until we support building with
+Win 10 SDK v10.0.20348.0 or newer.
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb637f5076bc08706a11866737
 ---
- modules/desktop_capture/win/wgc_capture_session.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/desktop_capture/win/wgc_capture_session.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index e220e4f4f8..827f257717 100644
+index 8c74c2bf24..86afc52411 100644
 --- a/modules/desktop_capture/win/wgc_capture_session.cc
 +++ b/modules/desktop_capture/win/wgc_capture_session.cc
-@@ -190,8 +190,8 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+@@ -188,6 +188,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+     }
+   }
+ 
++// Until Mozilla builds with Win 10 SDK v10.0.20348.0 or newer, this
++// code will not build.  Once we support the newer SDK, Bug 1868198
++// exists to decide if we ever want to use this code since it is
++// removing an indicator that capture is happening.
++#if !defined(WEBRTC_MOZILLA_BUILD)
    // By default, the WGC capture API adds a yellow border around the captured
    // window or display to indicate that a capture is in progress. The section
    // below is an attempt to remove this yellow border to make the capture
--  // experience more inline with the DXGI capture path. The QueryInterface call
--  // will silently fail on Windows versions lower than 2104 (10.0.20348.0).
-+  // experience more inline with the DXGI capture path.
-+  // This requires 10.0.20348.0 or later, which practically means Windows 11.
-   ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession3> session3;
-   if (SUCCEEDED(session_->QueryInterface(
-           ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession3,
+@@ -199,6 +204,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+           &session3))) {
+     session3->put_IsBorderRequired(false);
+   }
++#endif
+ 
+   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
+ 

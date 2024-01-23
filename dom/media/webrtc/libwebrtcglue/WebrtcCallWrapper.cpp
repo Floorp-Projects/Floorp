@@ -30,7 +30,7 @@ namespace mozilla {
 
   wrapper->mCallThread->Dispatch(
       NS_NewRunnableFunction(__func__, [wrapper, aSharedState] {
-        webrtc::Call::Config config(wrapper->mEventLog.get());
+        webrtc::CallConfig config(wrapper->mEventLog.get());
         config.audio_state =
             webrtc::AudioState::Create(aSharedState->mAudioStateConfig);
         config.task_queue_factory = wrapper->mTaskQueueFactory.get();
@@ -38,7 +38,7 @@ namespace mozilla {
         wrapper->SetCall(WrapUnique(webrtc::Call::Create(
             config, &wrapper->mClock,
             webrtc::RtpTransportControllerSendFactory().Create(
-                config.ExtractTransportConfig(), &wrapper->mClock))));
+                config.ExtractTransportConfig(), &wrapper->mClock)).release()));
       }));
 
   return wrapper;

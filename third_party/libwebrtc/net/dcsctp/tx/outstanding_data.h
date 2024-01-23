@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/iforward_tsn_chunk.h"
@@ -75,7 +76,7 @@ class OutstandingData {
       size_t data_chunk_header_size,
       UnwrappedTSN next_tsn,
       UnwrappedTSN last_cumulative_tsn_ack,
-      std::function<bool(IsUnordered, StreamID, MID)> discard_from_send_queue)
+      std::function<bool(StreamID, OutgoingMessageId)> discard_from_send_queue)
       : data_chunk_header_size_(data_chunk_header_size),
         next_tsn_(next_tsn),
         last_cumulative_tsn_ack_(last_cumulative_tsn_ack),
@@ -128,6 +129,7 @@ class OutstandingData {
   // parameters. Returns the TSN if the item was actually added and scheduled to
   // be sent, and absl::nullopt if it shouldn't be sent.
   absl::optional<UnwrappedTSN> Insert(
+      OutgoingMessageId message_id,
       const Data& data,
       TimeMs time_sent,
       MaxRetransmits max_retransmissions = MaxRetransmits::NoLimit(),
@@ -175,12 +177,14 @@ class OutstandingData {
       kAbandon,
     };
 
-    Item(Data data,
+    Item(OutgoingMessageId message_id,
+         Data data,
          TimeMs time_sent,
          MaxRetransmits max_retransmissions,
          TimeMs expires_at,
          LifecycleId lifecycle_id)
-        : time_sent_(time_sent),
+        : message_id_(message_id),
+          time_sent_(time_sent),
           max_retransmissions_(max_retransmissions),
           expires_at_(expires_at),
           lifecycle_id_(lifecycle_id),
@@ -188,6 +192,8 @@ class OutstandingData {
 
     Item(const Item&) = delete;
     Item& operator=(const Item&) = delete;
+
+    OutgoingMessageId message_id() const { return message_id_; }
 
     TimeMs time_sent() const { return time_sent_; }
 
@@ -248,6 +254,8 @@ class OutstandingData {
 
     // NOTE: This data structure has been optimized for size, by ordering fields
     // to avoid unnecessary padding.
+
+    const OutgoingMessageId message_id_;
 
     // When the packet was sent, and placed in this queue.
     const TimeMs time_sent_;
@@ -338,7 +346,7 @@ class OutstandingData {
   // The last cumulative TSN ack number.
   UnwrappedTSN last_cumulative_tsn_ack_;
   // Callback when to discard items from the send queue.
-  std::function<bool(IsUnordered, StreamID, MID)> discard_from_send_queue_;
+  std::function<bool(StreamID, OutgoingMessageId)> discard_from_send_queue_;
 
   std::map<UnwrappedTSN, Item> outstanding_data_;
   // The number of bytes that are in-flight (sent but not yet acked or nacked).

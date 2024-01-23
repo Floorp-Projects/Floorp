@@ -40,7 +40,6 @@ enum : int {  // The first valid value is 1.
   kVideoRotationRtpExtensionId,
 };
 
-constexpr int kDefaultMaxQp = cricket::WebRtcVideoSendChannel::kDefaultQpMax;
 uint8_t CodecTypeToPayloadType(VideoCodecType codec_type) {
   switch (codec_type) {
     case VideoCodecType::kVideoCodecGeneric:
@@ -234,8 +233,8 @@ VideoEncoderConfig CreateVideoEncoderConfig(VideoStreamConfig config) {
                        VideoStreamConfig::Encoder::ContentType::kScreen;
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
-            cricket_codec, kDefaultMaxQp, screenshare, screenshare,
-            encoder_info);
+            cricket_codec, cricket::kDefaultVideoMaxQpVpx, screenshare,
+            screenshare, encoder_info);
   } else {
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<DefaultVideoStreamFactory>();

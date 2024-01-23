@@ -9,6 +9,7 @@
 DIRS += [
     "/third_party/libwebrtc/api/adaptation/resource_adaptation_api_gn",
     "/third_party/libwebrtc/api/array_view_gn",
+    "/third_party/libwebrtc/api/async_dns_resolver_gn",
     "/third_party/libwebrtc/api/audio/aec3_config_gn",
     "/third_party/libwebrtc/api/audio/aec3_factory_gn",
     "/third_party/libwebrtc/api/audio/audio_frame_api_gn",
@@ -306,6 +307,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_temporal_layers_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_helpers_gn",
+    "/third_party/libwebrtc/rtc_base/async_dns_resolver_gn",
     "/third_party/libwebrtc/rtc_base/async_packet_socket_gn",
     "/third_party/libwebrtc/rtc_base/async_resolver_interface_gn",
     "/third_party/libwebrtc/rtc_base/audio_format_to_string_gn",
@@ -415,6 +417,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/config_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/core_headers_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/log_severity_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/nullability_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/raw_logging_internal_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/throw_delegate_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_gn",

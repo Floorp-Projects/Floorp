@@ -10,6 +10,7 @@
 
 #include "modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h"
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -100,6 +101,13 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   }
 
   Direction GetDirection() const override { return Direction::kSender; }
+  std::string GetMimeType() const override {
+    if (!codec_type_.has_value()) {
+      return "video/x-unknown";
+    }
+    std::string mime_type = "video/";
+    return mime_type + CodecTypeToPayloadString(*codec_type_);
+  }
 
   const std::string& GetRid() const override { return rid_; }
 

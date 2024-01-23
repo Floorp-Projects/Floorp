@@ -409,6 +409,7 @@ rtc_library("video_coding_utility") {
     ":video_codec_interface",
     "../../api:array_view",
     "../../api:field_trials_view",
+    "../../api:field_trials_view",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
     "../../api/units:time_delta",
@@ -1055,8 +1056,8 @@ if (rtc_include_tests) {
       "../../api/video_codecs:video_codecs_api",
       "../../media:rtc_internal_video_codecs",
       "../../rtc_base:logging",
-      "../../system_wrappers:field_trial",
       "../../test:fileutils",
+      "../../test:test_flags",
       "../../test:test_main",
       "../../test:test_support",
       "../../test:video_test_support",
@@ -1076,7 +1077,10 @@ if (rtc_include_tests) {
       shard_timeout = 900
     }
 
-    absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/flags:flag",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
+    ]
 
     data = [ "../../resources/FourPeople_1280x720_30.yuv" ]
   }
@@ -1260,6 +1264,7 @@ if (rtc_include_tests) {
       "../../api:array_view",
       "../../api:create_simulcast_test_fixture_api",
       "../../api:fec_controller_api",
+      "../../api:field_trials_view",
       "../../api:mock_fec_controller_override",
       "../../api:mock_video_decoder",
       "../../api:mock_video_encoder",

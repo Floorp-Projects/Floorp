@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d60700
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index e3058fca0d..156177fe71 100644
+index 08dd74591d..81d5c66652 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -623,9 +623,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
+@@ -625,9 +625,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    include_audio_level_indication_.store(enable);
    if (enable) {

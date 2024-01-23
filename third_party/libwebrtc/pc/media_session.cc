@@ -1029,13 +1029,12 @@ void MergeCodecs(const std::vector<Codec>& reference_codecs,
 // don't conflict with mappings of the other media type; `supported_codecs` is
 // a list filtered for the media section`s direction but with default payload
 // types.
-template <typename Codecs>
-Codecs MatchCodecPreference(
+std::vector<Codec> MatchCodecPreference(
     const std::vector<webrtc::RtpCodecCapability>& codec_preferences,
-    const Codecs& codecs,
-    const Codecs& supported_codecs,
+    const std::vector<Codec>& codecs,
+    const std::vector<Codec>& supported_codecs,
     const webrtc::FieldTrialsView* field_trials) {
-  Codecs filtered_codecs;
+  std::vector<Codec> filtered_codecs;
   bool want_rtx = false;
   bool want_red = false;
 
@@ -1046,10 +1045,10 @@ Codecs MatchCodecPreference(
       want_red = true;
     }
   }
+  bool red_was_added = false;
   for (const auto& codec_preference : codec_preferences) {
     auto found_codec = absl::c_find_if(
-        supported_codecs,
-        [&codec_preference](const typename Codecs::value_type& codec) {
+        supported_codecs, [&codec_preference](const Codec& codec) {
           webrtc::RtpCodecParameters codec_parameters =
               codec.ToCodecParameters();
           return codec_parameters.name == codec_preference.name &&
@@ -1061,11 +1060,16 @@ Codecs MatchCodecPreference(
         });
 
     if (found_codec != supported_codecs.end()) {
-      absl::optional<typename Codecs::value_type> found_codec_with_correct_pt =
-          FindMatchingCodec(supported_codecs, codecs, *found_codec,
-                            field_trials);
+      absl::optional<Codec> found_codec_with_correct_pt = FindMatchingCodec(
+          supported_codecs, codecs, *found_codec, field_trials);
       if (found_codec_with_correct_pt) {
-        filtered_codecs.push_back(*found_codec_with_correct_pt);
+        // RED may already have been added if its primary codec is before RED
+        // in the codec list.
+        bool is_red_codec = IsRedCodec(*found_codec_with_correct_pt);
+        if (!is_red_codec || !red_was_added) {
+          filtered_codecs.push_back(*found_codec_with_correct_pt);
+          red_was_added = is_red_codec ? true : red_was_added;
+        }
         std::string id = rtc::ToString(found_codec_with_correct_pt->id);
         // Search for the matching rtx or red codec.
         if (want_red || want_rtx) {
@@ -1086,11 +1090,11 @@ Codecs MatchCodecPreference(
               if (fmtp != codec.params.end()) {
                 std::vector<absl::string_view> redundant_payloads =
                     rtc::split(fmtp->second, '/');
-                if (redundant_payloads.size() > 0 &&
+                if (!redundant_payloads.empty() &&
                     redundant_payloads[0] == id) {
-                  if (std::find(filtered_codecs.begin(), filtered_codecs.end(),
-                                codec) == filtered_codecs.end()) {
+                  if (!red_was_added) {
                     filtered_codecs.push_back(codec);
+                    red_was_added = true;
                   }
                   break;
                 }
@@ -1337,15 +1341,16 @@ void StripCNCodecs(AudioCodecs* audio_codecs) {
                       audio_codecs->end());
 }
 
-template <class C>
-bool SetCodecsInAnswer(const MediaContentDescriptionImpl<C>* offer,
-                       const std::vector<C>& local_codecs,
+bool SetCodecsInAnswer(const MediaContentDescription* offer,
+                       const std::vector<Codec>& local_codecs,
                        const MediaDescriptionOptions& media_description_options,
                        const MediaSessionOptions& session_options,
                        UniqueRandomIdGenerator* ssrc_generator,
                        StreamParamsVec* current_streams,
                        MediaContentDescription* answer,
                        const webrtc::FieldTrialsView& field_trials) {
+  RTC_DCHECK(offer->type() == MEDIA_TYPE_AUDIO ||
+             offer->type() == MEDIA_TYPE_VIDEO);
   std::vector<Codec> negotiated_codecs;
   NegotiateCodecs(local_codecs, offer->codecs(), &negotiated_codecs,
                   media_description_options.codec_preferences.empty(),
@@ -1674,9 +1679,6 @@ MediaSessionDescriptionFactory::CreateOfferOrError(
         msection_index < current_description->contents().size()) {
       current_content = &current_description->contents()[msection_index];
       // Media type must match unless this media section is being recycled.
-      RTC_DCHECK(current_content->name != media_description_options.mid ||
-                 IsMediaContentOfType(current_content,
-                                      media_description_options.type));
     }
     RTCError error;
     switch (media_description_options.type) {
@@ -2037,13 +2039,11 @@ void MergeCodecsFromDescription(
     const webrtc::FieldTrialsView* field_trials) {
   for (const ContentInfo* content : current_active_contents) {
     if (IsMediaContentOfType(content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content->media_description()->as_audio();
-      MergeCodecs(audio->codecs(), audio_codecs, used_pltypes, field_trials);
+      MergeCodecs(content->media_description()->codecs(), audio_codecs,
+                  used_pltypes, field_trials);
     } else if (IsMediaContentOfType(content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content->media_description()->as_video();
-      MergeCodecs(video->codecs(), video_codecs, used_pltypes, field_trials);
+      MergeCodecs(content->media_description()->codecs(), video_codecs,
+                  used_pltypes, field_trials);
     }
   }
 }
@@ -2098,23 +2098,21 @@ void MediaSessionDescriptionFactory::GetCodecsForAnswer(
   VideoCodecs filtered_offered_video_codecs;
   for (const ContentInfo& content : remote_offer.contents()) {
     if (IsMediaContentOfType(&content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content.media_description()->as_audio();
-      for (const AudioCodec& offered_audio_codec : audio->codecs()) {
-        if (!FindMatchingCodec(audio->codecs(), filtered_offered_audio_codecs,
+      std::vector<Codec> offered_codecs = content.media_description()->codecs();
+      for (const Codec& offered_audio_codec : offered_codecs) {
+        if (!FindMatchingCodec(offered_codecs, filtered_offered_audio_codecs,
                                offered_audio_codec, field_trials) &&
-            FindMatchingCodec(audio->codecs(), all_audio_codecs_,
+            FindMatchingCodec(offered_codecs, all_audio_codecs_,
                               offered_audio_codec, field_trials)) {
           filtered_offered_audio_codecs.push_back(offered_audio_codec);
         }
       }
     } else if (IsMediaContentOfType(&content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content.media_description()->as_video();
-      for (const VideoCodec& offered_video_codec : video->codecs()) {
-        if (!FindMatchingCodec(video->codecs(), filtered_offered_video_codecs,
+      std::vector<Codec> offered_codecs = content.media_description()->codecs();
+      for (const Codec& offered_video_codec : offered_codecs) {
+        if (!FindMatchingCodec(offered_codecs, filtered_offered_video_codecs,
                                offered_video_codec, field_trials) &&
-            FindMatchingCodec(video->codecs(), all_video_codecs_,
+            FindMatchingCodec(offered_codecs, all_video_codecs_,
                               offered_video_codec, field_trials)) {
           filtered_offered_video_codecs.push_back(offered_video_codec);
         }
@@ -2156,17 +2154,13 @@ MediaSessionDescriptionFactory::GetOfferedRtpHeaderExtensionsWithIds(
   // type is added.
   for (const ContentInfo* content : current_active_contents) {
     if (IsMediaContentOfType(content, MEDIA_TYPE_AUDIO)) {
-      const AudioContentDescription* audio =
-          content->media_description()->as_audio();
-      MergeRtpHdrExts(audio->rtp_header_extensions(), &offered_extensions.audio,
-                      &all_regular_extensions, &all_encrypted_extensions,
-                      &used_ids);
+      MergeRtpHdrExts(content->media_description()->rtp_header_extensions(),
+                      &offered_extensions.audio, &all_regular_extensions,
+                      &all_encrypted_extensions, &used_ids);
     } else if (IsMediaContentOfType(content, MEDIA_TYPE_VIDEO)) {
-      const VideoContentDescription* video =
-          content->media_description()->as_video();
-      MergeRtpHdrExts(video->rtp_header_extensions(), &offered_extensions.video,
-                      &all_regular_extensions, &all_encrypted_extensions,
-                      &used_ids);
+      MergeRtpHdrExts(content->media_description()->rtp_header_extensions(),
+                      &offered_extensions.video, &all_regular_extensions,
+                      &all_encrypted_extensions, &used_ids);
     }
   }
 
@@ -2286,8 +2280,7 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
-        // TODO(bugs.webrtc.org/15471): add a unit test for this since
-        // it is not clear how this can happen for offers.
+        // Can happen if the remote side re-uses a MID while recycling.
         LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                              "Media type for content with mid='" +
                                  current_content->name +
@@ -2386,8 +2379,7 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
-        // TODO(bugs.webrtc.org/15471): add a unit test for this since
-        // it is not clear how this can happen for offers.
+        // Can happen if the remote side re-uses a MID while recycling.
         LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                              "Media type for content with mid='" +
                                  current_content->name +

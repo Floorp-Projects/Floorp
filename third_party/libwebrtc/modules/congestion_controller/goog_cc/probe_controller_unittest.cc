@@ -60,13 +60,28 @@ class ProbeControllerFixture {
   NiceMock<MockRtcEventLog> mock_rtc_event_log;
 };
 
-TEST(ProbeControllerTest, InitiatesProbingAtStart) {
+TEST(ProbeControllerTest, InitiatesProbingAfterSetBitrates) {
+  ProbeControllerFixture fixture;
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
+
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  EXPECT_GE(probes.size(), 2u);
+}
+
+TEST(ProbeControllerTest, InitiatesProbingWhenNetworkAvailable) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
-  auto probes = probe_controller->SetBitrates(
+  std::vector<ProbeClusterConfig> probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  EXPECT_THAT(probes, IsEmpty());
+  probes = probe_controller->OnNetworkAvailability({.network_available = true});
   EXPECT_GE(probes.size(), 2u);
 }
 
@@ -74,6 +89,9 @@ TEST(ProbeControllerTest, SetsDefaultTargetDurationAndTargetProbeCount) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   std::vector<ProbeClusterConfig> probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   ASSERT_GE(probes.size(), 2u);
@@ -89,6 +107,9 @@ TEST(ProbeControllerTest,
       "min_probe_packets_sent:2,min_probe_duration:123ms/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   std::vector<ProbeClusterConfig> probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   ASSERT_GE(probes.size(), 2u);
@@ -115,6 +136,9 @@ TEST(ProbeControllerTest, CanConfigureInitialProbeRateFactor) {
   ProbeControllerFixture fixture("WebRTC-Bwe-ProbingConfiguration/p1:2,p2:3/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
@@ -126,6 +150,9 @@ TEST(ProbeControllerTest, DisableSecondInitialProbeIfRateFactorZero) {
   ProbeControllerFixture fixture("WebRTC-Bwe-ProbingConfiguration/p1:2,p2:0/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 1u);
@@ -136,6 +163,9 @@ TEST(ProbeControllerTest, InitiatesProbingOnMaxBitrateIncrease) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   // Long enough to time out exponential probing.
@@ -155,6 +185,9 @@ TEST(ProbeControllerTest, ProbesOnMaxAllocatedBitrateIncreaseOnlyWhenInAlr) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probes = probe_controller->SetEstimatedBitrate(
@@ -186,7 +219,9 @@ TEST(ProbeControllerTest, CanDisableProbingOnMaxTotalAllocatedBitrateIncrease) {
       "probe_max_allocation:false/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
-
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probes = probe_controller->SetEstimatedBitrate(
@@ -208,6 +243,9 @@ TEST(ProbeControllerTest, InitiatesProbingOnMaxBitrateIncreaseAtMaxBitrate) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   // Long enough to time out exponential probing.
@@ -231,6 +269,9 @@ TEST(ProbeControllerTest, TestExponentialProbing) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
 
@@ -252,6 +293,9 @@ TEST(ProbeControllerTest, TestExponentialProbingTimeout) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   // Advance far enough to cause a time out in waiting for probing result.
@@ -268,6 +312,9 @@ TEST(ProbeControllerTest, RequestProbeInAlr) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_GE(probes.size(), 2u);
@@ -291,6 +338,9 @@ TEST(ProbeControllerTest, RequestProbeWhenAlrEndedRecently) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
@@ -316,6 +366,9 @@ TEST(ProbeControllerTest, RequestProbeWhenAlrNotEndedRecently) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
@@ -339,6 +392,9 @@ TEST(ProbeControllerTest, RequestProbeWhenBweDropNotRecent) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
@@ -361,6 +417,9 @@ TEST(ProbeControllerTest, PeriodicProbing) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -405,6 +464,9 @@ TEST(ProbeControllerTest, PeriodicProbingAfterReset) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   Timestamp alr_start_time = fixture.CurrentTime();
 
   probe_controller->SetAlrStartTimeMs(alr_start_time.ms());
@@ -463,6 +525,9 @@ TEST(ProbeControllerTest, TestExponentialProbingOverflow) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   const DataRate kMbpsMultiplier = DataRate::KilobitsPerSec(1000);
   auto probes = probe_controller->SetBitrates(kMinBitrate, 10 * kMbpsMultiplier,
                                               100 * kMbpsMultiplier,
@@ -484,6 +549,9 @@ TEST(ProbeControllerTest, TestAllocatedBitrateCap) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   const DataRate kMbpsMultiplier = DataRate::KilobitsPerSec(1000);
   const DataRate kMaxBitrate = 100 * kMbpsMultiplier;
   auto probes = probe_controller->SetBitrates(
@@ -529,6 +597,9 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
       "alloc_p1:2,alloc_p2,min_probe_packets_sent:2/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(kMinBitrate, kStartBitrate,
                                               DataRate::KilobitsPerSec(5000),
@@ -563,11 +634,12 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
 }
 
 TEST(ProbeControllerTest, LimitAlrProbeWhenLossBasedBweLimited) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -602,6 +674,9 @@ TEST(ProbeControllerTest, PeriodicProbeAtUpperNetworkStateEstimate) {
       "WebRTC-Bwe-ProbingConfiguration/network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -627,9 +702,12 @@ TEST(ProbeControllerTest,
      LimitProbeAtUpperNetworkStateEstimateIfLossBasedLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -659,6 +737,9 @@ TEST(ProbeControllerTest, AlrProbesLimitedByNetworkStateEstimate) {
       "WebRTC-Bwe-ProbingConfiguration/network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -687,6 +768,9 @@ TEST(ProbeControllerTest, CanSetLongerProbeDurationAfterNetworkStateEstimate) {
       "network_state_interval:5s,network_state_probe_duration:100ms/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -706,11 +790,12 @@ TEST(ProbeControllerTest, CanSetLongerProbeDurationAfterNetworkStateEstimate) {
 }
 
 TEST(ProbeControllerTest, ProbeInAlrIfLossBasedIncreasing) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probe_controller->EnablePeriodicAlrProbing(true);
@@ -732,11 +817,12 @@ TEST(ProbeControllerTest, ProbeInAlrIfLossBasedIncreasing) {
 }
 
 TEST(ProbeControllerTest, ProbeFurtherInAlrIfLossBasedIncreasing) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probe_controller->EnablePeriodicAlrProbing(true);
@@ -764,16 +850,17 @@ TEST(ProbeControllerTest, ProbeFurtherInAlrIfLossBasedIncreasing) {
 }
 
 TEST(ProbeControllerTest, NotProbeWhenInAlrIfLossBasedDecreases) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probe_controller->EnablePeriodicAlrProbing(true);
   probes = probe_controller->SetEstimatedBitrate(
-      kStartBitrate, BandwidthLimitedCause::kLossLimitedBweDecreasing,
+      kStartBitrate, BandwidthLimitedCause::kLossLimitedBwe,
       fixture.CurrentTime());
 
   // Wait long enough to time out exponential probing.
@@ -789,11 +876,12 @@ TEST(ProbeControllerTest, NotProbeWhenInAlrIfLossBasedDecreases) {
 }
 
 TEST(ProbeControllerTest, NotProbeIfLossBasedIncreasingOutsideAlr) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "limit_probe_target_rate_to_loss_bwe:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   probe_controller->EnablePeriodicAlrProbing(true);
@@ -815,9 +903,12 @@ TEST(ProbeControllerTest, NotProbeIfLossBasedIncreasingOutsideAlr) {
 TEST(ProbeControllerTest, ProbeFurtherWhenLossBasedIsSameAsDelayBasedEstimate) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -855,6 +946,9 @@ TEST(ProbeControllerTest, ProbeIfEstimateLowerThanNetworkStateEstimate) {
       "target_rate_to_loss_bwe:true/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -896,9 +990,12 @@ TEST(ProbeControllerTest, ProbeIfEstimateLowerThanNetworkStateEstimate) {
 TEST(ProbeControllerTest, DontProbeFurtherWhenLossLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -918,17 +1015,20 @@ TEST(ProbeControllerTest, DontProbeFurtherWhenLossLimited) {
   EXPECT_LT(probes[0].target_data_rate, state_estimate.link_capacity_upper);
   // Expect that no more probes are sent immediately if BWE is loss limited.
   probes = probe_controller->SetEstimatedBitrate(
-      probes[0].target_data_rate,
-      BandwidthLimitedCause::kLossLimitedBweDecreasing, fixture.CurrentTime());
+      probes[0].target_data_rate, BandwidthLimitedCause::kLossLimitedBwe,
+      fixture.CurrentTime());
   EXPECT_TRUE(probes.empty());
 }
 
 TEST(ProbeControllerTest, ProbeFurtherWhenDelayBasedLimited) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -958,9 +1058,12 @@ TEST(ProbeControllerTest,
      ProbeFurtherIfNetworkStateEstimateIncreaseAfterProbeSent) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   ASSERT_FALSE(probes.empty());
@@ -999,6 +1102,9 @@ TEST(ProbeControllerTest, SkipAlrProbeIfEstimateLargerThanMaxProbe) {
       "skip_if_est_larger_than_fraction_of_max:0.9/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -1027,6 +1133,9 @@ TEST(ProbeControllerTest,
       "skip_if_est_larger_than_fraction_of_max:1.0/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -1057,6 +1166,9 @@ TEST(ProbeControllerTest, SkipNetworkStateProbeIfEstimateLargerThanMaxProbe) {
       "network_state_interval:2s,skip_if_est_larger_than_fraction_of_max:0.9/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   ASSERT_FALSE(probes.empty());
@@ -1080,6 +1192,9 @@ TEST(ProbeControllerTest, SendsProbeIfNetworkStateEstimateLowerThanMaxProbe) {
       "/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
   ASSERT_FALSE(probes.empty());
@@ -1107,9 +1222,12 @@ TEST(ProbeControllerTest,
      ProbeNotLimitedByNetworkStateEsimateIfLowerThantCurrent) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,limit_probe_target_rate_to_loss_bwe:true/");
+      "network_state_interval:5s/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
   probe_controller->EnablePeriodicAlrProbing(true);
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -1133,11 +1251,12 @@ TEST(ProbeControllerTest,
 }
 
 TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,not_probe_if_delay_increased:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
@@ -1162,11 +1281,12 @@ TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
 }
 
 TEST(ProbeControllerTest, DontProbeIfHighRtt) {
-  ProbeControllerFixture fixture(
-      "WebRTC-Bwe-ProbingConfiguration/"
-      "network_state_interval:5s,not_probe_if_delay_increased:true/");
+  ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
 
   auto probes = probe_controller->SetBitrates(
       kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());

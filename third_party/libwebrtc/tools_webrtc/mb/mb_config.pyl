@@ -397,10 +397,10 @@
       'gn_args': 'is_debug=true',
     },
     'debug_bot': {
-      'mixins': ['debug', 'reclient'],
+      'mixins': ['debug', 'reclient', 'strict_field_trials'],
     },
     'debug_static_bot': {
-      'mixins': ['debug', 'minimal_symbols', 'reclient'],
+      'mixins': ['debug', 'minimal_symbols', 'reclient', 'strict_field_trials'],
     },
     'dummy_audio_file_devices': {
       'gn_args': 'rtc_use_dummy_audio_file_devices=true',
@@ -465,13 +465,16 @@
       'gn_args': 'is_debug=false',
     },
     'release_bot': {
-      'mixins': ['pure_release_bot', 'dcheck_always_on'],
+      'mixins': ['pure_release_bot', 'dcheck_always_on', 'strict_field_trials'],
     },
     'rtc_objc_test_prefix': {
       'gn_args': 'rtc_objc_prefix="RTC_TESTING"',
     },
     'rtti': {
       'gn_args': 'use_rtti=true',
+    },
+    'strict_field_trials': {
+      'gn_args': 'rtc_strict_field_trials="dcheck"',
     },
     'tsan': {
       'gn_args': 'is_tsan=true',

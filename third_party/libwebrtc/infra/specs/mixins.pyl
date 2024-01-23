@@ -51,6 +51,14 @@
       }
     }
   },
+  'crosshatch': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'crosshatch',
+        'os': 'Android'
+      }
+    }
+  },
   'fuchsia-gtest-output': {
     'args': [
       '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
@@ -212,7 +220,7 @@
     'args': ['--nologs']
   },
   'quick-perf-tests': {
-    'args': ['--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/', '--nologs']
+    'args': ['--webrtc_quick_perf_test', '--nologs']
   },
   'redfin': {
     'swarming': {
@@ -247,6 +255,11 @@
   'shards-6': {
     'swarming': {
       'shards': 6
+    }
+  },
+  'shards-8': {
+    'swarming': {
+      'shards': 8
     }
   },
   'timeout-2h': {
@@ -312,10 +325,10 @@
     }
   },
   'xcode_15_main': {
-    'args': ['--xcode-build-version', '15a5229h'],
+    'args': ['--xcode-build-version', '15a240d'],
     'swarming': {
       'named_caches': [{
-        'name': 'xcode_ios_15a5229h',
+        'name': 'xcode_ios_15a240d',
         'path': 'Xcode.app'
       }]
     }

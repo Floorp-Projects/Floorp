@@ -25,6 +25,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/exp_filter.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -587,6 +588,7 @@ void OveruseFrameDetector::CheckForOveruse(
     return;
 
   int64_t now_ms = rtc::TimeMillis();
+  const char* action = "NoAction";
 
   if (IsOverusing(*encode_usage_percent_)) {
     // If the last thing we did was going up, and now have to back down, we need
@@ -612,21 +614,24 @@ void OveruseFrameDetector::CheckForOveruse(
     ++num_overuse_detections_;
 
     observer->AdaptDown();
+    action = "AdaptDown";
   } else if (IsUnderusing(*encode_usage_percent_, now_ms)) {
     last_rampup_time_ms_ = now_ms;
     in_quick_rampup_ = true;
 
     observer->AdaptUp();
+    action = "AdaptUp";
   }
+  TRACE_EVENT2("webrtc", "OveruseFrameDetector::CheckForOveruse",
+               "encode_usage_percent", *encode_usage_percent_, "action",
+               TRACE_STR_COPY(action));
 
   int rampup_delay =
       in_quick_rampup_ ? kQuickRampUpDelayMs : current_rampup_delay_ms_;
 
-  RTC_LOG(LS_VERBOSE) << " Frame stats: "
-                         " encode usage "
-                      << *encode_usage_percent_ << " overuse detections "
-                      << num_overuse_detections_ << " rampup delay "
-                      << rampup_delay;
+  RTC_LOG(LS_INFO) << "CheckForOveruse: encode usage " << *encode_usage_percent_
+                   << " overuse detections " << num_overuse_detections_
+                   << " rampup delay " << rampup_delay << " action " << action;
 }
 
 void OveruseFrameDetector::SetOptions(const CpuOveruseOptions& options) {

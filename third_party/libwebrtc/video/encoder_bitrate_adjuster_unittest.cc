@@ -13,11 +13,12 @@
 #include <memory>
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "api/units/data_rate.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace test {
@@ -82,7 +83,8 @@ class EncoderBitrateAdjusterTest : public ::testing::Test {
       }
     }
 
-    adjuster_ = std::make_unique<EncoderBitrateAdjuster>(codec_);
+    adjuster_ =
+        std::make_unique<EncoderBitrateAdjuster>(codec_, scoped_field_trial_);
     adjuster_->OnEncoderInfo(encoder_info_);
     current_adjusted_allocation_ =
         adjuster_->AdjustRateAllocation(VideoEncoder::RateControlParameters(
@@ -234,6 +236,7 @@ class EncoderBitrateAdjusterTest : public ::testing::Test {
   double target_framerate_fps_;
   int tl_pattern_idx_[kMaxSpatialLayers];
   int sequence_idx_[kMaxSpatialLayers][kMaxTemporalStreams];
+  test::ScopedKeyValueConfig scoped_field_trial_;
 
   const std::vector<int> kTlPatterns[kMaxTemporalStreams] = {
       {0},
@@ -422,7 +425,8 @@ TEST_F(EncoderBitrateAdjusterTest, DifferentSpatialOvershoots) {
 TEST_F(EncoderBitrateAdjusterTest, HeadroomAllowsOvershootToMediaRate) {
   // Two streams, both with three temporal layers.
   // Media rate is 1.0, but network rate is higher.
-  ScopedFieldTrials field_trial(
+  test::ScopedKeyValueConfig field_trial(
+      scoped_field_trial_,
       "WebRTC-VideoRateControl/adjuster_use_headroom:true/");
 
   const uint32_t kS0Bitrate = 300000;
@@ -464,7 +468,8 @@ TEST_F(EncoderBitrateAdjusterTest, HeadroomAllowsOvershootToMediaRate) {
 TEST_F(EncoderBitrateAdjusterTest, DontExceedMediaRateEvenWithHeadroom) {
   // Two streams, both with three temporal layers.
   // Media rate is 1.1, but network rate is higher.
-  ScopedFieldTrials field_trial(
+  test::ScopedKeyValueConfig field_trial(
+      scoped_field_trial_,
       "WebRTC-VideoRateControl/adjuster_use_headroom:true/");
 
   const uint32_t kS0Bitrate = 300000;

@@ -349,7 +349,6 @@ rtc_library("call") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/functional:bind_front",
-    "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -558,7 +557,6 @@ if (rtc_include_tests) {
       absl_deps = [
         "//third_party/abseil-cpp/absl/container:inlined_vector",
         "//third_party/abseil-cpp/absl/functional:any_invocable",
-        "//third_party/abseil-cpp/absl/memory",
         "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
         "//third_party/abseil-cpp/absl/types:variant",
@@ -620,6 +618,7 @@ if (rtc_include_tests) {
         "../test:frame_generator_capturer",
         "../test:null_transport",
         "../test:test_common",
+        "../test:test_flags",
         "../test:test_support",
         "../test:video_test_common",
         "../test:video_test_constants",

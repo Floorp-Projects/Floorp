@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d
  3 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 1b3cb7d9ab..abca496973 100644
+index ddbd22e34a..6f9aa6ae09 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -90,8 +90,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+@@ -95,8 +95,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
          RtpVideoFrameReceiver* receiver,
          Clock* clock,
          rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,

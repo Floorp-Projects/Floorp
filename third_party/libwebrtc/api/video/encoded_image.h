@@ -83,16 +83,10 @@ class RTC_EXPORT EncodedImage {
   void SetRtpTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
   uint32_t RtpTimestamp() const { return timestamp_rtp_; }
 
-  // TODO(bugs.webrtc.org/9378): Delete two functions below after 2023-10-12
-  [[deprecated]] void SetTimestamp(uint32_t timestamp) {
-    SetRtpTimestamp(timestamp);
-  }
-  [[deprecated]] uint32_t Timestamp() const { return RtpTimestamp(); }
-
   void SetEncodeTime(int64_t encode_start_ms, int64_t encode_finish_ms);
 
   // Frame capture time in local time.
-  webrtc::Timestamp CaptureTime() const;
+  Timestamp CaptureTime() const;
 
   // Frame capture time in ntp epoch time, i.e. time since 1st Jan 1900
   int64_t NtpTimeMs() const { return ntp_time_ms_; }
@@ -106,11 +100,11 @@ class RTC_EXPORT EncodedImage {
     simulcast_index_ = simulcast_index;
   }
 
-  const absl::optional<webrtc::Timestamp>& CaptureTimeIdentifier() const {
+  const absl::optional<Timestamp>& CaptureTimeIdentifier() const {
     return capture_time_identifier_;
   }
   void SetCaptureTimeIdentifier(
-      const absl::optional<webrtc::Timestamp>& capture_time_identifier) {
+      const absl::optional<Timestamp>& capture_time_identifier) {
     capture_time_identifier_ = capture_time_identifier;
   }
 
@@ -250,7 +244,7 @@ class RTC_EXPORT EncodedImage {
   size_t size_ = 0;  // Size of encoded frame data.
   uint32_t timestamp_rtp_ = 0;
   absl::optional<int> simulcast_index_;
-  absl::optional<webrtc::Timestamp> capture_time_identifier_;
+  absl::optional<Timestamp> capture_time_identifier_;
   absl::optional<int> spatial_index_;
   absl::optional<int> temporal_index_;
   std::map<int, size_t> spatial_layer_frame_size_bytes_;

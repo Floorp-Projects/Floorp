@@ -22,9 +22,12 @@
 
 namespace webrtc {
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 rtc::AsyncResolverInterface* BasicAsyncResolverFactory::Create() {
   return new rtc::AsyncResolver();
 }
+#pragma clang diagnostic pop
 
 std::unique_ptr<webrtc::AsyncDnsResolverInterface>
 BasicAsyncDnsResolverFactory::Create() {

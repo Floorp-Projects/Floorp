@@ -150,6 +150,8 @@ RTC_EXPORT extern const char kH265FmtpTxMode[];
 extern const char kVP9ProfileId[];
 
 extern const int kDefaultVideoMaxFramerate;
+extern const int kDefaultVideoMaxQpVpx;
+extern const int kDefaultVideoMaxQpH26x;
 
 extern const size_t kConferenceMaxNumSpatialLayers;
 extern const size_t kConferenceMaxNumTemporalLayers;

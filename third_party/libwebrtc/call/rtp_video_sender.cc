@@ -226,7 +226,9 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.send_bitrate_observer = observers.bitrate_observer;
   configuration.send_packet_observer = observers.send_packet_observer;
   configuration.event_log = event_log;
-  configuration.retransmission_rate_limiter = retransmission_rate_limiter;
+  if (trials.IsDisabled("WebRTC-DisableRtxRateLimiter")) {
+    configuration.retransmission_rate_limiter = retransmission_rate_limiter;
+  }
   configuration.rtp_stats_callback = observers.rtp_stats;
   configuration.frame_encryptor = frame_encryptor;
   configuration.require_frame_encryption =

@@ -11,6 +11,7 @@
 #ifndef API_TEST_MOCK_TRANSFORMABLE_VIDEO_FRAME_H_
 #define API_TEST_MOCK_TRANSFORMABLE_VIDEO_FRAME_H_
 
+#include <string>
 #include <vector>
 
 #include "api/frame_transformer_interface.h"
@@ -36,6 +37,7 @@ class MockTransformableVideoFrame
               GetDirection,
               (),
               (const, override));
+  MOCK_METHOD(std::string, GetMimeType, (), (const, override));
   MOCK_METHOD(VideoFrameMetadata, Metadata, (), (const, override));
   MOCK_METHOD(absl::optional<Timestamp>,
               GetCaptureTimeIdentifier,

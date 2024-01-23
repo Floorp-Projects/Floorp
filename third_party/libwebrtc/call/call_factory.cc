@@ -17,7 +17,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/memory/memory.h"
 #include "absl/types/optional.h"
 #include "api/test/simulated_network.h"
 #include "api/units/time_delta.h"
@@ -83,7 +82,7 @@ CallFactory::CallFactory() {
   call_thread_.Detach();
 }
 
-Call* CallFactory::CreateCall(const Call::Config& config) {
+std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
   RTC_DCHECK_RUN_ON(&call_thread_);
   RTC_DCHECK(config.trials);
 
@@ -98,15 +97,15 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
   RTC_CHECK(false);
   return nullptr;
   /* Mozilla: Avoid this since it could use GetRealTimeClock().
-  Call* call =
+  std::unique_ptr<Call> call =
       Call::Create(config, Clock::GetRealTimeClock(),
                    config.rtp_transport_controller_send_factory->Create(
                        transportConfig, Clock::GetRealTimeClock()));
 
   if (!send_degradation_configs.empty() ||
       !receive_degradation_configs.empty()) {
-    return new DegradedCall(absl::WrapUnique(call), send_degradation_configs,
-                            receive_degradation_configs);
+    return std::make_unique<DegradedCall>(
+        std::move(call), send_degradation_configs, receive_degradation_configs);
   }
 
   return call;
@@ -114,7 +113,7 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
 }
 
 std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
-  return std::unique_ptr<CallFactoryInterface>(new CallFactory());
+  return std::make_unique<CallFactory>();
 }
 
 }  // namespace webrtc

@@ -136,7 +136,7 @@ index 4879311fdb..88b74b44ac 100644
  
      // Receive-side RTT.
 diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 3e2a51322f..46015cb0c7 100644
+index 8d88ce23c6..9ee9ed3e76 100644
 --- a/call/video_receive_stream.cc
 +++ b/call/video_receive_stream.cc
 @@ -161,6 +161,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {

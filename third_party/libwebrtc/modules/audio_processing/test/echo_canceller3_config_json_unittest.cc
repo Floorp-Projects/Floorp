@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "api/audio/echo_canceller3_config_json.h"
+#include "modules/audio_processing/test/echo_canceller3_config_json.h"
 
 #include "api/audio/echo_canceller3_config.h"
 #include "test/gtest.h"
@@ -36,8 +36,12 @@ TEST(EchoCanceller3JsonHelpers, ToStringAndParseJson) {
   cfg.multi_channel.stereo_detection_threshold += 1.0f;
   cfg.multi_channel.stereo_detection_timeout_threshold_seconds += 1;
   cfg.multi_channel.stereo_detection_hysteresis_seconds += 1;
+
   std::string json_string = Aec3ConfigToJsonString(cfg);
-  EchoCanceller3Config cfg_transformed = Aec3ConfigFromJsonString(json_string);
+  EchoCanceller3Config cfg_transformed;
+  bool parsing_successful;
+  Aec3ConfigFromJsonString(json_string, &cfg_transformed, & parsing_successful);
+  ASSERT_TRUE(parsing_successful);
 
   // Expect unchanged values to remain default.
   EXPECT_EQ(cfg.ep_strength.default_len,

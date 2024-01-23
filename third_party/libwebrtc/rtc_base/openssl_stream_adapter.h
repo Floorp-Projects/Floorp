@@ -124,6 +124,8 @@ class OpenSSLStreamAdapter final : public SSLStreamAdapter,
                             uint8_t* result,
                             size_t result_len) override;
 
+  uint16_t GetPeerSignatureAlgorithm() const override;
+
   // DTLS-SRTP interface
   bool SetDtlsSrtpCryptoSuites(const std::vector<int>& crypto_suites) override;
   bool GetDtlsSrtpCryptoSuite(int* crypto_suite) override;

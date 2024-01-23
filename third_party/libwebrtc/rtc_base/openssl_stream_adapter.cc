@@ -469,6 +469,17 @@ bool OpenSSLStreamAdapter::ExportKeyingMaterial(absl::string_view label,
   return true;
 }
 
+uint16_t OpenSSLStreamAdapter::GetPeerSignatureAlgorithm() const {
+  if (state_ != SSL_CONNECTED) {
+    return 0;
+  }
+#ifdef OPENSSL_IS_BORINGSSL
+  return SSL_get_peer_signature_algorithm(ssl_);
+#else
+  return kSslSignatureAlgorithmUnknown;
+#endif
+}
+
 bool OpenSSLStreamAdapter::SetDtlsSrtpCryptoSuites(
     const std::vector<int>& ciphers) {
   if (state_ != SSL_NONE) {
