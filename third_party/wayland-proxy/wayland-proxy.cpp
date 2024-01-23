@@ -465,7 +465,8 @@ bool WaylandProxy::SetupWaylandDisplays() {
   if (!waylandDisplay) {
     waylandDisplay = getenv("WAYLAND_DISPLAY");
     if (!waylandDisplay) {
-      Error("Init(), Missing Wayland display, WAYLAND_DISPLAY is empty.", false);
+      Error("Init(), Missing Wayland display, WAYLAND_DISPLAY is empty.",
+            false);
       return false;
     }
   }
@@ -555,7 +556,8 @@ void WaylandProxy::RestoreWaylandDisplay() {
   unlink(mWaylandProxy);
   char* waylandDisplay = getenv("WAYLAND_DISPLAY_COMPOSITOR");
   if (waylandDisplay) {
-    Info("RestoreWaylandDisplay() WAYLAND_DISPLAY restored to %s\n", waylandDisplay);
+    Info("RestoreWaylandDisplay() WAYLAND_DISPLAY restored to %s\n",
+         waylandDisplay);
     setenv("WAYLAND_DISPLAY", waylandDisplay, /* overwrite = */ true);
     unsetenv("WAYLAND_DISPLAY_COMPOSITOR");
   }
