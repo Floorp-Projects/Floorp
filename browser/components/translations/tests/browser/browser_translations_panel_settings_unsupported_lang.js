@@ -31,11 +31,15 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsAlwaysTranslateLanguage("es", { checked: false });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: false,
+  });
   await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
   });
-  await assertIsAlwaysTranslateLanguage("es", { checked: true });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: true,
+  });
 
   await FullPageTranslationsTestUtils.assertPageIsTranslated(
     "es",
@@ -56,8 +60,14 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     openFromAppMenu: true,
     onOpenPanel: assertPanelUnsupportedLanguageView,
   });
-  assertIsAlwaysTranslateLanguage("fr", { checked: false, disabled: true });
-  assertIsNeverTranslateLanguage("fr", { checked: false, disabled: true });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("fr", {
+    checked: false,
+    disabled: true,
+  });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("fr", {
+    checked: false,
+    disabled: true,
+  });
 
   await cleanup();
 });

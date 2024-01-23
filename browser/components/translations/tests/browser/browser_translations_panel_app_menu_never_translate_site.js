@@ -26,9 +26,15 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: false }
+  );
   await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: true }
+  );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     openFromAppMenu: true,
@@ -36,9 +42,15 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: true }
+  );
   await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: false }
+  );
 
   await cleanup();
 });
@@ -73,13 +85,23 @@ add_task(
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-    await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
+    await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+      checked: true,
+    });
+    await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+      SPANISH_PAGE_URL,
+      { checked: false }
+    );
 
     await FullPageTranslationsTestUtils.clickNeverTranslateSite();
 
-    await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
+    await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+      checked: true,
+    });
+    await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+      SPANISH_PAGE_URL,
+      { checked: true }
+    );
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
@@ -89,13 +111,23 @@ add_task(
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-    await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
+    await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+      checked: true,
+    });
+    await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+      SPANISH_PAGE_URL,
+      { checked: true }
+    );
 
     await FullPageTranslationsTestUtils.clickNeverTranslateSite();
 
-    await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
+    await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+      checked: true,
+    });
+    await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+      SPANISH_PAGE_URL,
+      { checked: false }
+    );
 
     await FullPageTranslationsTestUtils.assertPageIsTranslated(
       "es",

@@ -27,9 +27,15 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: false }
+  );
   await FullPageTranslationsTestUtils.clickNeverTranslateSite();
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(
+    SPANISH_PAGE_URL,
+    { checked: true }
+  );
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
