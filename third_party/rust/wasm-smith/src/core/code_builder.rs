@@ -2,12 +2,12 @@ use super::{
     Elements, FuncType, GlobalInitExpr, Instruction, InstructionKind::*, InstructionKinds, Module,
     ValType,
 };
-use crate::unique_string;
+use crate::{unique_string, MemoryOffsetChoices};
 use arbitrary::{Result, Unstructured};
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryFrom;
 use std::rc::Rc;
-use wasm_encoder::{BlockType, ConstExpr, ExportKind, GlobalType, MemArg, RefType};
+use wasm_encoder::{BlockType, Catch, ConstExpr, ExportKind, GlobalType, MemArg, RefType};
 mod no_traps;
 
 macro_rules! instructions {
@@ -94,10 +94,7 @@ instructions! {
     (None, nop, Control, 800),
     (None, block, Control),
     (None, r#loop, Control),
-    (Some(try_valid), r#try, Control),
-    (Some(delegate_valid), delegate, Control),
-    (Some(catch_valid), catch, Control),
-    (Some(catch_all_valid), catch_all, Control),
+    (Some(try_table_valid), try_table, Control),
     (Some(if_valid), r#if, Control),
     (Some(else_valid), r#else, Control),
     (Some(end_valid), end, Control),
@@ -110,7 +107,7 @@ instructions! {
     (Some(return_call_valid), return_call, Control),
     (Some(return_call_indirect_valid), return_call_indirect, Control),
     (Some(throw_valid), throw, Control, 850),
-    (Some(rethrow_valid), rethrow, Control),
+    (Some(throw_ref_valid), throw_ref, Control, 850),
     // Parametric instructions.
     (Some(drop_valid), drop, Parametric, 990),
     (Some(select_valid), select, Parametric),
@@ -662,9 +659,7 @@ enum ControlKind {
     Block,
     If,
     Loop,
-    Try,
-    Catch,
-    CatchAll,
+    TryTable,
 }
 
 enum Float {
@@ -866,7 +861,7 @@ impl CodeBuilder<'_> {
             Box::new(|_| Ok(BlockType::Empty)),
             Box::new(|u| Ok(BlockType::Result(module.arbitrary_valtype(u)?))),
         ];
-        if module.config.multi_value_enabled() {
+        if module.config.multi_value_enabled {
             for (i, ty) in module.func_types() {
                 if self.types_on_stack(&ty.params) {
                     options.push(Box::new(move |_| Ok(BlockType::FunctionType(i as u32))));
@@ -882,19 +877,15 @@ impl CodeBuilder<'_> {
         u: &mut Unstructured,
         module: &Module,
     ) -> Result<Vec<Instruction>> {
-        let max_instructions = module.config.max_instructions();
-        let allowed_instructions = module.config.allowed_instructions();
+        let max_instructions = module.config.max_instructions;
+        let allowed_instructions = module.config.allowed_instructions;
         let mut instructions = vec![];
 
         while !self.allocs.controls.is_empty() {
             let keep_going = instructions.len() < max_instructions
                 && u.arbitrary().map_or(false, |b: u8| b != 0);
             if !keep_going {
-                self.end_active_control_frames(
-                    u,
-                    &mut instructions,
-                    module.config.disallow_traps(),
-                )?;
+                self.end_active_control_frames(u, &mut instructions, module.config.disallow_traps)?;
                 break;
             }
 
@@ -910,7 +901,7 @@ impl CodeBuilder<'_> {
                     self.end_active_control_frames(
                         u,
                         &mut instructions,
-                        module.config.disallow_traps(),
+                        module.config.disallow_traps,
                     )?;
                     break;
                 }
@@ -922,7 +913,7 @@ impl CodeBuilder<'_> {
             // is based off Cranelift's pass for nan canonicalization for which
             // instructions to canonicalize, but the general idea is most
             // floating-point operations.
-            if module.config.canonicalize_nans() {
+            if module.config.canonicalize_nans {
                 match instructions.last().unwrap() {
                     Instruction::F32Ceil
                     | Instruction::F32Floor
@@ -1267,7 +1258,7 @@ fn arbitrary_val(ty: ValType, u: &mut Unstructured<'_>) -> Instruction {
 
 #[inline]
 fn unreachable_valid(module: &Module, _: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
+    !module.config.disallow_traps
 }
 
 fn unreachable(
@@ -1310,114 +1301,69 @@ fn block(
 }
 
 #[inline]
-fn try_valid(module: &Module, _: &mut CodeBuilder) -> bool {
-    module.config.exceptions_enabled()
+fn try_table_valid(module: &Module, _: &mut CodeBuilder) -> bool {
+    module.config.exceptions_enabled
 }
 
-fn r#try(
+fn try_table<'m>(
     u: &mut Unstructured,
     module: &Module,
-    builder: &mut CodeBuilder,
+    builder: &'m mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
     let block_ty = builder.arbitrary_block_type(u, module)?;
+
+    let mut catch_options: Vec<Box<dyn Fn(&mut Unstructured<'_>) -> Result<Catch> + 'm>> =
+        Vec::new();
+
+    for (i, ctrl) in builder.allocs.controls.iter().rev().enumerate() {
+        let i = i as u32;
+
+        let label_types = ctrl.label_types();
+        if label_types.is_empty() {
+            catch_options.push(Box::new(move |_| Ok(Catch::All { label: i })));
+        }
+        if label_types == [ValType::EXNREF] {
+            catch_options.push(Box::new(move |_| Ok(Catch::AllRef { label: i })));
+        }
+
+        if let Some(tags) = builder.allocs.tags.get(label_types) {
+            catch_options.push(Box::new(move |u| {
+                Ok(Catch::One {
+                    tag: *u.choose(&tags)?,
+                    label: i,
+                })
+            }));
+        }
+
+        let mut label_types_with_exnref = label_types.to_vec();
+        label_types_with_exnref.push(ValType::EXNREF);
+        if let Some(tags) = builder.allocs.tags.get(&label_types_with_exnref) {
+            catch_options.push(Box::new(move |u| {
+                Ok(Catch::OneRef {
+                    tag: *u.choose(&tags)?,
+                    label: i,
+                })
+            }));
+        }
+    }
+
+    let mut catches = Vec::new();
+    if catch_options.len() > 0 {
+        for _ in 0..u.int_in_range(0..=10)? {
+            catches.push(u.choose(&mut catch_options)?(u)?);
+        }
+    }
+
     let (params, results) = module.params_results(&block_ty);
     let height = builder.allocs.operands.len() - params.len();
     builder.allocs.controls.push(Control {
-        kind: ControlKind::Try,
+        kind: ControlKind::TryTable,
         params,
         results,
         height,
     });
-    instructions.push(Instruction::Try(block_ty));
-    Ok(())
-}
-
-#[inline]
-fn delegate_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    let control_kind = builder.allocs.controls.last().unwrap().kind;
-    // delegate is only valid if end could be used in a try control frame
-    module.config.exceptions_enabled()
-        && control_kind == ControlKind::Try
-        && end_valid(module, builder)
-}
-
-fn delegate(
-    u: &mut Unstructured,
-    _: &Module,
-    builder: &mut CodeBuilder,
-    instructions: &mut Vec<Instruction>,
-) -> Result<()> {
-    // There will always be at least the function's return frame and try
-    // control frame if we are emitting delegate
-    let n = builder.allocs.controls.iter().count();
-    debug_assert!(n >= 2);
-    // Delegate must target an outer control from the try block, and is
-    // encoded with relative depth from the outer control
-    let target_relative_from_last = u.int_in_range(1..=n - 1)?;
-    let target_relative_from_outer = target_relative_from_last - 1;
-    // Delegate ends the try block
-    builder.allocs.controls.pop();
-    instructions.push(Instruction::Delegate(target_relative_from_outer as u32));
-    Ok(())
-}
-
-#[inline]
-fn catch_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    let control_kind = builder.allocs.controls.last().unwrap().kind;
-    // catch is only valid if end could be used in a try or catch (not
-    // catch_all) control frame. There must also be a tag that we can catch.
-    module.config.exceptions_enabled()
-        && (control_kind == ControlKind::Try || control_kind == ControlKind::Catch)
-        && end_valid(module, builder)
-        && module.tags.len() > 0
-}
-
-fn catch(
-    u: &mut Unstructured,
-    module: &Module,
-    builder: &mut CodeBuilder,
-    instructions: &mut Vec<Instruction>,
-) -> Result<()> {
-    let tag_idx = u.int_in_range(0..=(module.tags.len() - 1))?;
-    let tag_type = &module.tags[tag_idx];
-    let control = builder.allocs.controls.pop().unwrap();
-    // Pop the results for the previous try or catch
-    builder.pop_operands(&control.results);
-    // Push the params of the tag we're catching
-    builder.push_operands(&tag_type.func_type.params);
-    builder.allocs.controls.push(Control {
-        kind: ControlKind::Catch,
-        ..control
-    });
-    instructions.push(Instruction::Catch(tag_idx as u32));
-    Ok(())
-}
-
-#[inline]
-fn catch_all_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    let control_kind = builder.allocs.controls.last().unwrap().kind;
-    // catch_all is only valid if end could be used in a try or catch (not
-    // catch_all) control frame.
-    module.config.exceptions_enabled()
-        && (control_kind == ControlKind::Try || control_kind == ControlKind::Catch)
-        && end_valid(module, builder)
-}
-
-fn catch_all(
-    _: &mut Unstructured,
-    _: &Module,
-    builder: &mut CodeBuilder,
-    instructions: &mut Vec<Instruction>,
-) -> Result<()> {
-    let control = builder.allocs.controls.pop().unwrap();
-    // Pop the results for the previous try or catch
-    builder.pop_operands(&control.results);
-    builder.allocs.controls.push(Control {
-        kind: ControlKind::CatchAll,
-        ..control
-    });
-    instructions.push(Instruction::CatchAll);
+    instructions.push(Instruction::TryTable(block_ty, catches.into()));
     Ok(())
 }
 
@@ -1709,7 +1655,7 @@ fn call_indirect_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
     if builder.allocs.funcref_tables.is_empty() || !builder.type_on_stack(ValType::I32) {
         return false;
     }
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         // We have no way to reflect, at run time, on a `funcref` in
         // the `i`th slot in a table and dynamically avoid trapping
         // `call_indirect`s. Therefore, we can't emit *any*
@@ -1749,7 +1695,7 @@ fn call_indirect(
 
 #[inline]
 fn return_call_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    if !module.config.tail_call_enabled() {
+    if !module.config.tail_call_enabled {
         return false;
     }
 
@@ -1786,14 +1732,14 @@ fn return_call(
 
 #[inline]
 fn return_call_indirect_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    if !module.config.tail_call_enabled()
+    if !module.config.tail_call_enabled
         || builder.allocs.funcref_tables.is_empty()
         || !builder.type_on_stack(ValType::I32)
     {
         return false;
     }
 
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         // See comment in `call_indirect_valid`; same applies here.
         return false;
     }
@@ -1835,7 +1781,7 @@ fn return_call_indirect(
 
 #[inline]
 fn throw_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.exceptions_enabled()
+    module.config.exceptions_enabled
         && builder
             .allocs
             .tags
@@ -1867,40 +1813,18 @@ fn throw(
 }
 
 #[inline]
-fn rethrow_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    // There must be a catch or catch_all control on the stack
-    module.config.exceptions_enabled()
-        && builder
-            .allocs
-            .controls
-            .iter()
-            .any(|l| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
+fn throw_ref_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    module.config.exceptions_enabled && builder.types_on_stack(&[ValType::EXNREF])
 }
 
-fn rethrow(
-    u: &mut Unstructured,
-    _: &Module,
+fn throw_ref(
+    _u: &mut Unstructured,
+    _module: &Module,
     builder: &mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
-    let n = builder
-        .allocs
-        .controls
-        .iter()
-        .filter(|l| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
-        .count();
-    debug_assert!(n > 0);
-    let i = u.int_in_range(0..=n - 1)?;
-    let (target, _) = builder
-        .allocs
-        .controls
-        .iter()
-        .rev()
-        .enumerate()
-        .filter(|(_, l)| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
-        .nth(i)
-        .unwrap();
-    instructions.push(Instruction::Rethrow(target as u32));
+    builder.pop_operands(&[ValType::EXNREF]);
+    instructions.push(Instruction::ThrowRef);
     Ok(())
 }
 
@@ -2113,7 +2037,7 @@ fn i32_load(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
     builder.allocs.operands.push(Some(ValType::I32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(Instruction::I32Load(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::I32Load(memarg));
@@ -2129,7 +2053,7 @@ fn i64_load(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2, 3])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(Instruction::I64Load(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::I64Load(memarg));
@@ -2145,7 +2069,7 @@ fn f32_load(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
     builder.allocs.operands.push(Some(ValType::F32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(Instruction::F32Load(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::F32Load(memarg));
@@ -2161,7 +2085,7 @@ fn f64_load(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2, 3])?;
     builder.allocs.operands.push(Some(ValType::F64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(Instruction::F64Load(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::F64Load(memarg));
@@ -2177,7 +2101,7 @@ fn i32_load_8_s(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0])?;
     builder.allocs.operands.push(Some(ValType::I32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I32Load8S(memarg),
             module,
@@ -2198,7 +2122,7 @@ fn i32_load_8_u(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0])?;
     builder.allocs.operands.push(Some(ValType::I32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I32Load8U(memarg),
             module,
@@ -2219,7 +2143,7 @@ fn i32_load_16_s(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
     builder.allocs.operands.push(Some(ValType::I32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I32Load16S(memarg),
             module,
@@ -2240,7 +2164,7 @@ fn i32_load_16_u(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
     builder.allocs.operands.push(Some(ValType::I32));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I32Load16U(memarg),
             module,
@@ -2261,7 +2185,7 @@ fn i64_load_8_s(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load8S(memarg),
             module,
@@ -2282,7 +2206,7 @@ fn i64_load_16_s(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load16S(memarg),
             module,
@@ -2303,7 +2227,7 @@ fn i64_load_32_s(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load32S(memarg),
             module,
@@ -2324,7 +2248,7 @@ fn i64_load_8_u(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load8U(memarg),
             module,
@@ -2345,7 +2269,7 @@ fn i64_load_16_u(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load16U(memarg),
             module,
@@ -2366,7 +2290,7 @@ fn i64_load_32_u(
 ) -> Result<()> {
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
     builder.allocs.operands.push(Some(ValType::I64));
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::load(
             Instruction::I64Load32U(memarg),
             module,
@@ -2398,7 +2322,7 @@ fn i32_store(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(Instruction::I32Store(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::I32Store(memarg));
@@ -2419,7 +2343,7 @@ fn i64_store(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2, 3])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(Instruction::I64Store(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::I64Store(memarg));
@@ -2440,7 +2364,7 @@ fn f32_store(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F32]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(Instruction::F32Store(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::F32Store(memarg));
@@ -2461,7 +2385,7 @@ fn f64_store(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F64]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2, 3])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(Instruction::F64Store(memarg), module, builder, instructions);
     } else {
         instructions.push(Instruction::F64Store(memarg));
@@ -2477,7 +2401,7 @@ fn i32_store_8(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32]);
     let memarg = mem_arg(u, module, builder, &[0])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::I32Store8(memarg),
             module,
@@ -2498,7 +2422,7 @@ fn i32_store_16(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32]);
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::I32Store16(memarg),
             module,
@@ -2519,7 +2443,7 @@ fn i64_store_8(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64]);
     let memarg = mem_arg(u, module, builder, &[0])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::I64Store8(memarg),
             module,
@@ -2540,7 +2464,7 @@ fn i64_store_16(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64]);
     let memarg = mem_arg(u, module, builder, &[0, 1])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::I64Store16(memarg),
             module,
@@ -2561,7 +2485,7 @@ fn i64_store_32(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::I64Store32(memarg),
             module,
@@ -2617,9 +2541,9 @@ fn memory_grow(
 
 #[inline]
 fn memory_init_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.bulk_memory_enabled()
+    module.config.bulk_memory_enabled
         && have_data(module, builder)
-        && !module.config.disallow_traps() // Non-trapping memory init not yet implemented
+        && !module.config.disallow_traps // Non-trapping memory init not yet implemented
         && (builder.allocs.memory32.len() > 0
             && builder.types_on_stack(&[ValType::I32, ValType::I32, ValType::I32])
             || (builder.allocs.memory64.len() > 0
@@ -2647,8 +2571,8 @@ fn memory_init(
 
 #[inline]
 fn memory_fill_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.bulk_memory_enabled()
-        && !module.config.disallow_traps() // Non-trapping memory fill generation not yet implemented
+    module.config.bulk_memory_enabled
+        && !module.config.disallow_traps // Non-trapping memory fill generation not yet implemented
         && (builder.allocs.memory32.len() > 0
             && builder.types_on_stack(&[ValType::I32, ValType::I32, ValType::I32])
             || (builder.allocs.memory64.len() > 0
@@ -2674,13 +2598,13 @@ fn memory_fill(
 
 #[inline]
 fn memory_copy_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    if !module.config.bulk_memory_enabled() {
+    if !module.config.bulk_memory_enabled {
         return false;
     }
 
     // The non-trapping case for memory copy has not yet been implemented,
     // so we are excluding them for now
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         return false;
     }
 
@@ -2749,7 +2673,7 @@ fn memory_copy(
 
 #[inline]
 fn data_drop_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    have_data(module, builder) && module.config.bulk_memory_enabled()
+    have_data(module, builder) && module.config.bulk_memory_enabled
 }
 
 fn data_drop(
@@ -3326,7 +3250,7 @@ fn i32_div_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32, ValType::I32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::signed_div_rem(Instruction::I32DivS, builder, instructions);
     } else {
         instructions.push(Instruction::I32DivS);
@@ -3342,7 +3266,7 @@ fn i32_div_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32, ValType::I32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::unsigned_div_rem(Instruction::I32DivU, builder, instructions);
     } else {
         instructions.push(Instruction::I32DivU);
@@ -3358,7 +3282,7 @@ fn i32_rem_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32, ValType::I32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::signed_div_rem(Instruction::I32RemS, builder, instructions);
     } else {
         instructions.push(Instruction::I32RemS);
@@ -3374,7 +3298,7 @@ fn i32_rem_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I32, ValType::I32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::unsigned_div_rem(Instruction::I32RemU, builder, instructions);
     } else {
         instructions.push(Instruction::I32RemU);
@@ -3558,7 +3482,7 @@ fn i64_div_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64, ValType::I64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::signed_div_rem(Instruction::I64DivS, builder, instructions);
     } else {
         instructions.push(Instruction::I64DivS);
@@ -3574,7 +3498,7 @@ fn i64_div_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64, ValType::I64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::unsigned_div_rem(Instruction::I64DivU, builder, instructions);
     } else {
         instructions.push(Instruction::I64DivU);
@@ -3590,7 +3514,7 @@ fn i64_rem_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64, ValType::I64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::signed_div_rem(Instruction::I64RemS, builder, instructions);
     } else {
         instructions.push(Instruction::I64RemS);
@@ -3606,7 +3530,7 @@ fn i64_rem_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::I64, ValType::I64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::unsigned_div_rem(Instruction::I64RemU, builder, instructions);
     } else {
         instructions.push(Instruction::I64RemU);
@@ -4069,7 +3993,7 @@ fn i32_wrap_i64(
 }
 
 fn nontrapping_f32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.saturating_float_to_int_enabled() && f32_on_stack(module, builder)
+    module.config.saturating_float_to_int_enabled && f32_on_stack(module, builder)
 }
 
 fn i32_trunc_f32_s(
@@ -4080,7 +4004,7 @@ fn i32_trunc_f32_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I32TruncF32S, builder, instructions);
     } else {
         instructions.push(Instruction::I32TruncF32S);
@@ -4096,7 +4020,7 @@ fn i32_trunc_f32_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F32]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I32TruncF32U, builder, instructions);
     } else {
         instructions.push(Instruction::I32TruncF32U);
@@ -4105,7 +4029,7 @@ fn i32_trunc_f32_u(
 }
 
 fn nontrapping_f64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.saturating_float_to_int_enabled() && f64_on_stack(module, builder)
+    module.config.saturating_float_to_int_enabled && f64_on_stack(module, builder)
 }
 
 fn i32_trunc_f64_s(
@@ -4116,7 +4040,7 @@ fn i32_trunc_f64_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F64]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I32TruncF64S, builder, instructions);
     } else {
         instructions.push(Instruction::I32TruncF64S);
@@ -4132,7 +4056,7 @@ fn i32_trunc_f64_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F64]);
     builder.push_operands(&[ValType::I32]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I32TruncF64U, builder, instructions);
     } else {
         instructions.push(Instruction::I32TruncF64U);
@@ -4172,7 +4096,7 @@ fn i64_trunc_f32_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F32]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I64TruncF32S, builder, instructions);
     } else {
         instructions.push(Instruction::I64TruncF32S);
@@ -4188,7 +4112,7 @@ fn i64_trunc_f32_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F32]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I64TruncF32U, builder, instructions);
     } else {
         instructions.push(Instruction::I64TruncF32U);
@@ -4204,7 +4128,7 @@ fn i64_trunc_f64_s(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I64TruncF64S, builder, instructions);
     } else {
         instructions.push(Instruction::I64TruncF64S);
@@ -4220,7 +4144,7 @@ fn i64_trunc_f64_u(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::F64]);
     builder.push_operands(&[ValType::I64]);
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::trunc(Instruction::I64TruncF64U, builder, instructions);
     } else {
         instructions.push(Instruction::I64TruncF64U);
@@ -4397,7 +4321,7 @@ fn f64_reinterpret_i64(
 }
 
 fn extendable_i32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.sign_extension_ops_enabled() && i32_on_stack(module, builder)
+    module.config.sign_extension_ops_enabled && i32_on_stack(module, builder)
 }
 
 fn i32_extend_8_s(
@@ -4425,7 +4349,7 @@ fn i32_extend_16_s(
 }
 
 fn extendable_i64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.sign_extension_ops_enabled() && i64_on_stack(module, builder)
+    module.config.sign_extension_ops_enabled && i64_on_stack(module, builder)
 }
 
 fn i64_extend_8_s(
@@ -4561,7 +4485,7 @@ fn i64_trunc_sat_f64_u(
 }
 
 fn memory_offset(u: &mut Unstructured, module: &Module, memory_index: u32) -> Result<u64> {
-    let (a, b, c) = module.config.memory_offset_choices();
+    let MemoryOffsetChoices(a, b, c) = module.config.memory_offset_choices;
     assert!(a + b + c != 0);
 
     let memory_type = &module.memories[memory_index as usize];
@@ -4571,7 +4495,7 @@ fn memory_offset(u: &mut Unstructured, module: &Module, memory_index: u32) -> Re
         .map(|max| max.saturating_mul(65536))
         .unwrap_or(u64::MAX);
 
-    let (min, max, true_max) = match (memory_type.memory64, module.config.disallow_traps()) {
+    let (min, max, true_max) = match (memory_type.memory64, module.config.disallow_traps) {
         (true, false) => {
             // 64-bit memories can use the limits calculated above as-is
             (min, max, u64::MAX)
@@ -4652,7 +4576,7 @@ fn data_index(u: &mut Unstructured, module: &Module) -> Result<u32> {
 
 #[inline]
 fn ref_null_valid(module: &Module, _: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
+    module.config.reference_types_enabled
 }
 
 fn ref_null(
@@ -4669,7 +4593,7 @@ fn ref_null(
 
 #[inline]
 fn ref_func_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled() && builder.allocs.referenced_functions.len() > 0
+    module.config.reference_types_enabled && builder.allocs.referenced_functions.len() > 0
 }
 
 fn ref_func(
@@ -4686,7 +4610,7 @@ fn ref_func(
 
 #[inline]
 fn ref_is_null_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
+    module.config.reference_types_enabled
         && (builder.type_on_stack(ValType::EXTERNREF) || builder.type_on_stack(ValType::FUNCREF))
 }
 
@@ -4704,9 +4628,9 @@ fn ref_is_null(
 
 #[inline]
 fn table_fill_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
-        && module.config.bulk_memory_enabled()
-        && !module.config.disallow_traps() // Non-trapping table fill generation not yet implemented
+    module.config.reference_types_enabled
+        && module.config.bulk_memory_enabled
+        && !module.config.disallow_traps // Non-trapping table fill generation not yet implemented
         && [ValType::EXTERNREF, ValType::FUNCREF].iter().any(|ty| {
             builder.types_on_stack(&[ValType::I32, *ty, ValType::I32])
                 && module.tables.iter().any(|t| *ty == t.element_type.into())
@@ -4729,8 +4653,8 @@ fn table_fill(
 
 #[inline]
 fn table_set_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
-    && !module.config.disallow_traps() // Non-trapping table.set generation not yet implemented
+    module.config.reference_types_enabled
+    && !module.config.disallow_traps // Non-trapping table.set generation not yet implemented
         && [ValType::EXTERNREF, ValType::FUNCREF].iter().any(|ty| {
             builder.types_on_stack(&[ValType::I32, *ty])
                 && module.tables.iter().any(|t| *ty == t.element_type.into())
@@ -4752,8 +4676,8 @@ fn table_set(
 
 #[inline]
 fn table_get_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
-    && !module.config.disallow_traps() // Non-trapping table.get generation not yet implemented
+    module.config.reference_types_enabled
+    && !module.config.disallow_traps // Non-trapping table.get generation not yet implemented
         && builder.type_on_stack(ValType::I32)
         && module.tables.len() > 0
 }
@@ -4774,7 +4698,7 @@ fn table_get(
 
 #[inline]
 fn table_size_valid(module: &Module, _: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled() && module.tables.len() > 0
+    module.config.reference_types_enabled && module.tables.len() > 0
 }
 
 fn table_size(
@@ -4791,7 +4715,7 @@ fn table_size(
 
 #[inline]
 fn table_grow_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
+    module.config.reference_types_enabled
         && [ValType::EXTERNREF, ValType::FUNCREF].iter().any(|ty| {
             builder.types_on_stack(&[*ty, ValType::I32])
                 && module.tables.iter().any(|t| *ty == t.element_type.into())
@@ -4814,8 +4738,8 @@ fn table_grow(
 
 #[inline]
 fn table_copy_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
-    && !module.config.disallow_traps() // Non-trapping table.copy generation not yet implemented
+    module.config.bulk_memory_enabled
+    && !module.config.disallow_traps // Non-trapping table.copy generation not yet implemented
         && module.tables.len() > 0
         && builder.types_on_stack(&[ValType::I32, ValType::I32, ValType::I32])
 }
@@ -4838,8 +4762,8 @@ fn table_copy(
 
 #[inline]
 fn table_init_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled()
-    && !module.config.disallow_traps() // Non-trapping table.init generation not yet implemented.
+    module.config.bulk_memory_enabled
+    && !module.config.disallow_traps // Non-trapping table.init generation not yet implemented.
         && builder.allocs.table_init_possible
         && builder.types_on_stack(&[ValType::I32, ValType::I32, ValType::I32])
 }
@@ -4869,7 +4793,7 @@ fn table_init(
 
 #[inline]
 fn elem_drop_valid(module: &Module, _builder: &mut CodeBuilder) -> bool {
-    module.config.reference_types_enabled() && module.elems.len() > 0
+    module.config.bulk_memory_enabled && module.elems.len() > 0
 }
 
 fn elem_drop(
@@ -4910,138 +4834,138 @@ fn lane_index(u: &mut Unstructured, number_of_lanes: u8) -> Result<u8> {
 
 #[inline]
 fn simd_v128_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128])
 }
 
 #[inline]
 fn simd_v128_on_stack_relaxed(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.relaxed_simd_enabled()
+    !module.config.disallow_traps
+        && module.config.relaxed_simd_enabled
         && builder.types_on_stack(&[ValType::V128])
 }
 
 #[inline]
 fn simd_v128_v128_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::V128])
 }
 
 #[inline]
 fn simd_v128_v128_on_stack_relaxed(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.relaxed_simd_enabled()
+    !module.config.disallow_traps
+        && module.config.relaxed_simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::V128])
 }
 
 #[inline]
 fn simd_v128_v128_v128_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::V128, ValType::V128])
 }
 
 #[inline]
 fn simd_v128_v128_v128_on_stack_relaxed(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.relaxed_simd_enabled()
+    !module.config.disallow_traps
+        && module.config.relaxed_simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::V128, ValType::V128])
 }
 
 #[inline]
 fn simd_v128_i32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::I32])
 }
 
 #[inline]
 fn simd_v128_i64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::I64])
 }
 
 #[inline]
 fn simd_v128_f32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::F32])
 }
 
 #[inline]
 fn simd_v128_f64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.types_on_stack(&[ValType::V128, ValType::F64])
 }
 
 #[inline]
 fn simd_i32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.type_on_stack(ValType::I32)
 }
 
 #[inline]
 fn simd_i64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.type_on_stack(ValType::I64)
 }
 
 #[inline]
 fn simd_f32_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.type_on_stack(ValType::F32)
 }
 
 #[inline]
 fn simd_f64_on_stack(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && builder.type_on_stack(ValType::F64)
 }
 
 #[inline]
 fn simd_have_memory_and_offset(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && have_memory_and_offset(module, builder)
 }
 
 #[inline]
 fn simd_have_memory_and_offset_and_v128(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && store_valid(module, builder, || ValType::V128)
 }
 
 #[inline]
 fn simd_load_lane_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
     // The SIMD non-trapping case is not yet implemented.
-    !module.config.disallow_traps() && simd_have_memory_and_offset_and_v128(module, builder)
+    !module.config.disallow_traps && simd_have_memory_and_offset_and_v128(module, builder)
 }
 
 #[inline]
 fn simd_v128_store_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
-    !module.config.disallow_traps()
-        && module.config.simd_enabled()
+    !module.config.disallow_traps
+        && module.config.simd_enabled
         && store_valid(module, builder, || ValType::V128)
 }
 
 #[inline]
 fn simd_store_lane_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
     // The SIMD non-trapping case is not yet implemented.
-    !module.config.disallow_traps() && simd_v128_store_valid(module, builder)
+    !module.config.disallow_traps && simd_v128_store_valid(module, builder)
 }
 
 #[inline]
 fn simd_enabled(module: &Module, _: &mut CodeBuilder) -> bool {
-    module.config.simd_enabled()
+    module.config.simd_enabled
 }
 
 macro_rules! simd_load {
@@ -5055,7 +4979,7 @@ macro_rules! simd_load {
         ) -> Result<()> {
             let memarg = mem_arg(u, module, builder, $alignments)?;
             builder.push_operands(&[ValType::V128]);
-            if module.config.disallow_traps() {
+            if module.config.disallow_traps {
                 no_traps::load(
                     Instruction::$instruction(memarg),
                     module,
@@ -5092,7 +5016,7 @@ fn v128_store(
 ) -> Result<()> {
     builder.pop_operands(&[ValType::V128]);
     let memarg = mem_arg(u, module, builder, &[0, 1, 2, 3, 4])?;
-    if module.config.disallow_traps() {
+    if module.config.disallow_traps {
         no_traps::store(
             Instruction::V128Store(memarg),
             module,

@@ -241,12 +241,12 @@ let $13 = instantiate(`(module
 )`);
 
 // ./test/core/type-equivalence.wast:237
-register($13, `M`);
+register($13, `Mr1`);
 
 // ./test/core/type-equivalence.wast:238
 let $14 = instantiate(`(module
   (rec (type $$t2 (func (param i32 (ref $$t2)))))
-  (func (import "M" "f") (param (ref $$t2)))
+  (func (import "Mr1" "f") (param (ref $$t2)))
 )`);
 
 // ./test/core/type-equivalence.wast:246
@@ -262,7 +262,7 @@ let $15 = instantiate(`(module
 )`);
 
 // ./test/core/type-equivalence.wast:256
-register($15, `M`);
+register($15, `Mr2`);
 
 // ./test/core/type-equivalence.wast:257
 let $16 = instantiate(`(module
@@ -271,9 +271,9 @@ let $16 = instantiate(`(module
     (type $$t2 (func (param i32 (ref $$t3))))
     (type $$t3 (func (param i32 (ref $$t2))))
   )
-  (func (import "M" "f1") (param (ref $$t1)))
-  (func (import "M" "f2") (param (ref $$t2)))
-  (func (import "M" "f3") (param (ref $$t3)))
+  (func (import "Mr2" "f1") (param (ref $$t1)))
+  (func (import "Mr2" "f2") (param (ref $$t2)))
+  (func (import "Mr2" "f3") (param (ref $$t3)))
 )`);
 
 // ./test/core/type-equivalence.wast:268
@@ -289,7 +289,7 @@ let $17 = instantiate(`(module
 )`);
 
 // ./test/core/type-equivalence.wast:278
-register($17, `M`);
+register($17, `Mr3`);
 
 // ./test/core/type-equivalence.wast:279
 let $18 = instantiate(`(module
@@ -298,9 +298,9 @@ let $18 = instantiate(`(module
     (type $$t2 (func (param i32 (ref $$t1))))
     (type $$t3 (func (param i32 (ref $$t2))))
   )
-  (func (import "M" "f1") (param (ref $$t1)))
-  (func (import "M" "f2") (param (ref $$t2)))
-  (func (import "M" "f3") (param (ref $$t3)))
+  (func (import "Mr3" "f1") (param (ref $$t1)))
+  (func (import "Mr3" "f2") (param (ref $$t2)))
+  (func (import "Mr3" "f3") (param (ref $$t3)))
 )`);
 
 // ./test/core/type-equivalence.wast:290
@@ -323,7 +323,7 @@ let $19 = instantiate(`(module
 )`);
 
 // ./test/core/type-equivalence.wast:307
-register($19, `M`);
+register($19, `Mr4`);
 
 // ./test/core/type-equivalence.wast:308
 let $20 = instantiate(`(module
@@ -339,7 +339,7 @@ let $20 = instantiate(`(module
     (type $$u3 (func (param f32 (ref $$t2))))
   )
 
-  (func (import "M" "f1") (param (ref $$t1)))
-  (func (import "M" "f2") (param (ref $$t2)))
-  (func (import "M" "f3") (param (ref $$t3)))
+  (func (import "Mr4" "f1") (param (ref $$t1)))
+  (func (import "Mr4" "f2") (param (ref $$t2)))
+  (func (import "Mr4" "f3") (param (ref $$t3)))
 )`);

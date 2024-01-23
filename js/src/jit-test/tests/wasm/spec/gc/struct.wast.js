@@ -175,10 +175,10 @@ let $4 = instantiate(`(module
 )`);
 
 // ./test/core/gc/struct.wast:155
-assert_trap(() => invoke($4, `struct.get-null`, []), `null structure`);
+assert_trap(() => invoke($4, `struct.get-null`, []), `null structure reference`);
 
 // ./test/core/gc/struct.wast:156
-assert_trap(() => invoke($4, `struct.set-null`, []), `null structure`);
+assert_trap(() => invoke($4, `struct.set-null`, []), `null structure reference`);
 
 // ./test/core/gc/struct.wast:160
 let $5 = instantiate(`(module

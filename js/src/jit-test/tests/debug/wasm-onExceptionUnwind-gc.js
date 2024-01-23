@@ -12,7 +12,7 @@ dbg.onExceptionUnwind = (frame, value) => {
 };
 
 sandbox.innerCode = wasmTextToBinary(`(module
-    (import "imports" "tbl" (table 1 anyfunc))
+    (import "imports" "tbl" (table 1 funcref))
     (import "imports" "setNull" (func $setNull))
     (func $trap
         call $setNull
@@ -21,7 +21,7 @@ sandbox.innerCode = wasmTextToBinary(`(module
     (elem (i32.const 0) $trap)
 )`);
 sandbox.outerCode = wasmTextToBinary(`(module
-    (import "imports" "tbl" (table 1 anyfunc))
+    (import "imports" "tbl" (table 1 funcref))
     (type $v2v (func))
     (func (export "run")
         i32.const 0
@@ -32,7 +32,7 @@ sandbox.outerCode = wasmTextToBinary(`(module
 sandbox.eval(`
 (function() {
 
-var tbl = new WebAssembly.Table({initial:1, element:"anyfunc"});
+var tbl = new WebAssembly.Table({initial:1, element:"funcref"});
 function setNull() { tbl.set(0, null) }
 new WebAssembly.Instance(new WebAssembly.Module(innerCode), {imports:{tbl,setNull}});
 var outer = new WebAssembly.Instance(new WebAssembly.Module(outerCode), {imports:{tbl}});
