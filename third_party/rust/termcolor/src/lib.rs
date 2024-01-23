@@ -1143,7 +1143,7 @@ impl BufferWriter {
         }
         let mut stream = self.stream.wrap(self.stream.get_ref().lock());
         if let Some(ref sep) = self.separator {
-            if self.printed.load(Ordering::SeqCst) {
+            if self.printed.load(Ordering::Relaxed) {
                 stream.write_all(sep)?;
                 stream.write_all(b"\n")?;
             }
@@ -1163,7 +1163,7 @@ impl BufferWriter {
                 b.print(&mut *console, &mut stream)?;
             }
         }
-        self.printed.store(true, Ordering::SeqCst);
+        self.printed.store(true, Ordering::Relaxed);
         Ok(())
     }
 }
