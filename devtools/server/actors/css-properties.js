@@ -9,8 +9,6 @@ const {
   cssPropertiesSpec,
 } = require("resource://devtools/shared/specs/css-properties.js");
 
-const { cssColors } = require("resource://devtools/shared/css/color-db.js");
-
 loader.lazyRequireGetter(
   this,
   "CSS_TYPES",
@@ -44,9 +42,8 @@ function generateCssProperties(doc) {
   const propertyNames = InspectorUtils.getCSSPropertyNames({
     includeAliases: true,
   });
-  const colors = Object.keys(cssColors);
 
-  propertyNames.forEach(name => {
+  for (const name of propertyNames) {
     // Get the list of CSS types this property supports.
     const supports = [];
     for (const type in CSS_TYPES) {
@@ -55,13 +52,7 @@ function generateCssProperties(doc) {
       }
     }
 
-    // Don't send colors over RDP, these will be re-attached by the front.
-    let values = InspectorUtils.getCSSValuesForProperty(name);
-    if (values.includes("aliceblue")) {
-      values = values.filter(x => !colors.includes(x));
-      values.unshift("COLOR");
-    }
-
+    const values = InspectorUtils.getCSSValuesForProperty(name);
     const subproperties = InspectorUtils.getSubpropertiesForCSSProperty(name);
 
     properties[name] = {
@@ -70,7 +61,7 @@ function generateCssProperties(doc) {
       supports,
       subproperties,
     };
-  });
+  }
 
   return properties;
 }
