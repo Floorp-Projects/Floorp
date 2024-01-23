@@ -63,6 +63,20 @@ const TEST_PROVIDER_INFO = [
 add_setup(async function () {
   SearchTestUtils.useMockIdleService();
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+
+  // On startup, the event scheduler is initialized.
+  // If serpEventTelemetryCategorization is already true, the instance of the
+  // class will be subscribed to to the real idle service instead of the mock
+  // idle service. If it's false, toggling the preference (which happens later
+  // in this setup) will initialize it.
+  if (
+    Services.prefs.getBoolPref(
+      "browser.search.serpEventTelemetryCategorization.enabled"
+    )
+  ) {
+    SearchSERPCategorizationEventScheduler.uninit();
+    SearchSERPCategorizationEventScheduler.init();
+  }
   await waitForIdle();
 
   let promise = waitForDomainToCategoriesUpdate();
