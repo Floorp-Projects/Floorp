@@ -58,7 +58,10 @@ support-files = [
 ]
 
 ["browser_favicon_empty_data.js"]
-support-files = ["blank.html"]
+support-files = [
+  "blank.html",
+  "file_favicon_empty.html",
+]
 
 ["browser_favicon_load.js"]
 https_first_disabled = true
