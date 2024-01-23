@@ -224,16 +224,6 @@
   }
 }
 
-/* Display userContext icon instead of text, when window is too narrow. */
-.urlbarView-results[wrap] > .urlbarView-row[type=switchtab] {
-  .urlbarView-userContext-label {
-    display: none;
-  }
-  .urlbarView-userContext-icons {
-    display: inline-block;
-  }
-}
-
 .urlbarView-overflowable,
 .urlbarView-url {
   overflow: hidden;
@@ -549,26 +539,41 @@
 }
 
 /* user context box */
-.urlbarView-userContext-indicator {
-  align-items: center;
+.urlbarView-userContext {
+  border-top: 4px solid var(--identity-tab-color);
 }
 
-.urlbarView-userContext-label {
-  color: var(--identity-tab-color);
-}
-
-.urlbarView-userContext-icons {
-  height: var(--urlbarView-favicon-width);
-  vertical-align: middle;
+.urlbarView-userContext-icon {
+  height: 14px;
   background-image: var(--identity-icon);
   -moz-context-properties: fill;
-  fill: var(--identity-icon-color);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center center;
+  vertical-align: top;
+  margin-inline-start: 0.35em;
+}
+
+.urlbarView-userContext-iconMode {
   display: none;
 }
 
+.urlbarView-userContext-textMode {
+  display: inline-block;
+  > span {
+    font-variant: small-caps;
+  }
+}
+
+/* Display userContext icon instead of text, when window is too narrow. */
+.urlbarView-results[wrap] {
+  .urlbarView-userContext-textMode {
+    display: none;
+  }
+  .urlbarView-userContext-iconMode {
+    display: inline-block;
+  }
+}
 
 /* Tail suggestions */
 
@@ -661,6 +666,10 @@
     background-color: var(--urlbar-box-focus-bgcolor);
     border-radius: var(--toolbarbutton-border-radius);
     padding: 6px 8px;
+
+    &.urlbarView-userContext {
+      padding-top: 2px;
+    }
     margin-block: -6px;
     margin-inline-start: 8px;
 
