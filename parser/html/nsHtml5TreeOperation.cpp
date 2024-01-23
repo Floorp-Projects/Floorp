@@ -929,6 +929,10 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       *aOperation.mFragHandle =
           static_cast<HTMLTemplateElement*>(*aOperation.mTemplateNode)
               ->Content();
+      nsContentUtils::LogSimpleConsoleError(
+          u"Failed to attach Declarative Shadow DOM."_ns, "DOM"_ns,
+          mBuilder->GetDocument()->IsInPrivateBrowsing(),
+          mBuilder->GetDocument()->IsInChromeDocShell());
       return NS_OK;
     }
 

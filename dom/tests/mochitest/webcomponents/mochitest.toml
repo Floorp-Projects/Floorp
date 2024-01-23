@@ -50,6 +50,8 @@ support-files = [
 
 ["test_custom_element_when_defined.html"]
 
+["test_declarative_shadowdom_failure_log.html"]
+
 ["test_detached_style.html"]
 
 ["test_document_adoptnode.html"]
