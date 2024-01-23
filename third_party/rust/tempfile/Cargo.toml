@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.63"
 name = "tempfile"
-version = "3.8.0"
+version = "3.9.0"
 authors = [
     "Steven Allen <steven@stebalien.com>",
     "The Rust Project Developers",
@@ -45,14 +45,14 @@ version = "0.3"
 nightly = []
 
 [target."cfg(any(unix, target_os = \"wasi\"))".dependencies.rustix]
-version = "0.38"
+version = "0.38.26"
 features = ["fs"]
 
 [target."cfg(target_os = \"redox\")".dependencies.redox_syscall]
-version = "0.3"
+version = "0.4"
 
 [target."cfg(windows)".dependencies.windows-sys]
-version = "0.48"
+version = "0.52"
 features = [
     "Win32_Storage_FileSystem",
     "Win32_Foundation",

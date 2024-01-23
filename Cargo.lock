@@ -4203,7 +4203,7 @@ checksum = "93f00c865fe7cabf650081affecd3871070f26767e7b2070a3ffae14c654b447"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.3.999",
  "smallvec",
  "windows-targets 0.48.999",
 ]
@@ -4609,6 +4609,13 @@ dependencies = [
 [[package]]
 name = "redox_syscall"
 version = "0.3.999"
+dependencies = [
+ "redox_syscall 0.4.999",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.4.999"
 
 [[package]]
 name = "redox_users"
@@ -5468,15 +5475,15 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.8.0"
+version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb94d2f3cc536af71caac6b6fcebf65860b347e7ce0cc9ebe8f70d3e521054ef"
+checksum = "01ce4141aa927a6d1bd34a041795abd0db1cccba5d5f24b009f694bdf3a1f3fa"
 dependencies = [
  "cfg-if 1.0.0",
  "fastrand",
- "redox_syscall",
+ "redox_syscall 0.4.999",
  "rustix",
- "windows-sys 0.48.999",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
