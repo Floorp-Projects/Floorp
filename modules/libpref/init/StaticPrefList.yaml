@@ -3442,7 +3442,7 @@
 # Enable Screen Wake Lock API
 - name: dom.screenwakelock.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Prevent errors when using set_permission from permissions.sys.mjs
