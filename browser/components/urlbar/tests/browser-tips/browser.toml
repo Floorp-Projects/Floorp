@@ -15,7 +15,6 @@ https_first_disabled = true
 
 ["browser_searchTips_interaction.js"]
 https_first_disabled = true
-fail-if = ["a11y_checks"] # Bug 1854660 clicked customizableui-special-spring1 may not be focusable
 
 ["browser_selection.js"]
 

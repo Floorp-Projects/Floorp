@@ -596,7 +596,14 @@ add_task(async function ignoreEndsEngagement() {
         .closest("#nav-bar")
         .querySelector("toolbarspring");
       await UrlbarTestUtils.promisePopupClose(window, async () => {
+        // We intentionally turn off this a11y check, because the following
+        // click is purposefully targeting a non-interactive element to dismiss
+        // the opened URL Bar with a mouse which can be done by assistive
+        // technology and keyboard by pressing `Esc` key, this rule check shall
+        // be ignored by a11y_checks suite.
+        AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
         await EventUtils.synthesizeMouseAtCenter(spring, {});
+        AccessibilityUtils.resetEnv();
       });
       Assert.ok(
         UrlbarProviderSearchTips.showedTipTypeInCurrentEngagement ==
