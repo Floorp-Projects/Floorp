@@ -108,9 +108,8 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         lifecycleScope.launch {
-            // During initial development, this will only be available in Nightly or Debug builds.
             requirePreference<SwitchPreference>(R.string.pref_key_enable_debug_drawer).apply {
-                isVisible = Config.channel.isNightlyOrDebug
+                isVisible = true
                 isChecked = debugSettingsRepository.debugDrawerEnabled.first()
                 onPreferenceChangeListener =
                     Preference.OnPreferenceChangeListener { _, newValue ->

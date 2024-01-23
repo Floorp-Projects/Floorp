@@ -266,34 +266,32 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
 
-        if (Config.channel.isNightlyOrDebug) {
-            lifecycleScope.launch {
-                val debugSettingsRepository = DefaultDebugSettingsRepository(
-                    context = this@HomeActivity,
-                    writeScope = this,
-                )
+        lifecycleScope.launch {
+            val debugSettingsRepository = DefaultDebugSettingsRepository(
+                context = this@HomeActivity,
+                writeScope = this,
+            )
 
-                debugSettingsRepository.debugDrawerEnabled
-                    .distinctUntilChanged()
-                    .collect { enabled ->
-                        with(binding.debugOverlay) {
-                            if (enabled) {
-                                visibility = View.VISIBLE
+            debugSettingsRepository.debugDrawerEnabled
+                .distinctUntilChanged()
+                .collect { enabled ->
+                    with(binding.debugOverlay) {
+                        if (enabled) {
+                            visibility = View.VISIBLE
 
-                                setContent {
-                                    FenixOverlay(
-                                        browserStore = components.core.store,
-                                        inactiveTabsEnabled = settings().inactiveTabsAreEnabled,
-                                    )
-                                }
-                            } else {
-                                setContent {}
-
-                                visibility = View.GONE
+                            setContent {
+                                FenixOverlay(
+                                    browserStore = components.core.store,
+                                    inactiveTabsEnabled = settings().inactiveTabsAreEnabled,
+                                )
                             }
+                        } else {
+                            setContent {}
+
+                            visibility = View.GONE
                         }
                     }
-            }
+                }
         }
 
         setContentView(binding.root)
