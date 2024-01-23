@@ -1442,7 +1442,7 @@ class ASTSerializer {
   bool exportSpecifier(BinaryNode* exportSpec, MutableHandleValue dst);
   bool exportNamespaceSpecifier(UnaryNode* exportSpec, MutableHandleValue dst);
   bool classDefinition(ClassNode* pn, bool expr, MutableHandleValue dst);
-  bool importAttributes(ListNode* assertionList, NodeVector& assertions);
+  bool importAttributes(ListNode* attributeList, NodeVector& attributes);
 
   bool optStatement(ParseNode* pn, MutableHandleValue dst) {
     if (!pn) {

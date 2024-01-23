@@ -4898,7 +4898,7 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 }
 
 template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType assertionsSet) {
+bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType attributesSet) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert) ||
              anyChars.isCurrentTokenType(TokenKind::With));
 
@@ -4972,7 +4972,7 @@ bool GeneralParser<ParseHandler, Unit>::withClause(ListNodeType assertionsSet) {
                           handler_.newImportAttribute(keyNode, valueNode),
                           false);
 
-    handler_.addList(assertionsSet, importAttributeNode);
+    handler_.addList(attributesSet, importAttributeNode);
 
     if (!tokenStream.getToken(&token)) {
       return false;
