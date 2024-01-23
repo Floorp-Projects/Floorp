@@ -802,6 +802,13 @@ for ( let lanes of ['i8x16', 'i16x8', 'i32x4', 'i64x2'] ) {
       assertEq(ins.exports.test(), 0xffff);
     }
   }
+
+  // Some patterns that look like zero extend.
+  for (let pat of ["0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30"]) {
+    wasmCompile(`(module (func (param v128) (result v128) (i8x16.shuffle ${pat} (local.get 0) (v128.const i32x4 0 0 0 0))))`);
+    const res = wasmSimdAnalysis();
+    assertEq(!res.includes("shuffle -> zero-extend"), true);
+  }
 }
 
 // Constant folding scalar->simd.  There are functional tests for all these in
