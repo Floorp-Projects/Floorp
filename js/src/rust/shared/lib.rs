@@ -15,6 +15,7 @@
 extern crate encoding_c;
 extern crate encoding_c_mem;
 extern crate mozglue_static;
+extern crate unicode_bidi_ffi;
 
 #[cfg(feature = "smoosh")]
 extern crate smoosh;

@@ -59,6 +59,7 @@ fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" 
 oxilangtag = "0.1.3"
 oxilangtag-ffi = { path = "../../../../intl/locale/rust/oxilangtag-ffi" }
 unicode-bidi = "0.3.15"
+unicode-bidi-ffi = { path = "../../../../intl/bidi/rust/unicode-bidi-ffi" }
 rure = "0.2.2"
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
 mozannotation_client = { path = "../../../crashreporter/mozannotation_client", optional = true }
