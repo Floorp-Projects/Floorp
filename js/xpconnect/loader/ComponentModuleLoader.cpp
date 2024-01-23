@@ -76,7 +76,56 @@ already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateStaticImport(
 already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
-  return nullptr;  // Not yet implemented.
+  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aMaybeActiveScript->ReferrerPolicy(),
+      aMaybeActiveScript->GetFetchOptions(), dom::SRIMetadata(),
+      aMaybeActiveScript->BaseURL(), context,
+      /* aIsTopLevel = */ true, /* aIsDynamicImport =  */ true, this,
+      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
+
+  request->SetDynamicImport(aMaybeActiveScript, aSpecifier, aPromise);
+  request->NoCacheEntryFound();
+
+  return request.forget();
+}
+
+void ComponentModuleLoader::OnDynamicImportStarted(
+    ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsDynamicImport());
+  MOZ_ASSERT(!mLoadRequests.Contains(aRequest));
+
+  if (aRequest->IsFetching()) {
+    // This module is newly imported.
+    //
+    // DynamicImportRequests() can contain multiple requests when a dynamic
+    // import is performed while evaluating the top-level script of other
+    // dynamic imports.
+    //
+    // mLoadRequests should be empty given evaluation is performed after
+    // handling all fetching requests.
+    MOZ_ASSERT(DynamicImportRequests().Contains(aRequest));
+    MOZ_ASSERT(mLoadRequests.isEmpty());
+
+    nsresult rv = OnFetchComplete(aRequest, NS_OK);
+    if (NS_FAILED(rv)) {
+      mLoadRequests.CancelRequestsAndClear();
+      CancelDynamicImport(aRequest, rv);
+      return;
+    }
+
+    rv = ProcessRequests();
+    if (NS_FAILED(rv)) {
+      CancelDynamicImport(aRequest, rv);
+      return;
+    }
+  } else {
+    // This module had already been imported.
+    MOZ_ASSERT(DynamicImportRequests().isEmpty());
+    MOZ_ASSERT(mLoadRequests.isEmpty());
+  }
+
+  ProcessDynamicImport(aRequest);
 }
 
 bool ComponentModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
@@ -150,7 +199,10 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
     context->mScript = script;
   }
 
-  mLoadRequests.AppendElement(aRequest);
+  if (!aRequest->IsDynamicImport()) {
+    // NOTE: Dynamic import is stored into mDynamicImportRequests.
+    mLoadRequests.AppendElement(aRequest);
+  }
 
   return NS_OK;
 }

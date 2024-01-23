@@ -73,6 +73,8 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::Handle<JSString*> aSpecifier,
       JS::Handle<JSObject*> aPromise) override;
 
+  void OnDynamicImportStarted(ModuleLoadRequest* aRequest) override;
+
   bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) override;
 
   nsresult StartFetch(ModuleLoadRequest* aRequest) override;
