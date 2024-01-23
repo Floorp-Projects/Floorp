@@ -772,12 +772,11 @@ void Promise::MaybeRejectWithClone(JSContext* aCx,
 
 // A WorkerRunnable to resolve/reject the Promise on the worker thread.
 // Calling thread MUST hold PromiseWorkerProxy's mutex before creating this.
-class PromiseWorkerProxyRunnable final : public WorkerRunnable {
+class PromiseWorkerProxyRunnable : public WorkerRunnable {
  public:
   PromiseWorkerProxyRunnable(PromiseWorkerProxy* aPromiseWorkerProxy,
                              PromiseWorkerProxy::RunCallbackFunc aFunc)
-      : WorkerRunnable(aPromiseWorkerProxy->GetWorkerPrivate(),
-                       "PromiseWorkerProxyRunnable", WorkerThread),
+      : WorkerRunnable(aPromiseWorkerProxy->GetWorkerPrivate(), WorkerThread),
         mPromiseWorkerProxy(aPromiseWorkerProxy),
         mFunc(aFunc) {
     MOZ_ASSERT(NS_IsMainThread());

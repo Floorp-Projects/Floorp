@@ -1578,8 +1578,7 @@ class FulfillImageBitmapPromiseWorkerTask final
  public:
   FulfillImageBitmapPromiseWorkerTask(Promise* aPromise,
                                       ImageBitmap* aImageBitmap)
-      : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate(),
-                                 "FulfillImageBitmapPromiseWorkerTask"),
+      : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate()),
         FulfillImageBitmapPromise(aPromise, aImageBitmap) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -1700,13 +1699,13 @@ class CreateImageBitmapFromBlob final : public DiscardableRunnable,
 NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, DiscardableRunnable,
                             imgIContainerCallback, nsIInputStreamCallback)
 
-class CreateImageBitmapFromBlobRunnable final : public WorkerRunnable {
+class CreateImageBitmapFromBlobRunnable : public WorkerRunnable {
  public:
   explicit CreateImageBitmapFromBlobRunnable(WorkerPrivate* aWorkerPrivate,
                                              CreateImageBitmapFromBlob* aTask,
                                              layers::Image* aImage,
                                              nsresult aStatus)
-      : WorkerRunnable(aWorkerPrivate, "CreateImageBitmapFromBlobRunnable"),
+      : WorkerRunnable(aWorkerPrivate),
         mTask(aTask),
         mImage(aImage),
         mStatus(aStatus) {}

@@ -55,8 +55,7 @@ void WorkerDocumentListener::OnVisible(bool aVisible) {
   class VisibleRunnable final : public WorkerRunnable {
    public:
     VisibleRunnable(WorkerPrivate* aWorkerPrivate, bool aVisible)
-        : WorkerRunnable(aWorkerPrivate, "VisibleRunnable"),
-          mVisible(aVisible) {}
+        : WorkerRunnable(aWorkerPrivate), mVisible(aVisible) {}
 
     bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
       WorkerGlobalScope* scope = aWorkerPrivate->GlobalScope();
