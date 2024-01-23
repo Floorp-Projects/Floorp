@@ -181,3 +181,11 @@ pub(crate) fn port_send(
 ) -> io::Result<()> {
     unsafe { ret(c::port_send(borrowed_fd(port), events, userdata)) }
 }
+
+#[cfg(not(any(windows, target_os = "redox", target_os = "wasi")))]
+pub(crate) fn pause() {
+    let r = unsafe { libc::pause() };
+    let errno = libc_errno::errno().0;
+    debug_assert_eq!(r, -1);
+    debug_assert_eq!(errno, libc::EINTR);
+}

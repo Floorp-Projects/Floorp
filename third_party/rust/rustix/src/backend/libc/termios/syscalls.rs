@@ -40,6 +40,13 @@ pub(crate) fn tcgetattr(fd: BorrowedFd<'_>) -> io::Result<Termios> {
         let termios2 = unsafe {
             let mut termios2 = MaybeUninit::<c::termios2>::uninit();
 
+            // QEMU's `TCGETS2` doesn't currently set `input_speed` or
+            // `output_speed` on PowerPC, so zero out the fields ourselves.
+            #[cfg(any(target_arch = "powerpc", target_arch = "powerpc64"))]
+            {
+                termios2.write(core::mem::zeroed());
+            }
+
             ret(c::ioctl(
                 borrowed_fd(fd),
                 c::TCGETS2 as _,
@@ -60,6 +67,33 @@ pub(crate) fn tcgetattr(fd: BorrowedFd<'_>) -> io::Result<Termios> {
             input_speed: termios2.c_ispeed,
             output_speed: termios2.c_ospeed,
         };
+
+        // QEMU's `TCGETS2` doesn't currently set `input_speed` or
+        // `output_speed` on PowerPC, so set them manually if we can.
+        #[cfg(any(target_arch = "powerpc", target_arch = "powerpc64"))]
+        {
+            use crate::termios::speed;
+
+            if result.output_speed == 0 && (termios2.c_cflag & c::CBAUD) != c::BOTHER {
+                if let Some(output_speed) = speed::decode(termios2.c_cflag & c::CBAUD) {
+                    result.output_speed = output_speed;
+                }
+            }
+            if result.input_speed == 0
+                && ((termios2.c_cflag & c::CIBAUD) >> c::IBSHIFT) != c::BOTHER
+            {
+                // For input speeds, `B0` is special-cased to mean the input
+                // speed is the same as the output speed.
+                if ((termios2.c_cflag & c::CIBAUD) >> c::IBSHIFT) == c::B0 {
+                    result.input_speed = result.output_speed;
+                } else if let Some(input_speed) =
+                    speed::decode((termios2.c_cflag & c::CIBAUD) >> c::IBSHIFT)
+                {
+                    result.input_speed = input_speed;
+                }
+            }
+        }
+
         result.special_codes.0[..termios2.c_cc.len()].copy_from_slice(&termios2.c_cc);
 
         Ok(result)
@@ -81,6 +115,15 @@ pub(crate) fn tcgetattr(fd: BorrowedFd<'_>) -> io::Result<Termios> {
 pub(crate) fn tcgetpgrp(fd: BorrowedFd<'_>) -> io::Result<Pid> {
     unsafe {
         let pid = ret_pid_t(c::tcgetpgrp(borrowed_fd(fd)))?;
+
+        // This doesn't appear to be documented, but on Linux, it appears
+        // `tcsetpgrp` can succceed and set the pid to 0 if we pass it a
+        // pseudo-terminal device fd. For now, translate it into `OPNOTSUPP`.
+        #[cfg(linux_kernel)]
+        if pid == 0 {
+            return Err(io::Errno::OPNOTSUPP);
+        }
+
         Ok(Pid::from_raw_unchecked(pid))
     }
 }
@@ -110,12 +153,12 @@ pub(crate) fn tcsetattr(
         // linux-raw-sys' ioctl-generation script for sparc isn't working yet,
         // so as a temporary workaround, declare these manually.
         #[cfg(any(target_arch = "sparc", target_arch = "sparc64"))]
-        const TCSETS: u32 = 0x80245409;
+        const TCSETS: u32 = 0x8024_5409;
         #[cfg(any(target_arch = "sparc", target_arch = "sparc64"))]
-        const TCSETS2: u32 = 0x802c540d;
+        const TCSETS2: u32 = 0x802c_540d;
 
-        // Translate from `optional_actions` into an ioctl request code. On MIPS,
-        // `optional_actions` already has `TCGETS` added to it.
+        // Translate from `optional_actions` into an ioctl request code. On
+        // MIPS, `optional_actions` already has `TCGETS` added to it.
         let request = TCSETS2
             + if cfg!(any(
                 target_arch = "mips",
@@ -341,7 +384,7 @@ pub(crate) fn cfmakeraw(termios: &mut Termios) {
 pub(crate) fn isatty(fd: BorrowedFd<'_>) -> bool {
     // Use the return value of `isatty` alone. We don't check `errno` because
     // we return `bool` rather than `io::Result<bool>`, because we assume
-    // `BorrrowedFd` protects us from `EBADF`, and any other reasonably
+    // `BorrowedFd` protects us from `EBADF`, and any other reasonably
     // anticipated `errno` value would end up interpreted as “assume it's not a
     // terminal” anyway.
     unsafe { c::isatty(borrowed_fd(fd)) != 0 }

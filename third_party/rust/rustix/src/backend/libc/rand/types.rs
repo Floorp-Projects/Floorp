@@ -18,7 +18,7 @@ bitflags! {
         /// `GRND_INSECURE`
         const INSECURE = c::GRND_INSECURE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

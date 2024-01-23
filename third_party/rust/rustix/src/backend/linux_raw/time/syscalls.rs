@@ -3,8 +3,7 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
 use crate::backend::conv::{ret, ret_infallible};
 use crate::clockid::ClockId;
@@ -105,7 +104,7 @@ unsafe fn clock_settime_old(which_clock: ClockId, timespec: Timespec) -> io::Res
 #[cfg(feature = "time")]
 #[inline]
 pub(crate) fn timerfd_create(clockid: TimerfdClockId, flags: TimerfdFlags) -> io::Result<OwnedFd> {
-    unsafe { ret_owned_fd(syscall!(__NR_timerfd_create, clockid, flags)) }
+    unsafe { ret_owned_fd(syscall_readonly!(__NR_timerfd_create, clockid, flags)) }
 }
 
 #[cfg(feature = "time")]

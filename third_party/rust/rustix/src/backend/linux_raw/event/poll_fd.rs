@@ -4,7 +4,7 @@ use bitflags::bitflags;
 bitflags! {
     /// `POLL*` flags for use with [`poll`].
     ///
-    /// [`poll`]: crate::io::poll
+    /// [`poll`]: crate::event::poll
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct PollFlags: u16 {
@@ -31,7 +31,7 @@ bitflags! {
         /// `POLLRDHUP`
         const RDHUP = linux_raw_sys::general::POLLRDHUP as u16;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

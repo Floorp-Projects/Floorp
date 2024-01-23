@@ -7,7 +7,7 @@ mod chroot;
 mod exit;
 #[cfg(not(target_os = "wasi"))] // WASI doesn't have get[gpu]id.
 mod id;
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(any(target_os = "aix", target_os = "espidf", target_os = "vita")))]
 mod ioctl;
 #[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
 mod kill;
@@ -19,7 +19,8 @@ mod pidfd;
 mod pidfd_getfd;
 #[cfg(linux_kernel)]
 mod prctl;
-#[cfg(not(any(target_os = "fuchsia", target_os = "wasi")))] // WASI doesn't have [gs]etpriority.
+#[cfg(not(any(target_os = "fuchsia", target_os = "vita", target_os = "wasi")))]
+// WASI doesn't have [gs]etpriority.
 mod priority;
 #[cfg(freebsdlike)]
 mod procctl;
@@ -27,15 +28,16 @@ mod procctl;
     target_os = "espidf",
     target_os = "fuchsia",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 mod rlimit;
-#[cfg(any(linux_kernel, target_os = "dragonfly", target_os = "fuchsia"))]
+#[cfg(any(freebsdlike, linux_kernel, target_os = "fuchsia"))]
 mod sched;
 mod sched_yield;
 #[cfg(not(target_os = "wasi"))] // WASI doesn't have umask.
 mod umask;
-#[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
+#[cfg(not(any(target_os = "espidf", target_os = "vita", target_os = "wasi")))]
 mod wait;
 
 #[cfg(not(target_os = "wasi"))]
@@ -45,7 +47,7 @@ pub use chroot::*;
 pub use exit::*;
 #[cfg(not(target_os = "wasi"))]
 pub use id::*;
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(any(target_os = "aix", target_os = "espidf", target_os = "vita")))]
 pub use ioctl::*;
 #[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
 pub use kill::*;
@@ -57,7 +59,7 @@ pub use pidfd::*;
 pub use pidfd_getfd::*;
 #[cfg(linux_kernel)]
 pub use prctl::*;
-#[cfg(not(any(target_os = "fuchsia", target_os = "wasi")))]
+#[cfg(not(any(target_os = "fuchsia", target_os = "vita", target_os = "wasi")))]
 pub use priority::*;
 #[cfg(freebsdlike)]
 pub use procctl::*;
@@ -65,13 +67,14 @@ pub use procctl::*;
     target_os = "espidf",
     target_os = "fuchsia",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 pub use rlimit::*;
-#[cfg(any(linux_kernel, target_os = "dragonfly", target_os = "fuchsia"))]
+#[cfg(any(freebsdlike, linux_kernel, target_os = "fuchsia"))]
 pub use sched::*;
 pub use sched_yield::sched_yield;
 #[cfg(not(target_os = "wasi"))]
 pub use umask::*;
-#[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
+#[cfg(not(any(target_os = "espidf", target_os = "vita", target_os = "wasi")))]
 pub use wait::*;

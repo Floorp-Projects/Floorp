@@ -3,15 +3,17 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
-use crate::backend::conv::{ret_usize, slice_mut};
+use crate::backend::conv::{pass_usize, ret_usize};
 use crate::io;
 use crate::rand::GetRandomFlags;
 
 #[inline]
-pub(crate) fn getrandom(buf: &mut [u8], flags: GetRandomFlags) -> io::Result<usize> {
-    let (buf_addr_mut, buf_len) = slice_mut(buf);
-    unsafe { ret_usize(syscall!(__NR_getrandom, buf_addr_mut, buf_len, flags)) }
+pub(crate) unsafe fn getrandom(
+    buf: *mut u8,
+    cap: usize,
+    flags: GetRandomFlags,
+) -> io::Result<usize> {
+    ret_usize(syscall!(__NR_getrandom, buf, pass_usize(cap), flags))
 }

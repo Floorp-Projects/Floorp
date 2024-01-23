@@ -15,7 +15,7 @@ bitflags! {
         /// `XATTR_REPLACE`
         const REPLACE = c::XATTR_REPLACE as c::c_uint;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

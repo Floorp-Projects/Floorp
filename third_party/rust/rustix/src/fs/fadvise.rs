@@ -1,7 +1,6 @@
 use crate::{backend, io};
 use backend::fd::AsFd;
-
-pub use backend::fs::types::Advice;
+use backend::fs::types::Advice;
 
 /// `posix_fadvise(fd, offset, len, advice)`—Declares an expected access
 /// pattern for a file.

@@ -12,7 +12,7 @@ bitflags! {
         /// `FD_CLOEXEC`
         const CLOEXEC = bitcast!(c::FD_CLOEXEC);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -37,7 +37,7 @@ bitflags! {
         /// `RWF_APPEND` (since Linux 4.16)
         const APPEND = linux_raw_sys::general::RWF_APPEND;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -59,7 +59,7 @@ bitflags! {
         )))] // Android 5.0 has dup3, but libc doesn't have bindings
         const CLOEXEC = bitcast!(c::O_CLOEXEC);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

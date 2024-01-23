@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.63"
 name = "rustix"
-version = "0.38.13"
+version = "0.38.28"
 authors = [
     "Dan Gohman <dev@sunfishcode.online>",
     "Jakub Konka <kubkon@jakubkonka.com>",
@@ -27,7 +27,7 @@ include = [
     "/*.md",
     "benches",
 ]
-description = "Safe Rust bindings to POSIX/Unix/Linux/Winsock2-like syscalls"
+description = "Safe Rust bindings to POSIX/Unix/Linux/Winsock-like syscalls"
 documentation = "https://docs.rs/rustix"
 readme = "README.md"
 keywords = [
@@ -99,10 +99,10 @@ default-features = false
 version = "1.0"
 
 [dev-dependencies.libc]
-version = "0.2.147"
+version = "0.2.150"
 
 [dev-dependencies.libc_errno]
-version = "0.3.1"
+version = "0.3.8"
 default-features = false
 package = "errno"
 
@@ -133,8 +133,9 @@ all-apis = [
     "pty",
     "rand",
     "runtime",
-    "system",
+    "shm",
     "stdio",
+    "system",
     "termios",
     "thread",
     "time",
@@ -148,6 +149,7 @@ default = [
 event = []
 fs = []
 io_uring = [
+    "event",
     "fs",
     "net",
     "linux-raw-sys/io_uring",
@@ -183,6 +185,7 @@ rustc-dep-of-std = [
     "bitflags/rustc-dep-of-std",
     "compiler_builtins?/rustc-dep-of-std",
 ]
+shm = ["fs"]
 std = [
     "bitflags/std",
     "alloc",
@@ -202,7 +205,7 @@ use-libc = [
 use-libc-auxv = []
 
 [target."cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))".dependencies.linux-raw-sys]
-version = "0.4.3"
+version = "0.4.11"
 features = [
     "general",
     "ioctl",
@@ -214,19 +217,19 @@ default-features = false
 version = "0.4"
 
 [target."cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))".dependencies.libc]
-version = "0.2.147"
+version = "0.2.150"
 features = ["extra_traits"]
 optional = true
 default-features = false
 
 [target."cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))".dependencies.libc_errno]
-version = "0.3.1"
+version = "0.3.8"
 optional = true
 default-features = false
 package = "errno"
 
 [target."cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))".dependencies.linux-raw-sys]
-version = "0.4.7"
+version = "0.4.11"
 features = [
     "general",
     "errno",
@@ -237,12 +240,12 @@ features = [
 default-features = false
 
 [target."cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))".dependencies.libc]
-version = "0.2.147"
+version = "0.2.150"
 features = ["extra_traits"]
 default-features = false
 
 [target."cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))".dependencies.libc_errno]
-version = "0.3.1"
+version = "0.3.8"
 default-features = false
 package = "errno"
 
@@ -251,12 +254,12 @@ version = "1.5.2"
 optional = true
 
 [target."cfg(windows)".dependencies.libc_errno]
-version = "0.3.1"
+version = "0.3.8"
 default-features = false
 package = "errno"
 
 [target."cfg(windows)".dependencies.windows-sys]
-version = "0.48.0"
+version = "0.52.0"
 features = [
     "Win32_Foundation",
     "Win32_Networking_WinSock",

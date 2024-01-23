@@ -18,14 +18,40 @@ pub struct Dir {
     /// The `OwnedFd` that we read directory entries from.
     fd: OwnedFd,
 
+    /// Have we seen any errors in this iteration?
+    any_errors: bool,
+
+    /// Should we rewind the stream on the next iteration?
+    rewind: bool,
+
+    /// The buffer for `linux_dirent64` entries.
     buf: Vec<u8>,
+
+    /// Where we are in the buffer.
     pos: usize,
-    next: Option<u64>,
 }
 
 impl Dir {
-    /// Construct a `Dir` that reads entries from the given directory
-    /// file descriptor.
+    /// Take ownership of `fd` and construct a `Dir` that reads entries from
+    /// the given directory file descriptor.
+    #[inline]
+    pub fn new<Fd: Into<OwnedFd>>(fd: Fd) -> io::Result<Self> {
+        Self::_new(fd.into())
+    }
+
+    #[inline]
+    fn _new(fd: OwnedFd) -> io::Result<Self> {
+        Ok(Self {
+            fd,
+            any_errors: false,
+            rewind: false,
+            buf: Vec::new(),
+            pos: 0,
+        })
+    }
+
+    /// Borrow `fd` and construct a `Dir` that reads entries from the given
+    /// directory file descriptor.
     #[inline]
     pub fn read_from<Fd: AsFd>(fd: Fd) -> io::Result<Self> {
         Self::_read_from(fd.as_fd())
@@ -38,25 +64,39 @@ impl Dir {
 
         Ok(Self {
             fd: fd_for_dir,
+            any_errors: false,
+            rewind: false,
             buf: Vec::new(),
             pos: 0,
-            next: None,
         })
     }
 
     /// `rewinddir(self)`
     #[inline]
     pub fn rewind(&mut self) {
+        self.any_errors = false;
+        self.rewind = true;
         self.pos = self.buf.len();
-        self.next = Some(0);
     }
 
     /// `readdir(self)`, where `None` means the end of the directory.
     pub fn read(&mut self) -> Option<io::Result<DirEntry>> {
-        if let Some(next) = self.next.take() {
-            match crate::backend::fs::syscalls::_seek(self.fd.as_fd(), next as i64, SEEK_SET) {
+        // If we've seen errors, don't continue to try to read anyting further.
+        if self.any_errors {
+            return None;
+        }
+
+        // If a rewind was requested, seek to the beginning.
+        if self.rewind {
+            self.rewind = false;
+            match io::retry_on_intr(|| {
+                crate::backend::fs::syscalls::_seek(self.fd.as_fd(), 0, SEEK_SET)
+            }) {
                 Ok(_) => (),
-                Err(err) => return Some(Err(err)),
+                Err(err) => {
+                    self.any_errors = true;
+                    return Some(Err(err));
+                }
             }
         }
 
@@ -78,7 +118,7 @@ impl Dir {
         if self.buf.len() - self.pos < size_of::<linux_dirent64>() {
             match self.read_more()? {
                 Ok(()) => (),
-                Err(e) => return Some(Err(e)),
+                Err(err) => return Some(Err(err)),
             }
         }
 
@@ -135,15 +175,33 @@ impl Dir {
         }))
     }
 
+    #[must_use]
     fn read_more(&mut self) -> Option<io::Result<()>> {
-        let og_len = self.buf.len();
-        // Capacity increment currently chosen by wild guess.
-        self.buf
-            .resize(self.buf.capacity() + 32 * size_of::<linux_dirent64>(), 0);
-        let nread = match crate::backend::fs::syscalls::getdents(self.fd.as_fd(), &mut self.buf) {
+        // The first few times we're called, we allocate a relatively small
+        // buffer, because many directories are small. If we're called more,
+        // use progressively larger allocations, up to a fixed maximum.
+        //
+        // The specific sizes and policy here have not been tuned in detail yet
+        // and may need to be adjusted. In doing so, we should be careful to
+        // avoid unbounded buffer growth. This buffer only exists to share the
+        // cost of a `getdents` call over many entries, so if it gets too big,
+        // cache and heap usage will outweigh the benefit. And ultimately,
+        // directories can contain more entries than we can allocate contiguous
+        // memory for, so we'll always need to cap the size at some point.
+        if self.buf.len() < 1024 * size_of::<linux_dirent64>() {
+            self.buf.reserve(32 * size_of::<linux_dirent64>());
+        }
+        self.buf.resize(self.buf.capacity(), 0);
+        let nread = match io::retry_on_intr(|| {
+            crate::backend::fs::syscalls::getdents(self.fd.as_fd(), &mut self.buf)
+        }) {
             Ok(nread) => nread,
+            Err(io::Errno::NOENT) => {
+                self.any_errors = true;
+                return None;
+            }
             Err(err) => {
-                self.buf.resize(og_len, 0);
+                self.any_errors = true;
                 return Some(Err(err));
             }
         };
@@ -224,4 +282,34 @@ impl DirEntry {
     pub fn ino(&self) -> u64 {
         self.d_ino
     }
+}
+
+#[test]
+fn dir_iterator_handles_io_errors() {
+    // create a dir, keep the FD, then delete the dir
+    let tmp = tempfile::tempdir().unwrap();
+    let fd = crate::fs::openat(
+        crate::fs::CWD,
+        tmp.path(),
+        crate::fs::OFlags::RDONLY | crate::fs::OFlags::CLOEXEC,
+        crate::fs::Mode::empty(),
+    )
+    .unwrap();
+
+    let file_fd = crate::fs::openat(
+        &fd,
+        tmp.path().join("test.txt"),
+        crate::fs::OFlags::WRONLY | crate::fs::OFlags::CREATE,
+        crate::fs::Mode::RWXU,
+    )
+    .unwrap();
+
+    let mut dir = Dir::read_from(&fd).unwrap();
+
+    // Reach inside the `Dir` and replace its directory with a file, which
+    // will cause the subsequent `getdents64` to fail.
+    crate::io::dup2(&file_fd, &mut dir.fd).unwrap();
+
+    assert!(matches!(dir.next(), Some(Err(_))));
+    assert!(dir.next().is_none());
 }

@@ -18,20 +18,19 @@
 //! namespace. So with the checking here, they may fail, but they won't be able
 //! to succeed with bogus results.
 
-use crate::backend::pid::syscalls::getpid;
 use crate::fd::{AsFd, BorrowedFd, OwnedFd};
+use crate::ffi::CStr;
 use crate::fs::{
-    fstat, fstatfs, major, openat, renameat, FileType, FsWord, Mode, OFlags, Stat, CWD,
+    fstat, fstatfs, major, openat, renameat, FileType, FsWord, Mode, OFlags, RawDir, Stat, CWD,
     PROC_SUPER_MAGIC,
 };
 use crate::io;
 use crate::path::DecInt;
 #[cfg(feature = "rustc-dep-of-std")]
 use core::lazy::OnceCell;
+use core::mem::MaybeUninit;
 #[cfg(not(feature = "rustc-dep-of-std"))]
 use once_cell::sync::OnceCell;
-#[cfg(feature = "alloc")]
-use {crate::ffi::CStr, crate::fs::Dir};
 
 /// Linux's procfs always uses inode 1 for its root directory.
 const PROC_ROOT_INO: u64 = 1;
@@ -42,8 +41,8 @@ enum Kind {
     Proc,
     Pid,
     Fd,
-    #[cfg(feature = "alloc")]
     File,
+    Symlink,
 }
 
 /// Check a subdirectory of "/proc" for anomalies.
@@ -69,16 +68,23 @@ fn check_proc_entry_with_stat(
     match kind {
         Kind::Proc => check_proc_root(entry, &entry_stat)?,
         Kind::Pid | Kind::Fd => check_proc_subdir(entry, &entry_stat, proc_stat)?,
-        #[cfg(feature = "alloc")]
         Kind::File => check_proc_file(&entry_stat, proc_stat)?,
+        Kind::Symlink => check_proc_symlink(&entry_stat, proc_stat)?,
     }
 
     // "/proc" directories are typically mounted r-xr-xr-x.
     // "/proc/self/fd" is r-x------. Allow them to have fewer permissions, but
     // not more.
-    let expected_mode = if let Kind::Fd = kind { 0o500 } else { 0o555 };
-    if entry_stat.st_mode & 0o777 & !expected_mode != 0 {
-        return Err(io::Errno::NOTSUP);
+    match kind {
+        Kind::Symlink => {
+            // On Linux, symlinks don't have their own permissions.
+        }
+        _ => {
+            let expected_mode = if let Kind::Fd = kind { 0o500 } else { 0o555 };
+            if entry_stat.st_mode & 0o777 & !expected_mode != 0 {
+                return Err(io::Errno::NOTSUP);
+            }
+        }
     }
 
     match kind {
@@ -97,10 +103,16 @@ fn check_proc_entry_with_stat(
                 return Err(io::Errno::NOTSUP);
             }
         }
-        #[cfg(feature = "alloc")]
         Kind::File => {
             // Check that files in procfs don't have extraneous hard links to
             // them (which might indicate hard links to other things).
+            if entry_stat.st_nlink != 1 {
+                return Err(io::Errno::NOTSUP);
+            }
+        }
+        Kind::Symlink => {
+            // Check that symlinks in procfs don't have extraneous hard links
+            // to them (which might indicate hard links to other things).
             if entry_stat.st_nlink != 1 {
                 return Err(io::Errno::NOTSUP);
             }
@@ -153,10 +165,20 @@ fn check_proc_subdir(
     Ok(())
 }
 
-#[cfg(feature = "alloc")]
 fn check_proc_file(stat: &Stat, proc_stat: Option<&Stat>) -> io::Result<()> {
     // Check that we have a regular file.
     if FileType::from_raw_mode(stat.st_mode) != FileType::RegularFile {
+        return Err(io::Errno::NOTSUP);
+    }
+
+    check_proc_nonroot(stat, proc_stat)?;
+
+    Ok(())
+}
+
+fn check_proc_symlink(stat: &Stat, proc_stat: Option<&Stat>) -> io::Result<()> {
+    // Check that we have a symbolic link.
+    if FileType::from_raw_mode(stat.st_mode) != FileType::Symlink {
         return Err(io::Errno::NOTSUP);
     }
 
@@ -204,8 +226,8 @@ fn is_mountpoint(file: BorrowedFd<'_>) -> bool {
 
 /// Open a directory in `/proc`, mapping all errors to `io::Errno::NOTSUP`.
 fn proc_opendirat<P: crate::path::Arg, Fd: AsFd>(dirfd: Fd, path: P) -> io::Result<OwnedFd> {
-    // We could add `PATH`|`NOATIME` here but Linux 2.6.32 doesn't support it.
-    // Also for `NOATIME` see the comment in `open_and_check_file`.
+    // We don't add `PATH` here because that disables `DIRECTORY`. And we don't
+    // add `NOATIME` for the same reason as the comment in `open_and_check_file`.
     let oflags = OFlags::NOFOLLOW | OFlags::DIRECTORY | OFlags::CLOEXEC | OFlags::NOCTTY;
     openat(dirfd, path, oflags, Mode::empty()).map_err(|_err| io::Errno::NOTSUP)
 }
@@ -245,6 +267,7 @@ fn proc() -> io::Result<(BorrowedFd<'static>, &'static Stat)> {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
+#[allow(unsafe_code)]
 fn proc_self() -> io::Result<(BorrowedFd<'static>, &'static Stat)> {
     static PROC_SELF: StaticFd = StaticFd::new();
 
@@ -253,11 +276,21 @@ fn proc_self() -> io::Result<(BorrowedFd<'static>, &'static Stat)> {
         .get_or_try_init(|| {
             let (proc, proc_stat) = proc()?;
 
-            let pid = getpid();
+            // `getpid` would return our pid in our own pid namespace, so
+            // instead use `readlink` on the `self` symlink to learn our pid in
+            // the procfs namespace.
+            let self_symlink = open_and_check_file(proc, proc_stat, cstr!("self"), Kind::Symlink)?;
+            let mut buf = [MaybeUninit::<u8>::uninit(); 20];
+            let len = crate::backend::fs::syscalls::readlinkat(
+                self_symlink.as_fd(),
+                cstr!(""),
+                &mut buf,
+            )?;
+            let pid: &[u8] = unsafe { core::mem::transmute(&buf[..len]) };
 
             // Open "/proc/self". Use our pid to compute the name rather than
             // literally using "self", as "self" is a symlink.
-            let proc_self = proc_opendirat(proc, DecInt::new(pid.as_raw_nonzero().get()))?;
+            let proc_self = proc_opendirat(proc, pid)?;
             let proc_self_stat = check_proc_entry(Kind::Pid, proc_self.as_fd(), Some(proc_stat))
                 .map_err(|_err| io::Errno::NOTSUP)?;
 
@@ -314,7 +347,6 @@ fn new_static_fd(fd: OwnedFd, stat: Stat) -> (OwnedFd, Stat) {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
-#[cfg(feature = "alloc")]
 fn proc_self_fdinfo() -> io::Result<(BorrowedFd<'static>, &'static Stat)> {
     static PROC_SELF_FDINFO: StaticFd = StaticFd::new();
 
@@ -344,18 +376,21 @@ fn proc_self_fdinfo() -> io::Result<(BorrowedFd<'static>, &'static Stat)> {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
-#[cfg(feature = "alloc")]
 #[inline]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "procfs")))]
 pub fn proc_self_fdinfo_fd<Fd: AsFd>(fd: Fd) -> io::Result<OwnedFd> {
     _proc_self_fdinfo(fd.as_fd())
 }
 
-#[cfg(feature = "alloc")]
 fn _proc_self_fdinfo(fd: BorrowedFd<'_>) -> io::Result<OwnedFd> {
     let (proc_self_fdinfo, proc_self_fdinfo_stat) = proc_self_fdinfo()?;
     let fd_str = DecInt::from_fd(fd);
-    open_and_check_file(proc_self_fdinfo, proc_self_fdinfo_stat, fd_str.as_c_str())
+    open_and_check_file(
+        proc_self_fdinfo,
+        proc_self_fdinfo_stat,
+        fd_str.as_c_str(),
+        Kind::File,
+    )
 }
 
 /// Returns a handle to a Linux `/proc/self/pagemap` file.
@@ -369,7 +404,6 @@ fn _proc_self_fdinfo(fd: BorrowedFd<'_>) -> io::Result<OwnedFd> {
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
 /// [Linux pagemap]: https://www.kernel.org/doc/Documentation/vm/pagemap.txt
-#[cfg(feature = "alloc")]
 #[inline]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "procfs")))]
 pub fn proc_self_pagemap() -> io::Result<OwnedFd> {
@@ -385,7 +419,6 @@ pub fn proc_self_pagemap() -> io::Result<OwnedFd> {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
-#[cfg(feature = "alloc")]
 #[inline]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "procfs")))]
 pub fn proc_self_maps() -> io::Result<OwnedFd> {
@@ -401,7 +434,6 @@ pub fn proc_self_maps() -> io::Result<OwnedFd> {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man5/proc.5.html
-#[cfg(feature = "alloc")]
 #[inline]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "procfs")))]
 pub fn proc_self_status() -> io::Result<OwnedFd> {
@@ -409,15 +441,18 @@ pub fn proc_self_status() -> io::Result<OwnedFd> {
 }
 
 /// Open a file under `/proc/self`.
-#[cfg(feature = "alloc")]
 fn proc_self_file(name: &CStr) -> io::Result<OwnedFd> {
     let (proc_self, proc_self_stat) = proc_self()?;
-    open_and_check_file(proc_self, proc_self_stat, name)
+    open_and_check_file(proc_self, proc_self_stat, name, Kind::File)
 }
 
 /// Open a procfs file within in `dir` and check it for bind mounts.
-#[cfg(feature = "alloc")]
-fn open_and_check_file(dir: BorrowedFd<'_>, dir_stat: &Stat, name: &CStr) -> io::Result<OwnedFd> {
+fn open_and_check_file(
+    dir: BorrowedFd<'_>,
+    dir_stat: &Stat,
+    name: &CStr,
+    kind: Kind,
+) -> io::Result<OwnedFd> {
     let (_, proc_stat) = proc()?;
 
     // Don't use `NOATIME`, because it [requires us to own the file], and when
@@ -426,7 +461,11 @@ fn open_and_check_file(dir: BorrowedFd<'_>, dir_stat: &Stat, name: &CStr) -> io:
     //
     // [requires us to own the file]: https://man7.org/linux/man-pages/man2/openat.2.html
     // [to root:root]: https://man7.org/linux/man-pages/man5/proc.5.html
-    let oflags = OFlags::RDONLY | OFlags::CLOEXEC | OFlags::NOFOLLOW | OFlags::NOCTTY;
+    let mut oflags = OFlags::RDONLY | OFlags::CLOEXEC | OFlags::NOFOLLOW | OFlags::NOCTTY;
+    if let Kind::Symlink = kind {
+        // Open symlinks with `O_PATH`.
+        oflags |= OFlags::PATH;
+    }
     let file = openat(dir, name, oflags, Mode::empty()).map_err(|_err| io::Errno::NOTSUP)?;
     let file_stat = fstat(&file)?;
 
@@ -436,32 +475,29 @@ fn open_and_check_file(dir: BorrowedFd<'_>, dir_stat: &Stat, name: &CStr) -> io:
     // we just opened. If we can't find it, there could be a file bind mount on
     // top of the file we want.
     //
-    // As we scan, we also check for ".", to make sure it's the same directory
-    // as our original directory, to detect mount points, since
-    // `Dir::read_from` reopens ".".
-    //
     // TODO: With Linux 5.8 we might be able to use `statx` and
     // `STATX_ATTR_MOUNT_ROOT` to detect mountpoints directly instead of doing
     // this scanning.
-    let dir = Dir::read_from(dir).map_err(|_err| io::Errno::NOTSUP)?;
 
-    // Confirm that we got the same inode.
-    let dot_stat = dir.stat().map_err(|_err| io::Errno::NOTSUP)?;
-    if (dot_stat.st_dev, dot_stat.st_ino) != (dir_stat.st_dev, dir_stat.st_ino) {
-        return Err(io::Errno::NOTSUP);
-    }
+    let expected_type = match kind {
+        Kind::File => FileType::RegularFile,
+        Kind::Symlink => FileType::Symlink,
+        _ => unreachable!(),
+    };
 
     let mut found_file = false;
     let mut found_dot = false;
-    for entry in dir {
+
+    let mut buf = [MaybeUninit::uninit(); 2048];
+    let mut iter = RawDir::new(dir, &mut buf);
+    while let Some(entry) = iter.next() {
         let entry = entry.map_err(|_err| io::Errno::NOTSUP)?;
         if entry.ino() == file_stat.st_ino
-            && entry.file_type() == FileType::RegularFile
+            && entry.file_type() == expected_type
             && entry.file_name() == name
         {
             // We found the file. Proceed to check the file handle.
-            let _ =
-                check_proc_entry_with_stat(Kind::File, file.as_fd(), file_stat, Some(proc_stat))?;
+            let _ = check_proc_entry_with_stat(kind, file.as_fd(), file_stat, Some(proc_stat))?;
 
             found_file = true;
         } else if entry.ino() == dir_stat.st_ino

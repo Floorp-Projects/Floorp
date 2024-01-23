@@ -86,6 +86,9 @@ const PR_SET_NAME: c_int = 15;
 
 /// Set the name of the calling thread.
 ///
+/// Unlike `pthread_setname_np`, this function silently truncates the name to
+/// 16 bytes, as the Linux syscall does.
+///
 /// # References
 ///  - [`prctl(PR_SET_NAME,...)`]
 ///
@@ -205,8 +208,8 @@ pub enum Capability {
     /// cleared on successful return from `chown` (not implemented).
     FileSetID = linux_raw_sys::general::CAP_FSETID,
     /// Overrides the restriction that the real or effective user ID of a
-    /// process sending a signal must match the real or effective user ID
-    /// of the process receiving the signal.
+    /// process sending a signal must match the real or effective user ID of
+    /// the process receiving the signal.
     Kill = linux_raw_sys::general::CAP_KILL,
     /// Allows `setgid` manipulation. Allows `setgroups`. Allows forged gids on
     /// socket credentials passing.
@@ -366,8 +369,9 @@ pub enum Capability {
     ///
     /// [`Capability::SystemAdmin`] is required to use bpf_probe_write_user.
     ///
-    /// [`Capability::SystemAdmin`] is required to iterate system wide loaded
-    /// programs, maps, links, BTFs and convert their IDs to file descriptors.
+    /// [`Capability::SystemAdmin`] is required to iterate system-wide loaded
+    /// programs, maps, links, and BTFs, and convert their IDs to file
+    /// descriptors.
     ///
     /// [`Capability::PerformanceMonitoring`] and
     /// [`Capability::BerkeleyPacketFilters`] are required to load tracing
@@ -443,7 +447,7 @@ bitflags! {
         /// Set [`NO_CAP_AMBIENT_RAISE`] irreversibly.
         const NO_CAP_AMBIENT_RAISE_LOCKED = 1_u32 << 7;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -742,18 +746,20 @@ const PR_MTE_TAG_SHIFT: u32 = 3;
 const PR_MTE_TAG_MASK: u32 = 0xffff_u32 << PR_MTE_TAG_SHIFT;
 
 bitflags! {
-    /// Zero means addresses that are passed for the purpose of being dereferenced by the kernel must be untagged.
+    /// Zero means addresses that are passed for the purpose of being
+    /// dereferenced by the kernel must be untagged.
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct TaggedAddressMode: u32 {
-        /// Addresses that are passed for the purpose of being dereferenced by the kernel may be tagged.
+        /// Addresses that are passed for the purpose of being dereferenced by
+        /// the kernel may be tagged.
         const ENABLED = 1_u32 << 0;
         /// Synchronous tag check fault mode.
         const TCF_SYNC = 1_u32 << 1;
         /// Asynchronous tag check fault mode.
         const TCF_ASYNC = 1_u32 << 2;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -781,8 +787,8 @@ const PR_SET_TAGGED_ADDR_CTRL: c_int = 55;
 ///
 /// # Safety
 ///
-/// Please ensure the conditions necessary to safely call this function,
-/// as detailed in the references above.
+/// Please ensure the conditions necessary to safely call this function, as
+/// detailed in the references above.
 ///
 /// [`prctl(PR_SET_TAGGED_ADDR_CTRL,...)`]: https://man7.org/linux/man-pages/man2/prctl.2.html
 #[inline]
@@ -810,8 +816,8 @@ const PR_SYS_DISPATCH_OFF: usize = 0;
 ///
 /// # Safety
 ///
-/// Please ensure the conditions necessary to safely call this function,
-/// as detailed in the references above.
+/// Please ensure the conditions necessary to safely call this function, as
+/// detailed in the references above.
 ///
 /// [`prctl(PR_SET_SYSCALL_USER_DISPATCH,PR_SYS_DISPATCH_OFF,...)`]: https://man7.org/linux/man-pages/man2/prctl.2.html
 #[inline]
@@ -856,8 +862,8 @@ impl TryFrom<u8> for SysCallUserDispatchFastSwitch {
 ///
 /// # Safety
 ///
-/// Please ensure the conditions necessary to safely call this function,
-/// as detailed in the references above.
+/// Please ensure the conditions necessary to safely call this function, as
+/// detailed in the references above.
 ///
 /// [`prctl(PR_SET_SYSCALL_USER_DISPATCH,PR_SYS_DISPATCH_ON,...)`]: https://man7.org/linux/man-pages/man2/prctl.2.html
 #[inline]

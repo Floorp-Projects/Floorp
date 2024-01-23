@@ -1,6 +1,7 @@
 //! `Timespec` and related types, which are used by multiple public API
 //! modules.
 
+#[cfg(not(fix_y2038))]
 use crate::backend::c;
 
 /// `struct timespec`
@@ -28,17 +29,21 @@ pub type Secs = c::time_t;
 #[cfg(fix_y2038)]
 pub type Secs = i64;
 
-/// A type for the `tv_nsec` field of [`Timespec`].
-#[cfg(all(libc, target_arch = "x86_64", target_pointer_width = "32"))]
+/// A type for the `tv_sec` field of [`Timespec`].
+#[cfg(any(
+    fix_y2038,
+    linux_raw,
+    all(libc, target_arch = "x86_64", target_pointer_width = "32")
+))]
 pub type Nsecs = i64;
 
 /// A type for the `tv_nsec` field of [`Timespec`].
-#[cfg(all(libc, not(all(target_arch = "x86_64", target_pointer_width = "32"))))]
+#[cfg(all(
+    not(fix_y2038),
+    libc,
+    not(all(target_arch = "x86_64", target_pointer_width = "32"))
+))]
 pub type Nsecs = c::c_long;
-
-/// A type for the `tv_nsec` field of [`Timespec`].
-#[cfg(linux_raw)]
-pub type Nsecs = i64;
 
 /// On 32-bit glibc platforms, `timespec` has anonymous padding fields, which
 /// Rust doesn't support yet (see `unnamed_fields`), so we define our own
@@ -52,7 +57,7 @@ pub(crate) struct LibcTimespec {
     #[cfg(target_endian = "big")]
     padding: core::mem::MaybeUninit<u32>,
 
-    pub(crate) tv_nsec: Nsecs,
+    pub(crate) tv_nsec: i32,
 
     #[cfg(target_endian = "little")]
     padding: core::mem::MaybeUninit<u32>,
@@ -64,7 +69,7 @@ impl From<LibcTimespec> for Timespec {
     fn from(t: LibcTimespec) -> Self {
         Self {
             tv_sec: t.tv_sec,
-            tv_nsec: t.tv_nsec,
+            tv_nsec: t.tv_nsec as _,
         }
     }
 }
@@ -75,7 +80,7 @@ impl From<Timespec> for LibcTimespec {
     fn from(t: Timespec) -> Self {
         Self {
             tv_sec: t.tv_sec,
-            tv_nsec: t.tv_nsec,
+            tv_nsec: t.tv_nsec as _,
             padding: core::mem::MaybeUninit::uninit(),
         }
     }

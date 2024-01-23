@@ -51,22 +51,26 @@ fn _ttyname(dirfd: BorrowedFd<'_>, mut buffer: Vec<u8>) -> io::Result<CString> {
     loop {
         match backend::termios::syscalls::ttyname(dirfd, buffer.spare_capacity_mut()) {
             Err(io::Errno::RANGE) => {
-                buffer.reserve(buffer.capacity() + 1); // use `Vec` reallocation strategy to grow capacity exponentially
+                // Use `Vec` reallocation strategy to grow capacity
+                // exponentially.
+                buffer.reserve(buffer.capacity() + 1);
             }
             Ok(len) => {
-                // SAFETY: assume the backend returns the length of the string
+                // SAFETY: Assume the backend returns the length of the string
+                // excluding the NUL.
                 unsafe {
-                    buffer.set_len(len);
+                    buffer.set_len(len + 1);
                 }
 
                 // SAFETY:
-                // - "ttyname_r stores this pathname in the buffer buf"
-                // - [POSIX definition 3.271: Pathname]: "A string that is used to identify a
-                //   file."
-                // - [POSIX definition 3.375: String]: "A contiguous sequence of bytes
-                //   terminated by and including the first null byte."
+                // - “ttyname_r stores this pathname in the buffer buf”
+                // - [POSIX definition 3.271: Pathname]: “A string that is used
+                //   to identify a file.”
+                // - [POSIX definition 3.375: String]: “A contiguous sequence
+                //   of bytes terminated by and including the first null byte.”
                 //
-                // Thus, there will be a single NUL byte at the end of the string.
+                // Thus, there will be a single NUL byte at the end of the
+                // string.
                 //
                 // [POSIX definition 3.271: Pathname]: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_271
                 // [POSIX definition 3.375: String]: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_375

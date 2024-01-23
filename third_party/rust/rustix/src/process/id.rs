@@ -211,11 +211,9 @@ pub fn setsid() -> io::Result<Pid> {
 /// [Linux]: https://man7.org/linux/man-pages/man2/getgroups.2.html
 #[cfg(feature = "alloc")]
 pub fn getgroups() -> io::Result<Vec<Gid>> {
-    let mut buffer = Vec::new();
-
     // This code would benefit from having a better way to read into
     // uninitialized memory, but that requires `unsafe`.
-    buffer.reserve(8);
+    let mut buffer = Vec::with_capacity(8);
     buffer.resize(buffer.capacity(), Gid::ROOT);
 
     loop {
@@ -227,7 +225,8 @@ pub fn getgroups() -> io::Result<Vec<Gid>> {
             buffer.resize(ngroups, Gid::ROOT);
             return Ok(buffer);
         }
-        buffer.reserve(1); // use `Vec` reallocation strategy to grow capacity exponentially
+        // Use `Vec` reallocation strategy to grow capacity exponentially.
+        buffer.reserve(1);
         buffer.resize(buffer.capacity(), Gid::ROOT);
     }
 }

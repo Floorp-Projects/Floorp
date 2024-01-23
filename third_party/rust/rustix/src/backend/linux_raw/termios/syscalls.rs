@@ -3,8 +3,7 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
 use crate::backend::c;
 use crate::backend::conv::{by_ref, c_uint, ret};
@@ -38,8 +37,46 @@ pub(crate) fn tcgetwinsize(fd: BorrowedFd<'_>) -> io::Result<Winsize> {
 pub(crate) fn tcgetattr(fd: BorrowedFd<'_>) -> io::Result<Termios> {
     unsafe {
         let mut result = MaybeUninit::<Termios>::uninit();
+
+        // QEMU's `TCGETS2` doesn't currently set `input_speed` or
+        // `output_speed` on PowerPC, so zero out the fields ourselves.
+        #[cfg(any(target_arch = "powerpc", target_arch = "powerpc64"))]
+        {
+            result.write(core::mem::zeroed());
+        }
+
         ret(syscall!(__NR_ioctl, fd, c_uint(c::TCGETS2), &mut result))?;
-        Ok(result.assume_init())
+
+        let result = result.assume_init();
+
+        // QEMU's `TCGETS2` doesn't currently set `input_speed` or
+        // `output_speed` on PowerPC, so set them manually if we can.
+        #[cfg(any(target_arch = "powerpc", target_arch = "powerpc64"))]
+        let result = {
+            use crate::termios::speed;
+            let mut result = result;
+            if result.output_speed == 0 && (result.control_modes.bits() & c::CBAUD) != c::BOTHER {
+                if let Some(output_speed) = speed::decode(result.control_modes.bits() & c::CBAUD) {
+                    result.output_speed = output_speed;
+                }
+            }
+            if result.input_speed == 0
+                && ((result.control_modes.bits() & c::CIBAUD) >> c::IBSHIFT) != c::BOTHER
+            {
+                // For input speeds, `B0` is special-cased to mean the input
+                // speed is the same as the output speed.
+                if ((result.control_modes.bits() & c::CIBAUD) >> c::IBSHIFT) == c::B0 {
+                    result.input_speed = result.output_speed;
+                } else if let Some(input_speed) =
+                    speed::decode((result.control_modes.bits() & c::CIBAUD) >> c::IBSHIFT)
+                {
+                    result.input_speed = input_speed;
+                }
+            }
+            result
+        };
+
+        Ok(result)
     }
 }
 
@@ -49,6 +86,14 @@ pub(crate) fn tcgetpgrp(fd: BorrowedFd<'_>) -> io::Result<Pid> {
         let mut result = MaybeUninit::<c::pid_t>::uninit();
         ret(syscall!(__NR_ioctl, fd, c_uint(TIOCGPGRP), &mut result))?;
         let pid = result.assume_init();
+
+        // This doesn't appear to be documented, but it appears `tcsetpgrp` can
+        // succceed and set the pid to 0 if we pass it a pseudo-terminal device
+        // fd. For now, fail with `OPNOTSUPP`.
+        if pid == 0 {
+            return Err(io::Errno::OPNOTSUPP);
+        }
+
         Ok(Pid::from_raw_unchecked(pid))
     }
 }
@@ -129,7 +174,7 @@ pub(crate) fn tcgetsid(fd: BorrowedFd<'_>) -> io::Result<Pid> {
 #[inline]
 pub(crate) fn tcsetwinsize(fd: BorrowedFd<'_>, winsize: Winsize) -> io::Result<()> {
     unsafe {
-        ret(syscall!(
+        ret(syscall_readonly!(
             __NR_ioctl,
             fd,
             c_uint(TIOCSWINSZ),
@@ -140,7 +185,15 @@ pub(crate) fn tcsetwinsize(fd: BorrowedFd<'_>, winsize: Winsize) -> io::Result<(
 
 #[inline]
 pub(crate) fn tcsetpgrp(fd: BorrowedFd<'_>, pid: Pid) -> io::Result<()> {
-    unsafe { ret(syscall!(__NR_ioctl, fd, c_uint(TIOCSPGRP), pid)) }
+    let raw_pid: c::c_int = pid.as_raw_nonzero().get();
+    unsafe {
+        ret(syscall_readonly!(
+            __NR_ioctl,
+            fd,
+            c_uint(TIOCSPGRP),
+            by_ref(&raw_pid)
+        ))
+    }
 }
 
 /// A wrapper around a conceptual `cfsetspeed` which handles an arbitrary
@@ -230,7 +283,6 @@ pub(crate) fn isatty(fd: BorrowedFd<'_>) -> bool {
 }
 
 #[cfg(all(feature = "alloc", feature = "procfs"))]
-#[allow(unsafe_code)]
 pub(crate) fn ttyname(fd: BorrowedFd<'_>, buf: &mut [MaybeUninit<u8>]) -> io::Result<usize> {
     let fd_stat = crate::backend::fs::syscalls::fstat(fd)?;
 
@@ -242,7 +294,7 @@ pub(crate) fn ttyname(fd: BorrowedFd<'_>, buf: &mut [MaybeUninit<u8>]) -> io::Re
     // Check that `fd` is really a tty.
     tcgetwinsize(fd)?;
 
-    // Get a fd to '/proc/self/fd'.
+    // Get a fd to "/proc/self/fd".
     let proc_self_fd = procfs::proc_self_fd()?;
 
     // Gather the ttyname by reading the "fd" file inside `proc_self_fd`.

@@ -1,5 +1,5 @@
-//! The BSD sockets API requires us to read the `ss_family` field before
-//! we can interpret the rest of a `sockaddr` produced by the kernel.
+//! The BSD sockets API requires us to read the `ss_family` field before we can
+//! interpret the rest of a `sockaddr` produced by the kernel.
 
 use super::addr::SocketAddrStorage;
 #[cfg(unix)]
@@ -29,15 +29,20 @@ pub(crate) fn encode_sockaddr_v4(v4: &SocketAddrV4) -> c::sockaddr_in {
             target_os = "espidf",
             target_os = "haiku",
             target_os = "nto",
+            target_os = "vita",
         ))]
         sin_len: size_of::<c::sockaddr_in>() as _,
         sin_family: c::AF_INET as _,
         sin_port: u16::to_be(v4.port()),
         sin_addr: in_addr_new(u32::from_ne_bytes(v4.ip().octets())),
-        #[cfg(not(target_os = "haiku"))]
+        #[cfg(not(any(target_os = "haiku", target_os = "vita")))]
         sin_zero: [0; 8_usize],
         #[cfg(target_os = "haiku")]
         sin_zero: [0; 24_usize],
+        #[cfg(target_os = "vita")]
+        sin_zero: [0; 6_usize],
+        #[cfg(target_os = "vita")]
+        sin_vport: 0,
     }
 }
 
@@ -54,6 +59,7 @@ pub(crate) fn encode_sockaddr_v6(v6: &SocketAddrV6) -> c::sockaddr_in6 {
         target_os = "espidf",
         target_os = "haiku",
         target_os = "nto",
+        target_os = "vita"
     ))]
     {
         sockaddr_in6_new(
@@ -70,7 +76,8 @@ pub(crate) fn encode_sockaddr_v6(v6: &SocketAddrV6) -> c::sockaddr_in6 {
         target_os = "aix",
         target_os = "espidf",
         target_os = "haiku",
-        target_os = "nto"
+        target_os = "nto",
+        target_os = "vita"
     )))]
     {
         sockaddr_in6_new(

@@ -10,13 +10,15 @@ use crate::backend::c;
 use crate::ffi::CStr;
 use core::ffi::c_void;
 use core::ptr::{null_mut, read, NonNull};
+#[cfg(feature = "runtime")]
+use core::sync::atomic::AtomicBool;
 use core::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
 use linux_raw_sys::elf::*;
 use linux_raw_sys::general::{
     AT_CLKTCK, AT_EXECFN, AT_HWCAP, AT_HWCAP2, AT_NULL, AT_PAGESZ, AT_SYSINFO_EHDR,
 };
 #[cfg(feature = "runtime")]
-use linux_raw_sys::general::{AT_ENTRY, AT_PHDR, AT_PHENT, AT_PHNUM};
+use linux_raw_sys::general::{AT_ENTRY, AT_PHDR, AT_PHENT, AT_PHNUM, AT_RANDOM, AT_SECURE};
 
 #[cfg(feature = "param")]
 #[inline]
@@ -53,6 +55,12 @@ pub(crate) fn linux_execfn() -> &'static CStr {
 
 #[cfg(feature = "runtime")]
 #[inline]
+pub(crate) fn linux_secure() -> bool {
+    unsafe { SECURE.load(Ordering::Relaxed) }
+}
+
+#[cfg(feature = "runtime")]
+#[inline]
 pub(crate) fn exe_phdrs() -> (*const c_void, usize, usize) {
     unsafe {
         (
@@ -76,6 +84,12 @@ pub(crate) fn entry() -> usize {
     unsafe { ENTRY.load(Ordering::Relaxed) }
 }
 
+#[cfg(feature = "runtime")]
+#[inline]
+pub(crate) fn random() -> *const [u8; 16] {
+    unsafe { RANDOM.load(Ordering::Relaxed) }
+}
+
 static mut PAGE_SIZE: AtomicUsize = AtomicUsize::new(0);
 static mut CLOCK_TICKS_PER_SECOND: AtomicUsize = AtomicUsize::new(0);
 static mut HWCAP: AtomicUsize = AtomicUsize::new(0);
@@ -84,6 +98,8 @@ static mut SYSINFO_EHDR: AtomicPtr<Elf_Ehdr> = AtomicPtr::new(null_mut());
 // Initialize `EXECFN` to a valid `CStr` pointer so that we don't need to check
 // for null on every `execfn` call.
 static mut EXECFN: AtomicPtr<c::c_char> = AtomicPtr::new(b"\0".as_ptr() as _);
+#[cfg(feature = "runtime")]
+static mut SECURE: AtomicBool = AtomicBool::new(false);
 // Use `dangling` so that we can always treat it like an empty slice.
 #[cfg(feature = "runtime")]
 static mut PHDR: AtomicPtr<Elf_Phdr> = AtomicPtr::new(NonNull::dangling().as_ptr());
@@ -93,6 +109,8 @@ static mut PHENT: AtomicUsize = AtomicUsize::new(0);
 static mut PHNUM: AtomicUsize = AtomicUsize::new(0);
 #[cfg(feature = "runtime")]
 static mut ENTRY: AtomicUsize = AtomicUsize::new(0);
+#[cfg(feature = "runtime")]
+static mut RANDOM: AtomicPtr<[u8; 16]> = AtomicPtr::new(NonNull::dangling().as_ptr());
 
 /// When "use-explicitly-provided-auxv" is enabled, we export a function to be
 /// called during initialization, and passed a pointer to the original
@@ -133,6 +151,8 @@ unsafe fn init_from_auxp(mut auxp: *const Elf_auxv_t) {
             AT_SYSINFO_EHDR => SYSINFO_EHDR.store(a_val.cast::<Elf_Ehdr>(), Ordering::Relaxed),
 
             #[cfg(feature = "runtime")]
+            AT_SECURE => SECURE.store(a_val as usize != 0, Ordering::Relaxed),
+            #[cfg(feature = "runtime")]
             AT_PHDR => PHDR.store(a_val.cast::<Elf_Phdr>(), Ordering::Relaxed),
             #[cfg(feature = "runtime")]
             AT_PHNUM => PHNUM.store(a_val as usize, Ordering::Relaxed),
@@ -140,6 +160,8 @@ unsafe fn init_from_auxp(mut auxp: *const Elf_auxv_t) {
             AT_PHENT => PHENT.store(a_val as usize, Ordering::Relaxed),
             #[cfg(feature = "runtime")]
             AT_ENTRY => ENTRY.store(a_val as usize, Ordering::Relaxed),
+            #[cfg(feature = "runtime")]
+            AT_RANDOM => RANDOM.store(a_val.cast::<[u8; 16]>(), Ordering::Relaxed),
 
             AT_NULL => break,
             _ => (),

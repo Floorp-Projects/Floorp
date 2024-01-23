@@ -22,7 +22,7 @@ use {core::fmt, std::ffi::OsStr, std::path::Path};
 ///
 /// This is used for opening paths such as `/proc/self/fd/<fd>` on Linux.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```
 /// # #[cfg(any(feature = "fs", feature = "net"))]

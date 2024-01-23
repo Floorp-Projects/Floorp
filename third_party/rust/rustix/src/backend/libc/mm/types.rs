@@ -6,7 +6,7 @@ bitflags! {
     ///
     /// For `PROT_NONE`, use `ProtFlags::empty()`.
     ///
-    /// [`mmap`]: crate::io::mmap
+    /// [`mmap`]: crate::mm::mmap
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct ProtFlags: u32 {
@@ -17,7 +17,7 @@ bitflags! {
         /// `PROT_EXEC`
         const EXEC = bitcast!(c::PROT_EXEC);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -27,7 +27,7 @@ bitflags! {
     ///
     /// For `PROT_NONE`, use `MprotectFlags::empty()`.
     ///
-    /// [`mprotect`]: crate::io::mprotect
+    /// [`mprotect`]: crate::mm::mprotect
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct MprotectFlags: u32 {
@@ -59,7 +59,7 @@ bitflags! {
         #[cfg(all(linux_kernel, any(target_arch = "sparc", target_arch = "sparc64")))]
         const ADI = linux_raw_sys::general::PROT_ADI;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -69,8 +69,8 @@ bitflags! {
     ///
     /// For `MAP_ANONYMOUS` (aka `MAP_ANON`), see [`mmap_anonymous`].
     ///
-    /// [`mmap`]: crate::io::mmap
-    /// [`mmap_anonymous`]: crates::io::mmap_anonymous
+    /// [`mmap`]: crate::mm::mmap
+    /// [`mmap_anonymous`]: crates::mm::mmap_anonymous
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct MapFlags: u32 {
@@ -231,7 +231,7 @@ bitflags! {
         #[cfg(any())]
         const UNINITIALIZED = bitcast!(c::MAP_UNINITIALIZED);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -242,15 +242,15 @@ bitflags! {
     ///
     /// For `MREMAP_FIXED`, see [`mremap_fixed`].
     ///
-    /// [`mremap`]: crate::io::mremap
-    /// [`mremap_fixed`]: crate::io::mremap_fixed
+    /// [`mremap`]: crate::mm::mremap
+    /// [`mremap_fixed`]: crate::mm::mremap_fixed
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct MremapFlags: u32 {
         /// `MREMAP_MAYMOVE`
         const MAYMOVE = bitcast!(c::MREMAP_MAYMOVE);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -258,7 +258,7 @@ bitflags! {
 bitflags! {
     /// `MS_*` flags for use with [`msync`].
     ///
-    /// [`msync`]: crate::io::msync
+    /// [`msync`]: crate::mm::msync
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct MsyncFlags: u32 {
@@ -272,7 +272,7 @@ bitflags! {
         /// written).
         const INVALIDATE = bitcast!(c::MS_INVALIDATE);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -281,14 +281,14 @@ bitflags! {
 bitflags! {
     /// `MLOCK_*` flags for use with [`mlock_with`].
     ///
-    /// [`mlock_with`]: crate::io::mlock_with
+    /// [`mlock_with`]: crate::mm::mlock_with
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct MlockFlags: u32 {
         /// `MLOCK_ONFAULT`
         const ONFAULT = bitcast!(c::MLOCK_ONFAULT);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -383,10 +383,10 @@ pub enum Advice {
     /// `MADV_UNMERGEABLE`
     #[cfg(linux_kernel)]
     LinuxUnmergeable = bitcast!(c::MADV_UNMERGEABLE),
-    /// `MADV_HUGEPAGE` (since Linux 2.6.38)
+    /// `MADV_HUGEPAGE`
     #[cfg(linux_kernel)]
     LinuxHugepage = bitcast!(c::MADV_HUGEPAGE),
-    /// `MADV_NOHUGEPAGE` (since Linux 2.6.38)
+    /// `MADV_NOHUGEPAGE`
     #[cfg(linux_kernel)]
     LinuxNoHugepage = bitcast!(c::MADV_NOHUGEPAGE),
     /// `MADV_DONTDUMP` (since Linux 3.4)
@@ -429,7 +429,7 @@ impl Advice {
 bitflags! {
     /// `O_*` flags for use with [`userfaultfd`].
     ///
-    /// [`userfaultfd`]: crate::io::userfaultfd
+    /// [`userfaultfd`]: crate::mm::userfaultfd
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UserfaultfdFlags: u32 {
@@ -438,7 +438,40 @@ bitflags! {
         /// `O_NONBLOCK`
         const NONBLOCK = bitcast!(c::O_NONBLOCK);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
+        const _ = !0;
+    }
+}
+
+#[cfg(any(linux_kernel, freebsdlike, netbsdlike))]
+bitflags! {
+    /// `MCL_*` flags for use with [`mlockall`].
+    ///
+    /// [`mlockall`]: crate::mm::mlockall
+    #[repr(transparent)]
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct MlockAllFlags: u32 {
+        /// Used together with `MCL_CURRENT`, `MCL_FUTURE`, or both. Mark all
+        /// current (with `MCL_CURRENT`) or future (with `MCL_FUTURE`) mappings
+        /// to lock pages when they are faulted in. When used with
+        /// `MCL_CURRENT`, all present pages are locked, but `mlockall` will
+        /// not fault in non-present pages. When used with `MCL_FUTURE`, all
+        /// future mappings will be marked to lock pages when they are faulted
+        /// in, but they will not be populated by the lock when the mapping is
+        /// created. `MCL_ONFAULT` must be used with either `MCL_CURRENT` or
+        /// `MCL_FUTURE` or both.
+        #[cfg(linux_kernel)]
+        const ONFAULT = bitcast!(libc::MCL_ONFAULT);
+        /// Lock all pages which will become mapped into the address space of
+        /// the process in the future. These could be, for instance, new pages
+        /// required by a growing heap and stack as well as new memory-mapped
+        /// files or shared memory regions.
+        const FUTURE = bitcast!(libc::MCL_FUTURE);
+        /// Lock all pages which are currently mapped into the address space of
+        /// the process.
+        const CURRENT = bitcast!(libc::MCL_CURRENT);
+
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

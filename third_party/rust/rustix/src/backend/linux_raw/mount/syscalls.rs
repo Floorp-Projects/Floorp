@@ -51,8 +51,8 @@ pub(crate) fn fsmount(
     fs_fd: BorrowedFd<'_>,
     flags: super::types::FsMountFlags,
     attr_flags: super::types::MountAttrFlags,
-) -> io::Result<()> {
-    unsafe { ret(syscall_readonly!(__NR_fsmount, fs_fd, flags, attr_flags)) }
+) -> io::Result<OwnedFd> {
+    unsafe { ret_owned_fd(syscall_readonly!(__NR_fsmount, fs_fd, flags, attr_flags)) }
 }
 
 #[cfg(feature = "mount")]

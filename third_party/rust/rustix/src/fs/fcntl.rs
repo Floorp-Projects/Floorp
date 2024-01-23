@@ -1,13 +1,14 @@
-//! The Unix `fcntl` function is effectively lots of different functions
-//! hidden behind a single dynamic dispatch interface. In order to provide
-//! a type-safe API, rustix makes them all separate functions so that they
-//! can have dedicated static type signatures.
+//! The Unix `fcntl` function is effectively lots of different functions hidden
+//! behind a single dynamic dispatch interface. In order to provide a type-safe
+//! API, rustix makes them all separate functions so that they can have
+//! dedicated static type signatures.
 
 #[cfg(not(any(
     target_os = "emscripten",
     target_os = "espidf",
     target_os = "fuchsia",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 use crate::fs::FlockOperation;
@@ -64,7 +65,7 @@ pub fn fcntl_get_seals<Fd: AsFd>(fd: Fd) -> io::Result<SealFlags> {
 }
 
 #[cfg(any(linux_kernel, target_os = "freebsd", target_os = "fuchsia"))]
-pub use backend::fs::types::SealFlags;
+use backend::fs::types::SealFlags;
 
 /// `fcntl(fd, F_ADD_SEALS)`
 ///
@@ -86,8 +87,8 @@ pub fn fcntl_add_seals<Fd: AsFd>(fd: Fd, seals: SealFlags) -> io::Result<()> {
 /// file should be locked.
 ///
 /// Unlike `flock`-style locks, `fcntl`-style locks are process-associated,
-/// meaning that they don't guard against being acquired by two threads in
-/// the same process.
+/// meaning that they don't guard against being acquired by two threads in the
+/// same process.
 ///
 /// # References
 ///  - [POSIX]
@@ -100,6 +101,7 @@ pub fn fcntl_add_seals<Fd: AsFd>(fd: Fd, seals: SealFlags) -> io::Result<()> {
     target_os = "espidf",
     target_os = "fuchsia",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 #[inline]

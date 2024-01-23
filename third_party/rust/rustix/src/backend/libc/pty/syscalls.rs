@@ -58,7 +58,7 @@ pub(crate) fn ptsname(fd: BorrowedFd<'_>, mut buffer: Vec<u8>) -> io::Result<CSt
             }
         };
 
-        // MacOS 10.13.4 has `ptsname_r`; use it if we have it, otherwise fall
+        // macOS 10.13.4 has `ptsname_r`; use it if we have it, otherwise fall
         // back to calling the underlying ioctl directly.
         #[cfg(apple)]
         let r = unsafe {
@@ -67,7 +67,8 @@ pub(crate) fn ptsname(fd: BorrowedFd<'_>, mut buffer: Vec<u8>) -> io::Result<CSt
             if let Some(libc_ptsname_r) = ptsname_r.get() {
                 libc_ptsname_r(borrowed_fd(fd), buffer.as_mut_ptr().cast(), buffer.len())
             } else {
-                // The size declared in the `TIOCPTYGNAME` macro in sys/ttycom.h is 128.
+                // The size declared in the `TIOCPTYGNAME` macro in
+                // sys/ttycom.h is 128.
                 let mut name: [u8; 128] = [0_u8; 128];
                 match c::ioctl(borrowed_fd(fd), c::TIOCPTYGNAME as _, &mut name) {
                     0 => {
@@ -87,7 +88,8 @@ pub(crate) fn ptsname(fd: BorrowedFd<'_>, mut buffer: Vec<u8>) -> io::Result<CSt
             return Err(io::Errno::from_raw_os_error(r));
         }
 
-        buffer.reserve(1); // use `Vec` reallocation strategy to grow capacity exponentially
+        // Use `Vec` reallocation strategy to grow capacity exponentially.
+        buffer.reserve(1);
         buffer.resize(buffer.capacity(), 0_u8);
     }
 }

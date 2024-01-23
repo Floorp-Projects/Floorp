@@ -6,6 +6,7 @@ pub mod inotify;
     target_os = "espidf",
     target_os = "haiku",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 pub(crate) mod makedev;

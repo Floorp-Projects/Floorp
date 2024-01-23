@@ -15,6 +15,8 @@ use crate::utils::{as_ptr, check_raw_pointer};
 use alloc::vec::Vec;
 use core::mem::size_of;
 use core::ptr::{null_mut, read_unaligned, NonNull};
+#[cfg(feature = "runtime")]
+use core::sync::atomic::AtomicU8;
 use core::sync::atomic::Ordering::Relaxed;
 use core::sync::atomic::{AtomicPtr, AtomicUsize};
 use linux_raw_sys::elf::*;
@@ -22,7 +24,9 @@ use linux_raw_sys::general::{
     AT_BASE, AT_CLKTCK, AT_EXECFN, AT_HWCAP, AT_HWCAP2, AT_NULL, AT_PAGESZ, AT_SYSINFO_EHDR,
 };
 #[cfg(feature = "runtime")]
-use linux_raw_sys::general::{AT_ENTRY, AT_PHDR, AT_PHENT, AT_PHNUM};
+use linux_raw_sys::general::{
+    AT_EGID, AT_ENTRY, AT_EUID, AT_GID, AT_PHDR, AT_PHENT, AT_PHNUM, AT_RANDOM, AT_SECURE, AT_UID,
+};
 
 #[cfg(feature = "param")]
 #[inline]
@@ -82,6 +86,23 @@ pub(crate) fn linux_execfn() -> &'static CStr {
 
 #[cfg(feature = "runtime")]
 #[inline]
+pub(crate) fn linux_secure() -> bool {
+    let mut secure = SECURE.load(Relaxed);
+
+    // 0 means not initialized yet.
+    if secure == 0 {
+        init_auxv();
+        secure = SECURE.load(Relaxed);
+    }
+
+    // 0 means not present. Libc `getauxval(AT_SECURE)` would return 0.
+    // 1 means not in secure mode.
+    // 2 means in secure mode.
+    secure > 1
+}
+
+#[cfg(feature = "runtime")]
+#[inline]
 pub(crate) fn exe_phdrs() -> (*const c::c_void, usize, usize) {
     let mut phdr = PHDR.load(Relaxed);
     let mut phent = PHENT.load(Relaxed);
@@ -124,12 +145,27 @@ pub(crate) fn entry() -> usize {
     entry
 }
 
+#[cfg(feature = "runtime")]
+#[inline]
+pub(crate) fn random() -> *const [u8; 16] {
+    let mut random = RANDOM.load(Relaxed);
+
+    if random.is_null() {
+        init_auxv();
+        random = RANDOM.load(Relaxed);
+    }
+
+    random
+}
+
 static PAGE_SIZE: AtomicUsize = AtomicUsize::new(0);
 static CLOCK_TICKS_PER_SECOND: AtomicUsize = AtomicUsize::new(0);
 static HWCAP: AtomicUsize = AtomicUsize::new(0);
 static HWCAP2: AtomicUsize = AtomicUsize::new(0);
 static EXECFN: AtomicPtr<c::c_char> = AtomicPtr::new(null_mut());
 static SYSINFO_EHDR: AtomicPtr<Elf_Ehdr> = AtomicPtr::new(null_mut());
+#[cfg(feature = "runtime")]
+static SECURE: AtomicU8 = AtomicU8::new(0);
 #[cfg(feature = "runtime")]
 static PHDR: AtomicPtr<Elf_Phdr> = AtomicPtr::new(null_mut());
 #[cfg(feature = "runtime")]
@@ -138,11 +174,13 @@ static PHENT: AtomicUsize = AtomicUsize::new(0);
 static PHNUM: AtomicUsize = AtomicUsize::new(0);
 #[cfg(feature = "runtime")]
 static ENTRY: AtomicUsize = AtomicUsize::new(0);
+#[cfg(feature = "runtime")]
+static RANDOM: AtomicPtr<[u8; 16]> = AtomicPtr::new(null_mut());
 
 #[cfg(feature = "alloc")]
 fn pr_get_auxv() -> crate::io::Result<Vec<u8>> {
     use super::super::conv::{c_int, pass_usize, ret_usize};
-    const PR_GET_AUXV: c::c_int = 0x41555856;
+    const PR_GET_AUXV: c::c_int = 0x4155_5856;
     let mut buffer = alloc::vec![0u8; 512];
     let len = unsafe {
         ret_usize(syscall_always_asm!(
@@ -184,7 +222,7 @@ fn init_auxv() {
             Ok(buffer) => {
                 // SAFETY: We assume the kernel returns a valid auxv.
                 unsafe {
-                    init_from_aux_iter(AuxPointer(buffer.as_ptr().cast()));
+                    init_from_aux_iter(AuxPointer(buffer.as_ptr().cast())).unwrap();
                 }
                 return;
             }
@@ -212,6 +250,7 @@ fn init_auxv() {
 /// Process auxv entries from the open file `auxv`.
 #[cfg(feature = "alloc")]
 #[cold]
+#[must_use]
 fn init_from_auxv_file(auxv: OwnedFd) -> Option<()> {
     let mut buffer = Vec::<u8>::with_capacity(512);
     loop {
@@ -248,6 +287,7 @@ fn init_from_auxv_file(auxv: OwnedFd) -> Option<()> {
 /// The buffer contains `Elf_aux_t` elements, though it need not be aligned;
 /// function uses `read_unaligned` to read from it.
 #[cold]
+#[must_use]
 unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Option<()> {
     let mut pagesz = 0;
     let mut clktck = 0;
@@ -256,6 +296,8 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
     let mut execfn = null_mut();
     let mut sysinfo_ehdr = null_mut();
     #[cfg(feature = "runtime")]
+    let mut secure = 0;
+    #[cfg(feature = "runtime")]
     let mut phdr = null_mut();
     #[cfg(feature = "runtime")]
     let mut phnum = 0;
@@ -263,6 +305,16 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
     let mut phent = 0;
     #[cfg(feature = "runtime")]
     let mut entry = 0;
+    #[cfg(feature = "runtime")]
+    let mut uid = None;
+    #[cfg(feature = "runtime")]
+    let mut euid = None;
+    #[cfg(feature = "runtime")]
+    let mut gid = None;
+    #[cfg(feature = "runtime")]
+    let mut egid = None;
+    #[cfg(feature = "runtime")]
+    let mut random = null_mut();
 
     for Elf_auxv_t { a_type, a_val } in aux_iter {
         match a_type as _ {
@@ -274,9 +326,23 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
             AT_SYSINFO_EHDR => sysinfo_ehdr = check_elf_base(a_val as *mut _)?.as_ptr(),
 
             AT_BASE => {
-                let _ = check_elf_base(a_val.cast())?;
+                // The `AT_BASE` value can be NULL in a static executable that
+                // doesn't use a dynamic linker. If so, ignore it.
+                if !a_val.is_null() {
+                    let _ = check_elf_base(a_val.cast())?;
+                }
             }
 
+            #[cfg(feature = "runtime")]
+            AT_SECURE => secure = (a_val as usize != 0) as u8 + 1,
+            #[cfg(feature = "runtime")]
+            AT_UID => uid = Some(a_val),
+            #[cfg(feature = "runtime")]
+            AT_EUID => euid = Some(a_val),
+            #[cfg(feature = "runtime")]
+            AT_GID => gid = Some(a_val),
+            #[cfg(feature = "runtime")]
+            AT_EGID => egid = Some(a_val),
             #[cfg(feature = "runtime")]
             AT_PHDR => phdr = check_raw_pointer::<Elf_Phdr>(a_val as *mut _)?.as_ptr(),
             #[cfg(feature = "runtime")]
@@ -285,6 +351,8 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
             AT_PHENT => phent = a_val as usize,
             #[cfg(feature = "runtime")]
             AT_ENTRY => entry = a_val as usize,
+            #[cfg(feature = "runtime")]
+            AT_RANDOM => random = check_raw_pointer::<[u8; 16]>(a_val as *mut _)?.as_ptr(),
 
             AT_NULL => break,
             _ => (),
@@ -294,8 +362,16 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
     #[cfg(feature = "runtime")]
     assert_eq!(phent, size_of::<Elf_Phdr>());
 
-    // The base and sysinfo_ehdr (if present) matches our platform. Accept
-    // the aux values.
+    // If we're running set-uid or set-gid, enable “secure execution” mode,
+    // which doesn't do much, but users may be depending on the things that
+    // it does do.
+    #[cfg(feature = "runtime")]
+    if uid != euid || gid != egid {
+        secure = 2;
+    }
+
+    // The base and sysinfo_ehdr (if present) matches our platform. Accept the
+    // aux values.
     PAGE_SIZE.store(pagesz, Relaxed);
     CLOCK_TICKS_PER_SECOND.store(clktck, Relaxed);
     HWCAP.store(hwcap, Relaxed);
@@ -303,11 +379,15 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
     EXECFN.store(execfn, Relaxed);
     SYSINFO_EHDR.store(sysinfo_ehdr, Relaxed);
     #[cfg(feature = "runtime")]
+    SECURE.store(secure, Relaxed);
+    #[cfg(feature = "runtime")]
     PHDR.store(phdr, Relaxed);
     #[cfg(feature = "runtime")]
     PHNUM.store(phnum, Relaxed);
     #[cfg(feature = "runtime")]
     ENTRY.store(entry, Relaxed);
+    #[cfg(feature = "runtime")]
+    RANDOM.store(random, Relaxed);
 
     Some(())
 }
@@ -318,6 +398,7 @@ unsafe fn init_from_aux_iter(aux_iter: impl Iterator<Item = Elf_auxv_t>) -> Opti
 /// which hopefully holds the value of the kernel-provided vDSO in memory. Do a
 /// series of checks to be as sure as we can that it's safe to use.
 #[cold]
+#[must_use]
 unsafe fn check_elf_base(base: *const Elf_Ehdr) -> Option<NonNull<Elf_Ehdr>> {
     // If we're reading a 64-bit auxv on a 32-bit platform, we'll see a zero
     // `a_val` because `AT_*` values are never greater than `u32::MAX`. Zero is
@@ -418,7 +499,7 @@ impl Iterator for AuxFile {
                 Ok(0) => panic!("unexpected end of auxv file"),
                 Ok(n) => slice = &mut slice[n..],
                 Err(crate::io::Errno::INTR) => continue,
-                Err(err) => Err(err).unwrap(),
+                Err(err) => panic!("{:?}", err),
             }
         }
         Some(unsafe { read_unaligned(buf.as_ptr().cast()) })

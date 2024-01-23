@@ -36,7 +36,7 @@ use {alloc::string::String, alloc::vec::Vec};
 /// This is similar to [`AsRef`]`<`[`Path`]`>`, but is implemented for more
 /// kinds of strings and can convert into more kinds of strings.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```
 /// # #[cfg(any(feature = "fs", feature = "net"))]
@@ -1039,7 +1039,7 @@ where
         buf_ptr.add(bytes.len()).write(0);
     }
 
-    // SAFETY: we just wrote the bytes above and they will remain valid for the
+    // SAFETY: We just wrote the bytes above and they will remain valid for the
     // duration of `f` b/c buf doesn't get dropped until the end of the
     // function.
     match CStr::from_bytes_with_nul(unsafe { slice::from_raw_parts(buf_ptr, bytes.len() + 1) }) {
@@ -1063,10 +1063,12 @@ where
 
     #[cfg(not(feature = "alloc"))]
     {
-        #[cfg(libc)]
+        #[cfg(all(libc, not(target_os = "wasi")))]
         const LARGE_PATH_BUFFER_SIZE: usize = libc::PATH_MAX as usize;
         #[cfg(linux_raw)]
         const LARGE_PATH_BUFFER_SIZE: usize = linux_raw_sys::general::PATH_MAX as usize;
+        #[cfg(target_os = "wasi")]
+        const LARGE_PATH_BUFFER_SIZE: usize = 4096 as usize; // TODO: upstream this
 
         // Taken from
         // <https://github.com/rust-lang/rust/blob/a00f8ba7fcac1b27341679c51bf5a3271fa82df3/library/std/src/sys/common/small_c_string.rs>
@@ -1078,15 +1080,15 @@ where
             return Err(io::Errno::NAMETOOLONG);
         }
 
-        // SAFETY: `bytes.len() < LARGE_PATH_BUFFER_SIZE` which means we have space
-        // for `bytes.len() + 1` u8s:
+        // SAFETY: `bytes.len() < LARGE_PATH_BUFFER_SIZE` which means we have
+        // space for `bytes.len() + 1` u8s:
         unsafe {
             ptr::copy_nonoverlapping(bytes.as_ptr(), buf_ptr, bytes.len());
             buf_ptr.add(bytes.len()).write(0);
         }
 
-        // SAFETY: we just wrote the bytes above and they will remain valid for the
-        // duration of `f` b/c buf doesn't get dropped until the end of the
+        // SAFETY: We just wrote the bytes above and they will remain valid for
+        // the duration of `f` b/c buf doesn't get dropped until the end of the
         // function.
         match CStr::from_bytes_with_nul(unsafe { slice::from_raw_parts(buf_ptr, bytes.len() + 1) })
         {

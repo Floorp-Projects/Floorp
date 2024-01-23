@@ -35,7 +35,7 @@ bitflags::bitflags! {
         /// `MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_RSEQ` (since Linux 5.10)
         const REGISTER_PRIVATE_EXPEDITED_RSEQ = MembarrierCommand::RegisterPrivateExpeditedRseq as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

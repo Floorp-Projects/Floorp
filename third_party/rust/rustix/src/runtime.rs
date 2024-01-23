@@ -1,9 +1,12 @@
-//! Low-level implementation details for libc-like runtime libraries such as
-//! [origin].
+//! Experimental low-level implementation details for libc-like runtime
+//! libraries such as [Origin].
 //!
 //! Do not use the functions in this module unless you've read all of their
-//! code, *and* you know all the relevant internal implementation details of
-//! any libc in the process they'll be used.
+//! code. They don't always behave the same way as functions with similar names
+//! in `libc`. Sometimes information about the differences is included in the
+//! Linux documentation under “C library/kernel differences” sections. And, if
+//! there is a libc in the process, these functions may have surprising
+//! interactions with it.
 //!
 //! These functions are for implementing thread-local storage (TLS), managing
 //! threads, loaded libraries, and other process-wide resources. Most of
@@ -14,7 +17,7 @@
 //! The API for these functions is not stable, and this module is
 //! `doc(hidden)`.
 //!
-//! [origin]: https://github.com/sunfishcode/origin
+//! [Origin]: https://github.com/sunfishcode/origin#readme
 //!
 //! # Safety
 //!
@@ -86,7 +89,7 @@ pub unsafe fn arm_set_tls(data: *mut c_void) -> io::Result<()> {
     backend::runtime::syscalls::tls::arm_set_tls(data)
 }
 
-/// `prctl(PR_SET_FS, data)`—Set the x86_64 `fs` register.
+/// `prctl(PR_SET_FS, data)`—Set the x86-64 `fs` register.
 ///
 /// # Safety
 ///
@@ -98,7 +101,7 @@ pub unsafe fn set_fs(data: *mut c_void) {
     backend::runtime::syscalls::tls::set_fs(data)
 }
 
-/// Set the x86_64 thread ID address.
+/// Set the x86-64 thread ID address.
 ///
 /// # Safety
 ///
@@ -107,22 +110,6 @@ pub unsafe fn set_fs(data: *mut c_void) {
 #[inline]
 pub unsafe fn set_tid_address(data: *mut c_void) -> Pid {
     backend::runtime::syscalls::tls::set_tid_address(data)
-}
-
-/// `prctl(PR_SET_NAME, name)`
-///
-/// # References
-///  - [Linux]
-///
-/// # Safety
-///
-/// This is a very low-level feature for implementing threading libraries.
-/// See the references links above.
-///
-/// [Linux]: https://man7.org/linux/man-pages/man2/prctl.2.html
-#[inline]
-pub unsafe fn set_thread_name(name: &CStr) -> io::Result<()> {
-    backend::runtime::syscalls::tls::set_thread_name(name)
 }
 
 #[cfg(linux_raw)]
@@ -143,7 +130,7 @@ pub unsafe fn exit_thread(status: i32) -> ! {
 ///
 /// This is equivalent to `_exit` and `_Exit` in libc.
 ///
-/// This does not all any `__cxa_atexit`, `atexit`, or any other destructors.
+/// This does not call any `__cxa_atexit`, `atexit`, or any other destructors.
 /// Most programs should use [`std::process::exit`] instead of calling this
 /// directly.
 ///
@@ -185,7 +172,7 @@ pub const EXIT_FAILURE: i32 = backend::c::EXIT_FAILURE;
 /// Return fields from the main executable segment headers ("phdrs") relevant
 /// to initializing TLS provided to the program at startup.
 ///
-/// `addr` will always be non-null, even when the TLS data is absent, ao that
+/// `addr` will always be non-null, even when the TLS data is absent, so that
 /// the `addr` and `file_size` parameters are suitable for creating a slice
 /// with `slice::from_raw_parts`.
 #[inline]
@@ -224,6 +211,19 @@ pub fn exe_phdrs() -> (*const c_void, usize, usize) {
 #[inline]
 pub fn entry() -> usize {
     backend::param::auxv::entry()
+}
+
+/// `getauxval(AT_RANDOM)`—Returns the address of 16 pseudorandom bytes.
+///
+/// These bytes are for use by libc. For anything else, use the `rand` crate.
+///
+/// # References
+///  - [Linux]
+///
+/// [Linux]: https://man7.org/linux/man-pages/man3/getauxval.3.html
+#[inline]
+pub fn random() -> *const [u8; 16] {
+    backend::param::auxv::random()
 }
 
 #[cfg(linux_raw)]
@@ -270,13 +270,19 @@ pub use backend::runtime::tls::StartupTlsInfo;
 ///    that could cause undefined behavior. The extent to which this also
 ///    applies to Rust functions is unclear at this time.
 ///
+///  - And more.
+///
 /// # Safety
 ///
 /// The child must avoid accessing any memory shared with the parent in a
 /// way that invokes undefined behavior. It must avoid accessing any threading
 /// runtime functions in a way that invokes undefined behavior. And it must
 /// avoid invoking any undefined behavior through any function that is not
-/// guaranteed to be async-signal-safe.
+/// guaranteed to be async-signal-safe. But, what does async-signal-safe even
+/// mean in a Rust program? This documentation does not have all the answers.
+///
+/// So you're on your own. And on top of all the troubles with `fork` in
+/// general, this wrapper implementation is highly experimental.
 ///
 /// # References
 ///  - [POSIX]
@@ -306,8 +312,16 @@ pub use backend::runtime::tls::StartupTlsInfo;
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/fork.2.html
 /// [async-signal-safe]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_04_03
-pub unsafe fn fork() -> io::Result<Option<Pid>> {
+pub unsafe fn fork() -> io::Result<Fork> {
     backend::runtime::syscalls::fork()
+}
+
+/// Regular Unix `fork` doesn't tell the child its own PID because it assumes
+/// the child can just do `getpid`. That's true, but it's more fun if it
+/// doesn't have to.
+pub enum Fork {
+    Child(Pid),
+    Parent(Pid),
 }
 
 /// `execveat(dirfd, path.as_c_str(), argv, envp, flags)`—Execute a new
@@ -426,6 +440,28 @@ pub unsafe fn sigprocmask(how: How, set: Option<&Sigset>) -> io::Result<Sigset> 
     backend::runtime::syscalls::sigprocmask(how, set)
 }
 
+/// `sigpending()`—Query the pending signals.
+///
+/// # References
+///  - [Linux `sigpending`]
+///
+/// [Linux `sigpending`]: https://man7.org/linux/man-pages/man2/sigpending.2.html
+#[inline]
+pub fn sigpending() -> Sigset {
+    backend::runtime::syscalls::sigpending()
+}
+
+/// `sigsuspend(set)`—Suspend the calling thread and wait for signals.
+///
+/// # References
+///  - [Linux `sigsuspend`]
+///
+/// [Linux `sigsuspend`]: https://man7.org/linux/man-pages/man2/sigsuspend.2.html
+#[inline]
+pub fn sigsuspend(set: &Sigset) -> io::Result<()> {
+    backend::runtime::syscalls::sigsuspend(set)
+}
+
 /// `sigwait(set)`—Wait for signals.
 ///
 /// # Safety
@@ -443,7 +479,7 @@ pub unsafe fn sigwait(set: &Sigset) -> io::Result<Signal> {
     backend::runtime::syscalls::sigwait(set)
 }
 
-/// `sigwait(set)`—Wait for signals, returning a [`Siginfo`].
+/// `sigwaitinfo(set)`—Wait for signals, returning a [`Siginfo`].
 ///
 /// # Safety
 ///
@@ -476,3 +512,70 @@ pub unsafe fn sigwaitinfo(set: &Sigset) -> io::Result<Siginfo> {
 pub unsafe fn sigtimedwait(set: &Sigset, timeout: Option<Timespec>) -> io::Result<Siginfo> {
     backend::runtime::syscalls::sigtimedwait(set, timeout)
 }
+
+/// `getauxval(AT_SECURE)`—Returns the Linux “secure execution” mode.
+///
+/// Return a boolean value indicating whether “secure execution” mode was
+/// requested, due to the process having elevated privileges. This includes
+/// whether the `AT_SECURE` AUX value is set, and whether the initial real UID
+/// and GID differ from the initial effective UID and GID.
+///
+/// The meaning of “secure execution” mode is beyond the scope of this
+/// comment.
+///
+/// # References
+///  - [Linux]
+///
+/// [Linux]: https://man7.org/linux/man-pages/man3/getauxval.3.html
+#[cfg(any(
+    linux_raw,
+    any(
+        all(target_os = "android", target_pointer_width = "64"),
+        target_os = "linux",
+    )
+))]
+#[inline]
+pub fn linux_secure() -> bool {
+    backend::param::auxv::linux_secure()
+}
+
+/// `brk(addr)`—Change the location of the “program break”.
+///
+/// # Safety
+///
+/// This is not identical to `brk` in libc. libc `brk` may have bookkeeping
+/// that needs to be kept up to date that this doesn't keep up to date, so
+/// don't use it unless you are implementing libc.
+#[cfg(linux_raw)]
+#[inline]
+pub unsafe fn brk(addr: *mut c_void) -> io::Result<*mut c_void> {
+    backend::runtime::syscalls::brk(addr)
+}
+
+/// `__SIGRTMIN`—The start of the realtime signal range.
+///
+/// This is the raw `SIGRTMIN` value from the OS, which is not the same as the
+/// `SIGRTMIN` macro provided by libc. Don't use this unless you are
+/// implementing libc.
+#[cfg(linux_raw)]
+pub const SIGRTMIN: u32 = linux_raw_sys::general::SIGRTMIN;
+
+/// `__SIGRTMAX`—The last of the realtime signal range.
+///
+/// This is the raw `SIGRTMAX` value from the OS, which is not the same as the
+/// `SIGRTMAX` macro provided by libc. Don't use this unless you are
+/// implementing libc.
+#[cfg(linux_raw)]
+pub const SIGRTMAX: u32 = {
+    // Use the actual `SIGRTMAX` value on platforms which define it.
+    #[cfg(not(any(target_arch = "arm", target_arch = "x86", target_arch = "x86_64")))]
+    {
+        linux_raw_sys::general::SIGRTMAX
+    }
+
+    // On platfoms that don't, derive it from `_NSIG`.
+    #[cfg(any(target_arch = "arm", target_arch = "x86", target_arch = "x86_64"))]
+    {
+        linux_raw_sys::general::_NSIG - 1
+    }
+};

@@ -9,7 +9,7 @@ pub use backend::event::poll_fd::{PollFd, PollFlags};
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -20,7 +20,7 @@ pub use backend::event::poll_fd::{PollFd, PollFlags};
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/poll.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/poll.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/poll.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsapoll
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsapoll
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=poll&sektion=2
 /// [NetBSD]: https://man.netbsd.org/poll.2
 /// [OpenBSD]: https://man.openbsd.org/poll.2

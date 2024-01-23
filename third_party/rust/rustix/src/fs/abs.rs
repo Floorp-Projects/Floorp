@@ -1,7 +1,7 @@
 //! POSIX-style filesystem functions which operate on bare paths.
 
 use crate::fd::OwnedFd;
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(any(target_os = "espidf", target_os = "vita")))]
 use crate::fs::Access;
 #[cfg(not(any(
     solarish,
@@ -10,12 +10,15 @@ use crate::fs::Access;
     target_os = "netbsd",
     target_os = "nto",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 use crate::fs::StatFs;
 #[cfg(not(any(target_os = "haiku", target_os = "redox", target_os = "wasi")))]
 use crate::fs::StatVfs;
 use crate::fs::{Mode, OFlags, Stat};
+#[cfg(not(target_os = "wasi"))]
+use crate::ugid::{Gid, Uid};
 use crate::{backend, io, path};
 #[cfg(feature = "alloc")]
 use {
@@ -127,7 +130,8 @@ fn _readlink(path: &CStr, mut buffer: Vec<u8>) -> io::Result<CString> {
             buffer.resize(nread, 0_u8);
             return Ok(CString::new(buffer).unwrap());
         }
-        buffer.reserve(1); // use `Vec` reallocation strategy to grow capacity exponentially
+        // Use `Vec` reallocation strategy to grow capacity exponentially.
+        buffer.reserve(1);
         buffer.resize(buffer.capacity(), 0_u8);
     }
 }
@@ -233,7 +237,7 @@ pub fn mkdir<P: path::Arg>(path: P, mode: Mode) -> io::Result<()> {
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/access.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/access.2.html
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(any(target_os = "espidf", target_os = "vita")))]
 #[inline]
 pub fn access<P: path::Arg>(path: P, access: Access) -> io::Result<()> {
     path.into_with_c_str(|path| backend::fs::syscalls::access(path, access))
@@ -255,6 +259,7 @@ pub fn access<P: path::Arg>(path: P, access: Access) -> io::Result<()> {
     target_os = "netbsd",
     target_os = "nto",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 #[inline]
@@ -264,10 +269,10 @@ pub fn statfs<P: path::Arg>(path: P) -> io::Result<StatFs> {
 
 /// `statvfs`—Queries filesystem metadata, POSIX version.
 ///
-/// Compared to [`statfs`], this function often provides less information,
-/// but it is more portable. But even so, filesystems are very diverse and not
-/// all the fields are meaningful for every filesystem. And `f_fsid` doesn't
-/// seem to have a clear meaning anywhere.
+/// Compared to [`statfs`], this function often provides less information, but
+/// it is more portable. But even so, filesystems are very diverse and not all
+/// the fields are meaningful for every filesystem. And `f_fsid` doesn't seem
+/// to have a clear meaning anywhere.
 ///
 /// # References
 ///  - [POSIX]
@@ -279,4 +284,18 @@ pub fn statfs<P: path::Arg>(path: P) -> io::Result<StatFs> {
 #[inline]
 pub fn statvfs<P: path::Arg>(path: P) -> io::Result<StatVfs> {
     path.into_with_c_str(backend::fs::syscalls::statvfs)
+}
+
+/// `chown(path, owner, group)`—Sets open file or directory ownership.
+///
+/// # References
+///  - [POSIX]
+///  - [Linux]
+///
+/// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/chown.html
+/// [Linux]: https://man7.org/linux/man-pages/man2/chown.2.html
+#[cfg(not(target_os = "wasi"))]
+#[inline]
+pub fn chown<P: path::Arg>(path: P, owner: Option<Uid>, group: Option<Gid>) -> io::Result<()> {
+    path.into_with_c_str(|path| backend::fs::syscalls::chown(path, owner, group))
 }

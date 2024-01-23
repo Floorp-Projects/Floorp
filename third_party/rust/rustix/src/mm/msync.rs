@@ -16,9 +16,9 @@ pub use backend::mm::types::MsyncFlags;
 ///
 /// # Safety
 ///
-/// `addr` must be a valid pointer to memory that is appropriate to
-/// call `msync` on. Some forms of `msync` may mutate the memory
-/// or evoke a variety of side-effects on the mapping and/or the file.
+/// `addr` must be a valid pointer to memory that is appropriate to call
+/// `msync` on. Some forms of `msync` may mutate the memory or evoke a variety
+/// of side-effects on the mapping and/or the file.
 ///
 /// # References
 ///  - [POSIX]

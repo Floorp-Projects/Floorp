@@ -50,7 +50,7 @@ pub(crate) fn fsmount(
     fs_fd: BorrowedFd<'_>,
     flags: super::types::FsMountFlags,
     attr_flags: super::types::MountAttrFlags,
-) -> io::Result<()> {
+) -> io::Result<OwnedFd> {
     syscall! {
         fn fsmount(
             fs_fd: c::c_int,
@@ -58,7 +58,7 @@ pub(crate) fn fsmount(
             attr_flags: c::c_uint
         ) via SYS_fsmount -> c::c_int
     }
-    unsafe { ret(fsmount(borrowed_fd(fs_fd), flags.bits(), attr_flags.bits())) }
+    unsafe { ret_owned_fd(fsmount(borrowed_fd(fs_fd), flags.bits(), attr_flags.bits())) }
 }
 
 #[cfg(linux_kernel)]

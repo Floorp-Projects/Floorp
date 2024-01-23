@@ -28,7 +28,7 @@ pub fn fsmount(
     fs_fd: BorrowedFd<'_>,
     flags: FsMountFlags,
     attr_flags: MountAttrFlags,
-) -> io::Result<()> {
+) -> io::Result<OwnedFd> {
     backend::mount::syscalls::fsmount(fs_fd, flags, attr_flags)
 }
 

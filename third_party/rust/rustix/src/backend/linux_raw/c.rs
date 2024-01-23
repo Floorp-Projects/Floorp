@@ -6,7 +6,7 @@
 #![allow(unused_imports)]
 #![allow(non_camel_case_types)]
 
-pub type size_t = usize;
+pub(crate) type size_t = usize;
 pub(crate) use linux_raw_sys::ctypes::*;
 pub(crate) use linux_raw_sys::errno::EINVAL;
 pub(crate) use linux_raw_sys::ioctl::{FIONBIO, FIONREAD};
@@ -29,6 +29,7 @@ pub(crate) use linux_raw_sys::general::epoll_event;
         not(feature = "use-explicitly-provided-auxv"),
         any(
             feature = "param",
+            feature = "process",
             feature = "runtime",
             feature = "time",
             target_arch = "x86",
@@ -40,7 +41,6 @@ pub(crate) use linux_raw_sys::general::{
     XATTR_REPLACE,
 };
 
-#[allow(unused)]
 pub(crate) use linux_raw_sys::ioctl::{BLKPBSZGET, BLKSSZGET, FICLONE};
 
 #[cfg(feature = "io_uring")]
@@ -52,30 +52,87 @@ pub(crate) use linux_raw_sys::{
     general::{O_CLOEXEC as SOCK_CLOEXEC, O_NONBLOCK as SOCK_NONBLOCK},
     if_ether::*,
     net::{
-        AF_DECnet, __kernel_sa_family_t as sa_family_t,
-        __kernel_sockaddr_storage as sockaddr_storage, cmsghdr, in6_addr, in_addr, ip_mreq,
-        ipv6_mreq, linger, msghdr, sockaddr, sockaddr_in, sockaddr_in6, sockaddr_un, socklen_t,
-        AF_APPLETALK, AF_ASH, AF_ATMPVC, AF_ATMSVC, AF_AX25, AF_BLUETOOTH, AF_BRIDGE, AF_CAN,
-        AF_ECONET, AF_IEEE802154, AF_INET, AF_INET6, AF_IPX, AF_IRDA, AF_ISDN, AF_IUCV, AF_KEY,
-        AF_LLC, AF_NETBEUI, AF_NETLINK, AF_NETROM, AF_PACKET, AF_PHONET, AF_PPPOX, AF_RDS, AF_ROSE,
-        AF_RXRPC, AF_SECURITY, AF_SNA, AF_TIPC, AF_UNIX, AF_UNSPEC, AF_WANPIPE, AF_X25, IPPROTO_AH,
-        IPPROTO_BEETPH, IPPROTO_COMP, IPPROTO_DCCP, IPPROTO_EGP, IPPROTO_ENCAP, IPPROTO_ESP,
-        IPPROTO_ETHERNET, IPPROTO_FRAGMENT, IPPROTO_GRE, IPPROTO_ICMP, IPPROTO_ICMPV6, IPPROTO_IDP,
-        IPPROTO_IGMP, IPPROTO_IP, IPPROTO_IPIP, IPPROTO_IPV6, IPPROTO_MH, IPPROTO_MPLS,
-        IPPROTO_MPTCP, IPPROTO_MTP, IPPROTO_PIM, IPPROTO_PUP, IPPROTO_RAW, IPPROTO_ROUTING,
-        IPPROTO_RSVP, IPPROTO_SCTP, IPPROTO_TCP, IPPROTO_TP, IPPROTO_UDP, IPPROTO_UDPLITE,
-        IPV6_ADD_MEMBERSHIP, IPV6_DROP_MEMBERSHIP, IPV6_MULTICAST_HOPS, IPV6_MULTICAST_LOOP,
-        IPV6_UNICAST_HOPS, IPV6_V6ONLY, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP, IP_MULTICAST_LOOP,
-        IP_MULTICAST_TTL, IP_TTL, MSG_CMSG_CLOEXEC, MSG_CONFIRM, MSG_DONTROUTE, MSG_DONTWAIT,
-        MSG_EOR, MSG_ERRQUEUE, MSG_MORE, MSG_NOSIGNAL, MSG_OOB, MSG_PEEK, MSG_TRUNC, MSG_WAITALL,
-        SCM_CREDENTIALS, SCM_RIGHTS, SHUT_RD, SHUT_RDWR, SHUT_WR, SOCK_DGRAM, SOCK_RAW, SOCK_RDM,
-        SOCK_SEQPACKET, SOCK_STREAM, SOL_SOCKET, SO_BROADCAST, SO_DOMAIN, SO_ERROR, SO_KEEPALIVE,
-        SO_LINGER, SO_PASSCRED, SO_RCVBUF, SO_RCVTIMEO_NEW, SO_RCVTIMEO_NEW as SO_RCVTIMEO,
-        SO_RCVTIMEO_OLD, SO_REUSEADDR, SO_SNDBUF, SO_SNDTIMEO_NEW, SO_SNDTIMEO_NEW as SO_SNDTIMEO,
-        SO_SNDTIMEO_OLD, SO_TYPE, TCP_NODELAY,
+        linger, msghdr, sockaddr, sockaddr_in, sockaddr_in6, sockaddr_un, socklen_t, AF_DECnet,
+        __kernel_sa_family_t as sa_family_t, __kernel_sockaddr_storage as sockaddr_storage,
+        cmsghdr, in6_addr, in_addr, ip_mreq, ip_mreq_source, ip_mreqn, ipv6_mreq, AF_APPLETALK,
+        AF_ASH, AF_ATMPVC, AF_ATMSVC, AF_AX25, AF_BLUETOOTH, AF_BRIDGE, AF_CAN, AF_ECONET,
+        AF_IEEE802154, AF_INET, AF_INET6, AF_IPX, AF_IRDA, AF_ISDN, AF_IUCV, AF_KEY, AF_LLC,
+        AF_NETBEUI, AF_NETLINK, AF_NETROM, AF_PACKET, AF_PHONET, AF_PPPOX, AF_RDS, AF_ROSE,
+        AF_RXRPC, AF_SECURITY, AF_SNA, AF_TIPC, AF_UNIX, AF_UNSPEC, AF_WANPIPE, AF_X25,
+        IP6T_SO_ORIGINAL_DST, IPPROTO_FRAGMENT, IPPROTO_ICMPV6, IPPROTO_MH, IPPROTO_ROUTING,
+        IPV6_ADD_MEMBERSHIP, IPV6_DROP_MEMBERSHIP, IPV6_FREEBIND, IPV6_MULTICAST_HOPS,
+        IPV6_MULTICAST_LOOP, IPV6_RECVTCLASS, IPV6_TCLASS, IPV6_UNICAST_HOPS, IPV6_V6ONLY,
+        IP_ADD_MEMBERSHIP, IP_ADD_SOURCE_MEMBERSHIP, IP_DROP_MEMBERSHIP, IP_DROP_SOURCE_MEMBERSHIP,
+        IP_FREEBIND, IP_MULTICAST_LOOP, IP_MULTICAST_TTL, IP_RECVTOS, IP_TOS, IP_TTL,
+        MSG_CMSG_CLOEXEC, MSG_CONFIRM, MSG_DONTROUTE, MSG_DONTWAIT, MSG_EOR, MSG_ERRQUEUE,
+        MSG_MORE, MSG_NOSIGNAL, MSG_OOB, MSG_PEEK, MSG_TRUNC, MSG_WAITALL, SCM_CREDENTIALS,
+        SCM_RIGHTS, SHUT_RD, SHUT_RDWR, SHUT_WR, SOCK_DGRAM, SOCK_RAW, SOCK_RDM, SOCK_SEQPACKET,
+        SOCK_STREAM, SOL_SOCKET, SO_ACCEPTCONN, SO_BROADCAST, SO_COOKIE, SO_DOMAIN, SO_ERROR,
+        SO_INCOMING_CPU, SO_KEEPALIVE, SO_LINGER, SO_OOBINLINE, SO_ORIGINAL_DST, SO_PASSCRED,
+        SO_PROTOCOL, SO_RCVBUF, SO_RCVTIMEO_NEW, SO_RCVTIMEO_NEW as SO_RCVTIMEO, SO_RCVTIMEO_OLD,
+        SO_REUSEADDR, SO_REUSEPORT, SO_SNDBUF, SO_SNDTIMEO_NEW, SO_SNDTIMEO_NEW as SO_SNDTIMEO,
+        SO_SNDTIMEO_OLD, SO_TYPE, TCP_CONGESTION, TCP_CORK, TCP_KEEPCNT, TCP_KEEPIDLE,
+        TCP_KEEPINTVL, TCP_NODELAY, TCP_QUICKACK, TCP_THIN_LINEAR_TIMEOUTS, TCP_USER_TIMEOUT,
     },
     netlink::*,
 };
+
+// Cast away bindgen's `enum` type to make these consistent with the other
+// `setsockopt`/`getsockopt` level values.
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_IP: u32 = linux_raw_sys::net::IPPROTO_IP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_ICMP: u32 = linux_raw_sys::net::IPPROTO_ICMP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_IGMP: u32 = linux_raw_sys::net::IPPROTO_IGMP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_IPIP: u32 = linux_raw_sys::net::IPPROTO_IPIP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_TCP: u32 = linux_raw_sys::net::IPPROTO_TCP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_EGP: u32 = linux_raw_sys::net::IPPROTO_EGP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_PUP: u32 = linux_raw_sys::net::IPPROTO_PUP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_UDP: u32 = linux_raw_sys::net::IPPROTO_UDP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_IDP: u32 = linux_raw_sys::net::IPPROTO_IDP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_TP: u32 = linux_raw_sys::net::IPPROTO_TP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_DCCP: u32 = linux_raw_sys::net::IPPROTO_DCCP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_IPV6: u32 = linux_raw_sys::net::IPPROTO_IPV6 as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_RSVP: u32 = linux_raw_sys::net::IPPROTO_RSVP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_GRE: u32 = linux_raw_sys::net::IPPROTO_GRE as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_ESP: u32 = linux_raw_sys::net::IPPROTO_ESP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_AH: u32 = linux_raw_sys::net::IPPROTO_AH as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_MTP: u32 = linux_raw_sys::net::IPPROTO_MTP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_BEETPH: u32 = linux_raw_sys::net::IPPROTO_BEETPH as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_ENCAP: u32 = linux_raw_sys::net::IPPROTO_ENCAP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_PIM: u32 = linux_raw_sys::net::IPPROTO_PIM as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_COMP: u32 = linux_raw_sys::net::IPPROTO_COMP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_SCTP: u32 = linux_raw_sys::net::IPPROTO_SCTP as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_UDPLITE: u32 = linux_raw_sys::net::IPPROTO_UDPLITE as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_MPLS: u32 = linux_raw_sys::net::IPPROTO_MPLS as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_ETHERNET: u32 = linux_raw_sys::net::IPPROTO_ETHERNET as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_RAW: u32 = linux_raw_sys::net::IPPROTO_RAW as _;
+#[cfg(feature = "net")]
+pub(crate) const IPPROTO_MPTCP: u32 = linux_raw_sys::net::IPPROTO_MPTCP as _;
 
 #[cfg(any(feature = "process", feature = "runtime"))]
 pub(crate) use linux_raw_sys::general::siginfo_t;
@@ -86,12 +143,14 @@ pub(crate) const EXIT_SUCCESS: c_int = 0;
 pub(crate) const EXIT_FAILURE: c_int = 1;
 #[cfg(feature = "process")]
 pub(crate) const EXIT_SIGNALED_SIGABRT: c_int = 128 + linux_raw_sys::general::SIGABRT as c_int;
+#[cfg(feature = "runtime")]
+pub(crate) const CLONE_CHILD_SETTID: c_int = linux_raw_sys::general::CLONE_CHILD_SETTID as c_int;
 
 #[cfg(feature = "process")]
 pub(crate) use linux_raw_sys::{
     general::{
         CLD_CONTINUED, CLD_DUMPED, CLD_EXITED, CLD_KILLED, CLD_STOPPED, CLD_TRAPPED,
-        O_NONBLOCK as PIDFD_NONBLOCK, P_ALL, P_PID, P_PIDFD,
+        O_NONBLOCK as PIDFD_NONBLOCK, P_ALL, P_PGID, P_PID, P_PIDFD,
     },
     ioctl::TIOCSCTTY,
 };
@@ -210,3 +269,36 @@ pub(crate) const CLOCK_THREAD_CPUTIME_ID: c_int =
     linux_raw_sys::general::CLOCK_THREAD_CPUTIME_ID as _;
 pub(crate) const CLOCK_PROCESS_CPUTIME_ID: c_int =
     linux_raw_sys::general::CLOCK_PROCESS_CPUTIME_ID as _;
+#[cfg(any(feature = "thread", feature = "time", target_arch = "x86"))]
+pub(crate) const CLOCK_BOOTTIME: c_int = linux_raw_sys::general::CLOCK_BOOTTIME as _;
+#[cfg(any(feature = "thread", feature = "time", target_arch = "x86"))]
+pub(crate) const CLOCK_BOOTTIME_ALARM: c_int = linux_raw_sys::general::CLOCK_BOOTTIME_ALARM as _;
+#[cfg(any(feature = "thread", feature = "time", target_arch = "x86"))]
+pub(crate) const CLOCK_TAI: c_int = linux_raw_sys::general::CLOCK_TAI as _;
+#[cfg(any(feature = "thread", feature = "time", target_arch = "x86"))]
+pub(crate) const CLOCK_REALTIME_ALARM: c_int = linux_raw_sys::general::CLOCK_REALTIME_ALARM as _;
+
+#[cfg(feature = "system")]
+mod reboot_symbols {
+    use super::c_int;
+
+    pub(crate) const LINUX_REBOOT_MAGIC1: c_int = linux_raw_sys::general::LINUX_REBOOT_MAGIC1 as _;
+    pub(crate) const LINUX_REBOOT_MAGIC2: c_int = linux_raw_sys::general::LINUX_REBOOT_MAGIC2 as _;
+
+    pub(crate) const LINUX_REBOOT_CMD_RESTART: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_RESTART as _;
+    pub(crate) const LINUX_REBOOT_CMD_HALT: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_HALT as _;
+    pub(crate) const LINUX_REBOOT_CMD_CAD_ON: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_CAD_ON as _;
+    pub(crate) const LINUX_REBOOT_CMD_CAD_OFF: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_CAD_OFF as _;
+    pub(crate) const LINUX_REBOOT_CMD_POWER_OFF: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_POWER_OFF as _;
+    pub(crate) const LINUX_REBOOT_CMD_SW_SUSPEND: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_SW_SUSPEND as _;
+    pub(crate) const LINUX_REBOOT_CMD_KEXEC: c_int =
+        linux_raw_sys::general::LINUX_REBOOT_CMD_KEXEC as _;
+}
+#[cfg(feature = "system")]
+pub(crate) use reboot_symbols::*;

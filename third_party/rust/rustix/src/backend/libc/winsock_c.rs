@@ -1,4 +1,4 @@
-//! Adapt the Winsock2 API to resemble a POSIX-style libc API.
+//! Adapt the Winsock API to resemble a POSIX-style libc API.
 
 #![allow(unused_imports)]
 #![allow(non_camel_case_types)]

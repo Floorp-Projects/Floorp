@@ -10,7 +10,7 @@ use crate::{backend, io, ioctl};
 use backend::c;
 use backend::fd::AsFd;
 
-/// `ioctl(fd, TIOCSCTTY, 0)`—Sets the controlling terminal for the processs.
+/// `ioctl(fd, TIOCSCTTY, 0)`—Sets the controlling terminal for the process.
 ///
 /// # References
 ///  - [Linux]

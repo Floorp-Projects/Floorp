@@ -1,5 +1,5 @@
-//! The BSD sockets API requires us to read the `ss_family` field before
-//! we can interpret the rest of a `sockaddr` produced by the kernel.
+//! The BSD sockets API requires us to read the `ss_family` field before we can
+//! interpret the rest of a `sockaddr` produced by the kernel.
 
 #[cfg(unix)]
 use super::addr::SocketAddrUnix;
@@ -14,14 +14,40 @@ use core::mem::size_of;
 // This must match the header of `sockaddr`.
 #[repr(C)]
 struct sockaddr_header {
-    #[cfg(any(bsd, target_os = "haiku"))]
+    #[cfg(any(
+        bsd,
+        target_os = "aix",
+        target_os = "espidf",
+        target_os = "haiku",
+        target_os = "nto",
+        target_os = "vita"
+    ))]
     sa_len: u8,
-    #[cfg(any(bsd, target_os = "haiku"))]
+    #[cfg(any(
+        bsd,
+        target_os = "aix",
+        target_os = "espidf",
+        target_os = "haiku",
+        target_os = "nto",
+        target_os = "vita"
+    ))]
     ss_family: u8,
-    #[cfg(not(any(bsd, target_os = "haiku")))]
+    #[cfg(not(any(
+        bsd,
+        target_os = "aix",
+        target_os = "espidf",
+        target_os = "haiku",
+        target_os = "nto",
+        target_os = "vita"
+    )))]
     ss_family: u16,
 }
 
+/// Read the `ss_family` field from a socket address returned from the OS.
+///
+/// # Safety
+///
+/// `storage` must point to a valid socket address returned from the OS.
 #[inline]
 unsafe fn read_ss_family(storage: *const c::sockaddr_storage) -> u16 {
     // Assert that we know the layout of `sockaddr`.
@@ -31,7 +57,8 @@ unsafe fn read_ss_family(storage: *const c::sockaddr_storage) -> u16 {
             target_os = "aix",
             target_os = "espidf",
             target_os = "haiku",
-            target_os = "nto"
+            target_os = "nto",
+            target_os = "vita"
         ))]
         sa_len: 0_u8,
         #[cfg(any(
@@ -39,7 +66,8 @@ unsafe fn read_ss_family(storage: *const c::sockaddr_storage) -> u16 {
             target_os = "aix",
             target_os = "espidf",
             target_os = "haiku",
-            target_os = "nto"
+            target_os = "nto",
+            target_os = "vita"
         ))]
         sa_family: 0_u8,
         #[cfg(not(any(
@@ -47,7 +75,8 @@ unsafe fn read_ss_family(storage: *const c::sockaddr_storage) -> u16 {
             target_os = "aix",
             target_os = "espidf",
             target_os = "haiku",
-            target_os = "nto"
+            target_os = "nto",
+            target_os = "vita"
         )))]
         sa_family: 0_u16,
         #[cfg(not(target_os = "haiku"))]
@@ -138,10 +167,10 @@ pub(crate) unsafe fn read_sockaddr(
                 // Otherwise we expect a NUL-terminated filesystem path.
 
                 // Trim off unused bytes from the end of `path_bytes`.
-                let path_bytes = if cfg!(target_os = "freebsd") {
-                    // FreeBSD sometimes sets the length to longer than the length
-                    // of the NUL-terminated string. Find the NUL and truncate the
-                    // string accordingly.
+                let path_bytes = if cfg!(any(solarish, target_os = "freebsd")) {
+                    // FreeBSD and illumos sometimes set the length to longer
+                    // than the length of the NUL-terminated string. Find the
+                    // NUL and truncate the string accordingly.
                     &decode.sun_path[..decode
                         .sun_path
                         .iter()
@@ -168,6 +197,11 @@ pub(crate) unsafe fn read_sockaddr(
     }
 }
 
+/// Read an optional socket address returned from the OS.
+///
+/// # Safety
+///
+/// `storage` must point to a valid socket address returned from the OS.
 pub(crate) unsafe fn maybe_read_sockaddr_os(
     storage: *const c::sockaddr_storage,
     len: usize,
@@ -185,6 +219,11 @@ pub(crate) unsafe fn maybe_read_sockaddr_os(
     }
 }
 
+/// Read a socket address returned from the OS.
+///
+/// # Safety
+///
+/// `storage` must point to a valid socket address returned from the OS.
 pub(crate) unsafe fn read_sockaddr_os(
     storage: *const c::sockaddr_storage,
     len: usize,
@@ -250,10 +289,10 @@ unsafe fn inner_read_sockaddr_os(
                 assert_eq!(decode.sun_path[len - 1 - offsetof_sun_path], 0);
                 let path_bytes = &decode.sun_path[..len - 1 - offsetof_sun_path];
 
-                // FreeBSD sometimes sets the length to longer than the length
-                // of the NUL-terminated string. Find the NUL and truncate the
-                // string accordingly.
-                #[cfg(target_os = "freebsd")]
+                // FreeBSD and illumos sometimes set the length to longer than
+                // the length of the NUL-terminated string. Find the NUL and
+                // truncate the string accordingly.
+                #[cfg(any(solarish, target_os = "freebsd"))]
                 let path_bytes = &path_bytes[..path_bytes.iter().position(|b| *b == 0).unwrap()];
 
                 SocketAddrAny::Unix(

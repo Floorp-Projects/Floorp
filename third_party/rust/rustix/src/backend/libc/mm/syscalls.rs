@@ -2,6 +2,8 @@
 
 #[cfg(not(target_os = "redox"))]
 use super::types::Advice;
+#[cfg(any(linux_kernel, freebsdlike, netbsdlike))]
+use super::types::MlockAllFlags;
 #[cfg(any(target_os = "emscripten", target_os = "linux"))]
 use super::types::MremapFlags;
 use super::types::{MapFlags, MprotectFlags, MsyncFlags, ProtFlags};
@@ -219,4 +221,24 @@ pub(crate) unsafe fn userfaultfd(flags: UserfaultfdFlags) -> io::Result<OwnedFd>
         ) via SYS_userfaultfd -> c::c_int
     }
     ret_owned_fd(userfaultfd(bitflags_bits!(flags)))
+}
+
+/// Locks all pages mapped into the address space of the calling process.
+///
+/// This includes the pages of the code, data, and stack segment, as well as
+/// shared libraries, user space kernel data, shared memory, and memory-mapped
+/// files. All mapped pages are guaranteed to be resident in RAM when the call
+/// returns successfully; the pages are guaranteed to stay in RAM until later
+/// unlocked.
+#[inline]
+#[cfg(any(linux_kernel, freebsdlike, netbsdlike))]
+pub(crate) fn mlockall(flags: MlockAllFlags) -> io::Result<()> {
+    unsafe { ret(c::mlockall(bitflags_bits!(flags))) }
+}
+
+/// Unlocks all pages mapped into the address space of the calling process.
+#[inline]
+#[cfg(any(linux_kernel, freebsdlike, netbsdlike))]
+pub(crate) fn munlockall() -> io::Result<()> {
+    unsafe { ret(c::munlockall()) }
 }

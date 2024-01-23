@@ -122,7 +122,7 @@ pub(crate) fn with_unix_msghdr<R>(
     f: impl FnOnce(c::msghdr) -> R,
 ) -> R {
     f(c::msghdr {
-        msg_name: as_ptr(addr) as _,
+        msg_name: as_ptr(&addr.unix) as _,
         msg_namelen: addr.addr_len() as _,
         msg_iov: iov.as_ptr() as _,
         msg_iovlen: msg_iov_len(iov.len()),

@@ -25,7 +25,7 @@ use backend::fd::RawFd;
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -37,7 +37,7 @@ use backend::fd::RawFd;
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/close.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/close.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/close.2.html#//apple_ref/doc/man/2/close
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-closesocket
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-closesocket
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=close&sektion=2
 /// [NetBSD]: https://man.netbsd.org/close.2
 /// [OpenBSD]: https://man.openbsd.org/close.2

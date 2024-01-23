@@ -83,7 +83,8 @@ pub(crate) const fn sockaddr_in6_new(
         target_os = "aix",
         target_os = "espidf",
         target_os = "haiku",
-        target_os = "nto"
+        target_os = "nto",
+        target_os = "vita"
     ))]
     sin6_len: u8,
     sin6_family: c::sa_family_t,
@@ -98,7 +99,8 @@ pub(crate) const fn sockaddr_in6_new(
             target_os = "aix",
             target_os = "espidf",
             target_os = "haiku",
-            target_os = "nto"
+            target_os = "nto",
+            target_os = "vita"
         ))]
         sin6_len,
         sin6_family,
@@ -108,6 +110,8 @@ pub(crate) const fn sockaddr_in6_new(
         sin6_scope_id,
         #[cfg(solarish)]
         __sin6_src_id: 0,
+        #[cfg(target_os = "vita")]
+        sin6_vport: 0,
     }
 }
 

@@ -3,14 +3,16 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
 use crate::backend::c;
 #[cfg(target_arch = "x86")]
 use crate::backend::conv::by_mut;
+#[cfg(target_arch = "x86_64")]
+use crate::backend::conv::c_uint;
 use crate::backend::conv::{
-    by_ref, c_int, c_uint, ret, ret_c_int, ret_c_int_infallible, ret_error, size_of, zero,
+    by_ref, c_int, ret, ret_c_int, ret_c_int_infallible, ret_error, ret_infallible, ret_void_star,
+    size_of, zero,
 };
 #[cfg(feature = "fs")]
 use crate::fd::BorrowedFd;
@@ -18,30 +20,62 @@ use crate::ffi::CStr;
 #[cfg(feature = "fs")]
 use crate::fs::AtFlags;
 use crate::io;
-use crate::pid::Pid;
-use crate::runtime::{How, Sigaction, Siginfo, Sigset, Stack};
+use crate::pid::{Pid, RawPid};
+use crate::runtime::{Fork, How, Sigaction, Siginfo, Sigset, Stack};
 use crate::signal::Signal;
 use crate::timespec::Timespec;
 use crate::utils::option_as_ptr;
+use core::ffi::c_void;
 use core::mem::MaybeUninit;
 #[cfg(target_pointer_width = "32")]
 use linux_raw_sys::general::__kernel_old_timespec;
 use linux_raw_sys::general::kernel_sigset_t;
-use linux_raw_sys::prctl::PR_SET_NAME;
 #[cfg(target_arch = "x86_64")]
-use {crate::backend::conv::ret_infallible, linux_raw_sys::general::ARCH_SET_FS};
+use linux_raw_sys::general::ARCH_SET_FS;
 
 #[inline]
-pub(crate) unsafe fn fork() -> io::Result<Option<Pid>> {
+pub(crate) unsafe fn fork() -> io::Result<Fork> {
+    let mut child_pid = MaybeUninit::<RawPid>::uninit();
+
+    // Unix `fork` only returns the child PID in the parent; we'd like it in
+    // the child too, so set `CLONE_CHILD_SETTID` and pass in the address of
+    // a memory location to store it to in the child.
+    //
+    // Architectures differ on the order of the parameters.
+    #[cfg(target_arch = "x86_64")]
     let pid = ret_c_int(syscall_readonly!(
         __NR_clone,
-        c_int(c::SIGCHLD),
+        c_int(c::SIGCHLD | c::CLONE_CHILD_SETTID),
         zero(),
         zero(),
-        zero(),
+        &mut child_pid,
         zero()
     ))?;
-    Ok(Pid::from_raw(pid))
+    #[cfg(any(
+        target_arch = "aarch64",
+        target_arch = "arm",
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "powerpc64",
+        target_arch = "riscv64",
+        target_arch = "x86"
+    ))]
+    let pid = ret_c_int(syscall_readonly!(
+        __NR_clone,
+        c_int(c::SIGCHLD | c::CLONE_CHILD_SETTID),
+        zero(),
+        zero(),
+        zero(),
+        &mut child_pid
+    ))?;
+
+    Ok(if let Some(pid) = Pid::from_raw(pid) {
+        Fork::Parent(pid)
+    } else {
+        Fork::Child(Pid::from_raw_unchecked(child_pid.assume_init()))
+    })
 }
 
 #[cfg(feature = "fs")]
@@ -107,18 +141,6 @@ pub(crate) mod tls {
     }
 
     #[inline]
-    pub(crate) unsafe fn set_thread_name(name: &CStr) -> io::Result<()> {
-        ret(syscall_readonly!(
-            __NR_prctl,
-            c_uint(PR_SET_NAME),
-            name,
-            zero(),
-            zero(),
-            zero()
-        ))
-    }
-
-    #[inline]
     pub(crate) fn exit_thread(code: c::c_int) -> ! {
         unsafe { syscall_noreturn!(__NR_exit, c_int(code)) }
     }
@@ -163,6 +185,30 @@ pub(crate) unsafe fn sigprocmask(how: How, new: Option<&Sigset>) -> io::Result<S
         size_of::<kernel_sigset_t, _>()
     ))?;
     Ok(old.assume_init())
+}
+
+#[inline]
+pub(crate) fn sigpending() -> Sigset {
+    let mut pending = MaybeUninit::<Sigset>::uninit();
+    unsafe {
+        ret_infallible(syscall!(
+            __NR_rt_sigpending,
+            &mut pending,
+            size_of::<kernel_sigset_t, _>()
+        ));
+        pending.assume_init()
+    }
+}
+
+#[inline]
+pub(crate) fn sigsuspend(set: &Sigset) -> io::Result<()> {
+    unsafe {
+        ret(syscall_readonly!(
+            __NR_rt_sigsuspend,
+            by_ref(set),
+            size_of::<kernel_sigset_t, _>()
+        ))
+    }
 }
 
 #[inline]
@@ -263,4 +309,10 @@ unsafe fn sigtimedwait_old(
 #[inline]
 pub(crate) fn exit_group(code: c::c_int) -> ! {
     unsafe { syscall_noreturn!(__NR_exit_group, c_int(code)) }
+}
+
+#[inline]
+pub(crate) unsafe fn brk(addr: *mut c::c_void) -> io::Result<*mut c_void> {
+    // This is non-`readonly`, to prevent loads from being reordered past it.
+    ret_void_star(syscall!(__NR_brk, addr))
 }

@@ -148,10 +148,10 @@ pub(in crate::backend) unsafe fn indirect_syscall5(
     // clobbered as the return value anyway.
     asm!(
         "push esi",
-        "push DWORD PTR [eax + 0]",
-        "mov esi, DWORD PTR [eax + 4]",
-        "mov eax, DWORD PTR [eax + 8]",
-        "call DWORD PTR [esp]",
+        "push [eax + 0]",
+        "mov esi, [eax + 4]",
+        "mov eax, [eax + 8]",
+        "call [esp]",
         "pop esi",
         "pop esi",
         inout("eax") &[callee as _, a3.to_asm(), nr.to_asm()] => r0,
@@ -163,7 +163,6 @@ pub(in crate::backend) unsafe fn indirect_syscall5(
     FromAsm::from_asm(r0)
 }
 
-#[allow(clippy::too_many_arguments)]
 #[inline]
 pub(in crate::backend) unsafe fn indirect_syscall6(
     callee: SyscallType,
@@ -187,11 +186,11 @@ pub(in crate::backend) unsafe fn indirect_syscall6(
     asm!(
         "push ebp",
         "push esi",
-        "push DWORD PTR [eax + 0]",
-        "mov esi, DWORD PTR [eax + 4]",
-        "mov ebp, DWORD PTR [eax + 8]",
-        "mov eax, DWORD PTR [eax + 12]",
-        "call DWORD PTR [esp]",
+        "push [eax + 0]",
+        "mov esi, [eax + 4]",
+        "mov ebp, [eax + 8]",
+        "mov eax, [eax + 12]",
+        "call [esp]",
         "pop esi",
         "pop esi",
         "pop ebp",
@@ -442,9 +441,9 @@ pub(in crate::backend) unsafe fn syscall6(
     asm!(
         "push ebp",
         "push esi",
-        "mov esi, DWORD PTR [eax + 0]",
-        "mov ebp, DWORD PTR [eax + 4]",
-        "mov eax, DWORD PTR [eax + 8]",
+        "mov esi, [eax + 0]",
+        "mov ebp, [eax + 4]",
+        "mov eax, [eax + 8]",
         "int $$0x80",
         "pop esi",
         "pop ebp",
@@ -473,9 +472,9 @@ pub(in crate::backend) unsafe fn syscall6_readonly(
     asm!(
         "push ebp",
         "push esi",
-        "mov esi, DWORD PTR [eax + 0]",
-        "mov ebp, DWORD PTR [eax + 4]",
-        "mov eax, DWORD PTR [eax + 8]",
+        "mov esi, [eax + 0]",
+        "mov ebp, [eax + 4]",
+        "mov eax, [eax + 8]",
         "int $$0x80",
         "pop esi",
         "pop ebp",

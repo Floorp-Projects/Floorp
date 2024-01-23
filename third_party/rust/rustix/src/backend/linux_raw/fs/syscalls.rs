@@ -8,9 +8,17 @@
 
 use crate::backend::c;
 use crate::backend::conv::fs::oflags_for_open_how;
+#[cfg(any(
+    not(feature = "linux_4_11"),
+    target_arch = "aarch64",
+    target_arch = "riscv64",
+    target_arch = "mips",
+    target_arch = "mips32r6",
+))]
+use crate::backend::conv::zero;
 use crate::backend::conv::{
     by_ref, c_int, c_uint, dev_t, opt_mut, pass_usize, raw_fd, ret, ret_c_int, ret_c_uint,
-    ret_infallible, ret_owned_fd, ret_usize, size_of, slice, slice_mut, zero,
+    ret_infallible, ret_owned_fd, ret_usize, size_of, slice, slice_mut,
 };
 #[cfg(target_pointer_width = "64")]
 use crate::backend::conv::{loff_t, loff_t_from_u64, ret_u64};
@@ -154,6 +162,30 @@ pub(crate) fn chownat(
             c_uint(ow),
             c_uint(gr),
             flags
+        ))
+    }
+}
+
+#[inline]
+pub(crate) fn chown(path: &CStr, owner: Option<Uid>, group: Option<Gid>) -> io::Result<()> {
+    // Most architectures have a `chown` syscall.
+    #[cfg(not(any(target_arch = "aarch64", target_arch = "riscv64")))]
+    unsafe {
+        let (ow, gr) = crate::ugid::translate_fchown_args(owner, group);
+        ret(syscall_readonly!(__NR_chown, path, c_uint(ow), c_uint(gr)))
+    }
+
+    // Aarch64 and RISC-V don't, so use `fchownat`.
+    #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
+    unsafe {
+        let (ow, gr) = crate::ugid::translate_fchown_args(owner, group);
+        ret(syscall_readonly!(
+            __NR_fchownat,
+            raw_fd(AT_FDCWD),
+            path,
+            c_uint(ow),
+            c_uint(gr),
+            zero()
         ))
     }
 }
@@ -354,6 +386,7 @@ pub(crate) fn fadvise(fd: BorrowedFd<'_>, pos: u64, len: u64, advice: Advice) ->
             lo(len)
         ))
     }
+
     // On mips, the arguments are not reordered, and padding is inserted
     // instead to ensure alignment.
     #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
@@ -369,6 +402,9 @@ pub(crate) fn fadvise(fd: BorrowedFd<'_>, pos: u64, len: u64, advice: Advice) ->
             advice
         ))
     }
+
+    // For all other 32-bit architectures, use `fadvise64_64` so that we get a
+    // 64-bit length.
     #[cfg(all(
         target_pointer_width = "32",
         not(any(
@@ -389,6 +425,8 @@ pub(crate) fn fadvise(fd: BorrowedFd<'_>, pos: u64, len: u64, advice: Advice) ->
             advice
         ))
     }
+
+    // On 64-bit architectures, use `fadvise64` which is sufficient.
     #[cfg(target_pointer_width = "64")]
     unsafe {
         ret(syscall_readonly!(
@@ -809,13 +847,15 @@ pub(crate) fn statx(
     }
 }
 
+#[cfg(not(feature = "linux_4_11"))]
 #[inline]
 pub(crate) fn is_statx_available() -> bool {
     unsafe {
         // Call `statx` with null pointers so that if it fails for any reason
-        // other than `EFAULT`, we know it's not supported.
+        // other than `EFAULT`, we know it's not supported. This can use
+        // "readonly" because we don't pass it a buffer to mutate.
         matches!(
-            ret(syscall!(
+            ret(syscall_readonly!(
                 __NR_statx,
                 raw_fd(AT_FDCWD),
                 zero(),
@@ -927,7 +967,6 @@ pub(crate) fn readlink(path: &CStr, buf: &mut [u8]) -> io::Result<usize> {
     }
 }
 
-#[cfg(feature = "alloc")]
 #[inline]
 pub(crate) fn readlinkat(
     dirfd: BorrowedFd<'_>,

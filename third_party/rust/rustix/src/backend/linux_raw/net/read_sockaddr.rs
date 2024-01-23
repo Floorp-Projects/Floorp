@@ -1,11 +1,12 @@
-//! The BSD sockets API requires us to read the `ss_family` field before
-//! we can interpret the rest of a `sockaddr` produced by the kernel.
+//! The BSD sockets API requires us to read the `ss_family` field before we can
+//! interpret the rest of a `sockaddr` produced by the kernel.
 #![allow(unsafe_code)]
 
 use crate::backend::c;
 use crate::io;
 use crate::net::{Ipv4Addr, Ipv6Addr, SocketAddrAny, SocketAddrUnix, SocketAddrV4, SocketAddrV6};
 use core::mem::size_of;
+use core::slice;
 
 // This must match the header of `sockaddr`.
 #[repr(C)]
@@ -93,24 +94,29 @@ pub(crate) unsafe fn read_sockaddr(
                 //
                 // [abstract namespace]: https://man7.org/linux/man-pages/man7/unix.7.html
                 if decode.sun_path[0] == 0 {
-                    return SocketAddrUnix::new_abstract_name(
-                        &decode.sun_path[1..len - offsetof_sun_path],
-                    )
-                    .map(SocketAddrAny::Unix);
+                    let bytes = &decode.sun_path[1..len - offsetof_sun_path];
+
+                    // SAFETY: Convert `&[c_char]` to `&[u8]`.
+                    let bytes = slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len());
+
+                    return SocketAddrUnix::new_abstract_name(bytes).map(SocketAddrAny::Unix);
                 }
 
                 // Otherwise we expect a NUL-terminated filesystem path.
+                let bytes = &decode.sun_path[..len - 1 - offsetof_sun_path];
+
+                // SAFETY: Convert `&[c_char]` to `&[u8]`.
+                let bytes = slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len());
+
                 assert_eq!(decode.sun_path[len - 1 - offsetof_sun_path], 0);
-                Ok(SocketAddrAny::Unix(SocketAddrUnix::new(
-                    &decode.sun_path[..len - 1 - offsetof_sun_path],
-                )?))
+                Ok(SocketAddrAny::Unix(SocketAddrUnix::new(bytes)?))
             }
         }
         _ => Err(io::Errno::NOTSUP),
     }
 }
 
-/// Read a socket address returned from the OS.
+/// Read an optional socket address returned from the OS.
 ///
 /// # Safety
 ///
@@ -165,19 +171,23 @@ pub(crate) unsafe fn read_sockaddr_os(storage: *const c::sockaddr, len: usize) -
                 //
                 // [abstract namespace]: https://man7.org/linux/man-pages/man7/unix.7.html
                 if decode.sun_path[0] == 0 {
-                    return SocketAddrAny::Unix(
-                        SocketAddrUnix::new_abstract_name(
-                            &decode.sun_path[1..len - offsetof_sun_path],
-                        )
-                        .unwrap(),
-                    );
+                    let bytes = &decode.sun_path[1..len - offsetof_sun_path];
+
+                    // SAFETY: Convert `&[c_char]` to `&[u8]`.
+                    let bytes = slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len());
+
+                    return SocketAddrAny::Unix(SocketAddrUnix::new_abstract_name(bytes).unwrap());
                 }
 
                 // Otherwise we expect a NUL-terminated filesystem path.
                 assert_eq!(decode.sun_path[len - 1 - offsetof_sun_path], 0);
-                SocketAddrAny::Unix(
-                    SocketAddrUnix::new(&decode.sun_path[..len - 1 - offsetof_sun_path]).unwrap(),
-                )
+
+                let bytes = &decode.sun_path[..len - 1 - offsetof_sun_path];
+
+                // SAFETY: Convert `&[c_char]` to `&[u8]`.
+                let bytes = slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len());
+
+                SocketAddrAny::Unix(SocketAddrUnix::new(bytes).unwrap())
             }
         }
         other => unimplemented!("{:?}", other),
