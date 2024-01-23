@@ -20,6 +20,7 @@
 #include "gfxPlatformGtk.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "nsGtkUtils.h"
 #include "nsTArray.h"
@@ -109,7 +110,7 @@ RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   return nullptr;
 }
 
-static UniquePtr<ScreenGetterGtk> gScreenGetter;
+static StaticAutoPtr<ScreenGetterGtk> gScreenGetter;
 
 static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   LOG_SCREEN("Received monitors-changed event");
@@ -292,7 +293,7 @@ gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
 }
 
 ScreenHelperGTK::ScreenHelperGTK() {
-  gScreenGetter = MakeUnique<ScreenGetterGtk>();
+  gScreenGetter = new ScreenGetterGtk();
   gScreenGetter->Init();
 }
 
