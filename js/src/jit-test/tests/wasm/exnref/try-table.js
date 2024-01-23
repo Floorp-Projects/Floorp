@@ -196,7 +196,7 @@
       (tag $E (param ${types}))
 
       (func (export "testCatch") (result ${types})
-        try_table (catch $E 1)
+        try_table (catch $E 0)
           ${params.map((x) => `${constructor} ${x}`).join(" ")}
           throw $E
         end
@@ -204,7 +204,7 @@
       )
       (func (export "testCatchRef") (result ${types})
         (block (result ${types} exnref)
-          try_table (catch_ref $E 1)
+          try_table (catch_ref $E 0)
             ${params.map((x) => `${constructor} ${x}`).join(" ")}
             throw $E
           end
@@ -352,19 +352,23 @@
     (import "" "tag" (tag $tag))
     (import "" "throwJS" (func $throwJS (param externref)))
     (func $innerRethrow (param externref)
-      try_table (result exnref) (catch_ref $tag 0) (catch_all_ref 0)
-        local.get 0
-        call $throwJS
+      (block (result exnref)
+        try_table (catch_ref $tag 0) (catch_all_ref 0)
+          local.get 0
+          call $throwJS
+        end
         return
-      end
+      )
       throw_ref
     )
     (func (export "test") (param externref)
-      try_table (result exnref) (catch_ref $tag 0) (catch_all_ref 0)
-        local.get 0
-        call $innerRethrow
+      (block (result exnref)
+        try_table (catch_ref $tag 0) (catch_all_ref 0)
+          local.get 0
+          call $innerRethrow
+        end
         return
-      end
+      )
       throw_ref
     )
   )`, {"": {tag, throwJS}}).exports;
