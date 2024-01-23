@@ -326,6 +326,7 @@ export class FormAutofillSection {
       throw new Error("No fieldDetail for the focused input.");
     }
 
+    this.getAdaptedProfiles([profile]);
     if (!(await this.prepareFillingProfile(profile))) {
       this.log.debug("profile cannot be filled");
       return false;
@@ -1286,15 +1287,6 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
 
       profile["cc-number"] = decrypted;
     }
-    return true;
-  }
-
-  async autofillFields(profile) {
-    this.getAdaptedProfiles([profile]);
-    if (!(await super.autofillFields(profile))) {
-      return false;
-    }
-
     return true;
   }
 }
