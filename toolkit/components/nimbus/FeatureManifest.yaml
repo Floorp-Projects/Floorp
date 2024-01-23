@@ -98,22 +98,6 @@ search:
 
         If the key is not referenced in the search configuration, then no parameter
         will be added. Only the search team can update the configuration.
-    cbhStudyUs:
-      type: string
-      setPref:
-        branch: default
-        pref: browser.search.param.google_channel_us
-      description: >-
-        NOTE: Please use `extraParams` rather than this field.
-        A string pref set by Nimbus tests for US search cohort
-    cbhStudyRow:
-      type: string
-      setPref:
-        branch: default
-        pref: browser.search.param.google_channel_row
-      description: >-
-        NOTE: Please use `extraParams` rather than this field.
-        A string pref set by Nimbus tests for Rest of World (ROW) search cohort
     richSuggestionsFeatureGate:
       type: boolean
       setPref:
