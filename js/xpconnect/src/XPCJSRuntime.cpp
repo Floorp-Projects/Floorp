@@ -2587,6 +2587,9 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
     case JSUseCounter::WASM:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm);
       break;
+    case JSUseCounter::WASM_LEGACY_EXCEPTIONS:
+      SetUseCounter(obj, eUseCounter_custom_JS_wasm_legacy_exceptions);
+      break;
     case JSUseCounter::LATE_WEEKDAY:
       SetUseCounter(obj, eUseCounter_custom_JS_late_weekday);
       break;
