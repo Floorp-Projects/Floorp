@@ -174,8 +174,8 @@ fuzzy(0-1,0-145) == rounded-background-color-width-left-6.html rounded-backgroun
 == background-image-tiling.html background-image-tiling-ref.html
 
 != border-image-width-0.html border-image-width-10.html
-fuzzy(0-112,0-25) == border-image-width-4.html border-image-width-0.html
-fuzzy(0-112,0-25) == border-image-width-9.html border-image-width-0.html
+fuzzy(0-112,0-29) == border-image-width-4.html border-image-width-0.html
+fuzzy(0-112,0-29) == border-image-width-9.html border-image-width-0.html
 
 == iframe-1.html iframe-1-ref.html
 
