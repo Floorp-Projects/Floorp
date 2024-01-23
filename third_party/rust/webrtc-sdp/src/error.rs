@@ -36,27 +36,25 @@ impl fmt::Display for SdpParserInternalError {
         match *self {
             SdpParserInternalError::UnknownAddressType(ref unknown) => write!(
                 f,
-                "{}: {}",
-                INTERNAL_ERROR_MESSAGE_UNKNOWN_ADDRESS_TYPE, unknown
+                "{INTERNAL_ERROR_MESSAGE_UNKNOWN_ADDRESS_TYPE}: {unknown}"
             ),
             SdpParserInternalError::AddressTypeMismatch { found, expected } => write!(
                 f,
-                "{}: {}, {}",
-                INTERNAL_ERROR_MESSAGE_ADDRESS_TYPE_MISMATCH, found, expected
+                "{INTERNAL_ERROR_MESSAGE_ADDRESS_TYPE_MISMATCH}: {found}, {expected}"
             ),
-            SdpParserInternalError::Generic(ref message) => write!(f, "Parsing error: {}", message),
+            SdpParserInternalError::Generic(ref message) => write!(f, "Parsing error: {message}"),
             SdpParserInternalError::Unsupported(ref message) => {
-                write!(f, "Unsupported parsing error: {}", message)
+                write!(f, "Unsupported parsing error: {message}")
             }
             SdpParserInternalError::Integer(ref error) => {
-                write!(f, "Integer parsing error: {}", error)
+                write!(f, "Integer parsing error: {error}")
             }
-            SdpParserInternalError::Float(ref error) => write!(f, "Float parsing error: {}", error),
+            SdpParserInternalError::Float(ref error) => write!(f, "Float parsing error: {error}"),
             SdpParserInternalError::Domain(ref error) => {
-                write!(f, "Domain name parsing error: {}", error)
+                write!(f, "Domain name parsing error: {error}")
             }
             SdpParserInternalError::IpAddress(ref error) => {
-                write!(f, "IP address parsing error: {}", error)
+                write!(f, "IP address parsing error: {error}")
             }
         }
     }
@@ -101,33 +99,25 @@ impl Serialize for SdpParserError {
     {
         let mut state = serializer.serialize_struct(
             "error",
-            match *self {
+            match self {
                 SdpParserError::Sequence { .. } => 3,
                 _ => 4,
             },
         )?;
-        match *self {
-            SdpParserError::Line {
-                ref error,
-                ref line,
-                ..
-            } => {
+        match self {
+            SdpParserError::Line { error, line, .. } => {
                 state.serialize_field("type", "Line")?;
-                state.serialize_field("message", &format!("{}", error))?;
-                state.serialize_field("line", &line)?
+                state.serialize_field("message", &format!("{error}"))?;
+                state.serialize_field("line", line)?
             }
-            SdpParserError::Unsupported {
-                ref error,
-                ref line,
-                ..
-            } => {
+            SdpParserError::Unsupported { error, line, .. } => {
                 state.serialize_field("type", "Unsupported")?;
-                state.serialize_field("message", &format!("{}", error))?;
-                state.serialize_field("line", &line)?
+                state.serialize_field("message", &format!("{error}"))?;
+                state.serialize_field("line", line)?
             }
-            SdpParserError::Sequence { ref message, .. } => {
+            SdpParserError::Sequence { message, .. } => {
                 state.serialize_field("type", "Sequence")?;
-                state.serialize_field("message", &message)?;
+                state.serialize_field("message", message)?;
             }
         };
         state.serialize_field(
@@ -144,38 +134,31 @@ impl Serialize for SdpParserError {
 
 impl fmt::Display for SdpParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match self {
             SdpParserError::Line {
-                ref error,
-                ref line,
-                ref line_number,
-            } => write!(
-                f,
-                "Line error: {} in line({}): {}",
-                error, line_number, line
-            ),
+                error,
+                line,
+                line_number,
+            } => write!(f, "Line error: {error} in line({line_number}): {line}"),
             SdpParserError::Unsupported {
-                ref error,
-                ref line,
-                ref line_number,
-            } => write!(
-                f,
-                "Unsupported: {} in line({}): {}",
-                error, line_number, line
-            ),
+                error,
+                line,
+                line_number,
+            } => write!(f, "Unsupported: {error} in line({line_number}): {line}",),
             SdpParserError::Sequence {
-                ref message,
-                ref line_number,
-            } => write!(f, "Sequence error in line({}): {}", line_number, message),
+                message,
+                line_number,
+            } => write!(f, "Sequence error in line({line_number}): {message}"),
         }
     }
 }
 
 impl Error for SdpParserError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match *self {
-            SdpParserError::Line { ref error, .. }
-            | SdpParserError::Unsupported { ref error, .. } => Some(error),
+        match self {
+            SdpParserError::Line { error, .. } | SdpParserError::Unsupported { error, .. } => {
+                Some(error)
+            }
             // Can't tell much more about our internal errors
             _ => None,
         }
