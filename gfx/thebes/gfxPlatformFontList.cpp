@@ -1311,8 +1311,8 @@ class StartCmapLoadingRunnable : public mozilla::Runnable {
 
 void gfxPlatformFontList::StartCmapLoadingFromFamily(uint32_t aStartIndex) {
   AutoLock lock(mLock);
-  if (aStartIndex > mStartedLoadingCmapsFrom) {
-    // We already initiated cmap-loading from somewhere earlier in the list;
+  if (aStartIndex >= mStartedLoadingCmapsFrom) {
+    // We already initiated cmap-loading from here or earlier in the list;
     // no need to do it again here.
     return;
   }
