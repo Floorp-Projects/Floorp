@@ -982,12 +982,12 @@ async function assertVisibility({ message, visible, hidden }) {
     // First wait for the condition to be met.
     await waitForCondition(() => {
       for (const element of Object.values(visible)) {
-        if (element.hidden) {
+        if (BrowserTestUtils.isHidden(element)) {
           return false;
         }
       }
       for (const element of Object.values(hidden)) {
-        if (!element.hidden) {
+        if (BrowserTestUtils.isVisible(element)) {
           return false;
         }
       }
@@ -998,10 +998,10 @@ async function assertVisibility({ message, visible, hidden }) {
   }
   // Now report the conditions.
   for (const [name, element] of Object.entries(visible)) {
-    ok(!element.hidden, `${name} is visible.`);
+    ok(BrowserTestUtils.isVisible(element), `${name} is visible.`);
   }
   for (const [name, element] of Object.entries(hidden)) {
-    ok(element.hidden, `${name} is hidden.`);
+    ok(BrowserTestUtils.isHidden(element), `${name} is hidden.`);
   }
 }
 
