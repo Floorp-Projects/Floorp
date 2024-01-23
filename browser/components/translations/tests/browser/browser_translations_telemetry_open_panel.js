@@ -22,7 +22,7 @@ add_task(async function test_translations_telemetry_open_panel() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
@@ -52,7 +52,7 @@ add_task(async function test_translations_telemetry_open_panel() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();

@@ -35,7 +35,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -66,7 +66,8 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelUnsupportedLanguageView,
+      onOpenPanel:
+        FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
     });
 
     info("Destroy the engine process so that an error will happen.");
@@ -75,7 +76,7 @@ add_task(
     await navigate("Navigate back to a Spanish page.", {
       url: SPANISH_PAGE_URL_DOT_ORG,
       downloadHandler: rejectDownloads,
-      onOpenPanel: assertPanelErrorView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewError,
     });
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);

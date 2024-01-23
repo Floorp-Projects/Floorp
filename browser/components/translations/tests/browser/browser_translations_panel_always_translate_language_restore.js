@@ -23,7 +23,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -57,7 +57,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
 
     await FullPageTranslationsTestUtils.clickRestoreButton();
@@ -70,7 +70,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 

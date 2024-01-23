@@ -25,7 +25,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await FullPageTranslationsTestUtils.clickTranslateButton({
@@ -39,7 +39,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 

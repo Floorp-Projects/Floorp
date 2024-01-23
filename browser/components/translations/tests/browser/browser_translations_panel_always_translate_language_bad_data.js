@@ -14,7 +14,7 @@ add_task(async function test_always_translate_with_bad_data() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     openFromAppMenu: true,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();

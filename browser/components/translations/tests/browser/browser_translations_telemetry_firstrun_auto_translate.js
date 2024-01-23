@@ -22,7 +22,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
   await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
@@ -75,7 +75,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelRevisitView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
   });
 
   await FullPageTranslationsTestUtils.clickRestoreButton();

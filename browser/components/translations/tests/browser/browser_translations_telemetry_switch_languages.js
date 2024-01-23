@@ -20,7 +20,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   FullPageTranslationsTestUtils.assertSelectedFromLanguage("es");
@@ -96,7 +96,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   FullPageTranslationsTestUtils.assertSelectedToLanguage("en");

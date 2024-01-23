@@ -23,7 +23,7 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -83,7 +83,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await FullPageTranslationsTestUtils.clickTranslateButton({
@@ -97,7 +97,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -162,7 +162,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -193,7 +193,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 

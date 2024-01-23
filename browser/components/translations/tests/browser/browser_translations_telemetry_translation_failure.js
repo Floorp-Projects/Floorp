@@ -45,7 +45,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
@@ -61,7 +61,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.clickTranslateButton({
       downloadHandler: rejectDownloads,
-      onOpenPanel: assertPanelErrorView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewError,
     });
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
@@ -140,7 +140,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
   await navigate("Navigate to a Spanish page", {
     url: SPANISH_PAGE_URL,
     downloadHandler: rejectDownloads,
-    onOpenPanel: assertPanelErrorView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewError,
   });
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);

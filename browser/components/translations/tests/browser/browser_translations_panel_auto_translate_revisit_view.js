@@ -30,7 +30,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -61,7 +61,8 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelUnsupportedLanguageView,
+      onOpenPanel:
+        FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
     });
 
     await navigate("Navigate back to the Spanish page.", {
@@ -77,7 +78,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
 
     await cleanup();

@@ -19,7 +19,7 @@ add_task(async function test_translations_panel_a11y_focus() {
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     openWithKeyboard: true,
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   is(

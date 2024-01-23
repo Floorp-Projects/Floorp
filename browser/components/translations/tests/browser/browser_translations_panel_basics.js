@@ -23,7 +23,7 @@ add_task(async function test_translations_panel_basics() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   const panel = document.getElementById("translations-panel");
@@ -39,7 +39,7 @@ add_task(async function test_translations_panel_basics() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelLoadingView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewLoading,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
@@ -53,7 +53,7 @@ add_task(async function test_translations_panel_basics() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelRevisitView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
   });
 
   await FullPageTranslationsTestUtils.clickRestoreButton();

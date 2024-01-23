@@ -25,7 +25,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
   await FullPageTranslationsTestUtils.assertIsAlwaysOfferTranslationsEnabled(
@@ -55,7 +55,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.assertIsAlwaysOfferTranslationsEnabled(
     true
@@ -89,7 +89,10 @@ add_task(async function test_translations_panel_auto_offer_settings() {
 
   await navigate(
     "Wait for the popup to be shown when navigating to a different host.",
-    { url: SPANISH_PAGE_URL_DOT_ORG, onOpenPanel: assertPanelDefaultView }
+    {
+      url: SPANISH_PAGE_URL_DOT_ORG,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
+    }
   );
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {

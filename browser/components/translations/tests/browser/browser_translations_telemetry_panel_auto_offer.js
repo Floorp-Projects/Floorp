@@ -50,7 +50,7 @@ add_task(async function test_translations_panel_auto_offer() {
 
   await navigate("Navigate to a page on a different domain.", {
     url: SPANISH_PAGE_URL_DOT_ORG,
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
