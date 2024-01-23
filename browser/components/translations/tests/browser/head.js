@@ -32,6 +32,20 @@ const getIntlDisplayName = (() => {
  */
 class FullPageTranslationsTestUtils {
   /**
+   * A collection of element visibility expectations for the default panel view.
+   */
+  static #defaultViewVisibilityExpectations = {
+    cancelButton: true,
+    fromMenuList: true,
+    fromLabel: true,
+    header: true,
+    langSelection: true,
+    toMenuList: true,
+    toLabel: true,
+    translateButton: true,
+  };
+
+  /**
    * Asserts that the state of a checkbox with a given dataL10nId is
    * checked or not, based on the value of expected being true or false.
    *
@@ -251,6 +265,200 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Asserts that for each provided expectation, the visible state of the corresponding
+   * element in TranslationsPanel.elements both exists and matches the visibility expectation.
+   *
+   * @param {object} expectations
+   *   A list of expectations for the visibility of any subset of TranslationsPanel.elements
+   */
+  static #assertPanelElementVisibility(expectations = {}) {
+    // Assume nothing is visible by default, and overwrite them
+    // with any specific expectations provided in the argument.
+    const finalExpectations = {
+      cancelButton: false,
+      changeSourceLanguageButton: false,
+      dismissErrorButton: false,
+      error: false,
+      fromMenuList: false,
+      fromLabel: false,
+      header: false,
+      intro: false,
+      introLearnMoreLink: false,
+      langSelection: false,
+      restoreButton: false,
+      toLabel: false,
+      toMenuList: false,
+      translateButton: false,
+      unsupportedHeader: false,
+      unsupportedHint: false,
+      unsupportedLearnMoreLink: false,
+      ...expectations,
+    };
+    const elements = TranslationsPanel.elements;
+    for (const propertyName in finalExpectations) {
+      ok(
+        elements.hasOwnProperty(propertyName),
+        `Expected translations panel elements to have property ${propertyName}`
+      );
+      if (finalExpectations.hasOwnProperty(propertyName)) {
+        assertIsVisible(finalExpectations[propertyName], {
+          element: elements[propertyName],
+        });
+      }
+    }
+  }
+
+  /**
+   * Asserts that the TranslationsPanel header has the expected l10nId.
+   *
+   * @param {string} l10nId - The expected data-l10n-id of the header.
+   */
+  static #assertPanelHeaderL10nId(l10nId) {
+    const { header } = TranslationsPanel.elements;
+    is(
+      header.getAttribute("data-l10n-id"),
+      l10nId,
+      "The translations panel header should match the expected data-l10n-id"
+    );
+  }
+
+  /**
+   * Asserts that the mainViewId of the panel matches the given string.
+   *
+   * @param {string} expectedId
+   */
+  static #assertPanelMainViewId(expectedId) {
+    const mainViewId =
+      TranslationsPanel.elements.multiview.getAttribute("mainViewId");
+    is(
+      mainViewId,
+      expectedId,
+      "The full-page Translations panel mainViewId should match its expected value"
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the default panel view.
+   */
+  static assertPanelViewDefault() {
+    info("Checking that the panel shows the default view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
+    });
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-header"
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the panel error view.
+   */
+  static assertPanelViewError() {
+    info("Checking that the panel shows the error view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      error: true,
+      ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
+    });
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-header"
+    );
+  }
+
+  /**
+   * Asserts that the panel element visibility matches the panel loading view.
+   */
+  static assertPanelViewLoading() {
+    info("Checking that the panel shows the loading view");
+    FullPageTranslationsTestUtils.assertPanelViewDefault();
+    const loadingButton = getByL10nId(
+      "translations-panel-translate-button-loading"
+    );
+    ok(loadingButton, "The loading button is present");
+    ok(loadingButton.disabled, "The loading button is disabled");
+  }
+
+  /**
+   * Asserts that panel element visibility matches the panel first-show view.
+   */
+  static assertPanelViewFirstShow() {
+    info("Checking that the panel shows the first-show view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      intro: true,
+      introLearnMoreLink: true,
+      ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
+    });
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-intro-header"
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the panel first-show error view.
+   */
+  static assertPanelViewFirstShowError() {
+    info("Checking that the panel shows the first-show error view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      error: true,
+      intro: true,
+      introLearnMoreLink: true,
+      ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
+    });
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-intro-header"
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the panel revisit view.
+   */
+  static assertPanelViewRevisit() {
+    info("Checking that the panel shows the revisit view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      header: true,
+      langSelection: true,
+      restoreButton: true,
+      toLabel: true,
+      toMenuList: true,
+      translateButton: true,
+    });
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-revisit-header"
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the panel unsupported language view.
+   */
+  static assertPanelViewUnsupportedLanguage() {
+    info("Checking that the panel shows the unsupported-language view");
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "translations-panel-view-unsupported-language"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      changeSourceLanguageButton: true,
+      dismissErrorButton: true,
+      unsupportedHeader: true,
+      unsupportedHint: true,
+      unsupportedLearnMoreLink: true,
+    });
+  }
+
+  /**
    * Asserts that the selected from-language matches the provided language tag.
    *
    * @param {string} langTag - A BCP-47 language tag.
@@ -391,7 +599,9 @@ class FullPageTranslationsTestUtils {
           "Click the change-source-language button"
         );
       },
-      firstShow ? assertPanelFirstShowView : assertPanelDefaultView
+      firstShow
+        ? FullPageTranslationsTestUtils.assertPanelViewFirstShow
+        : FullPageTranslationsTestUtils.assertPanelViewDefault
     );
   }
 
@@ -676,192 +886,6 @@ function logAction(...params) {
       ""
     )}`
   );
-}
-
-/**
- * Asserts that for each provided expectation, the visible state of the corresponding
- * element in TranslationsPanel.elements both exists and matches the visibility expectation.
- *
- * @param {object} expectations
- *   A list of expectations for the visibility of any subset of TranslationsPanel.elements
- */
-function assertPanelElementVisibility(expectations = {}) {
-  // Assume nothing is visible by default, and overwrite them
-  // with any specific expectations provided in the argument.
-  const finalExpectations = {
-    cancelButton: false,
-    changeSourceLanguageButton: false,
-    dismissErrorButton: false,
-    error: false,
-    fromMenuList: false,
-    fromLabel: false,
-    header: false,
-    intro: false,
-    introLearnMoreLink: false,
-    langSelection: false,
-    restoreButton: false,
-    toLabel: false,
-    toMenuList: false,
-    translateButton: false,
-    unsupportedHeader: false,
-    unsupportedHint: false,
-    unsupportedLearnMoreLink: false,
-    ...expectations,
-  };
-  const elements = TranslationsPanel.elements;
-  for (const propertyName in finalExpectations) {
-    ok(
-      elements.hasOwnProperty(propertyName),
-      `Expected translations panel elements to have property ${propertyName}`
-    );
-    if (finalExpectations.hasOwnProperty(propertyName)) {
-      assertIsVisible(finalExpectations[propertyName], {
-        element: elements[propertyName],
-      });
-    }
-  }
-}
-
-/**
- * Asserts that the mainViewId of the panel matches the given string.
- *
- * @param {string} expectedId
- */
-function assertPanelMainViewId(expectedId) {
-  const mainViewId =
-    TranslationsPanel.elements.multiview.getAttribute("mainViewId");
-  is(
-    mainViewId,
-    expectedId,
-    "The TranslationsPanel mainViewId should match its expected value"
-  );
-}
-
-/**
- * A collection of element visibility expectations for the default panel view.
- */
-const defaultViewVisibilityExpectations = {
-  cancelButton: true,
-  fromMenuList: true,
-  fromLabel: true,
-  header: true,
-  langSelection: true,
-  toMenuList: true,
-  toLabel: true,
-  translateButton: true,
-};
-
-/**
- * Asserts that the TranslationsPanel header has the expected l10nId.
- *
- * @param {string} l10nId - The expected data-l10n-id of the header.
- */
-function assertDefaultHeaderL10nId(l10nId) {
-  const { header } = TranslationsPanel.elements;
-  is(
-    header.getAttribute("data-l10n-id"),
-    l10nId,
-    "The translations panel header should match the expected data-l10n-id"
-  );
-}
-
-/**
- * Asserts that panel element visibility matches the default panel view.
- */
-function assertPanelDefaultView() {
-  info("Checking that the panel shows the default view");
-  assertPanelMainViewId("translations-panel-view-default");
-  assertPanelElementVisibility({
-    ...defaultViewVisibilityExpectations,
-  });
-  assertDefaultHeaderL10nId("translations-panel-header");
-}
-
-/**
- * Asserts that the panel element visibility matches the panel loading view.
- */
-function assertPanelLoadingView() {
-  info("Checking that the panel shows the loading view");
-  assertPanelDefaultView();
-  const loadingButton = getByL10nId(
-    "translations-panel-translate-button-loading"
-  );
-  ok(loadingButton, "The loading button is present");
-  ok(loadingButton.disabled, "The loading button is disabled");
-}
-
-/**
- * Asserts that panel element visibility matches the panel error view.
- */
-function assertPanelErrorView() {
-  info("Checking that the panel shows the error view");
-  assertPanelMainViewId("translations-panel-view-default");
-  assertPanelElementVisibility({
-    error: true,
-    ...defaultViewVisibilityExpectations,
-  });
-  assertDefaultHeaderL10nId("translations-panel-header");
-}
-
-/**
- * Asserts that panel element visibility matches the panel first-show view.
- */
-function assertPanelFirstShowView() {
-  info("Checking that the panel shows the first-show view");
-  assertPanelMainViewId("translations-panel-view-default");
-  assertPanelElementVisibility({
-    intro: true,
-    introLearnMoreLink: true,
-    ...defaultViewVisibilityExpectations,
-  });
-  assertDefaultHeaderL10nId("translations-panel-intro-header");
-}
-
-/**
- * Asserts that panel element visibility matches the panel first-show error view.
- */
-function assertPanelFirstShowErrorView() {
-  info("Checking that the panel shows the first-show error view");
-  assertPanelMainViewId("translations-panel-view-default");
-  assertPanelElementVisibility({
-    error: true,
-    intro: true,
-    introLearnMoreLink: true,
-    ...defaultViewVisibilityExpectations,
-  });
-  assertDefaultHeaderL10nId("translations-panel-intro-header");
-}
-
-/**
- * Asserts that panel element visibility matches the panel revisit view.
- */
-function assertPanelRevisitView() {
-  info("Checking that the panel shows the revisit view");
-  assertPanelMainViewId("translations-panel-view-default");
-  assertPanelElementVisibility({
-    header: true,
-    langSelection: true,
-    restoreButton: true,
-    toLabel: true,
-    toMenuList: true,
-    translateButton: true,
-  });
-  assertDefaultHeaderL10nId("translations-panel-revisit-header");
-}
-
-/**
- * Asserts that panel element visibility matches the panel unsupported language view.
- */
-function assertPanelUnsupportedLanguageView() {
-  info("Checking that the panel shows the unsupported-language view");
-  assertPanelMainViewId("translations-panel-view-unsupported-language");
-  assertPanelElementVisibility({
-    changeSourceLanguageButton: true,
-    dismissErrorButton: true,
-    unsupportedHeader: true,
-    unsupportedHint: true,
-    unsupportedLearnMoreLink: true,
-  });
 }
 
 /**

@@ -21,7 +21,8 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelUnsupportedLanguageView,
+      onOpenPanel:
+        FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
     });
 
     await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
@@ -84,7 +85,8 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelUnsupportedLanguageView,
+      onOpenPanel:
+        FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
     });
 
     await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {

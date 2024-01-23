@@ -18,7 +18,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_language() {
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     openFromAppMenu: true,
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -51,7 +51,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -68,7 +68,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await FullPageTranslationsTestUtils.assertIsNeverTranslateSite(

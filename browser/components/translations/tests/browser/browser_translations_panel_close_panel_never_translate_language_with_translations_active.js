@@ -19,7 +19,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -40,7 +40,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
@@ -78,7 +78,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -99,7 +99,7 @@ add_task(
     );
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
-      onOpenPanel: assertPanelRevisitView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
@@ -118,7 +118,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
-      onOpenPanel: assertPanelDefaultView,
+      onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {

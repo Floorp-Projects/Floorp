@@ -22,13 +22,13 @@ add_task(async function test_translations_panel_firstrun() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
@@ -38,7 +38,7 @@ add_task(async function test_translations_panel_firstrun() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
@@ -48,7 +48,7 @@ add_task(async function test_translations_panel_firstrun() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();

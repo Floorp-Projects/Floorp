@@ -27,7 +27,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelDefaultView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
@@ -58,7 +58,8 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
     openFromAppMenu: true,
-    onOpenPanel: assertPanelUnsupportedLanguageView,
+    onOpenPanel:
+      FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
   });
   await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("fr", {
     checked: false,

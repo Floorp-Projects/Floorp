@@ -26,7 +26,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
@@ -43,7 +43,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
 
   await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: rejectDownloads,
-    onOpenPanel: assertPanelFirstShowErrorView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShowError,
   });
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
@@ -114,7 +114,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {

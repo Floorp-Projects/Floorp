@@ -97,7 +97,7 @@ add_task(async function test_translations_panel_fuzzing() {
           "The button is available."
         );
         await FullPageTranslationsTestUtils.openTranslationsPanel({
-          onOpenPanel: assertPanelDefaultView,
+          onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
         });
 
         await FullPageTranslationsTestUtils.clickTranslateButton();
@@ -196,7 +196,7 @@ add_task(async function test_translations_panel_fuzzing() {
       if (activeTab === "spanish" && isSpanishPageTranslated) {
         reportOperation("restoreSpanishPage");
         await FullPageTranslationsTestUtils.openTranslationsPanel({
-          onOpenPanel: assertPanelRevisitView,
+          onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
         });
 
         await FullPageTranslationsTestUtils.clickRestoreButton();

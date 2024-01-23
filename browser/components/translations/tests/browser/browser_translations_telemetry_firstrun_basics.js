@@ -24,7 +24,7 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
   );
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
@@ -57,7 +57,7 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
   });
 
   await FullPageTranslationsTestUtils.openTranslationsPanel({
-    onOpenPanel: assertPanelFirstShowView,
+    onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
