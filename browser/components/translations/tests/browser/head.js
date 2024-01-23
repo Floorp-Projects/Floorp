@@ -26,7 +26,7 @@ function assertIsVisible(expected, { element, id }) {
 
   if (element) {
     return is(
-      isVisible(element),
+      BrowserTestUtils.isVisible(element),
       expected,
       `Expected element with id '${element.id}' to be ${
         expected ? "visible" : "invisible"
@@ -143,7 +143,7 @@ function getByL10nId(l10nId, doc = document) {
     throw new Error("Could not find the element by l10n id: " + l10nId);
   }
   for (const element of elements) {
-    if (isVisible(element)) {
+    if (BrowserTestUtils.isVisible(element)) {
       return element;
     }
   }
@@ -188,7 +188,7 @@ function maybeGetById(id, ensureIsVisible = true, doc = document) {
     return element;
   }
 
-  if (isVisible(element)) {
+  if (BrowserTestUtils.isVisible(element)) {
     return element;
   }
 
@@ -205,26 +205,11 @@ function maybeGetByL10nId(l10nId, doc = document) {
   const selector = `[data-l10n-id="${l10nId}"]`;
   const elements = doc.querySelectorAll(selector);
   for (const element of elements) {
-    if (isVisible(element)) {
+    if (BrowserTestUtils.isVisible(element)) {
       return element;
     }
   }
   return null;
-}
-
-/**
- * Returns whether an element's computed style is visible.
- *
- * @param {Element} element - The element to check.
- * @returns {boolean}
- */
-function isVisible(element) {
-  if (element.offsetParent === null) {
-    return false;
-  }
-  const win = element.ownerDocument.ownerGlobal;
-  const { visibility, display } = win.getComputedStyle(element);
-  return visibility === "visible" && display !== "none";
 }
 
 /**
