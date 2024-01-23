@@ -3241,13 +3241,15 @@ modules:
         description: The application update services.
         includes:
           - toolkit/mozapps/update/**/*
-        meta: {}
         owners:
           - *bytesized
         peers:
           - *mhowell
-          - *agashlin
         machine_name: application_update
+        meta:
+          peers_emeritus:
+            - *agashlin
+
 
       - name: Bookmarks & History
         description: The bookmarks and history services (Places).
