@@ -1074,11 +1074,11 @@ modules:
     meta:
       owners_emeritus:
         - Brendan Eich
+        - Kate Hudson
     owners:
       - *bholley
       - *overholt
       - *mossop
-      - *k88hudson
       - *nalexander
       - *nika
     peers: []
