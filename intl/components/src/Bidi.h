@@ -7,13 +7,7 @@
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/intl/ICU4CGlue.h"
 
-#define USE_RUST_UNICODE_BIDI 1
-
-#if USE_RUST_UNICODE_BIDI
-#  include "mozilla/intl/unicode_bidi_ffi_generated.h"
-#else
 struct UBiDi;
-#endif
 
 namespace mozilla::intl {
 
@@ -122,9 +116,9 @@ class Bidi final {
   enum class BaseDirection { LTR, RTL, Neutral };
 
   /**
-   * Get the base direction of the text.
+   * Get the base direction of the paragraph.
    */
-  static BaseDirection GetBaseDirection(Span<const char16_t> aText);
+  static BaseDirection GetBaseDirection(Span<const char16_t> aParagraph);
 
   /**
    * Get one run's logical start, length, and directionality. In an RTL run, the
@@ -148,15 +142,6 @@ class Bidi final {
                              int32_t* aLength);
 
  private:
-#if USE_RUST_UNICODE_BIDI
-  using UnicodeBidi = mozilla::intl::ffi::UnicodeBidi;
-  struct BidiFreePolicy {
-    void operator()(void* aPtr) {
-      bidi_destroy(static_cast<UnicodeBidi*>(aPtr));
-    }
-  };
-  mozilla::UniquePtr<UnicodeBidi, BidiFreePolicy> mBidi;
-#else
   ICUPointer<UBiDi> mBidi = ICUPointer<UBiDi>(nullptr);
 
   /**
@@ -169,7 +154,6 @@ class Bidi final {
    * The length of the paragraph from `Bidi::SetParagraph`.
    */
   int32_t mLength = 0;
-#endif
 };
 
 }  // namespace mozilla::intl

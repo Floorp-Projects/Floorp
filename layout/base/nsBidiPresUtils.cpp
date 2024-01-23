@@ -997,12 +997,10 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
       if (++numRun >= runCount) {
         // We've run out of runs of text; but don't forget to store bidi data
         // to the frame before breaking out of the loop (bug 1426042).
-        if (frame != NS_BIDI_CONTROL_FRAME) {
-          storeBidiDataToFrame();
-          if (isTextFrame) {
-            frame->AdjustOffsetsForBidi(contentOffset,
-                                        contentOffset + fragmentLength);
-          }
+        storeBidiDataToFrame();
+        if (isTextFrame) {
+          frame->AdjustOffsetsForBidi(contentOffset,
+                                      contentOffset + fragmentLength);
         }
         break;
       }
