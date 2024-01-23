@@ -111,7 +111,7 @@ class MessagePortIdentifierRunnable final : public WorkerRunnable {
   MessagePortIdentifierRunnable(WorkerPrivate* aWorkerPrivate,
                                 RemoteWorkerChild* aActor,
                                 const MessagePortIdentifier& aPortIdentifier)
-      : WorkerRunnable(aWorkerPrivate),
+      : WorkerRunnable(aWorkerPrivate, "MessagePortIdentifierRunnable"),
         mActor(aActor),
         mPortIdentifier(aPortIdentifier) {}
 

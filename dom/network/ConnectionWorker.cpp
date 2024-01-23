@@ -109,7 +109,7 @@ class ShutdownRunnable : public WorkerMainThreadRunnable {
   }
 };
 
-class NotifyRunnable : public WorkerRunnable {
+class NotifyRunnable final : public WorkerRunnable {
  private:
   RefPtr<ConnectionProxy> mProxy;
 
@@ -120,7 +120,7 @@ class NotifyRunnable : public WorkerRunnable {
  public:
   NotifyRunnable(WorkerPrivate* aWorkerPrivate, ConnectionProxy* aProxy,
                  ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway)
-      : WorkerRunnable(aWorkerPrivate),
+      : WorkerRunnable(aWorkerPrivate, "NotifyRunnable"),
         mProxy(aProxy),
         mConnectionType(aType),
         mIsWifi(aIsWifi),
