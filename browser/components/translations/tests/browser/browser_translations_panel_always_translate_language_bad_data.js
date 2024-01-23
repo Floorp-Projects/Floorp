@@ -19,7 +19,7 @@ add_task(async function test_always_translate_with_bad_data() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsAlwaysTranslateLanguage("en", {
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("en", {
     checked: false,
     disabled: true,
   });

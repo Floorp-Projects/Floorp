@@ -26,11 +26,15 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsAlwaysTranslateLanguage("es", { checked: false });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: false,
+  });
   await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
   });
-  await assertIsAlwaysTranslateLanguage("es", { checked: true });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: true,
+  });
 
   await FullPageTranslationsTestUtils.assertPageIsTranslated(
     "es",
@@ -56,9 +60,13 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsAlwaysTranslateLanguage("es", { checked: true });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: true,
+  });
   await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage();
-  await assertIsAlwaysTranslateLanguage("es", { checked: false });
+  await FullPageTranslationsTestUtils.assertIsAlwaysTranslateLanguage("es", {
+    checked: false,
+  });
 
   await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },

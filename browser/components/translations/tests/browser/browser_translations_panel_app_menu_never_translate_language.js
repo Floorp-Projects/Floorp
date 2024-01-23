@@ -28,9 +28,13 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await assertIsNeverTranslateLanguage("es", { checked: true });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
+    checked: true,
+  });
   await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
-  await assertIsNeverTranslateLanguage("es", { checked: false });
+  await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
+    checked: false,
+  });
 
   await cleanup();
 });
