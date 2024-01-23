@@ -33,6 +33,7 @@
 #include "js/GCAPI.h"               // JS::AutoSuppressGCAnalysis
 #include "js/RegExpFlags.h"         // JS::RegExpFlags
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "js/Utility.h"             // JS::AutoEnterOOMUnsafeRegion
 #include "js/Wrapper.h"
 #include "proxy/DOMProxy.h"  // js::GetDOMProxyHandlerFamily
 #include "proxy/ScriptedProxyHandler.h"
@@ -5695,11 +5696,13 @@ static bool IsArrayIteratorPrototypeOptimizable(
     JSContext* cx, AllowIteratorReturn allowReturn,
     MutableHandle<NativeObject*> arrIterProto, uint32_t* slot,
     MutableHandle<JSFunction*> nextFun) {
-  auto* proto =
-      GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global());
-  if (!proto) {
-    cx->recoverFromOutOfMemory();
-    return false;
+  NativeObject* proto = nullptr;
+  {
+    AutoEnterOOMUnsafeRegion oom;
+    proto = GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global());
+    if (!proto) {
+      oom.crash("failed to allocate Array iterator prototype");
+    }
   }
   arrIterProto.set(proto);
 
