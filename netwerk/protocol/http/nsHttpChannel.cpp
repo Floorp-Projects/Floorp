@@ -737,8 +737,9 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   }
 
   if (aShouldUpgrade && !mURI->SchemeIs("https")) {
-    Telemetry::Accumulate(Telemetry::HTTPS_UPGRADE_WITH_HTTPS_RR,
-                          aUpgradeWithHTTPSRR);
+    mozilla::glean::networking::https_upgrade_with_https_rr
+        .Get(aUpgradeWithHTTPSRR ? "https_rr"_ns : "others"_ns)
+        .Add(1);
     return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
   }
 
@@ -7328,10 +7329,14 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     }
 
     if (HTTPS_RR_IS_USED(stage)) {
-      Telemetry::Accumulate(
-          Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR,
-          LoadEchConfigUsed() ? "echConfig-used"_ns : "echConfig-not-used"_ns,
-          NS_SUCCEEDED(mStatus));
+      nsAutoCString suffix(LoadEchConfigUsed() ? "_ech_used" : "");
+      // Determine the result string based on the status.
+      nsAutoCString result(NS_SUCCEEDED(mStatus) ? "success" : "failure");
+      result.Append(suffix);
+
+      mozilla::glean::networking::http_channel_onstart_success_https_rr
+          .Get(result)
+          .Add(1);
       StoreHasHTTPSRR(true);
     }
 
@@ -7483,8 +7488,8 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
 static void ReportHTTPSRRTelemetry(
     const Maybe<nsCOMPtr<nsIDNSHTTPSSVCRecord>>& aMaybeRecord) {
   bool hasHTTPSRR = aMaybeRecord && (aMaybeRecord.ref() != nullptr);
-  Telemetry::Accumulate(Telemetry::HTTPS_RR_PRESENTED, hasHTTPSRR);
   if (!hasHTTPSRR) {
+    mozilla::glean::networking::https_rr_presented.Get("none"_ns).Add(1);
     return;
   }
 
@@ -7497,7 +7502,9 @@ static void ReportHTTPSRRTelemetry(
     Maybe<std::tuple<nsCString, SupportedAlpnRank>> alpn =
         svcbRecord->GetAlpn();
     bool isHttp3 = alpn ? IsHttp3(std::get<1>(*alpn)) : false;
-    Telemetry::Accumulate(Telemetry::HTTPS_RR_WITH_HTTP3_PRESENTED, isHttp3);
+    mozilla::glean::networking::https_rr_presented
+        .Get(isHttp3 ? "presented_with_http3"_ns : "presented"_ns)
+        .Add(1);
   }
 }
 
