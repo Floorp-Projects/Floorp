@@ -236,7 +236,7 @@ bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 
 bool WasmGcObject::lookUpProperty(JSContext* cx, Handle<WasmGcObject*> obj,
                                   jsid id, WasmGcObject::PropOffset* offset,
-                                  FieldType* type) {
+                                  StorageType* type) {
   switch (obj->kind()) {
     case wasm::TypeDefKind::Struct: {
       const auto& structType = obj->typeDef().structType();
@@ -284,7 +284,7 @@ bool WasmGcObject::lookUpProperty(JSContext* cx, Handle<WasmGcObject*> obj,
 bool WasmGcObject::loadValue(JSContext* cx, Handle<WasmGcObject*> obj, jsid id,
                              MutableHandleValue vp) {
   WasmGcObject::PropOffset offset;
-  FieldType type;
+  StorageType type;
   if (!lookUpProperty(cx, obj, id, &offset, &type)) {
     return false;
   }
@@ -331,30 +331,30 @@ bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static void WriteValTo(const Val& val, FieldType ty, void* dest) {
+static void WriteValTo(const Val& val, StorageType ty, void* dest) {
   switch (ty.kind()) {
-    case FieldType::I8:
+    case StorageType::I8:
       *((uint8_t*)dest) = val.i32();
       break;
-    case FieldType::I16:
+    case StorageType::I16:
       *((uint16_t*)dest) = val.i32();
       break;
-    case FieldType::I32:
+    case StorageType::I32:
       *((uint32_t*)dest) = val.i32();
       break;
-    case FieldType::I64:
+    case StorageType::I64:
       *((uint64_t*)dest) = val.i64();
       break;
-    case FieldType::F32:
+    case StorageType::F32:
       *((float*)dest) = val.f32();
       break;
-    case FieldType::F64:
+    case StorageType::F64:
       *((double*)dest) = val.f64();
       break;
-    case FieldType::V128:
+    case StorageType::V128:
       *((V128*)dest) = val.v128();
       break;
-    case FieldType::Ref:
+    case StorageType::Ref:
       *((GCPtr<AnyRef>*)dest) = val.ref();
       break;
   }
@@ -730,7 +730,7 @@ size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
 
 void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   const StructType& structType = typeDef().structType();
-  FieldType fieldType = structType.fields_[fieldIndex].type;
+  StorageType fieldType = structType.fields_[fieldIndex].type;
   uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
 
   MOZ_ASSERT(fieldIndex < structType.fields_.length());

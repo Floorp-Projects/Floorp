@@ -3860,13 +3860,13 @@ class FunctionCompiler {
 
   /******************************** WasmGC: low level load/store helpers ***/
 
-  // Given a (FieldType, FieldExtension) pair, produce the (MIRType,
+  // Given a (StorageType, FieldExtension) pair, produce the (MIRType,
   // MWideningOp) pair that will give the correct operation for reading the
   // value from memory.
-  static void fieldLoadInfoToMIR(FieldType type, FieldWideningOp wideningOp,
+  static void fieldLoadInfoToMIR(StorageType type, FieldWideningOp wideningOp,
                                  MIRType* mirType, MWideningOp* mirWideningOp) {
     switch (type.kind()) {
-      case FieldType::I8: {
+      case StorageType::I8: {
         switch (wideningOp) {
           case FieldWideningOp::Signed:
             *mirType = MIRType::Int32;
@@ -3880,7 +3880,7 @@ class FunctionCompiler {
             MOZ_CRASH();
         }
       }
-      case FieldType::I16: {
+      case StorageType::I16: {
         switch (wideningOp) {
           case FieldWideningOp::Signed:
             *mirType = MIRType::Int32;
@@ -3907,13 +3907,13 @@ class FunctionCompiler {
     }
   }
 
-  // Given a FieldType, produce the MNarrowingOp required for writing the
+  // Given a StorageType, produce the MNarrowingOp required for writing the
   // value to memory.
-  static MNarrowingOp fieldStoreInfoToMIR(FieldType type) {
+  static MNarrowingOp fieldStoreInfoToMIR(StorageType type) {
     switch (type.kind()) {
-      case FieldType::I8:
+      case StorageType::I8:
         return MNarrowingOp::To8;
-      case FieldType::I16:
+      case StorageType::I16:
         return MNarrowingOp::To16;
       default:
         return MNarrowingOp::None;
@@ -3926,7 +3926,7 @@ class FunctionCompiler {
   // barrier.  `keepAlive` will be referenced by the instruction so as to hold
   // it live (from the GC's point of view).
   [[nodiscard]] bool writeGcValueAtBasePlusOffset(
-      uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
+      uint32_t lineOrBytecode, StorageType fieldType, MDefinition* keepAlive,
       AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
       uint32_t offset, bool needsTrapInfo, WasmPreBarrierKind preBarrierKind) {
     MOZ_ASSERT(aliasBitset != 0);
@@ -3979,7 +3979,7 @@ class FunctionCompiler {
   // to the post-write barrier.  `keepAlive` will be referenced by the
   // instruction so as to hold it live (from the GC's point of view).
   [[nodiscard]] bool writeGcValueAtBasePlusScaledIndex(
-      uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
+      uint32_t lineOrBytecode, StorageType fieldType, MDefinition* keepAlive,
       AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
       uint32_t scale, MDefinition* index, WasmPreBarrierKind preBarrierKind) {
     MOZ_ASSERT(aliasBitset != 0);
@@ -4011,7 +4011,7 @@ class FunctionCompiler {
   // and `fieldWideningOp`.  `keepAlive` will be referenced by the instruction
   // so as to hold it live (from the GC's point of view).
   [[nodiscard]] MDefinition* readGcValueAtBasePlusOffset(
-      FieldType fieldType, FieldWideningOp fieldWideningOp,
+      StorageType fieldType, FieldWideningOp fieldWideningOp,
       MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
       uint32_t offset, bool needsTrapInfo) {
     MOZ_ASSERT(aliasBitset != 0);
@@ -4038,7 +4038,7 @@ class FunctionCompiler {
   // `fieldType` and `fieldWideningOp`.  `keepAlive` will be referenced by the
   // instruction so as to hold it live (from the GC's point of view).
   [[nodiscard]] MDefinition* readGcValueAtBasePlusScaledIndex(
-      FieldType fieldType, FieldWideningOp fieldWideningOp,
+      StorageType fieldType, FieldWideningOp fieldWideningOp,
       MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
       uint32_t scale, MDefinition* index) {
     MOZ_ASSERT(aliasBitset != 0);
@@ -4133,7 +4133,7 @@ class FunctionCompiler {
       uint32_t lineOrBytecode, const StructField& field,
       MDefinition* structObject, MDefinition* value,
       WasmPreBarrierKind preBarrierKind) {
-    FieldType fieldType = field.type;
+    StorageType fieldType = field.type;
     uint32_t fieldOffset = field.offset;
 
     bool areaIsOutline;
@@ -4183,7 +4183,7 @@ class FunctionCompiler {
   [[nodiscard]] MDefinition* readValueFromStructField(
       const StructField& field, FieldWideningOp wideningOp,
       MDefinition* structObject) {
-    FieldType fieldType = field.type;
+    StorageType fieldType = field.type;
     uint32_t fieldOffset = field.offset;
 
     bool areaIsOutline;
@@ -4438,10 +4438,10 @@ class FunctionCompiler {
                                MDefinition* arrayObject, MDefinition* index,
                                MDefinition* numElements, MDefinition* val) {
     mozilla::DebugOnly<MIRType> valMIRType = val->type();
-    FieldType valFieldType = arrayType.elementType_;
-    MOZ_ASSERT(valFieldType.widenToValType().toMIRType() == valMIRType);
+    StorageType elemType = arrayType.elementType_;
+    MOZ_ASSERT(elemType.widenToValType().toMIRType() == valMIRType);
 
-    uint32_t elemSize = valFieldType.size();
+    uint32_t elemSize = elemType.size();
     MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
 
     // Make `arrayBase` point at the first byte of the (OOL) data area.
@@ -4454,7 +4454,7 @@ class FunctionCompiler {
     //   arrayBase   : TargetWord
     //   index       : Int32
     //   numElements : Int32
-    //   val         : <any FieldType>
+    //   val         : <any StorageType>
     //   $elemSize = arrayType.elementType_.size(); 1, 2, 4, 8 or 16
     //
     // Generate MIR:
@@ -4536,8 +4536,8 @@ class FunctionCompiler {
     // `writeGcValueAtBasePlusOffset` rather than
     // `writeGcValueAtBasePlusScaledIndex` to do the store.
     if (!writeGcValueAtBasePlusOffset(
-            lineOrBytecode, valFieldType, arrayObject,
-            AliasSet::WasmArrayDataArea, val, ptrPhi, /*offset=*/0,
+            lineOrBytecode, elemType, arrayObject, AliasSet::WasmArrayDataArea,
+            val, ptrPhi, /*offset=*/0,
             /*needsTrapInfo=*/false, WasmPreBarrierKind::None)) {
       return false;
     }
@@ -7487,8 +7487,8 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
 
   // Write each element in turn.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  FieldType elemFieldType = arrayType.elementType_;
-  uint32_t elemSize = elemFieldType.size();
+  StorageType elemType = arrayType.elementType_;
+  uint32_t elemSize = elemType.size();
 
   // How do we know that the offset expression `i * elemSize` below remains
   // within 2^31 (signed-i32) range?  In the worst case we will have 16-byte
@@ -7506,9 +7506,9 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
     }
     // `i * elemSize` is made safe by the assertions above.
     if (!f.writeGcValueAtBasePlusOffset(
-            lineOrBytecode, elemFieldType, arrayObject,
-            AliasSet::WasmArrayDataArea, values[numElements - 1 - i], base,
-            i * elemSize, false, WasmPreBarrierKind::None)) {
+            lineOrBytecode, elemType, arrayObject, AliasSet::WasmArrayDataArea,
+            values[numElements - 1 - i], base, i * elemSize, false,
+            WasmPreBarrierKind::None)) {
       return false;
     }
   }
@@ -7704,13 +7704,13 @@ static bool EmitArraySet(FunctionCompiler& f) {
 
   // And do the store.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  FieldType elemFieldType = arrayType.elementType_;
-  uint32_t elemSize = elemFieldType.size();
+  StorageType elemType = arrayType.elementType_;
+  uint32_t elemSize = elemType.size();
   MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
 
   return f.writeGcValueAtBasePlusScaledIndex(
-      lineOrBytecode, elemFieldType, arrayObject, AliasSet::WasmArrayDataArea,
-      value, base, elemSize, index, WasmPreBarrierKind::Normal);
+      lineOrBytecode, elemType, arrayObject, AliasSet::WasmArrayDataArea, value,
+      base, elemSize, index, WasmPreBarrierKind::Normal);
 }
 
 static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
@@ -7736,12 +7736,12 @@ static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
 
   // And do the load.
   const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  FieldType elemFieldType = arrayType.elementType_;
-  uint32_t elemSize = elemFieldType.size();
+  StorageType elemType = arrayType.elementType_;
+  uint32_t elemSize = elemType.size();
   MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
 
   MDefinition* load = f.readGcValueAtBasePlusScaledIndex(
-      elemFieldType, wideningOp, arrayObject, AliasSet::WasmArrayDataArea, base,
+      elemType, wideningOp, arrayObject, AliasSet::WasmArrayDataArea, base,
       elemSize, index);
   if (!load) {
     return false;

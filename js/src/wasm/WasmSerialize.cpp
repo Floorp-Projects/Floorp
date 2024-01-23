@@ -479,7 +479,8 @@ CoderResult CodeValType(Coder<mode>& coder, CoderArg<mode, ValType> item) {
 }
 
 template <CoderMode mode>
-CoderResult CodeFieldType(Coder<mode>& coder, CoderArg<mode, FieldType> item) {
+CoderResult CodeStorageType(Coder<mode>& coder,
+                            CoderArg<mode, StorageType> item) {
   return CodePackedTypeCode(coder, item->addressOfPacked());
 }
 
@@ -532,7 +533,7 @@ CoderResult CodeFuncType(Coder<mode>& coder, CoderArg<mode, FuncType> item) {
 template <CoderMode mode>
 CoderResult CodeStructField(Coder<mode>& coder,
                             CoderArg<mode, StructField> item) {
-  MOZ_TRY(CodeFieldType(coder, &item->type));
+  MOZ_TRY(CodeStorageType(coder, &item->type));
   MOZ_TRY(CodePod(coder, &item->offset));
   MOZ_TRY(CodePod(coder, &item->isMutable));
   return Ok();
@@ -555,7 +556,7 @@ CoderResult CodeStructType(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ArrayType, 16);
-  MOZ_TRY(CodeFieldType(coder, &item->elementType_));
+  MOZ_TRY(CodeStorageType(coder, &item->elementType_));
   MOZ_TRY(CodePod(coder, &item->isMutable_));
   return Ok();
 }

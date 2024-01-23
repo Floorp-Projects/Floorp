@@ -145,7 +145,7 @@ bool TagType::initialize(ValTypeVector&& argTypes) {
 
   StructLayout layout;
   for (size_t i = 0; i < argTypes_.length(); i++) {
-    CheckedInt32 offset = layout.addField(FieldType(argTypes_[i].packed()));
+    CheckedInt32 offset = layout.addField(StorageType(argTypes_[i].packed()));
     if (!offset.isValid()) {
       return false;
     }

@@ -19,39 +19,39 @@ void wasm::Dump(ValType type) {
 }
 
 void wasm::Dump(ValType type, GenericPrinter& out) {
-  Dump(type.fieldType(), out);
+  Dump(type.storageType(), out);
 }
 
-void wasm::Dump(FieldType type) {
+void wasm::Dump(StorageType type) {
   Fprinter out(stdout);
   wasm::Dump(type, out);
 }
 
-void wasm::Dump(FieldType type, GenericPrinter& out) {
+void wasm::Dump(StorageType type, GenericPrinter& out) {
   const char* literal = nullptr;
   switch (type.kind()) {
-    case FieldType::I8:
+    case StorageType::I8:
       literal = "i8";
       break;
-    case FieldType::I16:
+    case StorageType::I16:
       literal = "i16";
       break;
-    case FieldType::I32:
+    case StorageType::I32:
       literal = "i32";
       break;
-    case FieldType::I64:
+    case StorageType::I64:
       literal = "i64";
       break;
-    case FieldType::V128:
+    case StorageType::V128:
       literal = "v128";
       break;
-    case FieldType::F32:
+    case StorageType::F32:
       literal = "f32";
       break;
-    case FieldType::F64:
+    case StorageType::F64:
       literal = "f64";
       break;
-    case FieldType::Ref:
+    case StorageType::Ref:
       return Dump(type.refType(), out);
   }
   out.put(literal);

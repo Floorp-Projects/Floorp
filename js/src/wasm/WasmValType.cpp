@@ -393,34 +393,34 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
 }
 
 UniqueChars wasm::ToString(ValType type, const TypeContext* types) {
-  return ToString(type.fieldType(), types);
+  return ToString(type.storageType(), types);
 }
 
-UniqueChars wasm::ToString(FieldType type, const TypeContext* types) {
+UniqueChars wasm::ToString(StorageType type, const TypeContext* types) {
   const char* literal = nullptr;
   switch (type.kind()) {
-    case FieldType::I8:
+    case StorageType::I8:
       literal = "i8";
       break;
-    case FieldType::I16:
+    case StorageType::I16:
       literal = "i16";
       break;
-    case FieldType::I32:
+    case StorageType::I32:
       literal = "i32";
       break;
-    case FieldType::I64:
+    case StorageType::I64:
       literal = "i64";
       break;
-    case FieldType::V128:
+    case StorageType::V128:
       literal = "v128";
       break;
-    case FieldType::F32:
+    case StorageType::F32:
       literal = "f32";
       break;
-    case FieldType::F64:
+    case StorageType::F64:
       literal = "f64";
       break;
-    case FieldType::Ref:
+    case StorageType::Ref:
       return ToString(type.refType(), types);
   }
   return DuplicateString(literal);

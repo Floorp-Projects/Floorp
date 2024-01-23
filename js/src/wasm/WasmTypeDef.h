@@ -256,7 +256,7 @@ class FuncType {
 // array of types in the ModuleEnvironment when the Module is created.
 
 struct StructField {
-  FieldType type;
+  StorageType type;
   uint32_t offset;
   bool isMutable;
 
@@ -278,7 +278,7 @@ struct StructField {
 
     // Immutable fields are covariant w.r.t. field types
     if (!subType.isMutable && !superType.isMutable) {
-      return FieldType::isSubTypeOf(subType.type, superType.type);
+      return StorageType::isSubTypeOf(subType.type, superType.type);
     }
 
     return false;
@@ -399,7 +399,7 @@ class StructLayout {
 
  public:
   // The field adders return the offset of the the field.
-  CheckedInt32 addField(FieldType type);
+  CheckedInt32 addField(StorageType type);
 
   // The close method rounds up the structure size to the appropriate
   // alignment and returns that size.
@@ -411,12 +411,14 @@ class StructLayout {
 
 class ArrayType {
  public:
-  FieldType elementType_;  // field type
-  bool isMutable_;         // mutability
+  // The kind of value stored in this array
+  StorageType elementType_;
+  // Whether this array is mutable or not
+  bool isMutable_;
 
  public:
   ArrayType() : isMutable_(false) {}
-  ArrayType(FieldType elementType, bool isMutable)
+  ArrayType(StorageType elementType, bool isMutable)
       : elementType_(elementType), isMutable_(isMutable) {}
 
   ArrayType(const ArrayType&) = default;
@@ -459,8 +461,8 @@ class ArrayType {
 
     // Immutable fields are covariant w.r.t. field types
     if (!subType.isMutable_ && !superType.isMutable_) {
-      return FieldType::isSubTypeOf(subType.elementType_,
-                                    superType.elementType_);
+      return StorageType::isSubTypeOf(subType.elementType_,
+                                      superType.elementType_);
     }
 
     return true;
@@ -970,7 +972,7 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
         visitor(&type.typeDef()->recGroup());
       }
     };
-    auto visitFieldType = [this, visitor](FieldType type) {
+    auto visitStorageType = [this, visitor](StorageType type) {
       if (type.isTypeRef() && &type.typeDef()->recGroup() != this) {
         visitor(&type.typeDef()->recGroup());
       }
@@ -998,13 +1000,13 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
         case TypeDefKind::Struct: {
           const StructType& structType = typeDef.structType();
           for (const auto& field : structType.fields_) {
-            visitFieldType(field.type);
+            visitStorageType(field.type);
           }
           break;
         }
         case TypeDefKind::Array: {
           const ArrayType& arrayType = typeDef.arrayType();
-          visitFieldType(arrayType.elementType_);
+          visitStorageType(arrayType.elementType_);
           break;
         }
         case TypeDefKind::None: {

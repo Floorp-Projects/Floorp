@@ -137,9 +137,9 @@ bool wasm::DecodeValidatedLocalEntries(const TypeContext& types, Decoder& d,
 }
 
 bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
-                            size_t opcodeOffset, FieldType subType,
-                            FieldType superType) {
-  if (FieldType::isSubTypeOf(subType, superType)) {
+                            size_t opcodeOffset, StorageType subType,
+                            StorageType superType) {
+  if (StorageType::isSubTypeOf(subType, superType)) {
     return true;
   }
 
@@ -1642,7 +1642,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < numFields; i++) {
-    if (!d.readFieldType(*env->types, env->features, &fields[i].type)) {
+    if (!d.readStorageType(*env->types, env->features, &fields[i].type)) {
       return false;
     }
 
@@ -1671,8 +1671,8 @@ static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
     return d.fail("gc types not enabled");
   }
 
-  FieldType elementType;
-  if (!d.readFieldType(*env->types, env->features, &elementType)) {
+  StorageType elementType;
+  if (!d.readStorageType(*env->types, env->features, &elementType)) {
     return false;
   }
 
@@ -2784,8 +2784,8 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
   if (seg.active()) {
     RefType tblElemType = env->tables[seg.tableIndex].elemType;
     if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
-                          ValType(elemType).fieldType(),
-                          ValType(tblElemType).fieldType())) {
+                          ValType(elemType).storageType(),
+                          ValType(tblElemType).storageType())) {
       return false;
     }
   }
