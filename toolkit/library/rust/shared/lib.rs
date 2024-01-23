@@ -88,6 +88,7 @@ extern crate fluent;
 extern crate fluent_ffi;
 
 extern crate oxilangtag_ffi;
+extern crate unicode_bidi_ffi;
 
 extern crate rure;
 
