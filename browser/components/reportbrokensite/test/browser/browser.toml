@@ -1,9 +1,13 @@
 [DEFAULT]
 tags = "report-broken-site"
 support-files = [
+  "example_report_page.html",
   "head.js",
   "sendMoreInfoTestEndpoint.html",
 ]
+
+["browser_antitracking_data_sent.js"]
+support-files = [ "send_more_info.js" ]
 
 ["browser_keyboard_navigation.js"]
 
@@ -14,12 +18,17 @@ support-files = [
 ["browser_reason_dropdown.js"]
 
 ["browser_report_send.js"]
+support-files = [ "send.js" ]
 
 ["browser_report_site_issue_fallback.js"]
 
 ["browser_site_not_working_fallback.js"]
 
 ["browser_send_more_info.js"]
+support-files = [
+  "send_more_info.js",
+  "../../../../../toolkit/components/gfx/content/videotest.mp4",
+]
 
 ["browser_back_buttons.js"]
 

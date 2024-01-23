@@ -1,0 +1,290 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* Helper methods for testing sending reports with
+ * the Report Broken Site feature.
+ */
+
+/* import-globals-from head.js */
+
+"use strict";
+
+const { Troubleshoot } = ChromeUtils.importESModule(
+  "resource://gre/modules/Troubleshoot.sys.mjs"
+);
+
+function getSysinfoProperty(propertyName, defaultValue) {
+  try {
+    return Services.sysinfo.getProperty(propertyName);
+  } catch (e) {}
+  return defaultValue;
+}
+
+function securityStringToArray(str) {
+  return str ? str.split(";") : null;
+}
+
+function getExpectedGraphicsDevices(snapshot) {
+  const { graphics } = snapshot;
+  return [
+    graphics.adapterDeviceID,
+    graphics.adapterVendorID,
+    graphics.adapterDeviceID2,
+    graphics.adapterVendorID2,
+  ]
+    .filter(i => i)
+    .sort();
+}
+
+function compareGraphicsDevices(expected, rawActual) {
+  const actual = rawActual
+    .map(({ deviceID, vendorID }) => [deviceID, vendorID])
+    .flat()
+    .filter(i => i)
+    .sort();
+  return areObjectsEqual(actual, expected);
+}
+
+function getExpectedGraphicsDrivers(snapshot) {
+  const { graphics } = snapshot;
+  const expected = [];
+  for (let i = 1; i < 3; ++i) {
+    const version = graphics[`webgl${i}Version`];
+    if (version && version != "-") {
+      expected.push(graphics[`webgl${i}Renderer`]);
+      expected.push(version);
+    }
+  }
+  return expected.filter(i => i).sort();
+}
+
+function compareGraphicsDrivers(expected, rawActual) {
+  const actual = rawActual
+    .map(({ renderer, version }) => [renderer, version])
+    .flat()
+    .filter(i => i)
+    .sort();
+  return areObjectsEqual(actual, expected);
+}
+
+function getExpectedGraphicsFeatures(snapshot) {
+  const expected = {};
+  for (let { name, log, status } of snapshot.graphics.featureLog.features) {
+    for (const item of log?.reverse() ?? []) {
+      if (item.failureId && item.status == status) {
+        status = `${status} (${item.message || item.failureId})`;
+      }
+    }
+    expected[name] = status;
+  }
+  return expected;
+}
+
+async function getExpectedWebCompatInfo(tab, snapshot, fullAppData = false) {
+  const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+
+  const { application, graphics, intl, securitySoftware } = snapshot;
+
+  const { fissionAutoStart, memorySizeBytes, updateChannel, userAgent } =
+    application;
+
+  const app = {
+    defaultLocales: intl.localeService.available,
+    defaultUseragentString: userAgent,
+    fissionEnabled: fissionAutoStart,
+  };
+  if (fullAppData) {
+    app.applicationName = application.name;
+    app.osArchitecture = getSysinfoProperty("arch", null);
+    app.osName = getSysinfoProperty("name", null);
+    app.osVersion = getSysinfoProperty("version", null);
+    app.updateChannel = updateChannel;
+    app.version = application.version;
+  }
+
+  const hasTouchScreen = graphics.info.ApzTouchInput == 1;
+
+  const { registeredAntiVirus, registeredAntiSpyware, registeredFirewall } =
+    securitySoftware;
+
+  const browserInfo = {
+    app,
+    graphics: {
+      devicesJson(actualStr) {
+        const expected = getExpectedGraphicsDevices(snapshot);
+        // If undefined is saved to the Glean value here, we'll get the string "undefined" (invalid JSON).
+        // We should stop using JSON like this in bug 1875185.
+        if (!actualStr || actualStr == "undefined") {
+          return !expected.length;
+        }
+        return compareGraphicsDevices(expected, JSON.parse(actualStr));
+      },
+      driversJson(actualStr) {
+        const expected = getExpectedGraphicsDrivers(snapshot);
+        // If undefined is saved to the Glean value here, we'll get the string "undefined" (invalid JSON).
+        // We should stop using JSON like this in bug 1875185.
+        if (!actualStr || actualStr == "undefined") {
+          return !expected.length;
+        }
+        return compareGraphicsDrivers(expected, JSON.parse(actualStr));
+      },
+      featuresJson(actualStr) {
+        const expected = getExpectedGraphicsFeatures(snapshot);
+        // If undefined is saved to the Glean value here, we'll get the string "undefined" (invalid JSON).
+        // We should stop using JSON like this in bug 1875185.
+        if (!actualStr || actualStr == "undefined") {
+          return !expected.length;
+        }
+        return areObjectsEqual(JSON.parse(actualStr), expected);
+      },
+      hasTouchScreen,
+      monitorsJson(actualStr) {
+        // We don't care about monitor data on Android right now.
+        if (AppConstants.platform == "android") {
+          return actualStr == "undefined";
+        }
+        return actualStr == JSON.stringify(gfxInfo.getMonitors());
+      },
+    },
+    prefs: {
+      cookieBehavior: Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior",
+        -1
+      ),
+      forcedAcceleratedLayers: Services.prefs.getBoolPref(
+        "layers.acceleration.force-enabled",
+        false
+      ),
+      globalPrivacyControlEnabled: Services.prefs.getBoolPref(
+        "privacy.globalprivacycontrol.enabled",
+        false
+      ),
+      installtriggerEnabled: Services.prefs.getBoolPref(
+        "extensions.InstallTrigger.enabled",
+        false
+      ),
+      opaqueResponseBlocking: Services.prefs.getBoolPref(
+        "browser.opaqueResponseBlocking",
+        false
+      ),
+      resistFingerprintingEnabled: Services.prefs.getBoolPref(
+        "privacy.resistFingerprinting",
+        false
+      ),
+      softwareWebrender: Services.prefs.getBoolPref(
+        "gfx.webrender.software",
+        false
+      ),
+    },
+    security: {
+      antispyware: securityStringToArray(registeredAntiSpyware),
+      antivirus: securityStringToArray(registeredAntiVirus),
+      firewall: securityStringToArray(registeredFirewall),
+    },
+    system: {
+      isTablet: getSysinfoProperty("tablet", false),
+      memory: Math.round(memorySizeBytes / 1024 / 1024),
+    },
+  };
+
+  const tabInfo = await tab.linkedBrowser.ownerGlobal.SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    async function () {
+      return {
+        devicePixelRatio: `${content.devicePixelRatio}`,
+        antitracking: {
+          blockList: "basic",
+          isPrivateBrowsing: false,
+          hasTrackingContentBlocked: false,
+          hasMixedActiveContentBlocked: false,
+          hasMixedDisplayContentBlocked: false,
+        },
+        frameworks: {
+          fastclick: false,
+          marfeel: false,
+          mobify: false,
+        },
+        languages: content.navigator.languages,
+        useragentString: content.navigator.userAgent,
+      };
+    }
+  );
+
+  browserInfo.graphics.devicePixelRatio = tabInfo.devicePixelRatio;
+  delete tabInfo.devicePixelRatio;
+
+  return { browserInfo, tabInfo };
+}
+
+function extractPingData(branch) {
+  const data = {};
+  for (const [name, value] of Object.entries(branch)) {
+    data[name] = value.testGetValue();
+  }
+  return data;
+}
+
+function extractBrokenSiteReportFromGleanPing(Glean) {
+  const ping = extractPingData(Glean.brokenSiteReport);
+  ping.tabInfo = extractPingData(Glean.brokenSiteReportTabInfo);
+  ping.tabInfo.antitracking = extractPingData(
+    Glean.brokenSiteReportTabInfoAntitracking
+  );
+  ping.tabInfo.frameworks = extractPingData(
+    Glean.brokenSiteReportTabInfoFrameworks
+  );
+  ping.browserInfo = {
+    app: extractPingData(Glean.brokenSiteReportBrowserInfoApp),
+    graphics: extractPingData(Glean.brokenSiteReportBrowserInfoGraphics),
+    prefs: extractPingData(Glean.brokenSiteReportBrowserInfoPrefs),
+    security: extractPingData(Glean.brokenSiteReportBrowserInfoSecurity),
+    system: extractPingData(Glean.brokenSiteReportBrowserInfoSystem),
+  };
+  return ping;
+}
+
+async function testSend(tab, menu, expectedOverrides = {}) {
+  const url = expectedOverrides.url ?? menu.win.gBrowser.currentURI.spec;
+  const description = expectedOverrides.description ?? "";
+  const breakageCategory = expectedOverrides.breakageCategory ?? null;
+
+  let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
+
+  const snapshot = await Troubleshoot.snapshot();
+  const expected = await getExpectedWebCompatInfo(tab, snapshot);
+
+  expected.url = url;
+  expected.description = description;
+  expected.breakageCategory = breakageCategory;
+
+  if (expectedOverrides.antitracking) {
+    expected.tabInfo.antitracking = expectedOverrides.antitracking;
+  }
+
+  if (expectedOverrides.frameworks) {
+    expected.tabInfo.frameworks = expectedOverrides.frameworks;
+  }
+
+  if (breakageCategory) {
+    rbs.chooseReason(breakageCategory);
+  }
+
+  const pingCheck = new Promise(resolve => {
+    Services.fog.testResetFOG();
+    GleanPings.brokenSiteReport.testBeforeNextSubmit(() => {
+      const ping = extractBrokenSiteReportFromGleanPing(Glean);
+      ok(areObjectsEqual(ping, expected), "ping matches expectations");
+      resolve();
+    });
+  });
+
+  await rbs.clickSend();
+  await pingCheck;
+  await rbs.clickOkay();
+
+  // re-opening the panel, the url and description should be reset
+  rbs = await menu.openReportBrokenSite();
+  rbs.isMainViewResetToCurrentTab();
+  rbs.close();
+}

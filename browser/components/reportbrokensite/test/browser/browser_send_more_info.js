@@ -6,9 +6,20 @@
  * the webcompat.com endpoint and send the right data.
  */
 
+/* import-globals-from send_more_info.js */
+
 "use strict";
 
+const VIDEO_URL = `${BASE_URL}/videotest.mp4`;
+
+Services.scriptloader.loadSubScript(
+  getRootDirectory(gTestPath) + "send_more_info.js",
+  this
+);
+
 add_common_setup();
+
+requestLongerTimeout(2);
 
 add_task(async function testSendMoreInfoPref() {
   ensureReportBrokenSitePreffedOn();
@@ -31,42 +42,27 @@ add_task(async function testSendMoreInfoPref() {
   );
 });
 
-async function testSendMoreInfo(menu, url, description = "any") {
-  let rbs = await menu.openAndPrefillReportBrokenSite(url, description);
-
-  if (!url) {
-    url = menu.win.gBrowser.currentURI.spec;
-  }
-
-  const receivedData = await rbs.clickSendMoreInfo();
-  const { message } = receivedData;
-
-  is(message.url, url, "sent correct URL");
-  is(message.description, description, "sent correct description");
-
-  is(message.src, "desktop-reporter", "sent correct src");
-  is(message.utm_campaign, "report-broken-site", "sent correct utm_campaign");
-  is(message.utm_source, "desktop-reporter", "sent correct utm_source");
-
-  ok(typeof message.details == "object", "sent extra details");
-
-  // re-opening the panel, the url and description should be reset
-  rbs = await menu.openReportBrokenSite();
-  rbs.isMainViewResetToCurrentTab();
-  rbs.close();
-}
-
 add_task(async function testSendingMoreInfo() {
   ensureReportBrokenSitePreffedOn();
   ensureSendMoreInfoEnabled();
 
   const tab = await openTab(REPORTABLE_PAGE_URL);
 
-  await testSendMoreInfo(AppMenu());
+  await testSendMoreInfo(tab, AppMenu());
 
   await changeTab(tab, REPORTABLE_PAGE_URL2);
 
-  await testSendMoreInfo(ProtectionsPanel(), "https://override.com", "another");
+  await testSendMoreInfo(tab, ProtectionsPanel(), {
+    url: "https://override.com",
+    description: "another",
+    expectNoTabDetails: true,
+  });
+
+  // also load a video to ensure system codec
+  // information is loaded and properly sent
+  const tab2 = await openTab(VIDEO_URL);
+  await testSendMoreInfo(tab2, HelpMenu());
+  closeTab(tab2);
 
   closeTab(tab);
 });
