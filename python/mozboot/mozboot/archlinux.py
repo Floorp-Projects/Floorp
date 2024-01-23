@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import subprocess
 import sys
 
 from mozboot.base import BaseBootstrapper
@@ -24,6 +25,24 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.pacman_install("mercurial")
 
     def pacman_install(self, *packages):
+        def is_installed(package):
+            pacman_query = subprocess.run(
+                ["pacman", "-Q", package],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+            if pacman_query.returncode not in [0, 1]:
+                raise Exception(
+                    f'Failed to query pacman whether "{package}" is installed: "{pacman_query.stdout}"'
+                )
+            return pacman_query.returncode == 0
+
+        packages = [p for p in packages if not is_installed(p)]
+        # avoid sudo prompt if all packages are installed already
+        if not packages:
+            return
+
         command = ["pacman", "-S", "--needed"]
         if self.no_interactive:
             command.append("--noconfirm")
