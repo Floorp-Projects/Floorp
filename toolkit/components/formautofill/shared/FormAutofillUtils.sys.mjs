@@ -12,9 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
-  AddressMetaData: "resource://gre/modules/shared/AddressMetaData.sys.mjs",
-  AddressMetaDataExtension:
-    "resource://gre/modules/shared/AddressMetaDataExtension.sys.mjs",
+  AddressMetaDataLoader:
+    "resource://gre/modules/shared/AddressMetaDataLoader.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(
@@ -78,129 +77,6 @@ const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
 // The maximum length of data to be saved in a single field for preventing DoS
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
-
-export let AddressDataLoader = {
-  // Status of address data loading. We'll load all the countries with basic level 1
-  // information while requesting conutry information, and set country to true.
-  // Level 1 Set is for recording which country's level 1/level 2 data is loaded,
-  // since we only load this when getCountryAddressData called with level 1 parameter.
-  _dataLoaded: {
-    country: false,
-    level1: new Set(),
-  },
-
-  /**
-   * Load address meta data and extension into one object.
-   *
-   * @returns {object}
-   *          An object containing address data object with properties from extension.
-   */
-  _loadAddressMetaData() {
-    const addressMetaData = lazy.AddressMetaData;
-
-    for (const key in lazy.AddressMetaDataExtension) {
-      let addressDataForKey = addressMetaData[key];
-      if (!addressDataForKey) {
-        addressDataForKey = addressMetaData[key] = {};
-      }
-
-      Object.assign(addressDataForKey, lazy.AddressMetaDataExtension[key]);
-    }
-    return addressMetaData;
-  },
-
-  /**
-   * Convert certain properties' string value into array. We should make sure
-   * the cached data is parsed.
-   *
-   * @param   {object} data Original metadata from addressReferences.
-   * @returns {object} parsed metadata with property value that converts to array.
-   */
-  _parse(data) {
-    if (!data) {
-      return null;
-    }
-
-    const properties = [
-      "languages",
-      "sub_keys",
-      "sub_isoids",
-      "sub_names",
-      "sub_lnames",
-    ];
-    for (let key of properties) {
-      if (!data[key]) {
-        continue;
-      }
-      // No need to normalize data if the value is array already.
-      if (Array.isArray(data[key])) {
-        return data;
-      }
-
-      data[key] = data[key].split("~");
-    }
-    return data;
-  },
-
-  /**
-   * We'll cache addressData in the loader once the data loaded from scripts.
-   * It'll become the example below after loading addressReferences with extension:
-   * addressData: {
-   *               "data/US": {"lang": ["en"], ...// Data defined in libaddressinput metadata
-   *                           "alternative_names": ... // Data defined in extension }
-   *               "data/CA": {} // Other supported country metadata
-   *               "data/TW": {} // Other supported country metadata
-   *               "data/TW/台北市": {} // Other supported country level 1 metadata
-   *              }
-   *
-   * @param   {string} country
-   * @param   {string?} level1
-   * @returns {object} Default locale metadata
-   */
-  _loadData(country, level1 = null) {
-    // Load the addressData if needed
-    if (!this._dataLoaded.country) {
-      this._addressData = this._loadAddressMetaData();
-      this._dataLoaded.country = true;
-    }
-    if (!level1) {
-      return this._parse(this._addressData[`data/${country}`]);
-    }
-    // If level1 is set, load addressReferences under country folder with specific
-    // country/level 1 for level 2 information.
-    if (!this._dataLoaded.level1.has(country)) {
-      Object.assign(this._addressData, this._loadAddressMetaData());
-      this._dataLoaded.level1.add(country);
-    }
-    return this._parse(this._addressData[`data/${country}/${level1}`]);
-  },
-
-  /**
-   * Return the region metadata with default locale and other locales (if exists).
-   *
-   * @param   {string} country
-   * @param   {string?} level1
-   * @returns {object} Return default locale and other locales metadata.
-   */
-  getData(country, level1 = null) {
-    let defaultLocale = this._loadData(country, level1);
-    if (!defaultLocale) {
-      return null;
-    }
-
-    let countryData = this._parse(this._addressData[`data/${country}`]);
-    let locales = [];
-    // TODO: Should be able to support multi-locale level 1/ level 2 metadata query
-    //      in Bug 1421886
-    if (countryData.languages) {
-      let list = countryData.languages.filter(key => key !== countryData.lang);
-      locales = list.map(key =>
-        this._parse(this._addressData[`${defaultLocale.id}--${key}`])
-      );
-    }
-    return { defaultLocale, locales };
-  },
-};
 
 FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() {
@@ -488,7 +364,7 @@ FormAutofillUtils = {
 
   /**
    * Get country address data and fallback to US if not found.
-   * See AddressDataLoader._loadData for more details of addressData structure.
+   * See AddressMetaDataLoader.#loadData for more details of addressData structure.
    *
    * @param {string} [country=FormAutofill.DEFAULT_REGION]
    *        The country code for requesting specific country's metadata. It'll be
@@ -504,21 +380,23 @@ FormAutofillUtils = {
     country = FormAutofill.DEFAULT_REGION,
     level1 = null
   ) {
-    let metadata = AddressDataLoader.getData(country, level1);
+    let metadata = lazy.AddressMetaDataLoader.getData(country, level1);
     if (!metadata) {
       if (level1) {
         return null;
       }
       // Fallback to default region if we couldn't get data from given country.
       if (country != FormAutofill.DEFAULT_REGION) {
-        metadata = AddressDataLoader.getData(FormAutofill.DEFAULT_REGION);
+        metadata = lazy.AddressMetaDataLoader.getData(
+          FormAutofill.DEFAULT_REGION
+        );
       }
     }
 
     // TODO: Now we fallback to US if we couldn't get data from default region,
     //       but it could be removed in bug 1423464 if it's not necessary.
     if (!metadata) {
-      metadata = AddressDataLoader.getData("US");
+      metadata = lazy.AddressMetaDataLoader.getData("US");
     }
     return metadata;
   },
@@ -706,7 +584,7 @@ FormAutofillUtils = {
       return null;
     }
 
-    if (AddressDataLoader.getData(countryName)) {
+    if (lazy.AddressMetaDataLoader.getData(countryName)) {
       return countryName;
     }
 
