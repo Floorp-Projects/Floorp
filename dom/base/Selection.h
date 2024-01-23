@@ -839,9 +839,9 @@ class Selection final : public nsSupportsWeakReference,
 
     StyledRange* FindRangeData(AbstractRange* aRange);
 
-    using Elements = AutoTArray<StyledRange, 1>;
+    using StyledRangeArray = AutoTArray<StyledRange, 1>;
 
-    Elements::size_type Length() const;
+    StyledRangeArray::size_type Length() const;
 
     nsresult RemoveCollapsedRanges();
 
@@ -879,9 +879,9 @@ class Selection final : public nsSupportsWeakReference,
                                    const nsINode* aEndNode, uint32_t aEndOffset,
                                    bool aAllowAdjacent,
                                    Maybe<size_t>& aStartIndex,
-                                   Maybe<size_t>& aEndIndex) const;
+                                   Maybe<size_t>& aEndIndex);
 
-    bool HasEqualRangeBoundariesAt(const nsRange& aRange,
+    bool HasEqualRangeBoundariesAt(const AbstractRange& aRange,
                                    size_t aRangeIndex) const;
 
     /**
@@ -894,6 +894,12 @@ class Selection final : public nsSupportsWeakReference,
      */
     MOZ_CAN_RUN_SCRIPT nsresult
     MaybeAddRangeAndTruncateOverlaps(nsRange* aRange, Maybe<size_t>* aOutIndex);
+
+    /**
+     * Adds the range even if there are overlaps.
+     */
+    MOZ_CAN_RUN_SCRIPT nsresult
+    AddRangeAndIgnoreOverlaps(AbstractRange* aRange);
 
     /**
      * GetCommonEditingHost() returns common editing host of all
@@ -936,6 +942,15 @@ class Selection final : public nsSupportsWeakReference,
 
     void UnregisterSelection();
 
+    // `mRanges` always needs to be sorted by the Range's start point.
+    // Especially when dealing with `StaticRange`s this is not guaranteed
+    // automatically. Therefore this method should be called before paint to
+    // ensure that any potential DOM mutations are incorporated in `mRanges`
+    // order. This method will also move invalid `StaticRange`s into
+    // `mInvalidStaticRanges` (and previously-invalid-now-valid-again
+    // `StaticRange`s back into `mRanges`).
+    void ReorderRangesIfNecessary();
+
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
     //
@@ -949,9 +964,23 @@ class Selection final : public nsSupportsWeakReference,
     // If this proves to be a performance concern, then an interval tree may be
     // a possible solution, allowing the calculation of the overlap interval in
     // O(log n) time, though this would require rebalancing and other overhead.
-    Elements mRanges;
+    StyledRangeArray mRanges;
+
+    // With introduction of the custom highlight API, Selection must be able to
+    // hold `StaticRange`s as well. If they become invalid (eg. end is before
+    // start), they must be excluded from painting, but still kept.
+    // mRanges needs to contain valid ranges sorted correctly only. Therefore,
+    // invalid static ranges are being stored in this array, which is being kept
+    // up to date in `ReorderRangesIfNecessary()`.
+    StyledRangeArray mInvalidStaticRanges;
 
     Selection& mSelection;
+
+    // The Document's generation for which `mRanges` have been ordered.
+    int32_t mDocumentGeneration{0};
+    // This flag indicates that ranges may have changed. It is set to true in
+    // `Selection::NotifySelectionListeners().`
+    bool mRangesMightHaveChanged{false};
   };
 
   StyledRanges mStyledRanges{*this};

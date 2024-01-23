@@ -791,6 +791,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
     for (i = 0; i < count; ++i) {
       NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyledRanges.mRanges[i].mRange)
     }
+    count = tmp->mStyledRanges.mInvalidStaticRanges.Length();
+    for (i = 0; i < count; ++i) {
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+          mStyledRanges.mInvalidStaticRanges[i].mRange);
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorFocusRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameSelection)
@@ -1166,6 +1171,49 @@ nsresult Selection::AddRangesForSelectableNodes(
   return mStyledRanges.MaybeAddRangeAndTruncateOverlaps(aRange, aOutIndex);
 }
 
+nsresult Selection::StyledRanges::AddRangeAndIgnoreOverlaps(
+    AbstractRange* aRange) {
+  MOZ_ASSERT(aRange);
+  MOZ_ASSERT(aRange->IsPositioned());
+  MOZ_ASSERT(mSelection.mSelectionType == SelectionType::eHighlight);
+  if (aRange->IsStaticRange() && !aRange->AsStaticRange()->IsValid()) {
+    mInvalidStaticRanges.AppendElement(StyledRange(aRange));
+    aRange->RegisterSelection(MOZ_KnownLive(mSelection));
+    return NS_OK;
+  }
+
+  // a common case is that we have no ranges yet
+  if (mRanges.Length() == 0) {
+    mRanges.AppendElement(StyledRange(aRange));
+    aRange->RegisterSelection(MOZ_KnownLive(mSelection));
+    return NS_OK;
+  }
+
+  Maybe<size_t> maybeStartIndex, maybeEndIndex;
+  nsresult rv =
+      GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
+                            aRange->GetEndContainer(), aRange->EndOffset(),
+                            false, maybeStartIndex, maybeEndIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  size_t startIndex(0);
+  if (maybeEndIndex.isNothing()) {
+    // All ranges start after the given range. We can insert our range at
+    // position 0.
+    startIndex = 0;
+  } else if (maybeStartIndex.isNothing()) {
+    // All ranges end before the given range. We can insert our range at
+    // the end of the array.
+    startIndex = mRanges.Length();
+  } else {
+    startIndex = *maybeStartIndex;
+  }
+
+  mRanges.InsertElementAt(startIndex, StyledRange(aRange));
+  aRange->RegisterSelection(MOZ_KnownLive(mSelection));
+  return NS_OK;
+}
+
 nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
     nsRange* aRange, Maybe<size_t>* aOutIndex) {
   MOZ_ASSERT(aRange);
@@ -1334,7 +1382,7 @@ void Selection::Clear(nsPresContext* aPresContext) {
 }
 
 bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
-    const nsRange& aRange, size_t aRangeIndex) const {
+    const AbstractRange& aRange, size_t aRangeIndex) const {
   if (aRangeIndex < mRanges.Length()) {
     const AbstractRange* range = mRanges[aRangeIndex].mRange;
     return range->HasEqualBoundaries(aRange);
@@ -1411,10 +1459,58 @@ nsresult Selection::GetDynamicRangesForIntervalArray(
   return NS_OK;
 }
 
+void Selection::StyledRanges::ReorderRangesIfNecessary() {
+  const Document* doc = mSelection.GetDocument();
+  if (!doc) {
+    return;
+  }
+  if (mRanges.Length() < 2 && mInvalidStaticRanges.IsEmpty()) {
+    // There is nothing to be reordered.
+    return;
+  }
+  const int32_t currentDocumentGeneration = doc->GetGeneration();
+  const bool domMutationHasHappened =
+      currentDocumentGeneration != mDocumentGeneration;
+  if (domMutationHasHappened) {
+    // After a DOM mutation, invalid static ranges might have become valid and
+    // valid static ranges might have become invalid.
+    StyledRangeArray invalidStaticRanges;
+    for (StyledRangeArray::const_iterator iter = mRanges.begin();
+         iter != mRanges.end();) {
+      const AbstractRange* range = iter->mRange;
+      if (range->IsStaticRange() && !range->AsStaticRange()->IsValid()) {
+        invalidStaticRanges.AppendElement(*iter);
+        iter = mRanges.RemoveElementAt(iter);
+      } else {
+        ++iter;
+      }
+    }
+    for (StyledRangeArray::const_iterator iter = mInvalidStaticRanges.begin();
+         iter != mInvalidStaticRanges.end();) {
+      MOZ_ASSERT(iter->mRange->IsStaticRange());
+      if (iter->mRange->AsStaticRange()->IsValid()) {
+        mRanges.AppendElement(*iter);
+        iter = mInvalidStaticRanges.RemoveElementAt(iter);
+      } else {
+        ++iter;
+      }
+    }
+    mInvalidStaticRanges.AppendElements(std::move(invalidStaticRanges));
+  }
+  if (domMutationHasHappened || mRangesMightHaveChanged) {
+    mRanges.Sort([](const StyledRange& a, const StyledRange& b) -> int {
+      return CompareToRangeStart(*a.mRange->GetStartContainer(),
+                                 a.mRange->StartOffset(), *b.mRange);
+    });
+    mDocumentGeneration = currentDocumentGeneration;
+    mRangesMightHaveChanged = false;
+  }
+}
+
 nsresult Selection::StyledRanges::GetIndicesForInterval(
     const nsINode* aBeginNode, uint32_t aBeginOffset, const nsINode* aEndNode,
     uint32_t aEndOffset, bool aAllowAdjacent, Maybe<size_t>& aStartIndex,
-    Maybe<size_t>& aEndIndex) const {
+    Maybe<size_t>& aEndIndex) {
   MOZ_ASSERT(aStartIndex.isNothing());
   MOZ_ASSERT(aEndIndex.isNothing());
 
@@ -1425,6 +1521,8 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
   if (NS_WARN_IF(!aEndNode)) {
     return NS_ERROR_INVALID_POINTER;
   }
+
+  ReorderRangesIfNecessary();
 
   if (mRanges.Length() == 0) {
     return NS_OK;
@@ -1944,7 +2042,10 @@ void Selection::StyledRanges::UnregisterSelection() {
   }
 }
 
-void Selection::StyledRanges::Clear() { mRanges.Clear(); }
+void Selection::StyledRanges::Clear() {
+  mRanges.Clear();
+  mInvalidStaticRanges.Clear();
+}
 
 StyledRange* Selection::StyledRanges::FindRangeData(AbstractRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
@@ -1956,8 +2057,8 @@ StyledRange* Selection::StyledRanges::FindRangeData(AbstractRange* aRange) {
   return nullptr;
 }
 
-Selection::StyledRanges::Elements::size_type Selection::StyledRanges::Length()
-    const {
+Selection::StyledRanges::StyledRangeArray::size_type
+Selection::StyledRanges::Length() const {
   return mRanges.Length();
 }
 
@@ -2190,9 +2291,10 @@ void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
 void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
     AbstractRange& aRange) {
   MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
-
-  mStyledRanges.mRanges.AppendElement(StyledRange{&aRange});
-  aRange.RegisterSelection(*this);
+  nsresult rv = mStyledRanges.AddRangeAndIgnoreOverlaps(&aRange);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   if (!mFrameSelection) {
     return;  // nothing to do
@@ -3463,6 +3565,8 @@ void Selection::NotifySelectionListeners() {
 
   MOZ_LOG(sSelectionLog, LogLevel::Debug,
           ("%s: selection=%p", __FUNCTION__, this));
+
+  mStyledRanges.mRangesMightHaveChanged = true;
 
   // Our internal code should not move focus with using this class while
   // this moves focus nor from selection listeners.
