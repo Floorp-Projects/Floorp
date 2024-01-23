@@ -17,7 +17,7 @@ add_task(async function test_always_translate_with_bad_data() {
     onOpenPanel: assertPanelDefaultView,
     openFromAppMenu: true,
   });
-  await openTranslationsSettingsMenu();
+  await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("en", {
     checked: false,

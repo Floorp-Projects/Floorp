@@ -236,6 +236,30 @@ class FullPageTranslationsTestUtils {
       onOpenPanel
     );
   }
+
+  /**
+   * Opens the translations panel settings menu.
+   * Requires that the translations panel is already open.
+   */
+  static async openTranslationsSettingsMenu() {
+    logAction();
+    const gearIcons = getAllByL10nId("translations-panel-settings-button");
+    for (const gearIcon of gearIcons) {
+      if (gearIcon.hidden) {
+        continue;
+      }
+      click(gearIcon, "Open the settings menu");
+      info("Waiting for settings menu to open.");
+      const manageLanguages = await waitForCondition(() =>
+        maybeGetByL10nId("translations-panel-settings-manage-languages")
+      );
+      ok(
+        manageLanguages,
+        "The manage languages item should be visible in the settings menu."
+      );
+      return;
+    }
+  }
 }
 
 /**
@@ -259,30 +283,6 @@ function logAction(...params) {
       ""
     )}`
   );
-}
-
-/**
- * Opens the translations panel settings menu.
- * Requires that the translations panel is already open.
- */
-async function openTranslationsSettingsMenu() {
-  logAction();
-  const gearIcons = getAllByL10nId("translations-panel-settings-button");
-  for (const gearIcon of gearIcons) {
-    if (gearIcon.hidden) {
-      continue;
-    }
-    click(gearIcon, "Open the settings menu");
-    info("Waiting for settings menu to open.");
-    const manageLanguages = await waitForCondition(() =>
-      maybeGetByL10nId("translations-panel-settings-manage-languages")
-    );
-    ok(
-      manageLanguages,
-      "The manage languages item should be visible in the settings menu."
-    );
-    return;
-  }
 }
 
 /**

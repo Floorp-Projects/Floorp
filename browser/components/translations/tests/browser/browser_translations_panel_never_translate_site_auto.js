@@ -26,7 +26,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelDefaultView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
@@ -47,7 +47,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });

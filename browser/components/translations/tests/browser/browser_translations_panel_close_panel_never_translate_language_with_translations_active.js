@@ -22,7 +22,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
@@ -38,7 +38,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await waitForTranslationsPopupEvent("popuphidden", async () => {
@@ -73,7 +73,7 @@ add_task(
       onOpenPanel: assertPanelDefaultView,
     });
 
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
@@ -89,7 +89,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsPanel({
       onOpenPanel: assertPanelRevisitView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
     await clickNeverTranslateSite();
@@ -100,7 +100,7 @@ add_task(
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
-    await openTranslationsSettingsMenu();
+    await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
