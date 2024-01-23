@@ -2715,14 +2715,16 @@ modules:
     meta:
       owners_emeritus:
         - Robert O'Callahan
+      peers_emeritus:
+        - David Baron
+        - Boris Zbarsky
       group: dev-platform
       components:
         - 'Core::Layout: View Rendering'
     owners:
-      - *mstange
+      - *tnikkel
     peers:
-      - *bzbarsky
-      - *dbaron
+      - *mstange
     machine_name: core_view_system
 
   - name: 'Core: Web Audio'
