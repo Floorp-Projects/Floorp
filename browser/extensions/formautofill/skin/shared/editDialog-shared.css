@@ -105,11 +105,6 @@ dialog[subdialog] form {
   margin: 1em 0 0;
 }
 
-moz-button-group {
-  margin-inline: 4px;
-  margin-block-end: 4px;
-}
-
 #billingAddressGUID-container {
   display: none;
 }
