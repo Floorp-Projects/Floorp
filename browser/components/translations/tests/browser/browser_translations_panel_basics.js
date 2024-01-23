@@ -41,7 +41,11 @@ add_task(async function test_translations_panel_basics() {
 
   await resolveDownloads(1);
 
-  await assertPageIsTranslated("es", "en", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "en",
+    runInPage
+  );
 
   await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 

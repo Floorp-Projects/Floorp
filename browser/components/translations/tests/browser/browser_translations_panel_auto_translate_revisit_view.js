@@ -38,7 +38,11 @@ add_task(
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
-    await assertPageIsTranslated("es", "en", runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
+      "es",
+      "en",
+      runInPage
+    );
 
     await navigate("Navigate to a page in an unsupported language", {
       url: FRENCH_PAGE_URL,
@@ -59,7 +63,11 @@ add_task(
       downloadHandler: resolveDownloads,
     });
 
-    await assertPageIsTranslated("es", "en", runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
+      "es",
+      "en",
+      runInPage
+    );
 
     await openTranslationsPanel({
       openFromAppMenu: true,

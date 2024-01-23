@@ -35,7 +35,11 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   });
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
-  await assertPageIsTranslated("es", "en", runInPage);
+  await FullPageTranslationsTestUtils.assertPageIsTranslated(
+    "es",
+    "en",
+    runInPage
+  );
 
   await navigate("Navigate to a page in an unsupported language.", {
     url: FRENCH_PAGE_URL,

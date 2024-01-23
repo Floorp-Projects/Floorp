@@ -30,7 +30,11 @@ add_task(
       downloadHandler: resolveDownloads,
     });
 
-    await assertPageIsTranslated("es", "en", runInPage);
+    await FullPageTranslationsTestUtils.assertPageIsTranslated(
+      "es",
+      "en",
+      runInPage
+    );
 
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
     await openTranslationsSettingsMenu();
