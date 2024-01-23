@@ -218,7 +218,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   // resources and possibly schedule another paint.
   //
   // A reference to the session object is held until this function has
-  // returned.
+  // returned. Callers should hold a reference to the widget, since this
+  // function could deallocate the widget if it is unparented.
   virtual void NotifyCompositorSessionLost(
       mozilla::layers::CompositorSession* aSession);
 
