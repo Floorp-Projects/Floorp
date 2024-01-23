@@ -18,6 +18,7 @@
 #include "mozilla/layers/OverlayInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -259,7 +260,7 @@ class DCLayerTree {
   }
 
  protected:
-  static UniquePtr<GpuOverlayInfo> sGpuOverlayInfo;
+  static StaticAutoPtr<GpuOverlayInfo> sGpuOverlayInfo;
 };
 
 /**
