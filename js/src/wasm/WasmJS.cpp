@@ -103,6 +103,14 @@ using mozilla::Nothing;
 using mozilla::RangedPtr;
 using mozilla::Span;
 
+static bool ThrowCompileOutOfMemory(JSContext* cx) {
+  // Most OOMs during compilation are due to large contiguous allocations,
+  // and future allocations are likely to succeed. Throwing a proper error
+  // object is nicer for users in these circumstances.
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+  return false;
+}
+
 // ============================================================================
 // Imports
 
@@ -395,8 +403,7 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
                                JSMSG_WASM_COMPILE_ERROR, error.get());
       return false;
     }
-    ReportOutOfMemory(cx);
-    return false;
+    return ThrowCompileOutOfMemory(cx);
   }
 
   Rooted<ImportValues> imports(cx);
@@ -1495,8 +1502,7 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
                                JSMSG_WASM_COMPILE_ERROR, error.get());
       return false;
     }
-    ReportOutOfMemory(cx);
-    return false;
+    return ThrowCompileOutOfMemory(cx);
   }
 
   RootedObject proto(
@@ -4275,7 +4281,7 @@ static bool RejectWithPendingException(JSContext* cx,
 static bool Reject(JSContext* cx, const CompileArgs& args,
                    Handle<PromiseObject*> promise, const UniqueChars& error) {
   if (!error) {
-    ReportOutOfMemory(cx);
+    ThrowCompileOutOfMemory(cx);
     return RejectWithPendingException(cx, promise);
   }
 
