@@ -19,10 +19,6 @@ description: |
   The system is overseen by the owner and peers of the Module Ownership module. For the modules that make up Firefox, oversight is provided by the Firefox Technical Leadership module. Owners may add and remove peers from their modules as they wish, without reference to anyone else.
 
 people:
-  - &abr
-    bmo_id: 241693
-    name: Adam Roach
-    nick: abr
   - &adw
     bmo_id: 334927
     name: Drew Willcoxon
@@ -2118,11 +2114,13 @@ modules:
       group: dev-media
       components:
         - Core::WebRTC::Networking
-    owners:
-      - *ekr
+      owners_emeritus:
+        - Eric Rescola
+      peers_emeritus:
+        - Adam Roach
+    owners: []
     peers:
       - *bwc
-      - *abr
       - *nohlmeier
     machine_name: core_media_transport
 
@@ -2829,6 +2827,8 @@ modules:
     meta:
       peers_emeritus:
         - Ethan Hugg
+        - Eric Rescola
+        - Adam Roach
       group: dev-media
       url: https://wiki.mozilla.org/Media/webrtc
       components:
@@ -2837,8 +2837,6 @@ modules:
     owners:
       - *jesup
     peers:
-      - *ekr
-      - *abr
       - *bwc
     machine_name: core_webrtc
 
@@ -2894,6 +2892,9 @@ modules:
         meta:
           peers_emeritus:
             - Ethan Hugg
+            - Eric Rescola
+            - Adam Roach
+            - *nohlmeier
           group: dev-media
           url: https://wiki.mozilla.org/Media/webrtc
           components:
@@ -2901,10 +2902,7 @@ modules:
         owners:
           - *bwc
         peers:
-          - *ekr
-          - *abr
           - *jesup
-          - *nohlmeier
         machine_name: core_webrtc_signaling
     machine_name: core_webvr
 
@@ -3248,7 +3246,7 @@ modules:
         machine_name: application_update
         meta:
           peers_emeritus:
-            - *agashlin
+            - Adam Gashlin
 
 
       - name: Bookmarks & History
