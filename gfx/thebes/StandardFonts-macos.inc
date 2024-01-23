@@ -116,7 +116,7 @@ static const char* kBaseFonts[] = {
   "Muna",
   "Myanmar MN",
   "Myanmar Sangam MN",
-  "Nadeem Regular",
+  "Nadeem",
   "New Peninim MT",
   "Noteworthy",
   "Noto Nastaliq Urdu",
