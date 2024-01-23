@@ -2528,13 +2528,6 @@
   mirror: always
   do_not_use_directly: true
 
-# Guard for bug 1731504, in case fix breaks more websites
-# If true, event is first captured then bubbled on target element
-- name: dom.events.phases.correctOrderOnTarget
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # This pref controls whether or not the `protected` dataTransfer state is
 # enabled. If the `protected` dataTransfer stae is disabled, then the
 # DataTransfer will be read-only whenever it should be protected, and will not
