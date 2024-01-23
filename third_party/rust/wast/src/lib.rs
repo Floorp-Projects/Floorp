@@ -376,6 +376,7 @@ pub mod kw {
     custom_keyword!(after);
     custom_keyword!(alias);
     custom_keyword!(any);
+    custom_keyword!(anyfunc);
     custom_keyword!(anyref);
     custom_keyword!(arg);
     custom_keyword!(array);

@@ -3186,10 +3186,22 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-void Instance::setPendingException(Handle<WasmExceptionObject*> exn) {
-  pendingException_ = AnyRef::fromJSObject(*exn.get());
-  pendingExceptionTag_ =
-      AnyRef::fromJSObject(exn->as<WasmExceptionObject>().tag());
+static AnyRef GetExceptionTag(AnyRef exn) {
+  if (!exn.isJSObject()) {
+    return nullptr;
+  }
+
+  JSObject& exnObj = exn.toJSObject();
+  if (!exnObj.is<WasmExceptionObject>()) {
+    return nullptr;
+  }
+
+  return AnyRef::fromJSObject(exnObj.as<WasmExceptionObject>().tag());
+}
+
+void Instance::setPendingException(HandleAnyRef exn) {
+  pendingException_ = exn.get();
+  pendingExceptionTag_ = GetExceptionTag(exn.get());
 }
 
 void Instance::constantGlobalGet(uint32_t globalIndex,

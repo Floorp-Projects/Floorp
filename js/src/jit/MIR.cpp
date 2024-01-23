@@ -6079,24 +6079,6 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
   return call;
 }
 
-MWasmCallCatchable* MWasmCallCatchable::NewBuiltinInstanceMethodCall(
-    TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-    const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
-    const ABIArg& instanceArg, const Args& args,
-    uint32_t stackArgAreaSizeUnaligned, const MWasmCallTryDesc& tryDesc) {
-  auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
-  MWasmCallCatchable* call = MWasmCallCatchable::New(
-      alloc, desc, callee, args, stackArgAreaSizeUnaligned, tryDesc, nullptr);
-  if (!call) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(instanceArg != ABIArg());
-  call->instanceArg_ = instanceArg;
-  call->builtinMethodFailureMode_ = failureMode;
-  return call;
-}
-
 MWasmCallUncatchable* MWasmCallUncatchable::New(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::CalleeDesc& callee, const Args& args,

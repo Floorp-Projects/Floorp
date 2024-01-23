@@ -464,7 +464,7 @@ let $1 = instantiate(`(module
 )`);
 
 // ./test/core/gc/ref_test.wast:329
-assert_return(() => invoke($1, `test-sub`, []), []);
+invoke($1, `test-sub`, []);
 
 // ./test/core/gc/ref_test.wast:330
-assert_return(() => invoke($1, `test-canon`, []), []);
+invoke($1, `test-canon`, []);

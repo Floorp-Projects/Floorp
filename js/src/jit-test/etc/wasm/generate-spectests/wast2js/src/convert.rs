@@ -105,21 +105,9 @@ fn convert_directive(
                     out,
                     "register(${}, {});",
                     next_instance,
-                    format!("`{}`", escape_template_name_string(id.name()))
+                    format!("`{}`", escape_template_string(id.name()))
                 )?;
             }
-
-            *current_instance = Some(next_instance);
-        }
-        Wat(wast::QuoteWat::QuoteModule(_, source)) => {
-            let next_instance = current_instance.map(|x| x + 1).unwrap_or(0);
-            let module_text = quote_module_to_js_string(source)?;
-
-            writeln!(
-                out,
-                "let ${} = instantiate(`{}`);",
-                next_instance, module_text
-            )?;
 
             *current_instance = Some(next_instance);
         }
@@ -132,14 +120,14 @@ fn convert_directive(
             module,
         } => {
             let instanceish = module
-                .map(|x| format!("`{}`", escape_template_name_string(x.name())))
+                .map(|x| format!("`{}`", escape_template_string(x.name())))
                 .unwrap_or_else(|| format!("${}", current_instance.unwrap()));
 
             writeln!(
                 out,
                 "register({}, `{}`);",
                 instanceish,
-                escape_template_name_string(name)
+                escape_template_string(name)
             )?;
         }
         Invoke(i) => {
@@ -172,7 +160,7 @@ fn convert_directive(
             let exec_node = execute_to_js(current_instance, exec, wast)?;
             let expected_node = Box::new(JSNode::Raw(format!(
                 "`{}`",
-                escape_template_name_string(message)
+                escape_template_string(message)
             )));
             writeln!(
                 out,
@@ -193,7 +181,7 @@ fn convert_directive(
             let exec_node = invoke_to_js(current_instance, call)?;
             let expected_node = Box::new(JSNode::Raw(format!(
                 "`{}`",
-                escape_template_name_string(message)
+                escape_template_string(message)
             )));
             writeln!(
                 out,
@@ -219,7 +207,7 @@ fn convert_directive(
             let exec = Box::new(JSNode::Raw(format!("instantiate(`{}`)", text)));
             let expected_node = Box::new(JSNode::Raw(format!(
                 "`{}`",
-                escape_template_name_string(message)
+                escape_template_string(message)
             )));
             writeln!(
                 out,
@@ -245,7 +233,7 @@ fn convert_directive(
             let exec = Box::new(JSNode::Raw(format!("instantiate(`{}`)", text)));
             let expected_node = Box::new(JSNode::Raw(format!(
                 "`{}`",
-                escape_template_name_string(message)
+                escape_template_string(message)
             )));
             writeln!(
                 out,
@@ -270,7 +258,7 @@ fn convert_directive(
             let exec = Box::new(JSNode::Raw(format!("instantiate(`{}`)", text)));
             let expected_node = Box::new(JSNode::Raw(format!(
                 "`{}`",
-                escape_template_name_string(message)
+                escape_template_string(message)
             )));
             writeln!(
                 out,
@@ -289,21 +277,19 @@ fn convert_directive(
             let exec_node = execute_to_js(current_instance, exec, wast)?;
             writeln!(out, "assert_exception(() => {});", exec_node.output(0))?;
         }
-        Thread(..) => unimplemented!(),
-        Wait { .. } => unimplemented!(),
     }
 
     Ok(())
 }
 
-fn escape_template_string(text: &str, escape_ascii_lf_tab: bool) -> String {
+fn escape_template_string(text: &str) -> String {
     let mut escaped = String::new();
     for c in text.chars() {
         match c {
             '$' => escaped.push_str("$$"),
             '\\' => escaped.push_str("\\\\"),
             '`' => escaped.push_str("\\`"),
-            c if c.is_ascii_control() && escape_ascii_lf_tab && c != '\n' && c != '\t' => {
+            c if c.is_ascii_control() && c != '\n' && c != '\t' => {
                 escaped.push_str(&format!("\\x{:02x}", c as u32))
             }
             c if !c.is_ascii() => escaped.push_str(&c.escape_unicode().to_string()),
@@ -311,19 +297,6 @@ fn escape_template_string(text: &str, escape_ascii_lf_tab: bool) -> String {
         }
     }
     escaped
-}
-
-// Escape a module for use in a JS template string.
-fn escape_template_module_string(text: &str) -> String {
-    // Modules may have comments, where line-feeds must be passed through as-is
-    // to preserve their meaning
-    escape_template_string(text, false)
-}
-
-// Escape a name for use in a JS template string.
-fn escape_template_name_string(text: &str) -> String {
-    // Names don't care about line-feeds or tabs, just need equality
-    escape_template_string(text, true)
 }
 
 fn span_to_offset(span: wast::token::Span, text: &str) -> Result<usize> {
@@ -384,9 +357,9 @@ fn module_to_js_string(module: &wast::core::Module, wast: &str) -> Result<String
     let offset = span_to_offset(module.span, wast)?;
     let opened_module = &wast[offset..];
     if !opened_module.starts_with("module") {
-        return Ok(escape_template_module_string(opened_module));
+        return Ok(escape_template_string(opened_module));
     }
-    Ok(escape_template_module_string(&format!(
+    Ok(escape_template_string(&format!(
         "({}",
         closed_module(opened_module)?
     )))
@@ -398,20 +371,20 @@ fn quote_module_to_js_string(quotes: Vec<(wast::token::Span, &[u8])>) -> Result<
         text.push_str(str::from_utf8(src)?);
         text.push_str(" ");
     }
-    let escaped = escape_template_module_string(&text);
+    let escaped = escape_template_string(&text);
     Ok(escaped)
 }
 
 fn invoke_to_js(current_instance: &Option<usize>, i: wast::WastInvoke) -> Result<Box<JSNode>> {
     let instanceish = i
         .module
-        .map(|x| format!("`{}`", escape_template_name_string(x.name())))
+        .map(|x| format!("`{}`", escape_template_string(x.name())))
         .unwrap_or_else(|| format!("${}", current_instance.unwrap()));
     let body = to_js_value_array(&i.args, arg_to_js_value)?;
 
     Ok(Box::new(JSNode::Invoke {
         instance: instanceish,
-        name: escape_template_name_string(i.name),
+        name: escape_template_string(i.name),
         body: body,
     }))
 }
@@ -432,7 +405,7 @@ fn execute_to_js(
         }
         wast::WastExecute::Get { module, global } => {
             let instanceish = module
-                .map(|x| format!("`{}`", escape_template_name_string(x.name())))
+                .map(|x| format!("`{}`", escape_template_string(x.name())))
                 .unwrap_or_else(|| format!("${}", current_instance.unwrap()));
             Ok(Box::new(JSNode::Raw(format!(
                 "get({}, `{}`)",
@@ -561,7 +534,6 @@ fn return_value_to_js_value(v: &wast::core::WastRetCore<'_>) -> Result<String> {
         F64(x) => f64_pattern_to_js_value(x),
         RefNull(x) => match x {
             Some(wast::core::HeapType::Any) => format!("value('anyref', null)"),
-            Some(wast::core::HeapType::Exn) => format!("value('exnref', null)"),
             Some(wast::core::HeapType::Eq) => format!("value('eqref', null)"),
             Some(wast::core::HeapType::Array) => format!("value('arrayref', null)"),
             Some(wast::core::HeapType::Struct) => format!("value('structref', null)"),

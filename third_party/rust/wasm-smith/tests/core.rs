@@ -1,6 +1,6 @@
 use arbitrary::{Arbitrary, Unstructured};
 use rand::{rngs::SmallRng, RngCore, SeedableRng};
-use wasm_smith::{Config, Module};
+use wasm_smith::{Config, ConfiguredModule, Module, SwarmConfig};
 use wasmparser::{Validator, WasmFeatures};
 
 #[test]
@@ -42,14 +42,13 @@ fn smoke_test_swarm_config() {
     let mut buf = vec![0; 2048];
     for _ in 0..1024 {
         rng.fill_bytes(&mut buf);
-        let mut u = Unstructured::new(&buf);
-        if let Ok(config) = Config::arbitrary(&mut u) {
-            if let Ok(module) = Module::new(config, &mut u) {
-                let wasm_bytes = module.to_bytes();
+        let u = Unstructured::new(&buf);
+        if let Ok(module) = ConfiguredModule::<SwarmConfig>::arbitrary_take_rest(u) {
+            let module = module.module;
+            let wasm_bytes = module.to_bytes();
 
-                let mut validator = Validator::new_with_features(wasm_features());
-                validate(&mut validator, &wasm_bytes);
-            }
+            let mut validator = Validator::new_with_features(wasm_features());
+            validate(&mut validator, &wasm_bytes);
         }
     }
 }
@@ -61,7 +60,7 @@ fn multi_value_disabled() {
     for _ in 0..10 {
         rng.fill_bytes(&mut buf);
         let mut u = Unstructured::new(&buf);
-        let mut cfg = Config::arbitrary(&mut u).unwrap();
+        let mut cfg = SwarmConfig::arbitrary(&mut u).unwrap();
         cfg.multi_value_enabled = false;
         if let Ok(module) = Module::new(cfg, &mut u) {
             let wasm_bytes = module.to_bytes();
@@ -80,8 +79,8 @@ fn smoke_can_smith_valid_webassembly_one_point_oh() {
     for _ in 0..100 {
         rng.fill_bytes(&mut buf);
         let mut u = Unstructured::new(&buf);
-        let mut cfg = Config::arbitrary(&mut u).unwrap();
-        cfg.sign_extension_ops_enabled = false;
+        let mut cfg = SwarmConfig::arbitrary(&mut u).unwrap();
+        cfg.sign_extension_enabled = false;
         cfg.saturating_float_to_int_enabled = false;
         cfg.reference_types_enabled = false;
         cfg.multi_value_enabled = false;
@@ -109,7 +108,7 @@ fn smoke_test_no_trapping_mode() {
     for _ in 0..1024 {
         rng.fill_bytes(&mut buf);
         let mut u = Unstructured::new(&buf);
-        let mut cfg = Config::arbitrary(&mut u).unwrap();
+        let mut cfg = SwarmConfig::arbitrary(&mut u).unwrap();
         cfg.disallow_traps = true;
         if let Ok(module) = Module::new(cfg, &mut u) {
             let wasm_bytes = module.to_bytes();
@@ -130,20 +129,20 @@ fn wasm_features() -> WasmFeatures {
     }
 }
 
-fn parser_features_from_config(config: &Config) -> WasmFeatures {
+fn parser_features_from_config(config: &impl Config) -> WasmFeatures {
     WasmFeatures {
         mutable_global: true,
-        saturating_float_to_int: config.saturating_float_to_int_enabled,
-        sign_extension: config.sign_extension_ops_enabled,
-        reference_types: config.reference_types_enabled,
-        multi_value: config.multi_value_enabled,
-        bulk_memory: config.bulk_memory_enabled,
-        simd: config.simd_enabled,
-        relaxed_simd: config.relaxed_simd_enabled,
-        multi_memory: config.max_memories > 1,
-        exceptions: config.exceptions_enabled,
-        memory64: config.memory64_enabled,
-        tail_call: config.tail_call_enabled,
+        saturating_float_to_int: config.saturating_float_to_int_enabled(),
+        sign_extension: config.sign_extension_ops_enabled(),
+        reference_types: config.reference_types_enabled(),
+        multi_value: config.multi_value_enabled(),
+        bulk_memory: config.bulk_memory_enabled(),
+        simd: config.simd_enabled(),
+        relaxed_simd: config.relaxed_simd_enabled(),
+        multi_memory: config.max_memories() > 1,
+        exceptions: config.exceptions_enabled(),
+        memory64: config.memory64_enabled(),
+        tail_call: config.tail_call_enabled(),
 
         threads: false,
         floats: true,
@@ -153,7 +152,6 @@ fn parser_features_from_config(config: &Config) -> WasmFeatures {
         memory_control: false,
         gc: false,
         component_model_values: false,
-        component_model_nested_names: false,
     }
 }
 

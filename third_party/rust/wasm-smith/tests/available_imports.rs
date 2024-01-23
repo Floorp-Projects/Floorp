@@ -3,7 +3,7 @@
 use arbitrary::{Arbitrary, Unstructured};
 use rand::{rngs::SmallRng, RngCore, SeedableRng};
 use std::collections::HashMap;
-use wasm_smith::{Config, Module};
+use wasm_smith::{Config, Module, SwarmConfig};
 use wasmparser::{Parser, TypeRef, ValType};
 use wasmparser::{Validator, WasmFeatures};
 
@@ -113,10 +113,10 @@ enum AvailableImportKind {
 fn import_config(
     u: &mut Unstructured,
 ) -> (
-    Config,
+    SwarmConfig,
     Vec<(&'static str, &'static str, AvailableImportKind)>,
 ) {
-    let mut config = Config::arbitrary(u).expect("arbitrary swarm");
+    let mut config = SwarmConfig::arbitrary(u).expect("arbitrary swarm");
     config.exceptions_enabled = u.arbitrary().expect("exceptions enabled for swarm");
     let available = {
         use {AvailableImportKind::*, ValType::*};
@@ -156,20 +156,20 @@ fn import_config(
     (config, available)
 }
 
-fn parser_features_from_config(config: &Config) -> WasmFeatures {
+fn parser_features_from_config(config: &impl Config) -> WasmFeatures {
     WasmFeatures {
         mutable_global: true,
-        saturating_float_to_int: config.saturating_float_to_int_enabled,
-        sign_extension: config.sign_extension_ops_enabled,
-        reference_types: config.reference_types_enabled,
-        multi_value: config.multi_value_enabled,
-        bulk_memory: config.bulk_memory_enabled,
-        simd: config.simd_enabled,
-        relaxed_simd: config.relaxed_simd_enabled,
-        multi_memory: config.max_memories > 1,
-        exceptions: config.exceptions_enabled,
-        memory64: config.memory64_enabled,
-        tail_call: config.tail_call_enabled,
+        saturating_float_to_int: config.saturating_float_to_int_enabled(),
+        sign_extension: config.sign_extension_ops_enabled(),
+        reference_types: config.reference_types_enabled(),
+        multi_value: config.multi_value_enabled(),
+        bulk_memory: config.bulk_memory_enabled(),
+        simd: config.simd_enabled(),
+        relaxed_simd: config.relaxed_simd_enabled(),
+        multi_memory: config.max_memories() > 1,
+        exceptions: config.exceptions_enabled(),
+        memory64: config.memory64_enabled(),
+        tail_call: config.tail_call_enabled(),
 
         threads: false,
         floats: true,
@@ -179,7 +179,6 @@ fn parser_features_from_config(config: &Config) -> WasmFeatures {
         memory_control: false,
         gc: false,
         component_model_values: false,
-        component_model_nested_names: false,
     }
 }
 

@@ -54,10 +54,7 @@ impl<'a> Namespace<'a> {
         if let Some(_prev) = self.names.insert(name, index) {
             return Err(Error::new(
                 name.span(),
-                format!(
-                    "duplicate identifier: duplicate {desc} named `{}`",
-                    name.name()
-                ),
+                format!("duplicate identifier `{}` for {}", name.name(), desc),
             ));
         }
         Ok(())

@@ -3775,7 +3775,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (!exnObj->initArg(cx, offsets[i], params[i], nextArg)) {
+    if (!exnObj->initValue(cx, offsets[i], params[i], nextArg)) {
       return false;
     }
   }
@@ -3817,42 +3817,9 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
   return obj;
 }
 
-WasmExceptionObject* WasmExceptionObject::wrapJSValue(JSContext* cx,
-                                                      HandleValue value) {
-  Rooted<WasmNamespaceObject*> wasm(cx, WasmNamespaceObject::getOrCreate(cx));
-  if (!wasm) {
-    return nullptr;
-  }
-
-  Rooted<AnyRef> valueAnyRef(cx);
-  if (!AnyRef::fromJSValue(cx, value, &valueAnyRef)) {
-    return nullptr;
-  }
-
-  Rooted<WasmTagObject*> wrappedJSValueTag(cx, wasm->wrappedJSValueTag());
-  WasmExceptionObject* exn =
-      WasmExceptionObject::create(cx, wrappedJSValueTag, nullptr, nullptr);
-  if (!exn) {
-    return nullptr;
-  }
-  MOZ_ASSERT(exn->isWrappedJSValue());
-
-  exn->initRefArg(WrappedJSValueTagType_ValueOffset, valueAnyRef);
-  return exn;
-}
-
 bool WasmExceptionObject::isNewborn() const {
   MOZ_ASSERT(is<WasmExceptionObject>());
   return getReservedSlot(DATA_SLOT).isUndefined();
-}
-
-bool WasmExceptionObject::isWrappedJSValue() const {
-  return tagType() == sWrappedJSValueTagType;
-}
-
-Value WasmExceptionObject::wrappedJSValue() const {
-  MOZ_ASSERT(isWrappedJSValue());
-  return loadRefArg(WrappedJSValueTagType_ValueOffset).toJSValue();
 }
 
 const JSPropertySpec WasmExceptionObject::properties[] = {
@@ -3925,7 +3892,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
 
   uint32_t offset = exnTag->tagType()->argOffsets()[index];
   RootedValue result(cx);
-  if (!exnObj->loadArg(cx, offset, params[index], &result)) {
+  if (!exnObj->loadValue(cx, offset, params[index], &result)) {
     return false;
   }
   args.rval().set(result);
@@ -3970,9 +3937,8 @@ uint8_t* WasmExceptionObject::typedMem() const {
   return (uint8_t*)getReservedSlot(DATA_SLOT).toPrivate();
 }
 
-bool WasmExceptionObject::loadArg(JSContext* cx, size_t offset,
-                                  wasm::ValType type,
-                                  MutableHandleValue vp) const {
+bool WasmExceptionObject::loadValue(JSContext* cx, size_t offset,
+                                    wasm::ValType type, MutableHandleValue vp) {
   if (!type.isExposable()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
@@ -3981,8 +3947,8 @@ bool WasmExceptionObject::loadArg(JSContext* cx, size_t offset,
   return ToJSValue(cx, typedMem() + offset, type, vp);
 }
 
-bool WasmExceptionObject::initArg(JSContext* cx, size_t offset,
-                                  wasm::ValType type, HandleValue value) {
+bool WasmExceptionObject::initValue(JSContext* cx, size_t offset,
+                                    wasm::ValType type, HandleValue value) {
   if (!type.isExposable()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
@@ -3998,16 +3964,6 @@ bool WasmExceptionObject::initArg(JSContext* cx, size_t offset,
   }
   val.get().writeToHeapLocation(dest);
   return true;
-}
-
-void WasmExceptionObject::initRefArg(size_t offset, wasm::AnyRef ref) {
-  uint8_t* dest = typedMem() + offset;
-  *((GCPtr<AnyRef>*)dest) = ref;
-}
-
-wasm::AnyRef WasmExceptionObject::loadRefArg(size_t offset) const {
-  uint8_t* src = typedMem() + offset;
-  return *((GCPtr<AnyRef>*)src);
 }
 
 const JSFunctionSpec WasmExceptionObject::methods[] = {
@@ -5361,22 +5317,6 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
         return false;
       }
     }
-
-    RootedObject tagProto(
-        cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTag));
-    if (!tagProto) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    SharedTagType wrappedJSValueTagType(sWrappedJSValueTagType);
-    WasmTagObject* wrappedJSValueTagObject =
-        WasmTagObject::create(cx, wrappedJSValueTagType, tagProto);
-    if (!wrappedJSValueTagObject) {
-      return false;
-    }
-
-    wasm->setWrappedJSValueTag(wrappedJSValueTagObject);
   }
 
 #ifdef ENABLE_WASM_MOZ_INTGEMM
@@ -5389,24 +5329,13 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
   return true;
 }
 
-WasmNamespaceObject* WasmNamespaceObject::getOrCreate(JSContext* cx) {
-  JSObject* wasm =
-      GlobalObject::getOrCreateConstructor(cx, JSProto_WebAssembly);
-  if (!wasm) {
-    return nullptr;
-  }
-  return &wasm->as<WasmNamespaceObject>();
-}
-
 static const ClassSpec WebAssemblyClassSpec = {
     CreateWebAssemblyObject,       nullptr, WebAssembly_static_methods,
     WebAssembly_static_properties, nullptr, nullptr,
     WebAssemblyClassFinish};
 
 const JSClass js::WasmNamespaceObject::class_ = {
-    "WebAssembly",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly) |
-        JSCLASS_HAS_RESERVED_SLOTS(WasmNamespaceObject::RESERVED_SLOTS),
+    "WebAssembly", JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
     JS_NULL_CLASS_OPS, &WebAssemblyClassSpec};
 
 // Sundry

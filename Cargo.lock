@@ -43,7 +43,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce34de545ad29bcc00cb1b87a94c132256dcf83aa7eeb9674482568405a6ff0a"
 dependencies = [
  "alsa-sys",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "libc",
  "nix 0.26.99",
 ]
@@ -434,7 +434,7 @@ version = "0.69.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4c69fae65a523209d34240b60abe0c42d33d1045d445c0839d8a4894a736e2d"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "cexpr",
  "clang-sys",
  "lazy_static",
@@ -467,14 +467,14 @@ checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
 name = "bitflags"
 version = "1.999.999"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
 ]
 
 [[package]]
 name = "bitflags"
-version = "2.4.1"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "327762f6e5a765692301e5bb513e0d9fef63be86bbc14528052b1cd3e6f03e07"
+checksum = "b4682ae6287fcf752ecaabbfcc7b6f9b72aa33933dc23a554d853aea8eea8635"
 dependencies = [
  "serde",
 ]
@@ -1121,7 +1121,7 @@ source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=89abc256a2eab339
 dependencies = [
  "atomic",
  "audio-mixer",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "coreaudio-sys-utils",
  "cubeb-backend",
  "float-cmp",
@@ -1159,7 +1159,7 @@ name = "d3d12"
 version = "0.19.0"
 source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "libloading",
  "winapi",
 ]
@@ -1443,7 +1443,7 @@ dependencies = [
 name = "dom"
 version = "0.1.0"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
 ]
 
 [[package]]
@@ -2412,7 +2412,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbcd2dba93594b227a1f57ee09b8b9da8892c34d55aa332e034a228d0fe6a171"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "gpu-alloc-types",
 ]
 
@@ -2422,7 +2422,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98ff03b468aa837d70984d55f5d3f846f6ec31fe34bbb97c4f85219caeee1ca4"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
 ]
 
 [[package]]
@@ -3412,7 +3412,7 @@ version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c43f73953f8cbe511f021b58f18c3ce1c3d1ae13fe953293e13345bf83217f25"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "block",
  "core-graphics-types",
  "foreign-types",
@@ -3477,7 +3477,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dbc11dfb55b3b7b5684fb16d98e0fc9d1e93a64d6b00bf383eabfc4541aaac2"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "debugid",
  "num-derive",
  "num-traits",
@@ -3492,7 +3492,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "017101620fe5d413ac2d98224ab8b1fff0d4bacaf2803c130ad4a6db3e5d3e70"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "byteorder",
  "cfg-if 1.0.0",
  "crash-context",
@@ -3662,7 +3662,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec",
  "bindgen 0.69.2",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "bytes",
  "cc",
  "chrono",
@@ -3799,7 +3799,7 @@ source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44
 dependencies = [
  "arrayvec",
  "bit-set",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "codespan-reporting",
  "hexf-parse",
  "indexmap 2.999.999",
@@ -3946,7 +3946,7 @@ version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2eb04e9c688eff1c89d72b407f168cf79bb9e867a9d3323ed6c01519eb9cc053"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "cfg-if 1.0.0",
  "libc",
 ]
@@ -3993,7 +3993,7 @@ source = "git+https://github.com/mozilla/application-services?rev=63a6260c14847c
 name = "nsstring"
 version = "0.1.0"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "encoding_rs",
 ]
 
@@ -4443,7 +4443,7 @@ version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d3554923a69f4ce04c4a754260c338f505ce22642d3830e049a399fc2059a29"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "hex",
 ]
 
@@ -4500,7 +4500,7 @@ name = "pulse"
 version = "0.3.0"
 source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=c04c4d2c7f2291cb81a1c48f5a8c425748f18cd8#c04c4d2c7f2291cb81a1c48f5a8c425748f18cd8"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "pulse-ffi",
 ]
 
@@ -4723,7 +4723,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
 dependencies = [
  "base64 0.21.3",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "serde",
  "serde_derive",
 ]
@@ -4766,7 +4766,7 @@ version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a78046161564f5e7cd9008aff3b2990b3850dc8e0349119b98e8f251e099f24d"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "fallible-iterator",
  "fallible-streaming-iterator",
  "hashlink",
@@ -4841,7 +4841,7 @@ version = "0.38.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7db8590df6dfcd144d22afd1b83b36c21a18d7cbc1dc4bb5295a8712e9eb662"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "errno",
  "libc",
  "linux-raw-sys",
@@ -4905,7 +4905,7 @@ dependencies = [
 name = "selectors"
 version = "0.22.0"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "cssparser",
  "derive_more 0.99.999",
  "fxhash",
@@ -5182,7 +5182,7 @@ version = "0.3.0+sdk-1.3.268.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eda41003dc44290527a59b13432d4a0379379fa074b70174882adfbdfd917844"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
 ]
 
 [[package]]
@@ -5271,7 +5271,7 @@ dependencies = [
  "arrayvec",
  "atomic_refcell",
  "bindgen 0.69.2",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "byteorder",
  "cssparser",
  "derive_more 0.99.999",
@@ -5338,7 +5338,7 @@ name = "style_traits"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "cssparser",
  "euclid",
  "lazy_static",
@@ -6187,19 +6187,18 @@ version = "0.2.100"
 
 [[package]]
 name = "wasm-encoder"
-version = "0.39.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "111495d6204760238512f57a9af162f45086504da332af210f2f75dd80b34f1d"
+checksum = "7b09bc5df933a3dabbdb72ae4b6b71be8ae07f58774d5aa41bd20adcd41a235a"
 dependencies = [
  "leb128",
- "wasmparser",
 ]
 
 [[package]]
 name = "wasm-smith"
-version = "0.14.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a419bbbab75f5ad71744256b74fdaeeb9215ea9e9bfc59c477e96c462ee0ef59"
+checksum = "8ee085568165cd2886137be8ece587fe2f5cabbc0d63e35d8c8afc7daef2e8c2"
 dependencies = [
  "arbitrary",
  "flagset",
@@ -6209,21 +6208,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasmparser"
-version = "0.119.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c35daf77afb4f9b14016625144a391085ec2ca99ca9cc53ed291bb53ab5278d"
-dependencies = [
- "bitflags 2.4.1",
- "indexmap 2.999.999",
- "semver",
-]
-
-[[package]]
 name = "wast"
-version = "70.0.0"
+version = "69.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ee4bc54bbe1c6924160b9f75e374a1d07532e7580eb632c0ee6cdd109bb217e"
+checksum = "efa51b5ad1391943d1bfad537e50f28fe938199ee76b115be6bae83802cd5185"
 dependencies = [
  "leb128",
  "memchr",
@@ -6307,7 +6295,7 @@ name = "webrender"
 version = "0.62.0"
 dependencies = [
  "bincode",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "build-parallel",
  "byteorder",
  "derive_more 0.99.999",
@@ -6344,7 +6332,7 @@ name = "webrender_api"
 version = "0.62.0"
 dependencies = [
  "app_units",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "byteorder",
  "crossbeam-channel",
  "euclid",
@@ -6391,7 +6379,7 @@ dependencies = [
 name = "webrender_build"
 version = "0.0.2"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "lazy_static",
  "serde",
 ]
@@ -6422,7 +6410,7 @@ source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44
 dependencies = [
  "arrayvec",
  "bit-vec",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "cfg_aliases",
  "codespan-reporting",
  "indexmap 2.999.999",
@@ -6450,7 +6438,7 @@ dependencies = [
  "arrayvec",
  "ash",
  "bit-set",
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "block",
  "cfg_aliases",
  "core-graphics-types",
@@ -6484,7 +6472,7 @@ name = "wgpu-types"
 version = "0.19.0"
 source = "git+https://github.com/gfx-rs/wgpu?rev=f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e#f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.4.0",
  "js-sys",
  "serde",
  "web-sys",

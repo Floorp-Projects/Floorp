@@ -64,8 +64,6 @@ using FuncCompileInputVector = Vector<FuncCompileInput, 8, SystemAllocPolicy>;
 // input functions or stubs.
 
 struct CompiledCode {
-  CompiledCode() : featureUsage(FeatureUsage::None) {}
-
   Bytes bytes;
   CodeRangeVector codeRanges;
   CallSiteVector callSites;
@@ -76,7 +74,6 @@ struct CompiledCode {
   StackMaps stackMaps;
   TryNoteVector tryNotes;
   CodeRangeUnwindInfoVector codeRangeUnwindInfos;
-  FeatureUsage featureUsage;
 
   [[nodiscard]] bool swap(jit::MacroAssembler& masm);
 
@@ -91,7 +88,6 @@ struct CompiledCode {
     stackMaps.clear();
     tryNotes.clear();
     codeRangeUnwindInfos.clear();
-    featureUsage = FeatureUsage::None;
     MOZ_ASSERT(empty());
   }
 
@@ -99,8 +95,7 @@ struct CompiledCode {
     return bytes.empty() && codeRanges.empty() && callSites.empty() &&
            callSiteTargets.empty() && trapSites.empty() &&
            symbolicAccesses.empty() && codeLabels.empty() && tryNotes.empty() &&
-           stackMaps.empty() && codeRangeUnwindInfos.empty() &&
-           featureUsage == FeatureUsage::None;
+           stackMaps.empty() && codeRangeUnwindInfos.empty();
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

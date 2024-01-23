@@ -1745,19 +1745,19 @@ void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
   masm.loadPtr(Address(instance, offset), tagDst);
 }
 
-void BaseCompiler::consumePendingException(RegPtr instance, RegRef* exnDst,
-                                           RegRef* tagDst) {
+void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   RegPtr pendingAddr = RegPtr(PreBarrierReg);
   needPtr(pendingAddr);
   masm.computeEffectiveAddress(
-      Address(instance, Instance::offsetOfPendingException()), pendingAddr);
+      Address(InstanceReg, Instance::offsetOfPendingException()), pendingAddr);
   *exnDst = needRef();
   masm.loadPtr(Address(pendingAddr, 0), *exnDst);
   emitBarrieredClear(pendingAddr);
 
   *tagDst = needRef();
   masm.computeEffectiveAddress(
-      Address(instance, Instance::offsetOfPendingExceptionTag()), pendingAddr);
+      Address(InstanceReg, Instance::offsetOfPendingExceptionTag()),
+      pendingAddr);
   masm.loadPtr(Address(pendingAddr, 0), *tagDst);
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
@@ -4073,48 +4073,59 @@ bool BaseCompiler::emitTryTable() {
     return false;
   }
 
-  if (!deadCode_) {
-    // Simplifies jumping out, but it is also necessary so that control
-    // can re-enter the catch handler without restoring registers.
-    sync();
+  if (deadCode_) {
+    return true;
   }
+
+  // Simplifies jumping out, but it is also necessary so that control
+  // can re-enter the catch handler without restoring registers.
+  sync();
 
   initControl(controlItem(), params);
   // Be conservative for BCE due to complex control flow in try blocks.
   controlItem().bceSafeOnExit = 0;
 
-  // Don't emit a landing pad if this whole try is dead code
-  if (deadCode_) {
-    return true;
-  }
-
   // Emit a landing pad that exceptions will jump into. Jump over it for now.
-  Label skipLandingPad;
-  masm.jump(&skipLandingPad);
-
-  // Bind the otherLabel so that delegate can target this
-  masm.bind(&controlItem().otherLabel);
+  Label skip;
+  masm.jump(&skip);
 
   StackHeight prePadHeight = fr.stackHeight();
   uint32_t padOffset = masm.currentOffset();
   uint32_t padStackHeight = masm.framePushed();
 
-  // InstanceReg is live and contains this function's instance by the exception
-  // handling resume method. We keep it alive for use in loading the tag for
-  // each catch handler.
-  RegPtr instance = RegPtr(InstanceReg);
+  // Store the Instance that was left in InstanceReg by the exception
+  // handling mechanism, that is this frame's Instance but with the exception
+  // filled in Instance::pendingException.
+  fr.storeInstancePtr(InstanceReg);
+
+  // Ensure we don't take the result register that we'll need for passing
+  // results to the branch target. Also make sure we don't take the
+  // InstanceReg which is used for loading tags.
+  //
+  // TODO: future proof this code for multiple result registers.
+  ResultType resultRegs = ResultType::Single(RefType::extern_());
+  needIntegerResultRegisters(resultRegs);
 #ifndef RABALDR_PIN_INSTANCE
-  needPtr(instance);
+  needPtr(RegPtr(InstanceReg));
 #endif
 
   // Load exception and tag from instance, clearing it in the process.
   RegRef exn;
   RegRef exnTag;
-  consumePendingException(instance, &exn, &exnTag);
+  consumePendingException(&exn, &exnTag);
 
   // Get a register to hold the tags for each catch
   RegRef catchTag = needRef();
 
+  // Release our reserved registers.
+#ifndef RABALDR_PIN_INSTANCE
+  freePtr(RegPtr(InstanceReg));
+#endif
+  freeIntegerResultRegisters(resultRegs);
+
+  MOZ_ASSERT(exn != InstanceReg);
+  MOZ_ASSERT(exnTag != InstanceReg);
+  MOZ_ASSERT(catchTag != InstanceReg);
   bool hadCatchAll = false;
   for (const TryTableCatch& tryTableCatch : catches) {
     ResultType labelParams = ResultType::Vector(tryTableCatch.labelType);
@@ -4124,23 +4135,20 @@ bool BaseCompiler::emitTryTable() {
 
     // Handle a catch_all by jumping to the target block
     if (tryTableCatch.tagIndex == CatchAllIndex) {
-      // Capture the exnref if it has been requested, or else free it.
+      // Capture the exnref if it has been requested
       if (tryTableCatch.captureExnRef) {
         pushRef(exn);
-      } else {
-        freeRef(exn);
       }
-      // Free all of the other registers
-      freeRef(exnTag);
-      freeRef(catchTag);
-#ifndef RABALDR_PIN_INSTANCE
-      freePtr(instance);
-#endif
-
-      // Pop the results needed for the target branch and perform the jump
       popBlockResults(labelParams, target.stackHeight, ContinuationKind::Jump);
       masm.jump(&target.label);
+      // The registers holding the join values are free for the remainder of
+      // this block.
       freeResultRegisters(labelParams);
+      // Free the exn register, as code assumes that it's consumed by the final
+      // catch_all.
+      if (!tryTableCatch.captureExnRef) {
+        freeRef(exn);
+      }
 
       // Break from the loop and skip the implicit rethrow that's needed
       // if we didn't have a catch_all
@@ -4148,26 +4156,18 @@ bool BaseCompiler::emitTryTable() {
       break;
     }
 
-    // This is a `catch $t`, load the tag type we're trying to match
     const TagType& tagType = *moduleEnv_.tags[tryTableCatch.tagIndex].type;
     const TagOffsetVector& tagOffsets = tagType.argOffsets();
     ResultType tagParams = tagType.resultType();
 
-    // Load the tag for this catch and compare it against the exception's tag.
-    // If they don't match, skip to the next catch handler.
-    Label skipCatch;
-    loadTag(instance, tryTableCatch.tagIndex, catchTag);
-    masm.branchPtr(Assembler::NotEqual, exnTag, catchTag, &skipCatch);
+    Label skip;
+    loadTag(RegPtr(InstanceReg), tryTableCatch.tagIndex, catchTag);
+    masm.branchPtr(Assembler::NotEqual, exnTag, catchTag, &skip);
 
-    // The tags and instance are dead after we've had a match, free them
-    freeRef(exnTag);
-    freeRef(catchTag);
-#ifndef RABALDR_PIN_INSTANCE
-    freePtr(instance);
-#endif
-
-    // Allocate a register to hold the exception data pointer
-    RegPtr data = needPtr();
+    // Get a register for unpacking exceptions. We re-use the exnTag register
+    // as it is already reserved and dead from this point until the jump to the
+    // target label.
+    RegPtr data = RegPtr(exnTag);
 
     // Unpack the tag and jump to the block
     masm.loadPtr(Address(exn, (int32_t)WasmExceptionObject::offsetOfData()),
@@ -4226,68 +4226,50 @@ bool BaseCompiler::emitTryTable() {
       }
     }
 
-    // The exception data pointer is no longer live after unpacking the
-    // exception
-    freePtr(data);
-
-    // Capture the exnref if it has been requested, or else free it.
+    // Capture the exnref if it has been requested
     if (tryTableCatch.captureExnRef) {
       pushRef(exn);
-    } else {
-      freeRef(exn);
     }
-
-    // Pop the results needed for the target branch and perform the jump
     popBlockResults(labelParams, target.stackHeight, ContinuationKind::Jump);
     masm.jump(&target.label);
+    // The registers holding the join values are free for the remainder of this
+    // block.
     freeResultRegisters(labelParams);
 
-    // Reset the stack height for the skip to the next catch handler
+    // Reset the stack height for the skip
     fr.setStackHeight(prePadHeight);
-    masm.bind(&skipCatch);
+    masm.bind(&skip);
 
-    // Reset ownership of the registers for the next catch handler we emit
-    needRef(exn);
-    needRef(exnTag);
-    needRef(catchTag);
-#ifndef RABALDR_PIN_INSTANCE
-    needPtr(instance);
-#endif
+    // Re-assert ownership of the exnref register for the next branch of the
+    // try switch.
+    if (tryTableCatch.captureExnRef) {
+      needRef(exn);
+    }
   }
 
   if (!hadCatchAll) {
-    // Free all registers, except for the exception
-    freeRef(exnTag);
-    freeRef(catchTag);
-#ifndef RABALDR_PIN_INSTANCE
-    freePtr(instance);
-#endif
-
     // If none of the tag checks succeed and there is no catch_all,
-    // then we rethrow the exception
+    // then we rethrow the exception.
     if (!throwFrom(exn)) {
       return false;
     }
   } else {
-    // All registers should have been freed by the catch_all
+    // `exn` should be consumed by the catch_all code so it doesn't leak
     MOZ_ASSERT(isAvailableRef(exn));
-    MOZ_ASSERT(isAvailableRef(exnTag));
-    MOZ_ASSERT(isAvailableRef(catchTag));
-#ifndef RABALDR_PIN_INSTANCE
-    MOZ_ASSERT(isAvailablePtr(instance));
-#endif
   }
 
-  // Reset stack height for skipLandingPad, and bind it
-  fr.setStackHeight(prePadHeight);
-  masm.bind(&skipLandingPad);
+  freeRef(catchTag);
+  freeRef(exnTag);
 
-  // Start the try note for this try block, after the landing pad
+  // Reset stack height for skip.
+  fr.setStackHeight(prePadHeight);
+
+  masm.bind(&skip);
+
   if (!startTryNote(&controlItem().tryNoteIndex)) {
     return false;
   }
-
-  // Mark the try note to start at the landing pad we created above
+  // The landing pad begins at this point
   TryNoteVector& tryNotes = masm.tryNotes();
   TryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
   tryNote.setLandingPad(padOffset, padStackHeight);
@@ -4493,7 +4475,7 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
     // responsible to unpack the exception and rethrow it.
     RegRef exn;
     RegRef tag;
-    consumePendingException(RegPtr(InstanceReg), &exn, &tag);
+    consumePendingException(&exn, &tag);
     freeRef(tag);
     if (!throwFrom(exn)) {
       return false;
@@ -4558,7 +4540,6 @@ bool BaseCompiler::emitDelegate() {
   // try block or the very last block (to re-throw out of the function).
   Control& lastBlock = controlOutermost();
   while (controlKind(relativeDepth) != LabelKind::Try &&
-         controlKind(relativeDepth) != LabelKind::TryTable &&
          &controlItem(relativeDepth) != &lastBlock) {
     relativeDepth++;
   }
@@ -4646,7 +4627,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   // saved before the following call will clear it.
   RegRef exn;
   RegRef tag;
-  consumePendingException(RegPtr(InstanceReg), &exn, &tag);
+  consumePendingException(&exn, &tag);
 
   // Get a register to hold the tags for each catch
   RegRef catchTag = needRef();
@@ -4697,10 +4678,8 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 }
 
 bool BaseCompiler::endTryTable(ResultType type) {
-  if (!controlItem().deadOnArrival) {
-    // Mark the end of the try body. This may insert a nop.
-    finishTryNote(controlItem().tryNoteIndex);
-  }
+  // Mark the end of the try body. This may insert a nop.
+  finishTryNote(controlItem().tryNoteIndex);
   return endBlock(type);
 }
 
@@ -11927,9 +11906,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
                                       hasUnwindInfo)) {
       return false;
     }
-
-    // Record observed feature usage
-    code->featureUsage |= f.iter_.featureUsage();
   }
 
   masm.finish();
