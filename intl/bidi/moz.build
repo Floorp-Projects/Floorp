@@ -1,0 +1,7 @@
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    CbindgenHeader(
+        "unicode_bidi_ffi_generated.h", inputs=["/intl/bidi/rust/unicode-bidi-ffi"]
+    )
+    EXPORTS.mozilla.intl += [
+        "!unicode_bidi_ffi_generated.h",
+    ]
