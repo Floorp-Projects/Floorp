@@ -1,0 +1,11 @@
+[package]
+name = "windows-targets"
+version = "0.48.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.windows-targets]
+version = "0.52"

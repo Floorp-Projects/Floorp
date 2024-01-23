@@ -5,28 +5,15 @@ use std::io;
 use std::mem::size_of;
 use std::os::windows::io::AsRawHandle;
 
+use windows_sys::Wdk::Storage::FileSystem::NtCancelIoFileEx;
+use windows_sys::Wdk::System::IO::NtDeviceIoControlFile;
 use windows_sys::Win32::Foundation::{
     RtlNtStatusToDosError, HANDLE, NTSTATUS, STATUS_NOT_FOUND, STATUS_PENDING, STATUS_SUCCESS,
 };
-use windows_sys::Win32::System::WindowsProgramming::{
-    NtDeviceIoControlFile, IO_STATUS_BLOCK, IO_STATUS_BLOCK_0,
-};
+use windows_sys::Win32::System::IO::{IO_STATUS_BLOCK, IO_STATUS_BLOCK_0};
 
 const IOCTL_AFD_POLL: u32 = 0x00012024;
 
-#[link(name = "ntdll")]
-extern "system" {
-    /// See <https://processhacker.sourceforge.io/doc/ntioapi_8h.html#a0d4d550cad4d62d75b76961e25f6550c>
-    ///
-    /// This is an undocumented API and as such not part of <https://github.com/microsoft/win32metadata>
-    /// from which `windows-sys` is generated, and also unlikely to be added, so
-    /// we manually declare it here
-    fn NtCancelIoFileEx(
-        FileHandle: HANDLE,
-        IoRequestToCancel: *mut IO_STATUS_BLOCK,
-        IoStatusBlock: *mut IO_STATUS_BLOCK,
-    ) -> NTSTATUS;
-}
 /// Winsock2 AFD driver instance.
 ///
 /// All operations are unsafe due to IO_STATUS_BLOCK parameter are being used by Afd driver during STATUS_PENDING before I/O Completion Port returns its result.
@@ -132,14 +119,15 @@ cfg_io_source! {
     use std::ptr::null_mut;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
-    use super::iocp::CompletionPort;
-    use windows_sys::Win32::{
-        Foundation::{UNICODE_STRING, INVALID_HANDLE_VALUE},
-        System::WindowsProgramming::{
-            OBJECT_ATTRIBUTES, FILE_SKIP_SET_EVENT_ON_HANDLE,
-        },
-        Storage::FileSystem::{FILE_OPEN, NtCreateFile, SetFileCompletionNotificationModes, SYNCHRONIZE, FILE_SHARE_READ, FILE_SHARE_WRITE},
+    use windows_sys::Wdk::Foundation::OBJECT_ATTRIBUTES;
+    use windows_sys::Wdk::Storage::FileSystem::{NtCreateFile, FILE_OPEN};
+    use windows_sys::Win32::Foundation::{INVALID_HANDLE_VALUE, UNICODE_STRING};
+    use windows_sys::Win32::Storage::FileSystem::{
+        SetFileCompletionNotificationModes, FILE_SHARE_READ, FILE_SHARE_WRITE, SYNCHRONIZE,
     };
+    use windows_sys::Win32::System::WindowsProgramming::FILE_SKIP_SET_EVENT_ON_HANDLE;
+
+    use super::iocp::CompletionPort;
 
     const AFD_HELPER_ATTRIBUTES: OBJECT_ATTRIBUTES = OBJECT_ATTRIBUTES {
         Length: size_of::<OBJECT_ATTRIBUTES>() as u32,

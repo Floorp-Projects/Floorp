@@ -244,13 +244,13 @@ dependencies = [
  "libc",
  "log",
  "mach",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=6be424d75f1367e70f2f5ddcacd6d0237e81a6a9#6be424d75f1367e70f2f5ddcacd6d0237e81a6a9"
+source = "git+https://github.com/mozilla/audioipc?rev=44fbcd2b5417f8b5ff4907eec17b32a0fb633e03#44fbcd2b5417f8b5ff4907eec17b32a0fb633e03"
 dependencies = [
  "arrayvec",
  "ashmem",
@@ -272,13 +272,13 @@ dependencies = [
  "serde_bytes",
  "serde_derive",
  "slab",
- "windows-sys",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=6be424d75f1367e70f2f5ddcacd6d0237e81a6a9#6be424d75f1367e70f2f5ddcacd6d0237e81a6a9"
+source = "git+https://github.com/mozilla/audioipc?rev=44fbcd2b5417f8b5ff4907eec17b32a0fb633e03#44fbcd2b5417f8b5ff4907eec17b32a0fb633e03"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -289,7 +289,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=6be424d75f1367e70f2f5ddcacd6d0237e81a6a9#6be424d75f1367e70f2f5ddcacd6d0237e81a6a9"
+source = "git+https://github.com/mozilla/audioipc?rev=44fbcd2b5417f8b5ff4907eec17b32a0fb633e03#44fbcd2b5417f8b5ff4907eec17b32a0fb633e03"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -1558,7 +1558,7 @@ checksum = "136526188508e25c6fef639d7927dfb3e0e3084488bf202267829cf7fc23dbdd"
 dependencies = [
  "errno-dragonfly",
  "libc",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
@@ -3543,13 +3543,12 @@ dependencies = [
 [[package]]
 name = "mio"
 version = "0.8.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
+source = "git+https://github.com/glandium/mio?rev=9a2ef335c366044ffe73b1c4acabe50a1daefe05#9a2ef335c366044ffe73b1c4acabe50a1daefe05"
 dependencies = [
  "libc",
  "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "windows-sys",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3700,7 +3699,7 @@ dependencies = [
  "url",
  "uuid",
  "winapi",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
@@ -4217,7 +4216,7 @@ dependencies = [
  "libc",
  "redox_syscall",
  "smallvec",
- "windows-targets",
+ "windows-targets 0.48.999",
 ]
 
 [[package]]
@@ -4845,7 +4844,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
@@ -5488,7 +5487,7 @@ dependencies = [
  "fastrand",
  "redox_syscall",
  "rustix",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
@@ -5628,7 +5627,7 @@ dependencies = [
  "num_cpus",
  "pin-project-lite",
  "socket2",
- "windows-sys",
+ "windows-sys 0.48.999",
 ]
 
 [[package]]
@@ -6539,16 +6538,30 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windows-sys"
-version = "0.48.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
+version = "0.48.999"
 dependencies = [
- "windows-targets",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+dependencies = [
+ "windows-targets 0.52.999",
 ]
 
 [[package]]
 name = "windows-targets"
 version = "0.48.999"
+dependencies = [
+ "windows-targets 0.52.999",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.52.999"
 dependencies = [
  "quote",
  "syn",
