@@ -43,7 +43,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
   });
 

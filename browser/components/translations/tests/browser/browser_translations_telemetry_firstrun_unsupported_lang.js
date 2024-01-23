@@ -36,7 +36,9 @@ add_task(
       ],
     });
 
-    await clickChangeSourceLanguageButton({ firstShow: true });
+    await FullPageTranslationsTestUtils.clickChangeSourceLanguageButton({
+      firstShow: true,
+    });
 
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsPanel.changeSourceLanguageButton,
@@ -63,7 +65,7 @@ add_task(
       ],
     });
 
-    await clickCancelButton();
+    await FullPageTranslationsTestUtils.clickCancelButton();
 
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsPanel.cancelButton,
@@ -97,7 +99,7 @@ add_task(
       ],
     });
 
-    await clickDismissErrorButton();
+    await FullPageTranslationsTestUtils.clickDismissErrorButton();
 
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsPanel.dismissErrorButton,

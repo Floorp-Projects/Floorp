@@ -60,7 +60,7 @@ add_task(
       onOpenPanel: assertPanelRevisitView,
     });
 
-    await clickRestoreButton();
+    await FullPageTranslationsTestUtils.clickRestoreButton();
 
     await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },

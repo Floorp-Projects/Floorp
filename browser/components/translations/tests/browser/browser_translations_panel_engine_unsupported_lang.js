@@ -21,7 +21,7 @@ add_task(async function test_unsupported_lang() {
     onOpenPanel: assertPanelUnsupportedLanguageView,
   });
 
-  await clickChangeSourceLanguageButton();
+  await FullPageTranslationsTestUtils.clickChangeSourceLanguageButton();
 
   await cleanup();
 });

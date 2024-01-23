@@ -78,7 +78,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     onOpenPanel: assertPanelRevisitView,
   });
 
-  await clickRestoreButton();
+  await FullPageTranslationsTestUtils.clickRestoreButton();
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,

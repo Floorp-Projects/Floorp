@@ -26,7 +26,7 @@ add_task(async function test_translations_engine_destroy_pending() {
     onOpenPanel: assertPanelDefaultView,
   });
 
-  await clickTranslateButton({
+  await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
   });
 
