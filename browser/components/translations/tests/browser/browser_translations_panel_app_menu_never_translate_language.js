@@ -15,7 +15,7 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
     prefs: [["browser.translations.neverTranslateLanguages", "es"]],
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The translations button is available"
   );

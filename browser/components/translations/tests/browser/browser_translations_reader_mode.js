@@ -12,7 +12,7 @@ add_task(async function test_translations_button_hidden_in_reader_mode() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true },
     "The translations button is visible."
   );
@@ -21,7 +21,7 @@ add_task(async function test_translations_button_hidden_in_reader_mode() {
 
   await toggleReaderMode();
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: false },
     "The translations button is now hidden in reader mode."
   );
@@ -46,7 +46,7 @@ add_task(async function test_translations_button_hidden_in_reader_mode() {
 
   await toggleReaderMode();
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true },
     "The translations button is visible again outside of reader mode."
   );
@@ -65,7 +65,7 @@ add_task(async function test_translations_persist_in_reader_mode() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true },
     "The translations button is visible."
   );
@@ -104,7 +104,7 @@ add_task(async function test_translations_persist_in_reader_mode() {
     );
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: false },
     "The translations button is now hidden in reader mode."
   );

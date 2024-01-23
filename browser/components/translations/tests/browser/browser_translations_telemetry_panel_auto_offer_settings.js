@@ -15,7 +15,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     prefs: [["browser.translations.automaticallyPopup", false]],
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true },
     "The translations button is shown."
   );

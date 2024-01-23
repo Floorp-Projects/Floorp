@@ -16,7 +16,7 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The translations button is visible."
   );

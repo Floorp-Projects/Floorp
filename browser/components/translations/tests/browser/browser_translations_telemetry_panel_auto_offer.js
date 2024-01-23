@@ -43,7 +43,7 @@ add_task(async function test_translations_panel_auto_offer() {
     url: SPANISH_PAGE_URL_2,
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true },
     "The button is still shown."
   );

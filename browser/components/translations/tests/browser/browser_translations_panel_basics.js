@@ -12,10 +12,11 @@ add_task(async function test_translations_panel_basics() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: false, icon: true },
-    "The button is available."
-  );
+  const { button } =
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
+      { button: true, circleArrows: false, locale: false, icon: true },
+      "The button is available."
+    );
 
   is(button.getAttribute("data-l10n-id"), "urlbar-translations-button2");
 
@@ -30,7 +31,7 @@ add_task(async function test_translations_panel_basics() {
 
   await clickTranslateButton();
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: true, locale: false, icon: true },
     "The icon presents the loading indicator."
   );
@@ -53,7 +54,7 @@ add_task(async function test_translations_panel_basics() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The button is reverted to have an icon."
   );

@@ -92,7 +92,7 @@ add_task(async function test_translations_panel_fuzzing() {
         if (activeTab === "english") {
           await switchTab(spanishTab, "spanish tab");
         }
-        await assertTranslationsButton(
+        await FullPageTranslationsTestUtils.assertTranslationsButton(
           { button: true },
           "The button is available."
         );
@@ -100,7 +100,7 @@ add_task(async function test_translations_panel_fuzzing() {
 
         await clickTranslateButton();
 
-        await assertTranslationsButton(
+        await FullPageTranslationsTestUtils.assertTranslationsButton(
           { button: true, circleArrows: false, locale: true, icon: true },
           "Translations button is fully loaded."
         );
@@ -201,7 +201,7 @@ add_task(async function test_translations_panel_fuzzing() {
           runInSpanishPage
         );
 
-        await assertTranslationsButton(
+        await FullPageTranslationsTestUtils.assertTranslationsButton(
           { button: true, circleArrows: false, locale: false, icon: true },
           "The button is reverted to have an icon."
         );

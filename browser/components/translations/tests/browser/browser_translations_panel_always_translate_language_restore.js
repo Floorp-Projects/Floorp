@@ -15,7 +15,7 @@ add_task(
       languagePairs: LANGUAGE_PAIRS,
     });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The translations button is visible."
     );
@@ -54,7 +54,7 @@ add_task(
 
     await clickRestoreButton();
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The button is reverted to have an icon."
     );
@@ -68,14 +68,14 @@ add_task(
     await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The button shows only the icon."
     );
 
     await navigate("Reload the page", { url: SPANISH_PAGE_URL_DOT_ORG });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The button shows only the icon."
     );

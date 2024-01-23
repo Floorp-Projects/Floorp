@@ -16,7 +16,7 @@ add_task(async function test_translations_button_hidden_when_cpu_unsupported() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: false },
     "The button is not available."
   );

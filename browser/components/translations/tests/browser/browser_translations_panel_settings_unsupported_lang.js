@@ -21,7 +21,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     ],
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The translations button is visible."
   );
@@ -45,7 +45,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     url: FRENCH_PAGE_URL,
   });
 
-  await assertTranslationsButton(
+  await FullPageTranslationsTestUtils.assertTranslationsButton(
     { button: false },
     "The translations button should be unavailable."
   );

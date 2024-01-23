@@ -24,7 +24,7 @@ add_task(
       ],
     });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The translations button is visible."
     );
@@ -48,7 +48,7 @@ add_task(
       url: FRENCH_PAGE_URL,
     });
 
-    await assertTranslationsButton(
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
       { button: false },
       "The translations button should be unavailable."
     );
