@@ -3,8 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="org.mozilla.geckoview">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>

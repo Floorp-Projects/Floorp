@@ -39,6 +39,8 @@ android {
 
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
+
+    namespace 'org.mozilla.geckoview.example.messaging'
 }
 
 dependencies {
