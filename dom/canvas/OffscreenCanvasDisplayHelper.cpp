@@ -105,8 +105,7 @@ void OffscreenCanvasDisplayHelper::FlushForDisplay() {
    public:
     FlushWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                         OffscreenCanvasDisplayHelper* aDisplayHelper)
-        : WorkerRunnable(aWorkerPrivate, "FlushWorkerRunnable"),
-          mDisplayHelper(aDisplayHelper) {}
+        : WorkerRunnable(aWorkerPrivate), mDisplayHelper(aDisplayHelper) {}
 
     bool WorkerRun(JSContext*, WorkerPrivate*) override {
       // The OffscreenCanvas can only be freed on the worker thread, so we

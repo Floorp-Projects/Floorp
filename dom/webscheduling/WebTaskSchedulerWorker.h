@@ -17,7 +17,7 @@
 
 namespace mozilla::dom {
 
-class WebTaskWorkerRunnable final : public WorkerSameThreadRunnable {
+class WebTaskWorkerRunnable : public WorkerSameThreadRunnable {
  public:
   WebTaskWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                         WebTaskSchedulerWorker* aSchedulerWorker);

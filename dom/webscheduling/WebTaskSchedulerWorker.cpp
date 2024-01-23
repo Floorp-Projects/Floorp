@@ -12,7 +12,7 @@ namespace mozilla::dom {
 
 WebTaskWorkerRunnable::WebTaskWorkerRunnable(
     WorkerPrivate* aWorkerPrivate, WebTaskSchedulerWorker* aSchedulerWorker)
-    : WorkerSameThreadRunnable(aWorkerPrivate, "WebTaskWorkerRunnable"),
+    : WorkerSameThreadRunnable(aWorkerPrivate),
       mSchedulerWorker(aSchedulerWorker) {
   MOZ_ASSERT(mSchedulerWorker);
 }
