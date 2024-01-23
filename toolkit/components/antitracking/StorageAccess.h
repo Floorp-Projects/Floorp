@@ -115,6 +115,10 @@ bool StoragePartitioningEnabled(uint32_t aRejectedReason,
 //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
 //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
 //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
+//
+// If you update this function, you almost certainly want to consider
+// updating the other overloaded functions
+// (and ApproximateAllowAccessForWithoutChannel).
 bool ShouldAllowAccessFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
                           nsIURI* aURI, uint32_t* aRejectedReason);
 
@@ -124,6 +128,9 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
 // synchronously, so here we return the best guest: if we are sure that the
 // permission is granted for the origin of aURI, this method returns true,
 // otherwise false.
+//
+// If you update this function, you almost certainly want to consider
+// updating the ShouldAllowAccessFor functions.
 bool ApproximateAllowAccessForWithoutChannel(
     nsPIDOMWindowInner* aFirstPartyWindow, nsIURI* aURI);
 
@@ -131,11 +138,20 @@ bool ApproximateAllowAccessForWithoutChannel(
 // aChannel can be a 3rd party channel, or not.
 // See ShouldAllowAccessFor(window) to see the possible values of
 // aRejectedReason.
+//
+// If you update this function, you almost certainly want to consider
+// updating the other overloaded functions
+// (and ApproximateAllowAccessForWithoutChannel).
 bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
                           uint32_t* aRejectedReason);
 
 // This method checks if the principal has the permission to access to the
 // first party storage.
+// Warning: only use this function when aPrincipal is first-party.
+//
+// If you update this function, you almost certainly want to consider
+// updating the other overloaded functions
+// (and ApproximateAllowAccessForWithoutChannel).
 bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
                           nsICookieJarSettings* aCookieJarSettings);
 

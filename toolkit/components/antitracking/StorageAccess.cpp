@@ -61,12 +61,29 @@ uint32_t mozilla::detail::CheckCookiePermissionForPrincipal(
 
 /*
  * Checks if storage for a given principal is permitted by the user's
- * preferences. If aWindow is non-null, its principal must be passed as
- * aPrincipal, and the third-party iframe and sandboxing status of the window
- * are also checked.  If aURI is non-null, then it is used as the comparison
- * against aWindow to determine if this is a third-party load.  We also
- * allow a channel instead of the window reference when determining 3rd party
- * status.
+ * preferences.
+ *
+ * Ways this function is used:
+ * - aPrincipal, aWindow, optional aURI, others don't care: does this principal
+ * have storage access, testing this window's sandboxing and if it is
+ * third-party. If aURI is provided, we use that for the window's third party
+ * comparisons.
+ * - aPrincipal, aChannel, aWindow=nullptr, others don't care: does this
+ * principal have storage access, testing if this channel is third-party. Note
+ * that this ignores aURI.
+ * - aPrincipal, optional aCookieJarSettings, aWindow=nullptr, aChannel=nullptr,
+ * aURI don't care: does this principal have storage access (assuming it is in a
+ * first-party context and not sandboxed). If we aren't given a
+ * cookieJarSettings, we build one with the principal.
+ *
+ * In all of these cases, we test:
+ * - if aPrincipal is a NullPrincipal, denying
+ * - if this is for an about URI, allowing (maybe with private browsing
+ * constraints) We test the aWindow's extant doc's URI's, aURI's, and
+ * aPrincipal's scheme to be "about".
+ *
+ * We also send a decision to the  ContentBlockingNotifier if we have aWindow or
+ * aChannel and didn't stop at the NullPrincipal or about: checks.
  *
  * Used in the implementation of StorageAllowedForWindow,
  * StorageAllowedForDocument, StorageAllowedForChannel and
@@ -165,9 +182,11 @@ static StorageAccess InternalStorageAllowedCheck(
         aRejectedReason);
   } else {
     MOZ_ASSERT(aPrincipal);
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-        net::CookieJarSettings::Create(aPrincipal);
-    disabled = !ShouldAllowAccessFor(aPrincipal, cookieJarSettings);
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings = aCookieJarSettings;
+    if (!cookieJarSettings) {
+      cookieJarSettings = net::CookieJarSettings::Create(aPrincipal);
+    }
+    disabled = !ShouldAllowAccessFor(aPrincipal, aCookieJarSettings);
   }
 
   if (!disabled) {
@@ -383,6 +402,18 @@ int32_t CookiesBehavior(Document* a3rdPartyDocument) {
   }
 
   return a3rdPartyDocument->CookieJarSettings()->GetCookieBehavior();
+}
+
+bool CookiesBehaviorRejectsThirdPartyContexts(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // (See Bug 1406675 and Bug 1525917 for rationale).
+  if (BasePrincipal::Cast(aDocument->NodePrincipal())->AddonPolicy()) {
+    return false;
+  }
+
+  return aDocument->CookieJarSettings()->GetRejectThirdPartyContexts();
 }
 
 int32_t CookiesBehavior(nsILoadInfo* aLoadInfo, nsIURI* a3rdPartyURI) {
@@ -776,14 +807,8 @@ bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCookieJarSettings);
 
-  uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
-  if (aPrincipal->GetIsContentPrincipal()) {
-    PermissionManager* permManager = PermissionManager::GetInstance();
-    if (permManager) {
-      Unused << NS_WARN_IF(NS_FAILED(permManager->TestPermissionFromPrincipal(
-          aPrincipal, "cookie"_ns, &access)));
-    }
-  }
+  uint32_t access =
+      detail::CheckCookiePermissionForPrincipal(aCookieJarSettings, aPrincipal);
 
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
     return access != nsICookiePermission::ACCESS_DENY;
@@ -811,9 +836,9 @@ bool ApproximateAllowAccessForWithoutChannel(
     return false;
   }
 
-  if (!parentDocument->CookieJarSettings()->GetRejectThirdPartyContexts()) {
+  if (!CookiesBehaviorRejectsThirdPartyContexts(parentDocument)) {
     LOG(("Disabled by the pref (%d), bail out early",
-         parentDocument->CookieJarSettings()->GetCookieBehavior()));
+         CookiesBehavior(parentDocument)));
     return true;
   }
 
