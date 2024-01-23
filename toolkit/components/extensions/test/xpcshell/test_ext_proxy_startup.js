@@ -165,3 +165,83 @@ add_task(async function test_proxy_startup() {
 
   await promiseShutdownManager();
 });
+
+add_task(async function webRequest_before_proxy() {
+  Services.prefs.setBoolPref(
+    "extensions.webextensions.early_background_wakeup_on_request",
+    true
+  );
+  await promiseStartupManager();
+
+  function background() {
+    browser.webRequest.onBeforeRequest.addListener(
+      details => {
+        return { redirectUrl: "data:,response_from_webRequest" };
+      },
+      {
+        urls: ["*://example.com/wr"],
+        types: ["xmlhttprequest"],
+      },
+      ["blocking"]
+    );
+    browser.proxy.onRequest.addListener(
+      details => {
+        browser.test.sendMessage("seen_proxy_request");
+      },
+      {
+        urls: ["*://example.com/?proxy"],
+        types: ["xmlhttprequest"],
+      }
+    );
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      permissions: [
+        "proxy",
+        "webRequest",
+        "webRequestBlocking",
+        "http://example.com/*",
+      ],
+    },
+    background,
+  });
+  await extension.startup();
+  let res = await ExtensionTestUtils.fetch(
+    "http://example.com",
+    "http://example.com/wr"
+  );
+  Assert.equal(res, "response_from_webRequest", "Request succeeded");
+  await promiseRestartManager({ earlyStartup: false });
+
+  let wrPromise = ExtensionTestUtils.fetch(
+    "http://example.com",
+    "http://example.com/wr"
+  );
+  await promiseExtensionEvent(extension, "background-script-event");
+  await new Promise(executeSoon);
+  Assert.equal(
+    extension.extension.backgroundState,
+    "stopped",
+    "Request intercepted by webRequest should not trigger early startup"
+  );
+  let proxyPromise = ExtensionTestUtils.fetch(
+    "http://example.com",
+    "http://example.com/?proxy"
+  );
+  await promiseExtensionEvent(extension, "background-script-event");
+  await new Promise(executeSoon);
+  Assert.notEqual(
+    extension.extension.backgroundState,
+    "stopped",
+    `Request intercepted by proxy.onRequest should trigger early startup`
+  );
+  info("Expecting background page to be awakened by the proxy event");
+  await extension.awaitBackgroundStarted();
+  Assert.equal(await proxyPromise, "ok", "Got /?proxy response");
+  Assert.equal(await wrPromise, "response_from_webRequest", "Got /wr reply");
+  await extension.awaitMessage("seen_proxy_request");
+  await extension.unload();
+
+  await promiseShutdownManager();
+});
