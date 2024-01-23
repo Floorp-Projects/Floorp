@@ -851,10 +851,6 @@ people:
     bmo_id: 447061
     name: Rob Wu
     nick: robwu
-  - &roc
-    bmo_id: 5038
-    name: Robert O
-    nick: roc
   - &rpl
     bmo_id: 339062
     name: Luca Greco
@@ -2733,6 +2729,8 @@ modules:
     meta:
       owners_emeritus:
         - Ehsan Akhgari
+      peers_emeritus:
+        - Robert O'Callahan
       group: dev-platform
       url: https://wiki.mozilla.org/Web_Audio_API
       components:
@@ -2740,7 +2738,6 @@ modules:
     owners:
       - *padenot
     peers:
-      - *roc
       - *karlt
     machine_name: core_web_audio
 
