@@ -1,5 +1,5 @@
-//! The BSD sockets API requires us to read the `ss_family` field before
-//! we can interpret the rest of a `sockaddr` produced by the kernel.
+//! The BSD sockets API requires us to read the `ss_family` field before we can
+//! interpret the rest of a `sockaddr` produced by the kernel.
 #![allow(unsafe_code)]
 
 use crate::backend::c;

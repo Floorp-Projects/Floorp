@@ -80,8 +80,8 @@ impl Default for CpuSet {
 /// `pid` is the thread ID to update. If pid is `None`, then the current thread
 /// is updated.
 ///
-/// The `CpuSet` argument specifies the set of CPUs on which the thread will
-/// be eligible to run.
+/// The `CpuSet` argument specifies the set of CPUs on which the thread will be
+/// eligible to run.
 ///
 /// # References
 ///  - [Linux]
@@ -107,4 +107,19 @@ pub fn sched_setaffinity(pid: Option<Pid>, cpuset: &CpuSet) -> io::Result<()> {
 pub fn sched_getaffinity(pid: Option<Pid>) -> io::Result<CpuSet> {
     let mut cpuset = CpuSet::new();
     backend::process::syscalls::sched_getaffinity(pid, &mut cpuset.cpu_set).and(Ok(cpuset))
+}
+
+/// `sched_getcpu()`—Get the CPU that the current thread is currently on.
+///
+/// # References
+///  - [Linux]
+///  - [DragonFly BSD]
+///
+/// [Linux]: https://man7.org/linux/man-pages/man2/sched_getcpu.2.html
+/// [DragonFly BSD]: https://man.dragonflybsd.org/?command=sched_getcpu&section=2
+// FreeBSD added `sched_getcpu` in 13.0.
+#[cfg(any(linux_kernel, target_os = "dragonfly"))]
+#[inline]
+pub fn sched_getcpu() -> usize {
+    backend::process::syscalls::sched_getcpu()
 }

@@ -18,7 +18,7 @@ use crate::backend::c;
 use crate::fd::{AsFd, BorrowedFd};
 use crate::io::Result;
 
-#[cfg(any(linux_kernel, apple, bsd))]
+#[cfg(any(linux_kernel, bsd))]
 use core::mem;
 
 pub use patterns::*;
@@ -28,13 +28,13 @@ mod patterns;
 #[cfg(linux_kernel)]
 mod linux;
 
-#[cfg(any(apple, bsd))]
+#[cfg(bsd)]
 mod bsd;
 
 #[cfg(linux_kernel)]
 use linux as platform;
 
-#[cfg(any(apple, bsd))]
+#[cfg(bsd)]
 use bsd as platform;
 
 /// Perform an `ioctl` call.
@@ -46,12 +46,15 @@ use bsd as platform;
 /// controlling their behavior, some of which are proprietary.
 ///
 /// This crate exposes many other `ioctl` interfaces with safe and idiomatic
-/// wrappers, like [`ioctl_fionbio`](crate::io::ioctl_fionbio) and
-/// [`ioctl_fionread`](crate::io::ioctl_fionread). It is recommended to use
-/// those instead of this function, as they are safer and more idiomatic.
-/// For other cases, implement the [`Ioctl`] API and pass it to this function.
+/// wrappers, like [`ioctl_fionbio`] and [`ioctl_fionread`]. It is recommended
+/// to use those instead of this function, as they are safer and more
+/// idiomatic. For other cases, implement the [`Ioctl`] API and pass it to this
+/// function.
 ///
 /// See documentation for [`Ioctl`] for more information.
+///
+/// [`ioctl_fionbio`]: crate::io::ioctl_fionbio
+/// [`ioctl_fionread`]: crate::io::ioctl_fionread
 ///
 /// # Safety
 ///
@@ -62,18 +65,17 @@ use bsd as platform;
 /// `ioctl` call is safe to make.
 ///
 /// # References
-///
-/// - [Linux]
-/// - [WinSock2]
-/// - [FreeBSD]
-/// - [NetBSD]
-/// - [OpenBSD]
-/// - [Apple]
-/// - [Solaris]
-/// - [illumos]
+///  - [Linux]
+///  - [Winsock]
+///  - [FreeBSD]
+///  - [NetBSD]
+///  - [OpenBSD]
+///  - [Apple]
+///  - [Solaris]
+///  - [illumos]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man2/ioctl.2.html
-/// [Winsock2]: https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-ioctlsocket
+/// [Winsock]: https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-ioctlsocket
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=ioctl&sektion=2
 /// [NetBSD]: https://man.netbsd.org/ioctl.2
 /// [OpenBSD]: https://man.openbsd.org/ioctl.2
@@ -86,16 +88,16 @@ pub unsafe fn ioctl<F: AsFd, I: Ioctl>(fd: F, mut ioctl: I) -> Result<I::Output>
     let request = I::OPCODE.raw();
     let arg = ioctl.as_ptr();
 
-    // SAFETY: The variant of `Ioctl` asserts that this is a valid IOCTL call to
-    // make.
+    // SAFETY: The variant of `Ioctl` asserts that this is a valid IOCTL call
+    // to make.
     let output = if I::IS_MUTATING {
         _ioctl(fd, request, arg)?
     } else {
         _ioctl_readonly(fd, request, arg)?
     };
 
-    // SAFETY: The variant of `Ioctl` asserts that this is a valid pointer to the
-    // output data.
+    // SAFETY: The variant of `Ioctl` asserts that this is a valid pointer to
+    // the output data.
     I::output_from_ptr(output, arg)
 }
 
@@ -120,8 +122,8 @@ unsafe fn _ioctl_readonly(
 /// Objects implementing this trait can be passed to [`ioctl`] to make an
 /// `ioctl` call. The contents of the object represent the inputs to the
 /// `ioctl` call. The inputs must be convertible to a pointer through the
-/// `as_ptr` method. In most cases, this involves either casting a number to
-/// a pointer, or creating a pointer to the actual data. The latter case is
+/// `as_ptr` method. In most cases, this involves either casting a number to a
+/// pointer, or creating a pointer to the actual data. The latter case is
 /// necessary for `ioctl` calls that modify userspace data.
 ///
 /// # Safety
@@ -160,11 +162,11 @@ pub unsafe trait Ioctl {
     /// making this `false` enables optimizations that can make the call
     /// faster. When in doubt, set this to `true`.
     ///
-    /// # SAFETY
+    /// # Safety
     ///
     /// This should only be set to `false` if the `ioctl` call does not mutate
-    /// any data in the userspace. Undefined behavior may occur if this is
-    /// set to `false` when it should be `true`.
+    /// any data in the userspace. Undefined behavior may occur if this is set
+    /// to `false` when it should be `true`.
     const IS_MUTATING: bool;
 
     /// Get a pointer to the data to be passed to the `ioctl` command.
@@ -178,8 +180,8 @@ pub unsafe trait Ioctl {
     ///
     /// The `extract_output` value must be the resulting value after a
     /// successful `ioctl` call, and `out` is the direct return value of an
-    /// `ioctl` call that did not fail. In this case `extract_output` is
-    /// the pointer that was passed to the `ioctl` call.
+    /// `ioctl` call that did not fail. In this case `extract_output` is the
+    /// pointer that was passed to the `ioctl` call.
     unsafe fn output_from_ptr(
         out: IoctlOutput,
         extract_output: *mut c::c_void,
@@ -197,15 +199,17 @@ impl Opcode {
     /// Create a new old `Opcode` from a raw opcode.
     ///
     /// Rather than being a composition of several attributes, old opcodes are
-    /// just numbers. In general most drivers follow stricter conventions,
-    /// but older drivers may still use this strategy.
+    /// just numbers. In general most drivers follow stricter conventions, but
+    /// older drivers may still use this strategy.
     #[inline]
     pub const fn old(raw: RawOpcode) -> Self {
         Self { raw }
     }
 
-    /// Create a new opcode from a direction, group, number and size.
-    #[cfg(any(linux_kernel, apple, bsd))]
+    /// Create a new opcode from a direction, group, number, and size.
+    ///
+    /// This corresponds to the C macro `_IOC(direction, group, number, size)`
+    #[cfg(any(linux_kernel, bsd))]
     #[inline]
     pub const fn from_components(
         direction: Direction,
@@ -225,9 +229,12 @@ impl Opcode {
         ))
     }
 
-    /// Create a new non-mutating opcode from a group, a number and the type of
-    /// data.
-    #[cfg(any(linux_kernel, apple, bsd))]
+    /// Create a new non-mutating opcode from a group, a number, and the type
+    /// of data.
+    ///
+    /// This corresponds to the C macro `_IO(group, number)` when `T` is zero
+    /// sized.
+    #[cfg(any(linux_kernel, bsd))]
     #[inline]
     pub const fn none<T>(group: u8, number: u8) -> Self {
         Self::from_components(Direction::None, group, number, mem::size_of::<T>())
@@ -235,7 +242,9 @@ impl Opcode {
 
     /// Create a new reading opcode from a group, a number and the type of
     /// data.
-    #[cfg(any(linux_kernel, apple, bsd))]
+    ///
+    /// This corresponds to the C macro `_IOR(group, number, T)`.
+    #[cfg(any(linux_kernel, bsd))]
     #[inline]
     pub const fn read<T>(group: u8, number: u8) -> Self {
         Self::from_components(Direction::Read, group, number, mem::size_of::<T>())
@@ -243,7 +252,9 @@ impl Opcode {
 
     /// Create a new writing opcode from a group, a number and the type of
     /// data.
-    #[cfg(any(linux_kernel, apple, bsd))]
+    ///
+    /// This corresponds to the C macro `_IOW(group, number, T)`.
+    #[cfg(any(linux_kernel, bsd))]
     #[inline]
     pub const fn write<T>(group: u8, number: u8) -> Self {
         Self::from_components(Direction::Write, group, number, mem::size_of::<T>())
@@ -251,7 +262,9 @@ impl Opcode {
 
     /// Create a new reading and writing opcode from a group, a number and the
     /// type of data.
-    #[cfg(any(linux_kernel, apple, bsd))]
+    ///
+    /// This corresponds to the C macro `_IOWR(group, number, T)`.
+    #[cfg(any(linux_kernel, bsd))]
     #[inline]
     pub const fn read_write<T>(group: u8, number: u8) -> Self {
         Self::from_components(Direction::ReadWrite, group, number, mem::size_of::<T>())
@@ -289,30 +302,45 @@ pub type IoctlOutput = c::c_int;
 /// The type used by the `ioctl` to signify the command.
 pub type RawOpcode = _RawOpcode;
 
-// Under raw Linux, this is an unsigned int.
+// Under raw Linux, this is an `unsigned int`.
 #[cfg(linux_raw)]
 type _RawOpcode = c::c_uint;
 
-// On libc Linux with GNU libc, this is an unsigned long.
-#[cfg(all(not(linux_raw), target_os = "linux", target_env = "gnu"))]
+// On libc Linux with GNU libc or uclibc, this is an `unsigned long`.
+#[cfg(all(
+    not(linux_raw),
+    target_os = "linux",
+    any(target_env = "gnu", target_env = "uclibc")
+))]
 type _RawOpcode = c::c_ulong;
 
-// Musl uses a c_int
-#[cfg(all(not(linux_raw), target_os = "linux", not(target_env = "gnu")))]
+// Musl uses `c_int`.
+#[cfg(all(
+    not(linux_raw),
+    target_os = "linux",
+    not(target_env = "gnu"),
+    not(target_env = "uclibc")
+))]
 type _RawOpcode = c::c_int;
 
-// Android uses c_int
+// Android uses `c_int`.
 #[cfg(all(not(linux_raw), target_os = "android"))]
 type _RawOpcode = c::c_int;
 
-// Every BSD I looked at, Haiku and Redox uses an unsigned long.
-#[cfg(any(apple, bsd, target_os = "redox", target_os = "haiku"))]
+// BSD, Haiku, Hurd, Redox, and Vita use `unsigned long`.
+#[cfg(any(
+    bsd,
+    target_os = "redox",
+    target_os = "haiku",
+    target_os = "hurd",
+    target_os = "vita"
+))]
 type _RawOpcode = c::c_ulong;
 
-// Solaris, Fuchsia, Emscripten and WASI use an int
+// AIX, Emscripten, Fuchsia, Solaris, and WASI use a `int`.
 #[cfg(any(
-    target_os = "solaris",
-    target_os = "illumos",
+    solarish,
+    target_os = "aix",
     target_os = "fuchsia",
     target_os = "emscripten",
     target_os = "wasi",
@@ -320,10 +348,10 @@ type _RawOpcode = c::c_ulong;
 ))]
 type _RawOpcode = c::c_int;
 
-// ESP-IDF uses a c_uint
+// ESP-IDF uses a `c_uint`.
 #[cfg(target_os = "espidf")]
 type _RawOpcode = c::c_uint;
 
-// Windows has ioctlsocket, which uses i32
+// Windows has `ioctlsocket`, which uses `i32`.
 #[cfg(windows)]
 type _RawOpcode = i32;

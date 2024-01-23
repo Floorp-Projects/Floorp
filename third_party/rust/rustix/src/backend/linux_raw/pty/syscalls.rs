@@ -3,8 +3,7 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
 use crate::backend::conv::{by_ref, c_uint, ret};
 use crate::fd::BorrowedFd;

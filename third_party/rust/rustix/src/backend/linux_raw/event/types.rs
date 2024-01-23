@@ -4,7 +4,7 @@ use bitflags::bitflags;
 bitflags! {
     /// `EFD_*` flags for use with [`eventfd`].
     ///
-    /// [`eventfd`]: crate::io::eventfd
+    /// [`eventfd`]: crate::event::eventfd
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct EventfdFlags: c::c_uint {
@@ -15,7 +15,7 @@ bitflags! {
         /// `EFD_SEMAPHORE`
         const SEMAPHORE = linux_raw_sys::general::EFD_SEMAPHORE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

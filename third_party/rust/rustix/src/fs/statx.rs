@@ -3,8 +3,7 @@
 use crate::fd::AsFd;
 use crate::fs::AtFlags;
 use crate::{backend, io, path};
-
-pub use backend::fs::types::{Statx, StatxFlags, StatxTimestamp};
+use backend::fs::types::{Statx, StatxFlags};
 
 #[cfg(feature = "linux_4_11")]
 use backend::fs::syscalls::statx as _statx;
@@ -20,6 +19,36 @@ use compat::statx as _statx;
 ///
 /// # References
 ///  - [Linux]
+///
+/// # Examples
+///
+/// ```
+/// # use std::path::Path;
+/// # use std::io;
+/// # use rustix::fs::{AtFlags, StatxFlags};
+/// # use rustix::fd::BorrowedFd;
+/// /// Try to determine if the provided path is a mount root. Will return
+/// /// `Ok(None)` if the kernel is not new enough to support `statx` or
+/// /// [`libc::STATX_ATTR_MOUNT_ROOT`].
+/// fn is_mountpoint(root: BorrowedFd<'_>, path: &Path) -> io::Result<Option<bool>> {
+///     use rustix::fs::{AtFlags, StatxFlags};
+///
+///     let mountroot_flag = libc::STATX_ATTR_MOUNT_ROOT as u64;
+///     match rustix::fs::statx(
+///         root,
+///         path,
+///         AtFlags::NO_AUTOMOUNT | AtFlags::SYMLINK_NOFOLLOW,
+///         StatxFlags::empty(),
+///     ) {
+///         Ok(r) => {
+///             let present = (r.stx_attributes_mask & mountroot_flag) > 0;
+///             Ok(present.then(|| r.stx_attributes & mountroot_flag > 0))
+///         }
+///         Err(e) if e == rustix::io::Errno::NOSYS => Ok(None),
+///         Err(e) => Err(e.into()),
+///     }
+/// }
+/// ```
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man2/statx.2.html
 #[inline]
@@ -42,8 +71,9 @@ mod compat {
 
     use backend::fs::types::{Statx, StatxFlags};
 
-    // Linux kernel prior to 4.11 old versions of Docker don't support `statx`.
-    // We store the availability in a global to avoid unnecessary syscalls.
+    // Linux kernel prior to 4.11 and old versions of Docker don't support
+    // `statx`. We store the availability in a global to avoid unnecessary
+    // syscalls.
     //
     // 0: Unknown
     // 1: Not available

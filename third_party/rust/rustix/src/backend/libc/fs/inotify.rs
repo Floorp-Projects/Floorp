@@ -18,7 +18,7 @@ bitflags! {
         /// `IN_NONBLOCK`
         const NONBLOCK = bitcast!(c::IN_NONBLOCK);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -38,7 +38,7 @@ bitflags! {
         const CLOSE_NOWRITE = c::IN_CLOSE_NOWRITE;
         /// `IN_CLOSE_WRITE`
         const CLOSE_WRITE = c::IN_CLOSE_WRITE;
-        /// `IN_CREATE `
+        /// `IN_CREATE`
         const CREATE = c::IN_CREATE;
         /// `IN_DELETE`
         const DELETE = c::IN_DELETE;
@@ -75,7 +75,7 @@ bitflags! {
         /// `IN_ONLYDIR`
         const ONLYDIR = c::IN_ONLYDIR;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -90,23 +90,22 @@ pub fn inotify_init(flags: CreateFlags) -> io::Result<OwnedFd> {
     unsafe { ret_owned_fd(c::inotify_init1(bitflags_bits!(flags))) }
 }
 
-/// `inotify_add_watch(self, path, flags)`—Adds a watch to inotify
+/// `inotify_add_watch(self, path, flags)`—Adds a watch to inotify.
 ///
-/// This registers or updates a watch for the filesystem path `path`
-/// and returns a watch descriptor corresponding to this watch.
+/// This registers or updates a watch for the filesystem path `path` and
+/// returns a watch descriptor corresponding to this watch.
 ///
-/// Note: Due to the existence of hardlinks, providing two
-/// different paths to this method may result in it returning
-/// the same watch descriptor. An application should keep track of this
-/// externally to avoid logic errors.
+/// Note: Due to the existence of hardlinks, providing two different paths to
+/// this method may result in it returning the same watch descriptor. An
+/// application should keep track of this externally to avoid logic errors.
 pub fn inotify_add_watch<P: crate::path::Arg>(
     inot: BorrowedFd<'_>,
     path: P,
     flags: WatchFlags,
 ) -> io::Result<i32> {
     path.into_with_c_str(|path| {
-        // SAFETY: The fd and path we are passing is guaranteed valid by the type
-        // system.
+        // SAFETY: The fd and path we are passing is guaranteed valid by the
+        // type system.
         unsafe {
             ret_c_int(c::inotify_add_watch(
                 borrowed_fd(inot),
@@ -117,7 +116,7 @@ pub fn inotify_add_watch<P: crate::path::Arg>(
     })
 }
 
-/// `inotify_rm_watch(self, wd)`—Removes a watch from this inotify
+/// `inotify_rm_watch(self, wd)`—Removes a watch from this inotify.
 ///
 /// The watch descriptor provided should have previously been returned by
 /// [`inotify_add_watch`] and not previously have been removed.

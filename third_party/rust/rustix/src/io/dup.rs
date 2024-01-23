@@ -115,6 +115,7 @@ pub fn dup2<Fd: AsFd>(fd: Fd, new: &mut OwnedFd) -> io::Result<()> {
     target_os = "aix",
     target_os = "espidf",
     target_os = "nto",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 #[inline]

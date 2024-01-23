@@ -3,8 +3,7 @@
 //! # Safety
 //!
 //! See the `rustix::backend` module documentation for details.
-#![allow(unsafe_code)]
-#![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(unsafe_code, clippy::undocumented_unsafe_blocks)]
 
 use super::types::RawCpuSet;
 use crate::backend::c;
@@ -29,13 +28,39 @@ use crate::utils::as_mut_ptr;
 use core::mem::MaybeUninit;
 use core::ptr::{null, null_mut};
 use linux_raw_sys::general::{
-    membarrier_cmd, membarrier_cmd_flag, rlimit, rlimit64, PRIO_PGRP, PRIO_PROCESS, PRIO_USER,
-    RLIM64_INFINITY, RLIM_INFINITY,
+    membarrier_cmd, membarrier_cmd_flag, rlimit64, PRIO_PGRP, PRIO_PROCESS, PRIO_USER,
+    RLIM64_INFINITY,
 };
 #[cfg(feature = "fs")]
 use {crate::backend::conv::ret_c_uint_infallible, crate::fs::Mode};
 #[cfg(feature = "alloc")]
 use {crate::backend::conv::slice_just_addr_mut, crate::process::Gid};
+
+// `sched_getcpu` has special optimizations via the vDSO on some architectures.
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+pub(crate) use crate::backend::vdso_wrappers::sched_getcpu;
+
+// `sched_getcpu` on platforms without a vDSO entry for it.
+#[cfg(not(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+)))]
+#[inline]
+pub(crate) fn sched_getcpu() -> usize {
+    let mut cpu = MaybeUninit::<u32>::uninit();
+    unsafe {
+        let r = ret(syscall!(__NR_getcpu, &mut cpu, zero(), zero()));
+        debug_assert!(r.is_ok());
+        cpu.assume_init() as usize
+    }
+}
 
 #[cfg(feature = "fs")]
 #[inline]
@@ -142,7 +167,7 @@ pub(crate) fn getpgrp() -> Pid {
 #[inline]
 pub(crate) fn sched_getaffinity(pid: Option<Pid>, cpuset: &mut RawCpuSet) -> io::Result<()> {
     unsafe {
-        // The raw linux syscall returns the size (in bytes) of the `cpumask_t`
+        // The raw Linux syscall returns the size (in bytes) of the `cpumask_t`
         // data type that is used internally by the kernel to represent the CPU
         // set bit mask.
         let size = ret_usize(syscall!(
@@ -274,50 +299,15 @@ pub(crate) fn setpriority_process(pid: Option<Pid>, priority: i32) -> io::Result
 pub(crate) fn getrlimit(limit: Resource) -> Rlimit {
     let mut result = MaybeUninit::<rlimit64>::uninit();
     unsafe {
-        match ret(syscall!(
+        ret_infallible(syscall!(
             __NR_prlimit64,
             c_uint(0),
             limit,
             null::<c::c_void>(),
             &mut result
-        )) {
-            Ok(()) => rlimit_from_linux(result.assume_init()),
-            Err(err) => {
-                debug_assert_eq!(err, io::Errno::NOSYS);
-                getrlimit_old(limit)
-            }
-        }
+        ));
+        rlimit_from_linux(result.assume_init())
     }
-}
-
-/// The old 32-bit-only `getrlimit` syscall, for when we lack the new
-/// `prlimit64`.
-unsafe fn getrlimit_old(limit: Resource) -> Rlimit {
-    let mut result = MaybeUninit::<rlimit>::uninit();
-
-    // On these platforms, `__NR_getrlimit` is called `__NR_ugetrlimit`.
-    #[cfg(any(
-        target_arch = "arm",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "x86",
-    ))]
-    {
-        ret_infallible(syscall!(__NR_ugetrlimit, limit, &mut result));
-    }
-
-    // On these platforms, it's just `__NR_getrlimit`.
-    #[cfg(not(any(
-        target_arch = "arm",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "x86",
-    )))]
-    {
-        ret_infallible(syscall!(__NR_getrlimit, limit, &mut result));
-    }
-
-    rlimit_from_linux_old(result.assume_init())
 }
 
 #[inline]
@@ -332,17 +322,9 @@ pub(crate) fn setrlimit(limit: Resource, new: Rlimit) -> io::Result<()> {
             null_mut::<c::c_void>()
         )) {
             Ok(()) => Ok(()),
-            Err(io::Errno::NOSYS) => setrlimit_old(limit, new),
             Err(err) => Err(err),
         }
     }
-}
-
-/// The old 32-bit-only `setrlimit` syscall, for when we lack the new
-/// `prlimit64`.
-unsafe fn setrlimit_old(limit: Resource, new: Rlimit) -> io::Result<()> {
-    let lim = rlimit_to_linux_old(new)?;
-    ret(syscall_readonly!(__NR_setrlimit, limit, by_ref(&lim)))
 }
 
 #[inline]
@@ -393,36 +375,6 @@ fn rlimit_to_linux(lim: Rlimit) -> rlimit64 {
     rlimit64 { rlim_cur, rlim_max }
 }
 
-/// Like `rlimit_from_linux` but uses Linux's old 32-bit `rlimit`.
-#[allow(clippy::useless_conversion)]
-fn rlimit_from_linux_old(lim: rlimit) -> Rlimit {
-    let current = if lim.rlim_cur == RLIM_INFINITY as _ {
-        None
-    } else {
-        Some(lim.rlim_cur.into())
-    };
-    let maximum = if lim.rlim_max == RLIM_INFINITY as _ {
-        None
-    } else {
-        Some(lim.rlim_max.into())
-    };
-    Rlimit { current, maximum }
-}
-
-/// Like `rlimit_to_linux` but uses Linux's old 32-bit `rlimit`.
-#[allow(clippy::useless_conversion)]
-fn rlimit_to_linux_old(lim: Rlimit) -> io::Result<rlimit> {
-    let rlim_cur = match lim.current {
-        Some(r) => r.try_into().map_err(|_e| io::Errno::INVAL)?,
-        None => RLIM_INFINITY as _,
-    };
-    let rlim_max = match lim.maximum {
-        Some(r) => r.try_into().map_err(|_e| io::Errno::INVAL)?,
-        None => RLIM_INFINITY as _,
-    };
-    Ok(rlimit { rlim_cur, rlim_max })
-}
-
 #[inline]
 pub(crate) fn wait(waitopts: WaitOptions) -> io::Result<Option<(Pid, WaitStatus)>> {
     _waitpid(!0, waitopts)
@@ -434,6 +386,11 @@ pub(crate) fn waitpid(
     waitopts: WaitOptions,
 ) -> io::Result<Option<(Pid, WaitStatus)>> {
     _waitpid(Pid::as_raw(pid), waitopts)
+}
+
+#[inline]
+pub(crate) fn waitpgid(pgid: Pid, waitopts: WaitOptions) -> io::Result<Option<(Pid, WaitStatus)>> {
+    _waitpid(-pgid.as_raw_nonzero().get(), waitopts)
 }
 
 #[inline]
@@ -460,6 +417,7 @@ pub(crate) fn waitid(id: WaitId<'_>, options: WaitidOptions) -> io::Result<Optio
     match id {
         WaitId::All => _waitid_all(options),
         WaitId::Pid(pid) => _waitid_pid(pid, options),
+        WaitId::Pgid(pid) => _waitid_pgid(pid, options),
         WaitId::PidFd(fd) => _waitid_pidfd(fd, options),
     }
 }
@@ -493,6 +451,25 @@ fn _waitid_pid(pid: Pid, options: WaitidOptions) -> io::Result<Option<WaitidStat
             __NR_waitid,
             c_uint(c::P_PID),
             c_int(Pid::as_raw(Some(pid))),
+            by_mut(&mut status),
+            c_int(options.bits() as _),
+            zero()
+        ))?
+    };
+
+    Ok(unsafe { cvt_waitid_status(status) })
+}
+
+#[inline]
+fn _waitid_pgid(pgid: Option<Pid>, options: WaitidOptions) -> io::Result<Option<WaitidStatus>> {
+    // `waitid` can return successfully without initializing the struct (no
+    // children found when using `WNOHANG`)
+    let mut status = MaybeUninit::<c::siginfo_t>::zeroed();
+    unsafe {
+        ret(syscall!(
+            __NR_waitid,
+            c_uint(c::P_PGID),
+            c_int(Pid::as_raw(pgid)),
             by_mut(&mut status),
             c_int(options.bits() as _),
             zero()

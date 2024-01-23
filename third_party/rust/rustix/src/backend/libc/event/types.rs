@@ -17,7 +17,7 @@ use bitflags::bitflags;
 bitflags! {
     /// `EFD_*` flags for use with [`eventfd`].
     ///
-    /// [`eventfd`]: crate::io::eventfd
+    /// [`eventfd`]: crate::event::eventfd
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct EventfdFlags: u32 {
@@ -31,7 +31,7 @@ bitflags! {
         #[cfg(not(target_os = "espidf"))]
         const SEMAPHORE = bitcast!(c::EFD_SEMAPHORE);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

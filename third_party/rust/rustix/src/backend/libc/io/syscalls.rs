@@ -9,6 +9,7 @@ use crate::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
     target_os = "aix",
     target_os = "espidf",
     target_os = "nto",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 use crate::io::DupFlags;
@@ -25,14 +26,8 @@ use {
     crate::io::{IoSlice, IoSliceMut},
 };
 
-pub(crate) fn read(fd: BorrowedFd<'_>, buf: &mut [u8]) -> io::Result<usize> {
-    unsafe {
-        ret_usize(c::read(
-            borrowed_fd(fd),
-            buf.as_mut_ptr().cast(),
-            min(buf.len(), READ_LIMIT),
-        ))
-    }
+pub(crate) unsafe fn read(fd: BorrowedFd<'_>, buf: *mut u8, len: usize) -> io::Result<usize> {
+    ret_usize(c::read(borrowed_fd(fd), buf.cast(), min(len, READ_LIMIT)))
 }
 
 pub(crate) fn write(fd: BorrowedFd<'_>, buf: &[u8]) -> io::Result<usize> {
@@ -45,24 +40,22 @@ pub(crate) fn write(fd: BorrowedFd<'_>, buf: &[u8]) -> io::Result<usize> {
     }
 }
 
-pub(crate) fn pread(fd: BorrowedFd<'_>, buf: &mut [u8], offset: u64) -> io::Result<usize> {
-    let len = min(buf.len(), READ_LIMIT);
+pub(crate) unsafe fn pread(
+    fd: BorrowedFd<'_>,
+    buf: *mut u8,
+    len: usize,
+    offset: u64,
+) -> io::Result<usize> {
+    let len = min(len, READ_LIMIT);
 
     // Silently cast; we'll get `EINVAL` if the value is negative.
     let offset = offset as i64;
 
-    // ESP-IDF doesn't support 64-bit offsets.
-    #[cfg(target_os = "espidf")]
+    // ESP-IDF and Vita don't support 64-bit offsets.
+    #[cfg(any(target_os = "espidf", target_os = "vita"))]
     let offset: i32 = offset.try_into().map_err(|_| io::Errno::OVERFLOW)?;
 
-    unsafe {
-        ret_usize(c::pread(
-            borrowed_fd(fd),
-            buf.as_mut_ptr().cast(),
-            len,
-            offset,
-        ))
-    }
+    ret_usize(c::pread(borrowed_fd(fd), buf.cast(), len, offset))
 }
 
 pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &[u8], offset: u64) -> io::Result<usize> {
@@ -71,8 +64,8 @@ pub(crate) fn pwrite(fd: BorrowedFd<'_>, buf: &[u8], offset: u64) -> io::Result<
     // Silently cast; we'll get `EINVAL` if the value is negative.
     let offset = offset as i64;
 
-    // ESP-IDF doesn't support 64-bit offsets.
-    #[cfg(target_os = "espidf")]
+    // ESP-IDF and Vita don't support 64-bit offsets.
+    #[cfg(any(target_os = "espidf", target_os = "vita"))]
     let offset: i32 = offset.try_into().map_err(|_| io::Errno::OVERFLOW)?;
 
     unsafe { ret_usize(c::pwrite(borrowed_fd(fd), buf.as_ptr().cast(), len, offset)) }
@@ -105,7 +98,8 @@ pub(crate) fn writev(fd: BorrowedFd<'_>, bufs: &[IoSlice<'_>]) -> io::Result<usi
     target_os = "haiku",
     target_os = "nto",
     target_os = "redox",
-    target_os = "solaris"
+    target_os = "solaris",
+    target_os = "vita"
 )))]
 pub(crate) fn preadv(
     fd: BorrowedFd<'_>,
@@ -129,7 +123,8 @@ pub(crate) fn preadv(
     target_os = "haiku",
     target_os = "nto",
     target_os = "redox",
-    target_os = "solaris"
+    target_os = "solaris",
+    target_os = "vita"
 )))]
 pub(crate) fn pwritev(fd: BorrowedFd<'_>, bufs: &[IoSlice<'_>], offset: u64) -> io::Result<usize> {
     // Silently cast; we'll get `EINVAL` if the value is negative.
@@ -316,6 +311,7 @@ pub(crate) fn dup2(fd: BorrowedFd<'_>, new: &mut OwnedFd) -> io::Result<()> {
     target_os = "haiku",
     target_os = "nto",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 pub(crate) fn dup3(fd: BorrowedFd<'_>, new: &mut OwnedFd, flags: DupFlags) -> io::Result<()> {

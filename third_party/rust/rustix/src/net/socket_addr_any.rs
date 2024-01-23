@@ -11,7 +11,7 @@
 
 #[cfg(unix)]
 use crate::net::SocketAddrUnix;
-use crate::net::{AddressFamily, SocketAddrV4, SocketAddrV6};
+use crate::net::{AddressFamily, SocketAddr, SocketAddrV4, SocketAddrV6};
 use crate::{backend, io};
 #[cfg(feature = "std")]
 use core::fmt;
@@ -30,6 +30,16 @@ pub enum SocketAddrAny {
     /// `struct sockaddr_un`
     #[cfg(unix)]
     Unix(SocketAddrUnix),
+}
+
+impl From<SocketAddr> for SocketAddrAny {
+    #[inline]
+    fn from(from: SocketAddr) -> Self {
+        match from {
+            SocketAddr::V4(v4) => Self::V4(v4),
+            SocketAddr::V6(v6) => Self::V6(v6),
+        }
+    }
 }
 
 impl From<SocketAddrV4> for SocketAddrAny {

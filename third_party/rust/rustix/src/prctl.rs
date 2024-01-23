@@ -26,7 +26,7 @@ bitflags! {
         /// `PR_PAC_APGAKEY`—Generic authentication `A` key.
         const GENERIC_AUTHENTICATION_KEY_A = linux_raw_sys::prctl::PR_PAC_APGAKEY;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

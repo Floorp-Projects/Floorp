@@ -1,8 +1,7 @@
 //! Workarounds for Rust 1.63 where some things in the `static_assertions`
-//! crate do things that don't work in const contexts. We want to call them
-//! in const contexts in Rust versions where that's supported so that
-//! problems are caught at compile time, and fall back to dynamic asserts
-//! in Rust 1.63.
+//! crate do things that don't work in const contexts. We want to call them in
+//! const contexts in Rust versions where that's supported so that problems are
+//! caught at compile time, and fall back to dynamic asserts in Rust 1.63.
 
 #![allow(unused_macros)]
 

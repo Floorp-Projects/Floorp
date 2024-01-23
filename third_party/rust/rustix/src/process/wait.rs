@@ -9,7 +9,7 @@ use crate::fd::BorrowedFd;
 use crate::backend::process::wait::SiginfoExt;
 
 bitflags! {
-    /// Options for modifying the behavior of wait/waitpid
+    /// Options for modifying the behavior of [`wait`]/[`waitpid`].
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct WaitOptions: u32 {
@@ -23,21 +23,21 @@ bitflags! {
         /// [`Signal::Cont`].
         const CONTINUED = bitcast!(backend::process::wait::WCONTINUED);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
 
 #[cfg(not(any(target_os = "openbsd", target_os = "redox", target_os = "wasi")))]
 bitflags! {
-    /// Options for modifying the behavior of waitid
+    /// Options for modifying the behavior of [`waitid`].
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct WaitidOptions: u32 {
         /// Return immediately if no child has exited.
         const NOHANG = bitcast!(backend::process::wait::WNOHANG);
         /// Return if a stopped child has been resumed by delivery of
-        /// [`Signal::Cont`]
+        /// [`Signal::Cont`].
         const CONTINUED = bitcast!(backend::process::wait::WCONTINUED);
         /// Wait for processed that have exited.
         const EXITED = bitcast!(backend::process::wait::WEXITED);
@@ -46,7 +46,7 @@ bitflags! {
         /// Wait for processes that have been stopped.
         const STOPPED = bitcast!(backend::process::wait::WSTOPPED);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -93,8 +93,8 @@ impl WaitStatus {
         backend::process::wait::WIFCONTINUED(self.0 as _)
     }
 
-    /// Returns the number of the signal that stopped the process,
-    /// if the process was stopped by a signal.
+    /// Returns the number of the signal that stopped the process, if the
+    /// process was stopped by a signal.
     #[inline]
     pub fn stopping_signal(self) -> Option<u32> {
         if self.stopped() {
@@ -104,8 +104,8 @@ impl WaitStatus {
         }
     }
 
-    /// Returns the exit status number returned by the process,
-    /// if it exited normally.
+    /// Returns the exit status number returned by the process, if it exited
+    /// normally.
     #[inline]
     pub fn exit_status(self) -> Option<u32> {
         if self.exited() {
@@ -115,8 +115,8 @@ impl WaitStatus {
         }
     }
 
-    /// Returns the number of the signal that terminated the process,
-    /// if the process was terminated by a signal.
+    /// Returns the number of the signal that terminated the process, if the
+    /// process was terminated by a signal.
     #[inline]
     pub fn terminating_signal(self) -> Option<u32> {
         if self.signaled() {
@@ -153,15 +153,15 @@ impl WaitidStatus {
         self.si_code() == backend::c::CLD_EXITED
     }
 
-    /// Returns whether the process was terminated by a signal
-    /// and did not create a core file.
+    /// Returns whether the process was terminated by a signal and did not
+    /// create a core file.
     #[inline]
     pub fn killed(&self) -> bool {
         self.si_code() == backend::c::CLD_KILLED
     }
 
-    /// Returns whether the process was terminated by a signal
-    /// and did create a core file.
+    /// Returns whether the process was terminated by a signal and did create a
+    /// core file.
     #[inline]
     pub fn dumped(&self) -> bool {
         self.si_code() == backend::c::CLD_DUMPED
@@ -173,10 +173,10 @@ impl WaitidStatus {
         self.si_code() == backend::c::CLD_CONTINUED
     }
 
-    /// Returns the number of the signal that stopped the process,
-    /// if the process was stopped by a signal.
+    /// Returns the number of the signal that stopped the process, if the
+    /// process was stopped by a signal.
     #[inline]
-    #[cfg(not(any(target_os = "netbsd", target_os = "fuchsia", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "netbsd")))]
     pub fn stopping_signal(&self) -> Option<u32> {
         if self.stopped() {
             Some(self.si_status() as _)
@@ -185,10 +185,10 @@ impl WaitidStatus {
         }
     }
 
-    /// Returns the number of the signal that trapped the process,
-    /// if the process was trapped by a signal.
+    /// Returns the number of the signal that trapped the process, if the
+    /// process was trapped by a signal.
     #[inline]
-    #[cfg(not(any(target_os = "netbsd", target_os = "fuchsia", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "netbsd")))]
     pub fn trapping_signal(&self) -> Option<u32> {
         if self.trapped() {
             Some(self.si_status() as _)
@@ -197,10 +197,10 @@ impl WaitidStatus {
         }
     }
 
-    /// Returns the exit status number returned by the process,
-    /// if it exited normally.
+    /// Returns the exit status number returned by the process, if it exited
+    /// normally.
     #[inline]
-    #[cfg(not(any(target_os = "netbsd", target_os = "fuchsia", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "netbsd")))]
     pub fn exit_status(&self) -> Option<u32> {
         if self.exited() {
             Some(self.si_status() as _)
@@ -209,10 +209,10 @@ impl WaitidStatus {
         }
     }
 
-    /// Returns the number of the signal that terminated the process,
-    /// if the process was terminated by a signal.
+    /// Returns the number of the signal that terminated the process, if the
+    /// process was terminated by a signal.
     #[inline]
-    #[cfg(not(any(target_os = "netbsd", target_os = "fuchsia", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "netbsd")))]
     pub fn terminating_signal(&self) -> Option<u32> {
         if self.killed() || self.dumped() {
             Some(self.si_status() as _)
@@ -237,7 +237,7 @@ impl WaitidStatus {
         self.0.si_code
     }
 
-    #[cfg(not(any(target_os = "netbsd", target_os = "fuchsia", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "netbsd")))]
     #[allow(unsafe_code)]
     fn si_status(&self) -> backend::c::c_int {
         // SAFETY: POSIX [specifies] that the `siginfo_t` returned by a
@@ -254,20 +254,26 @@ impl WaitidStatus {
 #[non_exhaustive]
 pub enum WaitId<'a> {
     /// Wait on all processes.
+    #[doc(alias = "P_ALL")]
     All,
 
     /// Wait for a specific process ID.
+    #[doc(alias = "P_PID")]
     Pid(Pid),
+
+    /// Wait for a specific process group ID, or the calling process' group ID.
+    #[doc(alias = "P_PGID")]
+    Pgid(Option<Pid>),
 
     /// Wait for a specific process file descriptor.
     #[cfg(target_os = "linux")]
+    #[doc(alias = "P_PIDFD")]
     PidFd(BorrowedFd<'a>),
 
     /// Eat the lifetime for non-Linux platforms.
     #[doc(hidden)]
     #[cfg(not(target_os = "linux"))]
     __EatLifetime(core::marker::PhantomData<&'a ()>),
-    // TODO(notgull): Once this crate has the concept of PGIDs, add a WaitId::Pgid
 }
 
 /// `waitpid(pid, waitopts)`—Wait for a specific process to change state.
@@ -275,18 +281,22 @@ pub enum WaitId<'a> {
 /// If the pid is `None`, the call will wait for any child process whose
 /// process group id matches that of the calling process.
 ///
-/// If the pid is equal to `RawPid::MAX`, the call will wait for any child
-/// process.
-///
-/// Otherwise if the `wrapping_neg` of pid is less than pid, the call will wait
-/// for any child process with a group ID equal to the `wrapping_neg` of `pid`.
-///
 /// Otherwise, the call will wait for the child process with the given pid.
 ///
 /// On Success, returns the status of the selected process.
 ///
 /// If `NOHANG` was specified in the options, and the selected child process
 /// didn't change state, returns `None`.
+///
+/// # Bugs
+///
+/// This function does not currently support waiting for given process group
+/// (the < 0 case of `waitpid`); to do that, currently the [`waitpgid`] or
+/// [`waitid`] function must be used.
+///
+/// This function does not currently support waiting for any process (the
+/// `-1` case of `waitpid`); to do that, currently the [`wait`] function must
+/// be used.
 ///
 /// # References
 ///  - [POSIX]
@@ -298,6 +308,28 @@ pub enum WaitId<'a> {
 #[inline]
 pub fn waitpid(pid: Option<Pid>, waitopts: WaitOptions) -> io::Result<Option<WaitStatus>> {
     Ok(backend::process::syscalls::waitpid(pid, waitopts)?.map(|(_, status)| status))
+}
+
+/// `waitpid(-pgid, waitopts)`—Wait for a process in a specific process group
+/// to change state.
+///
+/// The call will wait for any child process with the given pgid.
+///
+/// On Success, returns the status of the selected process.
+///
+/// If `NOHANG` was specified in the options, and no selected child process
+/// changed state, returns `None`.
+///
+/// # References
+///  - [POSIX]
+///  - [Linux]
+///
+/// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html
+/// [Linux]: https://man7.org/linux/man-pages/man2/waitpid.2.html
+#[cfg(not(target_os = "wasi"))]
+#[inline]
+pub fn waitpgid(pgid: Pid, waitopts: WaitOptions) -> io::Result<Option<WaitStatus>> {
+    Ok(backend::process::syscalls::waitpgid(pgid, waitopts)?.map(|(_, status)| status))
 }
 
 /// `wait(waitopts)`—Wait for any of the children of calling process to

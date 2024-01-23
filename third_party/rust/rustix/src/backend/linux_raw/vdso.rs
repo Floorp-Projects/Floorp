@@ -55,7 +55,7 @@ fn elf_hash(name: &CStr) -> u32 {
 
 /// Create a `Vdso` value by parsing the vDSO at the `sysinfo_ehdr` address.
 fn init_from_sysinfo_ehdr() -> Option<Vdso> {
-    // SAFETY: the auxv initialization code does extensive checks to ensure
+    // SAFETY: The auxv initialization code does extensive checks to ensure
     // that the value we get really is an `AT_SYSINFO_EHDR` value from the
     // kernel.
     unsafe {
@@ -106,9 +106,9 @@ fn init_from_sysinfo_ehdr() -> Option<Vdso> {
                 vdso.load_end = vdso.base_plus(phdr.p_offset.checked_add(phdr.p_memsz)?)?;
                 vdso.pv_offset = phdr.p_offset.wrapping_sub(phdr.p_vaddr);
             } else if phdr.p_type == PT_DYNAMIC {
-                // If `p_offset` is zero, it's more likely that we're looking at memory
-                // that has been zeroed than that the kernel has somehow aliased the
-                // `Ehdr` and the `Elf_Dyn` array.
+                // If `p_offset` is zero, it's more likely that we're looking
+                // at memory that has been zeroed than that the kernel has
+                // somehow aliased the `Ehdr` and the `Elf_Dyn` array.
                 if phdr.p_offset < size_of::<Elf_Ehdr>() {
                     return None;
                 }
@@ -117,9 +117,9 @@ fn init_from_sysinfo_ehdr() -> Option<Vdso> {
                     .as_ptr();
                 num_dyn = phdr.p_memsz / size_of::<Elf_Dyn>();
             } else if phdr.p_type == PT_INTERP || phdr.p_type == PT_GNU_RELRO {
-                // Don't trust any ELF image that has an “interpreter” or that uses
-                // RELRO, which is likely to be a user ELF image rather and not the
-                // kernel vDSO.
+                // Don't trust any ELF image that has an “interpreter” or
+                // that uses RELRO, which is likely to be a user ELF image
+                // rather and not the kernel vDSO.
                 return None;
             }
         }
@@ -167,7 +167,7 @@ fn init_from_sysinfo_ehdr() -> Option<Vdso> {
                     .as_ptr();
                 }
                 DT_SYMENT => {
-                    if d.d_un.d_val != size_of::<Elf_Sym>() as _ {
+                    if d.d_un.d_ptr != size_of::<Elf_Sym>() {
                         return None; // Failed
                     }
                 }
@@ -176,8 +176,8 @@ fn init_from_sysinfo_ehdr() -> Option<Vdso> {
             }
             i = i.checked_add(1)?;
         }
-        // The upstream code checks `symstrings`, `symtab`, and `hash` for null;
-        // here, `check_raw_pointer` has already done that.
+        // The upstream code checks `symstrings`, `symtab`, and `hash` for
+        // null; here, `check_raw_pointer` has already done that.
 
         if vdso.verdef.is_null() {
             vdso.versym = null();

@@ -1,4 +1,4 @@
-//! `ioctl` opcode behavior for Linux platforms.
+//! `ioctl` opcode behavior for BSD platforms.
 
 use super::{Direction, RawOpcode};
 
@@ -18,7 +18,10 @@ pub(super) const fn compose_opcode(
     dir | num | (group << 8) | ((size & IOCPARAM_MASK) << 16)
 }
 
+// `IOC_VOID`
 pub const NONE: RawOpcode = 0x2000_0000;
-pub const WRITE: RawOpcode = 0x4000_0000;
-pub const READ: RawOpcode = 0x8000_0000;
+// `IOC_OUT` ("out" is from the perspective of the kernel)
+pub const READ: RawOpcode = 0x4000_0000;
+// `IOC_IN`
+pub const WRITE: RawOpcode = 0x8000_0000;
 pub const IOCPARAM_MASK: RawOpcode = 0x1FFF;

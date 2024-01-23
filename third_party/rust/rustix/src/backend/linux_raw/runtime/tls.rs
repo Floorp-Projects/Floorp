@@ -8,6 +8,7 @@
 
 use crate::backend::c;
 use crate::backend::param::auxv::exe_phdrs;
+use core::arch::global_asm;
 use core::ptr::{null, NonNull};
 use linux_raw_sys::elf::*;
 
@@ -25,6 +26,10 @@ pub(crate) fn startup_tls_info() -> StartupTlsInfo {
     let (first_phdr, phent, phnum) = exe_phdrs();
     let mut current_phdr = first_phdr.cast::<Elf_Phdr>();
 
+    // The dynamic address of the dynamic section, which we can compare with
+    // the `PT_DYNAMIC` header's static address, if present.
+    let dynamic_addr: *const c::c_void = unsafe { &_DYNAMIC };
+
     // SAFETY: We assume the phdr array pointer and length the kernel provided
     // to the process describe a valid phdr array.
     unsafe {
@@ -34,7 +39,13 @@ pub(crate) fn startup_tls_info() -> StartupTlsInfo {
             current_phdr = current_phdr.cast::<u8>().add(phent).cast();
 
             match phdr.p_type {
-                PT_PHDR => base = first_phdr.cast::<u8>().sub(phdr.p_vaddr),
+                // Compute the offset from the static virtual addresses
+                // in the `p_vaddr` fields to the dynamic addresses. We don't
+                // always get a `PT_PHDR` or `PT_DYNAMIC` header, so use
+                // whichever one we get.
+                PT_PHDR => base = first_phdr.cast::<u8>().wrapping_sub(phdr.p_vaddr),
+                PT_DYNAMIC => base = dynamic_addr.cast::<u8>().wrapping_sub(phdr.p_vaddr),
+
                 PT_TLS => tls_phdr = phdr,
                 PT_GNU_STACK => stack_size = phdr.p_memsz,
                 _ => {}
@@ -51,7 +62,7 @@ pub(crate) fn startup_tls_info() -> StartupTlsInfo {
             }
         } else {
             StartupTlsInfo {
-                addr: base.cast::<u8>().add((*tls_phdr).p_vaddr).cast(),
+                addr: base.cast::<u8>().wrapping_add((*tls_phdr).p_vaddr).cast(),
                 mem_size: (*tls_phdr).p_memsz,
                 file_size: (*tls_phdr).p_filesz,
                 align: (*tls_phdr).p_align,
@@ -60,6 +71,15 @@ pub(crate) fn startup_tls_info() -> StartupTlsInfo {
         }
     }
 }
+
+extern "C" {
+    /// Declare the `_DYNAMIC` symbol so that we can compare its address with
+    /// the static address in the `PT_DYNAMIC` header to learn our offset. Use
+    /// a weak symbol because `_DYNAMIC` is not always present.
+    static _DYNAMIC: c::c_void;
+}
+// Rust has `extern_weak` but it isn't stable, so use a `global_asm`.
+global_asm!(".weak _DYNAMIC");
 
 /// The values returned from [`startup_tls_info`].
 ///

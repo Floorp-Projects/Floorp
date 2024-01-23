@@ -2,7 +2,7 @@
   <h1><code>rustix</code></h1>
 
   <p>
-    <strong>Safe Rust bindings to POSIX/Unix/Linux/Winsock2 syscalls</strong>
+    <strong>Safe Rust bindings to POSIX/Unix/Linux/Winsock syscalls</strong>
   </p>
 
   <strong>A <a href="https://bytecodealliance.org/">Bytecode Alliance</a> project</strong>
@@ -16,7 +16,7 @@
 </div>
 
 `rustix` provides efficient memory-safe and [I/O-safe] wrappers to POSIX-like,
-Unix-like, Linux, and Winsock2 syscall-like APIs, with configurable backends.
+Unix-like, Linux, and Winsock syscall-like APIs, with configurable backends.
 It uses Rust references, slices, and return values instead of raw pointers, and
 [I/O safety types] instead of raw file descriptors, providing memory safety,
 [I/O safety], and [provenance]. It uses `Result`s for reporting errors,
@@ -24,9 +24,9 @@ It uses Rust references, slices, and return values instead of raw pointers, and
 to efficiently accept any Rust string type, and several other efficient
 conveniences.
 
-`rustix` is low-level and, and while the `net` API supports Winsock2 on
-Windows, the rest of the APIs do not support Windows; for higher-level and more
-portable APIs built on this functionality, see the [`cap-std`], [`memfd`],
+`rustix` is low-level and, and while the `net` API supports [Windows Sockets 2]
+(Winsock), the rest of the APIs do not support Windows; for higher-level and
+more portable APIs built on this functionality, see the [`cap-std`], [`memfd`],
 [`timerfd`], and [`io-streams`] crates, for example.
 
 `rustix` currently has two backends available:
@@ -42,7 +42,7 @@ portable APIs built on this functionality, see the [`cap-std`], [`memfd`],
       provenance all the way down to the syscalls.
 
  * libc, which uses the [`libc`] crate which provides bindings to native `libc`
-   libraries on Unix-family platforms, and [`windows-sys`] for Winsock2 on
+   libraries on Unix-family platforms, and [`windows-sys`] for Winsock on
    Windows, and is portable to many OS's.
 
 The linux_raw backend is enabled by default on platforms which support it. To
@@ -55,29 +55,30 @@ building.
 The modules [`rustix::io`], [`rustix::fd`], and [`rustix::ffi`] are enabled
 by default. The rest of the API is conditional with cargo feature flags:
 
-| Name       | Description
-| ---------- | ---------------------
-| `event`    | [`rustix::event`]—Polling and event operations.
-| `fs`       | [`rustix::fs`]—Filesystem operations.
-| `io_uring` | [`rustix::io_uring`]—Linux io_uring.
-| `mm`       | [`rustix::mm`]—Memory map operations.
-| `mount`    | [`rustix::mount`]—Linux mount API.
-| `net`      | [`rustix::net`]—Network-related operations.
-| `param`    | [`rustix::param`]—Process parameters.
-| `pipe`     | [`rustix::pipe`]—Pipe operations.
-| `process`  | [`rustix::process`]—Process-associated operations.
-| `procfs`   | [`rustix::procfs`]—Utilities for reading `/proc` on Linux.
-| `pty`      | [`rustix::pty`]—Pseudoterminal operations.
-| `rand`     | [`rustix::rand`]—Random-related operations.
-| `stdio`    | [`rustix::stdio`]—Stdio-related operations.
-| `system`   | [`rustix::system`]—System-related operations.
-| `termios`  | [`rustix::termios`]—Terminal I/O stream operations.
-| `thread`   | [`rustix::thread`]—Thread-associated operations.
-| `time`     | [`rustix::time`]—Time-related operations.
-|            |
-| `use-libc` | Enable the libc backend.
+| Name       | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| `event`    | [`rustix::event`]—Polling and event operations.                |
+| `fs`       | [`rustix::fs`]—Filesystem operations.                          |
+| `io_uring` | [`rustix::io_uring`]—Linux io_uring.                           |
+| `mm`       | [`rustix::mm`]—Memory map operations.                          |
+| `mount`    | [`rustix::mount`]—Linux mount API.                             |
+| `net`      | [`rustix::net`]—Network-related operations.                    |
+| `param`    | [`rustix::param`]—Process parameters.                          |
+| `pipe`     | [`rustix::pipe`]—Pipe operations.                              |
+| `process`  | [`rustix::process`]—Process-associated operations.             |
+| `procfs`   | [`rustix::procfs`]—Utilities for reading `/proc` on Linux.     |
+| `pty`      | [`rustix::pty`]—Pseudoterminal operations.                     |
+| `rand`     | [`rustix::rand`]—Random-related operations.                    |
+| `shm`      | [`rustix::shm`]—POSIX shared memory.                           |
+| `stdio`    | [`rustix::stdio`]—Stdio-related operations.                    |
+| `system`   | [`rustix::system`]—System-related operations.                  |
+| `termios`  | [`rustix::termios`]—Terminal I/O stream operations.            |
+| `thread`   | [`rustix::thread`]—Thread-associated operations.               |
+| `time`     | [`rustix::time`]—Time-related operations.                      |
+|            |                                                                |
+| `use-libc` | Enable the libc backend.                                       |
 
-[`rustix::event`]: https://docs.rs/rustix/*/rustix/fs/index.html
+[`rustix::event`]: https://docs.rs/rustix/*/rustix/event/index.html
 [`rustix::fs`]: https://docs.rs/rustix/*/rustix/fs/index.html
 [`rustix::io_uring`]: https://docs.rs/rustix/*/rustix/io_uring/index.html
 [`rustix::mm`]: https://docs.rs/rustix/*/rustix/mm/index.html
@@ -89,6 +90,7 @@ by default. The rest of the API is conditional with cargo feature flags:
 [`rustix::procfs`]: https://docs.rs/rustix/*/rustix/procfs/index.html
 [`rustix::pty`]: https://docs.rs/rustix/*/rustix/pty/index.html
 [`rustix::rand`]: https://docs.rs/rustix/*/rustix/rand/index.html
+[`rustix::shm`]: https://docs.rs/rustix/*/rustix/shm/index.html
 [`rustix::stdio`]: https://docs.rs/rustix/*/rustix/stdio/index.html
 [`rustix::system`]: https://docs.rs/rustix/*/rustix/system/index.html
 [`rustix::termios`]: https://docs.rs/rustix/*/rustix/termios/index.html
@@ -145,18 +147,32 @@ safety types rather than `RawFd`, and the flags parameters to functions such as
 ## Minimum Supported Rust Version (MSRV)
 
 This crate currently works on the version of [Rust on Debian stable], which is
-currently Rust 1.63. This policy may change in the future, in minor version
+currently [Rust 1.63]. This policy may change in the future, in minor version
 releases, so users using a fixed version of Rust should pin to a specific
 version of this crate.
 
+## Minimum Linux Version
+
+On Linux platforms, rustix requires at least Linux 3.2. This is at most the
+oldest Linux version supported by:
+ - [any current Rust target], or
+ - [kernel.org] at the time of rustix's [MSRV] release.
+The specifics of this policy may change in the future, but we intend it to
+always reflect “very old” Linux versions.
+
+[MSRV]: #minimum-supported-rust-version-msrv
+[Rust 1.63]: https://blog.rust-lang.org/2022/08/11/Rust-1.63.0.html
+[any current Rust target]: https://doc.rust-lang.org/nightly/rustc/platform-support.html
+[kernel.org]: https://www.kernel.org/releases.html
 [Rust on Debian stable]: https://packages.debian.org/stable/rust/rustc
+[Windows Sockets 2]: https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2
 [`nix`]: https://crates.io/crates/nix
 [`unix`]: https://crates.io/crates/unix
 [`nc`]: https://crates.io/crates/nc
 [`simple_libc`]: https://crates.io/crates/simple_libc
 [`uapi`]: https://crates.io/crates/uapi
 [`rusl`]: https://lib.rs/crates/rusl
-[`relibc`]: https://github.com/redox-os/relibc
+[`relibc`]: https://gitlab.redox-os.org/redox-os/relibc
 [`syscall`]: https://crates.io/crates/syscall
 [`sc`]: https://crates.io/crates/sc
 [`scall`]: https://crates.io/crates/scall

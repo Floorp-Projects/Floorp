@@ -1,6 +1,6 @@
 //! The following is derived from Rust's
 //! library/std/src/os/fd/raw.rs at revision
-//! fa68e73e9947be8ffc5b3b46d899e4953a44e7e9.
+//! 334a54cd83191f38ad8046ed94c45de735c86c65.
 //!
 //! All code in this file is licensed MIT or Apache 2.0 at your option.
 //!
@@ -71,7 +71,10 @@ pub trait FromRawFd {
     ///
     /// # Safety
     ///
-    /// The `fd` passed in must be a valid an open file descriptor.
+    /// The `fd` passed in must be an [owned file descriptor][io-safety];
+    /// in particular, it must be open.
+    ///
+    /// [io-safety]: io#io-safety
     ///
     /// # Example
     ///

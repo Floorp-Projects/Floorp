@@ -44,8 +44,9 @@ macro_rules! cstr {
             // call `from_bytes_with_nul_unchecked`, which as of this writing
             // is defined as `#[inline]` and completely optimizes away.
             //
-            // SAFETY: We have manually checked that the string does not contain
-            // embedded NULs above, and we append or own NUL terminator here.
+            // SAFETY: We have manually checked that the string does not
+            // contain embedded NULs above, and we append or own NUL terminator
+            // here.
             unsafe {
                 $crate::ffi::CStr::from_bytes_with_nul_unchecked(concat!($str, "\0").as_bytes())
             }

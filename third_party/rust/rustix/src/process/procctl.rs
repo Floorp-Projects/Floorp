@@ -5,8 +5,8 @@
 
 #![allow(unsafe_code)]
 
-use alloc::vec;
-use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use alloc::{vec, vec::Vec};
 use core::mem::MaybeUninit;
 use core::ptr;
 
@@ -230,7 +230,7 @@ bitflags! {
         /// The process is the root of the reaper tree (pid 1).
         const REALINIT = 2;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -300,7 +300,8 @@ bitflags! {
         const REAPER = 4;
         /// The reported process is in the zombie state.
         const ZOMBIE = 8;
-        /// The reported process is stopped by SIGSTOP/SIGTSTP.
+        /// The reported process is stopped by
+        /// [`Signal::Stop`]/[`Signal::Tstp`].
         const STOPPED = 16;
         /// The reported process is in the process of exiting.
         const EXITING = 32;
@@ -341,6 +342,7 @@ pub struct PidInfo {
 ///  - [FreeBSD: `procctl(PROC_REAP_GETPIDS,...)`]
 ///
 /// [FreeBSD: `procctl(PROC_REAP_GETPIDS,...)`]: https://man.freebsd.org/cgi/man.cgi?query=procctl&sektion=2
+#[cfg(feature = "alloc")]
 pub fn get_reaper_pids(process: ProcSelector) -> io::Result<Vec<PidInfo>> {
     // Sadly no better way to guarantee that we get all the results than to
     // allocate ~8MB of memory..
@@ -493,12 +495,12 @@ const PROC_NO_NEW_PRIVS_CTL: c_int = 19;
 
 const PROC_NO_NEW_PRIVS_ENABLE: c_int = 1;
 
-/// Enable the `no_new_privs` mode that ignores SUID and SGID bits
-/// on `execve` in the specified process and its future descendants.
+/// Enable the `no_new_privs` mode that ignores SUID and SGID bits on `execve`
+/// in the specified process and its future descendants.
 ///
-/// This is similar to `set_no_new_privs` on Linux, with the exception
-/// that on FreeBSD there is no argument `no_new_privs` argument as it's
-/// only possible to enable this mode and there's no going back.
+/// This is similar to `set_no_new_privs` on Linux, with the exception that on
+/// FreeBSD there is no argument `no_new_privs` argument as it's only possible
+/// to enable this mode and there's no going back.
 ///
 /// # References
 ///  - [Linux: `prctl(PR_SET_NO_NEW_PRIVS,...)`]

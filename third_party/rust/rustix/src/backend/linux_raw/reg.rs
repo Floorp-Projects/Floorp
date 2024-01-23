@@ -1,8 +1,8 @@
 //! Encapsulation for system call arguments and return values.
 //!
 //! The inline-asm code paths do some amount of reordering of arguments; to
-//! ensure that we don't accidentally misroute an argument or return value,
-//! we use distinct types for each argument index and return value.
+//! ensure that we don't accidentally misroute an argument or return value, we
+//! use distinct types for each argument index and return value.
 //!
 //! # Safety
 //!
@@ -23,8 +23,8 @@ pub(super) trait ToAsm: private::Sealed {
     ///
     /// # Safety
     ///
-    /// This should be used immediately before the syscall instruction, and
-    /// the returned value shouldn't be used for any other purpose.
+    /// This should be used immediately before the syscall instruction, and the
+    /// returned value shouldn't be used for any other purpose.
     #[must_use]
     unsafe fn to_asm(self) -> *mut Opaque;
 }
@@ -35,8 +35,8 @@ pub(super) trait FromAsm: private::Sealed {
     ///
     /// # Safety
     ///
-    /// This should be used immediately after the syscall instruction, and
-    /// the operand value shouldn't be used for any other purpose.
+    /// This should be used immediately after the syscall instruction, and the
+    /// operand value shouldn't be used for any other purpose.
     #[must_use]
     unsafe fn from_asm(raw: *mut Opaque) -> Self;
 }

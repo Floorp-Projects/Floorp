@@ -14,6 +14,14 @@ use super::reg::{ArgReg, RetReg, SyscallNumber, A0, A1, A2, A3, A4, A5, R0};
 use super::vdso;
 #[cfg(target_arch = "x86")]
 use core::arch::global_asm;
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+use core::ffi::c_void;
 use core::mem::transmute;
 use core::ptr::null_mut;
 use core::sync::atomic::AtomicPtr;
@@ -21,14 +29,25 @@ use core::sync::atomic::Ordering::Relaxed;
 #[cfg(target_pointer_width = "32")]
 #[cfg(feature = "time")]
 use linux_raw_sys::general::timespec as __kernel_old_timespec;
+#[cfg(any(
+    all(
+        feature = "process",
+        any(
+            target_arch = "x86_64",
+            target_arch = "x86",
+            target_arch = "riscv64",
+            target_arch = "powerpc64"
+        )
+    ),
+    feature = "time"
+))]
+use {super::c, super::conv::ret, core::mem::MaybeUninit};
 #[cfg(feature = "time")]
 use {
-    super::c,
-    super::conv::{c_int, ret},
+    super::conv::c_int,
     crate::clockid::{ClockId, DynamicClockId},
     crate::io,
     crate::timespec::Timespec,
-    core::mem::MaybeUninit,
     linux_raw_sys::general::{__kernel_clockid_t, __kernel_timespec},
 };
 
@@ -36,8 +55,8 @@ use {
 #[inline]
 pub(crate) fn clock_gettime(which_clock: ClockId) -> __kernel_timespec {
     // SAFETY: `CLOCK_GETTIME` contains either null or the address of a
-    // function with an ABI like libc `clock_gettime`, and calling it has
-    // the side effect of writing to the result buffer, and no others.
+    // function with an ABI like libc `clock_gettime`, and calling it has the
+    // side effect of writing to the result buffer, and no others.
     unsafe {
         let mut result = MaybeUninit::<__kernel_timespec>::uninit();
         let callee = match transmute(CLOCK_GETTIME.load(Relaxed)) {
@@ -67,19 +86,15 @@ pub(crate) fn clock_gettime_dynamic(which_clock: DynamicClockId<'_>) -> io::Resu
             ((!fd.as_raw_fd() << 3) | CLOCKFD) as __kernel_clockid_t
         }
 
-        DynamicClockId::RealtimeAlarm => {
-            linux_raw_sys::general::CLOCK_REALTIME_ALARM as __kernel_clockid_t
-        }
-        DynamicClockId::Tai => linux_raw_sys::general::CLOCK_TAI as __kernel_clockid_t,
-        DynamicClockId::Boottime => linux_raw_sys::general::CLOCK_BOOTTIME as __kernel_clockid_t,
-        DynamicClockId::BoottimeAlarm => {
-            linux_raw_sys::general::CLOCK_BOOTTIME_ALARM as __kernel_clockid_t
-        }
+        DynamicClockId::RealtimeAlarm => c::CLOCK_REALTIME_ALARM as __kernel_clockid_t,
+        DynamicClockId::Tai => c::CLOCK_TAI as __kernel_clockid_t,
+        DynamicClockId::Boottime => c::CLOCK_BOOTTIME as __kernel_clockid_t,
+        DynamicClockId::BoottimeAlarm => c::CLOCK_BOOTTIME_ALARM as __kernel_clockid_t,
     };
 
     // SAFETY: `CLOCK_GETTIME` contains either null or the address of a
-    // function with an ABI like libc `clock_gettime`, and calling it has
-    // the side effect of writing to the result buffer, and no others.
+    // function with an ABI like libc `clock_gettime`, and calling it has the
+    // side effect of writing to the result buffer, and no others.
     unsafe {
         const EINVAL: c::c_int = -(c::EINVAL as c::c_int);
         let mut timespec = MaybeUninit::<Timespec>::uninit();
@@ -93,6 +108,30 @@ pub(crate) fn clock_gettime_dynamic(which_clock: DynamicClockId<'_>) -> io::Resu
             _ => _rustix_clock_gettime_via_syscall(id, timespec.as_mut_ptr())?,
         }
         Ok(timespec.assume_init())
+    }
+}
+
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+#[inline]
+pub(crate) fn sched_getcpu() -> usize {
+    // SAFETY: `GETCPU` contains either null or the address of a function with
+    // an ABI like libc `getcpu`, and calling it has the side effect of writing
+    // to the result buffers, and no others.
+    unsafe {
+        let mut cpu = MaybeUninit::<u32>::uninit();
+        let callee = match transmute(GETCPU.load(Relaxed)) {
+            Some(callee) => callee,
+            None => init_getcpu(),
+        };
+        let r0 = callee(cpu.as_mut_ptr(), null_mut(), null_mut());
+        debug_assert_eq!(r0, 0);
+        cpu.assume_init() as usize
     }
 }
 
@@ -223,6 +262,15 @@ pub(super) mod x86_via_vdso {
 #[cfg(feature = "time")]
 type ClockGettimeType = unsafe extern "C" fn(c::c_int, *mut Timespec) -> c::c_int;
 
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+type GetcpuType = unsafe extern "C" fn(*mut u32, *mut u32, *mut c_void) -> c::c_int;
+
 /// The underlying syscall functions are only called from asm, using the
 /// special syscall calling convention to pass arguments and return values,
 /// which the signature here doesn't reflect.
@@ -234,9 +282,25 @@ pub(super) type SyscallType = unsafe extern "C" fn();
 #[cold]
 fn init_clock_gettime() -> ClockGettimeType {
     init();
-    // SAFETY: Load the function address from static storage that we
-    // just initialized.
+    // SAFETY: Load the function address from static storage that we just
+    // initialized.
     unsafe { transmute(CLOCK_GETTIME.load(Relaxed)) }
+}
+
+/// Initialize `GETCPU` and return its value.
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+#[cold]
+fn init_getcpu() -> GetcpuType {
+    init();
+    // SAFETY: Load the function address from static storage that we just
+    // initialized.
+    unsafe { transmute(GETCPU.load(Relaxed)) }
 }
 
 /// Initialize `SYSCALL` and return its value.
@@ -244,8 +308,8 @@ fn init_clock_gettime() -> ClockGettimeType {
 #[cold]
 fn init_syscall() -> SyscallType {
     init();
-    // SAFETY: Load the function address from static storage that we
-    // just initialized.
+    // SAFETY: Load the function address from static storage that we just
+    // initialized.
     unsafe { transmute(SYSCALL.load(Relaxed)) }
 }
 
@@ -254,6 +318,14 @@ fn init_syscall() -> SyscallType {
 struct Function;
 #[cfg(feature = "time")]
 static mut CLOCK_GETTIME: AtomicPtr<Function> = AtomicPtr::new(null_mut());
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+static mut GETCPU: AtomicPtr<Function> = AtomicPtr::new(null_mut());
 #[cfg(target_arch = "x86")]
 static mut SYSCALL: AtomicPtr<Function> = AtomicPtr::new(null_mut());
 
@@ -315,10 +387,28 @@ unsafe fn _rustix_clock_gettime_via_syscall(
     ret(syscall!(__NR_clock_gettime, c_int(clockid), res))
 }
 
+#[cfg(feature = "process")]
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "riscv64",
+    target_arch = "powerpc64"
+))]
+unsafe extern "C" fn rustix_getcpu_via_syscall(
+    cpu: *mut u32,
+    node: *mut u32,
+    unused: *mut c_void,
+) -> c::c_int {
+    match ret(syscall!(__NR_getcpu, cpu, node, unused)) {
+        Ok(()) => 0,
+        Err(err) => err.raw_os_error().wrapping_neg(),
+    }
+}
+
 #[cfg(target_arch = "x86")]
 extern "C" {
     /// A symbol pointing to an `int 0x80` instruction. This “function” is only
-    /// called from assembly, and only with the x86 syscall calling convention.
+    /// called from assembly, and only with the x86 syscall calling convention,
     /// so its signature here is not its true signature.
     ///
     /// This extern block and the `global_asm!` below can be replaced with
@@ -345,9 +435,9 @@ rustix_int_0x80:
 
 fn minimal_init() {
     // SAFETY: Store default function addresses in static storage so that if we
-    // end up making any system calls while we read the vDSO, they'll work.
-    // If the memory happens to already be initialized, this is redundant, but
-    // not harmful.
+    // end up making any system calls while we read the vDSO, they'll work. If
+    // the memory happens to already be initialized, this is redundant, but not
+    // harmful.
     unsafe {
         #[cfg(feature = "time")]
         {
@@ -355,6 +445,24 @@ fn minimal_init() {
                 .compare_exchange(
                     null_mut(),
                     rustix_clock_gettime_via_syscall as *mut Function,
+                    Relaxed,
+                    Relaxed,
+                )
+                .ok();
+        }
+
+        #[cfg(feature = "process")]
+        #[cfg(any(
+            target_arch = "x86_64",
+            target_arch = "x86",
+            target_arch = "riscv64",
+            target_arch = "powerpc64"
+        ))]
+        {
+            GETCPU
+                .compare_exchange(
+                    null_mut(),
+                    rustix_getcpu_via_syscall as *mut Function,
                     Relaxed,
                     Relaxed,
                 )
@@ -381,9 +489,9 @@ fn init() {
     if let Some(vdso) = vdso::Vdso::new() {
         #[cfg(feature = "time")]
         {
-            // Look up the platform-specific `clock_gettime` symbol as documented
-            // [here], except on 32-bit platforms where we look up the
-            // `64`-suffixed variant and fail if we don't find it.
+            // Look up the platform-specific `clock_gettime` symbol as
+            // documented [here], except on 32-bit platforms where we look up
+            // the `64`-suffixed variant and fail if we don't find it.
             //
             // [here]: https://man7.org/linux/man-pages/man7/vdso.7.html
             #[cfg(target_arch = "x86_64")]
@@ -408,8 +516,8 @@ fn init() {
             #[cfg(target_pointer_width = "64")]
             let ok = true;
 
-            // On some 32-bit platforms, the 64-bit `clock_gettime` symbols are not
-            // available on older kernel versions.
+            // On some 32-bit platforms, the 64-bit `clock_gettime` symbols are
+            // not available on older kernel versions.
             #[cfg(any(
                 target_arch = "arm",
                 target_arch = "mips",
@@ -421,11 +529,65 @@ fn init() {
             if ok {
                 assert!(!ptr.is_null());
 
-                // SAFETY: Store the computed function addresses in static storage
-                // so that we don't need to compute it again (but if we do, it
-                // doesn't hurt anything).
+                // SAFETY: Store the computed function addresses in static
+                // storage so that we don't need to compute it again (but if
+                // we do, it doesn't hurt anything).
                 unsafe {
                     CLOCK_GETTIME.store(ptr.cast(), Relaxed);
+                }
+            }
+        }
+
+        #[cfg(feature = "process")]
+        #[cfg(any(
+            target_arch = "x86_64",
+            target_arch = "x86",
+            target_arch = "riscv64",
+            target_arch = "powerpc64"
+        ))]
+        {
+            // Look up the platform-specific `getcpu` symbol as documented
+            // [here].
+            //
+            // [here]: https://man7.org/linux/man-pages/man7/vdso.7.html
+            #[cfg(target_arch = "x86_64")]
+            let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_getcpu"));
+            #[cfg(target_arch = "x86")]
+            let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_getcpu"));
+            #[cfg(target_arch = "riscv64")]
+            let ptr = vdso.sym(cstr!("LINUX_4.15"), cstr!("__kernel_getcpu"));
+            #[cfg(target_arch = "powerpc64")]
+            let ptr = vdso.sym(cstr!("LINUX_2.6.15"), cstr!("__kernel_getcpu"));
+
+            #[cfg(any(
+                target_arch = "x86_64",
+                target_arch = "riscv64",
+                target_arch = "powerpc64"
+            ))]
+            let ok = true;
+
+            // On 32-bit x86, the symbol doesn't appear present sometimes.
+            #[cfg(target_arch = "x86")]
+            let ok = !ptr.is_null();
+
+            #[cfg(any(
+                target_arch = "aarch64",
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6"
+            ))]
+            let ok = false;
+
+            if ok {
+                assert!(!ptr.is_null());
+
+                // SAFETY: Store the computed function addresses in static
+                // storage so that we don't need to compute it again (but if
+                // we do, it doesn't hurt anything).
+                unsafe {
+                    GETCPU.store(ptr.cast(), Relaxed);
                 }
             }
         }

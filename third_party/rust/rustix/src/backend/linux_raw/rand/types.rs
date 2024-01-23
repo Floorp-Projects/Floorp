@@ -14,7 +14,7 @@ bitflags! {
         /// `GRND_INSECURE`
         const INSECURE = linux_raw_sys::general::GRND_INSECURE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

@@ -24,6 +24,7 @@ use {
     target_os = "haiku",
     target_os = "openbsd",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 use {crate::thread::ClockId, core::ptr::null_mut};
@@ -42,6 +43,7 @@ weak!(fn __nanosleep64(*const LibcTimespec, *mut LibcTimespec) -> c::c_int);
     target_os = "haiku",
     target_os = "openbsd",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 #[inline]
@@ -92,7 +94,12 @@ pub(crate) fn clock_nanosleep_relative(id: ClockId, request: &Timespec) -> Nanos
 
 #[cfg(all(
     fix_y2038,
-    not(any(apple, target_os = "emscripten", target_os = "haiku"))
+    not(any(
+        apple,
+        target_os = "emscripten",
+        target_os = "haiku",
+        target_os = "vita"
+    ))
 ))]
 fn clock_nanosleep_relative_old(id: ClockId, request: &Timespec) -> NanosleepRelativeResult {
     let tv_sec = match request.tv_sec.try_into() {
@@ -137,6 +144,7 @@ fn clock_nanosleep_relative_old(id: ClockId, request: &Timespec) -> NanosleepRel
     target_os = "haiku",
     target_os = "openbsd",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi",
 )))]
 #[inline]
@@ -180,7 +188,12 @@ pub(crate) fn clock_nanosleep_absolute(id: ClockId, request: &Timespec) -> io::R
 
 #[cfg(all(
     fix_y2038,
-    not(any(apple, target_os = "emscripten", target_os = "haiku"))
+    not(any(
+        apple,
+        target_os = "emscripten",
+        target_os = "haiku",
+        target_os = "vita"
+    ))
 ))]
 fn clock_nanosleep_absolute_old(id: ClockId, request: &Timespec) -> io::Result<()> {
     let flags = c::TIMER_ABSTIME;

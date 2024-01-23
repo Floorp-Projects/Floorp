@@ -23,7 +23,7 @@ use crate::{fd::FromRawFd, ioctl};
 bitflags::bitflags! {
     /// `O_*` flags for use with [`openpt`] and [`ioctl_tiocgptpeer`].
     ///
-    /// [`ioctl_tiocgtpeer`]: https://docs.rs/rustix/*/x86_64-unknown-linux-gnu/rustix/pty/fn.ioctl_tiocgtpeer.html
+    /// [`ioctl_tiocgptpeer`]: https://docs.rs/rustix/*/x86_64-unknown-linux-gnu/rustix/pty/fn.ioctl_tiocgptpeer.html
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct OpenptFlags: u32 {
@@ -31,7 +31,7 @@ bitflags::bitflags! {
         const RDWR = c::O_RDWR as c::c_uint;
 
         /// `O_NOCTTY`
-        #[cfg(not(any(target_os = "espidf", target_os = "l4re", target_os = "redox")))]
+        #[cfg(not(any(target_os = "espidf", target_os = "l4re", target_os = "redox", target_os = "vita")))]
         const NOCTTY = c::O_NOCTTY as c::c_uint;
 
         /// `O_CLOEXEC`
@@ -41,7 +41,7 @@ bitflags::bitflags! {
         #[cfg(any(linux_kernel, target_os = "freebsd", target_os = "netbsd"))]
         const CLOEXEC = c::O_CLOEXEC as c::c_uint;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -142,8 +142,8 @@ pub fn unlockpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
 ///
 /// On Linux, calling this function has no effect, as the kernel is expected to
 /// grant the appropriate access. On all other platorms, this function has
-/// unspecified behavior if the calling process has a `SIGCHLD` signal handler
-/// installed.
+/// unspecified behavior if the calling process has a [`Signal::Child`] signal
+/// handler installed.
 ///
 /// # References
 ///  - [POSIX]
@@ -153,6 +153,7 @@ pub fn unlockpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/grantpt.html
 /// [Linux]: https://man7.org/linux/man-pages/man3/grantpt.3.html
 /// [glibc]: https://www.gnu.org/software/libc/manual/html_node/Allocation.html#index-grantpt
+/// [`Signal::Child`]: crate::process::Signal::Child
 #[inline]
 pub fn grantpt<Fd: AsFd>(fd: Fd) -> io::Result<()> {
     #[cfg(not(linux_kernel))]

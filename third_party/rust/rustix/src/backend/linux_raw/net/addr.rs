@@ -12,6 +12,7 @@ use crate::{io, path};
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
+use core::slice;
 
 /// `struct sockaddr_un`
 #[derive(Clone)]
@@ -36,7 +37,7 @@ impl SocketAddrUnix {
             return Err(io::Errno::NAMETOOLONG);
         }
         for (i, b) in bytes.iter().enumerate() {
-            unix.sun_path[i] = *b;
+            unix.sun_path[i] = *b as _;
         }
         let len = offsetof_sun_path() + bytes.len();
         let len = len.try_into().unwrap();
@@ -48,6 +49,10 @@ impl SocketAddrUnix {
     pub fn new_abstract_name(name: &[u8]) -> io::Result<Self> {
         let mut unix = Self::init();
         let id = &mut unix.sun_path[1..];
+
+        // SAFETY: Convert `&mut [c_char]` to `&mut [u8]`.
+        let id = unsafe { slice::from_raw_parts_mut(id.as_mut_ptr().cast::<u8>(), id.len()) };
+
         if let Some(id) = id.get_mut(..name.len()) {
             id.copy_from_slice(name);
             let len = offsetof_sun_path() + 1 + name.len();
@@ -69,9 +74,13 @@ impl SocketAddrUnix {
     #[inline]
     pub fn path(&self) -> Option<&CStr> {
         let len = self.len();
-        if len != 0 && self.unix.sun_path[0] != b'\0' {
+        if len != 0 && self.unix.sun_path[0] as u8 != b'\0' {
             let end = len as usize - offsetof_sun_path();
             let bytes = &self.unix.sun_path[..end];
+
+            // SAFETY: Convert `&[c_char]` to `&[u8]`.
+            let bytes = unsafe { slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len()) };
+
             // SAFETY: `from_bytes_with_nul_unchecked` since the string is
             // NUL-terminated.
             unsafe { Some(CStr::from_bytes_with_nul_unchecked(bytes)) }
@@ -84,9 +93,14 @@ impl SocketAddrUnix {
     #[inline]
     pub fn abstract_name(&self) -> Option<&[u8]> {
         let len = self.len();
-        if len != 0 && self.unix.sun_path[0] == b'\0' {
+        if len != 0 && self.unix.sun_path[0] as u8 == b'\0' {
             let end = len as usize - offsetof_sun_path();
-            Some(&self.unix.sun_path[1..end])
+            let bytes = &self.unix.sun_path[1..end];
+
+            // SAFETY: Convert `&[c_char]` to `&[u8]`.
+            let bytes = unsafe { slice::from_raw_parts(bytes.as_ptr().cast::<u8>(), bytes.len()) };
+
+            Some(bytes)
         } else {
             None
         }

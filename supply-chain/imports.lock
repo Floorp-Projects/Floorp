@@ -448,6 +448,13 @@ user-id = 6825
 user-login = "sunfishcode"
 user-name = "Dan Gohman"
 
+[[publisher.rustix]]
+version = "0.38.28"
+when = "2023-12-09"
+user-id = 6825
+user-login = "sunfishcode"
+user-name = "Dan Gohman"
+
 [[publisher.ryu]]
 version = "1.0.12"
 when = "2022-12-17"

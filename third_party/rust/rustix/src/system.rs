@@ -7,8 +7,10 @@
 #![allow(unsafe_code)]
 
 use crate::backend;
+#[cfg(target_os = "linux")]
+use crate::backend::c;
 use crate::ffi::CStr;
-#[cfg(not(any(target_os = "espidf", target_os = "emscripten")))]
+#[cfg(not(any(target_os = "espidf", target_os = "emscripten", target_os = "vita")))]
 use crate::io;
 use core::fmt;
 
@@ -17,6 +19,8 @@ pub use backend::system::types::Sysinfo;
 
 /// `uname()`—Returns high-level information about the runtime OS and
 /// hardware.
+///
+/// For `gethostname()`, use [`Uname::nodename`] on the result.
 ///
 /// # References
 ///  - [POSIX]
@@ -38,6 +42,7 @@ pub use backend::system::types::Sysinfo;
 /// [DragonFly BSD]: https://man.dragonflybsd.org/?command=uname&section=3
 /// [illumos]: https://illumos.org/man/2/uname
 /// [glibc]: https://www.gnu.org/software/libc/manual/html_node/Platform-Type.html
+#[doc(alias = "gethostname")]
 #[inline]
 pub fn uname() -> Uname {
     Uname(backend::system::syscalls::uname())
@@ -59,6 +64,8 @@ impl Uname {
     /// This is intended to be a network name, however it's unable to convey
     /// information about hosts that have multiple names, or any information
     /// about where the names are visible.
+    ///
+    /// This corresponds to the `gethostname` value.
     #[inline]
     pub fn nodename(&self) -> &CStr {
         Self::to_cstr(self.0.nodename.as_ptr().cast())
@@ -148,9 +155,66 @@ pub fn sysinfo() -> Sysinfo {
     target_os = "emscripten",
     target_os = "espidf",
     target_os = "redox",
+    target_os = "vita",
     target_os = "wasi"
 )))]
 #[inline]
 pub fn sethostname(name: &[u8]) -> io::Result<()> {
     backend::system::syscalls::sethostname(name)
+}
+
+/// Reboot command for use with [`reboot`].
+#[cfg(target_os = "linux")]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[repr(i32)]
+#[non_exhaustive]
+pub enum RebootCommand {
+    /// Disables the Ctrl-Alt-Del keystroke.
+    ///
+    /// When disabled, the keystroke will send a [`Signal::Int`] to pid 1.
+    ///
+    /// [`Signal::Int`]: crate::process::Signal::Int
+    CadOff = c::LINUX_REBOOT_CMD_CAD_OFF,
+    /// Enables the Ctrl-Alt-Del keystroke.
+    ///
+    /// When enabled, the keystroke will trigger a [`Restart`].
+    ///
+    /// [`Restart`]: Self::Restart
+    CadOn = c::LINUX_REBOOT_CMD_CAD_ON,
+    /// Prints the message "System halted" and halts the system
+    Halt = c::LINUX_REBOOT_CMD_HALT,
+    /// Execute a kernel that has been loaded earlier with [`kexec_load`].
+    ///
+    /// [`kexec_load`]: https://man7.org/linux/man-pages/man2/kexec_load.2.html
+    Kexec = c::LINUX_REBOOT_CMD_KEXEC,
+    /// Prints the message "Power down.", stops the system, and tries to remove
+    /// all power
+    PowerOff = c::LINUX_REBOOT_CMD_POWER_OFF,
+    /// Prints the message "Restarting system." and triggers a restart
+    Restart = c::LINUX_REBOOT_CMD_RESTART,
+    /// Hibernate the system by suspending to disk
+    SwSuspend = c::LINUX_REBOOT_CMD_SW_SUSPEND,
+}
+
+/// `reboot`—Reboot the system or enable/disable Ctrl-Alt-Del
+///
+/// The reboot syscall, despite the name, can actually do much more than
+/// reboot.
+///
+/// Among other things, it can:
+/// - Restart, Halt, Power Off, and Suspend the system
+/// - Enable and disable the Ctrl-Alt-Del keystroke
+/// - Execute other kernels
+/// - Terminate init inside PID namespaces
+///
+/// It is highly recommended to carefully read the kernel documentation before
+/// calling this function.
+///
+/// # References
+/// - [Linux]
+///
+/// [Linux]: https://man7.org/linux/man-pages/man2/reboot.2.html
+#[cfg(target_os = "linux")]
+pub fn reboot(cmd: RebootCommand) -> io::Result<()> {
+    backend::system::syscalls::reboot(cmd)
 }

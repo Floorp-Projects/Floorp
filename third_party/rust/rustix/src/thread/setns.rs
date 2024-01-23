@@ -31,7 +31,7 @@ bitflags! {
         /// Network name space.
         const NETWORK = CLONE_NEWNET;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -86,7 +86,7 @@ bitflags! {
         /// `CLONE_SYSVSEM`.
         const SYSVSEM = CLONE_SYSVSEM;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

@@ -1,6 +1,9 @@
+//! The `bitcast` and `bitflags_bits` macros.
+
+#![allow(unused_macros)]
+
 // Ensure that the source and destination types are both primitive integer
 // types and the same size, and then bitcast.
-#[allow(unused_macros)]
 macro_rules! bitcast {
     ($x:expr) => {{
         if false {
@@ -24,7 +27,6 @@ macro_rules! bitcast {
 
 /// Return a [`bitcast`] of the value of `$x.bits()`, where `$x` is a
 /// `bitflags` type.
-#[allow(unused_macros)]
 macro_rules! bitflags_bits {
     ($x:expr) => {{
         bitcast!($x.bits())

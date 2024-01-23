@@ -1,17 +1,33 @@
 //! `recv`, `send`, and variants.
 
+#![allow(unsafe_code)]
+
+use crate::buffer::split_init;
 #[cfg(unix)]
 use crate::net::SocketAddrUnix;
 use crate::net::{SocketAddr, SocketAddrAny, SocketAddrV4, SocketAddrV6};
 use crate::{backend, io};
 use backend::fd::{AsFd, BorrowedFd};
+use core::mem::MaybeUninit;
 
 pub use backend::net::send_recv::{RecvFlags, SendFlags};
 
-#[cfg(not(any(windows, target_os = "espidf", target_os = "redox", target_os = "wasi")))]
+#[cfg(not(any(
+    windows,
+    target_os = "espidf",
+    target_os = "redox",
+    target_os = "vita",
+    target_os = "wasi"
+)))]
 mod msg;
 
-#[cfg(not(any(windows, target_os = "espidf", target_os = "redox", target_os = "wasi")))]
+#[cfg(not(any(
+    windows,
+    target_os = "espidf",
+    target_os = "redox",
+    target_os = "vita",
+    target_os = "wasi"
+)))]
 pub use msg::*;
 
 /// `recv(fd, buf, flags)`—Reads data from a socket.
@@ -21,7 +37,7 @@ pub use msg::*;
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -33,7 +49,7 @@ pub use msg::*;
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/recv.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/recv.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/recv.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recv
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recv
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=recv&sektion=2
 /// [NetBSD]: https://man.netbsd.org/recv.2
 /// [OpenBSD]: https://man.openbsd.org/recv.2
@@ -42,7 +58,25 @@ pub use msg::*;
 /// [glibc]: https://www.gnu.org/software/libc/manual/html_node/Receiving-Data.html
 #[inline]
 pub fn recv<Fd: AsFd>(fd: Fd, buf: &mut [u8], flags: RecvFlags) -> io::Result<usize> {
-    backend::net::syscalls::recv(fd.as_fd(), buf, flags)
+    unsafe { backend::net::syscalls::recv(fd.as_fd(), buf.as_mut_ptr(), buf.len(), flags) }
+}
+
+/// `recv(fd, buf, flags)`—Reads data from a socket.
+///
+/// This is equivalent to [`recv`], except that it can read into uninitialized
+/// memory. It returns the slice that was initialized by this function and the
+/// slice that remains uninitialized.
+#[inline]
+pub fn recv_uninit<Fd: AsFd>(
+    fd: Fd,
+    buf: &mut [MaybeUninit<u8>],
+    flags: RecvFlags,
+) -> io::Result<(&mut [u8], &mut [MaybeUninit<u8>])> {
+    let length = unsafe {
+        backend::net::syscalls::recv(fd.as_fd(), buf.as_mut_ptr() as *mut u8, buf.len(), flags)
+    };
+
+    Ok(unsafe { split_init(buf, length?) })
 }
 
 /// `send(fd, buf, flags)`—Writes data to a socket.
@@ -52,7 +86,7 @@ pub fn recv<Fd: AsFd>(fd: Fd, buf: &mut [u8], flags: RecvFlags) -> io::Result<us
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -64,7 +98,7 @@ pub fn recv<Fd: AsFd>(fd: Fd, buf: &mut [u8], flags: RecvFlags) -> io::Result<us
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/send.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/send.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/send.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-send
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-send
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=send&sektion=2
 /// [NetBSD]: https://man.netbsd.org/send.2
 /// [OpenBSD]: https://man.openbsd.org/send.2
@@ -84,7 +118,7 @@ pub fn send<Fd: AsFd>(fd: Fd, buf: &[u8], flags: SendFlags) -> io::Result<usize>
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -96,7 +130,7 @@ pub fn send<Fd: AsFd>(fd: Fd, buf: &[u8], flags: SendFlags) -> io::Result<usize>
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/recvfrom.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/recvfrom.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/recvfrom.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recvfrom
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recvfrom
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=recvfrom&sektion=2
 /// [NetBSD]: https://man.netbsd.org/recvfrom.2
 /// [OpenBSD]: https://man.openbsd.org/recvfrom.2
@@ -109,7 +143,27 @@ pub fn recvfrom<Fd: AsFd>(
     buf: &mut [u8],
     flags: RecvFlags,
 ) -> io::Result<(usize, Option<SocketAddrAny>)> {
-    backend::net::syscalls::recvfrom(fd.as_fd(), buf, flags)
+    unsafe { backend::net::syscalls::recvfrom(fd.as_fd(), buf.as_mut_ptr(), buf.len(), flags) }
+}
+
+/// `recvfrom(fd, buf, flags, addr, len)`—Reads data from a socket and
+/// returns the sender address.
+///
+/// This is equivalent to [`recvfrom`], except that it can read into
+/// uninitialized memory. It returns the slice that was initialized by this
+/// function and the slice that remains uninitialized.
+#[allow(clippy::type_complexity)]
+#[inline]
+pub fn recvfrom_uninit<Fd: AsFd>(
+    fd: Fd,
+    buf: &mut [MaybeUninit<u8>],
+    flags: RecvFlags,
+) -> io::Result<(&mut [u8], &mut [MaybeUninit<u8>], Option<SocketAddrAny>)> {
+    let (length, addr) = unsafe {
+        backend::net::syscalls::recvfrom(fd.as_fd(), buf.as_mut_ptr() as *mut u8, buf.len(), flags)?
+    };
+    let (init, uninit) = unsafe { split_init(buf, length) };
+    Ok((init, uninit, addr))
 }
 
 /// `sendto(fd, buf, flags, addr)`—Writes data to a socket to a specific IP
@@ -120,7 +174,7 @@ pub fn recvfrom<Fd: AsFd>(
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -132,7 +186,7 @@ pub fn recvfrom<Fd: AsFd>(
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendto.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/sendto.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendto.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=sendto&sektion=2
 /// [NetBSD]: https://man.netbsd.org/sendto.2
 /// [OpenBSD]: https://man.openbsd.org/sendto.2
@@ -168,7 +222,7 @@ fn _sendto(
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -180,7 +234,7 @@ fn _sendto(
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendto.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/sendto.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendto.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=sendto&sektion=2
 /// [NetBSD]: https://man.netbsd.org/sendto.2
 /// [OpenBSD]: https://man.openbsd.org/sendto.2
@@ -218,7 +272,7 @@ fn _sendto_any(
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -230,7 +284,7 @@ fn _sendto_any(
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendto.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/sendto.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendto.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=sendto&sektion=2
 /// [NetBSD]: https://man.netbsd.org/sendto.2
 /// [OpenBSD]: https://man.openbsd.org/sendto.2
@@ -256,7 +310,7 @@ pub fn sendto_v4<Fd: AsFd>(
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -268,7 +322,7 @@ pub fn sendto_v4<Fd: AsFd>(
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendto.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/sendto.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendto.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=sendto&sektion=2
 /// [NetBSD]: https://man.netbsd.org/sendto.2
 /// [OpenBSD]: https://man.openbsd.org/sendto.2
@@ -294,7 +348,7 @@ pub fn sendto_v6<Fd: AsFd>(
 ///  - [POSIX]
 ///  - [Linux]
 ///  - [Apple]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -306,7 +360,7 @@ pub fn sendto_v6<Fd: AsFd>(
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/sendto.html
 /// [Linux]: https://man7.org/linux/man-pages/man2/sendto.2.html
 /// [Apple]: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sendto.2.html
-/// [Winsock2]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
+/// [Winsock]: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-sendto
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?query=sendto&sektion=2
 /// [NetBSD]: https://man.netbsd.org/sendto.2
 /// [OpenBSD]: https://man.openbsd.org/sendto.2

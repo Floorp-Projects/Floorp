@@ -1,8 +1,9 @@
 use crate::fd::AsFd;
-use crate::pid::Pid;
 #[cfg(not(target_os = "espidf"))]
 use crate::termios::{Action, OptionalActions, QueueSelector, Termios, Winsize};
 use crate::{backend, io};
+
+pub use crate::pid::Pid;
 
 /// `tcgetattr(fd)`—Get terminal attributes.
 ///
@@ -43,6 +44,11 @@ pub fn tcgetwinsize<Fd: AsFd>(fd: Fd) -> io::Result<Winsize> {
 /// `tcgetpgrp(fd)`—Get the terminal foreground process group.
 ///
 /// Also known as the `TIOCGPGRP` operation with `ioctl`.
+///
+/// On Linux, if `fd` is a pseudo-terminal, the underlying system call here can
+/// return a pid of 0, which rustix's `Pid` type doesn't support. So rustix
+/// instead handles this case by failing with [`io::Errno::OPNOTSUPP`] if the
+/// pid is 0.
 ///
 /// # References
 ///  - [POSIX]

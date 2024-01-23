@@ -31,6 +31,49 @@ use core::mem::MaybeUninit;
 use core::ptr::{null_mut, write_bytes};
 use linux_raw_sys::net;
 
+// Export types used in io_uring APIs.
+pub use crate::event::epoll::{
+    Event as EpollEvent, EventData as EpollEventData, EventFlags as EpollEventFlags,
+};
+pub use crate::fs::{Advice, AtFlags, Mode, OFlags, RenameFlags, ResolveFlags, Statx, StatxFlags};
+pub use crate::io::ReadWriteFlags;
+pub use crate::net::{RecvFlags, SendFlags, SocketFlags};
+pub use crate::timespec::Timespec;
+pub use linux_raw_sys::general::sigset_t;
+
+pub use net::{__kernel_sockaddr_storage as sockaddr_storage, msghdr, sockaddr, socklen_t};
+
+// Declare the `c_char` type for use with entries that take pointers
+// to C strings. Define it as unsigned or signed according to the platform
+// so that we match what Rust's `CStr` uses.
+//
+// When we can update to linux-raw-sys 0.5, we can remove this, as its
+// `c_char` type will declare this.
+/// The C `char` type.
+#[cfg(any(
+    target_arch = "aarch64",
+    target_arch = "arm",
+    target_arch = "msp430",
+    target_arch = "powerpc",
+    target_arch = "powerpc64",
+    target_arch = "riscv32",
+    target_arch = "riscv64",
+    target_arch = "s390x",
+))]
+#[allow(non_camel_case_types)]
+pub type c_char = u8;
+/// The C `char` type.
+#[cfg(any(
+    target_arch = "mips",
+    target_arch = "mips64",
+    target_arch = "sparc64",
+    target_arch = "x86",
+    target_arch = "x86_64",
+    target_arch = "xtensa",
+))]
+#[allow(non_camel_case_types)]
+pub type c_char = i8;
+
 mod sys {
     pub(super) use linux_raw_sys::io_uring::*;
     #[cfg(test)]
@@ -121,7 +164,10 @@ bitflags::bitflags! {
         /// `IORING_ENTER_EXT_ARG`
         const EXT_ARG = sys::IORING_ENTER_EXT_ARG;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// `IORING_ENTER_REGISTERED_RING`
+        const REGISTERED_RING = sys::IORING_ENTER_REGISTERED_RING;
+
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -459,7 +505,7 @@ bitflags::bitflags! {
         /// `IORING_SETUP_DEFER_TASKRUN`
         const DEFER_TASKRUN = sys::IORING_SETUP_DEFER_TASKRUN;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -490,7 +536,7 @@ bitflags::bitflags! {
         /// `1 << IOSQE_CQE_SKIP_SUCCESS_BIT`
         const CQE_SKIP_SUCCESS = 1 << sys::IOSQE_CQE_SKIP_SUCCESS_BIT as u8;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -512,7 +558,7 @@ bitflags::bitflags! {
         /// `IORING_CQE_F_NOTIF`
         const NOTIF = bitcast!(sys::IORING_CQE_F_NOTIF);
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -525,7 +571,7 @@ bitflags::bitflags! {
         /// `IORING_FSYNC_DATASYNC`
         const DATASYNC = sys::IORING_FSYNC_DATASYNC;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -560,7 +606,7 @@ bitflags::bitflags! {
         /// `IORING_LINK_TIMEOUT_UPDATE`
         const LINK_TIMEOUT_UPDATE = sys::IORING_LINK_TIMEOUT_UPDATE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -573,7 +619,7 @@ bitflags::bitflags! {
         /// `SPLICE_F_FD_IN_FIXED`
         const FD_IN_FIXED = sys::SPLICE_F_FD_IN_FIXED;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -586,7 +632,7 @@ bitflags::bitflags! {
         /// `IORING_MSG_RING_CQE_SKIP`
         const CQE_SKIP = sys::IORING_MSG_RING_CQE_SKIP;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -608,7 +654,7 @@ bitflags::bitflags! {
         /// `IORING_ASYNC_CANCEL_FD`
         const FD_FIXED = sys::IORING_ASYNC_CANCEL_FD_FIXED;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -657,7 +703,7 @@ bitflags::bitflags! {
         /// `IORING_FEAT_LINKED_FILE`
         const LINKED_FILE = sys::IORING_FEAT_LINKED_FILE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -670,7 +716,7 @@ bitflags::bitflags! {
         /// `IO_URING_OP_SUPPORTED`
         const SUPPORTED = sys::IO_URING_OP_SUPPORTED as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -683,7 +729,7 @@ bitflags::bitflags! {
         /// `IORING_RSRC_REGISTER_SPARSE`
         const REGISTER_SPARSE = sys::IORING_RSRC_REGISTER_SPARSE as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -702,7 +748,7 @@ bitflags::bitflags! {
         /// `IORING_SQ_TASKRUN`
         const TASKRUN = sys::IORING_SQ_TASKRUN;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -715,7 +761,7 @@ bitflags::bitflags! {
         /// `IORING_CQ_EVENTFD_DISABLED`
         const EVENTFD_DISABLED = sys::IORING_CQ_EVENTFD_DISABLED;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -737,7 +783,7 @@ bitflags::bitflags! {
         /// `IORING_POLL_ADD_LEVEL`
         const ADD_LEVEL = sys::IORING_POLL_ADD_LEVEL;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -760,7 +806,7 @@ bitflags::bitflags! {
         /// `IORING_SEND_ZC_REPORT_USAGE` (since Linux 6.2)
         const ZC_REPORT_USAGE = sys::IORING_SEND_ZC_REPORT_USAGE as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -783,7 +829,7 @@ bitflags::bitflags! {
         /// See also [`IoringSendFlags::FIXED_BUF`].
         const FIXED_BUF = sys::IORING_RECVSEND_FIXED_BUF as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -796,7 +842,7 @@ bitflags::bitflags! {
         /// `IORING_ACCEPT_MULTISHOT`
         const MULTISHOT = sys::IORING_ACCEPT_MULTISHOT as _;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -821,7 +867,7 @@ bitflags::bitflags! {
         /// `MSG_ERRQUEUE`
         const ERRQUEUE = net::MSG_ERRQUEUE;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }
@@ -1059,20 +1105,20 @@ pub union op_flags_union {
     pub sync_range_flags: u32,
     /// `msg_flags` is split into `send_flags` and `recv_flags`.
     #[doc(alias = "msg_flags")]
-    pub send_flags: crate::net::SendFlags,
+    pub send_flags: SendFlags,
     /// `msg_flags` is split into `send_flags` and `recv_flags`.
     #[doc(alias = "msg_flags")]
-    pub recv_flags: crate::net::RecvFlags,
+    pub recv_flags: RecvFlags,
     pub timeout_flags: IoringTimeoutFlags,
-    pub accept_flags: crate::net::SocketFlags,
+    pub accept_flags: SocketFlags,
     pub cancel_flags: IoringAsyncCancelFlags,
-    pub open_flags: crate::fs::OFlags,
-    pub statx_flags: crate::fs::AtFlags,
-    pub fadvise_advice: crate::fs::Advice,
+    pub open_flags: OFlags,
+    pub statx_flags: AtFlags,
+    pub fadvise_advice: Advice,
     pub splice_flags: SpliceFlags,
-    pub rename_flags: crate::fs::RenameFlags,
-    pub unlink_flags: crate::fs::AtFlags,
-    pub hardlink_flags: crate::fs::AtFlags,
+    pub rename_flags: RenameFlags,
+    pub unlink_flags: AtFlags,
+    pub hardlink_flags: AtFlags,
     pub msg_ring_flags: IoringMsgringFlags,
 }
 
@@ -1084,12 +1130,33 @@ pub union buf_union {
     pub buf_group: u16,
 }
 
+// TODO: Rename this to include `addr_len` when we have a semver bump?
 #[allow(missing_docs)]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union splice_fd_in_or_file_index_union {
     pub splice_fd_in: i32,
     pub file_index: u32,
+    pub addr_len: addr_len_struct,
+}
+
+#[allow(missing_docs)]
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct addr_len_struct {
+    pub addr_len: u16,
+    pub __pad3: [u16; 1],
+}
+
+#[allow(missing_docs)]
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct io_uring_sync_cancel_reg {
+    pub addr: u64,
+    pub fd: i32,
+    pub flags: IoringAsyncCancelFlags,
+    pub timeout: Timespec,
+    pub pad: [u64; 4],
 }
 
 /// An io_uring Completion Queue Entry.
@@ -1266,16 +1333,12 @@ pub struct iovec {
 #[derive(Debug, Copy, Clone, Default)]
 pub struct open_how {
     /// An [`OFlags`] value represented as a `u64`.
-    ///
-    /// [`OFlags`]: crate::fs::OFlags
     pub flags: u64,
 
     /// A [`Mode`] value represented as a `u64`.
-    ///
-    /// [`Mode`]: crate::fs::Mode
     pub mode: u64,
 
-    pub resolve: crate::fs::ResolveFlags,
+    pub resolve: ResolveFlags,
 }
 
 #[allow(missing_docs)]
@@ -1368,12 +1431,15 @@ impl Default for register_or_sqe_op_or_sqe_flags_union {
 fn io_uring_layouts() {
     use sys as c;
 
+    assert_eq_size!(io_uring_ptr, u64);
+
     check_renamed_type!(off_or_addr2_union, io_uring_sqe__bindgen_ty_1);
     check_renamed_type!(addr_or_splice_off_in_union, io_uring_sqe__bindgen_ty_2);
     check_renamed_type!(addr3_or_cmd_union, io_uring_sqe__bindgen_ty_6);
     check_renamed_type!(op_flags_union, io_uring_sqe__bindgen_ty_3);
     check_renamed_type!(buf_union, io_uring_sqe__bindgen_ty_4);
     check_renamed_type!(splice_fd_in_or_file_index_union, io_uring_sqe__bindgen_ty_5);
+    check_renamed_type!(addr_len_struct, io_uring_sqe__bindgen_ty_5__bindgen_ty_1);
     check_renamed_type!(
         register_or_sqe_op_or_sqe_flags_union,
         io_uring_restriction__bindgen_ty_1
@@ -1457,4 +1523,5 @@ fn io_uring_layouts() {
     check_struct!(open_how, flags, mode, resolve);
     check_struct!(io_uring_buf_reg, ring_addr, ring_entries, bgid, pad, resv);
     check_struct!(io_uring_buf, addr, len, bid, resv);
+    check_struct!(io_uring_sync_cancel_reg, addr, fd, flags, timeout, pad);
 }

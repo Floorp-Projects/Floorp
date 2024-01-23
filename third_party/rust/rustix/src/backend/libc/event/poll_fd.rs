@@ -12,7 +12,7 @@ use {
 bitflags! {
     /// `POLL*` flags for use with [`poll`].
     ///
-    /// [`poll`]: crate::io::poll
+    /// [`poll`]: crate::event::poll
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct PollFlags: c::c_short {
@@ -48,7 +48,7 @@ bitflags! {
         )]
         const RDHUP = c::POLLRDHUP;
 
-        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        /// <https://docs.rs/bitflags/*/bitflags/#externally-defined-flags>
         const _ = !0;
     }
 }

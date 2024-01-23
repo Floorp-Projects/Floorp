@@ -1,4 +1,8 @@
+#![allow(unsafe_code)]
+
+use crate::buffer::split_init;
 use crate::{backend, io};
+use core::mem::MaybeUninit;
 
 pub use backend::rand::types::GetRandomFlags;
 
@@ -16,5 +20,24 @@ pub use backend::rand::types::GetRandomFlags;
 /// [Linux]: https://man7.org/linux/man-pages/man2/getrandom.2.html
 #[inline]
 pub fn getrandom(buf: &mut [u8], flags: GetRandomFlags) -> io::Result<usize> {
-    backend::rand::syscalls::getrandom(buf, flags)
+    unsafe { backend::rand::syscalls::getrandom(buf.as_mut_ptr(), buf.len(), flags) }
+}
+
+/// `getrandom(buf, flags)`—Reads a sequence of random bytes.
+///
+/// This is identical to [`getrandom`], except that it can read into
+/// uninitialized memory. It returns the slice that was initialized by this
+/// function and the slice that remains uninitialized.
+#[inline]
+pub fn getrandom_uninit(
+    buf: &mut [MaybeUninit<u8>],
+    flags: GetRandomFlags,
+) -> io::Result<(&mut [u8], &mut [MaybeUninit<u8>])> {
+    // Get number of initialized bytes.
+    let length = unsafe {
+        backend::rand::syscalls::getrandom(buf.as_mut_ptr() as *mut u8, buf.len(), flags)
+    };
+
+    // Split into the initialized and uninitialized portions.
+    Ok(unsafe { split_init(buf, length?) })
 }

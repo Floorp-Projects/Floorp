@@ -26,8 +26,7 @@ impl Pid {
 
     /// Converts a `RawPid` into a `Pid`.
     ///
-    /// Returns `Some` for strictly positive `RawPid`s. Otherwise, returns
-    /// `None`.
+    /// Returns `Some` for positive `RawPid`s. Otherwise, returns `None`.
     ///
     /// This is safe because a `Pid` is a number without any guarantees for the
     /// kernel. Non-child `Pid`s are always racy for any syscalls, but can only
@@ -39,18 +38,18 @@ impl Pid {
     #[inline]
     pub const fn from_raw(raw: RawPid) -> Option<Self> {
         if raw > 0 {
-            // SAFETY: raw > 0.
+            // SAFETY: We just checked that `raw > 0`.
             unsafe { Some(Self::from_raw_unchecked(raw)) }
         } else {
             None
         }
     }
 
-    /// Converts a known strictly positive `RawPid` into a `Pid`.
+    /// Converts a known positive `RawPid` into a `Pid`.
     ///
     /// # Safety
     ///
-    /// The caller must guarantee `raw` is strictly positive.
+    /// The caller must guarantee `raw` is positive.
     #[inline]
     pub const unsafe fn from_raw_unchecked(raw: RawPid) -> Self {
         debug_assert!(raw > 0);

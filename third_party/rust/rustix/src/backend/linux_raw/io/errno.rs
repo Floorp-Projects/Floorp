@@ -19,12 +19,12 @@ use linux_raw_sys::errno;
 /// `errno`—An error code.
 ///
 /// The error type for `rustix` APIs. This is similar to [`std::io::Error`],
-//// but only holds an OS error code, and no extra error value.
+/// but only holds an OS error code, and no extra error value.
 ///
 /// # References
 ///  - [POSIX]
 ///  - [Linux]
-///  - [Winsock2]
+///  - [Winsock]
 ///  - [FreeBSD]
 ///  - [NetBSD]
 ///  - [OpenBSD]
@@ -34,7 +34,7 @@ use linux_raw_sys::errno;
 ///
 /// [POSIX]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/errno.html
 /// [Linux]: https://man7.org/linux/man-pages/man3/errno.3.html
-/// [Winsock2]: https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
+/// [Winsock]: https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
 /// [FreeBSD]: https://man.freebsd.org/cgi/man.cgi?errno
 /// [NetBSD]: https://man.netbsd.org/errno.2
 /// [OpenBSD]: https://man.openbsd.org/errno.2
@@ -60,7 +60,7 @@ impl Errno {
     #[inline]
     pub fn from_io_error(io_err: &std::io::Error) -> Option<Self> {
         io_err.raw_os_error().and_then(|raw| {
-            // `std::io::Error` could theoretically have arbitrary "OS error"
+            // `std::io::Error` could theoretically have arbitrary OS error
             // values, so check that they're in Linux's range.
             if (1..4096).contains(&raw) {
                 Some(Self::from_errno(raw as u32))
@@ -236,7 +236,7 @@ pub(in crate::backend) unsafe fn try_decode_void<Num: RetNumber>(
 /// # Safety
 ///
 /// This must only be used with syscalls which do not return on success.
-#[cfg(feature = "runtime")]
+#[cfg(any(feature = "event", feature = "runtime"))]
 #[inline]
 pub(in crate::backend) unsafe fn try_decode_error<Num: RetNumber>(raw: RetReg<Num>) -> io::Errno {
     debug_assert!(raw.is_in_range(-4095..0));
