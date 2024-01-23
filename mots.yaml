@@ -1022,10 +1022,6 @@ people:
     bmo_id: 373403
     name: Xidorn Quan
     nick: xidorn
-  - &ytausky
-    bmo_id: 621888
-    name: Yaron Tausky
-    nick: ytausky
   - &yulia
     bmo_id: 600802
     name: Yulia Startsev
@@ -2780,6 +2776,7 @@ modules:
         - Jonas Sicking
         - Kyle Huey
         - Ben Kelly
+        - Yaron Tausky
       group: dev-platform
       url: https://developer.mozilla.org/docs/Web/API/Web_Workers_API/Using_web_workers
       components:
@@ -2789,7 +2786,6 @@ modules:
       - *asuth
     peers:
       - *baku
-      - *ytausky
     machine_name: core_web_workers
 
   - name: 'Core: WebGPU (Graphics submodule)'
