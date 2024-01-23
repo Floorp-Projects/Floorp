@@ -15,12 +15,7 @@
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
     <item android:title="@string/save_pdf" android:id="@+id/save_pdf"/>
     <item android:title="@string/print_page" android:id="@+id/print_page"/>
-    <item android:title="Request Shopping Analysis" android:id="@+id/request_shopping_analysis"/>
-    <item android:title="Get Shopping Recommendations" android:id="@+id/request_shopping_recommendations"/>
-    <item android:title="Create Shopping Analysis" android:id="@+id/create_shopping_analysis"/>
-    <item android:title="Get Shopping Analysis Status" android:id="@+id/get_shopping_analysis_status"/>
-    <item android:title="Poll Until Analysis Completed" android:id="@+id/poll_shopping_analysis_status"/>
-    <item android:title="Report Back In Stock" android:id="@+id/report_back_in_stock"/>
+    <item android:title="Shopping Actions" android:id="@+id/shopping_actions"/>
     <item android:title="@string/translate" android:id="@+id/translate"/>
     <item android:title="@string/translate_restore" android:id="@+id/translate_restore"/>
     <item android:title="@string/translate_manage" android:id="@+id/translate_manage"/>
