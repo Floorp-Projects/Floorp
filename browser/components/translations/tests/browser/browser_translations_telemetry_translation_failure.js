@@ -44,7 +44,9 @@ add_task(
       }
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
 
     await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
       expectedEventCount: 1,

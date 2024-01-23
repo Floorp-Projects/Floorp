@@ -24,7 +24,9 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     expectedEventCount: 0,
   });
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
   await openTranslationsSettingsMenu();
   await assertIsAlwaysOfferTranslationsEnabled(false);
 
@@ -50,7 +52,9 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     }
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
   await assertIsAlwaysOfferTranslationsEnabled(true);
 
   await clickCancelButton();

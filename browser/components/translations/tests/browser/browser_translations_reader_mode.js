@@ -72,7 +72,9 @@ add_task(async function test_translations_persist_in_reader_mode() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   await clickTranslateButton({
     downloadHandler: resolveDownloads,

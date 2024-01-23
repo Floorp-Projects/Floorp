@@ -21,7 +21,9 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
   await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateLanguage("es", { checked: false });
@@ -63,7 +65,9 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
 
     await clickTranslateButton({
       downloadHandler: resolveDownloads,
@@ -75,7 +79,9 @@ add_task(
       runInPage
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
@@ -111,7 +117,9 @@ add_task(
       "The button is available."
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelDefaultView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
@@ -130,7 +138,9 @@ add_task(
       runInPage
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });

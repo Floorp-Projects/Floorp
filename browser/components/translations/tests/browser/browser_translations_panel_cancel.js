@@ -17,7 +17,9 @@ add_task(async function test_translations_panel_cancel() {
     "The button is available."
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   await clickCancelButton();
 

@@ -13,7 +13,7 @@ add_task(async function test_always_translate_with_bad_data() {
     prefs: [["browser.translations.alwaysTranslateLanguages", "en,fr"]],
   });
 
-  await openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
     onOpenPanel: assertPanelDefaultView,
     openFromAppMenu: true,
   });

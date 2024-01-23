@@ -21,14 +21,16 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
     "The translations button is visible."
   );
 
-  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
+    onOpenPanel: assertPanelDefaultView,
+  });
   await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
   await clickNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-  await openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openTranslationsPanel({
     openFromAppMenu: true,
     onOpenPanel: assertPanelDefaultView,
   });
@@ -66,7 +68,9 @@ add_task(
       runInPage
     );
 
-    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
+      onOpenPanel: assertPanelRevisitView,
+    });
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
@@ -79,7 +83,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openTranslationsPanel({
       openFromAppMenu: true,
       onOpenPanel: assertPanelDefaultView,
     });
