@@ -1,16 +1,19 @@
 // test1: client tries to connect to a http scheme location;
 function test1() {
   return new Promise(function (resolve, reject) {
-    try {
-      var ws = CreateTestWS(
-        "http://mochi.test:8888/tests/dom/websocket/tests/file_websocket"
-      );
-      ok(false, "test1 failed");
-    } catch (e) {
-      ok(true, "test1 failed");
-    }
+    var ws = CreateTestWS(
+      "http://mochi.test:8888/tests/dom/websocket/tests/file_websocket",
+      "test-1"
+    );
 
-    resolve();
+    ws.onmessage = function () {
+      ok(true, "created websocket with http scheme");
+    };
+
+    ws.onclose = function (e) {
+      shouldCloseCleanly(e);
+      resolve();
+    };
   });
 }
 
@@ -86,14 +89,16 @@ function test3() {
 // test4: client tries to connect using a relative url;
 function test4() {
   return new Promise(function (resolve, reject) {
-    try {
-      var ws = CreateTestWS("file_websocket");
-      ok(false, "test-4 failed");
-    } catch (e) {
-      ok(true, "test-4 failed");
-    }
+    var ws = CreateTestWS("file_websocket", "test-4");
 
-    resolve();
+    ws.onmessage = function () {
+      ok(true, "created websocket with relative scheme");
+    };
+
+    ws.onclose = function (e) {
+      shouldCloseCleanly(e);
+      resolve();
+    };
   });
 }
 
