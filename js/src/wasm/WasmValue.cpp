@@ -345,13 +345,6 @@ class wasm::DebugCodegenVal {
   static void print(void* v) { print(" ptr(%p)", v); }
 };
 
-template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
-                                                FieldType type, void* loc,
-                                                bool mustWrite64,
-                                                CoercionLevel level);
-template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(
-    JSContext* cx, HandleValue val, FieldType type, void* loc, bool mustWrite64,
-    CoercionLevel level);
 template bool wasm::ToJSValue<NoDebug>(JSContext* cx, const void* src,
                                        FieldType type, MutableHandleValue dst,
                                        CoercionLevel level);
@@ -380,20 +373,6 @@ template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                CoercionLevel level);
 template bool wasm::ToJSValueMayGC<NoDebug>(ValType type);
 template bool wasm::ToJSValueMayGC<DebugCodegenVal>(ValType type);
-
-template <typename Debug = NoDebug>
-bool ToWebAssemblyValue_i8(JSContext* cx, HandleValue val, int8_t* loc) {
-  bool ok = ToInt8(cx, val, loc);
-  Debug::print(*loc);
-  return ok;
-}
-
-template <typename Debug = NoDebug>
-bool ToWebAssemblyValue_i16(JSContext* cx, HandleValue val, int16_t* loc) {
-  bool ok = ToInt16(cx, val, loc);
-  Debug::print(*loc);
-  return ok;
-}
 
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val, int32_t* loc,
@@ -642,7 +621,7 @@ bool ToWebAssemblyValue_lossless(JSContext* cx, HandleValue val, ValType type,
 }
 
 template <typename Debug>
-bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
+bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                               void* loc, bool mustWrite64,
                               CoercionLevel level) {
   if (level == CoercionLevel::Lossless &&
@@ -652,21 +631,17 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
   }
 
   switch (type.kind()) {
-    case FieldType::I8:
-      return ToWebAssemblyValue_i8<Debug>(cx, val, (int8_t*)loc);
-    case FieldType::I16:
-      return ToWebAssemblyValue_i16<Debug>(cx, val, (int16_t*)loc);
-    case FieldType::I32:
+    case ValType::I32:
       return ToWebAssemblyValue_i32<Debug>(cx, val, (int32_t*)loc, mustWrite64);
-    case FieldType::I64:
+    case ValType::I64:
       return ToWebAssemblyValue_i64<Debug>(cx, val, (int64_t*)loc, mustWrite64);
-    case FieldType::F32:
+    case ValType::F32:
       return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc, mustWrite64);
-    case FieldType::F64:
+    case ValType::F64:
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
-    case FieldType::V128:
+    case ValType::V128:
       break;
-    case FieldType::Ref:
+    case ValType::Ref:
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       if (!type.isNullable() && val.isNull()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -720,14 +695,6 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_VAL_TYPE);
   return false;
-}
-
-template <typename Debug>
-bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
-                              void* loc, bool mustWrite64,
-                              CoercionLevel level) {
-  return wasm::ToWebAssemblyValue(cx, val, FieldType(type.packed()), loc,
-                                  mustWrite64, level);
 }
 
 template <typename Debug = NoDebug>

@@ -427,10 +427,6 @@ enum class CoercionLevel {
 //
 // [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
 template <typename Debug = NoDebug>
-extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
-                               void* loc, bool mustWrite64,
-                               CoercionLevel level = CoercionLevel::Spec);
-template <typename Debug = NoDebug>
 extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                                void* loc, bool mustWrite64,
                                CoercionLevel level = CoercionLevel::Spec);
