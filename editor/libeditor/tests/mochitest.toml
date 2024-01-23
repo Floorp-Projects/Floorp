@@ -165,9 +165,6 @@ support-files = [
 
 ["test_bug612447.html"]
 
-["test_bug620906.html"]
-skip-if = ["os == 'android'"] #TIMED_OUT
-
 ["test_bug622371.html"]
 
 ["test_bug625452.html"]
@@ -429,6 +426,9 @@ skip-if = ["os == 'android'"] #Bug 1575739
 ["test_cut_copy_password.html"]
 
 ["test_defaultParagraphSeparatorBR_between_blocks.html"]
+
+["test_doc_scrollbar_toggled_designMode_on_mousedown.html"]
+skip-if = ["os == 'android'"] # Needs interaction with the scrollbar
 
 ["test_dom_input_event_on_htmleditor.html"]
 
