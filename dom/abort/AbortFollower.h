@@ -44,6 +44,11 @@ class AbortFollower : public nsISupports {
   WeakPtr<AbortSignalImpl> mFollowingSignal;
 };
 
+/*
+ * AbortSignalImpl is a minimal implementation without an associated global
+ * and without event dispatching, those are added in AbortSignal.
+ * See Bug 1478101
+ */
 class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
  public:
   explicit AbortSignalImpl(bool aAborted, JS::Handle<JS::Value> aReason);
@@ -66,6 +71,8 @@ class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
   static void Unlink(AbortSignalImpl* aSignal);
 
   virtual ~AbortSignalImpl() { UnlinkFollowers(); }
+
+  void SetAborted(JS::Handle<JS::Value> aReason);
 
   JS::Heap<JS::Value> mReason;
 
