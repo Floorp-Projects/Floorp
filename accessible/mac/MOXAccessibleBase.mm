@@ -557,7 +557,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
       return element;
     }
 
-    if (stop) {
+    if (stop || ![element respondsToSelector:@selector(moxUnignoredParent)]) {
       break;
     }
   }
