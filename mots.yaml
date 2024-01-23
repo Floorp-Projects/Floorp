@@ -232,8 +232,7 @@ people:
     bmo_id: 396948
     name: Dave Hunt
     nick: davehunt
-  - &dbaron
-    bmo_id: 3881
+  - bmo_id: 3881
     name: David Baron
     nick: dbaron
   - &dcoates
@@ -358,6 +357,10 @@ people:
     bmo_id: 428608
     name: Frederik Braun
     nick: freddy
+  - &fredw
+    bmo_id: 739410
+    name: Frédéric Wang
+    nick: fredw
   - &froydnj
     bmo_id: 417288
     name: Nathan Froyd
@@ -2064,10 +2067,15 @@ modules:
       url: https://developer.mozilla.org/docs/Web/MathML
       components:
         - Core::MathML
+      peers_emeritus:
+        - Robert O'Callahan
+      owners_emeritus:
+        - *karlt
     owners:
-      - *karlt
+      - *emilio
     peers:
-      - *roc
+      - *fredw
+      - *jfkthame
     machine_name: core_mathml
 
   - name: 'Core: Media Playback'
