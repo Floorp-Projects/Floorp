@@ -61,6 +61,11 @@ if [[ $(uname -s) == "Darwin" ]]; then
   # than the system python
   export PATH="$MOZ_FETCHES_DIR/python/bin/:$PATH"
 
+  # Avoid mixing up the system python and toolchain python in the
+  # python path configuration
+  # https://bugs.python.org/issue22490
+  unset __PYVENV_LAUNCHER__
+
   # Set the SDK path for build, which is technically a higher version
   # than what is associated with the current OS version (10.15).
   # This should work as long as MACOSX_DEPLOYMENT_TARGET is set correctly
