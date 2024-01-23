@@ -216,3 +216,17 @@ nimbus_events:
     send_in_pings:
       - background-update
       - events
+
+  is_ready:
+    type: event
+    description: >
+      An event sent when Nimbus is ready — sent upon completion of each update of the recipes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1875510
+    data_reviews: []
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chumphreys@mozilla.com
+      - project-nimbus@mozilla.com
+    expires: 180
