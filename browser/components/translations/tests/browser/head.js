@@ -9,6 +9,148 @@ Services.scriptloader.loadSubScript(
 );
 
 /**
+ * Asserts the visibility state of an element retrieved by one of the three available options.
+ *
+ * @param {boolean} expected - The expected visibility state (true for visible, false for invisible).
+ * @param {object} options - The element retrieval options
+ * @param {Element} options.element - The HTML element to check visibility for.
+ * @param {string} options.id - The Id of the element to retrieve and check visibility for.
+ * @throws Throws if the visibility does not match the expected visibility state.
+ */
+function assertIsVisible(expected, { element, id }) {
+  if (id && element) {
+    throw new Error(
+      "assertIsVisible() expects either an element or an id, but both were specified."
+    );
+  }
+
+  if (element) {
+    return is(
+      isVisible(element),
+      expected,
+      `Expected element with id '${element.id}' to be ${
+        expected ? "visible" : "invisible"
+      }.`
+    );
+  }
+
+  if (id) {
+    return is(
+      maybeGetById(id) !== null,
+      expected,
+      `Expected element with id '${id}' to be ${
+        expected ? "visible" : "invisible"
+      }.`
+    );
+  }
+
+  throw new Error(
+    "assertIsVisible() was called with no specified element or id."
+  );
+}
+
+/**
+ * Opens a new tab in the foreground.
+ *
+ * @param {string} url
+ */
+async function addTab(url) {
+  logAction(url);
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    url,
+    true // Wait for laod
+  );
+  return {
+    tab,
+    removeTab() {
+      BrowserTestUtils.removeTab(tab);
+    },
+  };
+}
+
+/**
+ * Simulates clicking an element with the mouse.
+ *
+ * @param {element} element - The element to click.
+ * @param {string} [message] - A message to log to info.
+ */
+function click(element, message) {
+  logAction(message);
+  return new Promise(resolve => {
+    element.addEventListener(
+      "click",
+      function () {
+        resolve();
+      },
+      { once: true }
+    );
+
+    EventUtils.synthesizeMouseAtCenter(element, {
+      type: "mousedown",
+      isSynthesized: false,
+    });
+    EventUtils.synthesizeMouseAtCenter(element, {
+      type: "mouseup",
+      isSynthesized: false,
+    });
+  });
+}
+
+/**
+ * Get all elements that match the l10n id.
+ *
+ * @param {string} l10nId
+ * @param {Document} doc
+ * @returns {Element}
+ */
+function getAllByL10nId(l10nId, doc = document) {
+  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
+  console.log(doc);
+  if (elements.length === 0) {
+    throw new Error("Could not find the element by l10n id: " + l10nId);
+  }
+  return elements;
+}
+
+/**
+ * Retrieves an element by its Id.
+ *
+ * @param {string} id
+ * @param {Document} [doc]
+ * @returns {Element}
+ * @throws Throws if the element is not visible in the DOM.
+ */
+function getById(id, doc = document) {
+  const element = maybeGetById(id, /* ensureIsVisible */ true, doc);
+  if (!element) {
+    throw new Error("The element is not visible in the DOM: #" + id);
+  }
+  return element;
+}
+
+/**
+ * Get an element by its l10n id, as this is a user-visible way to find an element.
+ * The `l10nId` represents the text that a user would actually see.
+ *
+ * @param {string} l10nId
+ * @param {Document} doc
+ * @returns {Element}
+ */
+function getByL10nId(l10nId, doc = document) {
+  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
+  if (elements.length === 0) {
+    throw new Error("Could not find the element by l10n id: " + l10nId);
+  }
+  for (const element of elements) {
+    if (isVisible(element)) {
+      return element;
+    }
+  }
+  throw new Error("The element is not visible in the DOM: " + l10nId);
+}
+
+/**
  * Returns the intl display name of a given language tag.
  *
  * @param {string} langTag - A BCP-47 language tag.
@@ -26,6 +168,169 @@ const getIntlDisplayName = (() => {
     return displayNames.of(langTag);
   };
 })();
+
+/**
+ * Attempts to retrieve an element by its Id.
+ *
+ * @param {string} id - The Id of the element to retrieve.
+ * @param {boolean} [ensureIsVisible=true] - If set to true, the function will return null when the element is not visible.
+ * @param {Document} [doc=document] - The document from which to retrieve the element.
+ * @returns {Element | null} - The retrieved element.
+ * @throws Throws if no element was found by the given Id.
+ */
+function maybeGetById(id, ensureIsVisible = true, doc = document) {
+  const element = doc.getElementById(id);
+  if (!element) {
+    throw new Error("Could not find the element by id: #" + id);
+  }
+
+  if (!ensureIsVisible) {
+    return element;
+  }
+
+  if (isVisible(element)) {
+    return element;
+  }
+
+  return null;
+}
+
+/**
+ * A non-throwing version of `getByL10nId`.
+ *
+ * @param {string} l10nId
+ * @returns {Element | null}
+ */
+function maybeGetByL10nId(l10nId, doc = document) {
+  const selector = `[data-l10n-id="${l10nId}"]`;
+  const elements = doc.querySelectorAll(selector);
+  for (const element of elements) {
+    if (isVisible(element)) {
+      return element;
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns whether an element's computed style is visible.
+ *
+ * @param {Element} element - The element to check.
+ * @returns {boolean}
+ */
+function isVisible(element) {
+  if (element.offsetParent === null) {
+    return false;
+  }
+  const win = element.ownerDocument.ownerGlobal;
+  const { visibility, display } = win.getComputedStyle(element);
+  return visibility === "visible" && display !== "none";
+}
+
+/**
+ * Provide a uniform way to log actions. This abuses the Error stack to get the callers
+ * of the action. This should help in test debugging.
+ */
+function logAction(...params) {
+  const error = new Error();
+  const stackLines = error.stack.split("\n");
+  const actionName = stackLines[1]?.split("@")[0] ?? "";
+  const taskFileLocation = stackLines[2]?.split("@")[1] ?? "";
+  if (taskFileLocation.includes("head.js")) {
+    // Only log actions that were done at the test level.
+    return;
+  }
+
+  info(`Action: ${actionName}(${params.join(", ")})`);
+  info(
+    `Source: ${taskFileLocation.replace(
+      "chrome://mochitests/content/browser/",
+      ""
+    )}`
+  );
+}
+
+/**
+ * Navigate to a URL and indicate a message as to why.
+ */
+async function navigate(
+  message,
+  { url, onOpenPanel = null, downloadHandler = null, pivotTranslation = false }
+) {
+  logAction();
+  // When the translations panel is open from the app menu,
+  // it doesn't close on navigate the way that it does when it's
+  // open from the translations button, so ensure that we always
+  // close it when we navigate to a new page.
+  await closeTranslationsPanelIfOpen();
+
+  info(message);
+
+  // Load a blank page first to ensure that tests don't hang.
+  // I don't know why this is needed, but it appears to be necessary.
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, BLANK_PAGE);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  const loadTargetPage = async () => {
+    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    if (downloadHandler) {
+      await FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true, circleArrows: true, locale: false, icon: true },
+        "The icon presents the loading indicator."
+      );
+      await downloadHandler(pivotTranslation ? 2 : 1);
+    }
+  };
+
+  info(`Loading url: "${url}"`);
+  if (onOpenPanel) {
+    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+      "popupshown",
+      loadTargetPage,
+      onOpenPanel
+    );
+  } else {
+    await loadTargetPage();
+  }
+}
+
+/**
+ * Switches to a given tab.
+ *
+ * @param {object} tab - The tab to switch to
+ * @param {string} name
+ */
+async function switchTab(tab, name) {
+  logAction("tab", name);
+  gBrowser.selectedTab = tab;
+  await new Promise(resolve => setTimeout(resolve, 0));
+}
+
+/**
+ * Click the reader-mode button if the reader-mode button is available.
+ * Fails if the reader-mode button is hidden.
+ */
+async function toggleReaderMode() {
+  logAction();
+  const readerButton = document.getElementById("reader-mode-button");
+  await waitForCondition(() => readerButton.hidden === false);
+
+  readerButton.getAttribute("readeractive")
+    ? info("Exiting reader mode")
+    : info("Entering reader mode");
+
+  const readyPromise = readerButton.getAttribute("readeractive")
+    ? waitForCondition(() => !readerButton.getAttribute("readeractive"))
+    : BrowserTestUtils.waitForContentEvent(
+        gBrowser.selectedBrowser,
+        "AboutReaderContentReady"
+      );
+
+  click(readerButton, "Clicking the reader-mode button");
+  await readyPromise;
+}
 
 /**
  * A class containing test utility functions specific to testing full-page translations.
@@ -911,215 +1216,6 @@ class FullPageTranslationsTestUtils {
 }
 
 /**
- * Provide a uniform way to log actions. This abuses the Error stack to get the callers
- * of the action. This should help in test debugging.
- */
-function logAction(...params) {
-  const error = new Error();
-  const stackLines = error.stack.split("\n");
-  const actionName = stackLines[1]?.split("@")[0] ?? "";
-  const taskFileLocation = stackLines[2]?.split("@")[1] ?? "";
-  if (taskFileLocation.includes("head.js")) {
-    // Only log actions that were done at the test level.
-    return;
-  }
-
-  info(`Action: ${actionName}(${params.join(", ")})`);
-  info(
-    `Source: ${taskFileLocation.replace(
-      "chrome://mochitests/content/browser/",
-      ""
-    )}`
-  );
-}
-
-/**
- * Navigate to a URL and indicate a message as to why.
- */
-async function navigate(
-  message,
-  { url, onOpenPanel = null, downloadHandler = null, pivotTranslation = false }
-) {
-  logAction();
-  // When the translations panel is open from the app menu,
-  // it doesn't close on navigate the way that it does when it's
-  // open from the translations button, so ensure that we always
-  // close it when we navigate to a new page.
-  await closeTranslationsPanelIfOpen();
-
-  info(message);
-
-  // Load a blank page first to ensure that tests don't hang.
-  // I don't know why this is needed, but it appears to be necessary.
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, BLANK_PAGE);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
-  const loadTargetPage = async () => {
-    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
-    if (downloadHandler) {
-      await FullPageTranslationsTestUtils.assertTranslationsButton(
-        { button: true, circleArrows: true, locale: false, icon: true },
-        "The icon presents the loading indicator."
-      );
-      await downloadHandler(pivotTranslation ? 2 : 1);
-    }
-  };
-
-  info(`Loading url: "${url}"`);
-  if (onOpenPanel) {
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
-      "popupshown",
-      loadTargetPage,
-      onOpenPanel
-    );
-  } else {
-    await loadTargetPage();
-  }
-}
-
-/**
- * Click the reader-mode button if the reader-mode button is available.
- * Fails if the reader-mode button is hidden.
- */
-async function toggleReaderMode() {
-  logAction();
-  const readerButton = document.getElementById("reader-mode-button");
-  await waitForCondition(() => readerButton.hidden === false);
-
-  readerButton.getAttribute("readeractive")
-    ? info("Exiting reader mode")
-    : info("Entering reader mode");
-
-  const readyPromise = readerButton.getAttribute("readeractive")
-    ? waitForCondition(() => !readerButton.getAttribute("readeractive"))
-    : BrowserTestUtils.waitForContentEvent(
-        gBrowser.selectedBrowser,
-        "AboutReaderContentReady"
-      );
-
-  click(readerButton, "Clicking the reader-mode button");
-  await readyPromise;
-}
-
-/**
- * Opens a new tab in the foreground.
- *
- * @param {string} url
- */
-async function addTab(url) {
-  logAction(url);
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    url,
-    true // Wait for laod
-  );
-  return {
-    tab,
-    removeTab() {
-      BrowserTestUtils.removeTab(tab);
-    },
-  };
-}
-
-/**
- * Switches to a given tab.
- *
- * @param {object} tab - The tab to switch to
- * @param {string} name
- */
-async function switchTab(tab, name) {
-  logAction("tab", name);
-  gBrowser.selectedTab = tab;
-  await new Promise(resolve => setTimeout(resolve, 0));
-}
-
-/**
- * Simulates clicking an element with the mouse.
- *
- * @param {element} element - The element to click.
- * @param {string} [message] - A message to log to info.
- */
-function click(element, message) {
-  logAction(message);
-  return new Promise(resolve => {
-    element.addEventListener(
-      "click",
-      function () {
-        resolve();
-      },
-      { once: true }
-    );
-
-    EventUtils.synthesizeMouseAtCenter(element, {
-      type: "mousedown",
-      isSynthesized: false,
-    });
-    EventUtils.synthesizeMouseAtCenter(element, {
-      type: "mouseup",
-      isSynthesized: false,
-    });
-  });
-}
-
-/**
- * Returns whether an element's computed style is visible.
- *
- * @param {Element} element - The element to check.
- * @returns {boolean}
- */
-function isVisible(element) {
-  if (element.offsetParent === null) {
-    return false;
-  }
-  const win = element.ownerDocument.ownerGlobal;
-  const { visibility, display } = win.getComputedStyle(element);
-  return visibility === "visible" && display !== "none";
-}
-
-/**
- * Asserts the visibility state of an element retrieved by one of the three available options.
- *
- * @param {boolean} expected - The expected visibility state (true for visible, false for invisible).
- * @param {object} options - The element retrieval options
- * @param {Element} options.element - The HTML element to check visibility for.
- * @param {string} options.id - The Id of the element to retrieve and check visibility for.
- * @throws Throws if the visibility does not match the expected visibility state.
- */
-function assertIsVisible(expected, { element, id }) {
-  if (id && element) {
-    throw new Error(
-      "assertIsVisible() expects either an element or an id, but both were specified."
-    );
-  }
-
-  if (element) {
-    return is(
-      isVisible(element),
-      expected,
-      `Expected element with id '${element.id}' to be ${
-        expected ? "visible" : "invisible"
-      }.`
-    );
-  }
-
-  if (id) {
-    return is(
-      maybeGetById(id) !== null,
-      expected,
-      `Expected element with id '${id}' to be ${
-        expected ? "visible" : "invisible"
-      }.`
-    );
-  }
-
-  throw new Error(
-    "assertIsVisible() was called with no specified element or id."
-  );
-}
-
-/**
  * Opens the context menu at a specified element on the page, based on the provided options.
  *
  * @param {Function} runInPage - A content-exposed function to run within the context of the page.
@@ -1312,120 +1408,6 @@ async function assertContextMenuTranslateSelectionItem(
   }
 
   await closeContextMenuIfOpen();
-}
-
-/**
- * Get an element by its l10n id, as this is a user-visible way to find an element.
- * The `l10nId` represents the text that a user would actually see.
- *
- * @param {string} l10nId
- * @param {Document} doc
- * @returns {Element}
- */
-function getByL10nId(l10nId, doc = document) {
-  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
-  if (elements.length === 0) {
-    throw new Error("Could not find the element by l10n id: " + l10nId);
-  }
-  for (const element of elements) {
-    if (isVisible(element)) {
-      return element;
-    }
-  }
-  throw new Error("The element is not visible in the DOM: " + l10nId);
-}
-
-/**
- * Get all elements that match the l10n id.
- *
- * @param {string} l10nId
- * @param {Document} doc
- * @returns {Element}
- */
-function getAllByL10nId(l10nId, doc = document) {
-  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
-  console.log(doc);
-  if (elements.length === 0) {
-    throw new Error("Could not find the element by l10n id: " + l10nId);
-  }
-  return elements;
-}
-
-/**
- * Retrieves an element by its Id.
- *
- * @param {string} id
- * @param {Document} [doc]
- * @returns {Element}
- * @throws Throws if the element is not visible in the DOM.
- */
-function getById(id, doc = document) {
-  const element = maybeGetById(id, /* ensureIsVisible */ true, doc);
-  if (!element) {
-    throw new Error("The element is not visible in the DOM: #" + id);
-  }
-  return element;
-}
-
-/**
- * Attempts to retrieve an element by its Id.
- *
- * @param {string} id - The Id of the element to retrieve.
- * @param {boolean} [ensureIsVisible=true] - If set to true, the function will return null when the element is not visible.
- * @param {Document} [doc=document] - The document from which to retrieve the element.
- * @returns {Element | null} - The retrieved element.
- * @throws Throws if no element was found by the given Id.
- */
-function maybeGetById(id, ensureIsVisible = true, doc = document) {
-  const element = doc.getElementById(id);
-  if (!element) {
-    throw new Error("Could not find the element by id: #" + id);
-  }
-
-  if (!ensureIsVisible) {
-    return element;
-  }
-
-  if (isVisible(element)) {
-    return element;
-  }
-
-  return null;
-}
-
-/**
- * A non-throwing version of `getByL10nId`.
- *
- * @param {string} l10nId
- * @returns {Element | null}
- */
-function maybeGetByL10nId(l10nId, doc = document) {
-  const selector = `[data-l10n-id="${l10nId}"]`;
-  const elements = doc.querySelectorAll(selector);
-  for (const element of elements) {
-    if (isVisible(element)) {
-      return element;
-    }
-  }
-  return null;
-}
-
-/**
- * When switching between between views in the popup panel, wait for the view to
- * be fully shown.
- *
- * @param {Function} callback
- */
-async function waitForViewShown(callback) {
-  const panel = document.getElementById("translations-panel");
-  if (!panel) {
-    throw new Error("Unable to find the translations panel element.");
-  }
-  const promise = BrowserTestUtils.waitForEvent(panel, "ViewShown");
-  callback();
-  info("Waiting for the translations panel view to be shown");
-  await promise;
-  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 /**
