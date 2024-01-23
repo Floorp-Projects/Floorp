@@ -15,6 +15,7 @@
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;
@@ -81,12 +82,12 @@ static constexpr struct {
     {"Thai", nsGkAtoms::th},
     {"Tibt", nsGkAtoms::x_tibt}};
 
-static UniquePtr<nsLanguageAtomService> gLangAtomService;
+static StaticAutoPtr<nsLanguageAtomService> gLangAtomService;
 
 // static
 nsLanguageAtomService* nsLanguageAtomService::GetService() {
   if (!gLangAtomService) {
-    gLangAtomService = MakeUnique<nsLanguageAtomService>();
+    gLangAtomService = new nsLanguageAtomService();
   }
   return gLangAtomService.get();
 }

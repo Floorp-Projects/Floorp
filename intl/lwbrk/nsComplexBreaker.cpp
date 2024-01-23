@@ -10,6 +10,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTHashMap.h"
 #include "nsIObserver.h"
@@ -22,7 +23,7 @@ using namespace mozilla;
 
 using CacheMap = nsTHashMap<nsString, nsTArray<uint8_t>>;
 
-static UniquePtr<CacheMap> sBreakCache;
+static StaticAutoPtr<CacheMap> sBreakCache;
 
 // The underlying hash table extends capacity, when it hits .75 full and uses
 // powers of 2 for sizing. This cache limit will hopefully mean most pages fit
@@ -31,14 +32,14 @@ static UniquePtr<CacheMap> sBreakCache;
 // should still remain fast.
 static const int kCacheLimit = 3072;
 
-static UniquePtr<CacheMap> sOldBreakCache;
+static StaticAutoPtr<CacheMap> sOldBreakCache;
 
 // Simple runnable to delete caches off the main thread.
 class CacheDeleter final : public Runnable {
  public:
-  explicit CacheDeleter(UniquePtr<CacheMap> aCacheToDelete)
+  explicit CacheDeleter(CacheMap* aCacheToDelete)
       : Runnable("ComplexBreaker CacheDeleter"),
-        mCacheToDelete(std::move(aCacheToDelete)) {}
+        mCacheToDelete(aCacheToDelete) {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(!NS_IsMainThread());
@@ -69,10 +70,10 @@ NS_IMETHODIMP ComplexBreakObserver::Observe(nsISupports* aSubject,
     if (sOldBreakCache) {
       // We have an old cache, so delete that one first.
       NS_DispatchBackgroundTask(
-          MakeAndAddRef<CacheDeleter>(std::move(sOldBreakCache)));
+          MakeAndAddRef<CacheDeleter>(sOldBreakCache.forget()));
     } else if (sBreakCache) {
       NS_DispatchBackgroundTask(
-          MakeAndAddRef<CacheDeleter>(std::move(sBreakCache)));
+          MakeAndAddRef<CacheDeleter>(sBreakCache.forget()));
     }
   }
 
@@ -108,10 +109,10 @@ static void AddToCache(const char16_t* aText, uint32_t aLength,
 
   if (sOldBreakCache) {
     NS_DispatchBackgroundTask(
-        MakeAndAddRef<CacheDeleter>(std::move(sOldBreakCache)));
+        MakeAndAddRef<CacheDeleter>(sOldBreakCache.forget()));
   }
 
-  sOldBreakCache = std::move(sBreakCache);
+  sOldBreakCache = sBreakCache.forget();
 }
 
 static void CopyAndFill(const nsTArray<uint8_t>& aCachedBreakBefore,
@@ -141,7 +142,7 @@ void ComplexBreaker::GetBreaks(const char16_t* aText, uint32_t aLength,
       return;
     }
   } else {
-    sBreakCache = MakeUnique<CacheMap>();
+    sBreakCache = new CacheMap();
   }
 
   // We keep the previous cache when we hit our limit, so that the most recently
