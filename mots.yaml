@@ -2048,13 +2048,14 @@ modules:
     meta:
       peers_emeritus:
         - Johnny Stenback
+        - David Baron
+      owners_emeritus:
+        - Blake Kaplan
       url: http://www.mozilla.org/newlayout/doc/parser.html
       components:
         - 'Core::HTML: Parser'
-    owners:
-      - *mrbkap
+    owners: []
     peers:
-      - *dbaron
       - *peterv
       - *rbs
     machine_name: core_legacy_html_parser
