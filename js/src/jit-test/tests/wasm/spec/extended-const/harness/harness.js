@@ -98,7 +98,7 @@ class RefWithType {
 
 // ref.extern values created by spec tests will be JS objects of the form
 // { [externsym]: <number> }. Other externref values are possible to observe
-// if any.convert_extern is used.
+// if extern.convert_any is used.
 let externsym = Symbol("externref");
 function externref(s) {
   return { [externsym]: s };

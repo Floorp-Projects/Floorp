@@ -58,13 +58,14 @@ mod component;
 mod config;
 mod core;
 
-pub use crate::core::{
-    ConfiguredModule, InstructionKind, InstructionKinds, MaybeInvalidModule, Module,
-};
+pub use crate::core::{InstructionKind, InstructionKinds, MaybeInvalidModule, Module};
 use arbitrary::{Result, Unstructured};
-pub use component::{Component, ConfiguredComponent};
-pub use config::{Config, DefaultConfig, SwarmConfig};
+pub use component::Component;
+pub use config::{Config, MemoryOffsetChoices};
 use std::{collections::HashSet, fmt::Write, str};
+
+#[cfg(feature = "_internal_cli")]
+pub use config::InternalOptionalConfig;
 
 /// Do something an arbitrary number of times.
 ///

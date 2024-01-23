@@ -670,6 +670,13 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasm-encoder]]
+version = "0.39.0"
+when = "2024-01-09"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.wasm-smith]]
 version = "0.13.0"
 when = "2023-11-20"
@@ -677,9 +684,30 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasm-smith]]
+version = "0.14.0"
+when = "2024-01-09"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
+[[publisher.wasmparser]]
+version = "0.119.0"
+when = "2024-01-09"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.wast]]
 version = "69.0.0"
 when = "2023-11-20"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
+[[publisher.wast]]
+version = "70.0.0"
+when = "2024-01-09"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
@@ -1389,6 +1417,13 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "TOML parser, forked from toml 0.5"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.bitflags]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "2.4.0 -> 2.4.1"
+notes = "Only allowing new clippy lints"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.either]]

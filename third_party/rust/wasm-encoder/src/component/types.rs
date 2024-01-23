@@ -527,6 +527,27 @@ impl Encode for PrimitiveValType {
     }
 }
 
+#[cfg(feature = "wasmparser")]
+impl From<wasmparser::PrimitiveValType> for PrimitiveValType {
+    fn from(ty: wasmparser::PrimitiveValType) -> Self {
+        match ty {
+            wasmparser::PrimitiveValType::Bool => PrimitiveValType::Bool,
+            wasmparser::PrimitiveValType::S8 => PrimitiveValType::S8,
+            wasmparser::PrimitiveValType::U8 => PrimitiveValType::U8,
+            wasmparser::PrimitiveValType::S16 => PrimitiveValType::S16,
+            wasmparser::PrimitiveValType::U16 => PrimitiveValType::U16,
+            wasmparser::PrimitiveValType::S32 => PrimitiveValType::S32,
+            wasmparser::PrimitiveValType::U32 => PrimitiveValType::U32,
+            wasmparser::PrimitiveValType::S64 => PrimitiveValType::S64,
+            wasmparser::PrimitiveValType::U64 => PrimitiveValType::U64,
+            wasmparser::PrimitiveValType::Float32 => PrimitiveValType::Float32,
+            wasmparser::PrimitiveValType::Float64 => PrimitiveValType::Float64,
+            wasmparser::PrimitiveValType::Char => PrimitiveValType::Char,
+            wasmparser::PrimitiveValType::String => PrimitiveValType::String,
+        }
+    }
+}
+
 /// Represents a component value type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ComponentValType {
