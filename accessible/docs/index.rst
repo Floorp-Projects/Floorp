@@ -14,3 +14,4 @@ The `Accessibility page on the Mozilla Wiki <https://wiki.mozilla.org/Accessibil
    GeckoViewThreadTopography
    ColorsAndHighContrastMode
    HCMSettings
+   HCMMediaQueries
