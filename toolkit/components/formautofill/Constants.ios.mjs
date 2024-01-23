@@ -9,6 +9,8 @@ const IOS_DEFAULT_PREFERENCES = {
   "extensions.formautofill.creditCards.heuristics.fathom.testConfidence": 0,
   "extensions.formautofill.creditCards.heuristics.fathom.types":
     "cc-number,cc-name",
+  "extensions.formautofill.addresses.capture.requiredFields":
+    "street-address,postal-code,address-level1,address-level2",
   "extensions.formautofill.loglevel": "Warn",
   "extensions.formautofill.addresses.supported": "off",
   "extensions.formautofill.creditCards.supported": "detect",
