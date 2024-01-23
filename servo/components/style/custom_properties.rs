@@ -961,10 +961,17 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             CustomDeclarationValue::Value(ref unparsed_value) => {
                 let has_custom_property_references =
                     !unparsed_value.references.custom_properties.is_empty();
-                let has_non_custom_dependencies = !unparsed_value
-                    .references
-                    .get_non_custom_dependencies(self.computed_context.is_root_element())
-                    .is_empty();
+                let registered_length_property = custom_registration.map_or(
+                    false,
+                    |r| r.syntax.may_reference_font_relative_length()
+                );
+                // Non-custom dependency is really relevant for registered custom properties
+                // that require computed value of such dependencies.
+                let has_non_custom_dependencies = registered_length_property &&
+                    !unparsed_value
+                        .references
+                        .get_non_custom_dependencies(self.computed_context.is_root_element())
+                        .is_empty();
                 self.may_have_cycles |=
                     has_custom_property_references || has_non_custom_dependencies;
 
