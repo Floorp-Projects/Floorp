@@ -476,6 +476,255 @@ pub __storage: __kernel_sockaddr_storage,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct sync_serial_settings {
+pub clock_rate: crate::ctypes::c_uint,
+pub clock_type: crate::ctypes::c_uint,
+pub loopback: crate::ctypes::c_ushort,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct te1_settings {
+pub clock_rate: crate::ctypes::c_uint,
+pub clock_type: crate::ctypes::c_uint,
+pub loopback: crate::ctypes::c_ushort,
+pub slot_map: crate::ctypes::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct raw_hdlc_proto {
+pub encoding: crate::ctypes::c_ushort,
+pub parity: crate::ctypes::c_ushort,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fr_proto {
+pub t391: crate::ctypes::c_uint,
+pub t392: crate::ctypes::c_uint,
+pub n391: crate::ctypes::c_uint,
+pub n392: crate::ctypes::c_uint,
+pub n393: crate::ctypes::c_uint,
+pub lmi: crate::ctypes::c_ushort,
+pub dce: crate::ctypes::c_ushort,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fr_proto_pvc {
+pub dlci: crate::ctypes::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fr_proto_pvc_info {
+pub dlci: crate::ctypes::c_uint,
+pub master: [crate::ctypes::c_char; 16usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cisco_proto {
+pub interval: crate::ctypes::c_uint,
+pub timeout: crate::ctypes::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct x25_hdlc_proto {
+pub dce: crate::ctypes::c_ushort,
+pub modulo: crate::ctypes::c_uint,
+pub window: crate::ctypes::c_uint,
+pub t1: crate::ctypes::c_uint,
+pub t2: crate::ctypes::c_uint,
+pub n2: crate::ctypes::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ifmap {
+pub mem_start: crate::ctypes::c_ulong,
+pub mem_end: crate::ctypes::c_ulong,
+pub base_addr: crate::ctypes::c_ushort,
+pub irq: crate::ctypes::c_uchar,
+pub dma: crate::ctypes::c_uchar,
+pub port: crate::ctypes::c_uchar,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct if_settings {
+pub type_: crate::ctypes::c_uint,
+pub size: crate::ctypes::c_uint,
+pub ifs_ifsu: if_settings__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ifreq {
+pub ifr_ifrn: ifreq__bindgen_ty_1,
+pub ifr_ifru: ifreq__bindgen_ty_2,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ifconf {
+pub ifc_len: crate::ctypes::c_int,
+pub ifc_ifcu: ifconf__bindgen_ty_1,
+}
+#[repr(C)]
+pub struct xt_entry_match {
+pub u: xt_entry_match__bindgen_ty_1,
+pub data: __IncompleteArrayField<crate::ctypes::c_uchar>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_entry_match__bindgen_ty_1__bindgen_ty_1 {
+pub match_size: __u16,
+pub name: [crate::ctypes::c_char; 29usize],
+pub revision: __u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_entry_match__bindgen_ty_1__bindgen_ty_2 {
+pub match_size: __u16,
+pub match_: *mut xt_match,
+}
+#[repr(C)]
+pub struct xt_entry_target {
+pub u: xt_entry_target__bindgen_ty_1,
+pub data: __IncompleteArrayField<crate::ctypes::c_uchar>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_entry_target__bindgen_ty_1__bindgen_ty_1 {
+pub target_size: __u16,
+pub name: [crate::ctypes::c_char; 29usize],
+pub revision: __u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_entry_target__bindgen_ty_1__bindgen_ty_2 {
+pub target_size: __u16,
+pub target: *mut xt_target,
+}
+#[repr(C)]
+pub struct xt_standard_target {
+pub target: xt_entry_target,
+pub verdict: crate::ctypes::c_int,
+}
+#[repr(C)]
+pub struct xt_error_target {
+pub target: xt_entry_target,
+pub errorname: [crate::ctypes::c_char; 30usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_get_revision {
+pub name: [crate::ctypes::c_char; 29usize],
+pub revision: __u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _xt_align {
+pub u8_: __u8,
+pub u16_: __u16,
+pub u32_: __u32,
+pub u64_: __u64,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_counters {
+pub pcnt: __u64,
+pub bcnt: __u64,
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct xt_counters_info {
+pub name: [crate::ctypes::c_char; 32usize],
+pub num_counters: crate::ctypes::c_uint,
+pub counters: __IncompleteArrayField<xt_counters>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_tcp {
+pub spts: [__u16; 2usize],
+pub dpts: [__u16; 2usize],
+pub option: __u8,
+pub flg_mask: __u8,
+pub flg_cmp: __u8,
+pub invflags: __u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_udp {
+pub spts: [__u16; 2usize],
+pub dpts: [__u16; 2usize],
+pub invflags: __u8,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ip6t_ip6 {
+pub src: in6_addr,
+pub dst: in6_addr,
+pub smsk: in6_addr,
+pub dmsk: in6_addr,
+pub iniface: [crate::ctypes::c_char; 16usize],
+pub outiface: [crate::ctypes::c_char; 16usize],
+pub iniface_mask: [crate::ctypes::c_uchar; 16usize],
+pub outiface_mask: [crate::ctypes::c_uchar; 16usize],
+pub proto: __u16,
+pub tos: __u8,
+pub flags: __u8,
+pub invflags: __u8,
+}
+#[repr(C)]
+pub struct ip6t_entry {
+pub ipv6: ip6t_ip6,
+pub nfcache: crate::ctypes::c_uint,
+pub target_offset: __u16,
+pub next_offset: __u16,
+pub comefrom: crate::ctypes::c_uint,
+pub counters: xt_counters,
+pub elems: __IncompleteArrayField<crate::ctypes::c_uchar>,
+}
+#[repr(C)]
+pub struct ip6t_standard {
+pub entry: ip6t_entry,
+pub target: xt_standard_target,
+}
+#[repr(C)]
+pub struct ip6t_error {
+pub entry: ip6t_entry,
+pub target: xt_error_target,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ip6t_icmp {
+pub type_: __u8,
+pub code: [__u8; 2usize],
+pub invflags: __u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ip6t_getinfo {
+pub name: [crate::ctypes::c_char; 32usize],
+pub valid_hooks: crate::ctypes::c_uint,
+pub hook_entry: [crate::ctypes::c_uint; 5usize],
+pub underflow: [crate::ctypes::c_uint; 5usize],
+pub num_entries: crate::ctypes::c_uint,
+pub size: crate::ctypes::c_uint,
+}
+#[repr(C)]
+pub struct ip6t_replace {
+pub name: [crate::ctypes::c_char; 32usize],
+pub valid_hooks: crate::ctypes::c_uint,
+pub num_entries: crate::ctypes::c_uint,
+pub size: crate::ctypes::c_uint,
+pub hook_entry: [crate::ctypes::c_uint; 5usize],
+pub underflow: [crate::ctypes::c_uint; 5usize],
+pub num_counters: crate::ctypes::c_uint,
+pub counters: *mut xt_counters,
+pub entries: __IncompleteArrayField<ip6t_entry>,
+}
+#[repr(C)]
+pub struct ip6t_get_entries {
+pub name: [crate::ctypes::c_char; 32usize],
+pub size: crate::ctypes::c_uint,
+pub entrytable: __IncompleteArrayField<ip6t_entry>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct linger {
 pub l_onoff: crate::ctypes::c_int,
 pub l_linger: crate::ctypes::c_int,
@@ -510,6 +759,16 @@ pub gid: __u32,
 pub struct mmsghdr {
 pub msg_hdr: msghdr,
 pub msg_len: crate::ctypes::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_match {
+pub _address: u8,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct xt_target {
+pub _address: u8,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -966,6 +1225,135 @@ pub const TCP_MD5SIG_FLAG_PREFIX: u32 = 1;
 pub const TCP_MD5SIG_FLAG_IFINDEX: u32 = 2;
 pub const TCP_RECEIVE_ZEROCOPY_FLAG_TLB_CLEAN_HINT: u32 = 1;
 pub const UNIX_PATH_MAX: u32 = 108;
+pub const IFNAMSIZ: u32 = 16;
+pub const IFALIASZ: u32 = 256;
+pub const ALTIFNAMSIZ: u32 = 128;
+pub const GENERIC_HDLC_VERSION: u32 = 4;
+pub const CLOCK_DEFAULT: u32 = 0;
+pub const CLOCK_EXT: u32 = 1;
+pub const CLOCK_INT: u32 = 2;
+pub const CLOCK_TXINT: u32 = 3;
+pub const CLOCK_TXFROMRX: u32 = 4;
+pub const ENCODING_DEFAULT: u32 = 0;
+pub const ENCODING_NRZ: u32 = 1;
+pub const ENCODING_NRZI: u32 = 2;
+pub const ENCODING_FM_MARK: u32 = 3;
+pub const ENCODING_FM_SPACE: u32 = 4;
+pub const ENCODING_MANCHESTER: u32 = 5;
+pub const PARITY_DEFAULT: u32 = 0;
+pub const PARITY_NONE: u32 = 1;
+pub const PARITY_CRC16_PR0: u32 = 2;
+pub const PARITY_CRC16_PR1: u32 = 3;
+pub const PARITY_CRC16_PR0_CCITT: u32 = 4;
+pub const PARITY_CRC16_PR1_CCITT: u32 = 5;
+pub const PARITY_CRC32_PR0_CCITT: u32 = 6;
+pub const PARITY_CRC32_PR1_CCITT: u32 = 7;
+pub const LMI_DEFAULT: u32 = 0;
+pub const LMI_NONE: u32 = 1;
+pub const LMI_ANSI: u32 = 2;
+pub const LMI_CCITT: u32 = 3;
+pub const LMI_CISCO: u32 = 4;
+pub const IF_GET_IFACE: u32 = 1;
+pub const IF_GET_PROTO: u32 = 2;
+pub const IF_IFACE_V35: u32 = 4096;
+pub const IF_IFACE_V24: u32 = 4097;
+pub const IF_IFACE_X21: u32 = 4098;
+pub const IF_IFACE_T1: u32 = 4099;
+pub const IF_IFACE_E1: u32 = 4100;
+pub const IF_IFACE_SYNC_SERIAL: u32 = 4101;
+pub const IF_IFACE_X21D: u32 = 4102;
+pub const IF_PROTO_HDLC: u32 = 8192;
+pub const IF_PROTO_PPP: u32 = 8193;
+pub const IF_PROTO_CISCO: u32 = 8194;
+pub const IF_PROTO_FR: u32 = 8195;
+pub const IF_PROTO_FR_ADD_PVC: u32 = 8196;
+pub const IF_PROTO_FR_DEL_PVC: u32 = 8197;
+pub const IF_PROTO_X25: u32 = 8198;
+pub const IF_PROTO_HDLC_ETH: u32 = 8199;
+pub const IF_PROTO_FR_ADD_ETH_PVC: u32 = 8200;
+pub const IF_PROTO_FR_DEL_ETH_PVC: u32 = 8201;
+pub const IF_PROTO_FR_PVC: u32 = 8202;
+pub const IF_PROTO_FR_ETH_PVC: u32 = 8203;
+pub const IF_PROTO_RAW: u32 = 8204;
+pub const IFHWADDRLEN: u32 = 6;
+pub const NF_DROP: u32 = 0;
+pub const NF_ACCEPT: u32 = 1;
+pub const NF_STOLEN: u32 = 2;
+pub const NF_QUEUE: u32 = 3;
+pub const NF_REPEAT: u32 = 4;
+pub const NF_STOP: u32 = 5;
+pub const NF_MAX_VERDICT: u32 = 5;
+pub const NF_VERDICT_MASK: u32 = 255;
+pub const NF_VERDICT_FLAG_QUEUE_BYPASS: u32 = 32768;
+pub const NF_VERDICT_QMASK: u32 = 4294901760;
+pub const NF_VERDICT_QBITS: u32 = 16;
+pub const NF_VERDICT_BITS: u32 = 16;
+pub const NF_IP6_PRE_ROUTING: u32 = 0;
+pub const NF_IP6_LOCAL_IN: u32 = 1;
+pub const NF_IP6_FORWARD: u32 = 2;
+pub const NF_IP6_LOCAL_OUT: u32 = 3;
+pub const NF_IP6_POST_ROUTING: u32 = 4;
+pub const NF_IP6_NUMHOOKS: u32 = 5;
+pub const XT_FUNCTION_MAXNAMELEN: u32 = 30;
+pub const XT_EXTENSION_MAXNAMELEN: u32 = 29;
+pub const XT_TABLE_MAXNAMELEN: u32 = 32;
+pub const XT_CONTINUE: u32 = 4294967295;
+pub const XT_RETURN: i32 = -5;
+pub const XT_STANDARD_TARGET: &[u8; 1] = b"\0";
+pub const XT_ERROR_TARGET: &[u8; 6] = b"ERROR\0";
+pub const XT_INV_PROTO: u32 = 64;
+pub const IP6T_FUNCTION_MAXNAMELEN: u32 = 30;
+pub const IP6T_TABLE_MAXNAMELEN: u32 = 32;
+pub const IP6T_CONTINUE: u32 = 4294967295;
+pub const IP6T_RETURN: i32 = -5;
+pub const XT_TCP_INV_SRCPT: u32 = 1;
+pub const XT_TCP_INV_DSTPT: u32 = 2;
+pub const XT_TCP_INV_FLAGS: u32 = 4;
+pub const XT_TCP_INV_OPTION: u32 = 8;
+pub const XT_TCP_INV_MASK: u32 = 15;
+pub const XT_UDP_INV_SRCPT: u32 = 1;
+pub const XT_UDP_INV_DSTPT: u32 = 2;
+pub const XT_UDP_INV_MASK: u32 = 3;
+pub const IP6T_TCP_INV_SRCPT: u32 = 1;
+pub const IP6T_TCP_INV_DSTPT: u32 = 2;
+pub const IP6T_TCP_INV_FLAGS: u32 = 4;
+pub const IP6T_TCP_INV_OPTION: u32 = 8;
+pub const IP6T_TCP_INV_MASK: u32 = 15;
+pub const IP6T_UDP_INV_SRCPT: u32 = 1;
+pub const IP6T_UDP_INV_DSTPT: u32 = 2;
+pub const IP6T_UDP_INV_MASK: u32 = 3;
+pub const IP6T_STANDARD_TARGET: &[u8; 1] = b"\0";
+pub const IP6T_ERROR_TARGET: &[u8; 6] = b"ERROR\0";
+pub const IP6T_F_PROTO: u32 = 1;
+pub const IP6T_F_TOS: u32 = 2;
+pub const IP6T_F_GOTO: u32 = 4;
+pub const IP6T_F_MASK: u32 = 7;
+pub const IP6T_INV_VIA_IN: u32 = 1;
+pub const IP6T_INV_VIA_OUT: u32 = 2;
+pub const IP6T_INV_TOS: u32 = 4;
+pub const IP6T_INV_SRCIP: u32 = 8;
+pub const IP6T_INV_DSTIP: u32 = 16;
+pub const IP6T_INV_FRAG: u32 = 32;
+pub const IP6T_INV_PROTO: u32 = 64;
+pub const IP6T_INV_MASK: u32 = 127;
+pub const IP6T_BASE_CTL: u32 = 64;
+pub const IP6T_SO_SET_REPLACE: u32 = 64;
+pub const IP6T_SO_SET_ADD_COUNTERS: u32 = 65;
+pub const IP6T_SO_SET_MAX: u32 = 65;
+pub const IP6T_SO_GET_INFO: u32 = 64;
+pub const IP6T_SO_GET_ENTRIES: u32 = 65;
+pub const IP6T_SO_GET_REVISION_MATCH: u32 = 68;
+pub const IP6T_SO_GET_REVISION_TARGET: u32 = 69;
+pub const IP6T_SO_GET_MAX: u32 = 69;
+pub const IP6T_SO_ORIGINAL_DST: u32 = 80;
+pub const IP6T_ICMP_INV: u32 = 1;
+pub const NF_IP_PRE_ROUTING: u32 = 0;
+pub const NF_IP_LOCAL_IN: u32 = 1;
+pub const NF_IP_FORWARD: u32 = 2;
+pub const NF_IP_LOCAL_OUT: u32 = 3;
+pub const NF_IP_POST_ROUTING: u32 = 4;
+pub const NF_IP_NUMHOOKS: u32 = 5;
+pub const SO_ORIGINAL_DST: u32 = 80;
 pub const SHUT_RD: u32 = 0;
 pub const SHUT_WR: u32 = 1;
 pub const SHUT_RDWR: u32 = 2;
@@ -1010,7 +1398,16 @@ pub const AF_RXRPC: u32 = 33;
 pub const AF_ISDN: u32 = 34;
 pub const AF_PHONET: u32 = 35;
 pub const AF_IEEE802154: u32 = 36;
-pub const AF_MAX: u32 = 37;
+pub const AF_CAIF: u32 = 37;
+pub const AF_ALG: u32 = 38;
+pub const AF_NFC: u32 = 39;
+pub const AF_VSOCK: u32 = 40;
+pub const AF_KCM: u32 = 41;
+pub const AF_QIPCRTR: u32 = 42;
+pub const AF_SMC: u32 = 43;
+pub const AF_XDP: u32 = 44;
+pub const AF_MCTP: u32 = 45;
+pub const AF_MAX: u32 = 46;
 pub const MSG_OOB: u32 = 1;
 pub const MSG_PEEK: u32 = 2;
 pub const MSG_DONTROUTE: u32 = 4;
@@ -1030,6 +1427,45 @@ pub const MSG_CMSG_CLOEXEC: u32 = 1073741824;
 pub const SCM_RIGHTS: u32 = 1;
 pub const SCM_CREDENTIALS: u32 = 2;
 pub const SCM_SECURITY: u32 = 3;
+pub const SOL_IP: u32 = 0;
+pub const SOL_TCP: u32 = 6;
+pub const SOL_UDP: u32 = 17;
+pub const SOL_IPV6: u32 = 41;
+pub const SOL_ICMPV6: u32 = 58;
+pub const SOL_SCTP: u32 = 132;
+pub const SOL_UDPLITE: u32 = 136;
+pub const SOL_RAW: u32 = 255;
+pub const SOL_IPX: u32 = 256;
+pub const SOL_AX25: u32 = 257;
+pub const SOL_ATALK: u32 = 258;
+pub const SOL_NETROM: u32 = 259;
+pub const SOL_ROSE: u32 = 260;
+pub const SOL_DECNET: u32 = 261;
+pub const SOL_X25: u32 = 262;
+pub const SOL_PACKET: u32 = 263;
+pub const SOL_ATM: u32 = 264;
+pub const SOL_AAL: u32 = 265;
+pub const SOL_IRDA: u32 = 266;
+pub const SOL_NETBEUI: u32 = 267;
+pub const SOL_LLC: u32 = 268;
+pub const SOL_DCCP: u32 = 269;
+pub const SOL_NETLINK: u32 = 270;
+pub const SOL_TIPC: u32 = 271;
+pub const SOL_RXRPC: u32 = 272;
+pub const SOL_PPPOL2TP: u32 = 273;
+pub const SOL_BLUETOOTH: u32 = 274;
+pub const SOL_PNPIPE: u32 = 275;
+pub const SOL_RDS: u32 = 276;
+pub const SOL_IUCV: u32 = 277;
+pub const SOL_CAIF: u32 = 278;
+pub const SOL_ALG: u32 = 279;
+pub const SOL_NFC: u32 = 280;
+pub const SOL_KCM: u32 = 281;
+pub const SOL_TLS: u32 = 282;
+pub const SOL_XDP: u32 = 283;
+pub const SOL_MPTCP: u32 = 284;
+pub const SOL_MCTP: u32 = 285;
+pub const SOL_SMC: u32 = 286;
 pub const IPPROTO_IP: _bindgen_ty_1 = _bindgen_ty_1::IPPROTO_IP;
 pub const IPPROTO_ICMP: _bindgen_ty_1 = _bindgen_ty_1::IPPROTO_ICMP;
 pub const IPPROTO_IGMP: _bindgen_ty_1 = _bindgen_ty_1::IPPROTO_IGMP;
@@ -1194,6 +1630,25 @@ pub const TCP_NLA_BYTES_NOTSENT: _bindgen_ty_6 = _bindgen_ty_6::TCP_NLA_BYTES_NO
 pub const TCP_NLA_EDT: _bindgen_ty_6 = _bindgen_ty_6::TCP_NLA_EDT;
 pub const TCP_NLA_TTL: _bindgen_ty_6 = _bindgen_ty_6::TCP_NLA_TTL;
 pub const TCP_NLA_REHASH: _bindgen_ty_6 = _bindgen_ty_6::TCP_NLA_REHASH;
+pub const IF_OPER_UNKNOWN: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_UNKNOWN;
+pub const IF_OPER_NOTPRESENT: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_NOTPRESENT;
+pub const IF_OPER_DOWN: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_DOWN;
+pub const IF_OPER_LOWERLAYERDOWN: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_LOWERLAYERDOWN;
+pub const IF_OPER_TESTING: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_TESTING;
+pub const IF_OPER_DORMANT: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_DORMANT;
+pub const IF_OPER_UP: _bindgen_ty_7 = _bindgen_ty_7::IF_OPER_UP;
+pub const IF_LINK_MODE_DEFAULT: _bindgen_ty_8 = _bindgen_ty_8::IF_LINK_MODE_DEFAULT;
+pub const IF_LINK_MODE_DORMANT: _bindgen_ty_8 = _bindgen_ty_8::IF_LINK_MODE_DORMANT;
+pub const IF_LINK_MODE_TESTING: _bindgen_ty_8 = _bindgen_ty_8::IF_LINK_MODE_TESTING;
+pub const NFPROTO_UNSPEC: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_UNSPEC;
+pub const NFPROTO_INET: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_INET;
+pub const NFPROTO_IPV4: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_IPV4;
+pub const NFPROTO_ARP: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_ARP;
+pub const NFPROTO_NETDEV: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_NETDEV;
+pub const NFPROTO_BRIDGE: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_BRIDGE;
+pub const NFPROTO_IPV6: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_IPV6;
+pub const NFPROTO_DECNET: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_DECNET;
+pub const NFPROTO_NUMPROTO: _bindgen_ty_9 = _bindgen_ty_9::NFPROTO_NUMPROTO;
 #[repr(u32)]
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -1417,6 +1872,121 @@ TCP_NLA_EDT = 25,
 TCP_NLA_TTL = 26,
 TCP_NLA_REHASH = 27,
 }
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum net_device_flags {
+IFF_UP = 1,
+IFF_BROADCAST = 2,
+IFF_DEBUG = 4,
+IFF_LOOPBACK = 8,
+IFF_POINTOPOINT = 16,
+IFF_NOTRAILERS = 32,
+IFF_RUNNING = 64,
+IFF_NOARP = 128,
+IFF_PROMISC = 256,
+IFF_ALLMULTI = 512,
+IFF_MASTER = 1024,
+IFF_SLAVE = 2048,
+IFF_MULTICAST = 4096,
+IFF_PORTSEL = 8192,
+IFF_AUTOMEDIA = 16384,
+IFF_DYNAMIC = 32768,
+IFF_LOWER_UP = 65536,
+IFF_DORMANT = 131072,
+IFF_ECHO = 262144,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum _bindgen_ty_7 {
+IF_OPER_UNKNOWN = 0,
+IF_OPER_NOTPRESENT = 1,
+IF_OPER_DOWN = 2,
+IF_OPER_LOWERLAYERDOWN = 3,
+IF_OPER_TESTING = 4,
+IF_OPER_DORMANT = 5,
+IF_OPER_UP = 6,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum _bindgen_ty_8 {
+IF_LINK_MODE_DEFAULT = 0,
+IF_LINK_MODE_DORMANT = 1,
+IF_LINK_MODE_TESTING = 2,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum nf_inet_hooks {
+NF_INET_PRE_ROUTING = 0,
+NF_INET_LOCAL_IN = 1,
+NF_INET_FORWARD = 2,
+NF_INET_LOCAL_OUT = 3,
+NF_INET_POST_ROUTING = 4,
+NF_INET_NUMHOOKS = 5,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum nf_dev_hooks {
+NF_NETDEV_INGRESS = 0,
+NF_NETDEV_EGRESS = 1,
+NF_NETDEV_NUMHOOKS = 2,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum _bindgen_ty_9 {
+NFPROTO_UNSPEC = 0,
+NFPROTO_INET = 1,
+NFPROTO_IPV4 = 2,
+NFPROTO_ARP = 3,
+NFPROTO_NETDEV = 5,
+NFPROTO_BRIDGE = 7,
+NFPROTO_IPV6 = 10,
+NFPROTO_DECNET = 12,
+NFPROTO_NUMPROTO = 13,
+}
+#[repr(i32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum nf_ip6_hook_priorities {
+NF_IP6_PRI_FIRST = -2147483648,
+NF_IP6_PRI_RAW_BEFORE_DEFRAG = -450,
+NF_IP6_PRI_CONNTRACK_DEFRAG = -400,
+NF_IP6_PRI_RAW = -300,
+NF_IP6_PRI_SELINUX_FIRST = -225,
+NF_IP6_PRI_CONNTRACK = -200,
+NF_IP6_PRI_MANGLE = -150,
+NF_IP6_PRI_NAT_DST = -100,
+NF_IP6_PRI_FILTER = 0,
+NF_IP6_PRI_SECURITY = 50,
+NF_IP6_PRI_NAT_SRC = 100,
+NF_IP6_PRI_SELINUX_LAST = 225,
+NF_IP6_PRI_CONNTRACK_HELPER = 300,
+NF_IP6_PRI_LAST = 2147483647,
+}
+#[repr(i32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum nf_ip_hook_priorities {
+NF_IP_PRI_FIRST = -2147483648,
+NF_IP_PRI_RAW_BEFORE_DEFRAG = -450,
+NF_IP_PRI_CONNTRACK_DEFRAG = -400,
+NF_IP_PRI_RAW = -300,
+NF_IP_PRI_SELINUX_FIRST = -225,
+NF_IP_PRI_CONNTRACK = -200,
+NF_IP_PRI_MANGLE = -150,
+NF_IP_PRI_NAT_DST = -100,
+NF_IP_PRI_FILTER = 0,
+NF_IP_PRI_SECURITY = 50,
+NF_IP_PRI_NAT_SRC = 100,
+NF_IP_PRI_SELINUX_LAST = 225,
+NF_IP_PRI_CONNTRACK_HELPER = 300,
+NF_IP_PRI_CONNTRACK_CONFIRM = 2147483647,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union __kernel_sockaddr_storage__bindgen_ty_1 {
@@ -1447,6 +2017,69 @@ pub addrs: ipv6hdr__bindgen_ty_1__bindgen_ty_2,
 pub union tcp_word_hdr {
 pub hdr: tcphdr,
 pub words: [__be32; 5usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union if_settings__bindgen_ty_1 {
+pub raw_hdlc: *mut raw_hdlc_proto,
+pub cisco: *mut cisco_proto,
+pub fr: *mut fr_proto,
+pub fr_pvc: *mut fr_proto_pvc,
+pub fr_pvc_info: *mut fr_proto_pvc_info,
+pub x25: *mut x25_hdlc_proto,
+pub sync: *mut sync_serial_settings,
+pub te1: *mut te1_settings,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ifreq__bindgen_ty_1 {
+pub ifrn_name: [crate::ctypes::c_char; 16usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ifreq__bindgen_ty_2 {
+pub ifru_addr: sockaddr,
+pub ifru_dstaddr: sockaddr,
+pub ifru_broadaddr: sockaddr,
+pub ifru_netmask: sockaddr,
+pub ifru_hwaddr: sockaddr,
+pub ifru_flags: crate::ctypes::c_short,
+pub ifru_ivalue: crate::ctypes::c_int,
+pub ifru_mtu: crate::ctypes::c_int,
+pub ifru_map: ifmap,
+pub ifru_slave: [crate::ctypes::c_char; 16usize],
+pub ifru_newname: [crate::ctypes::c_char; 16usize],
+pub ifru_data: *mut crate::ctypes::c_void,
+pub ifru_settings: if_settings,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union ifconf__bindgen_ty_1 {
+pub ifcu_buf: *mut crate::ctypes::c_char,
+pub ifcu_req: *mut ifreq,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union nf_inet_addr {
+pub all: [__u32; 4usize],
+pub ip: __be32,
+pub ip6: [__be32; 4usize],
+pub in_: in_addr,
+pub in6: in6_addr,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union xt_entry_match__bindgen_ty_1 {
+pub user: xt_entry_match__bindgen_ty_1__bindgen_ty_1,
+pub kernel: xt_entry_match__bindgen_ty_1__bindgen_ty_2,
+pub match_size: __u16,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union xt_entry_target__bindgen_ty_1 {
+pub user: xt_entry_target__bindgen_ty_1__bindgen_ty_1,
+pub kernel: xt_entry_target__bindgen_ty_1__bindgen_ty_2,
+pub target_size: __u16,
 }
 impl<Storage> __BindgenBitfieldUnit<Storage> {
 #[inline]
@@ -1872,4 +2505,10 @@ tcpi_fastopen_client_fail as u64
 });
 __bindgen_bitfield_unit
 }
+}
+impl nf_inet_hooks {
+pub const NF_INET_INGRESS: nf_inet_hooks = nf_inet_hooks::NF_INET_NUMHOOKS;
+}
+impl nf_ip_hook_priorities {
+pub const NF_IP_PRI_LAST: nf_ip_hook_priorities = nf_ip_hook_priorities::NF_IP_PRI_CONNTRACK_CONFIRM;
 }
