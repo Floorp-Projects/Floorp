@@ -32,7 +32,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
-  await clickAlwaysTranslateLanguage({
+  await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
   });
   await assertIsAlwaysTranslateLanguage("es", { checked: true });

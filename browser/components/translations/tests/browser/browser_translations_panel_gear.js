@@ -18,7 +18,7 @@ add_task(async function test_translations_panel_manage_languages() {
 
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
-  await clickManageLanguages();
+  await FullPageTranslationsTestUtils.clickManageLanguages();
 
   await waitForCondition(
     () => gBrowser.currentURI.spec === "about:preferences#general",

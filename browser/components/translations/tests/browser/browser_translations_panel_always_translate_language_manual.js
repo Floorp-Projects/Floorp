@@ -42,7 +42,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await clickAlwaysTranslateLanguage();
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
     await FullPageTranslationsTestUtils.assertPageIsTranslated(
@@ -57,7 +57,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await clickAlwaysTranslateLanguage();
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
     await FullPageTranslationsTestUtils.assertTranslationsButton(

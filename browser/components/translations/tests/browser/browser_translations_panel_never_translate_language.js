@@ -27,7 +27,7 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateLanguage("es", { checked: false });
-  await clickNeverTranslateLanguage();
+  await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", { checked: true });
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
@@ -85,7 +85,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
-    await clickNeverTranslateLanguage();
+    await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
@@ -125,7 +125,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: false });
 
-    await clickAlwaysTranslateLanguage({
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
     });
 
@@ -146,7 +146,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
 
-    await clickNeverTranslateLanguage();
+    await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: true });

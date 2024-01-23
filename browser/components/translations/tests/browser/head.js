@@ -160,6 +160,87 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Simulates the effect of clicking the always-offer-translations menuitem.
+   * Requires that the settings menu of the translations panel is open,
+   * otherwise the test will fail.
+   */
+  static async clickAlwaysOfferTranslations() {
+    logAction();
+    await FullPageTranslationsTestUtils.#clickSettingsMenuItemByL10nId(
+      "translations-panel-settings-always-offer-translation"
+    );
+  }
+
+  /**
+   * Simulates the effect of clicking the always-translate-language menuitem.
+   * Requires that the settings menu of the translations panel is open,
+   * otherwise the test will fail.
+   */
+  static async clickAlwaysTranslateLanguage({
+    downloadHandler = null,
+    pivotTranslation = false,
+  } = {}) {
+    logAction();
+    await FullPageTranslationsTestUtils.#clickSettingsMenuItemByL10nId(
+      "translations-panel-settings-always-translate-language"
+    );
+    if (downloadHandler) {
+      await FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true, circleArrows: true, locale: false, icon: true },
+        "The icon presents the loading indicator."
+      );
+      await downloadHandler(pivotTranslation ? 2 : 1);
+    }
+  }
+
+  /**
+   * Simulates the effect of clicking the manage-languages menuitem.
+   * Requires that the settings menu of the translations panel is open,
+   * otherwise the test will fail.
+   */
+  static async clickManageLanguages() {
+    logAction();
+    await FullPageTranslationsTestUtils.#clickSettingsMenuItemByL10nId(
+      "translations-panel-settings-manage-languages"
+    );
+  }
+
+  /**
+   * Simulates the effect of clicking the never-translate-language menuitem.
+   * Requires that the settings menu of the translations panel is open,
+   * otherwise the test will fail.
+   */
+  static async clickNeverTranslateLanguage() {
+    logAction();
+    await FullPageTranslationsTestUtils.#clickSettingsMenuItemByL10nId(
+      "translations-panel-settings-never-translate-language"
+    );
+  }
+
+  /**
+   * Simulates the effect of clicking the never-translate-site menuitem.
+   * Requires that the settings menu of the translations panel is open,
+   * otherwise the test will fail.
+   */
+  static async clickNeverTranslateSite() {
+    logAction();
+    await FullPageTranslationsTestUtils.#clickSettingsMenuItemByL10nId(
+      "translations-panel-settings-never-translate-site"
+    );
+  }
+
+  /*
+   * Simulates the effect of toggling a menu item in the translations panel
+   * settings menu. Requires that the settings menu is currently open,
+   * otherwise the test will fail.
+   */
+  static async #clickSettingsMenuItemByL10nId(l10nId) {
+    info(`Toggling the "${l10nId}" settings menu item.`);
+    click(getByL10nId(l10nId), `Clicking the "${l10nId}" settings menu item.`);
+    await closeSettingsMenuIfOpen();
+  }
+
+  /**
    * Opens the translations panel.
    *
    * @param {object} config
@@ -336,88 +417,6 @@ function logAction(...params) {
       "chrome://mochitests/content/browser/",
       ""
     )}`
-  );
-}
-
-/*
- * Simulates the effect of toggling a menu item in the translations panel
- * settings menu. Requires that the settings menu is currently open,
- * otherwise the test will fail.
- */
-async function clickSettingsMenuItemByL10nId(l10nId) {
-  logAction(l10nId);
-  info(`Toggling the "${l10nId}" settings menu item.`);
-  click(getByL10nId(l10nId), `Clicking the "${l10nId}" settings menu item.`);
-  await closeSettingsMenuIfOpen();
-}
-
-/**
- * Simulates the effect of clicking the always-offer-translations menuitem.
- * Requires that the settings menu of the translations panel is open,
- * otherwise the test will fail.
- */
-async function clickAlwaysOfferTranslations() {
-  logAction();
-  await clickSettingsMenuItemByL10nId(
-    "translations-panel-settings-always-offer-translation"
-  );
-}
-
-/**
- * Simulates the effect of clicking the always-translate-language menuitem.
- * Requires that the settings menu of the translations panel is open,
- * otherwise the test will fail.
- */
-async function clickAlwaysTranslateLanguage({
-  downloadHandler = null,
-  pivotTranslation = false,
-} = {}) {
-  logAction();
-  await clickSettingsMenuItemByL10nId(
-    "translations-panel-settings-always-translate-language"
-  );
-  if (downloadHandler) {
-    await FullPageTranslationsTestUtils.assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-    await downloadHandler(pivotTranslation ? 2 : 1);
-  }
-}
-
-/**
- * Simulates the effect of clicking the never-translate-language menuitem.
- * Requires that the settings menu of the translations panel is open,
- * otherwise the test will fail.
- */
-async function clickNeverTranslateLanguage() {
-  logAction();
-  await clickSettingsMenuItemByL10nId(
-    "translations-panel-settings-never-translate-language"
-  );
-}
-
-/**
- * Simulates the effect of clicking the never-translate-site menuitem.
- * Requires that the settings menu of the translations panel is open,
- * otherwise the test will fail.
- */
-async function clickNeverTranslateSite() {
-  logAction();
-  await clickSettingsMenuItemByL10nId(
-    "translations-panel-settings-never-translate-site"
-  );
-}
-
-/**
- * Simulates the effect of clicking the manage-languages menuitem.
- * Requires that the settings menu of the translations panel is open,
- * otherwise the test will fail.
- */
-async function clickManageLanguages() {
-  logAction();
-  await clickSettingsMenuItemByL10nId(
-    "translations-panel-settings-manage-languages"
   );
 }
 

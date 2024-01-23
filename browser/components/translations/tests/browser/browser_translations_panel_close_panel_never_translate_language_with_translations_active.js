@@ -24,7 +24,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await clickAlwaysTranslateLanguage({
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
@@ -42,7 +42,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await clickNeverTranslateLanguage();
+      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
     });
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
@@ -75,7 +75,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await clickAlwaysTranslateLanguage({
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
@@ -92,7 +92,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
-    await clickNeverTranslateSite();
+    await FullPageTranslationsTestUtils.clickNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
@@ -107,7 +107,7 @@ add_task(
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await waitForTranslationsPopupEvent("popuphidden", async () => {
-      await clickNeverTranslateLanguage();
+      await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
     });
     await cleanup();
   }

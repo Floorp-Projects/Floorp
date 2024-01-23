@@ -40,7 +40,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await clickAlwaysTranslateLanguage({
+    await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
       downloadHandler: resolveDownloads,
     });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });

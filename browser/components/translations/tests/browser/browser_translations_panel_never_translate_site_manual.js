@@ -44,7 +44,7 @@ add_task(
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
-    await clickNeverTranslateSite();
+    await FullPageTranslationsTestUtils.clickNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);

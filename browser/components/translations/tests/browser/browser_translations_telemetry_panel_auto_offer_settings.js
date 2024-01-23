@@ -41,7 +41,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     ],
   });
 
-  await clickAlwaysOfferTranslations();
+  await FullPageTranslationsTestUtils.clickAlwaysOfferTranslations();
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.alwaysOfferTranslations,

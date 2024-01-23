@@ -25,7 +25,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     onOpenPanel: assertPanelFirstShowView,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
-  await clickAlwaysTranslateLanguage({
+  await FullPageTranslationsTestUtils.clickAlwaysTranslateLanguage({
     downloadHandler: resolveDownloads,
   });
 
