@@ -422,6 +422,8 @@ class nsBlockFrame : public nsContainerFrame {
 
   virtual ~nsBlockFrame();
 
+  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
+
 #ifdef DEBUG
   already_AddRefed<ComputedStyle> GetFirstLetterStyle(
       nsPresContext* aPresContext);
@@ -671,14 +673,6 @@ class nsBlockFrame : public nsContainerFrame {
     // For the OverflowOutOfFlowsProperty I think we do enforce that, but it's
     // a mix of out-of-flow frames, so that's why the method name has "Maybe".
     return HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
-  }
-
-  /**
-   * @return true if NS_BLOCK_DYNAMIC_BFC should be set on this frame.
-   */
-  bool IsDynamicBFC() const {
-    return StyleDisplay()->IsContainPaint() ||
-           StyleDisplay()->IsContainLayout();
   }
 
  protected:

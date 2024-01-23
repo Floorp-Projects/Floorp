@@ -2276,8 +2276,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     }
     if (containmentDiff & (StyleContain::PAINT | StyleContain::LAYOUT)) {
       // Paint and layout containment boxes are absolutely/fixed positioning
-      // containers and establishes an independent formatting context.
-      hint |= nsChangeHint_UpdateContainingBlock | nsChangeHint_UpdateBFC;
+      // containers.
+      hint |= nsChangeHint_UpdateContainingBlock;
     }
     // The other container types only need a reflow.
     hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
