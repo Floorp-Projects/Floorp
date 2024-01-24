@@ -836,6 +836,7 @@ function StringIteratorNext() {
 
   return result;
 }
+SetIsInlinableLargeFunction(StringIteratorNext);
 
 #if JS_HAS_INTL_API
 var collatorCache = new_Record();
