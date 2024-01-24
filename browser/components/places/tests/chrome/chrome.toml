@@ -4,9 +4,6 @@ support-files = ["head.js"]
 ["test_0_bug510634.xhtml"]
 
 ["test_bug1163447_selectItems_through_shortcut.xhtml"]
-skip-if = [
-  "(os == 'win' && processor == 'aarch64')", # bug 1532775
-]
 
 ["test_bug549192.xhtml"]
 

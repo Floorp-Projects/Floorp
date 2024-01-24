@@ -23,7 +23,6 @@ support-files = [
 skip-if = [
   "!debug && os == 'mac'", #Bug 1622925
   "!debug && os == 'linux'", #Bug 1622925
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
 ]
 

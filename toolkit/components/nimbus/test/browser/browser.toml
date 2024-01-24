@@ -4,7 +4,7 @@ prefs = [
   "app.normandy.run_interval_seconds=0", # This turns off the update interval for fetching recipes from Remote Settings
 ]
 skip-if = [
-  "toolkit == 'android'",
+  "os == 'android'",
   "appname == 'thunderbird'",
 ]
 

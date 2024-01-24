@@ -45,7 +45,6 @@ generated-files = [
 
 skip-if = [
   "os == 'linux' && asan", # Bug 1713895 - new Fission platform triage
-  "os == 'win' && os_version == '6.1'", # Bug 1717250
 ]
 prefs = [
   "dom.webmidi.enabled=true",

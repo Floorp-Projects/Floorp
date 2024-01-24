@@ -68,7 +68,7 @@ run-if = ["os == 'win'"]
 
 ["TestIATPatcher"]
 run-if = ["os == 'win'"]
-skip-if = ["bits == 32"] # fails on windows10x32
+skip-if = ["win11_2009 && bits == 32"] # fails on windows10x32
 
 ["TestIntegerPrintfMacros"]
 

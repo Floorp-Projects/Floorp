@@ -327,7 +327,6 @@ skip-if = true # Bug 1775616
 ["browser_background_tab_crash.js"]
 https_first_disabled = true
 run-if = ["crashreporter"]
-# Disabled on debug for frequent intermittent failures:
 
 ["browser_backup_recovery.js"]
 https_first_disabled = true
@@ -362,10 +361,9 @@ https_first_disabled = true
 
 ["browser_crashedTabs.js"]
 https_first_disabled = true
+run-if = ["crashreporter"]
 skip-if = [
-  "!crashreporter",
   "verify",
-  "win10_2004", # high frequency intermittent, Bug 1684120 - timed out
   "os == 'mac'", # high frequency intermittent
 ]
 
@@ -399,7 +397,7 @@ skip-if = ["verify && debug"]
 ["browser_formdata_face.js"]
 
 ["browser_formdata_format.js"]
-skip-if = ["!debug && (os == 'linux')"] # Bug 1535645
+skip-if = ["!debug && os == 'linux'"] # Bug 1535645
 
 ["browser_formdata_max_size.js"]
 
@@ -431,7 +429,6 @@ https_first_disabled = true
 skip-if = [
   "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
   "apple_catalina && !debug", # Bug 1638958
-  "win10_2004 && bits == 64 && !debug", # Bug 1638958
   "os == 'linux' && !debug", # Bug 1638958
   "win11_2009 && !debug", # Bug 1775605
 ]

@@ -75,7 +75,6 @@ skip-if = ["verify && debug && os == 'win'"]
 skip-if = [
   "os == 'linux' && os_version == '18.04' && !debug", # Bug 1559315
   "apple_catalina", # Bug 1713158
-  "win10_2004", # Bug 1559315, 1723573
   "win11_2009", # Bug 1797751
 ]
 
@@ -109,7 +108,6 @@ skip-if = ["os == 'win' && !debug"] # Bug 1703465
 ["browser_rules_color_scheme_simulation_meta.js"]
 
 ["browser_rules_color_scheme_simulation_rdm.js"]
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_rules_colorpicker-and-image-tooltip_01.js"]
 

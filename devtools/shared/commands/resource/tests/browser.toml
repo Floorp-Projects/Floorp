@@ -56,7 +56,6 @@ support-files = [
 
 ["browser_resources_document_events.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "os == 'linux' && bits == 64", # Bug 1715878
 ]
 
@@ -93,7 +92,6 @@ skip-if = [
 ["browser_resources_sources.js"]
 skip-if = [
   "os == 'linux' && bits == 64", # Bug 1744565
-  "win10_2004 && !debug", # Bug 1744565
   "win11_2009", # Bug 1767772
   "apple_catalina", # Bug 1767772
 ]

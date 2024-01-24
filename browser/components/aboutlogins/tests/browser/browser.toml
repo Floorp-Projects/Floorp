@@ -19,14 +19,13 @@ skip-if = [
 ]
 
 ["browser_alertDismissedAfterChangingPassword.js"]
-skip-if = ["os == 'mac' && os_version == '10.15' && !debug"] # Bug 1684513
+skip-if = ["apple_catalina && !debug"] # Bug 1684513
 
 ["browser_breachAlertShowingForAddedLogin.js"]
 
 ["browser_confirmDeleteDialog.js"]
 
 ["browser_contextmenuFillLogins.js"]
-skip-if = ["win10_2004 && debug"] # Bug 1723573
 
 ["browser_copyToClipboardButton.js"]
 

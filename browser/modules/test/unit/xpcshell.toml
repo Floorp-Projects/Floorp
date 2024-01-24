@@ -1,7 +1,7 @@
 [DEFAULT]
-head =  '' # no value from INI
+head =  ''
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 
 ["test_E10SUtils_nested_URIs.js"]
 

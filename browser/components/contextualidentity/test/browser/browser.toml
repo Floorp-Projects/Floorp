@@ -24,7 +24,6 @@ skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1731442
 ["browser_favicon.js"]
 
 ["browser_forgetAPI_EME_forgetThisSite.js"]
-skip-if = ["os == 'win' && processor == 'aarch64'"] # bug 1531927
 
 ["browser_forgetAPI_cookie_getCookiesWithOriginAttributes.js"]
 
@@ -45,7 +44,6 @@ skip-if = [
   "verify && debug && os == 'linux'",
   "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
   "os == 'linux' && socketprocess_networking",
-  "win10_2004 && !debug",
 ]
 
 ["browser_newtabButton.js"]

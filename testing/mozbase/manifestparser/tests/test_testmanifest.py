@@ -40,10 +40,10 @@ class TestTestManifest(unittest.TestCase):
         self.assertEqual([i["name"] for i in manifest.active_tests()], ["fleem"])
 
         # You should be able to expect failures:
-        last = manifest.active_tests(exists=False, toolkit="gtk")[-1]
+        last = manifest.active_tests(exists=False, os="linux")[-1]
         self.assertEqual(last["name"], "linuxtest")
         self.assertEqual(last["expected"], "pass")
-        last = manifest.active_tests(exists=False, toolkit="cocoa")[-1]
+        last = manifest.active_tests(exists=False, os="mac")[-1]
         self.assertEqual(last["expected"], "fail")
 
     def test_missing_paths_toml(self):

@@ -238,7 +238,6 @@ support-files = [
 ["browser_overflowScroll.js"]
 fail-if = ["a11y_checks"] # Bug 1854233 scrollbutton-down/up may not be focusable and/or labeled
 skip-if = [
-  "win10_2004", # Bug 1775648
   "win11_2009", # Bug 1797751
 ]
 

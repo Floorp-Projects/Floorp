@@ -95,7 +95,7 @@ support-files = ["test_accept_header.sjs"]
 ["test_arraybufferinputstream_large.html"]
 # Large ArrayBuffers not supported on 32-bit. TSan shadow memory causes OOMs.
 skip-if = [
-  "bits == 32",
+  "win11_2009 && bits == 32",
   "tsan",
   "asan",
 ]

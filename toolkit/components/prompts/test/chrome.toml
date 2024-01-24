@@ -6,9 +6,9 @@ support-files = [
 
 ["test_modal_prompts.html"]
 skip-if = [
-  "toolkit == 'android'", #android: TIMED_OUT
+  "os == 'android'", #android: TIMED_OUT
   "os == 'linux' && (debug || asan || tsan)",
 ]
 
 ["test_modal_select.html"]
-skip-if = ["toolkit == 'android'"] #android: TIMED_OUT
+skip-if = ["os == 'android'"] #android: TIMED_OUT

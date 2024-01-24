@@ -83,5 +83,5 @@ skip-if = [
   "os == 'mac'", # Bug 1528429
   "os == 'linux' && bits == 64 && os_version == '18.04'", # Bug 1619835
   "win10_2009 && bits == 64",           # Bug 1619835
-  "os == 'win' && bits == 32 && debug", # Bug 1619835
+  "win11_2009 && bits == 32 && debug", # Bug 1619835
 ]
