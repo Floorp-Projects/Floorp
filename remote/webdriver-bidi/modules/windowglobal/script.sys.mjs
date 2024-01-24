@@ -475,8 +475,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
    */
 
   _applySessionData(params) {
-    // We only care about updates coming on context creation.
-    if (params.category === "preload-script" && params.initial) {
+    if (params.category === "preload-script") {
       this.#preloadScripts = new Set();
       for (const item of params.sessionData) {
         if (this.messageHandler.matchesContext(item.contextDescriptor)) {
