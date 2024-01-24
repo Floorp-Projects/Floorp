@@ -722,6 +722,8 @@
     <string name="preferences_sync_bookmarks">Хатбаракҳо</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Воридшавиҳо</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Ниҳонвожаҳо</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Варақаҳои кушодашуда</string>
     <!-- Preference for signing out -->
@@ -749,6 +751,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Кортҳои кредитӣ</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Тарзҳои пардохт</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Нишониҳо</string>
 
@@ -1701,8 +1705,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Воридшавиҳо ва ниҳонвожаҳо</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Ниҳонвожаҳо</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Нигоҳ доштани воридшавиҳо ва ниҳонвожаҳо</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Нигоҳ доштани ниҳонвожаҳо</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Бо пешниҳоди нигоҳдорӣ</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1719,12 +1727,21 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Илова кардани воридшавӣ</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Илова кардани ниҳонвожа</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Воридшавиҳои ҳамоҳангшуда</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Ҳамоҳанг кардани ниҳонвожаҳо</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Ҳамоҳанг кардани воридшавиҳо байни дастгоҳҳо</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Ҳамоҳанг кардани ниҳонвожаҳо байни дастгоҳҳо</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Воридшавиҳои нигоҳдошташуда</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Ниҳонвожаҳои нигоҳдошташуда</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Воридшавиҳое, ки шумо дар %s нигоҳ медоред ё ҳамоҳанг мекунед, дар ин ҷо нишон дода мешаванд.</string>
     <!-- Preference to access list of saved logins -->
@@ -1739,6 +1756,8 @@
     <string name="preferences_passwords_exceptions_remove_all">Нест кардани ҳамаи истисноҳо</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Ҷустуҷӯи воридшавиҳо</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Ҷустуҷӯи ниҳонвожаҳо</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сомона</string>
     <!-- The header for the username for a login -->
@@ -1797,8 +1816,12 @@
     <string name="preferences_addresses">Нишониҳо</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Кортҳои кредитӣ</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Тарзҳои пардохт</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Нигоҳ доштан ва ба таври худкор пур кардани кортҳо</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Нигоҳ доштан ва пур кардани тарзҳои пардохт</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Маълумот рамзгузорӣ карда шуд</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->

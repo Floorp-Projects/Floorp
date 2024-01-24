@@ -722,6 +722,8 @@
     <string name="preferences_sync_bookmarks">Yer imleri</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Hesaplar</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Parolalar</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Açık sekmeler</string>
     <!-- Preference for signing out -->
@@ -748,6 +750,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kredi kartları</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Ödeme yöntemleri</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresler</string>
 
@@ -1694,8 +1698,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Hesaplar ve parolalar</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Parolalar</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Kullanıcı adı ve parolaları kaydet</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Parolaları kaydet</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Kaydetmeyi sor</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1712,26 +1720,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Hesap ekle</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Parola ekle</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Hesapları eşitle</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Parolaları eşitle</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Hesapları cihazlar arasında eşitle</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Parolaları cihazlar arasında eşitle</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Kayıtlı hesaplar</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Kayıtlı parolalar</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Kaydettiğiniz veya %s ile eşitlediğiniz hesaplar burada görünecektir.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%s tarayıcısına kaydettiğiniz veya eşitlediğiniz parolalar burada listelenecektir. Kaydettiğiniz tüm parolalar şifrelenir.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync hakkında bilgi alın.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Eşitlemeyle ilgili bilgi al</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">İstisnalar</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Kaydedilmeyen hesaplar ve parolalar burada görünecektir.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s, burada listelenen sitelerin parolalarını kaydetmeyecektir.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Bu sitelere ait hesaplar ve parolalar kaydedilmeyecektir.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s bu sitelerin parolalarını kaydetmeyecektir.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Tüm istisnaları sil</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Hesaplarda ara</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Parolalarda ara</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
@@ -1760,10 +1787,16 @@
     <string name="saved_login_hide_password">Parolayı gizle</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Kayıtlı hesaplarınızı görmek için kilidi açın</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Kayıtlı parolalarınızı görmek için kilidi açın</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Hesaplarınızı güvence altına alın</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Kayıtlı parolalarınızı güvence altına alın</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Cihazınız başka birinin eline geçerse kayıtlı hesaplarına erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı parolalarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Daha sonra</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1783,6 +1816,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Hesapları sırala menüsü</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Parolaları sırala menüsü</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Otomatik doldurma</string>
@@ -1790,10 +1826,16 @@
     <string name="preferences_addresses">Adresler</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kredi kartları</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Ödeme yöntemleri</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Kartları kaydedip otomatik doldur</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Ödeme yöntemlerini kaydet ve doldur</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Veriler şifrelenir</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s kaydettiğiniz tüm ödeme yöntemlerini şifreler</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kartları cihazlar arasında eşitle</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1801,16 +1843,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kredi kartı ekle</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Kart ekle</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kayıtlı kartları yönet</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kartları yönet</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Adres ekle</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adresleri yönet</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Adresleri kaydedip otomatik doldur</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Adresleri kaydet ve doldur</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Numaralar, e-posta ve gönderim adresleri gibi bilgileri dahil et</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Telefon numaraları ve e-posta adresleri de dahildir</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kart ekle</string>
@@ -1832,6 +1883,8 @@
     <string name="credit_cards_delete_card_button">Kartı sil</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Bu kredi kartını silmek istediğinizden emin misiniz?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Kart silinsin mi?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Sil</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1847,14 +1900,20 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Lütfen geçerli bir kredi kartı numarası girin</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Geçerli bir kart numarası girin</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Lütfen bu alanı doldurun</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kayıtlı kartlarınızı görmek için kilidi açın</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Kredi kartlarını güvence altına al</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Kayıtlı ödeme yöntemlerinizi güvence altına alın</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Cihazınız başka birinin eline geçerse kayıtlı kartlarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı kartlarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Hemen ayarla</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1865,6 +1924,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Depolanan kredi kartı bilgilerini kullanmak için kilidi açın</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Kayıtlı ödeme yöntemlerinizi kullanmak için kilidi açın</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adres ekle</string>
     <!-- Title of the "Edit address" screen -->
@@ -1902,6 +1963,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Bu adresi silmek istediğinizden emin misiniz?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Bu adres silinsin mi?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Sil</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2000,12 +2063,16 @@
     <string name="login_menu_edit_button">Düzenle</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Bu hesabı silmek istediğinizden emin misiniz?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Bu parolayı silmek istediğinizden emin misiniz?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Sil</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Vazgeç</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Hesap seçenekleri</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Parola seçenekleri</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Hesabın web adresi için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a login's username. -->
@@ -2014,10 +2081,16 @@
     <string name="saved_login_password_description">Hesabın parolası için düzenlenebilir metin alanı.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Değişiklikleri hesaba kaydet.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Değişiklikleri kaydet.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Düzenle</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Parola düzenle</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Yeni hesap ekle</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Parola ekle</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Parola gerekli</string>
     <!--  The error message in add login view when username field is blank. -->
@@ -2400,6 +2473,8 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s dilini asla çevirme</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Bu siteyi asla çevirme</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Diğer tüm ayarları geçersiz kılar</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Çeviri ayarları</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

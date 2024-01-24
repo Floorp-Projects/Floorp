@@ -719,6 +719,8 @@
     <string name="preferences_sync_bookmarks">Бетбелгілер</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Логиндер</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Парольдер</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Ашық беттер</string>
     <!-- Preference for signing out -->
@@ -744,6 +746,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Несиелік карталар</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Төлем әдістері</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Адрестер</string>
 
@@ -1686,8 +1690,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Логиндер және парольдер</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Парольдер</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Логиндер және парольдерді сақтау</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Парольдерді сақтау</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Сақтау алдында сұрау</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1706,26 +1714,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Логинді қосу</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Парольді қосу</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиндерді синхрондау</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Парольдерді синхрондау</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Логиндерді құрылғылар арасында синхрондау</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Парольдерді құрылғылар арасында синхрондау</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Сақталған логиндер</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Сақталған парольдер</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Сіз %s ішінде сақтаған немесе синхрондаған логиндер осында көрсетіледі.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Сіз %s ішіне сақтаған немесе синхрондаған парольдер осында тізіліп көрсетіледі. Сіз сақтаған барлық парольдер шифрленген.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Синхрондау туралы көбірек біліңіз.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Синхрондау туралы көбірек біліңіз</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Ережеден бөлек</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Сақталмаған логиндер мен парольдер осында көрсетіледі.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s осы жерде тізімделген сайттар үшін парольдерді сақтамайтын болады.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Бұл сайттар үшін логиндер мен парольдер сақталмайды.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s бұл сайттар үшін парольдерді сақтамайтын болады.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Барлық ережеден тыс жағдайларды өшіру</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Логиндерден іздеу</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Парольдерді іздеу</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1754,10 +1781,16 @@
     <string name="saved_login_hide_password">Парольді жасыру</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Сақталған логиндеріңізді көру үшін бұғаттауын ашыңыз</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Сақталған парольдеріңізді көру үшін бұғаттауын ашыңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Логиндер және парольдерді қорғаңыз</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Сақталған парольдерді қорғаңыз</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Бөтен адам сіздің құрылғыңызда болса, одан сақталған логиндер мен парольдерді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған парольдеріңізді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Кейінірек</string>
 
@@ -1776,6 +1809,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Логиндерді сұрыптау мәзірі</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Парольдерді сұрыптау мәзірі</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Автотолтыру</string>
@@ -1783,10 +1819,16 @@
     <string name="preferences_addresses">Адрестер</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Несиелік карталар</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Төлем әдістері</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Карталарды сақтау және автотолтыру</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Төлем әдістерін сақтау және толтыру</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Деректер шифрленген</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s сіз сақтаған барлық төлем әдістерін шифрлейді</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Карталарды құрылғылар арасында синхрондау</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1794,16 +1836,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Несиелік картаны қосу</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Картаны қосу</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Сақталған карталарды басқару</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Карталарды басқару</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Адресті қосу</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Адрестерді басқару</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Адрестерді сақтау және автотолтыру</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Адрестерді сақтау және толтыру</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Нөмірлер, эл. пошта және жеткізу адрестері сияқты ақпаратты қосу</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Телефон нөмірлері мен электрондық пошта адрестерін қамтиды</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Картаны қосу</string>
@@ -1825,6 +1876,8 @@
     <string name="credit_cards_delete_card_button">Картаны өшіру</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Бұл несие картасын өшіруді шынымен қалайсыз ба?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Картаны өшіру керек пе?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Өшіру</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1840,14 +1893,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Несиелік картаның жарамды нөмірін енгізіңіз</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Жарамды карта нөмірін енгізіңіз</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Бұл өрісті толтырыңыз</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Атын қосыңыз</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Сақталған карталарыңызды көру үшін бұғаттауын ашыңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Несиелік карталарыңызды қорғаңыз</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Сақталған төлем әдістерін қорғаңыз</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Бөтен адам сіздің құрылғыңызда болса, одан сақталған несиелік карталарды қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған карталарды қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Қазір баптау</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1858,6 +1919,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Сақталған несиелік карта ақпаратын қолдану үшін бұғаттауын ашыңыз</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Сақталған төлем әдістерін қолдану үшін құлыптан босатыңыз</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Адресті қосу</string>
     <!-- Title of the "Edit address" screen -->
@@ -1896,6 +1959,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Бұл адресті өшіруді шынымен қалайсыз ба?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Бұл адресті өшіру керек пе?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Өшіру</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1993,31 +2058,53 @@
     <string name="login_menu_edit_button">Түзету</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Бұл логинді өшіруді қалайсыз ба?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Бұл парольді өшіруді шынымен қалайсыз ба?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Өшіру</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Бас тарту</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Логин баптаулары</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Пароль опциялары</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Логиннің веб-адресі үшін түзетуге болатын мәтіндік өрісі.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Парольдің веб-адресі үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Логиннің пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Парольдің пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Логиннің паролі үшін түзетуге болатын мәтіндік өрісі.</string>
 
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Пароль үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Логин өзгерістерін сақтау.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Өзгерістерді сақтау.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Түзету</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Парольді түзету</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Жаңа логинді қосу</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Парольді қосу</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Пароль керек</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Парольді енгізіңіз</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Пайдаланушы аты керек</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Пайдаланушы атын енгізіңіз</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Хост атауы керек</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Веб адресін енгізіңіз</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Дауыстық іздеу</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2394,6 +2481,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s ешқашан аудармау</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Бұл сайтты ешқашан аудармау</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Барлық басқа баптауларды қайта анықтайды</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Аудару ұсыныстарын қайта анықтайды</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Аударма баптаулары</string>
 

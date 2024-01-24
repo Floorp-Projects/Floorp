@@ -727,6 +727,8 @@
     <string name="preferences_sync_bookmarks">Bokmärken</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Inloggningar</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Lösenord</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Öppna flikar</string>
     <!-- Preference for signing out -->

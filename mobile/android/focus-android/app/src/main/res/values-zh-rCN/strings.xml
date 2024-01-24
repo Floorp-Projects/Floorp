@@ -83,10 +83,6 @@
          sharing an URL. -->
     <string name="share_dialog_title">分享方式</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
     <string name="notification_erase_text">清除浏览记录</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
@@ -780,7 +776,7 @@
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. 点按<b>权限</b>]]></string>
 
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">转至设置</string>
+    <string name="phone_feature_go_to_settings">前往设置</string>
 
     <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. 开启<b>%1$s</b>权限]]></string>

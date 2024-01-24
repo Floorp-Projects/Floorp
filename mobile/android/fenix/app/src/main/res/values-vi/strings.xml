@@ -717,6 +717,8 @@
     <string name="preferences_sync_bookmarks">Dấu trang</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Đăng nhập</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Mật khẩu</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Các thẻ đang mở</string>
     <!-- Preference for signing out -->
@@ -743,6 +745,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Thẻ tín dụng</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Phương thức thanh toán</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Địa chỉ</string>
 
@@ -1679,8 +1683,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Thông tin đăng nhập và mật khẩu</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Mật khẩu</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Lưu thông tin đăng nhập và mật khẩu</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Lưu mật khẩu</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Yêu cầu để lưu</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1697,26 +1705,46 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Thêm thông tin đăng nhập</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Thêm mật khẩu</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Đồng bộ mật khẩu</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Đồng bộ hóa thông tin đăng nhập trên các thiết bị</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Đồng bộ hóa mật khẩu giữa các thiết bị</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Thông tin đăng nhập đã lưu</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Mật khẩu đã lưu</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Thông tin đăng nhập bạn lưu hoặc đồng bộ hóa với %s sẽ hiển thị tại đây.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Mật khẩu bạn lưu hoặc đồng bộ hóa với %s sẽ được liệt kê ở đây. Tất cả mật khẩu bạn lưu đều được mã hóa.
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tìm hiểu thêm về đồng bộ hóa.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Tìm hiểu thêm về đồng bộ hoá</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Ngoại lệ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Thông tin đăng nhập và mật khẩu không được lưu sẽ được hiển thị ở đây.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s sẽ không lưu mật khẩu cho các trang được liệt kê ở đây.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Thông tin đăng nhập và mật khẩu sẽ không được lưu cho các trang web này.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s sẽ không lưu mật khẩu cho các trang web này.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả ngoại lệ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Tìm thông tin đăng nhập</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Tìm kiếm mật khẩu</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Trang</string>
     <!-- The header for the username for a login -->
@@ -1745,10 +1773,16 @@
     <string name="saved_login_hide_password">Ẩn mật khẩu</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Mở khóa để xem thông tin đăng nhập đã lưu của bạn</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Mở khóa để xem mật khẩu đã lưu của bạn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Bảo mật thông tin đăng nhập và mật khẩu của bạn</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Giữ mật khẩu đã lưu của bạn một cách an toàn</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Thiết lập mẫu khóa thiết bị, mã PIN hoặc mật khẩu để bảo vệ thông tin đăng nhập và mật khẩu đã lưu của bạn khỏi bị truy cập nếu người khác lấy được thiết bị của bạn.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Đặt mật khẩu thiết bị dạng mẫu hình, mã PIN hoặc mật khẩu để bảo vệ mật khẩu đã lưu của bạn không bị truy cập nếu người khác lấy được thiết bị của bạn.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Để sau</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1767,6 +1801,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sắp xếp menu đăng nhập</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menu sắp xếp mật khẩu</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Tự động điền</string>
@@ -1774,10 +1811,16 @@
     <string name="preferences_addresses">Địa chỉ</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Thẻ tín dụng</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Phương thức thanh toán</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Lưu và tự động điền thẻ tín dụng</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Lưu và điền phương thức thanh toán</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dữ liệu được mã hóa</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s mã hóa tất cả các phương thức thanh toán bạn lưu</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Đồng bộ thông tin thẻ tín dụng trên các thiết bị</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1785,16 +1828,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Thêm thẻ tín dụng</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Thêm thẻ</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Quản lý thẻ tín dụng đã lưu</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Quản lý thẻ tín dụng</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Thêm địa chỉ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Quản lý địa chỉ</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Lưu và tự động điền địa chỉ</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Lưu và điền địa chỉ</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Bao gồm thông tin như số, email và địa chỉ giao hàng</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Bao gồm số điện thoại và địa chỉ email</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Thêm thẻ</string>
@@ -1816,6 +1868,8 @@
     <string name="credit_cards_delete_card_button">Xóa thẻ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Bạn có chắc chắn muốn xóa thẻ tín dụng này không?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Xoá thẻ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Xóa</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1831,14 +1885,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Vui lòng nhập số thẻ tín dụng hợp lệ</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Nhập số thẻ hợp lệ</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Vui lòng điền vào trường này</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Thêm tên</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Mở khóa để xem các thẻ tín dụng đã lưu của bạn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Bảo mật thẻ tín dụng của bạn</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Giữ các phương thức thanh toán đã lưu của bạn một cách an toàn</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Thiết lập màn hình khóa thiết bị với mẫu hình, mã PIN hoặc mật khẩu để bảo vệ thẻ tín dụng đã lưu của bạn không bị truy cập nếu người khác có thiết bị của bạn.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Đặt mật khẩu thiết bị dạng mẫu hình, mã PIN hoặc mật khẩu để bảo vệ thẻ đã lưu của bạn không bị truy cập nếu người khác lấy đuọc thiết bị của bạn.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Thiết lập ngay</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1848,6 +1910,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Mở khóa để sử dụng thông tin thẻ tín dụng được lưu trữ</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Mở khóa để sử dụng các phương thức thanh toán đã lưu</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Thêm địa chỉ</string>
     <!-- Title of the "Edit address" screen -->
@@ -1885,6 +1949,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Bạn có chắc chắn muốn xóa địa chỉ này không?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Xoá địa chỉ này?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Xóa</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1983,30 +2049,52 @@
     <string name="login_menu_edit_button">Chỉnh sửa</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Bạn có chắc chắn muốn xóa thông tin đăng nhập này không?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Bạn có chắc chắn muốn xóa mật khẩu này?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Xóa</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Hủy bỏ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Tùy chọn thông tin đăng nhập</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Cài đặt mật khẩu</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Trường văn bản có thể chỉnh sửa cho địa chỉ web của thông tin đăng nhập.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho địa chỉ trang web của mật khẩu.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Trường văn bản có thể chỉnh sửa cho tên người dùng của thông tin đăng nhập.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho tên người dùng của mật khẩu.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Trường văn bản có thể chỉnh sửa cho mật khẩu của thông tin đăng nhập.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho mật khẩu.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Lưu các thay đổi vào thông tin đăng nhập.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Lưu thay đổi.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Chỉnh sửa</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Chỉnh sửa mật khẩu</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Thêm thông tin đăng nhập mới</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Thêm mật khẩu</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Yêu cầu mật khẩu</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Nhập mật khẩu</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Yêu cầu tên đăng nhập</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Nhập tên người dùng</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Yêu cầu tên máy chủ</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Nhập địa chỉ trang web</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Tìm kiếm bằng giọng nói</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2381,6 +2469,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Không bao giờ dịch %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Không bao giờ dịch trang này</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Ghi đè tất cả các cài đặt khác</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Ghi đè đề xuất dịch</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Cài đặt dịch</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
