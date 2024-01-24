@@ -1,0 +1,22 @@
+[DEFAULT]
+head = "head_psm.js"
+tags = "psm"
+skip-if = ["os == 'android'"]
+
+["test_osclientcerts_module.js"]
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'",
+]
+
+["test_pkcs11_module.js"]
+
+["test_pkcs11_moduleDB.js"]
+
+["test_pkcs11_safe_mode.js"]
+
+["test_pkcs11_slot.js"]
+
+["test_pkcs11_token.js"]
+
+["test_pkcs11_tokenDB.js"]

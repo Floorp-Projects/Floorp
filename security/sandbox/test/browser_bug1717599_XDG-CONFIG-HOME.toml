@@ -1,0 +1,10 @@
+[DEFAULT]
+skip-if = [
+  "ccov",
+  "os == 'linux' && (asan || tsan)", # bug 1784517
+]
+tags = "contentsandbox"
+environment = "XDG_CONFIG_HOME="
+
+["browser_content_sandbox_bug1717599_XDG-CONFIG-HOME.js"]
+run-if = ["os == 'linux'"]

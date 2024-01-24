@@ -13,9 +13,9 @@ from pathlib import Path
 
 # All paths in this file are based where this file is run.
 WRAPPER_TEMPLATE_FILE = "mochi-wrapper.html.template"
-MANIFEST_TEMPLATE_FILE = "mochitest.ini.template"
-ERRATA_FILE = "mochitest-errata.ini"
-DEST_MANIFEST_PATHSTR = "generated-mochitest.ini"
+MANIFEST_TEMPLATE_FILE = "mochitest.toml.template"
+ERRATA_FILE = "mochitest-errata.toml"
+DEST_MANIFEST_PATHSTR = "generated-mochitest.toml"
 
 BASE_TEST_LIST_PATHSTR = "checkout/00_test_list.txt"
 GENERATED_PATHSTR = "generated"
@@ -411,20 +411,21 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
     # SUPPORT_FILES
     supportPathStrList = [ManifestPathStr(x) for x in supportPathStrList]
     supportPathStrList = sorted(supportPathStrList)
-    supportFilesStr = "\n".join(supportPathStrList)
+    supportFilesStr = '",\n  "'.join(supportPathStrList)
+    supportFilesStr = '[\n  "' + supportFilesStr + '",\n]'
 
     # MANIFEST_TESTS
     manifestTestLineList = []
     wrapperPathStrList = sorted(wrapperPathStrList)
     for wrapperPathStr in wrapperPathStrList:
         wrapperManifestPathStr = ManifestPathStr(wrapperPathStr)
-        sectionName = "[" + wrapperManifestPathStr + "]"
+        sectionName = '\n["' + wrapperManifestPathStr + '"]'
         manifestTestLineList.append(sectionName)
 
         errataLines = []
 
         subsuite = ChooseSubsuite(wrapperPathStr)
-        errataLines.append("subsuite = " + subsuite)
+        errataLines.append('subsuite = "' + subsuite + '"')
 
         if wrapperPathStr in errataMap:
             assert subsuite
@@ -458,59 +459,58 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
 # Internals
 
 
-kManifestHeaderRegex = re.compile(r"\[([^]]*)\]")
-
-
-def LoadINI(path):
+def LoadTOML(path):
     curSectionName = None
     curSectionMap = {}
-
     lineNum = 0
-
     ret = {}
     ret[curSectionName] = (lineNum, curSectionMap)
+    multiLineVal = False
+    key = ""
+    val = ""
 
     with open(path, "r") as f:
-        for line in f:
+        for rawLine in f:
             lineNum += 1
-
-            line = line.strip()
-            if not line:
-                continue
-
-            if line[0] in [";", "#"]:
-                continue
-
-            if line[0] == "[":
-                assert line[-1] == "]", "{}:{}".format(path, lineNum)
-
-                curSectionName = line[1:-1]
-                assert (
-                    curSectionName not in ret
-                ), "Line {}: Duplicate section: {}".format(lineNum, line)
-
-                curSectionMap = {}
-                ret[curSectionName] = (lineNum, curSectionMap)
-                continue
-
-            split = line.split("=", 1)
-            key = split[0].strip()
-            val = ""
-            if len(split) == 2:
-                val = split[1].strip()
-
-            curSectionMap[key] = (lineNum, val)
-            continue
+            if multiLineVal:
+                val += "\n" + rawLine.rstrip()
+                if rawLine.find("]") >= 0:
+                    multiLineVal = False
+                    curSectionMap[key] = (lineNum, val)
+            else:
+                line = rawLine.strip()
+                if not line:
+                    continue
+                if line[0] in [";", "#"]:
+                    continue
+                if line[0] == "[":
+                    assert line[-1] == "]", "{}:{}".format(path, lineNum)
+                    curSectionName = line[1:-1].strip('"')
+                    assert (
+                        curSectionName not in ret
+                    ), "Line {}: Duplicate section: {}".format(lineNum, line)
+                    curSectionMap = {}
+                    ret[curSectionName] = (lineNum, curSectionMap)
+                    continue
+                split = line.split("=", 1)
+                key = split[0].strip()
+                val = ""
+                if len(split) == 2:
+                    val = split[1].strip()
+                if val.find("[") >= 0 and val.find("]") < 0:
+                    multiLineVal = True
+                else:
+                    curSectionMap[key] = (lineNum, val)
 
     return ret
 
 
 def LoadErrata():
-    iniMap = LoadINI(ERRATA_FILE)
+    tomlMap = LoadTOML(ERRATA_FILE)
 
     ret = {}
 
-    for sectionName, (sectionLineNum, sectionMap) in iniMap.items():
+    for sectionName, (sectionLineNum, sectionMap) in tomlMap.items():
         curLines = []
 
         if sectionName is None:

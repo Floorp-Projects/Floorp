@@ -1,0 +1,34 @@
+[DEFAULT]
+tags = "webextensions sw-webextensions condprof"
+skip-if = [
+  "!e10s", # Thunderbird does still run in non e10s mode (and so also with in-process-webextensions mode)
+  "http3",
+  "http2",
+]
+
+prefs = [
+  "extensions.webextensions.remote=true",
+  # We don't want to reset this at the end of the test, so that we don't have
+  # to spawn a new extension child process for each test unit.
+  "dom.ipc.keepProcessesAlive.extension=1",
+  "extensions.backgroundServiceWorker.enabled=true",
+  "extensions.backgroundServiceWorker.forceInTestExtension=true",
+]
+dupe-manifest = true
+
+["test_verify_sw_mode.html"]
+# `test_verify_sw_mode.html` should be the first one, even if it breaks the
+# alphabetical order.
+
+["test_ext_scripting_contentScripts.html"]
+
+["test_ext_scripting_executeScript.html"]
+skip-if = ["true"] # Bug 1748315 - Add WebIDL bindings for `scripting.executeScript()`
+
+["test_ext_scripting_insertCSS.html"]
+skip-if = ["true"] # Bug 1748318 - Add WebIDL bindings for `tabs`
+
+["test_ext_scripting_removeCSS.html"]
+skip-if = ["true"] # Bug 1748318 - Add WebIDL bindings for `tabs`
+
+["test_ext_test.html"]
