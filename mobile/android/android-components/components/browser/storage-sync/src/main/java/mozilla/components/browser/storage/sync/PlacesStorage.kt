@@ -22,6 +22,7 @@ import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.utils.logElapsedTime
+import java.nio.charset.MalformedInputException
 import java.util.concurrent.Executors
 
 /**
@@ -145,6 +146,9 @@ abstract class PlacesStorage(
     protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
             block()
+        } catch (e: MalformedInputException) {
+            crashReporter?.submitCaughtException(e)
+            logger.debug("Ignoring invalid invalid non utf-8 character when running $operation", e)
         } catch (e: PlacesApiException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
         } catch (e: PlacesApiException.UrlParseFailed) {
