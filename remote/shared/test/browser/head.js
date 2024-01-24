@@ -12,11 +12,13 @@
  *     The browser element where the tab should be added.
  * @param {string} url
  *     The URL for the tab.
+ * @param {object=} options
+ *     Options object to forward to BrowserTestUtils.addTab.
  * @returns {Tab}
  *     The created tab.
  */
-function addTab(browser, url) {
-  const tab = BrowserTestUtils.addTab(browser, url);
+function addTab(browser, url, options) {
+  const tab = BrowserTestUtils.addTab(browser, url, options);
   registerCleanupFunction(() => browser.removeTab(tab));
   return tab;
 }

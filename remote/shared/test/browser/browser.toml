@@ -12,3 +12,5 @@ support-files = ["head.js"]
 ["browser_NavigationManager_notify.js"]
 
 ["browser_TabManager.js"]
+
+["browser_UserContextManager.js"]
