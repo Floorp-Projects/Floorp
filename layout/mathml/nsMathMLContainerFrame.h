@@ -430,10 +430,6 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
   explicit nsMathMLmathBlockFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
       : nsBlockFrame(aStyle, aPresContext, kClassID) {
-    // We should always have a float manager.  Not that things can really try
-    // to float out of us anyway, but we need one for line layout.
-    // Bug 1301881: Do we still need to set NS_BLOCK_STATIC_BFC?
-    // AddStateBits(NS_BLOCK_STATIC_BFC);
   }
   virtual ~nsMathMLmathBlockFrame() = default;
 };
