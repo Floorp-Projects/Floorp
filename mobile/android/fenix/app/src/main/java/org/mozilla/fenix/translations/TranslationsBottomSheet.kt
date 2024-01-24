@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -127,25 +128,36 @@ internal fun TranslationsOptionsAnimation(
 }
 
 @Composable
+@Suppress("LongParameterList")
 internal fun TranslationsDialog(
     learnMoreUrl: String,
     showFirstTimeTranslation: Boolean,
+    translateFromLanguages: List<Language>?,
+    translateToLanguages: List<Language>?,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
     translationError: TranslationError? = null,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
     onTranslateButtonClick: () -> Unit,
     onNotNowButtonClick: () -> Unit,
+    onFromSelected: (Language) -> Unit,
+    onToSelected: (Language) -> Unit,
 ) {
     TranslationsDialogBottomSheet(
         learnMoreUrl = learnMoreUrl,
         showFirstTimeTranslation = showFirstTimeTranslation,
         translationError = translationError,
-        translateFromLanguages = getTranslateFromLanguageList(),
-        translateToLanguages = getTranslateToLanguageList(),
+        translateFromLanguages = translateFromLanguages,
+        translateToLanguages = translateToLanguages,
+        initialFrom = initialFrom,
+        initialTo = initialTo,
         onSettingClicked = onSettingClicked,
         onLearnMoreClicked = onLearnMoreClicked,
         onTranslateButtonClicked = onTranslateButtonClick,
         onNotNowButtonClicked = onNotNowButtonClick,
+        onFromSelected = onFromSelected,
+        onToSelected = onToSelected,
     )
 }
 

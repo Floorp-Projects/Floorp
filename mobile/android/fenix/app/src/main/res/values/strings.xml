@@ -2337,6 +2337,8 @@
     <string name="translations_bottom_sheet_translating_in_progress">Translating</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Translating in Progress</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Choose a language</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">There was a problem translating. Please try again.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

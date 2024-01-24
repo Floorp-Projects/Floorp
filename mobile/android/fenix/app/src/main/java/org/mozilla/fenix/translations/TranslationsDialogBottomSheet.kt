@@ -69,26 +69,34 @@ private val ICON_SIZE = 24.dp
  *
  * @param learnMoreUrl The learn more link for translations website.
  * @param showFirstTimeTranslation Whether translations first flow should be shown.
- * @param translationError The type of translation errors that can occur.
  * @param translateFromLanguages Translation menu items to be shown in the translate from dropdown.
  * @param translateToLanguages Translation menu items are to be shown in the translate to dropdown.
+ * @param initialFrom The initial selection for the translate from dropdown.
+ * @param initialTo The initial selection for the translate to dropdown.
+ * @param translationError The type of translation errors that can occur.
  * @param onSettingClicked Invoked when the user clicks on the settings button.
  * @param onLearnMoreClicked Invoked when the user clicks on the "Learn More" button.
  * @param onTranslateButtonClicked Invoked when the user clicks on the "Translate" button.
  * @param onNotNowButtonClicked Invoked when the user clicks on the "Not Now" button.
+ * @param onFromSelected Invoked when the user selects an item on the from dropdown.
+ * @param onToSelected Invoked when the user selects an item on the to dropdown.
  */
 @Composable
 @Suppress("LongParameterList")
 fun TranslationsDialogBottomSheet(
     learnMoreUrl: String,
     showFirstTimeTranslation: Boolean,
+    translateFromLanguages: List<Language>?,
+    translateToLanguages: List<Language>?,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
     translationError: TranslationError? = null,
-    translateFromLanguages: List<Language>,
-    translateToLanguages: List<Language>,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
     onTranslateButtonClicked: () -> Unit,
     onNotNowButtonClicked: () -> Unit,
+    onFromSelected: (Language) -> Unit,
+    onToSelected: (Language) -> Unit,
 ) {
     var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
 
@@ -127,12 +135,18 @@ fun TranslationsDialogBottomSheet(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        if (translationError !is TranslationError.CouldNotLoadLanguagesError) {
+        if (translationError !is TranslationError.CouldNotLoadLanguagesError &&
+            translateFromLanguages != null && translateToLanguages != null
+        ) {
             when (orientation) {
                 Configuration.ORIENTATION_LANDSCAPE -> {
                     TranslationsDialogContentInLandscapeMode(
                         translateFromLanguages = translateFromLanguages,
                         translateToLanguages = translateToLanguages,
+                        initialFrom = initialFrom,
+                        initialTo = initialTo,
+                        onFromSelected = onFromSelected,
+                        onToSelected = onToSelected,
                     )
                 }
 
@@ -140,6 +154,10 @@ fun TranslationsDialogBottomSheet(
                     TranslationsDialogContentInPortraitMode(
                         translateFromLanguages = translateFromLanguages,
                         translateToLanguages = translateToLanguages,
+                        initialFrom = initialFrom,
+                        initialTo = initialTo,
+                        onFromSelected = onFromSelected,
+                        onToSelected = onToSelected,
                     )
                 }
             }
@@ -159,12 +177,19 @@ fun TranslationsDialogBottomSheet(
 private fun TranslationsDialogContentInPortraitMode(
     translateFromLanguages: List<Language>,
     translateToLanguages: List<Language>,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
+    onFromSelected: (Language) -> Unit,
+    onToSelected: (Language) -> Unit,
+
 ) {
     Column {
         TranslationsDropdown(
             header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
             modifier = Modifier.fillMaxWidth(),
             translateLanguages = translateFromLanguages,
+            initiallySelected = initialFrom,
+            onLanguageSelection = onFromSelected,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -173,6 +198,8 @@ private fun TranslationsDialogContentInPortraitMode(
             header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
             modifier = Modifier.fillMaxWidth(),
             translateLanguages = translateToLanguages,
+            initiallySelected = initialTo,
+            onLanguageSelection = onToSelected,
         )
     }
 }
@@ -181,6 +208,10 @@ private fun TranslationsDialogContentInPortraitMode(
 private fun TranslationsDialogContentInLandscapeMode(
     translateFromLanguages: List<Language>,
     translateToLanguages: List<Language>,
+    initialFrom: Language? = null,
+    initialTo: Language? = null,
+    onFromSelected: (Language) -> Unit,
+    onToSelected: (Language) -> Unit,
 ) {
     Column {
         Row {
@@ -189,6 +220,8 @@ private fun TranslationsDialogContentInLandscapeMode(
                 modifier = Modifier.weight(1f),
                 isInLandscapeMode = true,
                 translateLanguages = translateFromLanguages,
+                initiallySelected = initialFrom,
+                onLanguageSelection = onFromSelected,
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -198,6 +231,8 @@ private fun TranslationsDialogContentInLandscapeMode(
                 modifier = Modifier.weight(1f),
                 isInLandscapeMode = true,
                 translateLanguages = translateToLanguages,
+                initiallySelected = initialTo,
+                onLanguageSelection = onToSelected,
             )
         }
     }
@@ -318,22 +353,28 @@ private fun TranslationsDialogInfoMessage(
     }
 }
 
+/**
+ * Creates a dropdown with language selection to use to select languages for translation.
+ *
+ * @param header The title of the dropdown.
+ * @param translateLanguages The language choices the dropdown should provide.
+ * @param modifier Any modifiers for the component.
+ * @param isInLandscapeMode If the item should layout for landscape mode.
+ * @param initiallySelected The language initially selected, if null will show "Choose a language".
+ * @param onLanguageSelection Callback for the selected language.
+ */
 @Composable
 private fun TranslationsDropdown(
     header: String,
     translateLanguages: List<Language>,
     modifier: Modifier = Modifier,
     isInLandscapeMode: Boolean = false,
+    initiallySelected: Language? = null,
+    onLanguageSelection: (Language) -> Unit,
 ) {
     val density = LocalDensity.current
 
     var expanded by remember { mutableStateOf(false) }
-
-    var selectedLanguage by remember {
-        mutableStateOf(
-            translateLanguages.last().localizedDisplayName,
-        )
-    }
 
     var contextMenuWidthDp by remember {
         mutableStateOf(0.dp)
@@ -355,15 +396,18 @@ private fun TranslationsDropdown(
 
         Spacer(modifier = Modifier.height(4.dp))
 
+        var initialValue = stringResource(R.string.translations_bottom_sheet_default_dropdown_selection)
+        initiallySelected?.localizedDisplayName?.let {
+            initialValue = it
+        }
+
         Row {
-            selectedLanguage?.let {
-                Text(
-                    text = it,
-                    modifier = Modifier.weight(1f),
-                    color = FirefoxTheme.colors.textPrimary,
-                    style = FirefoxTheme.typography.subtitle1,
-                )
-            }
+            Text(
+                text = initialValue,
+                modifier = Modifier.weight(1f),
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.subtitle1,
+            )
 
             Spacer(modifier = Modifier.width(10.dp))
 
@@ -379,10 +423,12 @@ private fun TranslationsDropdown(
                     onDismissRequest = {
                         expanded = false
                     },
-                    menuItems = getContextMenuItems(translateLanguages = translateLanguages) {
-                        expanded = false
-                        selectedLanguage = it.localizedDisplayName
-                    },
+
+                    menuItems = getContextMenuItems(
+                        translateLanguages = translateLanguages,
+                        onClickItem = onLanguageSelection,
+                    ),
+
                     modifier = Modifier
                         .onGloballyPositioned { coordinates ->
                             contextMenuWidthDp = with(density) {
@@ -505,10 +551,14 @@ private fun TranslationsDialogBottomSheetPreview() {
             translationError = TranslationError.LanguageNotSupportedError(null),
             translateFromLanguages = getTranslateFromLanguageList(),
             translateToLanguages = getTranslateToLanguageList(),
+            initialFrom = null,
+            initialTo = null,
             onSettingClicked = {},
             onLearnMoreClicked = {},
             onTranslateButtonClicked = {},
             onNotNowButtonClicked = {},
+            onToSelected = {},
+            onFromSelected = {},
         )
     }
 }
