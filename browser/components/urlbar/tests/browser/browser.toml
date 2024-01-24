@@ -73,7 +73,6 @@ skip-if = [
 ]
 
 ["browser_acknowledgeFeedbackAndDismissal.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_action_searchengine.js"]
 skip-if = [
