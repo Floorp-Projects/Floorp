@@ -47,10 +47,7 @@ skip-if = ["os == 'mac'"]
 ["test_panel_list_min_width_from_anchor.html"]
 
 ["test_popupanchor.xhtml"]
-skip-if = [
-  "os == 'linux' && os_version == '18.04'", # Bug 1335894 perma-fail on linux 16.04
-  "verify && os == 'win'",
-]
+skip-if = ["os == 'linux' || (verify && (os == 'win'))"] # Bug 1335894 perma-fail on linux 16.04
 
 ["test_popupreflows.xhtml"]
 
@@ -62,7 +59,7 @@ support-files = [
   "video.ogg",
 ]
 skip-if = [
-  "os == 'android'",
+  "toolkit == 'android'",
   "os == 'linux' && debug", # Bug 1765783
 ]
 ["test_videocontrols_onclickplay.html"]

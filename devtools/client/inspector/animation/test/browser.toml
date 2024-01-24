@@ -57,12 +57,14 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_animation_animation-target.js"]
+skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_animation_animation-target_highlight.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "apple_catalina && !debug", # Disabled in Bug 1713158. Intemittent bug: Bug 1665011
   "os == 'linux' && !debug && !asan && !swgl && !ccov", # Bug 1665011
+  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1798331
   "a11y_checks && debug", # Bugs 1849028 and 1858041 for causing intermittent test results
 ]
@@ -152,7 +154,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_animation_logic_mutations_fast.js"]
 skip-if = [
   "debug",
-  "win11_2009' && bits == 32", # Bug 1567800
+  "os == 'win' && bits == 32", # Bug 1567800
   "os == 'linux' && !asan && !debug && !swgl && !ccov", # Bug 1567800
 ]
 

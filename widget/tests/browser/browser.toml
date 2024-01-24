@@ -79,7 +79,7 @@ support-files = ["helper_scrollbar_colors.html"]
 
 ["browser_test_swipe_gesture.js"]
 skip-if = [
-  "win11_2009 && bits == 32 && !debug", # Bug 1759422
+  "os == 'win' && bits == 32 && !debug", # Bug 1759422
   "verify", # Bug 1800022
   "os == 'linux'", # Bug 1784772
 ]
@@ -88,3 +88,4 @@ support-files = [
   "!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
   "!/gfx/layers/apz/test/mochitest/apz_test_utils.js",
 ]
+

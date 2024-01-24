@@ -1,5 +1,5 @@
 [DEFAULT]
-skip-if = ["os == 'android'"]
+skip-if = ["toolkit == 'android'"]
 
 ["browser_bug527935.js"]
 support-files = [
@@ -8,3 +8,4 @@ support-files = [
 ]
 
 ["browser_content_command_insert_text.js"]
+
