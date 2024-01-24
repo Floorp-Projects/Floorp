@@ -6409,9 +6409,15 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   *aFoundValidLine = FindValidLine();
 }
 
-static bool StyleEstablishesBFC(const ComputedStyle* style) {
-  return style->StyleDisplay()->IsContainPaint() ||
-         style->StyleDisplay()->IsContainLayout();
+static bool StyleEstablishesBFC(const ComputedStyle* aStyle) {
+  // paint/layout containment boxes and multi-column containers establish an
+  // independent formatting context.
+  // https://drafts.csswg.org/css-contain/#containment-paint
+  // https://drafts.csswg.org/css-contain/#containment-layout
+  // https://drafts.csswg.org/css-multicol/#columns
+  return aStyle->StyleDisplay()->IsContainPaint() ||
+         aStyle->StyleDisplay()->IsContainLayout() ||
+         aStyle->GetPseudoType() == PseudoStyleType::columnContent;
 }
 
 void nsBlockFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {

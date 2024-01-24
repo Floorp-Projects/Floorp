@@ -10718,8 +10718,7 @@ nsBlockFrame* nsCSSFrameConstructor::BeginBuildingColumns(
           PseudoStyleType::columnContent, columnSetStyle);
   aColumnContent->SetComputedStyleWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, columnSet, aColumnContent);
-  aColumnContent->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR |
-                               NS_BLOCK_STATIC_BFC);
+  aColumnContent->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
 
   // Set up the parent-child chain.
   SetInitialSingleChild(columnSetWrapper, columnSet);
