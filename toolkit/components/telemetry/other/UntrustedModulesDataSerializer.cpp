@@ -14,10 +14,7 @@
 #include "nsITelemetry.h"
 #include "nsUnicharUtils.h"
 #include "nsXULAppAPI.h"
-
-#if defined(MOZ_GECKO_PROFILER)
-#  include "shared-libraries.h"
-#endif  // MOZ_GECKO_PROFILER
+#include "shared-libraries.h"
 
 namespace mozilla {
 namespace Telemetry {

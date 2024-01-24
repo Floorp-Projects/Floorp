@@ -40,7 +40,6 @@ void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
 
 namespace IPC {
 
-#ifdef MOZ_GECKO_PROFILER
 void IPC::ParamTraits<SharedLibrary>::Write(MessageWriter* aWriter,
                                             const paramType& aParam) {
   WriteParam(aWriter, aParam.mStart);
@@ -81,22 +80,15 @@ bool IPC::ParamTraits<SharedLibraryInfo>::Read(MessageReader* aReader,
                                                paramType* aResult) {
   return ReadParam(aReader, &aResult->mEntries);
 }
-#endif  // MOZ_GECKO_PROFILER
 
 void IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Write(
     MessageWriter* aWriter, const paramType& aParam) {
-#ifdef MOZ_GECKO_PROFILER
   WriteParam(aWriter, aParam.mSharedLibraries);
-#endif  // MOZ_GECKO_PROFILER
 }
 
 bool IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Read(
     MessageReader* aReader, paramType* aResult) {
-#ifdef MOZ_GECKO_PROFILER
   return ReadParam(aReader, &aResult->mSharedLibraries);
-#else
-  return true;
-#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace IPC
