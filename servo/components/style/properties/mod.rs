@@ -367,14 +367,6 @@ impl PropertyId {
         }
     }
 
-    /// Returns true if this property is one of the transitionable properties.
-    pub fn is_transitionable(&self) -> bool {
-        match self {
-            Self::NonCustom(id) => id.is_transitionable(),
-            Self::Custom(..) => true,
-        }
-    }
-
     /// Returns a given property from the given name, _regardless of whether it is enabled or
     /// not_, or Err(()) for unknown properties.
     ///

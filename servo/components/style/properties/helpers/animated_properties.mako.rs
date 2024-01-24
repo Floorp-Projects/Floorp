@@ -389,7 +389,7 @@ impl AnimationValue {
         Some(animatable)
     }
 
-    /// Get an AnimationValue for an AnimatableLonghand from a given computed values.
+    /// Get an AnimationValue for an declaration id from a given computed values.
     pub fn from_computed_values(
         property: PropertyDeclarationId,
         style: &ComputedValues,
