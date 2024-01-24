@@ -32,6 +32,12 @@ use crate::values::computed::ToComputedValue;
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::effects::Filter;
 use void::{self, Void};
+use crate::properties_and_values::value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue, Value};
+use cssparser::{Parser, ParserInput};
+use crate::properties_and_values::value::ComputedValue;
+use style_traits::ToCss;
+use crate::values::animated::lists::by_computed_value;
+use crate::properties_and_values::value::ComponentList;
 
 /// Convert nsCSSPropertyID to TransitionProperty
 #[cfg(feature = "gecko")]
@@ -52,8 +58,11 @@ pub type AnimationValueMap = FxHashMap<OwnedPropertyDeclarationId, AnimationValu
 pub struct CustomAnimatedValue {
     /// The name of the custom property.
     name: crate::custom_properties::Name,
+    // TODO: we shouldn't need this. https://bugzilla.mozilla.org/show_bug.cgi?id=1864736
     /// The specified value of the custom property.
     value: SpecifiedCustomPropertyValue,
+    /// The computed value of the custom property.
+    computed_value: Option<ComputedValue>,
 }
 /// An enum to represent a single computed value belonging to an animated
 /// property in order to be interpolated with another one. When interpolating,
@@ -395,10 +404,33 @@ impl AnimationValue {
                 )
             },
             PropertyDeclaration::Custom(ref declaration) => {
-              match &declaration.value {
-                CustomDeclarationValue::Value(value) => AnimationValue::Custom(CustomAnimatedValue { name: declaration.name.clone(), value: (**value).clone() }),
-                _ => return None,
-              }
+                if let CustomDeclarationValue::Value(ref unparsed_value) = declaration.value {
+                    debug_assert!(
+                        context.builder.stylist.is_some(),
+                        "Need a Stylist to get property registration!"
+                    );
+                    if let Some(registration) = context.builder.stylist.unwrap().get_custom_property_registration(&declaration.name) {
+                        let mut result_value = None;
+                        let mut input = ParserInput::new(&unparsed_value.css);
+                        let mut input = Parser::new(&mut input);
+                        if let Ok(value) = SpecifiedRegisteredValue::get_computed_value(
+                            &mut input,
+                            &registration,
+                            &unparsed_value.url_data,
+                            context,
+                            AllowComputationallyDependent::Yes,) {
+                            result_value = match value {
+                                Value::Universal(_) => None,
+                                _ => Some(value),
+                            };
+                        }
+                        AnimationValue::Custom(CustomAnimatedValue { name: declaration.name.clone(), value: (**unparsed_value).clone(), computed_value: result_value})
+                    } else {
+                        AnimationValue::Custom(CustomAnimatedValue { name: declaration.name.clone(), value: (**unparsed_value).clone(), computed_value: None})
+                    }
+                } else {
+                    return None
+                }
             },
             _ => return None // non animatable properties will get included because of shorthands. ignore.
         };
@@ -418,8 +450,8 @@ impl AnimationValue {
                 // inherited/non_inherited map accordingly.
                 let p = &style.custom_properties();
                 return p.inherited.get(*name)
-                    .or_else(|| p.non_inherited.get(*name))
-                    .map(|value| AnimationValue::Custom(CustomAnimatedValue { name: (*name).clone(), value: (**value).clone() }));
+                .or_else(|| p.non_inherited.get(*name))
+                .map(|value| AnimationValue::Custom(CustomAnimatedValue { name: (*name).clone(), value: (**value).clone(), computed_value: None}));
             }
         };
 
@@ -484,9 +516,44 @@ fn animate_discrete<T: Clone>(this: &T, other: &T, procedure: Procedure) -> Resu
 
 impl Animate for AnimationValue {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
-        if let AnimationValue::Custom(..) = self {
-            // TODO(bug 1869185): Non-universal registered property may animate in a non-discrete way.
-            return Ok(animate_discrete(self, other, procedure)?)
+        match (self, other) {
+            (AnimationValue::Custom(ref self_animated_value), AnimationValue::Custom(ref other_animated_value)) => {
+                let (Some(self_value), Some(other_value)) = (self_animated_value.computed_value.as_ref().clone(), other_animated_value.computed_value.as_ref().clone()) else {
+                    return Ok(animate_discrete(self, other, procedure)?)
+                };
+                let mut result_computed_value = self_value.clone();
+                let mut result_value = self_animated_value.value.clone();
+                match (self_value, other_value) {
+                    (Value::Component(this_component), Value::Component(other_component)) => {
+                        if let Ok(component) = this_component.animate(&other_component, procedure) {
+                            result_value.css = component.to_css_string();
+                            result_computed_value = Value::Component(component);
+                        } else {
+                            return animate_discrete(self, other, procedure)
+                        }
+                    },
+                    (Value::Universal(_), Value::Universal(_)) => unreachable!(),
+                    (Value::List(this_list), Value::List(other_list)) => {
+                        let multiplier = this_list.multiplier;
+                        let values: Vec<_> =
+                        by_computed_value::animate(&this_list.components, &other_list.components, procedure)?;
+                        let component_list = ComponentList {
+                            multiplier,
+                            components: values.into(),
+                        };
+                        result_computed_value = ComputedValue::List(component_list.clone());
+                        result_value.css = component_list.clone().to_css_string();
+                    },
+                    _ => { return animate_discrete(self, other, procedure) },
+                }
+                return Ok(AnimationValue::Custom(
+                    CustomAnimatedValue {
+                        name: self_animated_value.name.clone(),
+                        value: result_value.clone(),
+			            computed_value: Some(result_computed_value).clone(),
+                }));
+            },
+            _ => {},
         }
 
         Ok(unsafe {

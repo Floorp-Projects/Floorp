@@ -88,7 +88,8 @@ impl<L, N, P, LP, C, Image, U, Integer, A, T, R, Transform>
 }
 
 /// A generic enum used for both specified value components and computed value components.
-#[derive(Clone, ToCss, ToComputedValue)]
+#[derive(Animate, Clone, ToCss, ToComputedValue, Debug, MallocSizeOf, PartialEq)]
+#[animation(no_bound(Image, Url))]
 pub enum GenericValueComponent<
     Length,
     Number,
@@ -114,8 +115,10 @@ pub enum GenericValueComponent<
     /// A <color> value
     Color(Color),
     /// An <image> value
+    #[animation(error)]
     Image(Image),
     /// A <url> value
+    #[animation(error)]
     Url(Url),
     /// An <integer> value
     Integer(Integer),
@@ -128,18 +131,23 @@ pub enum GenericValueComponent<
     /// A <transform-function> value
     TransformFunction(TransformFunction),
     /// A <custom-ident> value
+    #[animation(error)]
     CustomIdent(CustomIdent),
     /// A <transform-list> value, equivalent to <transform-function>+
+    #[animation(error)]
     TransformList(ComponentList<Self>),
     /// A <string> value
+    #[animation(error)]
     String(OwnedStr),
 }
 
 /// A list of component values, including the list's multiplier.
-#[derive(Clone, ToComputedValue)]
+#[derive(Clone, ToComputedValue, Debug, MallocSizeOf, PartialEq)]
 pub struct ComponentList<Component> {
-    multiplier: Multiplier,
-    components: crate::OwnedSlice<Component>,
+    /// Multiplier
+    pub multiplier: Multiplier,
+    /// The list of components contained.
+    pub components: crate::OwnedSlice<Component>,
 }
 
 impl<Component: ToCss> ToCss for ComponentList<Component> {
@@ -169,13 +177,13 @@ impl<Component: ToCss> ToCss for ComponentList<Component> {
 }
 
 /// A specified registered custom property value.
-#[derive(ToComputedValue, ToCss)]
+#[derive(ToComputedValue, ToCss, Clone, Debug, MallocSizeOf, PartialEq)]
 pub enum Value<Component> {
     /// A single specified component value whose syntax descriptor component did not have a
     /// multiplier.
     Component(Component),
     /// A specified value whose syntax descriptor was the universal syntax definition.
-    Universal(Arc<ComputedPropertyValue>),
+    Universal(#[ignore_malloc_size_of = "Arc"] Arc<ComputedPropertyValue>),
     /// A list of specified component values whose syntax descriptor component had a multiplier.
     List(ComponentList<Component>),
 }
@@ -187,8 +195,7 @@ pub type SpecifiedValue = Value<SpecifiedValueComponent>;
 pub type ComputedValue = Value<ComputedValueComponent>;
 
 impl SpecifiedValue {
-    /// Convert a registered custom property to a VariableValue, given input and a property
-    /// registration.
+    /// Convert a Computed custom property value to a VariableValue.
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
@@ -196,6 +203,26 @@ impl SpecifiedValue {
         context: &computed::Context,
         allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Arc<ComputedPropertyValue>, ()> {
+        let value = Self::get_computed_value(
+            input,
+            registration,
+            url_data,
+            context,
+            allow_computationally_dependent
+        );
+
+        Ok(value?.to_var(url_data))
+    }
+
+    /// Convert a registered custom property to a Computed custom property value, given input and a property
+    /// registration.
+    pub fn get_computed_value<'i, 't>(
+        input: &mut CSSParser<'i, 't>,
+        registration: &PropertyRegistration,
+        url_data: &UrlExtraData,
+        context: &computed::Context,
+        allow_computationally_dependent: AllowComputationallyDependent,
+    ) -> Result<ComputedValue, ()> {
         let Ok(value) = Self::parse(
             input,
             &registration.syntax,
@@ -205,8 +232,7 @@ impl SpecifiedValue {
             return Err(());
         };
 
-        let value = value.to_computed_value(context);
-        Ok(value.to_var(url_data))
+        Ok(value.to_computed_value(context))
     }
 
     /// Parse and validate a registered custom property value according to its syntax descriptor,
