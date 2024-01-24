@@ -454,6 +454,14 @@ add_task(function test_NoSuchShadowRootError() {
   ok(err instanceof error.WebDriverError);
 });
 
+add_task(function test_NoSuchUserContextError() {
+  let err = new error.NoSuchUserContextError("foo");
+  equal("NoSuchUserContextError", err.name);
+  equal("foo", err.message);
+  equal("no such user context", err.status);
+  ok(err instanceof error.WebDriverError);
+});
+
 add_task(function test_NoSuchWindowError() {
   let err = new error.NoSuchWindowError("foo");
   equal("NoSuchWindowError", err.name);

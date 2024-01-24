@@ -33,6 +33,7 @@ const ERRORS = new Set([
   "NoSuchRequestError",
   "NoSuchScriptError",
   "NoSuchShadowRootError",
+  "NoSuchUserContextError",
   "NoSuchWindowError",
   "ScriptTimeoutError",
   "SessionNotCreatedError",
@@ -649,6 +650,21 @@ class NoSuchRequestError extends WebDriverError {
 }
 
 /**
+ * A command tried to reference an unknown user context (containers in Firefox).
+ *
+ * @param {string=} message
+ *     Optional string describing error situation.
+ * @param {object=} data
+ *     Additional error data helpful in diagnosing the error.
+ */
+class NoSuchUserContextError extends WebDriverError {
+  constructor(message, data = {}) {
+    super(message, data);
+    this.status = "no such user context";
+  }
+}
+
+/**
  * A command to switch to a window could not be satisfied because
  * the window could not be found.
  *
@@ -841,6 +857,7 @@ const STATUSES = new Map([
   ["no such request", NoSuchRequestError],
   ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],
+  ["no such user context", NoSuchUserContextError],
   ["no such window", NoSuchWindowError],
   ["script timeout", ScriptTimeoutError],
   ["session not created", SessionNotCreatedError],
