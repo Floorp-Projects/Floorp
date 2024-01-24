@@ -1382,15 +1382,18 @@ s_paren! {
     pub struct SceUid(pub i32);
 
     #[repr(transparent)]
+    #[allow(dead_code)]
     pub struct SceMpeg(*mut *mut c_void);
 
     #[repr(transparent)]
+    #[allow(dead_code)]
     pub struct SceMpegStream(*mut c_void);
 
     #[repr(transparent)]
     pub struct Mp3Handle(pub i32);
 
     #[repr(transparent)]
+    #[allow(dead_code)]
     pub struct RegHandle(u32);
 }
 

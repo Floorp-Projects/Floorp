@@ -295,6 +295,13 @@ user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
+[[publisher.libc]]
+version = "0.2.152"
+when = "2024-01-07"
+user-id = 51017
+user-login = "JohnTitor"
+user-name = "Yuki Okushi"
+
 [[publisher.linux-raw-sys]]
 version = "0.4.7"
 when = "2023-09-10"

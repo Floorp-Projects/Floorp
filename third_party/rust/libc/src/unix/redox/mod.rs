@@ -28,7 +28,7 @@ pub type nfds_t = ::c_ulong;
 pub type nlink_t = ::c_ulong;
 pub type off_t = ::c_longlong;
 pub type pthread_t = *mut ::c_void;
-// Must be usize due to libstd/sys_common/thread_local.rs,
+// Must be usize due to library/std/sys_common/thread_local.rs,
 // should technically be *mut ::c_void
 pub type pthread_key_t = usize;
 pub type rlim_t = ::c_ulonglong;
@@ -729,6 +729,7 @@ pub const FIOCLEX: ::c_ulong = 0x5451;
 pub const TCGETS: ::c_ulong = 0x5401;
 pub const TCSETS: ::c_ulong = 0x5402;
 pub const TCFLSH: ::c_ulong = 0x540B;
+pub const TIOCSCTTY: ::c_ulong = 0x540E;
 pub const TIOCGPGRP: ::c_ulong = 0x540F;
 pub const TIOCSPGRP: ::c_ulong = 0x5410;
 pub const TIOCGWINSZ: ::c_ulong = 0x5413;
@@ -813,6 +814,7 @@ pub const SOCK_NONBLOCK: ::c_int = 0o4_000;
 pub const SOCK_CLOEXEC: ::c_int = 0o2_000_000;
 pub const SOCK_SEQPACKET: ::c_int = 5;
 pub const SOL_SOCKET: ::c_int = 1;
+pub const SOMAXCONN: ::c_int = 128;
 
 // sys/termios.h
 pub const VEOF: usize = 0;
@@ -1137,6 +1139,15 @@ extern "C" {
         clock_id: ::clockid_t,
     ) -> ::c_int;
 
+    //pty.h
+    pub fn openpty(
+        amaster: *mut ::c_int,
+        aslave: *mut ::c_int,
+        name: *mut ::c_char,
+        termp: *const termios,
+        winp: *const ::winsize,
+    ) -> ::c_int;
+
     // pwd.h
     pub fn getpwent() -> *mut passwd;
     pub fn setpwent();
@@ -1172,9 +1183,15 @@ extern "C" {
     pub fn sigwait(set: *const sigset_t, sig: *mut ::c_int) -> ::c_int;
 
     // stdlib.h
+    pub fn getsubopt(
+        optionp: *mut *mut c_char,
+        tokens: *const *mut c_char,
+        valuep: *mut *mut c_char,
+    ) -> ::c_int;
     pub fn reallocarray(ptr: *mut ::c_void, nmemb: ::size_t, size: ::size_t) -> *mut ::c_void;
 
     // string.h
+    pub fn explicit_bzero(p: *mut ::c_void, len: ::size_t);
     pub fn strlcat(dst: *mut ::c_char, src: *const ::c_char, siz: ::size_t) -> ::size_t;
     pub fn strlcpy(dst: *mut ::c_char, src: *const ::c_char, siz: ::size_t) -> ::size_t;
 
@@ -1201,6 +1218,8 @@ extern "C" {
     pub fn shm_unlink(name: *const ::c_char) -> ::c_int;
 
     // sys/resource.h
+    pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
+    pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
     pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
     pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
 
@@ -1229,17 +1248,8 @@ extern "C" {
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
     pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
 
-    // strings.h
-    pub fn explicit_bzero(p: *mut ::c_void, len: ::size_t);
-
-    pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
-    pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
-
-    pub fn getsubopt(
-        optionp: *mut *mut c_char,
-        tokens: *const *mut c_char,
-        valuep: *mut *mut c_char,
-    ) -> ::c_int;
+    // utmp.h
+    pub fn login_tty(fd: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

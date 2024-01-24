@@ -3,6 +3,13 @@
 Welcome! If you are reading this document, it means you are interested in contributing
 to the `libc` crate.
 
+## v0.2 changes
+
+If you want to add your changes to v0.2, please submit them to the `libc-0.2` branch.
+If you want to add any breaking changes, it should be submitted to the main branch,
+which has changes for v0.3.
+We will support and make a new release for v0.2 until we make the first release of v0.3.
+
 ## Adding an API
 
 Want to use an API which currently isn't bound in `libc`? It's quite easy to add
@@ -54,7 +61,7 @@ We have two automated tests running on [GitHub Actions](https://github.com/rust-
   - `cd libc-test && cargo test`
   - Use the `skip_*()` functions in `build.rs` if you really need a workaround.
 2. Style checker
-  - `rustc ci/style.rs && ./style src`
+  - [`sh ci/style.sh`](https://github.com/rust-lang/libc/blob/main/ci/style.sh)
 
 ## Breaking change policy
 

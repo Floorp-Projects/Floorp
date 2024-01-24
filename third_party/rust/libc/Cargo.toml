@@ -11,7 +11,7 @@
 
 [package]
 name = "libc"
-version = "0.2.150"
+version = "0.2.152"
 authors = ["The Rust Project Developers"]
 build = "build.rs"
 exclude = [
@@ -49,6 +49,7 @@ features = [
     "extra_traits",
 ]
 targets = [
+    "aarch64-apple-darwin",
     "aarch64-apple-ios",
     "aarch64-linux-android",
     "aarch64-pc-windows-msvc",

@@ -13,7 +13,7 @@ s! {
         /// Combination of granularity and offset.
         ///
         /// The granularity defines how many CPUs each bit in map describes.
-        /// The offset is the numer of the first CPU described by the first
+        /// The offset is the number of the first CPU described by the first
         /// bit in the bitmap.
         /// offset must be a multiple of 2^graularity.
         ///

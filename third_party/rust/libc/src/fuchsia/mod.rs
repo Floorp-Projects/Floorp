@@ -3233,6 +3233,9 @@ pub const O_DIRECT: ::c_int = 0x00000800;
 pub const O_LARGEFILE: ::c_int = 0x00001000;
 pub const O_NOFOLLOW: ::c_int = 0x00000080;
 
+pub const HUGETLB_FLAG_ENCODE_SHIFT: u32 = 26;
+pub const MAP_HUGE_SHIFT: u32 = 26;
+
 // intentionally not public, only used for fd_set
 cfg_if! {
     if #[cfg(target_pointer_width = "32")] {
@@ -3823,6 +3826,8 @@ extern "C" {
     pub fn pthread_rwlock_unlock(lock: *mut pthread_rwlock_t) -> ::c_int;
     pub fn pthread_rwlockattr_init(attr: *mut pthread_rwlockattr_t) -> ::c_int;
     pub fn pthread_rwlockattr_destroy(attr: *mut pthread_rwlockattr_t) -> ::c_int;
+    pub fn pthread_getname_np(thread: ::pthread_t, name: *mut ::c_char, len: ::size_t) -> ::c_int;
+    pub fn pthread_setname_np(thread: ::pthread_t, name: *const ::c_char) -> ::c_int;
     pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
 
     pub fn getsockopt(
@@ -4104,7 +4109,7 @@ extern "C" {
         host: *mut ::c_char,
         hostlen: ::socklen_t,
         serv: *mut ::c_char,
-        sevlen: ::socklen_t,
+        servlen: ::socklen_t,
         flags: ::c_int,
     ) -> ::c_int;
     pub fn reboot(how_to: ::c_int) -> ::c_int;

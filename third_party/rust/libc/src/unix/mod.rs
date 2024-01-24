@@ -41,13 +41,9 @@ cfg_if! {
     }
 }
 
-#[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum DIR {}
-impl ::Copy for DIR {}
-impl ::Clone for DIR {
-    fn clone(&self) -> DIR {
-        *self
-    }
+missing! {
+    #[cfg_attr(feature = "extra_traits", derive(Debug))]
+    pub enum DIR {}
 }
 pub type locale_t = *mut ::c_void;
 
@@ -321,7 +317,7 @@ cfg_if! {
     if #[cfg(any(target_os = "l4re", target_os = "espidf"))] {
         // required libraries for L4Re and the ESP-IDF framework are linked externally, ATM
     } else if #[cfg(feature = "std")] {
-        // cargo build, don't pull in anything extra as the libstd dep
+        // cargo build, don't pull in anything extra as the std dep
         // already pulls in all libs.
     } else if #[cfg(all(target_os = "linux",
                         any(target_env = "gnu", target_env = "uclibc"),
@@ -414,21 +410,11 @@ cfg_if! {
     }
 }
 
-#[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum FILE {}
-impl ::Copy for FILE {}
-impl ::Clone for FILE {
-    fn clone(&self) -> FILE {
-        *self
-    }
-}
-#[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum fpos_t {} // FIXME: fill this out with a struct
-impl ::Copy for fpos_t {}
-impl ::Clone for fpos_t {
-    fn clone(&self) -> fpos_t {
-        *self
-    }
+missing! {
+    #[cfg_attr(feature = "extra_traits", derive(Debug))]
+    pub enum FILE {}
+    #[cfg_attr(feature = "extra_traits", derive(Debug))]
+    pub enum fpos_t {} // FIXME: fill this out with a struct
 }
 
 extern "C" {
