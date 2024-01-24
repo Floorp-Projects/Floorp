@@ -1893,15 +1893,11 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
     return NS_OK;
   }
 
-  if (!mIntermediatePreloadingHealerTaskQueue) {
-    nsresult rv = NS_CreateBackgroundTaskQueue(
-        "IntermediatePreloadingHealer",
-        getter_AddRefs(mIntermediatePreloadingHealerTaskQueue));
-    if (NS_FAILED(rv)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-              ("NS_CreateBackgroundTaskQueue failed"));
-      return rv;
-    }
+  nsCOMPtr<nsIEventTarget> socketThread(
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
+  if (!socketThread) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("couldn't get socket thread?"));
+    return NS_ERROR_FAILURE;
   }
   uint32_t timerDelayMS =
       StaticPrefs::security_intermediate_preloading_healer_timer_interval_ms();
@@ -1909,7 +1905,7 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
       getter_AddRefs(mIntermediatePreloadingHealerTimer),
       IntermediatePreloadingHealerCallback, nullptr, timerDelayMS,
       nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY,
-      "IntermediatePreloadingHealer", mIntermediatePreloadingHealerTaskQueue);
+      "IntermediatePreloadingHealer", socketThread);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
             ("NS_NewTimerWithFuncCallback failed"));
