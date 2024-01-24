@@ -1,5 +1,5 @@
 [DEFAULT]
-skip-if = ["os == 'android'"]
+skip-if = ["toolkit == 'android'"]
 head = "head.js"
 
 ["browser_backgroundtask_specific_pref.js"]

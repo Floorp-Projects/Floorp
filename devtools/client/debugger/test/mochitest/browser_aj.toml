@@ -2,6 +2,7 @@
 tags = "devtools"
 subsuite = "devtools"
 skip-if = [
+  "os == 'linux' && debug && bits == 32",
   "asan", # Frequent failures when opening tabs due to OOM issues, bug 1760260
 ]
 support-files = [
@@ -208,6 +209,7 @@ skip-if = ["win11_2009"] # Bug 1798331
 ["browser_dbg-features-browser-toolbox-source-tree.js"]
 skip-if = [
   "asan", # Bug 1591064
+  "win10_2004", # Bug 1767702
   "win11_2009", # Bug 1798331
 ]
 
