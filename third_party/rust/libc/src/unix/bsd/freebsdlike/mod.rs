@@ -824,15 +824,12 @@ pub const CLOCK_VIRTUAL: ::clockid_t = 1;
 pub const CLOCK_PROF: ::clockid_t = 2;
 pub const CLOCK_MONOTONIC: ::clockid_t = 4;
 pub const CLOCK_UPTIME: ::clockid_t = 5;
-pub const CLOCK_BOOTTIME: ::clockid_t = CLOCK_UPTIME;
 pub const CLOCK_UPTIME_PRECISE: ::clockid_t = 7;
 pub const CLOCK_UPTIME_FAST: ::clockid_t = 8;
 pub const CLOCK_REALTIME_PRECISE: ::clockid_t = 9;
 pub const CLOCK_REALTIME_FAST: ::clockid_t = 10;
-pub const CLOCK_REALTIME_COARSE: ::clockid_t = CLOCK_REALTIME_FAST;
 pub const CLOCK_MONOTONIC_PRECISE: ::clockid_t = 11;
 pub const CLOCK_MONOTONIC_FAST: ::clockid_t = 12;
-pub const CLOCK_MONOTONIC_COARSE: ::clockid_t = CLOCK_MONOTONIC_FAST;
 pub const CLOCK_SECOND: ::clockid_t = 13;
 pub const CLOCK_THREAD_CPUTIME_ID: ::clockid_t = 14;
 pub const CLOCK_PROCESS_CPUTIME_ID: ::clockid_t = 15;
@@ -1491,6 +1488,13 @@ extern "C" {
         path: *const ::c_char,
         flags: ::c_ulong,
         atflag: ::c_int,
+    ) -> ::c_int;
+
+    pub fn clock_nanosleep(
+        clk_id: ::clockid_t,
+        flags: ::c_int,
+        rqtp: *const ::timespec,
+        rmtp: *mut ::timespec,
     ) -> ::c_int;
 
     pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;

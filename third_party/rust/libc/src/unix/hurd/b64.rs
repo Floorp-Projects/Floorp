@@ -25,6 +25,8 @@ pub type __ulong32_type = ::c_uint;
 pub type __s64_type = ::c_long;
 pub type __u64_type = ::c_ulong;
 
+pub type __ipc_pid_t = ::c_int;
+
 pub type Elf64_Half = u16;
 pub type Elf64_Word = u32;
 pub type Elf64_Off = u64;

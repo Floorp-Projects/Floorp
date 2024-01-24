@@ -48,6 +48,8 @@ pub type cpusetid_t = ::c_int;
 
 pub type sctp_assoc_t = u32;
 
+pub type eventfd_t = u64;
+
 #[cfg_attr(feature = "extra_traits", derive(Debug, Hash, PartialEq, Eq))]
 #[repr(u32)]
 pub enum devstat_support_flags {
@@ -365,13 +367,13 @@ s! {
     }
 
     pub struct cpuset_t {
-        #[cfg(all(freebsd14, target_pointer_width = "64"))]
+        #[cfg(all(any(freebsd15, freebsd14), target_pointer_width = "64"))]
         __bits: [::c_long; 16],
-        #[cfg(all(freebsd14, target_pointer_width = "32"))]
+        #[cfg(all(any(freebsd15, freebsd14), target_pointer_width = "32"))]
         __bits: [::c_long; 32],
-        #[cfg(all(not(freebsd14), target_pointer_width = "64"))]
+        #[cfg(all(not(any(freebsd15, freebsd14)), target_pointer_width = "64"))]
         __bits: [::c_long; 4],
-        #[cfg(all(not(freebsd14), target_pointer_width = "32"))]
+        #[cfg(all(not(any(freebsd15, freebsd14)), target_pointer_width = "32"))]
         __bits: [::c_long; 8],
     }
 
@@ -595,9 +597,9 @@ s! {
         pub sa_peer: ::sockaddr_storage,
         pub type_: ::c_int,
         pub dname: [::c_char; 32],
-        #[cfg(any(freebsd12, freebsd13, freebsd14))]
+        #[cfg(any(freebsd12, freebsd13, freebsd14, freebsd15))]
         pub sendq: ::c_uint,
-        #[cfg(any(freebsd12, freebsd13, freebsd14))]
+        #[cfg(any(freebsd12, freebsd13, freebsd14, freebsd15))]
         pub recvq: ::c_uint,
     }
 
@@ -1044,39 +1046,41 @@ s! {
         pub tcpi_snd_rexmitpack: u32,
         pub tcpi_rcv_ooopack: u32,
         pub tcpi_snd_zerowin: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_delivered_ce: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_received_ce: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_delivered_e1_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_delivered_e0_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_delivered_ce_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_received_e1_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_received_e0_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub __tcpi_received_ce_bytes: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_total_tlp: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_total_tlp_bytes: u64,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_snd_una: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_snd_max: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_rcv_numsacks: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_rcv_adv: u32,
-        #[cfg(freebsd14)]
+        #[cfg(any(freebsd15, freebsd14))]
         pub tcpi_dupacks: u32,
         #[cfg(freebsd14)]
         pub __tcpi_pad: [u32; 10],
-        #[cfg(not(freebsd14))]
+        #[cfg(freebsd15)]
+        pub __tcpi_pad: [u32; 14],
+        #[cfg(not(any(freebsd15, freebsd14)))]
         pub __tcpi_pad: [u32; 26],
     }
 
@@ -1404,9 +1408,9 @@ s_no_extra_traits! {
     }
 
     pub struct ptsstat {
-        #[cfg(any(freebsd12, freebsd13, freebsd14))]
+        #[cfg(any(freebsd12, freebsd13, freebsd14, freebsd15))]
         pub dev: u64,
-        #[cfg(not(any(freebsd12, freebsd13, freebsd14)))]
+        #[cfg(not(any(freebsd12, freebsd13, freebsd14, freebsd15)))]
         pub dev: u32,
         pub devname: [::c_char; SPECNAMELEN as usize + 1],
     }
@@ -2620,7 +2624,7 @@ pub const DEVSTAT_NAME_LEN: ::c_int = 16;
 
 // sys/cpuset.h
 cfg_if! {
-    if #[cfg(freebsd14)] {
+    if #[cfg(any(freebsd15, freebsd14))] {
         pub const CPU_SETSIZE: ::c_int = 1024;
     } else {
         pub const CPU_SETSIZE: ::c_int = 256;
@@ -3889,6 +3893,7 @@ pub const RFMEM: ::c_int = 32;
 pub const RFNOWAIT: ::c_int = 64;
 pub const RFCFDG: ::c_int = 4096;
 pub const RFTHREAD: ::c_int = 8192;
+pub const RFSIGSHARE: ::c_int = 16384;
 pub const RFLINUXTHPN: ::c_int = 65536;
 pub const RFTSIGZMB: ::c_int = 524288;
 pub const RFSPAWN: ::c_int = 2147483648;
@@ -4725,10 +4730,17 @@ pub const RB_POWERCYCLE: ::c_int = 0x400000;
 pub const RB_PROBE: ::c_int = 0x10000000;
 pub const RB_MULTIPLE: ::c_int = 0x20000000;
 
+// sys/time.h
+pub const CLOCK_BOOTTIME: ::clockid_t = ::CLOCK_UPTIME;
+pub const CLOCK_REALTIME_COARSE: ::clockid_t = ::CLOCK_REALTIME_FAST;
+pub const CLOCK_MONOTONIC_COARSE: ::clockid_t = ::CLOCK_MONOTONIC_FAST;
+
 // sys/timerfd.h
 
 pub const TFD_NONBLOCK: ::c_int = ::O_NONBLOCK;
 pub const TFD_CLOEXEC: ::c_int = O_CLOEXEC;
+pub const TFD_TIMER_ABSTIME: ::c_int = 0x01;
+pub const TFD_TIMER_CANCEL_ON_SET: ::c_int = 0x02;
 
 cfg_if! {
     if #[cfg(libc_const_extern_fn)] {
@@ -5358,13 +5370,6 @@ extern "C" {
     pub fn getpagesizes(pagesize: *mut ::size_t, nelem: ::c_int) -> ::c_int;
 
     pub fn clock_getcpuclockid2(arg1: ::id_t, arg2: ::c_int, arg3: *mut clockid_t) -> ::c_int;
-    pub fn clock_nanosleep(
-        clk_id: ::clockid_t,
-        flags: ::c_int,
-        rqtp: *const ::timespec,
-        rmtp: *mut ::timespec,
-    ) -> ::c_int;
-
     pub fn strchrnul(s: *const ::c_char, c: ::c_int) -> *mut ::c_char;
 
     pub fn shm_create_largepage(
@@ -5383,6 +5388,8 @@ extern "C" {
     pub fn setaudit(auditinfo: *const auditinfo_t) -> ::c_int;
 
     pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
+    pub fn eventfd_read(fd: ::c_int, value: *mut eventfd_t) -> ::c_int;
+    pub fn eventfd_write(fd: ::c_int, value: eventfd_t) -> ::c_int;
 
     pub fn fdatasync(fd: ::c_int) -> ::c_int;
 
@@ -5703,7 +5710,10 @@ extern "C" {
 }
 
 cfg_if! {
-    if #[cfg(freebsd14)] {
+    if #[cfg(freebsd15)] {
+        mod freebsd15;
+        pub use self::freebsd15::*;
+    } else if #[cfg(freebsd14)] {
         mod freebsd14;
         pub use self::freebsd14::*;
     } else if #[cfg(freebsd13)] {

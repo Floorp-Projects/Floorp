@@ -582,8 +582,8 @@ pub const EAI_SERVICE: ::c_int = 9;
 pub const EAI_SOCKTYPE: ::c_int = 10;
 pub const EAI_SYSTEM: ::c_int = 11;
 
-// This is not defined in vxWorks, but we have to define it here
-// to make the building pass for getrandom and libstd, FIXME
+// FIXME: This is not defined in vxWorks, but we have to define it here
+// to make the building pass for getrandom and std
 pub const RTLD_DEFAULT: *mut ::c_void = 0i64 as *mut ::c_void;
 
 //Clock Lib Stuff

@@ -260,12 +260,6 @@ s! {
         __unused5: u64
     }
 
-    pub struct seccomp_notif_sizes {
-        pub seccomp_notif: ::__u16,
-        pub seccomp_notif_resp: ::__u16,
-        pub seccomp_data: ::__u16,
-    }
-
     pub struct ptrace_rseq_configuration {
         pub rseq_abi_pointer: ::__u64,
         pub rseq_abi_size: ::__u32,
@@ -802,11 +796,6 @@ pub const REG_ERR: ::c_int = 19;
 pub const REG_TRAPNO: ::c_int = 20;
 pub const REG_OLDMASK: ::c_int = 21;
 pub const REG_CR2: ::c_int = 22;
-
-pub const SECCOMP_SET_MODE_STRICT: ::c_uint = 0;
-pub const SECCOMP_SET_MODE_FILTER: ::c_uint = 1;
-pub const SECCOMP_GET_ACTION_AVAIL: ::c_uint = 2;
-pub const SECCOMP_GET_NOTIF_SIZES: ::c_uint = 3;
 
 extern "C" {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;

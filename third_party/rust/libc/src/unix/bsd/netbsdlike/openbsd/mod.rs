@@ -41,6 +41,10 @@ pub type Elf64_Xword = u64;
 pub type ENTRY = entry;
 pub type ACTION = ::c_uint;
 
+// spawn.h
+pub type posix_spawnattr_t = *mut ::c_void;
+pub type posix_spawn_file_actions_t = *mut ::c_void;
+
 cfg_if! {
     if #[cfg(target_pointer_width = "64")] {
         type Elf_Addr = Elf64_Addr;
@@ -541,6 +545,68 @@ s! {
         #[cfg(not(libc_union))]
         pub ifr_ifru: ::sockaddr,
     }
+
+    pub struct tcp_info {
+        pub tcpi_state: u8,
+        pub __tcpi_ca_state: u8,
+        pub __tcpi_retransmits: u8,
+        pub __tcpi_probes: u8,
+        pub __tcpi_backoff: u8,
+        pub tcpi_options: u8,
+        pub tcpi_snd_wscale: u8,
+        pub tcpi_rcv_wscale: u8,
+        pub tcpi_rto: u32,
+        pub __tcpi_ato: u32,
+        pub tcpi_snd_mss: u32,
+        pub tcpi_rcv_mss: u32,
+        pub __tcpi_unacked: u32,
+        pub __tcpi_sacked: u32,
+        pub __tcpi_lost: u32,
+        pub __tcpi_retrans: u32,
+        pub __tcpi_fackets: u32,
+        pub tcpi_last_data_sent: u32,
+        pub tcpi_last_ack_sent: u32,
+        pub tcpi_last_data_recv: u32,
+        pub tcpi_last_ack_recv: u32,
+        pub __tcpi_pmtu: u32,
+        pub __tcpi_rcv_ssthresh: u32,
+        pub tcpi_rtt: u32,
+        pub tcpi_rttvar: u32,
+        pub tcpi_snd_ssthresh: u32,
+        pub tcpi_snd_cwnd: u32,
+        pub __tcpi_advmss: u32,
+        pub __tcpi_reordering: u32,
+        pub __tcpi_rcv_rtt: u32,
+        pub tcpi_rcv_space: u32,
+        pub tcpi_snd_wnd: u32,
+        pub tcpi_snd_nxt: u32,
+        pub tcpi_rcv_nxt: u32,
+        pub tcpi_toe_tid: u32,
+        pub tcpi_snd_rexmitpack: u32,
+        pub tcpi_rcv_ooopack: u32,
+        pub tcpi_snd_zerowin: u32,
+        pub tcpi_rttmin: u32,
+        pub tcpi_max_sndwnd: u32,
+        pub tcpi_rcv_adv: u32,
+        pub tcpi_rcv_up: u32,
+        pub tcpi_snd_una: u32,
+        pub tcpi_snd_up: u32,
+        pub tcpi_snd_wl1: u32,
+        pub tcpi_snd_wl2: u32,
+        pub tcpi_snd_max: u32,
+        pub tcpi_ts_recent: u32,
+        pub tcpi_ts_recent_age: u32,
+        pub tcpi_rfbuf_cnt: u32,
+        pub tcpi_rfbuf_ts: u32,
+        pub tcpi_so_rcv_sb_cc: u32,
+        pub tcpi_so_rcv_sb_hiwat: u32,
+        pub tcpi_so_rcv_sb_lowat: u32,
+        pub tcpi_so_rcv_sb_wat: u32,
+        pub tcpi_so_snd_sb_cc: u32,
+        pub tcpi_so_snd_sb_hiwat: u32,
+        pub tcpi_so_snd_sb_lowat: u32,
+        pub tcpi_so_snd_sb_wat: u32,
+    }
 }
 
 impl siginfo_t {
@@ -659,7 +725,7 @@ s_no_extra_traits! {
         pub ifru_metric: ::c_int,
         pub ifru_vnetid: i64,
         pub ifru_media: u64,
-        pub ifru_data: *mut ::c_char,
+        pub ifru_data: ::caddr_t,
         pub ifru_index: ::c_uint,
     }
 }
@@ -1229,6 +1295,7 @@ pub const O_DSYNC: ::c_int = 128;
 pub const MAP_RENAME: ::c_int = 0x0000;
 pub const MAP_NORESERVE: ::c_int = 0x0000;
 pub const MAP_HASSEMAPHORE: ::c_int = 0x0000;
+pub const MAP_TRYFIXED: ::c_int = 0;
 
 pub const EIPSEC: ::c_int = 82;
 pub const ENOMEDIUM: ::c_int = 85;
@@ -1830,6 +1897,25 @@ pub const LC_ALL_MASK: ::c_int = (1 << _LC_LAST) - 2;
 
 pub const LC_GLOBAL_LOCALE: ::locale_t = -1isize as ::locale_t;
 
+// sys/reboot.h
+pub const RB_ASKNAME: ::c_int = 0x00001;
+pub const RB_SINGLE: ::c_int = 0x00002;
+pub const RB_NOSYNC: ::c_int = 0x00004;
+pub const RB_HALT: ::c_int = 0x00008;
+pub const RB_INITNAME: ::c_int = 0x00010;
+pub const RB_KDB: ::c_int = 0x00040;
+pub const RB_RDONLY: ::c_int = 0x00080;
+pub const RB_DUMP: ::c_int = 0x00100;
+pub const RB_MINIROOT: ::c_int = 0x00200;
+pub const RB_CONFIG: ::c_int = 0x00400;
+pub const RB_TIMEBAD: ::c_int = 0x00800;
+pub const RB_POWERDOWN: ::c_int = 0x01000;
+pub const RB_SERCONS: ::c_int = 0x02000;
+pub const RB_USERREQ: ::c_int = 0x04000;
+pub const RB_RESET: ::c_int = 0x08000;
+pub const RB_GOODRANDOM: ::c_int = 0x10000;
+pub const RB_UNHIBERNATE: ::c_int = 0x20000;
+
 const_fn! {
     {const} fn _ALIGN(p: usize) -> usize {
         (p + _ALIGNBYTES) & !_ALIGNBYTES
@@ -2057,6 +2143,8 @@ extern "C" {
     ) -> ::c_int;
 
     pub fn mimmutable(addr: *mut ::c_void, len: ::size_t) -> ::c_int;
+
+    pub fn reboot(mode: ::c_int) -> ::c_int;
 }
 
 #[link(name = "execinfo")]

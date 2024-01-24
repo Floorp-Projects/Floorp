@@ -1,4 +1,4 @@
-// APIs in FreeBSD 14 that have changed since 11.
+// APIs in FreeBSD 13 that have changed since 11.
 
 pub type nlink_t = u64;
 pub type dev_t = u64;

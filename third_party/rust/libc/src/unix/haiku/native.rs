@@ -197,6 +197,50 @@ e! {
         B_UTILITIES_DIRECTORY,
         B_PACKAGE_LINKS_DIRECTORY,
     }
+
+    // kernel/OS.h
+
+    pub enum topology_level_type {
+        B_TOPOLOGY_UNKNOWN,
+        B_TOPOLOGY_ROOT,
+        B_TOPOLOGY_SMT,
+        B_TOPOLOGY_CORE,
+        B_TOPOLOGY_PACKAGE,
+    }
+
+    pub enum cpu_platform {
+        B_CPU_UNKNOWN,
+        B_CPU_x86,
+        B_CPU_x86_64,
+        B_CPU_PPC,
+        B_CPU_PPC_64,
+        B_CPU_M68K,
+        B_CPU_ARM,
+        B_CPU_ARM_64,
+        B_CPU_ALPHA,
+        B_CPU_MIPS,
+        B_CPU_SH,
+        B_CPU_SPARC,
+        B_CPU_RISC_V
+    }
+
+    pub enum cpu_vendor {
+        B_CPU_VENDOR_UNKNOWN,
+        B_CPU_VENDOR_AMD,
+        B_CPU_VENDOR_CYRIX,
+        B_CPU_VENDOR_IDT,
+        B_CPU_VENDOR_INTEL,
+        B_CPU_VENDOR_NATIONAL_SEMICONDUCTOR,
+        B_CPU_VENDOR_RISE,
+        B_CPU_VENDOR_TRANSMETA,
+        B_CPU_VENDOR_VIA,
+        B_CPU_VENDOR_IBM,
+        B_CPU_VENDOR_MOTOROLA,
+        B_CPU_VENDOR_NEC,
+        B_CPU_VENDOR_HYGON,
+        B_CPU_VENDOR_SUN,
+        B_CPU_VENDOR_FUJITSU
+    }
 }
 
 s! {
@@ -310,6 +354,19 @@ s! {
         pub events: u16
     }
 
+    pub struct cpu_topology_root_info {
+        pub platform: cpu_platform,
+    }
+
+    pub struct cpu_topology_package_info {
+        pub vendor: cpu_vendor,
+        pub cache_line_size: u32,
+    }
+
+    pub struct cpu_topology_core_info {
+        pub model: u32,
+        pub default_frequency: u64,
+    }
     // kernel/fs_attr.h
     pub struct attr_info {
         pub type_: u32,
@@ -412,6 +469,23 @@ s_no_extra_traits! {
         pub as_chars: [::c_char; 16],
         pub regs: __c_anonymous_regs,
     }
+
+    #[cfg(libc_union)]
+    pub union __c_anonymous_cpu_topology_info_data {
+        pub root: cpu_topology_root_info,
+        pub package: cpu_topology_package_info,
+        pub core: cpu_topology_core_info,
+    }
+
+    pub struct cpu_topology_node_info {
+        pub id: u32,
+        pub type_: topology_level_type,
+        pub level: u32,
+        #[cfg(libc_union)]
+        pub data: __c_anonymous_cpu_topology_info_data,
+        #[cfg(not(libc_union))]
+        pub data: cpu_topology_core_info,
+    }
 }
 
 cfg_if! {
@@ -444,6 +518,50 @@ cfg_if! {
                     .field("regs", &self.regs)
                     .finish()
                 }
+            }
+        }
+
+        #[cfg(libc_union)]
+        impl PartialEq for __c_anonymous_cpu_topology_info_data {
+            fn eq(&self, other: &__c_anonymous_cpu_topology_info_data) -> bool {
+                unsafe {
+                self.root == other.root
+                    || self.package == other.package
+                    || self.core == other.core
+                }
+            }
+        }
+        #[cfg(libc_union)]
+        impl Eq for __c_anonymous_cpu_topology_info_data {}
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for __c_anonymous_cpu_topology_info_data {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                unsafe {
+                f.debug_struct("__c_anonymous_cpu_topology_info_data")
+                    .field("root", &self.root)
+                    .field("package", &self.package)
+                    .field("core", &self.core)
+                    .finish()
+                }
+            }
+        }
+
+        impl PartialEq for cpu_topology_node_info {
+            fn eq(&self, other: &cpu_topology_node_info) -> bool {
+                self.id == other.id
+                    && self.type_ == other.type_
+                    && self.level == other.level
+            }
+        }
+
+        impl Eq for cpu_topology_node_info {}
+        impl ::fmt::Debug for cpu_topology_node_info {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("cpu_topology_node_info")
+                    .field("id", &self.id)
+                    .field("type", &self.type_)
+                    .field("level", &self.level)
+                    .finish()
             }
         }
     }
@@ -1025,6 +1143,10 @@ extern "C" {
         cpuCount: u32,
         info: *mut cpu_info,
         size: ::size_t,
+    ) -> status_t;
+    pub fn get_cpu_topology_info(
+        topologyInfos: *mut cpu_topology_node_info,
+        topologyInfoCount: *mut u32,
     ) -> status_t;
     pub fn is_computer_on() -> i32;
     pub fn is_computer_on_fire() -> ::c_double;

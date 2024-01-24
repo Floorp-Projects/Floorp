@@ -52,13 +52,10 @@ pub type iconv_t = *mut ::c_void;
 // linux/sctp.h
 pub type sctp_assoc_t = ::__s32;
 
-#[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum fpos64_t {} // FIXME: fill this out with a struct
-impl ::Copy for fpos64_t {}
-impl ::Clone for fpos64_t {
-    fn clone(&self) -> fpos64_t {
-        *self
-    }
+pub type eventfd_t = u64;
+missing! {
+    #[cfg_attr(feature = "extra_traits", derive(Debug))]
+    pub enum fpos64_t {} // FIXME: fill this out with a struct
 }
 
 s! {
@@ -578,6 +575,34 @@ s! {
         pub args: [::__u64; 6],
     }
 
+    pub struct seccomp_notif_sizes {
+        pub seccomp_notif: ::__u16,
+        pub seccomp_notif_resp: ::__u16,
+        pub seccomp_data: ::__u16,
+    }
+
+    pub struct seccomp_notif {
+        pub id: ::__u64,
+        pub pid: ::__u32,
+        pub flags: ::__u32,
+        pub data: seccomp_data,
+    }
+
+    pub struct seccomp_notif_resp {
+        pub id: ::__u64,
+        pub val: ::__s64,
+        pub error: ::__s32,
+        pub flags: ::__u32,
+    }
+
+    pub struct seccomp_notif_addfd {
+        pub id: ::__u64,
+        pub flags: ::__u32,
+        pub srcfd: ::__u32,
+        pub newfd: ::__u32,
+        pub newfd_flags: ::__u32,
+    }
+
     pub struct nlmsghdr {
         pub nlmsg_len: u32,
         pub nlmsg_type: u16,
@@ -685,6 +710,37 @@ s! {
     pub struct rlimit64 {
         pub rlim_cur: rlim64_t,
         pub rlim_max: rlim64_t,
+    }
+
+    // linux/tls.h
+
+    pub struct tls_crypto_info {
+        pub version: ::__u16,
+        pub cipher_type: ::__u16,
+    }
+
+    pub struct tls12_crypto_info_aes_gcm_128 {
+        pub info: tls_crypto_info,
+        pub iv: [::c_uchar; TLS_CIPHER_AES_GCM_128_IV_SIZE],
+        pub key: [::c_uchar; TLS_CIPHER_AES_GCM_128_KEY_SIZE],
+        pub salt: [::c_uchar; TLS_CIPHER_AES_GCM_128_SALT_SIZE],
+        pub rec_seq: [::c_uchar; TLS_CIPHER_AES_GCM_128_REC_SEQ_SIZE],
+    }
+
+    pub struct tls12_crypto_info_aes_gcm_256 {
+        pub info: tls_crypto_info,
+        pub iv: [::c_uchar; TLS_CIPHER_AES_GCM_256_IV_SIZE],
+        pub key: [::c_uchar; TLS_CIPHER_AES_GCM_256_KEY_SIZE],
+        pub salt: [::c_uchar; TLS_CIPHER_AES_GCM_256_SALT_SIZE],
+        pub rec_seq: [::c_uchar; TLS_CIPHER_AES_GCM_256_REC_SEQ_SIZE],
+    }
+
+    pub struct tls12_crypto_info_chacha20_poly1305 {
+        pub info: tls_crypto_info,
+        pub iv: [::c_uchar; TLS_CIPHER_CHACHA20_POLY1305_IV_SIZE],
+        pub key: [::c_uchar; TLS_CIPHER_CHACHA20_POLY1305_KEY_SIZE],
+        pub salt: [::c_uchar; TLS_CIPHER_CHACHA20_POLY1305_SALT_SIZE],
+        pub rec_seq: [::c_uchar; TLS_CIPHER_CHACHA20_POLY1305_REC_SEQ_SIZE],
     }
 }
 
@@ -821,6 +877,17 @@ s_no_extra_traits! {
         pub d_reclen: ::c_ushort,
         pub d_type: ::c_uchar,
         pub d_name: [::c_char; 256],
+    }
+
+    pub struct sched_attr {
+        pub size: ::__u32,
+        pub sched_policy: ::__u32,
+        pub sched_flags: ::__u64,
+        pub sched_nice: ::__s32,
+        pub sched_priority: ::__u32,
+        pub sched_runtime: ::__u64,
+        pub sched_deadline: ::__u64,
+        pub sched_period: ::__u64,
     }
 }
 
@@ -1285,6 +1352,46 @@ cfg_if! {
                 self.flags.hash(state);
                 self.tx_type.hash(state);
                 self.rx_filter.hash(state);
+            }
+        }
+
+        impl ::fmt::Debug for sched_attr {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sched_attr")
+                    .field("size", &self.size)
+                    .field("sched_policy", &self.sched_policy)
+                    .field("sched_flags", &self.sched_flags)
+                    .field("sched_nice", &self.sched_nice)
+                    .field("sched_priority", &self.sched_priority)
+                    .field("sched_runtime", &self.sched_runtime)
+                    .field("sched_deadline", &self.sched_deadline)
+                    .field("sched_period", &self.sched_period)
+                    .finish()
+            }
+        }
+        impl PartialEq for sched_attr {
+            fn eq(&self, other: &sched_attr) -> bool {
+                self.size == other.size &&
+                self.sched_policy == other.sched_policy &&
+                self.sched_flags == other.sched_flags &&
+                self.sched_nice == other.sched_nice &&
+                self.sched_priority == other.sched_priority &&
+                self.sched_runtime == other.sched_runtime &&
+                self.sched_deadline == other.sched_deadline &&
+                self.sched_period == other.sched_period
+            }
+        }
+        impl Eq for sched_attr {}
+        impl ::hash::Hash for sched_attr {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.size.hash(state);
+                self.sched_policy.hash(state);
+                self.sched_flags.hash(state);
+                self.sched_nice.hash(state);
+                self.sched_priority.hash(state);
+                self.sched_runtime.hash(state);
+                self.sched_deadline.hash(state);
+                self.sched_period.hash(state);
             }
         }
     }
@@ -1866,6 +1973,8 @@ pub const IFF_TUN: ::c_int = 0x0001;
 pub const IFF_TAP: ::c_int = 0x0002;
 pub const IFF_NAPI: ::c_int = 0x0010;
 pub const IFF_NAPI_FRAGS: ::c_int = 0x0020;
+// Used in TUNSETIFF to bring up tun/tap without carrier
+pub const IFF_NO_CARRIER: ::c_int = 0x0040;
 pub const IFF_NO_PI: ::c_int = 0x1000;
 // Read queue size
 pub const TUN_READQ_SIZE: ::c_short = 500;
@@ -1886,11 +1995,13 @@ pub const IFF_NOFILTER: ::c_int = 0x1000;
 // Socket options
 pub const TUN_TX_TIMESTAMP: ::c_int = 1;
 // Features for GSO (TUNSETOFFLOAD)
-pub const TUN_F_CSUM: ::c_ushort = 0x01; /* You can hand me unchecksummed packets. */
-pub const TUN_F_TSO4: ::c_ushort = 0x02; /* I can handle TSO for IPv4 packets */
-pub const TUN_F_TSO6: ::c_ushort = 0x04; /* I can handle TSO for IPv6 packets */
-pub const TUN_F_TSO_ECN: ::c_ushort = 0x08; /* I can handle TSO with ECN bits. */
-pub const TUN_F_UFO: ::c_ushort = 0x10; /* I can handle UFO packets */
+pub const TUN_F_CSUM: ::c_uint = 0x01;
+pub const TUN_F_TSO4: ::c_uint = 0x02;
+pub const TUN_F_TSO6: ::c_uint = 0x04;
+pub const TUN_F_TSO_ECN: ::c_uint = 0x08;
+pub const TUN_F_UFO: ::c_uint = 0x10;
+pub const TUN_F_USO4: ::c_uint = 0x20;
+pub const TUN_F_USO6: ::c_uint = 0x40;
 // Protocol info prepended to the packets (when IFF_NO_PI is not set)
 pub const TUN_PKT_STRIP: ::c_int = 0x0001;
 // Accept all multicast packets
@@ -1964,21 +2075,13 @@ pub const PTHREAD_PRIO_INHERIT: ::c_int = 1;
 pub const PTHREAD_PRIO_PROTECT: ::c_int = 2;
 pub const PTHREAD_PROCESS_PRIVATE: ::c_int = 0;
 pub const PTHREAD_PROCESS_SHARED: ::c_int = 1;
+pub const PTHREAD_INHERIT_SCHED: ::c_int = 0;
+pub const PTHREAD_EXPLICIT_SCHED: ::c_int = 1;
 pub const __SIZEOF_PTHREAD_COND_T: usize = 48;
 
 pub const RENAME_NOREPLACE: ::c_uint = 1;
 pub const RENAME_EXCHANGE: ::c_uint = 2;
 pub const RENAME_WHITEOUT: ::c_uint = 4;
-
-pub const SCHED_OTHER: ::c_int = 0;
-pub const SCHED_FIFO: ::c_int = 1;
-pub const SCHED_RR: ::c_int = 2;
-pub const SCHED_BATCH: ::c_int = 3;
-pub const SCHED_IDLE: ::c_int = 5;
-
-pub const SCHED_RESET_ON_FORK: ::c_int = 0x40000000;
-
-pub const CLONE_PIDFD: ::c_int = 0x1000;
 
 // netinet/in.h
 // NOTE: These are in addition to the constants defined in src/unix/mod.rs
@@ -2068,6 +2171,7 @@ pub const NI_NUMERICSERV: ::c_int = 2;
 pub const NI_NOFQDN: ::c_int = 4;
 pub const NI_NAMEREQD: ::c_int = 8;
 pub const NI_DGRAM: ::c_int = 16;
+pub const NI_IDN: ::c_int = 32;
 
 pub const SYNC_FILE_RANGE_WAIT_BEFORE: ::c_uint = 1;
 pub const SYNC_FILE_RANGE_WRITE: ::c_uint = 2;
@@ -2237,13 +2341,22 @@ pub const GRND_NONBLOCK: ::c_uint = 0x0001;
 pub const GRND_RANDOM: ::c_uint = 0x0002;
 pub const GRND_INSECURE: ::c_uint = 0x0004;
 
+// <linux/seccomp.h>
 pub const SECCOMP_MODE_DISABLED: ::c_uint = 0;
 pub const SECCOMP_MODE_STRICT: ::c_uint = 1;
 pub const SECCOMP_MODE_FILTER: ::c_uint = 2;
 
+pub const SECCOMP_SET_MODE_STRICT: ::c_uint = 0;
+pub const SECCOMP_SET_MODE_FILTER: ::c_uint = 1;
+pub const SECCOMP_GET_ACTION_AVAIL: ::c_uint = 2;
+pub const SECCOMP_GET_NOTIF_SIZES: ::c_uint = 3;
+
 pub const SECCOMP_FILTER_FLAG_TSYNC: ::c_ulong = 1;
 pub const SECCOMP_FILTER_FLAG_LOG: ::c_ulong = 2;
 pub const SECCOMP_FILTER_FLAG_SPEC_ALLOW: ::c_ulong = 4;
+pub const SECCOMP_FILTER_FLAG_NEW_LISTENER: ::c_ulong = 8;
+pub const SECCOMP_FILTER_FLAG_TSYNC_ESRCH: ::c_ulong = 16;
+pub const SECCOMP_FILTER_FLAG_WAIT_KILLABLE_RECV: ::c_ulong = 32;
 
 pub const SECCOMP_RET_KILL_PROCESS: ::c_uint = 0x80000000;
 pub const SECCOMP_RET_KILL_THREAD: ::c_uint = 0x00000000;
@@ -2257,6 +2370,11 @@ pub const SECCOMP_RET_ALLOW: ::c_uint = 0x7fff0000;
 pub const SECCOMP_RET_ACTION_FULL: ::c_uint = 0xffff0000;
 pub const SECCOMP_RET_ACTION: ::c_uint = 0x7fff0000;
 pub const SECCOMP_RET_DATA: ::c_uint = 0x0000ffff;
+
+pub const SECCOMP_USER_NOTIF_FLAG_CONTINUE: ::c_ulong = 1;
+
+pub const SECCOMP_ADDFD_FLAG_SETFD: ::c_ulong = 1;
+pub const SECCOMP_ADDFD_FLAG_SEND: ::c_ulong = 2;
 
 pub const ITIMER_REAL: ::c_int = 0;
 pub const ITIMER_VIRTUAL: ::c_int = 1;
@@ -2854,6 +2972,293 @@ pub const SIOCSIFMAP: ::c_ulong = 0x00008971;
 pub const SIOCSHWTSTAMP: ::c_ulong = 0x000089b0;
 pub const SIOCGHWTSTAMP: ::c_ulong = 0x000089b1;
 
+// wireless.h
+pub const WIRELESS_EXT: ::c_ulong = 0x16;
+
+pub const SIOCSIWCOMMIT: ::c_ulong = 0x8B00;
+pub const SIOCGIWNAME: ::c_ulong = 0x8B01;
+
+pub const SIOCSIWNWID: ::c_ulong = 0x8B02;
+pub const SIOCGIWNWID: ::c_ulong = 0x8B03;
+pub const SIOCSIWFREQ: ::c_ulong = 0x8B04;
+pub const SIOCGIWFREQ: ::c_ulong = 0x8B05;
+pub const SIOCSIWMODE: ::c_ulong = 0x8B06;
+pub const SIOCGIWMODE: ::c_ulong = 0x8B07;
+pub const SIOCSIWSENS: ::c_ulong = 0x8B08;
+pub const SIOCGIWSENS: ::c_ulong = 0x8B09;
+
+pub const SIOCSIWRANGE: ::c_ulong = 0x8B0A;
+pub const SIOCGIWRANGE: ::c_ulong = 0x8B0B;
+pub const SIOCSIWPRIV: ::c_ulong = 0x8B0C;
+pub const SIOCGIWPRIV: ::c_ulong = 0x8B0D;
+pub const SIOCSIWSTATS: ::c_ulong = 0x8B0E;
+pub const SIOCGIWSTATS: ::c_ulong = 0x8B0F;
+
+pub const SIOCSIWSPY: ::c_ulong = 0x8B10;
+pub const SIOCGIWSPY: ::c_ulong = 0x8B11;
+pub const SIOCSIWTHRSPY: ::c_ulong = 0x8B12;
+pub const SIOCGIWTHRSPY: ::c_ulong = 0x8B13;
+
+pub const SIOCSIWAP: ::c_ulong = 0x8B14;
+pub const SIOCGIWAP: ::c_ulong = 0x8B15;
+pub const SIOCGIWAPLIST: ::c_ulong = 0x8B17;
+pub const SIOCSIWSCAN: ::c_ulong = 0x8B18;
+pub const SIOCGIWSCAN: ::c_ulong = 0x8B19;
+
+pub const SIOCSIWESSID: ::c_ulong = 0x8B1A;
+pub const SIOCGIWESSID: ::c_ulong = 0x8B1B;
+pub const SIOCSIWNICKN: ::c_ulong = 0x8B1C;
+pub const SIOCGIWNICKN: ::c_ulong = 0x8B1D;
+
+pub const SIOCSIWRATE: ::c_ulong = 0x8B20;
+pub const SIOCGIWRATE: ::c_ulong = 0x8B21;
+pub const SIOCSIWRTS: ::c_ulong = 0x8B22;
+pub const SIOCGIWRTS: ::c_ulong = 0x8B23;
+pub const SIOCSIWFRAG: ::c_ulong = 0x8B24;
+pub const SIOCGIWFRAG: ::c_ulong = 0x8B25;
+pub const SIOCSIWTXPOW: ::c_ulong = 0x8B26;
+pub const SIOCGIWTXPOW: ::c_ulong = 0x8B27;
+pub const SIOCSIWRETRY: ::c_ulong = 0x8B28;
+pub const SIOCGIWRETRY: ::c_ulong = 0x8B29;
+
+pub const SIOCSIWENCODE: ::c_ulong = 0x8B2A;
+pub const SIOCGIWENCODE: ::c_ulong = 0x8B2B;
+
+pub const SIOCSIWPOWER: ::c_ulong = 0x8B2C;
+pub const SIOCGIWPOWER: ::c_ulong = 0x8B2D;
+
+pub const SIOCSIWGENIE: ::c_ulong = 0x8B30;
+pub const SIOCGIWGENIE: ::c_ulong = 0x8B31;
+
+pub const SIOCSIWMLME: ::c_ulong = 0x8B16;
+
+pub const SIOCSIWAUTH: ::c_ulong = 0x8B32;
+pub const SIOCGIWAUTH: ::c_ulong = 0x8B33;
+
+pub const SIOCSIWENCODEEXT: ::c_ulong = 0x8B34;
+pub const SIOCGIWENCODEEXT: ::c_ulong = 0x8B35;
+
+pub const SIOCSIWPMKSA: ::c_ulong = 0x8B36;
+
+pub const SIOCIWFIRSTPRIV: ::c_ulong = 0x8BE0;
+pub const SIOCIWLASTPRIV: ::c_ulong = 0x8BFF;
+
+pub const SIOCIWFIRST: ::c_ulong = 0x8B00;
+pub const SIOCIWLAST: ::c_ulong = SIOCIWLASTPRIV;
+
+pub const IWEVTXDROP: ::c_ulong = 0x8C00;
+pub const IWEVQUAL: ::c_ulong = 0x8C01;
+pub const IWEVCUSTOM: ::c_ulong = 0x8C02;
+pub const IWEVREGISTERED: ::c_ulong = 0x8C03;
+pub const IWEVEXPIRED: ::c_ulong = 0x8C04;
+pub const IWEVGENIE: ::c_ulong = 0x8C05;
+pub const IWEVMICHAELMICFAILURE: ::c_ulong = 0x8C06;
+pub const IWEVASSOCREQIE: ::c_ulong = 0x8C07;
+pub const IWEVASSOCRESPIE: ::c_ulong = 0x8C08;
+pub const IWEVPMKIDCAND: ::c_ulong = 0x8C09;
+pub const IWEVFIRST: ::c_ulong = 0x8C00;
+
+pub const IW_PRIV_TYPE_MASK: ::c_ulong = 0x7000;
+pub const IW_PRIV_TYPE_NONE: ::c_ulong = 0x0000;
+pub const IW_PRIV_TYPE_BYTE: ::c_ulong = 0x1000;
+pub const IW_PRIV_TYPE_CHAR: ::c_ulong = 0x2000;
+pub const IW_PRIV_TYPE_INT: ::c_ulong = 0x4000;
+pub const IW_PRIV_TYPE_FLOAT: ::c_ulong = 0x5000;
+pub const IW_PRIV_TYPE_ADDR: ::c_ulong = 0x6000;
+
+pub const IW_PRIV_SIZE_FIXED: ::c_ulong = 0x0800;
+
+pub const IW_PRIV_SIZE_MASK: ::c_ulong = 0x07FF;
+
+pub const IW_MAX_FREQUENCIES: usize = 32;
+pub const IW_MAX_BITRATES: usize = 32;
+pub const IW_MAX_TXPOWER: usize = 8;
+pub const IW_MAX_SPY: usize = 8;
+pub const IW_MAX_AP: usize = 64;
+pub const IW_ESSID_MAX_SIZE: usize = 32;
+
+pub const IW_MODE_AUTO: usize = 0;
+pub const IW_MODE_ADHOC: usize = 1;
+pub const IW_MODE_INFRA: usize = 2;
+pub const IW_MODE_MASTER: usize = 3;
+pub const IW_MODE_REPEAT: usize = 4;
+pub const IW_MODE_SECOND: usize = 5;
+pub const IW_MODE_MONITOR: usize = 6;
+pub const IW_MODE_MESH: usize = 7;
+
+pub const IW_QUAL_QUAL_UPDATED: ::c_ulong = 0x01;
+pub const IW_QUAL_LEVEL_UPDATED: ::c_ulong = 0x02;
+pub const IW_QUAL_NOISE_UPDATED: ::c_ulong = 0x04;
+pub const IW_QUAL_ALL_UPDATED: ::c_ulong = 0x07;
+pub const IW_QUAL_DBM: ::c_ulong = 0x08;
+pub const IW_QUAL_QUAL_INVALID: ::c_ulong = 0x10;
+pub const IW_QUAL_LEVEL_INVALID: ::c_ulong = 0x20;
+pub const IW_QUAL_NOISE_INVALID: ::c_ulong = 0x40;
+pub const IW_QUAL_RCPI: ::c_ulong = 0x80;
+pub const IW_QUAL_ALL_INVALID: ::c_ulong = 0x70;
+
+pub const IW_FREQ_AUTO: ::c_ulong = 0x00;
+pub const IW_FREQ_FIXED: ::c_ulong = 0x01;
+
+pub const IW_MAX_ENCODING_SIZES: usize = 8;
+pub const IW_ENCODING_TOKEN_MAX: usize = 64;
+
+pub const IW_ENCODE_INDEX: ::c_ulong = 0x00FF;
+pub const IW_ENCODE_FLAGS: ::c_ulong = 0xFF00;
+pub const IW_ENCODE_MODE: ::c_ulong = 0xF000;
+pub const IW_ENCODE_DISABLED: ::c_ulong = 0x8000;
+pub const IW_ENCODE_ENABLED: ::c_ulong = 0x0000;
+pub const IW_ENCODE_RESTRICTED: ::c_ulong = 0x4000;
+pub const IW_ENCODE_OPEN: ::c_ulong = 0x2000;
+pub const IW_ENCODE_NOKEY: ::c_ulong = 0x0800;
+pub const IW_ENCODE_TEMP: ::c_ulong = 0x0400;
+
+pub const IW_POWER_ON: ::c_ulong = 0x0000;
+pub const IW_POWER_TYPE: ::c_ulong = 0xF000;
+pub const IW_POWER_PERIOD: ::c_ulong = 0x1000;
+pub const IW_POWER_TIMEOUT: ::c_ulong = 0x2000;
+pub const IW_POWER_MODE: ::c_ulong = 0x0F00;
+pub const IW_POWER_UNICAST_R: ::c_ulong = 0x0100;
+pub const IW_POWER_MULTICAST_R: ::c_ulong = 0x0200;
+pub const IW_POWER_ALL_R: ::c_ulong = 0x0300;
+pub const IW_POWER_FORCE_S: ::c_ulong = 0x0400;
+pub const IW_POWER_REPEATER: ::c_ulong = 0x0800;
+pub const IW_POWER_MODIFIER: ::c_ulong = 0x000F;
+pub const IW_POWER_MIN: ::c_ulong = 0x0001;
+pub const IW_POWER_MAX: ::c_ulong = 0x0002;
+pub const IW_POWER_RELATIVE: ::c_ulong = 0x0004;
+
+pub const IW_TXPOW_TYPE: ::c_ulong = 0x00FF;
+pub const IW_TXPOW_DBM: ::c_ulong = 0x0000;
+pub const IW_TXPOW_MWATT: ::c_ulong = 0x0001;
+pub const IW_TXPOW_RELATIVE: ::c_ulong = 0x0002;
+pub const IW_TXPOW_RANGE: ::c_ulong = 0x1000;
+
+pub const IW_RETRY_ON: ::c_ulong = 0x0000;
+pub const IW_RETRY_TYPE: ::c_ulong = 0xF000;
+pub const IW_RETRY_LIMIT: ::c_ulong = 0x1000;
+pub const IW_RETRY_LIFETIME: ::c_ulong = 0x2000;
+pub const IW_RETRY_MODIFIER: ::c_ulong = 0x00FF;
+pub const IW_RETRY_MIN: ::c_ulong = 0x0001;
+pub const IW_RETRY_MAX: ::c_ulong = 0x0002;
+pub const IW_RETRY_RELATIVE: ::c_ulong = 0x0004;
+pub const IW_RETRY_SHORT: ::c_ulong = 0x0010;
+pub const IW_RETRY_LONG: ::c_ulong = 0x0020;
+
+pub const IW_SCAN_DEFAULT: ::c_ulong = 0x0000;
+pub const IW_SCAN_ALL_ESSID: ::c_ulong = 0x0001;
+pub const IW_SCAN_THIS_ESSID: ::c_ulong = 0x0002;
+pub const IW_SCAN_ALL_FREQ: ::c_ulong = 0x0004;
+pub const IW_SCAN_THIS_FREQ: ::c_ulong = 0x0008;
+pub const IW_SCAN_ALL_MODE: ::c_ulong = 0x0010;
+pub const IW_SCAN_THIS_MODE: ::c_ulong = 0x0020;
+pub const IW_SCAN_ALL_RATE: ::c_ulong = 0x0040;
+pub const IW_SCAN_THIS_RATE: ::c_ulong = 0x0080;
+
+pub const IW_SCAN_TYPE_ACTIVE: usize = 0;
+pub const IW_SCAN_TYPE_PASSIVE: usize = 1;
+
+pub const IW_SCAN_MAX_DATA: usize = 4096;
+
+pub const IW_SCAN_CAPA_NONE: ::c_ulong = 0x00;
+pub const IW_SCAN_CAPA_ESSID: ::c_ulong = 0x01;
+pub const IW_SCAN_CAPA_BSSID: ::c_ulong = 0x02;
+pub const IW_SCAN_CAPA_CHANNEL: ::c_ulong = 0x04;
+pub const IW_SCAN_CAPA_MODE: ::c_ulong = 0x08;
+pub const IW_SCAN_CAPA_RATE: ::c_ulong = 0x10;
+pub const IW_SCAN_CAPA_TYPE: ::c_ulong = 0x20;
+pub const IW_SCAN_CAPA_TIME: ::c_ulong = 0x40;
+
+pub const IW_CUSTOM_MAX: ::c_ulong = 256;
+
+pub const IW_GENERIC_IE_MAX: ::c_ulong = 1024;
+
+pub const IW_MLME_DEAUTH: ::c_ulong = 0;
+pub const IW_MLME_DISASSOC: ::c_ulong = 1;
+pub const IW_MLME_AUTH: ::c_ulong = 2;
+pub const IW_MLME_ASSOC: ::c_ulong = 3;
+
+pub const IW_AUTH_INDEX: ::c_ulong = 0x0FFF;
+pub const IW_AUTH_FLAGS: ::c_ulong = 0xF000;
+
+pub const IW_AUTH_WPA_VERSION: usize = 0;
+pub const IW_AUTH_CIPHER_PAIRWISE: usize = 1;
+pub const IW_AUTH_CIPHER_GROUP: usize = 2;
+pub const IW_AUTH_KEY_MGMT: usize = 3;
+pub const IW_AUTH_TKIP_COUNTERMEASURES: usize = 4;
+pub const IW_AUTH_DROP_UNENCRYPTED: usize = 5;
+pub const IW_AUTH_80211_AUTH_ALG: usize = 6;
+pub const IW_AUTH_WPA_ENABLED: usize = 7;
+pub const IW_AUTH_RX_UNENCRYPTED_EAPOL: usize = 8;
+pub const IW_AUTH_ROAMING_CONTROL: usize = 9;
+pub const IW_AUTH_PRIVACY_INVOKED: usize = 10;
+pub const IW_AUTH_CIPHER_GROUP_MGMT: usize = 11;
+pub const IW_AUTH_MFP: usize = 12;
+
+pub const IW_AUTH_WPA_VERSION_DISABLED: ::c_ulong = 0x00000001;
+pub const IW_AUTH_WPA_VERSION_WPA: ::c_ulong = 0x00000002;
+pub const IW_AUTH_WPA_VERSION_WPA2: ::c_ulong = 0x00000004;
+
+pub const IW_AUTH_CIPHER_NONE: ::c_ulong = 0x00000001;
+pub const IW_AUTH_CIPHER_WEP40: ::c_ulong = 0x00000002;
+pub const IW_AUTH_CIPHER_TKIP: ::c_ulong = 0x00000004;
+pub const IW_AUTH_CIPHER_CCMP: ::c_ulong = 0x00000008;
+pub const IW_AUTH_CIPHER_WEP104: ::c_ulong = 0x00000010;
+pub const IW_AUTH_CIPHER_AES_CMAC: ::c_ulong = 0x00000020;
+
+pub const IW_AUTH_KEY_MGMT_802_1X: usize = 1;
+pub const IW_AUTH_KEY_MGMT_PSK: usize = 2;
+
+pub const IW_AUTH_ALG_OPEN_SYSTEM: ::c_ulong = 0x00000001;
+pub const IW_AUTH_ALG_SHARED_KEY: ::c_ulong = 0x00000002;
+pub const IW_AUTH_ALG_LEAP: ::c_ulong = 0x00000004;
+
+pub const IW_AUTH_ROAMING_ENABLE: usize = 0;
+pub const IW_AUTH_ROAMING_DISABLE: usize = 1;
+
+pub const IW_AUTH_MFP_DISABLED: usize = 0;
+pub const IW_AUTH_MFP_OPTIONAL: usize = 1;
+pub const IW_AUTH_MFP_REQUIRED: usize = 2;
+
+pub const IW_ENCODE_SEQ_MAX_SIZE: usize = 8;
+
+pub const IW_ENCODE_ALG_NONE: usize = 0;
+pub const IW_ENCODE_ALG_WEP: usize = 1;
+pub const IW_ENCODE_ALG_TKIP: usize = 2;
+pub const IW_ENCODE_ALG_CCMP: usize = 3;
+pub const IW_ENCODE_ALG_PMK: usize = 4;
+pub const IW_ENCODE_ALG_AES_CMAC: usize = 5;
+
+pub const IW_ENCODE_EXT_TX_SEQ_VALID: ::c_ulong = 0x00000001;
+pub const IW_ENCODE_EXT_RX_SEQ_VALID: ::c_ulong = 0x00000002;
+pub const IW_ENCODE_EXT_GROUP_KEY: ::c_ulong = 0x00000004;
+pub const IW_ENCODE_EXT_SET_TX_KEY: ::c_ulong = 0x00000008;
+
+pub const IW_MICFAILURE_KEY_ID: ::c_ulong = 0x00000003;
+pub const IW_MICFAILURE_GROUP: ::c_ulong = 0x00000004;
+pub const IW_MICFAILURE_PAIRWISE: ::c_ulong = 0x00000008;
+pub const IW_MICFAILURE_STAKEY: ::c_ulong = 0x00000010;
+pub const IW_MICFAILURE_COUNT: ::c_ulong = 0x00000060;
+
+pub const IW_ENC_CAPA_WPA: ::c_ulong = 0x00000001;
+pub const IW_ENC_CAPA_WPA2: ::c_ulong = 0x00000002;
+pub const IW_ENC_CAPA_CIPHER_TKIP: ::c_ulong = 0x00000004;
+pub const IW_ENC_CAPA_CIPHER_CCMP: ::c_ulong = 0x00000008;
+pub const IW_ENC_CAPA_4WAY_HANDSHAKE: ::c_ulong = 0x00000010;
+
+pub const IW_PMKSA_ADD: usize = 1;
+pub const IW_PMKSA_REMOVE: usize = 2;
+pub const IW_PMKSA_FLUSH: usize = 3;
+
+pub const IW_PMKID_LEN: usize = 16;
+
+pub const IW_PMKID_CAND_PREAUTH: ::c_ulong = 0x00000001;
+
+pub const IW_EV_LCP_PK_LEN: usize = 4;
+
+pub const IW_EV_CHAR_PK_LEN: usize = IW_EV_LCP_PK_LEN + ::IFNAMSIZ;
+pub const IW_EV_POINT_PK_LEN: usize = IW_EV_LCP_PK_LEN + 4;
+
 pub const IPTOS_TOS_MASK: u8 = 0x1E;
 pub const IPTOS_PREC_MASK: u8 = 0xE0;
 
@@ -3234,6 +3639,41 @@ pub const HWTSTAMP_FILTER_PTP_V2_DELAY_REQ: ::c_uint = 14;
 pub const HWTSTAMP_FILTER_NTP_ALL: ::c_uint = 15;
 
 // linux/tls.h
+pub const TLS_TX: ::c_int = 1;
+pub const TLS_RX: ::c_int = 2;
+
+pub const TLS_1_2_VERSION_MAJOR: ::__u8 = 0x3;
+pub const TLS_1_2_VERSION_MINOR: ::__u8 = 0x3;
+pub const TLS_1_2_VERSION: ::__u16 =
+    ((TLS_1_2_VERSION_MAJOR as ::__u16) << 8) | (TLS_1_2_VERSION_MINOR as ::__u16);
+
+pub const TLS_1_3_VERSION_MAJOR: ::__u8 = 0x3;
+pub const TLS_1_3_VERSION_MINOR: ::__u8 = 0x4;
+pub const TLS_1_3_VERSION: ::__u16 =
+    ((TLS_1_3_VERSION_MAJOR as ::__u16) << 8) | (TLS_1_3_VERSION_MINOR as ::__u16);
+
+pub const TLS_CIPHER_AES_GCM_128: ::__u16 = 51;
+pub const TLS_CIPHER_AES_GCM_128_IV_SIZE: usize = 8;
+pub const TLS_CIPHER_AES_GCM_128_KEY_SIZE: usize = 16;
+pub const TLS_CIPHER_AES_GCM_128_SALT_SIZE: usize = 4;
+pub const TLS_CIPHER_AES_GCM_128_TAG_SIZE: usize = 16;
+pub const TLS_CIPHER_AES_GCM_128_REC_SEQ_SIZE: usize = 8;
+
+pub const TLS_CIPHER_AES_GCM_256: ::__u16 = 52;
+pub const TLS_CIPHER_AES_GCM_256_IV_SIZE: usize = 8;
+pub const TLS_CIPHER_AES_GCM_256_KEY_SIZE: usize = 32;
+pub const TLS_CIPHER_AES_GCM_256_SALT_SIZE: usize = 4;
+pub const TLS_CIPHER_AES_GCM_256_TAG_SIZE: usize = 16;
+pub const TLS_CIPHER_AES_GCM_256_REC_SEQ_SIZE: usize = 8;
+
+pub const TLS_CIPHER_CHACHA20_POLY1305: ::__u16 = 54;
+pub const TLS_CIPHER_CHACHA20_POLY1305_IV_SIZE: usize = 12;
+pub const TLS_CIPHER_CHACHA20_POLY1305_KEY_SIZE: usize = 32;
+pub const TLS_CIPHER_CHACHA20_POLY1305_SALT_SIZE: usize = 0;
+pub const TLS_CIPHER_CHACHA20_POLY1305_TAG_SIZE: usize = 16;
+pub const TLS_CIPHER_CHACHA20_POLY1305_REC_SEQ_SIZE: usize = 8;
+
+pub const TLS_SET_RECORD_TYPE: ::c_int = 1;
 pub const TLS_GET_RECORD_TYPE: ::c_int = 2;
 
 pub const SOL_TLS: ::c_int = 282;
@@ -4029,6 +4469,198 @@ pub const DCCP_SOCKOPT_CCID_TX_INFO: ::c_int = 192;
 /// maximum number of services provided on the same listening port
 pub const DCCP_SERVICE_LIST_MAX_LEN: ::c_int = 32;
 
+pub const CTL_KERN: ::c_int = 1;
+pub const CTL_VM: ::c_int = 2;
+pub const CTL_NET: ::c_int = 3;
+pub const CTL_FS: ::c_int = 5;
+pub const CTL_DEBUG: ::c_int = 6;
+pub const CTL_DEV: ::c_int = 7;
+pub const CTL_BUS: ::c_int = 8;
+pub const CTL_ABI: ::c_int = 9;
+pub const CTL_CPU: ::c_int = 10;
+
+pub const CTL_BUS_ISA: ::c_int = 1;
+
+pub const INOTIFY_MAX_USER_INSTANCES: ::c_int = 1;
+pub const INOTIFY_MAX_USER_WATCHES: ::c_int = 2;
+pub const INOTIFY_MAX_QUEUED_EVENTS: ::c_int = 3;
+
+pub const KERN_OSTYPE: ::c_int = 1;
+pub const KERN_OSRELEASE: ::c_int = 2;
+pub const KERN_OSREV: ::c_int = 3;
+pub const KERN_VERSION: ::c_int = 4;
+pub const KERN_SECUREMASK: ::c_int = 5;
+pub const KERN_PROF: ::c_int = 6;
+pub const KERN_NODENAME: ::c_int = 7;
+pub const KERN_DOMAINNAME: ::c_int = 8;
+pub const KERN_PANIC: ::c_int = 15;
+pub const KERN_REALROOTDEV: ::c_int = 16;
+pub const KERN_SPARC_REBOOT: ::c_int = 21;
+pub const KERN_CTLALTDEL: ::c_int = 22;
+pub const KERN_PRINTK: ::c_int = 23;
+pub const KERN_NAMETRANS: ::c_int = 24;
+pub const KERN_PPC_HTABRECLAIM: ::c_int = 25;
+pub const KERN_PPC_ZEROPAGED: ::c_int = 26;
+pub const KERN_PPC_POWERSAVE_NAP: ::c_int = 27;
+pub const KERN_MODPROBE: ::c_int = 28;
+pub const KERN_SG_BIG_BUFF: ::c_int = 29;
+pub const KERN_ACCT: ::c_int = 30;
+pub const KERN_PPC_L2CR: ::c_int = 31;
+pub const KERN_RTSIGNR: ::c_int = 32;
+pub const KERN_RTSIGMAX: ::c_int = 33;
+pub const KERN_SHMMAX: ::c_int = 34;
+pub const KERN_MSGMAX: ::c_int = 35;
+pub const KERN_MSGMNB: ::c_int = 36;
+pub const KERN_MSGPOOL: ::c_int = 37;
+pub const KERN_SYSRQ: ::c_int = 38;
+pub const KERN_MAX_THREADS: ::c_int = 39;
+pub const KERN_RANDOM: ::c_int = 40;
+pub const KERN_SHMALL: ::c_int = 41;
+pub const KERN_MSGMNI: ::c_int = 42;
+pub const KERN_SEM: ::c_int = 43;
+pub const KERN_SPARC_STOP_A: ::c_int = 44;
+pub const KERN_SHMMNI: ::c_int = 45;
+pub const KERN_OVERFLOWUID: ::c_int = 46;
+pub const KERN_OVERFLOWGID: ::c_int = 47;
+pub const KERN_SHMPATH: ::c_int = 48;
+pub const KERN_HOTPLUG: ::c_int = 49;
+pub const KERN_IEEE_EMULATION_WARNINGS: ::c_int = 50;
+pub const KERN_S390_USER_DEBUG_LOGGING: ::c_int = 51;
+pub const KERN_CORE_USES_PID: ::c_int = 52;
+pub const KERN_TAINTED: ::c_int = 53;
+pub const KERN_CADPID: ::c_int = 54;
+pub const KERN_PIDMAX: ::c_int = 55;
+pub const KERN_CORE_PATTERN: ::c_int = 56;
+pub const KERN_PANIC_ON_OOPS: ::c_int = 57;
+pub const KERN_HPPA_PWRSW: ::c_int = 58;
+pub const KERN_HPPA_UNALIGNED: ::c_int = 59;
+pub const KERN_PRINTK_RATELIMIT: ::c_int = 60;
+pub const KERN_PRINTK_RATELIMIT_BURST: ::c_int = 61;
+pub const KERN_PTY: ::c_int = 62;
+pub const KERN_NGROUPS_MAX: ::c_int = 63;
+pub const KERN_SPARC_SCONS_PWROFF: ::c_int = 64;
+pub const KERN_HZ_TIMER: ::c_int = 65;
+pub const KERN_UNKNOWN_NMI_PANIC: ::c_int = 66;
+pub const KERN_BOOTLOADER_TYPE: ::c_int = 67;
+pub const KERN_RANDOMIZE: ::c_int = 68;
+pub const KERN_SETUID_DUMPABLE: ::c_int = 69;
+pub const KERN_SPIN_RETRY: ::c_int = 70;
+pub const KERN_ACPI_VIDEO_FLAGS: ::c_int = 71;
+pub const KERN_IA64_UNALIGNED: ::c_int = 72;
+pub const KERN_COMPAT_LOG: ::c_int = 73;
+pub const KERN_MAX_LOCK_DEPTH: ::c_int = 74;
+pub const KERN_NMI_WATCHDOG: ::c_int = 75;
+pub const KERN_PANIC_ON_NMI: ::c_int = 76;
+
+pub const VM_OVERCOMMIT_MEMORY: ::c_int = 5;
+pub const VM_PAGE_CLUSTER: ::c_int = 10;
+pub const VM_DIRTY_BACKGROUND: ::c_int = 11;
+pub const VM_DIRTY_RATIO: ::c_int = 12;
+pub const VM_DIRTY_WB_CS: ::c_int = 13;
+pub const VM_DIRTY_EXPIRE_CS: ::c_int = 14;
+pub const VM_NR_PDFLUSH_THREADS: ::c_int = 15;
+pub const VM_OVERCOMMIT_RATIO: ::c_int = 16;
+pub const VM_PAGEBUF: ::c_int = 17;
+pub const VM_HUGETLB_PAGES: ::c_int = 18;
+pub const VM_SWAPPINESS: ::c_int = 19;
+pub const VM_LOWMEM_RESERVE_RATIO: ::c_int = 20;
+pub const VM_MIN_FREE_KBYTES: ::c_int = 21;
+pub const VM_MAX_MAP_COUNT: ::c_int = 22;
+pub const VM_LAPTOP_MODE: ::c_int = 23;
+pub const VM_BLOCK_DUMP: ::c_int = 24;
+pub const VM_HUGETLB_GROUP: ::c_int = 25;
+pub const VM_VFS_CACHE_PRESSURE: ::c_int = 26;
+pub const VM_LEGACY_VA_LAYOUT: ::c_int = 27;
+pub const VM_SWAP_TOKEN_TIMEOUT: ::c_int = 28;
+pub const VM_DROP_PAGECACHE: ::c_int = 29;
+pub const VM_PERCPU_PAGELIST_FRACTION: ::c_int = 30;
+pub const VM_ZONE_RECLAIM_MODE: ::c_int = 31;
+pub const VM_MIN_UNMAPPED: ::c_int = 32;
+pub const VM_PANIC_ON_OOM: ::c_int = 33;
+pub const VM_VDSO_ENABLED: ::c_int = 34;
+pub const VM_MIN_SLAB: ::c_int = 35;
+
+pub const NET_CORE: ::c_int = 1;
+pub const NET_ETHER: ::c_int = 2;
+pub const NET_802: ::c_int = 3;
+pub const NET_UNIX: ::c_int = 4;
+pub const NET_IPV4: ::c_int = 5;
+pub const NET_IPX: ::c_int = 6;
+pub const NET_ATALK: ::c_int = 7;
+pub const NET_NETROM: ::c_int = 8;
+pub const NET_AX25: ::c_int = 9;
+pub const NET_BRIDGE: ::c_int = 10;
+pub const NET_ROSE: ::c_int = 11;
+pub const NET_IPV6: ::c_int = 12;
+pub const NET_X25: ::c_int = 13;
+pub const NET_TR: ::c_int = 14;
+pub const NET_DECNET: ::c_int = 15;
+pub const NET_ECONET: ::c_int = 16;
+pub const NET_SCTP: ::c_int = 17;
+pub const NET_LLC: ::c_int = 18;
+pub const NET_NETFILTER: ::c_int = 19;
+pub const NET_DCCP: ::c_int = 20;
+pub const NET_IRDA: ::c_int = 412;
+
+// include/linux/sched.h
+pub const PF_VCPU: ::c_int = 0x00000001;
+pub const PF_IDLE: ::c_int = 0x00000002;
+pub const PF_EXITING: ::c_int = 0x00000004;
+pub const PF_POSTCOREDUMP: ::c_int = 0x00000008;
+pub const PF_IO_WORKER: ::c_int = 0x00000010;
+pub const PF_WQ_WORKER: ::c_int = 0x00000020;
+pub const PF_FORKNOEXEC: ::c_int = 0x00000040;
+pub const PF_MCE_PROCESS: ::c_int = 0x00000080;
+pub const PF_SUPERPRIV: ::c_int = 0x00000100;
+pub const PF_DUMPCORE: ::c_int = 0x00000200;
+pub const PF_SIGNALED: ::c_int = 0x00000400;
+pub const PF_MEMALLOC: ::c_int = 0x00000800;
+pub const PF_NPROC_EXCEEDED: ::c_int = 0x00001000;
+pub const PF_USED_MATH: ::c_int = 0x00002000;
+pub const PF_USER_WORKER: ::c_int = 0x00004000;
+pub const PF_NOFREEZE: ::c_int = 0x00008000;
+pub const PF_KSWAPD: ::c_int = 0x00020000;
+pub const PF_MEMALLOC_NOFS: ::c_int = 0x00040000;
+pub const PF_MEMALLOC_NOIO: ::c_int = 0x00080000;
+pub const PF_LOCAL_THROTTLE: ::c_int = 0x00100000;
+pub const PF_KTHREAD: ::c_int = 0x00200000;
+pub const PF_RANDOMIZE: ::c_int = 0x00400000;
+pub const PF_NO_SETAFFINITY: ::c_int = 0x04000000;
+pub const PF_MCE_EARLY: ::c_int = 0x08000000;
+pub const PF_MEMALLOC_PIN: ::c_int = 0x10000000;
+
+pub const CSIGNAL: ::c_int = 0x000000ff;
+
+pub const SCHED_NORMAL: ::c_int = 0;
+pub const SCHED_OTHER: ::c_int = 0;
+pub const SCHED_FIFO: ::c_int = 1;
+pub const SCHED_RR: ::c_int = 2;
+pub const SCHED_BATCH: ::c_int = 3;
+pub const SCHED_IDLE: ::c_int = 5;
+pub const SCHED_DEADLINE: ::c_int = 6;
+
+pub const SCHED_RESET_ON_FORK: ::c_int = 0x40000000;
+
+pub const CLONE_PIDFD: ::c_int = 0x1000;
+
+pub const SCHED_FLAG_RESET_ON_FORK: ::c_int = 0x01;
+pub const SCHED_FLAG_RECLAIM: ::c_int = 0x02;
+pub const SCHED_FLAG_DL_OVERRUN: ::c_int = 0x04;
+pub const SCHED_FLAG_KEEP_POLICY: ::c_int = 0x08;
+pub const SCHED_FLAG_KEEP_PARAMS: ::c_int = 0x10;
+pub const SCHED_FLAG_UTIL_CLAMP_MIN: ::c_int = 0x20;
+pub const SCHED_FLAG_UTIL_CLAMP_MAX: ::c_int = 0x40;
+
+pub const SCHED_FLAG_KEEP_ALL: ::c_int = SCHED_FLAG_KEEP_POLICY | SCHED_FLAG_KEEP_PARAMS;
+
+pub const SCHED_FLAG_UTIL_CLAMP: ::c_int = SCHED_FLAG_UTIL_CLAMP_MIN | SCHED_FLAG_UTIL_CLAMP_MAX;
+
+pub const SCHED_FLAG_ALL: ::c_int = SCHED_FLAG_RESET_ON_FORK
+    | SCHED_FLAG_RECLAIM
+    | SCHED_FLAG_DL_OVERRUN
+    | SCHED_FLAG_KEEP_ALL
+    | SCHED_FLAG_UTIL_CLAMP;
+
 f! {
     pub fn NLA_ALIGN(len: ::c_int) -> ::c_int {
         return ((len) + NLA_ALIGNTO - 1) & !(NLA_ALIGNTO - 1)
@@ -4243,7 +4875,7 @@ cfg_if! {
                 host: *mut ::c_char,
                 hostlen: ::socklen_t,
                 serv: *mut ::c_char,
-                sevlen: ::socklen_t,
+                servlen: ::socklen_t,
                 flags: ::c_int,
             ) -> ::c_int;
             pub fn getloadavg(
@@ -4602,6 +5234,9 @@ extern "C" {
         flags: ::c_uint,
     ) -> ::ssize_t;
     pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
+    pub fn eventfd_read(fd: ::c_int, value: *mut eventfd_t) -> ::c_int;
+    pub fn eventfd_write(fd: ::c_int, value: eventfd_t) -> ::c_int;
+
     pub fn sched_rr_get_interval(pid: ::pid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t, abstime: *const ::timespec) -> ::c_int;
     pub fn sem_getvalue(sem: *mut sem_t, sval: *mut ::c_int) -> ::c_int;
@@ -4684,6 +5319,27 @@ extern "C" {
         guardsize: *mut ::size_t,
     ) -> ::c_int;
     pub fn pthread_attr_setguardsize(attr: *mut ::pthread_attr_t, guardsize: ::size_t) -> ::c_int;
+    pub fn pthread_attr_getinheritsched(
+        attr: *const ::pthread_attr_t,
+        inheritsched: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_attr_setinheritsched(
+        attr: *mut ::pthread_attr_t,
+        inheritsched: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_attr_getschedpolicy(
+        attr: *const ::pthread_attr_t,
+        policy: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_attr_setschedpolicy(attr: *mut ::pthread_attr_t, policy: ::c_int) -> ::c_int;
+    pub fn pthread_attr_getschedparam(
+        attr: *const ::pthread_attr_t,
+        param: *mut ::sched_param,
+    ) -> ::c_int;
+    pub fn pthread_attr_setschedparam(
+        attr: *mut ::pthread_attr_t,
+        param: *const ::sched_param,
+    ) -> ::c_int;
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
     pub fn sched_get_priority_min(policy: ::c_int) -> ::c_int;
     pub fn pthread_condattr_getpshared(

@@ -2889,7 +2889,7 @@ extern "C" {
         host: *mut ::c_char,
         hostlen: ::size_t,
         serv: *mut ::c_char,
-        sevlen: ::size_t,
+        servlen: ::size_t,
         flags: ::c_int,
     ) -> ::c_int;
     pub fn getpagesize() -> ::c_int;

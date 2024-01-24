@@ -1294,12 +1294,13 @@ pub const O_EXCL: ::c_int = 1024;
 pub const O_NOCTTY: ::c_int = 2048;
 pub const O_TRUNC: ::c_int = 512;
 pub const O_NOFOLLOW: ::c_int = 0x20000;
-pub const O_DIRECTORY: ::c_int = 0x1000000;
 pub const O_SEARCH: ::c_int = 0x200000;
 pub const O_EXEC: ::c_int = 0x400000;
 pub const O_CLOEXEC: ::c_int = 0x800000;
 pub const O_ACCMODE: ::c_int = 0x600003;
 pub const O_XATTR: ::c_int = 0x4000;
+pub const O_DIRECTORY: ::c_int = 0x1000000;
+pub const O_DIRECT: ::c_int = 0x2000000;
 pub const S_IFIFO: mode_t = 4096;
 pub const S_IFCHR: mode_t = 8192;
 pub const S_IFBLK: mode_t = 24576;
@@ -2588,6 +2589,9 @@ const _CMSG_DATA_ALIGNMENT: usize = ::mem::size_of::<::c_int>();
 
 const NEWDEV: ::c_int = 1;
 
+// sys/sendfile.h
+pub const SFV_FD_SELF: ::c_int = -2;
+
 const_fn! {
     {const} fn _CMSG_HDR_ALIGN(p: usize) -> usize {
         (p + _CMSG_HDR_ALIGNMENT - 1) & !(_CMSG_HDR_ALIGNMENT - 1)
@@ -2753,7 +2757,7 @@ extern "C" {
         host: *mut ::c_char,
         hostlen: ::socklen_t,
         serv: *mut ::c_char,
-        sevlen: ::socklen_t,
+        servlen: ::socklen_t,
         flags: ::c_int,
     ) -> ::c_int;
     pub fn setpwent();
@@ -2948,6 +2952,7 @@ extern "C" {
         result: *mut *mut ::group,
     ) -> ::c_int;
     pub fn sigaltstack(ss: *const stack_t, oss: *mut stack_t) -> ::c_int;
+    pub fn sigsuspend(mask: *const ::sigset_t) -> ::c_int;
     pub fn sem_close(sem: *mut sem_t) -> ::c_int;
     pub fn getdtablesize() -> ::c_int;
 
@@ -3203,9 +3208,9 @@ extern "C" {
 
     pub fn sync();
 
-    fn __major(version: ::c_int, devnum: ::dev_t) -> ::major_t;
-    fn __minor(version: ::c_int, devnum: ::dev_t) -> ::minor_t;
-    fn __makedev(version: ::c_int, majdev: ::major_t, mindev: ::minor_t) -> ::dev_t;
+    pub fn __major(version: ::c_int, devnum: ::dev_t) -> ::major_t;
+    pub fn __minor(version: ::c_int, devnum: ::dev_t) -> ::minor_t;
+    pub fn __makedev(version: ::c_int, majdev: ::major_t, mindev: ::minor_t) -> ::dev_t;
 }
 
 #[link(name = "sendfile")]

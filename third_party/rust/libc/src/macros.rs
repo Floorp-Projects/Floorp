@@ -120,6 +120,12 @@ macro_rules! s_no_extra_traits {
     );
 }
 
+macro_rules! missing {
+    ($($(#[$attr:meta])* pub enum $i:ident {})*) => ($(
+        $(#[$attr])* #[allow(missing_copy_implementations)] pub enum $i { }
+    )*);
+}
+
 macro_rules! e {
     ($($(#[$attr:meta])* pub enum $i:ident { $($field:tt)* })*) => ($(
         __item! {
