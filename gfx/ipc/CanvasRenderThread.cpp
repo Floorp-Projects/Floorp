@@ -34,7 +34,8 @@ static bool sCanvasRenderThreadEverStarted = false;
 CanvasRenderThread::CanvasRenderThread(nsCOMPtr<nsIThread>&& aThread,
                                        nsCOMPtr<nsIThreadPool>&& aWorkers,
                                        bool aCreatedThread)
-    : mThread(std::move(aThread)),
+    : mMutex("CanvasRenderThread::mMutex"),
+      mThread(std::move(aThread)),
       mWorkers(std::move(aWorkers)),
       mCreatedThread(aCreatedThread) {}
 
@@ -148,7 +149,26 @@ void CanvasRenderThread::Shutdown() {
     return;
   }
 
+  // This closes all of the IPDL actors with possibly active task queues.
   CanvasManagerParent::Shutdown();
+
+  // Any task queues that are in the process of shutting down are tracked in
+  // mPendingShutdownTaskQueues. We need to block on each one until all events
+  // are flushed so that we can safely teardown RemoteTextureMap afterwards.
+  while (true) {
+    RefPtr<TaskQueue> taskQueue;
+    {
+      MutexAutoLock lock(sCanvasRenderThread->mMutex);
+
+      auto& pendingQueues = sCanvasRenderThread->mPendingShutdownTaskQueues;
+      if (pendingQueues.IsEmpty()) {
+        break;
+      }
+
+      taskQueue = pendingQueues.PopLastElement();
+    }
+    taskQueue->AwaitShutdownAndIdle();
+  }
 
   // Null out sCanvasRenderThread before we enter synchronous Shutdown,
   // from here on we are to be considered shut down for our consumers.
@@ -207,13 +227,41 @@ already_AddRefed<nsIThread> CanvasRenderThread::GetCanvasRenderThread() {
 
 /* static */ already_AddRefed<TaskQueue>
 CanvasRenderThread::CreateWorkerTaskQueue() {
-  if (!sCanvasRenderThread || !sCanvasRenderThread->mWorkers) {
+  if (!sCanvasRenderThread) {
     return nullptr;
   }
 
-  return TaskQueue::Create(do_AddRef(sCanvasRenderThread->mWorkers),
+  if (sCanvasRenderThread->mWorkers) {
+    return TaskQueue::Create(do_AddRef(sCanvasRenderThread->mWorkers),
+                             "CanvasWorker")
+        .forget();
+  }
+
+  return TaskQueue::Create(do_AddRef(sCanvasRenderThread->mThread),
                            "CanvasWorker")
       .forget();
+}
+
+/* static */ void CanvasRenderThread::ShutdownWorkerTaskQueue(
+    TaskQueue* aTaskQueue) {
+  if (!sCanvasRenderThread) {
+    MOZ_ASSERT_UNREACHABLE("No CanvasRenderThread!");
+    return;
+  }
+
+  MutexAutoLock lock(sCanvasRenderThread->mMutex);
+  auto& pendingQueues = sCanvasRenderThread->mPendingShutdownTaskQueues;
+  pendingQueues.AppendElement(aTaskQueue);
+}
+
+/* static */ void CanvasRenderThread::FinishShutdownWorkerTaskQueue(
+    TaskQueue* aTaskQueue) {
+  if (!sCanvasRenderThread) {
+    return;
+  }
+
+  MutexAutoLock lock(sCanvasRenderThread->mMutex);
+  sCanvasRenderThread->mPendingShutdownTaskQueues.RemoveElement(aTaskQueue);
 }
 
 /* static */ void CanvasRenderThread::Dispatch(

@@ -98,8 +98,7 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
   if (!mHelpers->InitTranslator(aTextureType, aBackendType,
                                 std::move(header->handle),
                                 std::move(bufferHandles), mDefaultBufferSize,
-                                std::move(readerSem), std::move(writerSem),
-                                /* aUseIPDLThread */ false)) {
+                                std::move(readerSem), std::move(writerSem))) {
     return false;
   }
 
