@@ -59,7 +59,7 @@ class UnsubscribeResultRunnable final : public WorkerRunnable {
   UnsubscribeResultRunnable(WorkerPrivate* aWorkerPrivate,
                             RefPtr<PromiseWorkerProxy>&& aProxy,
                             nsresult aStatus, bool aSuccess)
-      : WorkerRunnable(aWorkerPrivate),
+      : WorkerRunnable(aWorkerPrivate, "UnsubscribeResultRunnable"),
         mProxy(std::move(aProxy)),
         mStatus(aStatus),
         mSuccess(aSuccess) {

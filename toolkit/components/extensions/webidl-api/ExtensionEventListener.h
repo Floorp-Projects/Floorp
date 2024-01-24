@@ -120,7 +120,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
 // A WorkerRunnable subclass used to call an ExtensionEventListener
 // in the thread that owns the dom::Function wrapped by the
 // ExtensionEventListener class.
-class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
+class ExtensionListenerCallWorkerRunnable final : public dom::WorkerRunnable {
   friend class ExtensionListenerCallPromiseResultHandler;
 
  public:
@@ -134,7 +134,7 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
       ListenerCallOptions* aCallOptions,
       RefPtr<dom::Promise> aPromiseRetval = nullptr)
       : WorkerRunnable(aExtensionEventListener->GetWorkerPrivate(),
-                       WorkerThread),
+                       "ExtensionListenerCallWorkerRunnable", WorkerThread),
         mListener(aExtensionEventListener),
         mArgsHolder(std::move(aArgsHolder)),
         mPromiseResult(std::move(aPromiseRetval)),

@@ -124,7 +124,8 @@ class RequestResolver::FinishWorkerRunnable final : public WorkerRunnable {
 
  public:
   explicit FinishWorkerRunnable(RequestResolver* aResolver)
-      : WorkerRunnable(aResolver->mProxy->GetWorkerPrivate()),
+      : WorkerRunnable(aResolver->mProxy->GetWorkerPrivate(),
+                       "RequestResolver::FinishWorkerRunnable"),
         mResolver(aResolver) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aResolver);
