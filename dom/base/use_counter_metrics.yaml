@@ -131,8 +131,8 @@ use.counter.error:
     send_in_pings:
       - use-counters
 
-# Total of 2299 use counter metrics (excludes denominators).
-# Total of 356 'page' use counters.
+# Total of 2301 use counter metrics (excludes denominators).
+# Total of 357 'page' use counters.
 use.counter.page:
   svgsvgelement_getelementbyid:
     type: counter
@@ -5982,6 +5982,23 @@ use.counter.page:
     send_in_pings:
       - use-counters
 
+  htmldialogelement_show:
+    type: counter
+    description: >
+      Whether a page called called HTMLDialogElement.show.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   mixed_content_upgraded_image_success:
     type: counter
     description: >
@@ -6186,7 +6203,7 @@ use.counter.page:
     send_in_pings:
       - use-counters
 
-# Total of 356 'document' use counters.
+# Total of 357 'document' use counters.
 use.counter.doc:
   svgsvgelement_getelementbyid:
     type: counter
@@ -12023,6 +12040,23 @@ use.counter.doc:
     type: counter
     description: >
       Whether a document called called Scheduler.postTask.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  htmldialogelement_show:
+    type: counter
+    description: >
+      Whether a document called called HTMLDialogElement.show.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
