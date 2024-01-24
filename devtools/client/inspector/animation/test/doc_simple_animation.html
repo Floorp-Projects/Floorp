@@ -90,6 +90,8 @@
 
     .compositor-notall {
       animation: compositor-notall 2s infinite;
+      /* Blocks the transform animation from running in the compositor */
+      backface-visibility: hidden;
     }
 
     .longhand {

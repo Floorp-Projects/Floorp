@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "dom.animations-api.compositing.enabled=true",
-  "dom.animations.mainthread-synchronization-with-geometric-animations=true",
   "gfx.omta.background-color=true",
   "layout.css.basic-shape-rect.enabled=true",
   "layout.css.basic-shape-xywh.enabled=true",

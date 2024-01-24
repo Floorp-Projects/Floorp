@@ -178,16 +178,6 @@ void DocumentTimeline::MostRecentRefreshTimeUpdated() {
 
   TickState state;
   bool ticked = Tick(state);
-  if (state.mStartedAnyGeometricTransition) {
-    for (auto* transition : state.mStartedTransitions) {
-      transition->SetSyncWithGeometricAnimations();
-    }
-  }
-  if (state.mStartedAnyGeometricAnimation) {
-    for (auto* animation : state.mStartedAnimations) {
-      animation->SetSyncWithGeometricAnimations();
-    }
-  }
   if (!ticked) {
     // We already assert that GetRefreshDriver() is non-null at the beginning
     // of this function but we check it again here to be sure that ticking

@@ -330,7 +330,6 @@ class Animation : public DOMEventTargetHelper,
   void NotifyEffectTimingUpdated();
   void NotifyEffectPropertiesUpdated();
   void NotifyEffectTargetUpdated();
-  void NotifyGeometricAnimationsStartingThisFrame();
 
   /**
    * Used by subclasses to synchronously queue a cancel event in situations
@@ -402,7 +401,6 @@ class Animation : public DOMEventTargetHelper,
   void UpdateHiddenByContentVisibility();
 
   DocGroup* GetDocGroup();
-  void SetSyncWithGeometricAnimations() { mSyncWithGeometricAnimations = true; }
 
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
@@ -566,11 +564,6 @@ class Animation : public DOMEventTargetHelper,
   // in that case mFinished is immediately reset to represent a new current
   // finished promise.
   bool mFinishedIsResolved = false;
-
-  // True if this animation was triggered at the same time as one or more
-  // geometric animations and hence we should run any transform animations on
-  // the main thread.
-  bool mSyncWithGeometricAnimations = false;
 
   RefPtr<MicroTaskRunnable> mFinishNotificationTask;
 

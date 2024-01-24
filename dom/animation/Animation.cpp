@@ -929,21 +929,7 @@ void Animation::Tick(AnimationTimeline::TickState& aTickState) {
     // Finish pending if we can, but make sure we've seen one existing tick
     // at least.
     if (mSawTickWhilePending) {
-      if (TryTriggerNow() &&
-          StaticPrefs::
-              dom_animations_mainthread_synchronization_with_geometric_animations()) {
-        auto* transition = AsCSSTransition();
-        const bool isTransition = transition && transition->IsTiedToMarkup();
-        auto* array = isTransition ? &aTickState.mStartedTransitions
-                                   : &aTickState.mStartedAnimations;
-        array->AppendElement(this);
-        bool* startedAnyGeometric =
-            isTransition ? &aTickState.mStartedAnyGeometricTransition
-                         : &aTickState.mStartedAnyGeometricAnimation;
-        if (!*startedAnyGeometric) {
-          *startedAnyGeometric = mEffect && mEffect->AffectsGeometry();
-        }
-      }
+      TryTriggerNow();
     }
     mSawTickWhilePending = true;
   }
@@ -1069,20 +1055,6 @@ bool Animation::ShouldBeSynchronizedWithMainThread(
       mEffect ? mEffect->AsKeyframeEffect() : nullptr;
   if (!keyframeEffect) {
     return false;
-  }
-
-  // Are we starting at the same time as other geometric animations?
-  // We check this before calling ShouldBlockAsyncTransformAnimations, partly
-  // because it's cheaper, but also because it's often the most useful thing
-  // to know when you're debugging performance.
-  // Note: |mSyncWithGeometricAnimations| wouldn't be set if the geometric
-  // animations use scroll-timeline.
-  if (mSyncWithGeometricAnimations &&
-      keyframeEffect->HasAnimationOfPropertySet(
-          nsCSSPropertyIDSet::TransformLikeProperties())) {
-    aPerformanceWarning =
-        AnimationPerformanceWarning::Type::TransformWithSyncGeometricAnimations;
-    return true;
   }
 
   return keyframeEffect->ShouldBlockAsyncTransformAnimations(
@@ -1478,10 +1450,6 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
 
   mPendingState = PendingState::PlayPending;
 
-  // Clear flag that causes us to sync transform animations with the main
-  // thread for now. We'll set this when we go to set up compositor
-  // animations if it applies.
-  mSyncWithGeometricAnimations = false;
   mSawTickWhilePending = false;
   if (Document* doc = GetRenderedDocument()) {
     if (HasFiniteTimeline()) {
