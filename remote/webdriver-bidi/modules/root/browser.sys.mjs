@@ -7,6 +7,7 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Marionette: "chrome://remote/content/components/Marionette.sys.mjs",
   UserContextManager:
@@ -58,6 +59,43 @@ class BrowserModule extends Module {
   async createUserContext() {
     const userContextId = lazy.UserContextManager.createContext("webdriver");
     return { userContext: userContextId };
+  }
+
+  /**
+   * Closes a user context and all browsing contexts in it without running
+   * beforeunload handlers.
+   *
+   * @param {object=} options
+   * @param {string} options.userContext
+   *     Id of the user context to close.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchUserContextError}
+   *     Raised if the user context id could not be found.
+   */
+  async removeUserContext(options = {}) {
+    const { userContext: userContextId } = options;
+
+    lazy.assert.string(
+      userContextId,
+      `Expected "userContext" to be a string, got ${userContextId}`
+    );
+
+    if (userContextId === lazy.UserContextManager.DEFAULT_CONTEXT_ID) {
+      throw new lazy.error.InvalidArgumentError(
+        `Default user context cannot be removed`
+      );
+    }
+
+    if (!lazy.UserContextManager.hasUserContextId(userContextId)) {
+      throw new lazy.error.NoSuchUserContextError(
+        `User Context with id ${userContextId} was not found`
+      );
+    }
+    lazy.UserContextManager.removeUserContext(userContextId, {
+      closeContextTabs: true,
+    });
   }
 }
 
