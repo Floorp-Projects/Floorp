@@ -60,6 +60,7 @@ export var GeckoViewClipboardPermission = {
 
       debug`confirmUserPaste (${screenRect.x}, ${screenRect.y})`;
 
+      document.addEventListener("pointerdown", this);
       document.ownerGlobal.WindowEventDispatcher.sendRequestForResult({
         type: "GeckoView:ClipboardPermissionRequest",
         screenPoint: {
@@ -71,13 +72,28 @@ export var GeckoViewClipboardPermission = {
           const propBag = lazy.PromptUtils.objectToPropBag({ ok: allowOrDeny });
           this._pendingRequest.resolve(propBag);
           this._pendingRequest = null;
+          document.removeEventListener("pointerdown", this);
         },
         error => {
           debug`Permission error: ${error}`;
           this._pendingRequest.reject();
           this._pendingRequest = null;
+          document.removeEventListener("pointerdown", this);
         }
       );
     });
+  },
+
+  // EventListener interface.
+  handleEvent(aEvent) {
+    debug`handleEvent: ${aEvent.type}`;
+    switch (aEvent.type) {
+      case "pointerdown": {
+        aEvent.target.ownerGlobal.WindowEventDispatcher.sendRequestForResult({
+          type: "GeckoView:DismissClipboardPermissionRequest",
+        });
+        break;
+      }
+    }
   },
 };

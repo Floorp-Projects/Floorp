@@ -514,6 +514,52 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun clipboardReadDismiss() {
+        assumeThat("Unnecessary to run multiple times", id, equalTo("#text"))
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
+
+        withClipboard("clipboardReadDismiss") {} // Reset clipboard data
+
+        val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
+        mainSession.loadUri(url)
+        mainSession.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        val permissionResult = GeckoResult<AllowOrDeny>()
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate {
+            @AssertCalled(count = 1)
+            override fun onShowClipboardPermissionRequest(
+                session: GeckoSession,
+                perm: ClipboardPermission,
+            ):
+                GeckoResult<AllowOrDeny>? {
+                assertThat(
+                    "Type should match",
+                    perm.type,
+                    equalTo(SelectionActionDelegate.PERMISSION_CLIPBOARD_READ),
+                )
+                result.complete(null)
+                return permissionResult
+            }
+        })
+
+        mainSession.synthesizeTap(50, 50) // Provides user activation.
+        sessionRule.waitForResult(result)
+
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate {
+            @AssertCalled
+            override fun onDismissClipboardPermissionRequest(session: GeckoSession) {
+                permissionResult.complete(AllowOrDeny.DENY)
+            }
+        })
+
+        mainSession.synthesizeTap(10, 10) // click to dismiss.
+        sessionRule.waitForResult(permissionResult)
+    }
+
     /** Interface that defines behavior for a particular type of content */
     private interface SelectedContent {
         fun focus() {}
