@@ -1,7 +1,7 @@
 [DEFAULT]
 head = "head_bookmarks.js"
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 support-files = [
   "bookmarks.glue.html",
   "bookmarks.glue.json",

@@ -14,7 +14,7 @@ support-files = [
   "popup_blocker_10_popups.html",
 ]
 skip-if = [
-  "(os == 'linux')", # Frequent bug 1081925 and bug 1125520 failures
+  "os == 'linux'", # Frequent bug 1081925 and bug 1125520 failures
   "debug",
 ]
 

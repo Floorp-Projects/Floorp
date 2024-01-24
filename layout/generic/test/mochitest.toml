@@ -222,7 +222,7 @@ skip-if = [
 ["test_movement_by_words.html"]
 # Disable the caret movement by word test on Linux because the shortcut keys
 # are defined in system level.  So, it depends on the environment.
-skip-if = ["toolkit == 'gtk'"]
+skip-if = ["os == 'linux' && os_version == '18.04'"]
 
 ["test_overflow_event.html"]
 

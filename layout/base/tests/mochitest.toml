@@ -201,7 +201,7 @@ support-files = ["bug1093686_inner.html"]
 skip-if = [
   "os == 'android'", # android does not have clickable scrollbars
   "os == 'mac'", # mac does not have scrollbar down and up buttons
-  "toolkit == 'gtk'", # gtk may or may not have scrollbar buttons depending on theme
+  "os == 'linux' && os_version == '18.04'", # gtk may or may not have scrollbar buttons depending on theme
 ]
 
 ["test_bug1153130.html"]

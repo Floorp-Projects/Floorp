@@ -91,8 +91,7 @@ support-files = [
 ["test_file.xhtml"]
 skip-if = [
   "os == 'linux' && bits == 64 && debug", # Bug 1765445
-  "os == 'mac' && os_version == '10.15' && !debug", # Bug 1765445
-  "win10_2004 && !debug", # Bug 1765445
+  "apple_catalina && !debug", # Bug 1765445
 ]
 
 ["test_fileBlobPosting.xhtml"]

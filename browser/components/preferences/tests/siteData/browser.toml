@@ -14,7 +14,6 @@ support-files = [
 
 ["browser_siteData2.js"]
 skip-if = [
-  "win10_2004 && (!debug && !asan)", # Bug 1669937
   "win11_2009 && (!debug && !asan)", # Bug 1797751
   "apple_catalina && debug", # Bug 1775910
 ]

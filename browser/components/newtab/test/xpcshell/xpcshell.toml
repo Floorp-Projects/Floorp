@@ -1,7 +1,7 @@
 [DEFAULT]
 head = "head.js"
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 prefs = [
   "browser.startup.homepage.abouthome_cache.enabled=true",
  "browser.startup.homepage.abouthome_cache.testing=true",

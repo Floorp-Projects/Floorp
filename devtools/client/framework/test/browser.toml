@@ -160,7 +160,6 @@ skip-if = [
 ["browser_toolbox_fission_navigation.js"]
 skip-if = [
   "os == 'linux'", # Bug 1742672
-  "win10_2004", # Bug 1742672
 ]
 
 ["browser_toolbox_frames_list.js"]

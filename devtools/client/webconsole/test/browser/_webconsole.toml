@@ -654,7 +654,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_webconsole_requestStorageAccess_errors.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "http3", # Bug 1829298
   "http2",
   "a11y_checks", # Bugs 1858041, 1849028 and 1849179 for causing crashes
@@ -738,7 +737,6 @@ skip-if = [
 
 ["browser_webconsole_stubs_network_event.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1798331
   "http3", # Bug 1829298
   "http2",

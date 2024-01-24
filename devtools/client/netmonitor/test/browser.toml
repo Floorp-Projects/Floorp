@@ -125,7 +125,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_block-pattern.js"]
 skip-if = [
   "os == 'linux'",
-  "debug && (os == 'win' || os == 'mac')", # Bug 1603355
+  "debug && os == 'win'", # Bug 1603355
+  "debug && os == 'mac'", # Bug 1603355
 ]
 
 ["browser_net_block-serviceworker.js"]
@@ -139,7 +140,6 @@ skip-if = [
 ["browser_net_cached-status.js"]
 skip-if = [
   "verify",
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
 ]
 
@@ -179,14 +179,12 @@ skip-if = [
 
 ["browser_net_columns_time.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
 ]
 
 ["browser_net_complex-params.js"]
 skip-if = [
   "verify && !debug && os == 'win'",
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
 ]
 
@@ -208,9 +206,8 @@ skip-if = ["verify && debug && os == 'win'"]
 
 ["browser_net_copy_params.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
-  "(verify && !debug && (os == 'mac'))", # bug 1328915, disable linux32 debug devtools for timeouts
+  "verify && !debug && os == 'mac'", # bug 1328915, disable linux32 debug devtools for timeouts
 ]
 
 ["browser_net_copy_response.js"]
@@ -222,7 +219,6 @@ skip-if = [
 ["browser_net_cors_requests.js"]
 
 ["browser_net_curl-utils.js"]
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_net_cyrillic-01.js"]
 
@@ -268,7 +264,6 @@ skip-if = ["verify"] # Bug 1607678
 
 ["browser_net_fonts.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_net_footer-summary.js"]
 
@@ -472,7 +467,6 @@ skip-if = ["true"] # Bug 1373558
 ["browser_net_status-bar-transferred-size.js"]
 
 ["browser_net_status-bar.js"]
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_net_status-codes.js"]
 
@@ -521,7 +515,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_websocket_stacks.js"]
 
 ["browser_net_worker_stacks.js"]
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_net_ws-basic.js"]
 

@@ -11,7 +11,7 @@ support-files = [
 ]
 
 ["browser_bug839193.js"]
-skip-if = ["os == 'win' && bits == 32"] # Bug 1607975
+skip-if = ["win11_2009 && bits == 32"] # Bug 1607975
 
 ["browser_forgetThisSite.js"]
 skip-if = ["verify"]

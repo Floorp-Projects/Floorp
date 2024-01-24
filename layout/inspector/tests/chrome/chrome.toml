@@ -27,9 +27,8 @@ support-files = [
 
 ["test_fontVariationsAPI.xhtml"]
 skip-if = [
-  "os == 'win' && bits == 32",
-  "os == 'linux' && bits == 32", # bug 1456855
-  "os == 'mac'", # bug 1456856
+  "win11_2009 && bits == 32",
+  "apple_catalina", # bug 1456856
 ]
 support-files = ["test_fontVariationsAPI.css"]
 
