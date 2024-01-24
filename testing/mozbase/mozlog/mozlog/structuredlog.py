@@ -52,6 +52,7 @@ Allowed actions, and subfields:
       test - ID for the test
       path - Relative path to test (optional)
       subsuite - Name of the subsuite to which test belongs (optional)
+      group - Name of the test group for the incoming test (optional)
 
   test_end
       test - ID for the test
@@ -63,6 +64,7 @@ Allowed actions, and subfields:
       known_intermittent - List of known intermittent statuses that should
                            not fail a test. eg. ['FAIL', 'TIMEOUT']
       subsuite - Name of the subsuite to which test belongs (optional)
+      group - Name of the test group for the incoming test (optional)
 
   test_status
       test - ID for the test
@@ -74,6 +76,7 @@ Allowed actions, and subfields:
       known_intermittent - List of known intermittent statuses that should
                            not fail a test. eg. ['FAIL', 'TIMEOUT']
       subsuite - Name of the subsuite to which test belongs (optional)
+      group - Name of the test group for the incoming test (optional)
 
   process_output
       process - PID of the process
@@ -441,6 +444,7 @@ class StructuredLogger(object):
         TestId("test"),
         Unicode("path", default=None, optional=True),
         Unicode("subsuite", default=None, optional=True),
+        Unicode("group", default=None, optional=True),
     )
     def test_start(self, data):
         """Log a test_start message
@@ -449,6 +453,8 @@ class StructuredLogger(object):
         :param path: Path to test relative to some base (typically the root of
                      the source tree).
         :param subsuite: Optional name of the subsuite to which the test belongs.
+        :param group: Optional name of the test group or manifest name (useful
+                     when running in paralle)
         """
         if not self._state.suite_started:
             self.error(
@@ -472,6 +478,7 @@ class StructuredLogger(object):
         Dict(Any, "extra", default=None, optional=True),
         List(SubStatus, "known_intermittent", default=None, optional=True),
         Unicode("subsuite", default=None, optional=True),
+        Unicode("group", default=None, optional=True),
     )
     def test_status(self, data):
         """
@@ -487,6 +494,8 @@ class StructuredLogger(object):
         :param extra: Optional suite-specific data associated with the test result.
         :param known_intermittent: Optional list of string expected intermittent statuses
         :param subsuite: Optional name of the subsuite to which the test belongs.
+        :param group: Optional name of the test group or manifest name (useful
+                     when running in paralle)
         """
 
         if data["expected"] == data["status"] or data["status"] == "SKIP":
@@ -511,6 +520,7 @@ class StructuredLogger(object):
         Dict(Any, "extra", default=None, optional=True),
         List(Status, "known_intermittent", default=None, optional=True),
         Unicode("subsuite", default=None, optional=True),
+        Unicode("group", default=None, optional=True),
     )
     def test_end(self, data):
         """
@@ -526,6 +536,8 @@ class StructuredLogger(object):
         :param stack: Optional stack trace encountered during test execution.
         :param extra: Optional suite-specific data associated with the test result.
         :param subsuite: Optional name of the subsuite to which the test belongs.
+        :param group: Optional name of the test group or manifest name (useful
+                     when running in paralle)
         """
 
         if data["expected"] == data["status"] or data["status"] == "SKIP":

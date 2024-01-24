@@ -106,6 +106,16 @@ from mozrunner.utils import get_stack_fixer_function
 _cleanup_encoding_re = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]")
 
 
+def get_full_group_name(test):
+    group = test["manifest"]
+    if "ancestor_manifest" in test:
+        ancestor_manifest = normsep(test["ancestor_manifest"])
+        # Only change the group id if ancestor is not the generated root manifest.
+        if "/" in ancestor_manifest:
+            group = "{}:{}".format(ancestor_manifest, group)
+    return group
+
+
 def _cleanup_encoding_repl(m):
     c = m.group(0)
     return "\\\\" if c == "\\" else "\\x{0:02X}".format(ord(c))
@@ -757,14 +767,15 @@ class XPCShellTestThread(Thread):
 
         name = self.test_object["id"]
         path = self.test_object["path"]
+        group = get_full_group_name(self.test_object)
 
         # Check for skipped tests
         if "disabled" in self.test_object:
             message = self.test_object["disabled"]
             if not message:
                 message = "disabled from xpcshell manifest"
-            self.log.test_start(name)
-            self.log.test_end(name, "SKIP", message=message)
+            self.log.test_start(name, group=group)
+            self.log.test_end(name, "SKIP", message=message, group=group)
 
             self.retry = False
             self.keep_going = True
@@ -851,7 +862,7 @@ class XPCShellTestThread(Thread):
         process_output = None
 
         try:
-            self.log.test_start(name)
+            self.log.test_start(name, group=group)
             if self.verbose:
                 self.logCommand(name, self.command, test_dir)
 
@@ -949,6 +960,7 @@ class XPCShellTestThread(Thread):
                         "CRASH",
                         expected=expected,
                         message="Test ended before setting up the crash reporter",
+                        group=group,
                     )
                 elif self.retry:
                     self.log.test_end(
@@ -956,13 +968,16 @@ class XPCShellTestThread(Thread):
                         status,
                         expected=status,
                         message="Test failed or timed out, will retry",
+                        group=group,
                     )
                     self.clean_temp_dirs(path)
                     if self.verboseIfFails and not self.verbose:
                         self.log_full_output()
                     return
                 else:
-                    self.log.test_end(name, status, expected=expected, message=message)
+                    self.log.test_end(
+                        name, status, expected=expected, message=message, group=group
+                    )
                 self.log_full_output()
 
                 self.failCount += 1
@@ -980,7 +995,9 @@ class XPCShellTestThread(Thread):
                 if self.usingTSan and return_code == TSAN_EXIT_CODE_WITH_RACES:
                     self.log_full_output()
 
-                self.log.test_end(name, status, expected=expected, message=message)
+                self.log.test_end(
+                    name, status, expected=expected, message=message, group=group
+                )
                 if self.verbose:
                     self.log_full_output()
 
@@ -2096,12 +2113,7 @@ class XPCShellTests(object):
 
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
-            group = test["manifest"]
-            if "ancestor_manifest" in test:
-                ancestor_manifest = normsep(test["ancestor_manifest"])
-                # Only change the group id if ancestor is not the generated root manifest.
-                if "/" in ancestor_manifest:
-                    group = "{}:{}".format(ancestor_manifest, group)
+            group = get_full_group_name(test)
             tests_by_manifest[group].append(test["id"])
 
         self.log.suite_start(tests_by_manifest, name="xpcshell")

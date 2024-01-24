@@ -760,6 +760,7 @@ class TestTypeConversions(BaseStructuredTest):
             self.logger.test_status,
             "test1",
             "subtest1",
+            "group1",
             "PASS",
             "FAIL",
             "message",
