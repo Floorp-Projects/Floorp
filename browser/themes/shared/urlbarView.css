@@ -734,6 +734,10 @@
 
 /* Rich suggestions */
 
+.urlbarView-row[rich-suggestion] > .urlbarView-row-inner {
+  align-items: center;
+}
+
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-favicon {
   width: var(--urlbarView-rich-suggestion-default-icon-size);
   height: var(--urlbarView-rich-suggestion-default-icon-size);
@@ -770,6 +774,7 @@
     display: flex;
     flex-wrap: nowrap;
     flex-direction: row;
+    align-items: baseline;
 
     > .urlbarView-row-body-top-no-wrap {
       display: flex;
