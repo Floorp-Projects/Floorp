@@ -28,7 +28,7 @@ object Build {
     const val gleanSdkVersion: String = BuildConfig.GLEAN_SDK_VERSION
 
     /**
-     * Git hash of the latest commit in the Android Components repository checkout this version was built from.
+     * Git or hg hash of the latest commit in the Android Components repository checkout this version was built from.
      */
-    const val gitHash: String = BuildConfig.GIT_HASH
+    const val gitHash: String = BuildConfig.VCS_HASH
 }

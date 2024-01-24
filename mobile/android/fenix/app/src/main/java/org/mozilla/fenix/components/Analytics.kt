@@ -64,7 +64,7 @@ class Analytics(
                 BuildConfig.SENTRY_TOKEN,
                 tags = mapOf(
                     "geckoview" to "$MOZ_APP_VERSION-$MOZ_APP_BUILDID",
-                    "fenix.git" to BuildConfig.GIT_HASH,
+                    "fenix.git" to BuildConfig.VCS_HASH,
                 ),
                 environment = BuildConfig.BUILD_TYPE,
                 sendEventForNativeCrashes = false, // Do not send native crashes to Sentry

@@ -7,12 +7,22 @@ apply plugin: 'kotlin-android'
 
 def generatedSrcDir = new File(layout.buildDirectory.get().asFile, "generated/components/src/main/java")
 
-// This gitHash functionality is duplicated in publish.gradle.
-def getGitHash = { ->
+// This vcsHash functionality is duplicated in publish.gradle.
+def getVcsHash = { ->
     def stdout = new ByteArrayOutputStream()
-    exec {
-        commandLine 'git', 'rev-parse', '--short', 'HEAD'
-        standardOutput = stdout
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+            errorOutput = stderr
+        }
+    } catch (Exception e) {
+        exec {
+            commandLine 'hg', 'id', '--id'
+            environment 'HGPLAIN', '1'
+            standardOutput = stdout
+        }
     }
     return stdout.toString().trim()
 }
@@ -33,7 +43,7 @@ android {
         buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
         buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + appServicesVersion + "\"")
         buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + Versions.mozilla_glean + "\"")
-        buildConfigField("String", "GIT_HASH", "\"dev build\"")
+        buildConfigField("String", "VCS_HASH", "\"dev build\"")
     }
 
     buildTypes {
@@ -41,7 +51,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
-            buildConfigField("String", "GIT_HASH", "\"" + getGitHash() + "\"")
+            buildConfigField("String", "VCS_HASH", "\"" + getVcsHash() + "\"")
         }
     }
 

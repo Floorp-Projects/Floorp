@@ -42,7 +42,7 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
-        buildConfigField "String", "GIT_HASH", "\"\"" // see override in release builds for why it's blank.
+        buildConfigField "String", "VCS_HASH", "\"\"" // see override in release builds for why it's blank.
         // This should be the "public" base URL of AMO.
         buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
         buildConfigField "String", "AMO_COLLECTION_NAME", "\"Extensions-for-Android\""
@@ -95,8 +95,8 @@ android {
         matchingFallbacks = ['release'] // Use on the "release" build type in dependencies (AARs)
 
         // Changing the build config can cause files that depend on BuildConfig.java to recompile
-        // so we only set the git hash in release builds to avoid possible recompilation in debug builds.
-        buildConfigField "String", "GIT_HASH", "\"${Config.getGitHash()}\""
+        // so we only set the vcs hash in release builds to avoid possible recompilation in debug builds.
+        buildConfigField "String", "VCS_HASH", "\"${Config.getVcsHash()}\""
 
         if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
             signingConfig signingConfigs.debug
