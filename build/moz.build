@@ -32,7 +32,7 @@ DEFINES["ACCEPTED_MAR_CHANNEL_IDS"] = CONFIG["ACCEPTED_MAR_CHANNEL_IDS"]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     PYTHON_UNITTEST_MANIFESTS += [
-        "compare-mozconfig/python.ini",
+        "compare-mozconfig/python.toml",
     ]
 
 if CONFIG["ENABLE_TESTS"] or CONFIG["MOZ_DMD"]:

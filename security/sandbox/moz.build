@@ -6,8 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.toml",
-    "test/browser_bug1717599_XDG-CONFIG-DIRS.ini",
-    "test/browser_bug1717599_XDG-CONFIG-HOME.ini",
+    "test/browser_bug1717599_XDG-CONFIG-DIRS.toml",
+    "test/browser_bug1717599_XDG-CONFIG-HOME.toml",
     "test/browser_snap.toml",
     "test/browser_xdg.toml",
 ]
