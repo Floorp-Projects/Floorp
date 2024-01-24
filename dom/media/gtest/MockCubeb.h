@@ -29,6 +29,8 @@ struct cubeb_ops {
   int (*get_min_latency)(cubeb* context, cubeb_stream_params params,
                          uint32_t* latency_ms);
   int (*get_preferred_sample_rate)(cubeb* context, uint32_t* rate);
+  int (*get_supported_input_processing_params)(
+      cubeb* context, cubeb_input_processing_params* params);
   int (*enumerate_devices)(cubeb* context, cubeb_device_type type,
                            cubeb_device_collection* collection);
   int (*device_collection_destroy)(cubeb* context,
@@ -51,6 +53,9 @@ struct cubeb_ops {
   int (*stream_set_name)(cubeb_stream* stream, char const* stream_name);
   int (*stream_get_current_device)(cubeb_stream* stream,
                                    cubeb_device** const device);
+  int (*stream_set_input_mute)(cubeb_stream* stream, int mute);
+  int (*stream_set_input_processing_params)(
+      cubeb_stream* stream, cubeb_input_processing_params params);
   int (*stream_device_destroy)(cubeb_stream* stream, cubeb_device* device);
   int (*stream_register_device_changed_callback)(
       cubeb_stream* stream,
@@ -116,6 +121,8 @@ cubeb_ops const mock_ops = {
     /*.get_max_channel_count =*/cubeb_mock_get_max_channel_count,
     /*.get_min_latency =*/cubeb_mock_get_min_latency,
     /*.get_preferred_sample_rate =*/cubeb_mock_get_preferred_sample_rate,
+    /*.get_supported_input_processing_params =*/
+    NULL,
     /*.enumerate_devices =*/cubeb_mock_enumerate_devices,
     /*.device_collection_destroy =*/cubeb_mock_device_collection_destroy,
     /*.destroy =*/cubeb_mock_destroy,
@@ -129,11 +136,14 @@ cubeb_ops const mock_ops = {
     /*.stream_set_volume =*/cubeb_mock_stream_set_volume,
     /*.stream_set_name =*/cubeb_mock_stream_set_name,
     /*.stream_get_current_device =*/NULL,
+
+    /*.stream_set_input_mute =*/NULL,
+    /*.stream_set_input_processing_params =*/
+    NULL,
     /*.stream_device_destroy =*/NULL,
     /*.stream_register_device_changed_callback =*/
     cubeb_mock_stream_register_device_changed_callback,
     /*.register_device_collection_changed =*/
-
     cubeb_mock_register_device_collection_changed};
 
 class SmartMockCubebStream;
