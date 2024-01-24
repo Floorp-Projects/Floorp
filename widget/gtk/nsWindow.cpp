@@ -3328,7 +3328,10 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
   mCursor = aCursor;
 
   // Try to set the cursor image first, and fall back to the numeric cursor.
-  GdkCursor* imageCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
+  GdkCursor* imageCursor = nullptr;
+  if (mCustomCursorAllowed) {
+    imageCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
+  }
 
   // When using a custom cursor, clear the cursor first using eCursor_none, in
   // order to work around https://gitlab.gnome.org/GNOME/gtk/-/issues/6242

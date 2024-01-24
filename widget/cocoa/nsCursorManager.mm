@@ -276,13 +276,14 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 }
 
 - (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
-          widgetScaleFactor:(CGFloat)scaleFactor {
+          widgetScaleFactor:(CGFloat)scaleFactor
+                forceUpdate:(bool)aForceUpdate {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // As the user moves the mouse, this gets called repeatedly with the same
   // aCursorImage
-  if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor &&
-      mCurrentMacCursor) {
+  if (!aForceUpdate && sCurrentCursor == aCursor &&
+      sCurrentCursorScaleFactor == scaleFactor && mCurrentMacCursor) {
     // Native dragging can unset our cursor apparently (see bug 1739352).
     if (MOZ_UNLIKELY(![mCurrentMacCursor isSet])) {
       [mCurrentMacCursor set];
