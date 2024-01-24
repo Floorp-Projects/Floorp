@@ -17,11 +17,6 @@ nsContainerFrame* NS_NewSelectsAreaFrame(PresShell* aShell,
                                          ComputedStyle* aStyle) {
   nsSelectsAreaFrame* it =
       new (aShell) nsSelectsAreaFrame(aStyle, aShell->GetPresContext());
-
-  // We need NS_BLOCK_STATIC_BFC to ensure that the options inside the select
-  // aren't expanded by right floats outside the select.
-  it->AddStateBits(NS_BLOCK_STATIC_BFC);
-
   return it;
 }
 
