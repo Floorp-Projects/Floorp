@@ -257,6 +257,12 @@ ActorLifecycleProxy::ActorLifecycleProxy(IProtocol* aActor) : mActor(aActor) {
   MOZ_ASSERT(mActor->CanSend(),
              "Cannot create LifecycleProxy for non-connected actor!");
 
+  // Take a reference to our manager's lifecycle proxy to try to hold it &
+  // ensure it doesn't die before us.
+  if (mActor->mManager) {
+    mManager = mActor->mManager->mLifecycleProxy;
+  }
+
   // Record that we've taken our first reference to our actor.
   mActor->ActorAlloc();
 }
@@ -487,13 +493,13 @@ bool IProtocol::DeallocShmem(Shmem& aMem) {
   return ok;
 }
 
-void IProtocol::SetManager(IRefCountedProtocol* aManager) {
+void IProtocol::SetManager(IProtocol* aManager) {
   MOZ_RELEASE_ASSERT(!mManager || mManager == aManager);
   mManager = aManager;
   mToplevel = aManager->mToplevel;
 }
 
-void IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager) {
+void IProtocol::SetManagerAndRegister(IProtocol* aManager) {
   // Set the manager prior to registering so registering properly inherits
   // the manager's event target.
   SetManager(aManager);
@@ -501,18 +507,12 @@ void IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager) {
   aManager->Register(this);
 }
 
-void IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager,
-                                      int32_t aId) {
+void IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId) {
   // Set the manager prior to registering so registering properly inherits
   // the manager's event target.
   SetManager(aManager);
 
   aManager->RegisterID(this, aId);
-}
-
-void IProtocol::UnlinkManager() {
-  mToplevel = nullptr;
-  mManager = nullptr;
 }
 
 bool IProtocol::ChannelSend(UniquePtr<IPC::Message> aMsg) {

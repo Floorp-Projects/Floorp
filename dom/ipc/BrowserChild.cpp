@@ -2150,23 +2150,18 @@ bool BrowserChild::DeallocPDocAccessibleChild(
 #endif
 
 RefPtr<VsyncMainChild> BrowserChild::GetVsyncChild() {
-  // Initializing VsyncMainChild here turns on per-BrowserChild Vsync for a
+  // Initializing mVsyncChild here turns on per-BrowserChild Vsync for a
   // given platform. Note: this only makes sense if nsWindow returns a
   // window-specific VsyncSource.
 #if defined(MOZ_WAYLAND)
-  if (IsWaylandEnabled()) {
-    if (auto* actor = static_cast<VsyncMainChild*>(
-            LoneManagedOrNullAsserts(ManagedPVsyncChild()))) {
-      return actor;
+  if (IsWaylandEnabled() && !mVsyncChild) {
+    mVsyncChild = MakeRefPtr<VsyncMainChild>();
+    if (!SendPVsyncConstructor(mVsyncChild)) {
+      mVsyncChild = nullptr;
     }
-    auto actor = MakeRefPtr<VsyncMainChild>();
-    if (!SendPVsyncConstructor(actor)) {
-      return nullptr;
-    }
-    return actor;
   }
 #endif
-  return nullptr;
+  return mVsyncChild;
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(

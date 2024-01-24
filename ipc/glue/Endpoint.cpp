@@ -57,7 +57,7 @@ UntypedManagedEndpoint::~UntypedManagedEndpoint() {
 }
 
 bool UntypedManagedEndpoint::BindCommon(IProtocol* aActor,
-                                        IRefCountedProtocol* aManager) {
+                                        IProtocol* aManager) {
   MOZ_ASSERT(aManager);
   if (!mInner) {
     NS_WARNING("Cannot bind to invalid endpoint");

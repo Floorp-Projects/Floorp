@@ -265,22 +265,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserParent)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(BrowserParent)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowserParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
-  tmp->UnlinkManager();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowserParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(Manager())
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
+NS_IMPL_CYCLE_COLLECTION_WEAK(BrowserParent, mFrameLoader, mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserParent)
 
@@ -307,6 +292,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mUpdatedDimensions(false),
       mSizeMode(nsSizeMode_Normal),
       mCreatingWindow(false),
+      mVsyncParent(nullptr),
       mMarkedDestroying(false),
       mIsDestroyed(false),
       mRemoteTargetSetsCursor(false),
@@ -1405,19 +1391,21 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
   return IPC_OK();
 }
 
-already_AddRefed<PVsyncParent> BrowserParent::AllocPVsyncParent() {
-  return MakeAndAddRef<VsyncParent>();
+PVsyncParent* BrowserParent::AllocPVsyncParent() {
+  MOZ_ASSERT(!mVsyncParent);
+  mVsyncParent = new VsyncParent();
+  UpdateVsyncParentVsyncDispatcher();
+  return mVsyncParent.get();
 }
 
-IPCResult BrowserParent::RecvPVsyncConstructor(PVsyncParent* aActor) {
-  UpdateVsyncParentVsyncDispatcher();
-  return IPC_OK();
+bool BrowserParent::DeallocPVsyncParent(PVsyncParent* aActor) {
+  MOZ_ASSERT(aActor);
+  mVsyncParent = nullptr;
+  return true;
 }
 
 void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
-  VsyncParent* actor = static_cast<VsyncParent*>(
-      LoneManagedOrNullAsserts(ManagedPVsyncParent()));
-  if (!actor) {
+  if (!mVsyncParent) {
     return;
   }
 
@@ -1426,7 +1414,7 @@ void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
     if (!vsyncDispatcher) {
       vsyncDispatcher = gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
     }
-    actor->UpdateVsyncDispatcher(vsyncDispatcher);
+    mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
   }
 }
 

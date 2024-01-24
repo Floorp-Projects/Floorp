@@ -24,9 +24,7 @@ class AccShowEvent;
  */
 class DocAccessibleChild : public PDocAccessibleChild {
  public:
-  DocAccessibleChild(DocAccessible* aDoc,
-                     mozilla::ipc::IRefCountedProtocol* aManager)
-      : mDoc(aDoc) {
+  DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager) : mDoc(aDoc) {
     MOZ_COUNT_CTOR(DocAccessibleChild);
     SetManager(aManager);
   }
