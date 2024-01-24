@@ -65,7 +65,8 @@ class SessionAccessibility final
                           int32_t aScrollY, int32_t aMaxScrollX,
                           int32_t aMaxScrollY);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SendAccessibilityFocusedEvent(Accessible* aAccessible);
+  void SendAccessibilityFocusedEvent(Accessible* aAccessible,
+                                     bool aScrollIntoView);
   void SendHoverEnterEvent(Accessible* aAccessible);
   void SendTextSelectionChangedEvent(Accessible* aAccessible,
                                      int32_t aCaretOffset);

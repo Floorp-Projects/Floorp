@@ -168,7 +168,7 @@ bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
               MOZ_ASSERT(_acc->IsLocal());
               if (Accessible* result = AccessibleWrap::DoPivot(
                       _acc, aGranularity, aForward, aInclusive)) {
-                SendAccessibilityFocusedEvent(result);
+                SendAccessibilityFocusedEvent(result, true);
               }
             }
           });
@@ -181,7 +181,7 @@ bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
       nsAppShell::PostEvent([this, self, virtualViewID] {
         MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
         if (Accessible* acc = GetAccessibleByID(virtualViewID)) {
-          SendAccessibilityFocusedEvent(acc);
+          SendAccessibilityFocusedEvent(acc, true);
         }
       });
       return true;
@@ -411,13 +411,15 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
 }
 
 void SessionAccessibility::SendAccessibilityFocusedEvent(
-    Accessible* aAccessible) {
+    Accessible* aAccessible, bool aScrollIntoView) {
   MOZ_ASSERT(NS_IsMainThread());
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED,
       AccessibleWrap::GetVirtualViewID(aAccessible),
       AccessibleWrap::AndroidClass(aAccessible), nullptr);
-  aAccessible->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  if (aScrollIntoView) {
+    aAccessible->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  }
 }
 
 void SessionAccessibility::SendHoverEnterEvent(Accessible* aAccessible) {

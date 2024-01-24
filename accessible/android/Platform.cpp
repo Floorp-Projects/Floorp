@@ -100,7 +100,7 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
       if (Accessible* result = AccessibleWrap::DoPivot(
               aTarget, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
               true, true)) {
-        sessionAcc->SendAccessibilityFocusedEvent(result);
+        sessionAcc->SendAccessibilityFocusedEvent(result, false);
       }
       break;
     default:
@@ -167,7 +167,7 @@ void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
       if (Accessible* result = AccessibleWrap::DoPivot(
               leaf, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
               true)) {
-        sessionAcc->SendAccessibilityFocusedEvent(result);
+        sessionAcc->SendAccessibilityFocusedEvent(result, false);
       }
     }
   }
