@@ -336,7 +336,12 @@ nsresult EditorBase::InitInternal(Document& aDocument, Element* aRootElement,
                        "nsISelectionController::SetSelectionFlags("
                        "nsISelectionDisplay::DISPLAY_ALL) failed, but ignored");
 
-  MOZ_ASSERT(IsInitialized());
+  // Make sure that the editor will be destroyed properly
+  mDidPreDestroy = false;
+  // Make sure that the editor will be created properly
+  mDidPostCreate = false;
+
+  MOZ_ASSERT(IsBeingInitialized());
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eInitializing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
@@ -344,11 +349,6 @@ nsresult EditorBase::InitInternal(Document& aDocument, Element* aRootElement,
   }
 
   SelectionRef().AddSelectionListener(this);
-
-  // Make sure that the editor will be destroyed properly
-  mDidPreDestroy = false;
-  // Make sure that the editor will be created properly
-  mDidPostCreate = false;
 
   return NS_OK;
 }
@@ -473,7 +473,11 @@ void EditorBase::CreateEventListeners() {
 }
 
 nsresult EditorBase::InstallEventListeners() {
-  if (NS_WARN_IF(!IsInitialized()) || NS_WARN_IF(!mEventListener)) {
+  // FIXME InstallEventListeners() should not be called if we failed to set
+  // document or create an event listener.  So, these checks should be
+  // MOZ_DIAGNOSTIC_ASSERT instead.
+  MOZ_ASSERT(GetDocument());
+  if (MOZ_UNLIKELY(!GetDocument()) || NS_WARN_IF(!mEventListener)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -505,7 +509,7 @@ nsresult EditorBase::InstallEventListeners() {
 }
 
 void EditorBase::RemoveEventListeners() {
-  if (!IsInitialized() || !mEventListener) {
+  if (!mEventListener) {
     return;
   }
   mEventListener->Disconnect();
@@ -518,8 +522,7 @@ void EditorBase::RemoveEventListeners() {
 }
 
 bool EditorBase::IsListeningToEvents() const {
-  return IsInitialized() && mEventListener &&
-         !mEventListener->DetachedFromEditor();
+  return mEventListener && !mEventListener->DetachedFromEditor();
 }
 
 bool EditorBase::GetDesiredSpellCheckState() {

@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Text change notifications at updating default value of non-dirty textarea</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const textarea = document.createElement("textarea");
+  document.body.appendChild(textarea);
+  textarea.focus();
+
+  function stringifyTextChangeNotification(aNotification) {
+    if (!aNotification) {
+      return "{}";
+    }
+    return `{ offset: ${aNotification.offset}, removedLength: ${aNotification.removedLength}, addedLength: ${aNotification.addedLength} }`;
+  }
+
+  const tip =
+    Cc["@mozilla.org/text-input-processor;1"].
+      createInstance(Ci.nsITextInputProcessor);
+  let notifications = [];
+  function callback(aTIP, aNotification) {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-text-change":
+        notifications.push(aNotification);
+        break;
+    }
+    return true;
+  }
+
+  tip.beginInputTransactionForTests(window, callback);
+
+  notifications = [];
+  textarea.appendChild(document.createTextNode("abc"));
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  is(
+    stringifyTextChangeNotification(notifications[0]),
+    stringifyTextChangeNotification({ offset: 0, removedLength: 0, addedLength: "abc".length }),
+    "Adding text node to empty <textarea> should notify IME of a text change"
+  );
+
+  notifications = [];
+  textarea.firstChild.remove();
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  is(
+    stringifyTextChangeNotification(notifications[0]),
+    stringifyTextChangeNotification({ offset: 0, removedLength: "abc".length, addedLength: 0 }),
+    "Removing text node from <textarea> should notify IME of a text change"
+  );
+
+  // Update default value during reframes
+  notifications = [];
+  textarea.setAttribute("dir", "rtl");
+  textarea.prepend("abc", document.createElement("marquee"));
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  is(
+    stringifyTextChangeNotification(notifications[0]),
+    stringifyTextChangeNotification({ offset: 0, removedLength: 0, addedLength: "abc".length }),
+    "Adding text node to empty <textarea> during reframes should notify IME of a text change"
+  );
+
+  notifications = [];
+  textarea.removeAttribute("dir");
+  textarea.innerHTML = "";
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  is(
+    stringifyTextChangeNotification(notifications[0]),
+    stringifyTextChangeNotification({ offset: 0, removedLength: "abc".length, addedLength: 0 }),
+    "Removing text node from <textarea> during reframes should notify IME of a text change"
+  );
+
+  // Make the textarea dirty
+  textarea.value = "X";
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  notifications = [];
+  textarea.appendChild(document.createTextNode("abc"));
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  is(
+    textarea.value,
+    "X",
+    "The value should not be updated by adding text node into the dirty <textarea>"
+  );
+  is(
+    stringifyTextChangeNotification(notifications[0]),
+    stringifyTextChangeNotification(undefined),
+    "Adding text node to empty but dirty <textarea> should not notify IME of a text change"
+  );
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body></body>
+</html>
