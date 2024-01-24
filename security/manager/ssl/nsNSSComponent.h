@@ -135,11 +135,10 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   // The following members are accessed only on the main thread:
   static int mInstanceCount;
   // If the intermediate preloading healer is enabled, the following timer
-  // periodically dispatches events to the background task queue. Each of these
+  // periodically dispatches events to the socket thread. Each of these
   // events scans the NSS certdb for preloaded intermediates that are in
   // cert_storage and thus can be removed. By default, the interval is 5
   // minutes.
-  nsCOMPtr<nsISerialEventTarget> mIntermediatePreloadingHealerTaskQueue;
   nsCOMPtr<nsITimer> mIntermediatePreloadingHealerTimer;
 };
 
