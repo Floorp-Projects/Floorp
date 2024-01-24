@@ -83,6 +83,10 @@ class NoSuchScriptException(BidiException):
     error_code = "no such script"
 
 
+class NoSuchUserContextException(BidiException):
+    error_code = "no such user context"
+
+
 class UnableToCaptureScreenException(BidiException):
     error_code = "unable to capture screen"
 
