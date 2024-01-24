@@ -63,9 +63,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
 #include "nsFlexContainerFrame.h"
-#include "nsFileControlFrame.h"
-#include "nsMathMLContainerFrame.h"
-#include "nsSelectsAreaFrame.h"
 
 #include "nsBidiPresUtils.h"
 
@@ -6412,15 +6409,9 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   *aFoundValidLine = FindValidLine();
 }
 
-static bool StyleEstablishesBFC(const ComputedStyle* aStyle) {
-  // paint/layout containment boxes and multi-column containers establish an
-  // independent formatting context.
-  // https://drafts.csswg.org/css-contain/#containment-paint
-  // https://drafts.csswg.org/css-contain/#containment-layout
-  // https://drafts.csswg.org/css-multicol/#columns
-  return aStyle->StyleDisplay()->IsContainPaint() ||
-         aStyle->StyleDisplay()->IsContainLayout() ||
-         aStyle->GetPseudoType() == PseudoStyleType::columnContent;
+static bool StyleEstablishesBFC(const ComputedStyle* style) {
+  return style->StyleDisplay()->IsContainPaint() ||
+         style->StyleDisplay()->IsContainLayout();
 }
 
 void nsBlockFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
@@ -7749,27 +7740,6 @@ void nsBlockFrame::ChildIsDirty(nsIFrame* aChild) {
   nsContainerFrame::ChildIsDirty(aChild);
 }
 
-static bool AlwaysEstablishesBFC(const nsBlockFrame* aFrame) {
-  switch (aFrame->Type()) {
-    case LayoutFrameType::ColumnSetWrapper:
-      // CSS Multi-column level 1 section 2: A multi-column container
-      // establishes a new block formatting context, as per CSS 2.1 section
-      // 9.4.1.
-    case LayoutFrameType::ComboboxControl:
-      return true;
-    case LayoutFrameType::Block:
-      return static_cast<const nsFileControlFrame*>(do_QueryFrame(aFrame)) ||
-             // Ensure that the options inside the select aren't expanded by
-             // right floats outside the select.
-             static_cast<const nsSelectsAreaFrame*>(do_QueryFrame(aFrame)) ||
-             // See bug 1373767 and bug 353894.
-             static_cast<const nsMathMLmathBlockFrame*>(do_QueryFrame(aFrame));
-    default:
-      MOZ_ASSERT_UNREACHABLE("aFrame should be a block");
-      return false;
-  }
-}
-
 void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                         nsIFrame* aPrevInFlow) {
   // These are all the block specific frame bits, they are copied from
@@ -7812,16 +7782,13 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // then it should also establish a formatting context.
   //
   // Per spec, a column-span always establishes a new block formatting context.
-  //
-  // Other more specific frame types also always establish a BFC.
-  //
   if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
       (GetParent() &&
        (GetWritingMode().GetBlockDir() !=
             GetParent()->GetWritingMode().GetBlockDir() ||
         GetWritingMode().IsVerticalSideways() !=
             GetParent()->GetWritingMode().IsVerticalSideways())) ||
-      IsColumnSpan() || AlwaysEstablishesBFC(this)) {
+      IsColumnSpan()) {
     AddStateBits(NS_BLOCK_STATIC_BFC);
   }
 
