@@ -135,9 +135,9 @@ if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
     MARIONETTE_MANIFESTS += ["test/marionette/manifest-serviceworker.toml"]
     XPCSHELL_TESTS_MANIFESTS += [
         "test/xpcshell/webidl-api/xpcshell.toml",
-        "test/xpcshell/xpcshell-serviceworker.ini",
+        "test/xpcshell/xpcshell-serviceworker.toml",
     ]
-    MOCHITEST_MANIFESTS += ["test/mochitest/mochitest-serviceworker.ini"]
+    MOCHITEST_MANIFESTS += ["test/mochitest/mochitest-serviceworker.toml"]
 
 
 SPHINX_TREES["webextensions"] = "docs"

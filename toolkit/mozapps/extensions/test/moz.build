@@ -12,7 +12,7 @@ MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "xpcshell/rs-blocklist/xpcshell.toml",
-    "xpcshell/xpcshell-unpack.ini",
+    "xpcshell/xpcshell-unpack.toml",
     "xpcshell/xpcshell.toml",
 ]
 

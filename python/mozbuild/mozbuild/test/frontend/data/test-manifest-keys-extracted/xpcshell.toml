@@ -1,8 +1,5 @@
 [DEFAULT]
-head = [
-  "head1",
-  "head2",
-]
+head = "head1 head2"
 dupe-manifest = true
 
 ["test_xpcshell.js"]

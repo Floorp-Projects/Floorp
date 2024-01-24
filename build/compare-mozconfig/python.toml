@@ -1,0 +1,5 @@
+[DEFAULT]
+skip-if = ["true"] # fails on Python 3
+subsuite = "mozbuild"
+
+["compare-mozconfigs.py"]
