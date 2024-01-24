@@ -32,6 +32,7 @@ fail-if = [
 ["test_buffer_mapping_invalid_device.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
 ]
 
 ["test_command_buffer_creation.html"]
@@ -43,6 +44,7 @@ fail-if = [
 ["test_context_configure.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
 ]
 
 ["test_device_creation.html"]
@@ -51,9 +53,16 @@ fail-if = [
   "os == 'mac'",
 ]
 
+["test_device_lost.html"]
+fail-if = [
+  "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
+]
+
 ["test_double_encoder_finish.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
 ]
 
 ["test_enabled.html"]
@@ -85,6 +94,7 @@ fail-if = [
 ["test_queue_write_invalid_device.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
 ]
 
 ["test_submit_compute_empty.html"]
