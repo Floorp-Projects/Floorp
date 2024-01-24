@@ -474,6 +474,8 @@ skip-if = [
   "http2",
 ]
 
+["test_mouse_over_at_removing_down_target.html"]
+
 ["test_moving_and_expanding_selection_per_page.html"]
 support-files = ["window_empty_document.html"]
 

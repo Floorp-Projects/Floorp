@@ -6944,6 +6944,38 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
     return NS_OK;
   }
 
+  if (mPresContext) {
+    switch (aGUIEvent->mMessage) {
+      case eMouseDown:
+      case eMouseUp: {
+        // We should flush pending mousemove event before that because the event
+        // may occur without proper boundary event.  E.g., if a mousedown event
+        // listener removed or appended an element under the cursor and mouseup
+        // event comes immediately after that, mouseover or mouseout may have
+        // not been dispatched on the new element yet.
+        // XXX If eMouseMove is not propery dispatched before eMouseDown and
+        // a `mousedown` event listener removes the event target or its
+        // ancestor, eMouseOver will be dispatched between eMouseDown and
+        // eMouseUp.  That could cause unexpected behavior if a `mouseover`
+        // event listener assumes it's always disptached before `mousedown`.
+        // However, we're not sure whether it could happen with users' input.
+        RefPtr<PresShell> rootPresShell =
+            mPresContext->IsRoot() ? this : GetRootPresShell();
+        if (rootPresShell && rootPresShell->mSynthMouseMoveEvent.IsPending()) {
+          RefPtr<nsSynthMouseMoveEvent> synthMouseMoveEvent =
+              rootPresShell->mSynthMouseMoveEvent.get();
+          synthMouseMoveEvent->Run();
+        }
+        if (IsDestroying()) {
+          return NS_OK;
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
   EventHandler eventHandler(*this);
   return eventHandler.HandleEvent(aFrameForPresShell, aGUIEvent,
                                   aDontRetargetEvents, aEventStatus);
@@ -7976,6 +8008,10 @@ PresShell::EventHandler::HandleEventWithPointerCapturingContentWithoutItsFrame(
     // If we can't process event for the capturing content, release
     // the capture.
     PointerEventHandler::ReleaseIfCaptureByDescendant(aPointerCapturingContent);
+    // Since we don't dispatch ePointeUp nor ePointerCancel in this case,
+    // EventStateManager::PostHandleEvent does not have a chance to dispatch
+    // ePointerLostCapture event.  Therefore, we need to dispatch it here.
+    PointerEventHandler::MaybeImplicitlyReleasePointerCapture(aGUIEvent);
     return NS_OK;
   }
 
