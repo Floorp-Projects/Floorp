@@ -63,6 +63,7 @@ export default class TabPreview extends MozLitElement {
     this.panel.setAttribute("norolluponanchor", true);
     this.panel.setAttribute("consumeoutsideclicks", "never");
     this.panel.setAttribute("level", "parent");
+    this.panel.setAttribute("type", "arrow");
     this.shadowRoot.append(this.panel);
     return this.panel;
   }
@@ -90,19 +91,51 @@ export default class TabPreview extends MozLitElement {
   }
 
   handleEvent(e) {
-    if (e.type == "TabSelect") {
-      this.requestUpdate();
+    switch (e.type) {
+      case "TabSelect": {
+        this.requestUpdate();
+        break;
+      }
+      case "wheel": {
+        this.hidePreview();
+        break;
+      }
+      case "popuphidden": {
+        this.previewHidden();
+        break;
+      }
     }
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  showPreview() {
+    this.panel.openPopup(this.tab, {
+      position: "bottomleft topleft",
+      y: -2,
+      isContextMenu: false,
+    });
+    window.addEventListener("wheel", this, {
+      capture: true,
+      passive: true,
+    });
     window.addEventListener("TabSelect", this);
+    this.panel.addEventListener("popuphidden", this);
   }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
+  hidePreview() {
+    this.panel.hidePopup();
+    this.updateComplete.then(() => {
+      /**
+       * @event TabPreview#previewhidden
+       * @type {CustomEvent}
+       */
+      this.dispatchEvent(new CustomEvent("previewhidden"));
+    });
+  }
+
+  previewHidden() {
+    window.removeEventListener("wheel", this, { capture: true, passive: true });
     window.removeEventListener("TabSelect", this);
+    this.panel.removeEventListener("popuphidden", this);
   }
 
   // compute values derived from tab element
@@ -148,14 +181,7 @@ export default class TabPreview extends MozLitElement {
     }
     if (changedProperties.has("_previewIsActive")) {
       if (!this._previewIsActive) {
-        this.panel.hidePopup();
-        this.updateComplete.then(() => {
-          /**
-           * @event TabPreview#previewhidden
-           * @type {CustomEvent}
-           */
-          this.dispatchEvent(new CustomEvent("previewhidden"));
-        });
+        this.hidePreview();
       }
     }
     if (
@@ -167,11 +193,7 @@ export default class TabPreview extends MozLitElement {
         if (this.panel.state == "open" || this.panel.state == "showing") {
           this.panel.moveToAnchor(this.tab, "bottomleft topleft", 0, -2);
         } else {
-          this.panel.openPopup(this.tab, {
-            position: "bottomleft topleft",
-            y: -2,
-            isContextMenu: false,
-          });
+          this.showPreview();
         }
 
         this.dispatchEvent(
