@@ -23,6 +23,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *     The id of the user context.
  */
 
+/**
+ * Return value for the getUserContexts command.
+ *
+ * @typedef GetUserContextsResult
+ *
+ * @property {Array<UserContextInfo>} userContexts
+ *     Array of UserContextInfo for the current user contexts.
+ */
+
 class BrowserModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
@@ -59,6 +68,22 @@ class BrowserModule extends Module {
   async createUserContext() {
     const userContextId = lazy.UserContextManager.createContext("webdriver");
     return { userContext: userContextId };
+  }
+
+  /**
+   * Returns the list of available user contexts.
+   *
+   * @returns {GetUserContextsResult}
+   *     Object containing an array of UserContextInfo.
+   */
+  async getUserContexts() {
+    const userContexts = lazy.UserContextManager.getUserContextIds().map(
+      userContextId => ({
+        userContext: userContextId,
+      })
+    );
+
+    return { userContexts };
   }
 
   /**
