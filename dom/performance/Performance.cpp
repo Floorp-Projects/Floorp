@@ -396,17 +396,15 @@ DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
     return ConvertNameToTimestamp(aName, aRv);
   }
 
-  AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
-  Optional<nsAString> typeParam;
-  nsAutoString str;
-  str.AssignLiteral("mark");
-  typeParam = &str;
-  GetEntriesByName(aName, typeParam, arr);
-  if (!arr.IsEmpty()) {
-    if (aReturnUnclamped) {
-      return arr.LastElement()->UnclampedStartTime();
+  RefPtr<nsAtom> name = NS_Atomize(aName);
+  // Just loop over the user entries
+  for (const PerformanceEntry* entry : Reversed(mUserEntries)) {
+    if (entry->GetName() == name && entry->GetEntryType() == nsGkAtoms::mark) {
+      if (aReturnUnclamped) {
+        return entry->UnclampedStartTime();
+      }
+      return entry->StartTime();
     }
-    return arr.LastElement()->StartTime();
   }
 
   nsPrintfCString errorMsg("Given mark name, %s, is unknown",
