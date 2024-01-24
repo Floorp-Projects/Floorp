@@ -9,7 +9,18 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Marionette: "chrome://remote/content/components/Marionette.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
+
+/**
+ * An object that holds information about a user context.
+ *
+ * @typedef UserContextInfo
+ *
+ * @property {string} userContext
+ *     The id of the user context.
+ */
 
 class BrowserModule extends Module {
   constructor(messageHandler) {
@@ -36,6 +47,17 @@ class BrowserModule extends Module {
           "you can use Webdriver classic session delete command which will also close the browser."
       );
     }
+  }
+
+  /**
+   * Creates a user context.
+   *
+   * @returns {UserContextInfo}
+   *     UserContextInfo object for the created user context.
+   */
+  async createUserContext() {
+    const userContextId = lazy.UserContextManager.createContext("webdriver");
+    return { userContext: userContextId };
   }
 }
 
