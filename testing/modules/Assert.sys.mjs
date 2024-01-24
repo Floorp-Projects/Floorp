@@ -74,11 +74,25 @@ function getMessage(error, prefix = "") {
   // Wrap calls to JSON.stringify in try...catch blocks, as they may throw. If
   // so, fall back to toString().
   try {
+    if (
+      typeof error.actual == "object" &&
+      error.actual !== null &&
+      "QueryInterface" in error.actual
+    ) {
+      throw new Error("don't attempt to stringify this XPCOM object");
+    }
     actual = JSON.stringify(error.actual, replacer);
   } catch (ex) {
     actual = Object.prototype.toString.call(error.actual);
   }
   try {
+    if (
+      typeof error.expected == "object" &&
+      error.expected !== null &&
+      "QueryInterface" in error.expected
+    ) {
+      throw new Error("don't attempt to stringify this XPCOM object");
+    }
     expected = JSON.stringify(error.expected, replacer);
   } catch (ex) {
     expected = Object.prototype.toString.call(error.expected);
