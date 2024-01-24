@@ -561,6 +561,40 @@ async function validateDataSizes(dialogHelper) {
 }
 
 /**
+ *
+ * Opens dialog in the provided context and selects the checkboxes
+ * as sent in the parameters
+ *
+ * @param {Object} context the dialog is opened in, timespan to select,
+ *  if historyFormDataAndDownloads, cookiesAndStorage, cache or siteSettings
+ *  are checked
+ */
+async function performActionsOnDialog({
+  context = "browser",
+  timespan = Sanitizer.TIMESPAN_HOUR,
+  historyFormDataAndDownloads = true,
+  cookiesAndStorage = true,
+  cache = false,
+  siteSettings = false,
+}) {
+  let dh = new DialogHelper();
+  dh.setMode(context);
+  dh.onload = function () {
+    this.selectDuration(timespan);
+    this.checkPrefCheckbox(
+      "historyFormDataAndDownloads",
+      historyFormDataAndDownloads
+    );
+    this.checkPrefCheckbox("cookiesAndStorage", cookiesAndStorage);
+    this.checkPrefCheckbox("cache", cache);
+    this.checkPrefCheckbox("siteSettings", siteSettings);
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+}
+
+/**
  * Initializes the dialog to its default state.
  */
 add_task(async function default_state() {
@@ -1162,3 +1196,120 @@ async function clearAndValidateDataSizes({
   await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
+
+add_task(async function testEntryPointTelemetry() {
+  Services.fog.testResetFOG();
+
+  // Telemetry count we expect for each context
+  const EXPECTED_CONTEXT_COUNTS = {
+    browser: 3,
+    history: 2,
+    clearData: 1,
+  };
+
+  for (let key in EXPECTED_CONTEXT_COUNTS) {
+    Services.fog.testResetFOG();
+    for (let i = 0; i < EXPECTED_CONTEXT_COUNTS[key]; i++) {
+      await performActionsOnDialog({ context: key });
+    }
+    is(
+      Glean.privacySanitize.dialogOpen.testGetValue().length,
+      EXPECTED_CONTEXT_COUNTS[key],
+      `There should be ${EXPECTED_CONTEXT_COUNTS[key]} opens from ${key} context`
+    );
+  }
+});
+
+add_task(async function testTimespanTelemetry() {
+  Services.fog.testResetFOG();
+
+  // Expected timespan selections from telemetry
+  const EXPECTED_TIMESPANS = [
+    Sanitizer.TIMESPAN_HOUR,
+    Sanitizer.TIMESPAN_2HOURS,
+    Sanitizer.TIMESPAN_4HOURS,
+    Sanitizer.TIMESPAN_EVERYTHING,
+  ];
+
+  for (let timespan of EXPECTED_TIMESPANS) {
+    await performActionsOnDialog({ timespan });
+  }
+
+  for (let index in EXPECTED_TIMESPANS) {
+    is(
+      Glean.privacySanitize.clearingTimeSpanSelected.testGetValue()[index].extra
+        .time_span,
+      EXPECTED_TIMESPANS[index].toString(),
+      `Selected timespan should be ${EXPECTED_TIMESPANS[index]}`
+    );
+  }
+});
+
+add_task(async function testLoadtimeTelemetry() {
+  Services.fog.testResetFOG();
+
+  // loadtime metric is collected everytime that the dialog is opened
+  // expected number of times dialog will be opened for the test for each context
+  let EXPECTED_CONTEXT_COUNTS = {
+    browser: 2,
+    history: 3,
+    clearData: 2,
+  };
+
+  // open dialog based on expected_context_counts
+  for (let context in EXPECTED_CONTEXT_COUNTS) {
+    for (let i = 0; i < EXPECTED_CONTEXT_COUNTS[context]; i++) {
+      await performActionsOnDialog({ context });
+    }
+  }
+
+  let loadTimeDistribution = Glean.privacySanitize.loadTime.testGetValue();
+
+  let expectedNumberOfCounts = Object.entries(EXPECTED_CONTEXT_COUNTS).reduce(
+    (acc, [key, value]) => acc + value,
+    0
+  );
+  // No guarantees from timers means no guarantees on buckets.
+  // But we can guarantee it's only two samples.
+  is(
+    Object.entries(loadTimeDistribution.values).reduce(
+      (acc, [bucket, count]) => acc + count,
+      0
+    ),
+    expectedNumberOfCounts,
+    `Only ${expectedNumberOfCounts} buckets with samples`
+  );
+});
+
+add_task(async function testClearingOptionsTelemetry() {
+  Services.fog.testResetFOG();
+
+  let expectedObject = {
+    context: "clearSiteData",
+    history_form_data_downloads: "true",
+    cookies_and_storage: "false",
+    cache: "true",
+    site_settings: "true",
+  };
+
+  await performActionsOnDialog({
+    context: "clearSiteData",
+    historyFormDataAndDownloads: true,
+    cookiesAndStorage: false,
+    cache: true,
+    siteSettings: true,
+  });
+
+  let telemetryObject = Glean.privacySanitize.clear.testGetValue();
+  Assert.equal(
+    telemetryObject.length,
+    1,
+    "There should be only 1 telemetry object recorded"
+  );
+
+  Assert.deepEqual(
+    expectedObject,
+    telemetryObject[0].extra,
+    `Expected ${telemetryObject} to be the same as ${expectedObject}`
+  );
+});

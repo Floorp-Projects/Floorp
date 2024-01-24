@@ -122,8 +122,22 @@ var gSanitizePromptDialog = {
       }
     }
 
-    this.dataSizesFinishedUpdatingPromise =
-      this.getAndUpdateDataSizes(updateUsageData);
+    if (!lazy.USE_OLD_DIALOG) {
+      // Begin collecting how long it takes to load from here
+      let timerId = Glean.privacySanitize.loadTime.start();
+
+      this.dataSizesFinishedUpdatingPromise = this.getAndUpdateDataSizes(
+        updateUsageData
+      )
+        .then(() => {
+          // We're done loading, stop telemetry here
+          Glean.privacySanitize.loadTime.stopAndAccumulate(timerId);
+        })
+        .catch(() => {
+          // We're done loading, stop telemetry here
+          Glean.privacySanitize.loadTime.cancel(timerId);
+        });
+    }
 
     let OKButton = this._dialog.getButton("accept");
     let clearOnShutdownGroupbox = document.getElementById(
@@ -172,6 +186,9 @@ var gSanitizePromptDialog = {
       if (this._inClearOnShutdownNewDialog) {
         this.updatePrefs();
       } else {
+        if (!lazy.USE_OLD_DIALOG) {
+          this.reportTelemetry("clear");
+        }
         this.sanitize(e);
       }
     });
@@ -201,6 +218,10 @@ var gSanitizePromptDialog = {
     }
 
     await this.dataSizesFinishedUpdatingPromise;
+
+    if (!lazy.USE_OLD_DIALOG) {
+      this.reportTelemetry("open");
+    }
   },
 
   selectByTimespan() {
@@ -351,6 +372,7 @@ var gSanitizePromptDialog = {
     if (lazy.USE_OLD_DIALOG) {
       return;
     }
+
     if (doUpdateSites) {
       await lazy.SiteDataManager.updateSites();
     }
@@ -498,6 +520,41 @@ var gSanitizePromptDialog = {
       }
     }
     return items;
+  },
+
+  reportTelemetry(event) {
+    let contextOpenedIn;
+    if (this._inClearSiteDataNewDialog) {
+      contextOpenedIn = "clearSiteData";
+    } else if (this._inBrowserWindow) {
+      contextOpenedIn = "browser";
+    } else {
+      contextOpenedIn = "clearHistory";
+    }
+
+    // Report time span and clearing options after sanitize is clicked
+    if (event == "clear") {
+      Glean.privacySanitize.clearingTimeSpanSelected.record({
+        time_span: this.selectedTimespan.toString(),
+      });
+
+      let selectedOptions = this.getItemsToClear();
+      Glean.privacySanitize.clear.record({
+        context: contextOpenedIn,
+        history_form_data_downloads: selectedOptions.includes(
+          "historyFormDataAndDownloads"
+        ),
+        cookies_and_storage: selectedOptions.includes("cookiesAndStorage"),
+        cache: selectedOptions.includes("cache"),
+        site_settings: selectedOptions.includes("siteSettings"),
+      });
+    }
+    // if the dialog was just opened, just report which context it was opened in
+    else {
+      Glean.privacySanitize.dialogOpen.record({
+        context: contextOpenedIn,
+      });
+    }
   },
 };
 
