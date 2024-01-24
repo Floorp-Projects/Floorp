@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.3] - 2023-12-19
+### Fixed
+- Build on Android.
+
+## [0.9.2] - 2023-12-17
+### Fixed
+- Build on FreeBSD.
+
+## [0.9.1] - 2023-12-16
+### Changed
+- Added `MmapOptions::huge` method to support mapping hugetlb. Linux only.
+  [@ollie-etl](https://github.com/ollie-etl)
+  [@oliverbunting](https://github.com/oliverbunting)
+
+## [0.9.0] - 2023-10-03
+### Changed
+- The `Advice` struct was split into two enums: `Advice` and `UncheckedAdvice`.<br>
+  `Advice` can be passed to safe `advise` and `advise_range` methods.
+  And `UncheckedAdvice` can be passed to unsafe `unchecked_advise`
+  and `unchecked_advise_range` methods.<br>
+  [@adamreichold](https://github.com/adamreichold)
+
 ## [0.8.0] - 2023-09-25
 ### Changed
 - The `Advice` type is a struct and not an enum now.
@@ -174,7 +196,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `winapi` dependency. [memmap-rs/pull/89](https://github.com/danburkert/memmap-rs/pull/89)
 
-[Unreleased]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.9.3...HEAD
+[0.9.3]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.9.2...v0.9.3
+[0.9.2]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.9.1...v0.9.2
+[0.9.1]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.6.2...v0.7.0
