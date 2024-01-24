@@ -20,6 +20,19 @@ class Browser(BidiModule):
         return result["userContext"]
 
     @command
+    def get_user_contexts(self) -> Mapping[str, Any]:
+        return {}
+
+    @get_user_contexts.result
+    def _get_user_contexts(self, result: Mapping[str, Any]) -> Any:
+        assert result["userContexts"] is not None
+        assert isinstance(result["userContexts"], list)
+        for user_context_info in result["userContexts"]:
+            assert isinstance(user_context_info["userContext"], str)
+
+        return result["userContexts"]
+
+    @command
     def remove_user_context(
         self, user_context: str = None
     ) -> Mapping[str, Any]:
