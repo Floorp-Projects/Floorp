@@ -96,7 +96,7 @@ fn save_to_db(tx: &Transaction<'_>, ext_id: &str, val: &StorageChangeOp) -> Resu
             StorageChangeOp::Set(v) => {
                 let sv = v.to_string();
                 if sv.len() > SYNC_QUOTA_BYTES {
-                    return Err(ErrorKind::QuotaError(QuotaReason::TotalBytes).into());
+                    return Err(Error::QuotaError(QuotaReason::TotalBytes));
                 }
                 sv
             }
@@ -142,7 +142,7 @@ pub struct StorageValueChange {
 // be a plain vec
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct StorageChanges {
-    changes: Vec<StorageValueChange>,
+    pub changes: Vec<StorageValueChange>,
 }
 
 impl StorageChanges {
@@ -167,7 +167,7 @@ impl StorageChanges {
 
 // and it serializes as a map.
 impl Serialize for StorageChanges {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -205,12 +205,12 @@ pub fn set(tx: &Transaction<'_>, ext_id: &str, val: JsonValue) -> Result<Storage
     for (k, v) in val_map.into_iter() {
         let old_value = current.remove(&k);
         if current.len() >= SYNC_MAX_ITEMS {
-            return Err(ErrorKind::QuotaError(QuotaReason::MaxItems).into());
+            return Err(Error::QuotaError(QuotaReason::MaxItems));
         }
         // Reading the chrome docs literally re the quota, the length of the key
         // is just the string len, but the value is the json val, as bytes
         if get_quota_size_of(&k, &v) > SYNC_QUOTA_BYTES_PER_ITEM {
-            return Err(ErrorKind::QuotaError(QuotaReason::ItemBytes).into());
+            return Err(Error::QuotaError(QuotaReason::ItemBytes));
         }
         let change = StorageValueChange {
             key: k.clone(),
@@ -610,8 +610,8 @@ mod tests {
             )?;
         }
         let e = set(&tx, ext_id, json!({"another": "another"})).unwrap_err();
-        match e.kind() {
-            ErrorKind::QuotaError(QuotaReason::MaxItems) => {}
+        match e {
+            Error::QuotaError(QuotaReason::MaxItems) => {}
             _ => panic!("unexpected error type"),
         };
         Ok(())
@@ -636,8 +636,8 @@ mod tests {
 
         // Key length does push it over.
         let e = set(&tx, ext_id, json!({ "xxxx": val })).unwrap_err();
-        match e.kind() {
-            ErrorKind::QuotaError(QuotaReason::ItemBytes) => {}
+        match e {
+            Error::QuotaError(QuotaReason::ItemBytes) => {}
             _ => panic!("unexpected error type"),
         };
         Ok(())
@@ -659,8 +659,8 @@ mod tests {
 
         // Adding more data fails.
         let e = set(&tx, ext_id, json!({ "y": "newvalue" })).unwrap_err();
-        match e.kind() {
-            ErrorKind::QuotaError(QuotaReason::TotalBytes) => {}
+        match e {
+            Error::QuotaError(QuotaReason::TotalBytes) => {}
             _ => panic!("unexpected error type"),
         };
 

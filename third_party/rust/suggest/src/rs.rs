@@ -285,4 +285,6 @@ pub(crate) struct DownloadedYelpSuggestion {
     pub post_modifiers: Vec<String>,
     #[serde(rename = "locationSigns")]
     pub location_signs: Vec<DownloadedYelpLocationSign>,
+    #[serde(rename = "yelpModifiers")]
+    pub yelp_modifiers: Vec<String>,
 }

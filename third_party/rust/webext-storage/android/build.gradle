@@ -1,0 +1,22 @@
+// TODO: Uncomment this code when webext-storage component is integrated in android
+
+// apply from: "$rootDir/build-scripts/component-common.gradle"
+// apply from: "$rootDir/publish.gradle"
+
+// dependencies {
+//     // Part of the public API.
+//     api project(':sync15')
+
+//     implementation "org.mozilla.telemetry:glean:$glean_version"
+//     implementation "androidx.core:core-ktx:$androidx_core_version"
+
+//     testImplementation "androidx.test:core-ktx:$androidx_test_version"
+//     testImplementation "androidx.test.ext:junit-ktx:$androidx_test_junit_version"
+//     testImplementation "androidx.work:work-testing:$androidx_work_testing_version"
+//     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:$glean_version"
+// }
+
+
+// ext.configureUniFFIBindgen("../src/webext-storage.udl")
+// ext.dependsOnTheMegazord()
+// ext.configurePublish()

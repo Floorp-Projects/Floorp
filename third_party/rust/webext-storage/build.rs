@@ -10,4 +10,6 @@ fn main() {
 
     // If NSS_DIR isn't set, we don't really care, ignore the Err case.
     let _ = nss_build_common::link_nss();
+
+    uniffi::generate_scaffolding("./src/webext-storage.udl").unwrap();
 }

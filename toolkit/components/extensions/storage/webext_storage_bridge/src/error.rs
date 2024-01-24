@@ -12,7 +12,6 @@ use nserror::{
 };
 use serde_json::error::Error as JsonError;
 use webext_storage::error::Error as WebextStorageError;
-use webext_storage::error::ErrorKind as WebextStorageErrorKind;
 
 /// A specialized `Result` type for extension storage operations.
 pub type Result<T> = result::Result<T, Error>;
@@ -84,8 +83,8 @@ impl From<Error> for nsresult {
     fn from(error: Error) -> nsresult {
         match error {
             Error::Nsresult(result) => result,
-            Error::WebextStorage(e) => match e.kind() {
-                WebextStorageErrorKind::QuotaError(_) => NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+            Error::WebextStorage(e) => match e {
+                WebextStorageError::QuotaError(_) => NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
                 _ => NS_ERROR_FAILURE,
             },
             Error::MigrationFailed(_) => NS_ERROR_CANNOT_CONVERT_DATA,
