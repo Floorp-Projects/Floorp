@@ -67,11 +67,13 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
    public:
     virtual ~Helpers() = default;
 
-    virtual bool InitTranslator(
-        TextureType aTextureType, gfx::BackendType aBackendType,
-        Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
-        uint64_t aBufferSize, CrossProcessSemaphoreHandle&& aReaderSem,
-        CrossProcessSemaphoreHandle&& aWriterSem, bool aUseIPDLThread) = 0;
+    virtual bool InitTranslator(TextureType aTextureType,
+                                gfx::BackendType aBackendType,
+                                Handle&& aReadHandle,
+                                nsTArray<Handle>&& aBufferHandles,
+                                uint64_t aBufferSize,
+                                CrossProcessSemaphoreHandle&& aReaderSem,
+                                CrossProcessSemaphoreHandle&& aWriterSem) = 0;
 
     virtual bool AddBuffer(Handle&& aBufferHandle, uint64_t aBufferSize) = 0;
 
