@@ -279,8 +279,9 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.RAPTOR.value],
                 "tasks": [],
-                "description": "Run all the pageload tests in warm, and cold. Used to determine "
-                "if your patch has a direct impact on pageload performance.",
+                "description": "A group of tests that measures various important pageload metrics. More information "
+                "can about what is exactly measured can found here:"
+                " https://firefox-source-docs.mozilla.org/testing/perfdocs/raptor.html#desktop",
             },
             "Speedometer 3": {
                 "query": {
@@ -290,7 +291,8 @@ class ClassificationProvider:
                 "suites": [Suites.RAPTOR.value],
                 "app-restrictions": {},
                 "tasks": [],
-                "description": "",
+                "description": "A group of Speedometer3 tests on various platforms and architectures, speedometer3 is"
+                "currently the best benchmark we have for a baseline on real-world web performance",
             },
             "Responsiveness": {
                 "query": {
@@ -308,7 +310,8 @@ class ClassificationProvider:
                     ],
                 },
                 "tasks": [],
-                "description": "",
+                "description": "A group of tests that ensure that the interactive part of the browser stays fast and"
+                "responsive",
             },
             "Benchmarks": {
                 "query": {
@@ -317,7 +320,9 @@ class ClassificationProvider:
                 "suites": [Suites.RAPTOR.value],
                 "variant-restrictions": {Suites.RAPTOR.value: []},
                 "tasks": [],
-                "description": "",
+                "description": "A group of tests that benchmark how the browser performs in various categories. "
+                "More information about what exact benchmarks we run can be found here: "
+                "https://firefox-source-docs.mozilla.org/testing/perfdocs/raptor.html#benchmarks",
             },
             "DAMP (Devtools)": {
                 "query": {
@@ -325,7 +330,10 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.TALOS.value],
                 "tasks": [],
-                "description": "",
+                "description": "The DAMP tests are a group of tests that measure the performance of the browsers "
+                "devtools under certain conditiones. More information on the DAMP tests can be found"
+                " here: https://firefox-source-docs.mozilla.org/devtools/tests/performance-tests"
+                "-damp.html#what-does-it-do",
             },
             "Talos PerfTests": {
                 "query": {
@@ -333,7 +341,8 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.TALOS.value],
                 "tasks": [],
-                "description": "",
+                "description": "This selects all of the talos performance tests. More information can be found here: "
+                "https://firefox-source-docs.mozilla.org/testing/perfdocs/talos.html#test-types",
             },
             "Resource Usage": {
                 "query": {
@@ -352,7 +361,8 @@ class ClassificationProvider:
                     Suites.TALOS.value: [Apps.FIREFOX.value],
                 },
                 "tasks": [],
-                "description": "",
+                "description": "A group of tests that monitor resource usage of various metrics like power, CPU, and"
+                "memory",
             },
             "Graphics, & Media Playback": {
                 "query": {
@@ -372,6 +382,6 @@ class ClassificationProvider:
                     ],
                 },
                 "tasks": [],
-                "description": "",
+                "description": "A group of tests that monitor key graphics and media metrics to keep the browser fast",
             },
         }
