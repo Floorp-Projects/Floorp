@@ -214,7 +214,7 @@ class UntypedManagedEndpoint {
 
   ~UntypedManagedEndpoint() noexcept;
 
-  bool BindCommon(IProtocol* aActor, IProtocol* aManager);
+  bool BindCommon(IProtocol* aActor, IRefCountedProtocol* aManager);
 
  private:
   friend struct IPDLParamTraits<UntypedManagedEndpoint>;
@@ -267,7 +267,8 @@ class ManagedEndpoint : public UntypedManagedEndpoint {
   ManagedEndpoint(const PrivateIPDLInterface&, IProtocol* aActor)
       : UntypedManagedEndpoint(aActor) {}
 
-  bool Bind(const PrivateIPDLInterface&, PFooSide* aActor, IProtocol* aManager,
+  bool Bind(const PrivateIPDLInterface&, PFooSide* aActor,
+            IRefCountedProtocol* aManager,
             ManagedContainer<PFooSide>& aContainer) {
     if (!BindCommon(aActor, aManager)) {
       return false;
