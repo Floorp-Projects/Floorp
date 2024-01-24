@@ -76,7 +76,6 @@ module.exports = {
       "yahoo.co.jp",
       "twitter.com",
       "naver.com",
-      "canva.com",
       "ebay.com",
       "force.com",
       "amazon.in",
