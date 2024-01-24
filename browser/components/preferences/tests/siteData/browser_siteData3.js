@@ -131,8 +131,9 @@ add_task(async function test_grouping() {
   // The shown quota can be slightly larger than the raw data we put in (though it should
   // never be smaller), but that doesn't really matter to us since we only want to test that
   // the site data dialog accumulates this into a single column.
-  ok(
-    parseFloat(l10nAttributes.args.value) >= parseFloat(value),
+  Assert.greaterOrEqual(
+    parseFloat(l10nAttributes.args.value),
+    parseFloat(value),
     "Should show the correct accumulated quota size."
   );
   is(

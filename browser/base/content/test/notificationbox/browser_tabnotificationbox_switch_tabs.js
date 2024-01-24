@@ -15,8 +15,9 @@ function assertNotificationBoxHidden(reason, browser) {
   ok(name, `Notification box has a name ${reason}`);
 
   let { selectedViewName } = notificationBox._stack.parentElement;
-  ok(
-    selectedViewName != name,
+  Assert.notEqual(
+    selectedViewName,
+    name,
     `Box is not shown ${reason} ${selectedViewName} != ${name}`
   );
 }

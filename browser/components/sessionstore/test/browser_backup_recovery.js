@@ -127,8 +127,9 @@ add_task(async function test_creation() {
     "After second write, clean shutdown " +
       "sessionstore doesn't exist, since we haven't shutdown yet"
   );
-  ok(
-    Paths.upgradeBackup === "",
+  Assert.strictEqual(
+    Paths.upgradeBackup,
+    "",
     "After second write, clean " +
       "shutdown sessionstore doesn't exist, since we haven't shutdown yet"
   );

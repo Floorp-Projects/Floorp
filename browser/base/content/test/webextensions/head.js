@@ -606,10 +606,10 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     is(e.updated_from, "user", "Glean event has the expected updated_from.");
 
     if (e.step === "permissions_prompt") {
-      ok(parseInt(e.num_strings) > 0, "Expected num_strings.");
+      Assert.greater(parseInt(e.num_strings), 0, "Expected num_strings.");
     }
     if (e.step === "download_completed") {
-      ok(parseInt(e.download_time) > 0, "Valid download_time.");
+      Assert.greater(parseInt(e.download_time), 0, "Valid download_time.");
     }
   }
 

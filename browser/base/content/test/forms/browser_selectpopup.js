@@ -724,14 +724,14 @@ add_task(async function test_somehidden() {
   let selectPopup = await openSelectPopup("click");
 
   // The exact number is not needed; just ensure the height is larger than 4 items to accommodate any popup borders.
-  ok(
-    selectPopup.getBoundingClientRect().height >=
-      selectPopup.lastElementChild.getBoundingClientRect().height * 4,
+  Assert.greaterOrEqual(
+    selectPopup.getBoundingClientRect().height,
+    selectPopup.lastElementChild.getBoundingClientRect().height * 4,
     "Height contains at least 4 items"
   );
-  ok(
-    selectPopup.getBoundingClientRect().height <
-      selectPopup.lastElementChild.getBoundingClientRect().height * 5,
+  Assert.less(
+    selectPopup.getBoundingClientRect().height,
+    selectPopup.lastElementChild.getBoundingClientRect().height * 5,
     "Height doesn't contain 5 items"
   );
 
@@ -823,8 +823,9 @@ add_task(async function test_zoom() {
     );
     info("Zoomed font-size is " + zoomedFontSize);
 
-    ok(
-      Math.abs(zoomedFontSize - nonZoomedFontSize * 2.0) < 0.01,
+    Assert.less(
+      Math.abs(zoomedFontSize - nonZoomedFontSize * 2.0),
+      0.01,
       `Zoom should affect menu popup size, got ${zoomedFontSize}, ` +
         `expected ${nonZoomedFontSize * 2.0}`
     );

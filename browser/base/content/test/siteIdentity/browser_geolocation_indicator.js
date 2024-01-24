@@ -200,7 +200,7 @@ async function testGeoLocationLastAccessSet(browser) {
     );
   });
 
-  ok(timestamp != null, "Geo last access timestamp set");
+  Assert.notEqual(timestamp, null, "Geo last access timestamp set");
 
   let parseSuccess = true;
   try {

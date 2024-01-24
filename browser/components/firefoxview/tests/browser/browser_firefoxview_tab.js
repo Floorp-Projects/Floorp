@@ -210,9 +210,9 @@ add_task(async function test_firefoxview_view_count() {
 
   let tab = await openFirefoxViewTab(window);
 
-  ok(
-    SpecialPowers.getIntPref("browser.firefox-view.view-count") ===
-      startViews + 1,
+  Assert.strictEqual(
+    SpecialPowers.getIntPref("browser.firefox-view.view-count"),
+    startViews + 1,
     "View count pref value is incremented when tab is selected"
   );
 

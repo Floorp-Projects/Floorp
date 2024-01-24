@@ -39,7 +39,7 @@ function secondPageLoaded() {
     FullZoom.enlarge();
     gLevel = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
 
-    ok(gLevel > 1, "New zoom for tab 1 should be greater than 1");
+    Assert.greater(gLevel, 1, "New zoom for tab 1 should be greater than 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Zooming tab 1 should not affect tab 2");
     FullZoomHelper.zoomTest(gTab3, 1, "Zooming tab 1 should not affect tab 3");
 

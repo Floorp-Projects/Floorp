@@ -420,9 +420,14 @@ add_task(async function testReorderingBrowserLanguages() {
 
   ok(firstDialogId, "There was an id on the first dialog");
   ok(secondDialogId, "There was an id on the second dialog");
-  ok(firstDialogId != secondDialogId, "The dialog ids are different");
-  ok(
-    parseInt(firstDialogId) < parseInt(secondDialogId),
+  Assert.notEqual(
+    firstDialogId,
+    secondDialogId,
+    "The dialog ids are different"
+  );
+  Assert.less(
+    parseInt(firstDialogId),
+    parseInt(secondDialogId),
     "The second dialog id is larger than the first"
   );
 

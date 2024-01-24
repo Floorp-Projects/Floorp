@@ -74,8 +74,9 @@ function get_cache_for_private_window() {
       BrowserTestUtils.browserLoaded(newTabBrowser).then(function () {
         executeSoon(function () {
           getStorageEntryCount("private", function (nrEntriesP) {
-            ok(
-              nrEntriesP >= 1,
+            Assert.greaterOrEqual(
+              nrEntriesP,
+              1,
               "Memory cache reports some entries from example.org domain"
             );
 

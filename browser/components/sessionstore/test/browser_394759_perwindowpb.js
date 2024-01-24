@@ -39,8 +39,9 @@ function promiseTestOnWindow(aIsPrivate, aValue) {
       1,
       "Check that the closed window count hasn't changed"
     );
-    ok(
-      JSON.stringify(data).indexOf(aValue) > -1,
+    Assert.greater(
+      JSON.stringify(data).indexOf(aValue),
+      -1,
       "Check the closed window data was stored correctly"
     );
     registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));

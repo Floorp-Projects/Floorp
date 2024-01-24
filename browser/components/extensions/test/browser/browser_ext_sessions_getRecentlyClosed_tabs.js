@@ -117,8 +117,9 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   let tabInfo = recentlyClosed[0].tab;
   let expectedTab = expectedTabs.pop();
   checkTabInfo(expectedTab, tabInfo);
-  ok(
-    tabInfo.lastAccessed > lastAccessedTimes.get(tabInfo.url),
+  Assert.greater(
+    tabInfo.lastAccessed,
+    lastAccessedTimes.get(tabInfo.url),
     "lastAccessed has been updated"
   );
 
@@ -131,8 +132,9 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   is(tabInfos.length, 2, "Expected number of tabs in closed window.");
   for (let x = 0; x < tabInfos.length; x++) {
     checkTabInfo(expectedTabs[x], tabInfos[x]);
-    ok(
-      tabInfos[x].lastAccessed > lastAccessedTimes.get(tabInfos[x].url),
+    Assert.greater(
+      tabInfos[x].lastAccessed,
+      lastAccessedTimes.get(tabInfos[x].url),
       "lastAccessed has been updated"
     );
   }

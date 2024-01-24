@@ -282,8 +282,9 @@ var tests = [
         !notifyObj.showingCallbackTriggered,
         "Should not have triggered a second showing event"
       );
-      ok(
-        this.notification.timeShown > timeShown,
+      Assert.greater(
+        this.notification.timeShown,
+        timeShown,
         "should have updated timeShown to restart the security delay"
       );
 

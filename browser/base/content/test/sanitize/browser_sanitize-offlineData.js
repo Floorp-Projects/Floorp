@@ -88,7 +88,7 @@ for (let itemsToClear of prefs) {
     endDate = Date.now() * 1000;
     principals = sas.getActiveOrigins(endDate - oneHour, endDate);
     ok(!!principals, "We have an active origin.");
-    ok(principals.length >= 2, "We have an active origin.");
+    Assert.greaterOrEqual(principals.length, 2, "We have an active origin.");
 
     let found = 0;
     for (let i = 0; i < principals.length; ++i) {

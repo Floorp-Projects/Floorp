@@ -225,8 +225,9 @@ add_task(async function testPageActionPopup() {
       await promisePopupShown(panel);
 
       let oldTab = gBrowser.selectedTab;
-      ok(
-        oldTab != gBrowser.tabs[0],
+      Assert.notEqual(
+        oldTab,
+        gBrowser.tabs[0],
         "Should have an inactive tab to switch to"
       );
 

@@ -410,7 +410,11 @@ add_task(async function () {
         } else {
           message += `${entry[op] * -1} more times than expected`;
         }
-        ok(entry[op] >= 0, `${message} in ${procName} process`);
+        Assert.greaterOrEqual(
+          entry[op],
+          0,
+          `${message} in ${procName} process`
+        );
       }
       if (!("_used" in entry) && !entry.ignoreIfUnused) {
         ok(

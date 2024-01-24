@@ -234,5 +234,9 @@ async function forceCleanProcesses() {
   const currPrefValue = SpecialPowers.getBoolPref(
     "dom.ipc.processPrelaunch.enabled"
   );
-  ok(currPrefValue === origPrefValue, "processPrelaunch properly re-enabled");
+  Assert.strictEqual(
+    currPrefValue,
+    origPrefValue,
+    "processPrelaunch properly re-enabled"
+  );
 }

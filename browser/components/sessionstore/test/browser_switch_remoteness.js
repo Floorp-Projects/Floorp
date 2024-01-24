@@ -28,7 +28,11 @@ add_task(async function () {
   const MAX_BACK = Services.prefs.getIntPref(
     "browser.sessionstore.max_serialize_back"
   );
-  ok(MAX_BACK > -1, "check that the default has a value that caps data");
+  Assert.greater(
+    MAX_BACK,
+    -1,
+    "check that the default has a value that caps data"
+  );
 
   // Load more pages than we would save to disk on a clean shutdown.
   for (let i = 0; i < MAX_BACK + 2; i++) {

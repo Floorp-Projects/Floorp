@@ -128,12 +128,14 @@ add_task(async function test_window_resize() {
         "The overlay spans the height of the window"
       );
 
-      ok(
-        dimensions.scrollWidth < BIG_WINDOW_SIZE,
+      Assert.less(
+        dimensions.scrollWidth,
+        BIG_WINDOW_SIZE,
         "Screenshots overlay is smaller than the big window width"
       );
-      ok(
-        dimensions.scrollHeight < BIG_WINDOW_SIZE,
+      Assert.less(
+        dimensions.scrollHeight,
+        BIG_WINDOW_SIZE,
         "Screenshots overlay is smaller than the big window height"
       );
 

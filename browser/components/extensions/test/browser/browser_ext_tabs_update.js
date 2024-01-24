@@ -45,7 +45,7 @@ add_task(async function () {
 
   await Promise.all([extension.startup(), extension.awaitMessage("check")]);
 
-  ok(gBrowser.selectedTab == tab2, "correct tab selected");
+  Assert.equal(gBrowser.selectedTab, tab2, "correct tab selected");
 
   await extension.unload();
 

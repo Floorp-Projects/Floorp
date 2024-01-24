@@ -96,8 +96,9 @@ add_task(async function test_opened_page() {
 
       let detailsParam = doc.getElementById("details").innerText;
       const details = JSON.parse(detailsParam);
-      ok(
-        typeof details == "object",
+      Assert.equal(
+        typeof details,
+        "object",
         "Details param is a stringified JSON object."
       );
       ok(Array.isArray(details.consoleLog), "Details has a consoleLog array.");
@@ -166,38 +167,54 @@ add_task(async function test_opened_page() {
       is(log5.uri, URL, "Reports correct url");
       is(log5.pos, "36:5", "Reports correct line and column");
 
-      ok(typeof details.buildID == "string", "Details has a buildID string.");
-      ok(typeof details.channel == "string", "Details has a channel string.");
-      ok(
-        typeof details.hasTouchScreen == "boolean",
+      Assert.equal(
+        typeof details.buildID,
+        "string",
+        "Details has a buildID string."
+      );
+      Assert.equal(
+        typeof details.channel,
+        "string",
+        "Details has a channel string."
+      );
+      Assert.equal(
+        typeof details.hasTouchScreen,
+        "boolean",
         "Details has a hasTouchScreen flag."
       );
-      ok(
-        typeof details.hasFastClick == "undefined",
+      Assert.equal(
+        typeof details.hasFastClick,
+        "undefined",
         "Details does not have FastClick if not found."
       );
-      ok(
-        typeof details.hasMobify == "undefined",
+      Assert.equal(
+        typeof details.hasMobify,
+        "undefined",
         "Details does not have Mobify if not found."
       );
-      ok(
-        typeof details.hasMarfeel == "undefined",
+      Assert.equal(
+        typeof details.hasMarfeel,
+        "undefined",
         "Details does not have Marfeel if not found."
       );
-      ok(
-        typeof details["mixed active content blocked"] == "boolean",
+      Assert.equal(
+        typeof details["mixed active content blocked"],
+        "boolean",
         "Details has a mixed active content blocked flag."
       );
-      ok(
-        typeof details["mixed passive content blocked"] == "boolean",
+      Assert.equal(
+        typeof details["mixed passive content blocked"],
+        "boolean",
         "Details has a mixed passive content blocked flag."
       );
-      ok(
-        typeof details["tracking content blocked"] == "string",
+      Assert.equal(
+        typeof details["tracking content blocked"],
+        "string",
         "Details has a tracking content blocked string."
       );
-      ok(
-        typeof details["gfx.webrender.all"] == "boolean",
+      Assert.equal(
+        typeof details["gfx.webrender.all"],
+        "boolean",
         "Details has gfx.webrender.all."
       );
 
@@ -231,8 +248,9 @@ add_task(async function test_framework_detection() {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
-    ok(
-      typeof details == "object",
+    Assert.equal(
+      typeof details,
+      "object",
       "Details param is a stringified JSON object."
     );
     is(details.hasFastClick, true, "FastClick was found.");
@@ -255,8 +273,9 @@ add_task(async function test_fastclick_detection() {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
-    ok(
-      typeof details == "object",
+    Assert.equal(
+      typeof details,
+      "object",
       "Details param is a stringified JSON object."
     );
     is(details.hasFastClick, true, "FastClick was found.");
@@ -277,7 +296,11 @@ add_task(async function test_framework_label() {
     let doc = content.document;
     let labelParam = doc.getElementById("label").innerText;
     const label = JSON.parse(labelParam);
-    ok(typeof label == "object", "Label param is a stringified JSON object.");
+    Assert.equal(
+      typeof label,
+      "object",
+      "Label param is a stringified JSON object."
+    );
     is(label.includes("type-fastclick"), true, "FastClick was found.");
     is(label.includes("type-mobify"), true, "Mobify was found.");
     is(label.includes("type-marfeel"), true, "Marfeel was found.");

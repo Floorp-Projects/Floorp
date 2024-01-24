@@ -53,8 +53,9 @@ var gProgressListener = {
       // Check we failed on unknown protocol (received an alert from docShell)
       ok(didFail, "Correctly failed on unknown protocol");
       // Check we opened all tabs
-      ok(
-        gBrowser.tabs.length == kURIs.length,
+      Assert.equal(
+        gBrowser.tabs.length,
+        kURIs.length,
         "Correctly opened all expected tabs"
       );
       finishTest();

@@ -45,7 +45,7 @@ add_task(async function test() {
   );
   let treeController =
     tree.controllers.getControllerForCommand("placesCmd_copy");
-  ok(controller == treeController, "tree controller was returned");
+  Assert.equal(controller, treeController, "tree controller was returned");
 
   // Open the context menu for a toolbar item, and check if the toolbar's
   // controller is returned.
@@ -75,7 +75,11 @@ add_task(async function test() {
   let toolbarController = document
     .getElementById("PlacesToolbar")
     .controllers.getControllerForCommand("placesCmd_copy");
-  ok(controller == toolbarController, "the toolbar controller was returned");
+  Assert.equal(
+    controller,
+    toolbarController,
+    "the toolbar controller was returned"
+  );
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(
     placesContext,
@@ -87,7 +91,7 @@ add_task(async function test() {
   // Now that the context menu is closed, try to get the tree controller again.
   tree.focus();
   controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
-  ok(controller == treeController, "tree controller was returned");
+  Assert.equal(controller, treeController, "tree controller was returned");
 
   if (wasCollapsed) {
     await promiseSetToolbarVisibility(toolbar, false);

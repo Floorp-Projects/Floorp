@@ -55,7 +55,7 @@ async function testFileCreationPositive(args, path) {
   }
 
   let info = await IOUtils.stat(path);
-  ok(info.size > 0, "Screenshot should not be an empty file");
+  Assert.greater(info.size, 0, "Screenshot should not be an empty file");
   await IOUtils.remove(path);
 }
 

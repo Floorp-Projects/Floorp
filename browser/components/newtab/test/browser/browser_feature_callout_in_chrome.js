@@ -954,8 +954,9 @@ add_task(
 
     const win = await BrowserTestUtils.openNewBrowserWindow();
     win.document.dir = "rtl";
-    ok(
-      win.document.documentElement.getAttribute("dir") === "rtl",
+    Assert.strictEqual(
+      win.document.documentElement.getAttribute("dir"),
+      "rtl",
       "browser window is in RTL"
     );
 

@@ -158,7 +158,11 @@ add_task(async function test_sideloading() {
   addons.children[0].click();
 
   // The click should hide the main menu. This is currently synchronous.
-  ok(PanelUI.panel.state != "open", "Main menu is closed or closing.");
+  Assert.notEqual(
+    PanelUI.panel.state,
+    "open",
+    "Main menu is closed or closing."
+  );
 
   // When we get the permissions prompt, we should be at the extensions
   // list in about:addons

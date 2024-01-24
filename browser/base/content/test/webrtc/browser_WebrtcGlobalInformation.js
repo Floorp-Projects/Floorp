@@ -337,8 +337,9 @@ add_task(async () => {
   {
     const history = await getStatsHistorySince(ids[0]);
     const secondLen = history.reports.length;
-    ok(
-      secondLen > firstLen,
+    Assert.greater(
+      secondLen,
+      firstLen,
       "After waiting there are more history entries available."
     );
   }
@@ -474,8 +475,9 @@ add_task(async () => {
   const { reports } = await getStatsHistorySince(ids[0]);
   const first = reports[0];
   const last = reports.at(-1);
-  ok(
-    last.timestamp - first.timestamp <= STORAGE_WINDOW_S * 1000,
+  Assert.lessOrEqual(
+    last.timestamp - first.timestamp,
+    STORAGE_WINDOW_S * 1000,
     "History reports should be aging out according to the storage window pref"
   );
   pc.close();

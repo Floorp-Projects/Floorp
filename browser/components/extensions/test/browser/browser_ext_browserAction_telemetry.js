@@ -143,8 +143,9 @@ add_task(async function testBrowserActionTelemetryTiming() {
   clickBrowserAction(extension1);
   await awaitExtensionPanel(extension1);
   let sumOld = histogram.snapshot().sum;
-  ok(
-    sumOld > 0,
+  Assert.greater(
+    sumOld,
+    0,
     `Data recorded for first extension for histogram: ${TIMING_HISTOGRAM}.`
   );
 
@@ -154,15 +155,17 @@ add_task(async function testBrowserActionTelemetryTiming() {
     [EXTENSION_ID1],
     `Data recorded for first extension for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
-  ok(
-    oldKeyedSnapshot[EXTENSION_ID1].sum > 0,
+  Assert.greater(
+    oldKeyedSnapshot[EXTENSION_ID1].sum,
+    0,
     `Data recorded for first extension for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
 
   let gleanSumOld =
     Glean.extensionsTiming.browserActionPopupOpen.testGetValue()?.sum;
-  ok(
-    gleanSumOld > 0,
+  Assert.greater(
+    gleanSumOld,
+    0,
     "Data recorded for first extension on glean metric extensionsTiming.browserActionPopupOpen"
   );
 
@@ -171,16 +174,18 @@ add_task(async function testBrowserActionTelemetryTiming() {
   clickBrowserAction(extension2);
   await awaitExtensionPanel(extension2);
   let sumNew = histogram.snapshot().sum;
-  ok(
-    sumNew > sumOld,
+  Assert.greater(
+    sumNew,
+    sumOld,
     `Data recorded for second extension for histogram: ${TIMING_HISTOGRAM}.`
   );
   sumOld = sumNew;
 
   let gleanSumNew =
     Glean.extensionsTiming.browserActionPopupOpen.testGetValue()?.sum;
-  ok(
-    gleanSumNew > gleanSumOld,
+  Assert.greater(
+    gleanSumNew,
+    gleanSumOld,
     "Data recorded for second extension on glean metric extensionsTiming.browserActionPopupOpen"
   );
   gleanSumOld = gleanSumNew;
@@ -191,8 +196,9 @@ add_task(async function testBrowserActionTelemetryTiming() {
     [EXTENSION_ID1, EXTENSION_ID2],
     `Data recorded for second extension for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
-  ok(
-    newKeyedSnapshot[EXTENSION_ID2].sum > 0,
+  Assert.greater(
+    newKeyedSnapshot[EXTENSION_ID2].sum,
+    0,
     `Data recorded for second extension for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
   is(
@@ -207,23 +213,26 @@ add_task(async function testBrowserActionTelemetryTiming() {
   clickBrowserAction(extension2);
   await awaitExtensionPanel(extension2);
   sumNew = histogram.snapshot().sum;
-  ok(
-    sumNew > sumOld,
+  Assert.greater(
+    sumNew,
+    sumOld,
     `Data recorded for second opening of popup for histogram: ${TIMING_HISTOGRAM}.`
   );
   sumOld = sumNew;
 
   gleanSumNew =
     Glean.extensionsTiming.browserActionPopupOpen.testGetValue()?.sum;
-  ok(
-    gleanSumNew > gleanSumOld,
+  Assert.greater(
+    gleanSumNew,
+    gleanSumOld,
     "Data recorded for second popup opening on glean metric extensionsTiming.browserActionPopupOpen"
   );
   gleanSumOld = gleanSumNew;
 
   newKeyedSnapshot = histogramKeyed.snapshot();
-  ok(
-    newKeyedSnapshot[EXTENSION_ID2].sum > oldKeyedSnapshot[EXTENSION_ID2].sum,
+  Assert.greater(
+    newKeyedSnapshot[EXTENSION_ID2].sum,
+    oldKeyedSnapshot[EXTENSION_ID2].sum,
     `Data recorded for second opening of popup for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
   is(
@@ -238,21 +247,24 @@ add_task(async function testBrowserActionTelemetryTiming() {
   clickBrowserAction(extension1);
   await awaitExtensionPanel(extension1);
   sumNew = histogram.snapshot().sum;
-  ok(
-    sumNew > sumOld,
+  Assert.greater(
+    sumNew,
+    sumOld,
     `Data recorded for third opening of popup for histogram: ${TIMING_HISTOGRAM}.`
   );
 
   gleanSumNew =
     Glean.extensionsTiming.browserActionPopupOpen.testGetValue()?.sum;
-  ok(
-    gleanSumNew > gleanSumOld,
+  Assert.greater(
+    gleanSumNew,
+    gleanSumOld,
     "Data recorded for third popup opening on glean metric extensionsTiming.browserActionPopupOpen"
   );
 
   newKeyedSnapshot = histogramKeyed.snapshot();
-  ok(
-    newKeyedSnapshot[EXTENSION_ID1].sum > oldKeyedSnapshot[EXTENSION_ID1].sum,
+  Assert.greater(
+    newKeyedSnapshot[EXTENSION_ID1].sum,
+    oldKeyedSnapshot[EXTENSION_ID1].sum,
     `Data recorded for second opening of popup for histogram: ${TIMING_HISTOGRAM_KEYED}.`
   );
   is(

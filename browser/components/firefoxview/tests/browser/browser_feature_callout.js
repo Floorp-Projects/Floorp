@@ -405,7 +405,11 @@ add_task(async function feature_callout_dismiss_on_timeout() {
         sandbox
           .stub(browser.contentWindow, "setInterval")
           .callsFake((fn, ms) => {
-            ok(ms === 5000, "setInterval called with 5 second interval");
+            Assert.strictEqual(
+              ms,
+              5000,
+              "setInterval called with 5 second interval"
+            );
             onInterval = fn;
             resolve();
             return 1;
@@ -654,8 +658,9 @@ add_task(async function feature_callout_returns_default_fxview_focus_to_top() {
       document.querySelector(".dismiss-button").click();
       await waitForCalloutRemoved(document);
 
-      ok(
-        document.activeElement.localName === "body",
+      Assert.strictEqual(
+        document.activeElement.localName,
+        "body",
         "by default focus returns to the document body after callout closes"
       );
     }
@@ -698,8 +703,9 @@ add_task(
         await waitForCalloutRemoved(document);
 
         // verify that the focus landed in the right place
-        ok(
-          document.activeElement.id === "recently-closed-tabs-header-section",
+        Assert.strictEqual(
+          document.activeElement.id,
+          "recently-closed-tabs-header-section",
           "when focus changes away from callout it reverts after callout closes"
         );
       }

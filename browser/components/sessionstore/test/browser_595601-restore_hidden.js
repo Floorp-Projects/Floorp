@@ -83,7 +83,7 @@ function test_loadTabs(restoreHiddenTabs, callback) {
       firstProgress = false;
       is(isRestoring, 3, "restoring 3 tabs concurrently");
     } else {
-      ok(isRestoring < 4, "restoring max. 3 tabs concurrently");
+      Assert.less(isRestoring, 4, "restoring max. 3 tabs concurrently");
     }
 
     // We're explicity checking for (isRestoring == 1) here because the test

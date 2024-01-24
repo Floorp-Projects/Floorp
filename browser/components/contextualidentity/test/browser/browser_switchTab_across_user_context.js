@@ -63,8 +63,9 @@ add_task(async function test_switch_tab() {
     );
   });
 
-  ok(
-    tabSwitchRow != undefined,
+  Assert.notEqual(
+    tabSwitchRow,
+    undefined,
     "Urlbar results contain the switch to tab from another container."
   );
   let element = UrlbarTestUtils.getRowAt(window, resultIndex);
@@ -129,8 +130,9 @@ add_task(async function test_chiclet_disabled_on_update() {
   });
 
   let row = UrlbarTestUtils.getRowAt(window, 1);
-  ok(
-    row._elements["user-context"] == undefined,
+  Assert.equal(
+    row._elements["user-context"],
+    undefined,
     "Row doesnt contain user-context chiclet."
   );
 

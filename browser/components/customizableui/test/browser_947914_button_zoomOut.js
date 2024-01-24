@@ -51,7 +51,7 @@ add_task(async function () {
     return parseInt(zoomResetButton.getAttribute("label"), 10) == pageZoomLevel;
   });
 
-  ok(pageZoomLevel < 100, "Page zoomed out correctly");
+  Assert.less(pageZoomLevel, 100, "Page zoomed out correctly");
 
   // close the panel
   let panelHiddenPromise = promiseOverflowHidden(window);

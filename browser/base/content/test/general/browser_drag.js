@@ -22,7 +22,7 @@ async function test() {
     },
     expected
   );
-  ok(result === true, "dragging dataTransfer should be expected");
+  Assert.strictEqual(result, true, "dragging dataTransfer should be expected");
   gURLBar.setPageProxyState(oldstate);
   // Now, the identity information panel is opened by the proxy icon click.
   // We need to close it for next tests.

@@ -9,8 +9,9 @@ add_task(async function () {
     let defaultPolicy = Services.prefs.getIntPref(
       "network.http.referer.defaultPolicy"
     );
-    ok(
-      [2, 3].indexOf(defaultPolicy) > -1,
+    Assert.greater(
+      [2, 3].indexOf(defaultPolicy),
+      -1,
       "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)"
     );
     if (defaultPolicy == 2) {

@@ -110,7 +110,11 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   addons.children[0].click();
 
   // The click should hide the main menu. This is currently synchronous.
-  ok(PanelUI.panel.state != "open", "Main menu is closed or closing.");
+  Assert.notEqual(
+    PanelUI.panel.state,
+    "open",
+    "Main menu is closed or closing."
+  );
 
   // about:addons should load and go to the list of extensions
   let tab = await tabPromise;

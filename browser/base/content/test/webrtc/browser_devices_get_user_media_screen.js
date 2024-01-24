@@ -63,8 +63,9 @@ var gTests = [
 
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;
-      ok(
-        count >= 4,
+      Assert.greaterOrEqual(
+        count,
+        4,
         "There should be the 'Select Window or Screen' item, a separator and at least one window and one screen"
       );
 
@@ -123,8 +124,9 @@ var gTests = [
           scaryScreenIndex = i;
         }
       }
-      ok(
-        typeof scaryScreenIndex == "number",
+      Assert.equal(
+        typeof scaryScreenIndex,
+        "number",
         "there's at least one scary screen, as as all screens are"
       );
 
@@ -232,8 +234,9 @@ var gTests = [
 
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;
-      ok(
-        count >= 4,
+      Assert.greaterOrEqual(
+        count,
+        4,
         "There should be the 'Select Window or Screen' item, a separator and at least one window and one screen"
       );
 
@@ -310,8 +313,9 @@ var gTests = [
           "there's at least one scary window, as Firefox is running"
         );
       }
-      ok(
-        typeof scaryScreenIndex == "number",
+      Assert.equal(
+        typeof scaryScreenIndex,
+        "number",
         "there's at least one scary screen, as all screens are"
       );
 
@@ -441,8 +445,9 @@ var gTests = [
 
       let menulist = document.getElementById("webRTC-selectWindow-menulist");
       let count = menulist.itemCount;
-      ok(
-        count >= 4,
+      Assert.greaterOrEqual(
+        count,
+        4,
         "There should be the 'Select Window or Screen' item, a separator and at least one window and one screen"
       );
 

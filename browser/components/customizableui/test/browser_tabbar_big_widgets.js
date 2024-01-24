@@ -14,7 +14,7 @@ function test() {
   gNavToolbox.palette.appendChild(button);
   CustomizableUI.addWidgetToArea(kButtonId, CustomizableUI.AREA_TABSTRIP);
   let currentHeight = titlebar.getBoundingClientRect().height;
-  ok(currentHeight > originalHeight, "Titlebar should have grown");
+  Assert.greater(currentHeight, originalHeight, "Titlebar should have grown");
   CustomizableUI.removeWidgetFromArea(kButtonId);
   currentHeight = titlebar.getBoundingClientRect().height;
   is(

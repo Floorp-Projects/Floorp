@@ -107,12 +107,14 @@ async function testPopupSize(
     });
 
     let win = dims.window;
-    ok(
-      Math.abs(win.innerHeight - innerHeight) <= 1,
+    Assert.lessOrEqual(
+      Math.abs(win.innerHeight - innerHeight),
+      1,
       `Window height should not change (${win.innerHeight} ~= ${innerHeight})`
     );
-    ok(
-      win.innerWidth > innerWidth,
+    Assert.greater(
+      win.innerWidth,
+      innerWidth,
       `Window width should increase (${win.innerWidth} > ${innerWidth})`
     );
 
@@ -124,12 +126,14 @@ async function testPopupSize(
 
     // The getContentSize calculation is not always reliable to single-pixel
     // precision.
-    ok(
-      Math.abs(win.innerHeight - innerHeight) <= 1,
+    Assert.lessOrEqual(
+      Math.abs(win.innerHeight - innerHeight),
+      1,
       `Window height should return to approximately its original value (${win.innerHeight} ~= ${innerHeight})`
     );
-    ok(
-      Math.abs(win.innerWidth - innerWidth) <= 1,
+    Assert.lessOrEqual(
+      Math.abs(win.innerWidth - innerWidth),
+      1,
       `Window width should return to approximately its original value (${win.innerWidth} ~= ${innerWidth})`
     );
 
@@ -175,28 +179,32 @@ async function testPopupSize(
     let panelRect = panel.getBoundingClientRect();
     if (arrowSide == "top") {
       is(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
-      ok(
-        panelRect.bottom >= origPanelRect.bottom,
+      Assert.greaterOrEqual(
+        panelRect.bottom,
+        origPanelRect.bottom,
         `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`
       );
 
       let screenBottom =
         browserWin.screen.availTop + browserWin.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
-      ok(
-        Math.round(panelBottom) <= screenBottom,
+      Assert.lessOrEqual(
+        Math.round(panelBottom),
+        screenBottom,
         `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`
       );
     } else {
       is(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
-      ok(
-        panelRect.top <= origPanelRect.top,
+      Assert.lessOrEqual(
+        panelRect.top,
+        origPanelRect.top,
         `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`
       );
 
       let panelTop = browserWin.mozInnerScreenY + panelRect.top;
-      ok(
-        panelTop >= browserWin.screen.availTop,
+      Assert.greaterOrEqual(
+        panelTop,
+        browserWin.screen.availTop,
         `Top of popup should be on-screen. (${panelTop} >= ${browserWin.screen.availTop})`
       );
     }
@@ -244,21 +252,24 @@ async function testPopupSize(
   dims = await alterContent(browser, setClass, "big");
   let win = dims.window;
 
-  ok(
-    getHeight() > height,
+  Assert.greater(
+    getHeight(),
+    height,
     `Browser height should increase (${getHeight()} > ${height})`
   );
 
   if (isFixedWidth) {
     is(win.innerWidth, innerWidth, "Window width should not change");
   } else {
-    ok(
-      win.innerWidth >= innerWidth,
+    Assert.greaterOrEqual(
+      win.innerWidth,
+      innerWidth,
       `Window width should increase (${win.innerWidth} >= ${innerWidth})`
     );
   }
-  ok(
-    win.innerHeight >= innerHeight,
+  Assert.greaterOrEqual(
+    win.innerHeight,
+    innerHeight,
     `Window height should increase (${win.innerHeight} >= ${innerHeight})`
   );
   Assert.lessOrEqual(
@@ -279,14 +290,16 @@ async function testPopupSize(
     dims = await alterContent(browser, setClass, "bigger");
     win = dims.window;
 
-    ok(
-      getHeight() > height,
+    Assert.greater(
+      getHeight(),
+      height,
       `Browser height should increase (${getHeight()} > ${height})`
     );
 
     is(win.innerWidth, innerWidth, "Window width should not change");
-    ok(
-      win.innerHeight >= innerHeight,
+    Assert.greaterOrEqual(
+      win.innerHeight,
+      innerHeight,
       `Window height should increase (${win.innerHeight} >= ${innerHeight})`
     );
     Assert.lessOrEqual(
@@ -306,21 +319,24 @@ async function testPopupSize(
   dims = await alterContent(browser, setClass, "huge");
   win = dims.window;
 
-  ok(
-    getHeight() > height,
+  Assert.greater(
+    getHeight(),
+    height,
     `Browser height should increase (${getHeight()} > ${height})`
   );
 
   is(win.innerWidth, innerWidth, "Window width should not change");
-  ok(
-    win.innerHeight > innerHeight,
+  Assert.greater(
+    win.innerHeight,
+    innerHeight,
     `Window height should increase (${win.innerHeight} > ${innerHeight})`
   );
   // Commented out check for the window height here which mysteriously breaks
   // on infra but not locally. bug 1396843 covers re-enabling this.
   // ok(win.innerHeight < screen.height, `Window height be less than the screen height (${win.innerHeight} < ${screen.height})`);
-  ok(
-    win.scrollMaxY > 0,
+  Assert.greater(
+    win.scrollMaxY,
+    0,
     `Document should be vertically scrollable (${win.scrollMaxY} > 0)`
   );
 

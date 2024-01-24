@@ -117,7 +117,11 @@ function test() {
         checked++;
       }
     }
-    ok(uniq2Count > 0, "at least 1 tab properly checked 'early access'");
+    Assert.greater(
+      uniq2Count,
+      0,
+      "at least 1 tab properly checked 'early access'"
+    );
     is(checked, uniq2Count, "checked the same number of uniq2 as we set");
   }
 

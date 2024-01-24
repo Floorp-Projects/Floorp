@@ -24,7 +24,11 @@ add_task(async function () {
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   let count = await promiseSHistoryCount(tab.linkedBrowser);
-  ok(count >= 1, "the new tab does have at least one history entry");
+  Assert.greaterOrEqual(
+    count,
+    1,
+    "the new tab does have at least one history entry"
+  );
 
   await promiseTabState(tab, { entries: [] });
 

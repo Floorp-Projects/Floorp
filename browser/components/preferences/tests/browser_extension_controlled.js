@@ -393,8 +393,9 @@ add_task(async function testPrefLockedHomepage() {
     return mutationsDone;
   };
 
-  ok(
-    originalHomepage != extensionHomepage,
+  Assert.notEqual(
+    originalHomepage,
+    extensionHomepage,
     "The extension will change the homepage"
   );
 

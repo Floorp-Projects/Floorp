@@ -77,8 +77,9 @@ async function testProbe(aProbe) {
   // Now we should have a hang in our histogram.
   let snapshot = histogram.snapshot();
   BrowserTestUtils.removeTab(hangTab);
-  ok(
-    sum(Object.values(snapshot.values)) > 0,
+  Assert.greater(
+    sum(Object.values(snapshot.values)),
+    0,
     `Spinner probe should now have a value in some bucket`
   );
 }

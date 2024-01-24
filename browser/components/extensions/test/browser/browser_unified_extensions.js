@@ -158,8 +158,9 @@ add_task(async function test_clicks_on_unified_extension_button() {
 
   info("open panel with primary click");
   await openExtensionsPanel();
-  ok(
-    panel.getAttribute("panelopen") === "true",
+  Assert.strictEqual(
+    panel.getAttribute("panelopen"),
+    "true",
     "expected panel to be visible"
   );
   await closeExtensionsPanel();
@@ -187,8 +188,9 @@ add_task(async function test_clicks_on_unified_extension_button() {
     const viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
     EventUtils.synthesizeMouseAtCenter(button, { ctrlKey: true });
     await viewShown;
-    ok(
-      panel.getAttribute("panelopen") === "true",
+    Assert.strictEqual(
+      panel.getAttribute("panelopen"),
+      "true",
       "expected panel to be visible"
     );
     await closeExtensionsPanel();

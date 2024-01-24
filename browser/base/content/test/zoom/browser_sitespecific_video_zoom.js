@@ -43,7 +43,7 @@ function zoomTab1() {
     FullZoom.enlarge();
     gLevel1 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
 
-    ok(gLevel1 > 1, "New zoom for tab 1 should be greater than 1");
+    Assert.greater(gLevel1, 1, "New zoom for tab 1 should be greater than 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Zooming tab 1 should not affect tab 2");
 
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
@@ -65,7 +65,7 @@ function zoomTab2() {
       gBrowser.getBrowserForTab(gTab2)
     );
 
-    ok(level2 < 1, "New zoom for tab 2 should be less than 1");
+    Assert.less(level2, 1, "New zoom for tab 2 should be less than 1");
     FullZoomHelper.zoomTest(
       gTab1,
       gLevel1,

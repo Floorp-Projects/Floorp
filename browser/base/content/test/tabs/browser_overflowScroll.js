@@ -49,8 +49,9 @@ add_task(async function () {
   gBrowser.selectedTab = firstScrollable();
   await TestUtils.waitForTick();
 
-  ok(
-    left(scrollbox) <= left(firstScrollable()),
+  Assert.lessOrEqual(
+    left(scrollbox),
+    left(firstScrollable()),
     "Selecting the first tab scrolls it into view " +
       "(" +
       left(scrollbox) +
@@ -66,8 +67,9 @@ add_task(async function () {
 
   gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
   await waitForNextFrame();
-  ok(
-    right(gBrowser.selectedTab) <= right(scrollbox),
+  Assert.lessOrEqual(
+    right(gBrowser.selectedTab),
+    right(scrollbox),
     "Selecting the last tab scrolls it into view " +
       "(" +
       right(gBrowser.selectedTab) +
@@ -95,8 +97,9 @@ add_task(async function () {
   EventUtils.synthesizeMouseAtCenter(upButton, { clickCount: 3 });
   await waitForNextFrame();
   var firstScrollableLeft = left(firstScrollable());
-  ok(
-    left(scrollbox) <= firstScrollableLeft,
+  Assert.lessOrEqual(
+    left(scrollbox),
+    firstScrollableLeft,
     "Scrolled to the start with a triple click " +
       "(" +
       left(scrollbox) +

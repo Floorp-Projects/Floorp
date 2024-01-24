@@ -329,8 +329,9 @@ var tests = [
           this.notifyObj.id,
           this.notifyObj.browser
         );
-        ok(
-          notification != null,
+        Assert.notEqual(
+          notification,
+          null,
           "Notification remained when subframe navigated"
         );
         this.notifyObj.options.eventCallback = undefined;

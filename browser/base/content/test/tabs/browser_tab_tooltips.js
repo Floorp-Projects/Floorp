@@ -50,8 +50,9 @@ add_task(async function () {
     1,
     "tooltip left position for tab"
   );
-  ok(
-    tooltipRect.top >= tabRect.top + MIN_VERTICAL_TOOLTIP_OFFSET + MOUSE_OFFSET,
+  Assert.greaterOrEqual(
+    tooltipRect.top,
+    tabRect.top + MIN_VERTICAL_TOOLTIP_OFFSET + MOUSE_OFFSET,
     "tooltip top position for tab"
   );
   is(
@@ -73,9 +74,9 @@ add_task(async function () {
     1,
     "tooltip left position for close button"
   );
-  ok(
-    tooltipRect.top >
-      closeButtonRect.top + MIN_VERTICAL_TOOLTIP_OFFSET + MOUSE_OFFSET,
+  Assert.greater(
+    tooltipRect.top,
+    closeButtonRect.top + MIN_VERTICAL_TOOLTIP_OFFSET + MOUSE_OFFSET,
     "tooltip top position for close button"
   );
   ok(

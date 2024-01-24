@@ -92,8 +92,9 @@ async function initTabSync() {
     await TestUtils.waitForTick();
     recentFetchTime = Math.floor(Date.now() / 1000);
   }
-  ok(
-    recentFetchTime > previousFetchTime,
+  Assert.greater(
+    recentFetchTime,
+    previousFetchTime,
     "The new lastTabFetch value is greater than the previous"
   );
 

@@ -53,12 +53,14 @@ add_task(async function reload_tab() {
     "true",
     "Tab should be in customize mode"
   );
-  ok(
-    customizationContainer.clientWidth > 0,
+  Assert.greater(
+    customizationContainer.clientWidth,
+    0,
     "Customization container should be visible (X)"
   );
-  ok(
-    customizationContainer.clientHeight > 0,
+  Assert.greater(
+    customizationContainer.clientHeight,
+    0,
     "Customization container should be visible (Y)"
   );
 
@@ -86,12 +88,14 @@ add_task(async function reload_tab() {
     "true",
     "Tab should still be in customize mode"
   );
-  ok(
-    customizationContainer.clientWidth > 0,
+  Assert.greater(
+    customizationContainer.clientWidth,
+    0,
     "Customization container should still be visible (X)"
   );
-  ok(
-    customizationContainer.clientHeight > 0,
+  Assert.greater(
+    customizationContainer.clientHeight,
+    0,
     "Customization container should still be visible (Y)"
   );
 

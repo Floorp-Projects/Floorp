@@ -122,7 +122,7 @@ async function runTest(count, urls, permissions, delayedAllow) {
     `waiting for ${count} tabs, got ${cleaner.count()}`
   );
 
-  ok(cleaner.count() == count, `should have ${count} tabs`);
+  Assert.equal(cleaner.count(), count, `should have ${count} tabs`);
 
   await SpecialPowers.popPermissions();
   cleaner.clean();

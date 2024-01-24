@@ -134,7 +134,11 @@ add_task(async function testExtensionControlledPopup() {
   onObserverAdded.resetHistory();
   ok(!onObserverRemoved.called, "Observing the event");
   ok(!beforeDisableAddon.called, "Settings have not been restored");
-  ok(panel.getAttribute("panelopen") != "true", "The panel is closed");
+  Assert.notEqual(
+    panel.getAttribute("panelopen"),
+    "true",
+    "The panel is closed"
+  );
   is(popupnotification.hidden, true, "The popup is hidden");
   is(addon.userDisabled, false, "The extension is enabled");
   is(

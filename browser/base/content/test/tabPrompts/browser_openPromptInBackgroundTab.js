@@ -245,7 +245,7 @@ add_task(async function test_new_modal_ui() {
   // tab ends up as selected when its event fires, so using that here wouldn't work.
   await openedTabSelectedPromise;
 
-  ok(contentPromptManager._dialogs.length === 1, "Dialog opened.");
+  Assert.strictEqual(contentPromptManager._dialogs.length, 1, "Dialog opened.");
   dialog = contentPromptManager._dialogs[0];
   await dialog._dialogReady;
 

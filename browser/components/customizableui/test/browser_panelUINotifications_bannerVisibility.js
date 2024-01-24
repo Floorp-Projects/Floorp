@@ -36,7 +36,11 @@ add_task(async function testBannerVisibilityBeforeOpen() {
 
   await labelPromise;
 
-  ok(banner.getAttribute("label") != "", "Update banner should contain text");
+  Assert.notEqual(
+    banner.getAttribute("label"),
+    "",
+    "Update banner should contain text"
+  );
 
   AppMenuNotifications.removeNotification(/.*/);
 
@@ -76,7 +80,11 @@ add_task(async function testBannerVisibilityDuringOpen() {
 
   await labelPromise;
 
-  ok(banner.getAttribute("label") != "", "Update banner should contain text");
+  Assert.notEqual(
+    banner.getAttribute("label"),
+    "",
+    "Update banner should contain text"
+  );
 
   AppMenuNotifications.removeNotification(/.*/);
 
@@ -131,7 +139,11 @@ add_task(async function testBannerVisibilityAfterClose() {
 
   await labelPromise;
 
-  ok(banner.getAttribute("label") != "", "Update banner should contain text");
+  Assert.notEqual(
+    banner.getAttribute("label"),
+    "",
+    "Update banner should contain text"
+  );
 
   AppMenuNotifications.removeNotification(/.*/);
 

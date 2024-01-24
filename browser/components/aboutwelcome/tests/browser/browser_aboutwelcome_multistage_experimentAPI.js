@@ -279,7 +279,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await onButtonClick(browser, "button.primary");
 
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  Assert.greaterOrEqual(callCount, 1, `${callCount} Stub was called`);
   let clickCall;
   for (let i = 0; i < callCount; i++) {
     const call = aboutWelcomeActor.onContentMessage.getCall(i);

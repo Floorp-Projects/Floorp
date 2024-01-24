@@ -322,8 +322,9 @@ add_task(async function toggle_show_more_link() {
     const browser = viewTab.linkedBrowser;
     const openTabs = getOpenTabsComponent(browser);
     await openTabs.getUpdateComplete();
-    ok(
-      (await getRowsForCard(lastCard)).length < NUMBER_OF_TABS,
+    Assert.less(
+      (await getRowsForCard(lastCard)).length,
+      NUMBER_OF_TABS,
       "Not all tabs are shown yet."
     );
     info("Toggle the Show More link.");

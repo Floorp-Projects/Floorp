@@ -475,15 +475,16 @@ add_task(async function test_aboutcrashedtabzoom() {
 
   FullZoom.enlarge();
   let zoomLevel = ZoomManager.getZoomForBrowser(browser);
-  ok(zoomLevel !== 1, "should have enlarged");
+  Assert.notStrictEqual(zoomLevel, 1, "should have enlarged");
 
   await TabStateFlusher.flush(browser);
 
   // Crash the tab
   await BrowserTestUtils.crashFrame(browser);
 
-  ok(
-    ZoomManager.getZoomForBrowser(browser) === 1,
+  Assert.strictEqual(
+    ZoomManager.getZoomForBrowser(browser),
+    1,
     "zoom should have reset on crash"
   );
 
@@ -491,8 +492,9 @@ add_task(async function test_aboutcrashedtabzoom() {
   await clickButton(browser, "restoreTab");
   await tabRestoredPromise;
 
-  ok(
-    ZoomManager.getZoomForBrowser(browser) === zoomLevel,
+  Assert.strictEqual(
+    ZoomManager.getZoomForBrowser(browser),
+    zoomLevel,
     "zoom should have gone back to enlarged"
   );
   FullZoom.reset();

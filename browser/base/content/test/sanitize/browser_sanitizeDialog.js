@@ -582,7 +582,7 @@ DialogHelper.prototype = {
    */
   _checkAllCheckboxesCustom(check) {
     var cb = this.win.document.querySelectorAll("checkbox[preference]");
-    ok(cb.length > 1, "found checkboxes for preferences");
+    Assert.greater(cb.length, 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
       var pref = this.win.Preferences.get(cb[i].getAttribute("preference"));
       if (!!pref.value ^ check) {

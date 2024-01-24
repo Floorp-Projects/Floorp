@@ -28,8 +28,9 @@ add_task(async function test_open_tab_focus() {
     browser
   );
 
-  ok(
-    gBrowser.selectedTab === tab,
+  Assert.strictEqual(
+    gBrowser.selectedTab,
+    tab,
     "The original tab is still the selected tab"
   );
   BrowserTestUtils.removeTab(gBrowser.tabs[2]); // example.org tab

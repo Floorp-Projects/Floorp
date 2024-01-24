@@ -31,8 +31,9 @@ add_task(async function test_cookie_banners_promo_user_set_prefs() {
     const promoImage = content.document.querySelector(
       ".promo-image-large > img"
     );
-    ok(
-      promoImage?.src !== imgSrc,
+    Assert.notStrictEqual(
+      promoImage?.src,
+      imgSrc,
       "Cookie banner reduction promo is not shown"
     );
   });
@@ -73,7 +74,11 @@ add_task(async function test_cookie_banners_promo() {
     const promoImage = content.document.querySelector(
       ".promo-image-large > img"
     );
-    ok(promoImage?.src === imgSrc, "Cookie banner reduction promo is shown");
+    Assert.strictEqual(
+      promoImage?.src,
+      imgSrc,
+      "Cookie banner reduction promo is shown"
+    );
     let linkEl = content.document.getElementById("private-browsing-promo-link");
     linkEl.click();
   });
@@ -89,8 +94,9 @@ add_task(async function test_cookie_banners_promo() {
     const promoImage = content.document.querySelector(
       ".promo-image-large > img"
     );
-    ok(
-      promoImage?.src !== imgSrc,
+    Assert.notStrictEqual(
+      promoImage?.src,
+      imgSrc,
       "Cookie banner reduction promo is no longer shown after clicking the link"
     );
   });

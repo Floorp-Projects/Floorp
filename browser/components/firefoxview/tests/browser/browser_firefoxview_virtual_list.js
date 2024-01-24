@@ -56,8 +56,9 @@ add_task(async function test_max_render_count_on_win_resize() {
     );
     const newMaxRenderCount = rootVirtualList.maxRenderCountEstimate;
 
-    ok(
-      rootVirtualList.maxRenderCountEstimate === newMaxRenderCount,
+    Assert.strictEqual(
+      rootVirtualList.maxRenderCountEstimate,
+      newMaxRenderCount,
       `The maxRenderCountEstimate on the virtual-list is now ${newMaxRenderCount}`
     );
 

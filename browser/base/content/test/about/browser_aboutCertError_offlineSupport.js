@@ -28,8 +28,9 @@ add_task(async function testOfflineSupportPage() {
 
       let learnMoreLink = doc.getElementById("learnMoreLink");
       let supportPageURL = learnMoreLink.getAttribute("href");
-      ok(
-        supportPageURL == expectedURL + "time-errors",
+      Assert.equal(
+        supportPageURL,
+        expectedURL + "time-errors",
         "Correct support page URL has been set"
       );
       await EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);

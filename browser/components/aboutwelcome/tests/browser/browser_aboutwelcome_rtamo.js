@@ -165,8 +165,9 @@ add_task(async function test_rtamo_aboutwelcome() {
 
   await onButtonClick(browser, "button.primary");
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(
-    callCount === 2,
+  Assert.strictEqual(
+    callCount,
+    2,
     `${callCount} Stub called twice to install extension and send telemetry`
   );
 
