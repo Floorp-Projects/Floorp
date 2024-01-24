@@ -601,9 +601,8 @@ const ExpectComparisonTo = {
         break;
 
       case RunningOn.TodoMainThread:
-        todo_is(
-          compositorStr,
-          "",
+        todo(
+          compositorStr === "",
           desc + ": should NOT be animating on compositor"
         );
         actualStr = compositorStr === "" ? computedStr : compositorStr;

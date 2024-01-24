@@ -128,9 +128,8 @@ async_test(function(t) {
       getComputedStyle(hiddenIFrame).display;
 
       window.requestAnimationFrame(t.step_func(function() {
-        assert_greater_than_equal(
-          hiddenIFrame.contentDocument.timeline.currentTime,
-          previousValue,
+        assert_true(
+          hiddenIFrame.contentDocument.timeline.currentTime >= previousValue,
           'document.timeline.currentTime does not go backwards after'
           + ' re-setting display:none');
         t.done();
