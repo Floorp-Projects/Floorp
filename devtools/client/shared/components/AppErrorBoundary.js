@@ -29,8 +29,10 @@ loader.lazyGetter(this, "RELOAD_PAGE_INFO", function () {
 });
 
 // File a bug for the selected component specifically
+// Add format=__default__ to make sure users without EDITBUGS permission still
+// use the regular UI to create bugs, including the prefilled description.
 const bugLink =
-  "https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=";
+  "https://bugzilla.mozilla.org/enter_bug.cgi?format=__default__&product=DevTools&component=";
 
 /**
  * Error boundary that wraps around the a given component.
