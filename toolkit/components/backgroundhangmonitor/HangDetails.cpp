@@ -17,10 +17,7 @@
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "shared-libraries.h"
-#endif
+#include "shared-libraries.h"
 
 static const char MAGIC[] = "permahangsavev1";
 
