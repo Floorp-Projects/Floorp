@@ -230,14 +230,25 @@ if __name__ == "__main__":
                     % os.getcwd()
                 )
                 sys.exit(1)
+
+            merged_profdata = "merged.profdata"
             merge_cmd = [
                 llvm_profdata,
                 "merge",
                 "-o",
-                "merged.profdata",
+                merged_profdata,
             ] + profraw_files
             rc = subprocess.call(merge_cmd)
             if rc != 0:
                 print("INFRA-ERROR: Failed to merge profile data. Corrupt profile?")
                 # exit with TBPL_RETRY
                 sys.exit(4)
+
+            # llvm-profdata may fail while still exiting without an error.
+            if not os.path.isfile(merged_profdata):
+                print(merged_profdata, "was not created", file=sys.stderr)
+                sys.exit(1)
+
+            if os.path.getsize(merged_profdata) == 0:
+                print(merged_profdata, "was created but it is empty", file=sys.stderr)
+                sys.exit(1)
