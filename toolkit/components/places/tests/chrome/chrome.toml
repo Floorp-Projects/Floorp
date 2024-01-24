@@ -6,4 +6,4 @@ support-files = ["head.js"]
 ["test_browser_disableglobalhistory.xhtml"]
 support-files = ["browser_disableglobalhistory.xhtml"]
 
-["test_favicon_annotations.xhtml"]
+["test_cached_favicon.xhtml"]

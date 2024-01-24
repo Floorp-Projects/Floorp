@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This test ensures that the mime type is set for moz-anno channels of favicons
+ * This test ensures that the mime type is set for cached-favicon channels of favicons
  * properly.  Added with work in bug 481227.
  */
 

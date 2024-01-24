@@ -47,7 +47,7 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   // Because the default favicon used in the browser UI needs context paint, we
   // also allow it for:
   // - page-icon:<page-url> (used in history and bookmark items)
-  // - moz-anno:favicon:<page-url> (used in the awesomebar)
+  // - cached-favicon:<page-url> (used in the awesomebar)
   // This allowance does also inadvertently expose context-paint to 3rd-party
   // favicons, which is not great, but that hasn't caused trouble as far as we
   // know. Also: other places such as the tab bar don't use these protocols to
@@ -68,7 +68,8 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   nsAutoCString scheme;
   if (NS_SUCCEEDED(aURI->GetScheme(scheme)) &&
       (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource") ||
-       scheme.EqualsLiteral("page-icon") || scheme.EqualsLiteral("moz-anno"))) {
+       scheme.EqualsLiteral("page-icon") ||
+       scheme.EqualsLiteral("cached-favicon"))) {
     return true;
   }
   RefPtr<BasePrincipal> principal =

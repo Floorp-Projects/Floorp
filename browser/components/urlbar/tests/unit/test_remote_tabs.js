@@ -131,7 +131,7 @@ add_task(async function test_maximal() {
         uri: "http://example.com/",
         device: "My Phone",
         title: "An Example",
-        iconUri: "moz-anno:favicon:http://favicon/",
+        iconUri: "cached-favicon:http://favicon/",
       }),
     ],
   });

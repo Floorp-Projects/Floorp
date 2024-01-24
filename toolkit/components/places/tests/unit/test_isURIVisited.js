@@ -14,7 +14,7 @@ const SCHEMES = {
   //  "imap://": false,
   "news://": false,
   "mailbox:": false,
-  "moz-anno:favicon:http://": false,
+  "cached-favicon:http://": false,
   "view-source:http://": false,
   "chrome://browser/content/browser.xhtml?": false,
   "resource://": false,

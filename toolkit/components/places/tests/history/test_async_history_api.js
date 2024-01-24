@@ -358,7 +358,7 @@ add_task(async function test_non_addable_uri_errors() {
     "imap://cyrus.andrew.cmu.edu/archive.imap",
     "news://new.mozilla.org/mozilla.dev.apps.firefox",
     "mailbox:Inbox",
-    "moz-anno:favicon:http://mozilla.org/made-up-favicon",
+    "cached-favicon:http://mozilla.org/made-up-favicon",
     "view-source:http://mozilla.org",
     "chrome://browser/content/browser.xhtml",
     "resource://gre-resources/hiddenWindow.html",

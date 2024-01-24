@@ -117,9 +117,11 @@ static void SetMotionEvent(GUniquePtr<GdkEvent> aEvent) {
 static GtkWidget* sGrabWidget;
 
 static constexpr nsLiteralString kDisallowedExportedSchemes[] = {
-    u"about"_ns,      u"blob"_ns,     u"chrome"_ns,      u"imap"_ns,
-    u"javascript"_ns, u"mailbox"_ns,  u"moz-anno"_ns,    u"news"_ns,
-    u"page-icon"_ns,  u"resource"_ns, u"view-source"_ns, u"moz-extension"_ns,
+    u"about"_ns,          u"blob"_ns,        u"cached-favicon"_ns,
+    u"chrome"_ns,         u"imap"_ns,        u"javascript"_ns,
+    u"mailbox"_ns,        u"news"_ns,        u"page-icon"_ns,
+    u"resource"_ns,       u"view-source"_ns, u"moz-extension"_ns,
+    u"moz-page-thumb"_ns,
 };
 
 // _NETSCAPE_URL is similar to text/uri-list type.

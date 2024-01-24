@@ -641,10 +641,11 @@ nsresult nsFaviconService::GetFaviconLinkForIcon(nsIURI* aFaviconURI,
     static constexpr nsLiteralCString sDirectRequestProtocols[] = {
         // clang-format off
         "about"_ns,
+        "cached-favicon"_ns,
         "chrome"_ns,
         "data"_ns,
         "file"_ns,
-        "moz-anno"_ns,
+        "moz-page-thumb"_ns,
         "resource"_ns,
         // clang-format on
     };
@@ -681,7 +682,7 @@ nsresult nsFaviconService::GetFaviconLinkForIconString(const nsCString& aSpec,
   }
 
   nsAutoCString annoUri;
-  annoUri.AssignLiteral("moz-anno:" FAVICON_ANNOTATION_NAME ":");
+  annoUri.AssignLiteral("cached-favicon:");
   annoUri += aSpec;
   return NS_NewURI(aOutput, annoUri);
 }

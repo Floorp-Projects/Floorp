@@ -27,7 +27,7 @@ add_task(async function () {
     Assert.equal(icon.mimeType, "image/png");
     Assert.deepEqual(icon.data, data);
 
-    info("Check moz-anno:favicon protocol");
+    info("Check cached-favicon protocol");
     await compareFavicons(
       Services.io.newFileURI(file),
       PlacesUtils.urlWithSizeRef(

@@ -40,7 +40,7 @@ if CONFIG["MOZ_PLACES"]:
         "FaviconHelpers.cpp",
         "Helpers.cpp",
         "History.cpp",
-        "nsAnnoProtocolHandler.cpp",
+        "nsCachedFaviconProtocolHandler.cpp",
         "nsFaviconService.cpp",
         "nsNavBookmarks.cpp",
         "nsNavHistory.cpp",

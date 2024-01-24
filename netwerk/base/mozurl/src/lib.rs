@@ -55,7 +55,6 @@ fn default_port(scheme: &str) -> Option<u16> {
         "ws" => Some(80),
         "wss" => Some(443),
         "rtsp" => Some(443),
-        "moz-anno" => Some(443),
         "android" => Some(443),
         _ => None,
     }

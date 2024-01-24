@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsAnnoProtocolHandler_h___
-#define nsAnnoProtocolHandler_h___
+#ifndef nsCachedFaviconProtocolHandler_h___
+#define nsCachedFaviconProtocolHandler_h___
 
 #include "nsCOMPtr.h"
 #include "nsIProtocolHandler.h"
@@ -14,26 +14,25 @@
 #include "mozilla/Attributes.h"
 
 // {e8b8bdb7-c96c-4d82-9c6f-2b3c585ec7ea}
-#define NS_ANNOPROTOCOLHANDLER_CID                   \
+#define NS_CACHEDFAVICONPROTOCOLHANDLER_CID          \
   {                                                  \
     0xe8b8bdb7, 0xc96c, 0x4d82, {                    \
       0x9c, 0x6f, 0x2b, 0x3c, 0x58, 0x5e, 0xc7, 0xea \
     }                                                \
   }
 
-class nsAnnoProtocolHandler final : public nsIProtocolHandler,
-                                    public nsSupportsWeakReference {
+class nsCachedFaviconProtocolHandler final : public nsIProtocolHandler,
+                                             public nsSupportsWeakReference {
  public:
-  nsAnnoProtocolHandler() = default;
+  nsCachedFaviconProtocolHandler() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLHANDLER
 
  private:
-  ~nsAnnoProtocolHandler() = default;
+  ~nsCachedFaviconProtocolHandler() = default;
 
- protected:
-  nsresult ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI, nsCString& aName);
+  nsresult ParseCachedFaviconURI(nsIURI* aURI, nsIURI** aResultURI);
 
   /**
    * Obtains a new channel to be used to get a favicon from the database.  This
@@ -42,15 +41,15 @@ class nsAnnoProtocolHandler final : public nsIProtocolHandler,
    * @param aURI
    *        The URI the channel will be created for.  This is the URI that is
    *        set as the original URI on the channel.
-   * @param aAnnotationURI
+   * @param aCachedFaviconURI
    *        The URI that holds the data needed to get the favicon from the
    *        database.
    * @param aLoadInfo
    *        The loadinfo that requested the resource load.
    * @returns (via _channel) the channel that will obtain the favicon data.
    */
-  nsresult NewFaviconChannel(nsIURI* aURI, nsIURI* aAnnotationURI,
+  nsresult NewFaviconChannel(nsIURI* aURI, nsIURI* aCachedFaviconURI,
                              nsILoadInfo* aLoadInfo, nsIChannel** _channel);
 };
 
-#endif /* nsAnnoProtocolHandler_h___ */
+#endif /* nsCachedFaviconProtocolHandler_h___ */

@@ -1843,12 +1843,12 @@ export var PlacesUIUtils = {
   },
 
   /**
-   * Generates a moz-anno:favicon: link for an icon URL, that will allow to
-   * fetch the icon from the local favicons cache, rather than from the network.
+   * Generates a cached-favicon: link for an icon URL, that will allow to fetch
+   * the icon from the local favicons cache, rather than from the network.
    * If the icon URL is invalid, fallbacks to the default favicon URL.
    *
    * @param {string} icon The url of the icon to load from local cache.
-   * @returns {string} a "moz-anno:favicon:" prefixed URL, unless the original
+   * @returns {string} a "cached-favicon:" prefixed URL, unless the original
    *   URL protocol refers to a local resource, then it will just pass-through
    *   unchanged.
    */

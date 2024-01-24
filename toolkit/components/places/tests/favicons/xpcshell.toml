@@ -27,6 +27,8 @@ support-files = [
   "noise.png",
 ]
 
+["test_cached-favicon_mime_type.js"]
+
 ["test_copyFavicons.js"]
 
 ["test_expireAllFavicons.js"]
@@ -48,8 +50,6 @@ support-files = [
 ["test_heavy_favicon.js"]
 
 ["test_incremental_vacuum.js"]
-
-["test_moz-anno_favicon_mime_type.js"]
 
 ["test_multiple_frames.js"]
 
