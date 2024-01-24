@@ -64,11 +64,9 @@ UniquePtr<TextureData> CanvasTranslator::CreateTextureData(
 }
 
 CanvasTranslator::CanvasTranslator(
-    RefPtr<TaskQueue>&& aTaskQueue,
     layers::SharedSurfacesHolder* aSharedSurfacesHolder,
     const dom::ContentParentId& aContentId, uint32_t aManagerId)
-    : mTranslationTaskQueue(std::move(aTaskQueue)),
-      mSharedSurfacesHolder(aSharedSurfacesHolder),
+    : mSharedSurfacesHolder(aSharedSurfacesHolder),
       mMaxSpinCount(StaticPrefs::gfx_canvas_remote_max_spin_count()),
       mContentId(aContentId),
       mManagerId(aManagerId) {
@@ -80,6 +78,22 @@ CanvasTranslator::CanvasTranslator(
 }
 
 CanvasTranslator::~CanvasTranslator() = default;
+
+void CanvasTranslator::DispatchToTaskQueue(
+    already_AddRefed<nsIRunnable> aRunnable) {
+  if (mTranslationTaskQueue) {
+    MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(std::move(aRunnable)));
+  } else {
+    gfx::CanvasRenderThread::Dispatch(std::move(aRunnable));
+  }
+}
+
+bool CanvasTranslator::IsInTaskQueue() const {
+  if (mTranslationTaskQueue) {
+    return mTranslationTaskQueue->IsCurrentThreadIn();
+  }
+  return gfx::CanvasRenderThread::IsInCanvasRenderThread();
+}
 
 static bool CreateAndMapShmem(RefPtr<ipc::SharedMemoryBasic>& aShmem,
                               Handle&& aHandle,
@@ -119,7 +133,7 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     TextureType aTextureType, gfx::BackendType aBackendType,
     Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
     uint64_t aBufferSize, CrossProcessSemaphoreHandle&& aReaderSem,
-    CrossProcessSemaphoreHandle&& aWriterSem) {
+    CrossProcessSemaphoreHandle&& aWriterSem, bool aUseIPDLThread) {
   if (mHeaderShmem) {
     return IPC_FAIL(this, "RecvInitTranslator called twice.");
   }
@@ -153,6 +167,10 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
         << "GFX: CanvasTranslator failed creating WebGL shared context";
   }
 
+  if (!aUseIPDLThread) {
+    mTranslationTaskQueue = gfx::CanvasRenderThread::CreateWorkerTaskQueue();
+  }
+
   // Use the first buffer as our current buffer.
   mDefaultBufferSize = aBufferSize;
   auto handleIter = aBufferHandles.begin();
@@ -174,9 +192,9 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     mCanvasShmems.emplace(std::move(newShmem));
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
-      NewRunnableMethod("CanvasTranslator::TranslateRecording", this,
-                        &CanvasTranslator::TranslateRecording)));
+  DispatchToTaskQueue(NewRunnableMethod("CanvasTranslator::TranslateRecording",
+                                        this,
+                                        &CanvasTranslator::TranslateRecording));
   return IPC_OK();
 }
 
@@ -186,9 +204,9 @@ ipc::IPCResult CanvasTranslator::RecvRestartTranslation() {
     return IPC_OK();
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
-      NewRunnableMethod("CanvasTranslator::TranslateRecording", this,
-                        &CanvasTranslator::TranslateRecording)));
+  DispatchToTaskQueue(NewRunnableMethod("CanvasTranslator::TranslateRecording",
+                                        this,
+                                        &CanvasTranslator::TranslateRecording));
 
   return IPC_OK();
 }
@@ -200,17 +218,17 @@ ipc::IPCResult CanvasTranslator::RecvAddBuffer(
     return IPC_OK();
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
+  DispatchToTaskQueue(
       NewRunnableMethod<ipc::SharedMemoryBasic::Handle&&, size_t>(
           "CanvasTranslator::AddBuffer", this, &CanvasTranslator::AddBuffer,
-          std::move(aBufferHandle), aBufferSize)));
+          std::move(aBufferHandle), aBufferSize));
 
   return IPC_OK();
 }
 
 void CanvasTranslator::AddBuffer(ipc::SharedMemoryBasic::Handle&& aBufferHandle,
                                  size_t aBufferSize) {
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(IsInTaskQueue());
   if (mHeader->readerState == State::Failed) {
     // We failed before we got to the pause event.
     return;
@@ -254,18 +272,18 @@ ipc::IPCResult CanvasTranslator::RecvSetDataSurfaceBuffer(
     return IPC_OK();
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
+  DispatchToTaskQueue(
       NewRunnableMethod<ipc::SharedMemoryBasic::Handle&&, size_t>(
           "CanvasTranslator::SetDataSurfaceBuffer", this,
           &CanvasTranslator::SetDataSurfaceBuffer, std::move(aBufferHandle),
-          aBufferSize)));
+          aBufferSize));
 
   return IPC_OK();
 }
 
 void CanvasTranslator::SetDataSurfaceBuffer(
     ipc::SharedMemoryBasic::Handle&& aBufferHandle, size_t aBufferSize) {
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(IsInTaskQueue());
   if (mHeader->readerState == State::Failed) {
     // We failed before we got to the pause event.
     return;
@@ -288,7 +306,7 @@ void CanvasTranslator::SetDataSurfaceBuffer(
 }
 
 void CanvasTranslator::GetDataSurface(uint64_t aSurfaceRef) {
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(IsInTaskQueue());
 
   ReferencePtr surfaceRef = reinterpret_cast<void*>(aSurfaceRef);
   gfx::SourceSurface* surface = LookupSourceSurface(surfaceRef);
@@ -347,26 +365,19 @@ void CanvasTranslator::NextBuffer() {
 void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
 
-  // Since we might need to access the actor status off the owning IPDL thread,
-  // we need to cache it here.
-  mIPDLClosed = true;
+  if (!mTranslationTaskQueue) {
+    gfx::CanvasRenderThread::Dispatch(
+        NewRunnableMethod("CanvasTranslator::FinishShutdown", this,
+                          &CanvasTranslator::FinishShutdown));
+    return;
+  }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(NewRunnableMethod(
-      "CanvasTranslator::Shutdown", this, &CanvasTranslator::Shutdown)));
-
-  gfx::CanvasRenderThread::ShutdownWorkerTaskQueue(mTranslationTaskQueue);
-}
-
-void CanvasTranslator::Shutdown() {
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
-
-  // By clearing our texture dependencies in the TaskQueue as the last runnable,
-  // we can ensure we actually run this before advancing process shutdown.
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
-      NewRunnableMethod("CanvasTranslator::ClearTextureInfo", this,
-                        &CanvasTranslator::ClearTextureInfo)));
   mTranslationTaskQueue->BeginShutdown();
+  mTranslationTaskQueue->AwaitShutdownAndIdle();
+  FinishShutdown();
 }
+
+void CanvasTranslator::FinishShutdown() { ClearTextureInfo(); }
 
 bool CanvasTranslator::CheckDeactivated() {
   if (mDeactivated) {
@@ -460,7 +471,7 @@ void CanvasTranslator::CheckAndSignalWriter() {
         // The writer is making a decision about whether to wait. So, we must
         // wait until it has decided to avoid races. Check if the writer is
         // closed to avoid hangs.
-        if (mIPDLClosed) {
+        if (!CanSend()) {
           return;
         }
         continue;
@@ -536,7 +547,7 @@ bool CanvasTranslator::ReadNextEvent(EventType& aEventType) {
 }
 
 void CanvasTranslator::TranslateRecording() {
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(IsInTaskQueue());
 
   if (mSharedContext && EnsureSharedContextWebgl()) {
     mSharedContext->EnterTlsScope();
@@ -555,7 +566,7 @@ void CanvasTranslator::TranslateRecording() {
         [&](RecordedEvent* recordedEvent) -> bool {
           // Make sure that the whole event was read from the stream.
           if (!mCurrentMemReader.good()) {
-            if (mIPDLClosed) {
+            if (!CanSend()) {
               // The other side has closed only warn about read failure.
               gfxWarning() << "Failed to read event type: "
                            << recordedEvent->GetType();
@@ -594,7 +605,7 @@ void CanvasTranslator::TranslateRecording() {
   case _typeenum: {                                                    \
     auto e = _class(mCurrentMemReader);                                \
     if (!mCurrentMemReader.good()) {                                   \
-      if (mIPDLClosed) {                                               \
+      if (!CanSend()) {                                                \
         /* The other side has closed only warn about read failure. */  \
         gfxWarning() << "Failed to read event type: " << _typeenum;    \
       } else {                                                         \
@@ -755,10 +766,9 @@ void CanvasTranslator::NotifyRequiresRefresh(int64_t aTextureId,
     auto& info = mTextureInfo[aTextureId];
     if (!info.mNotifiedRequiresRefresh) {
       info.mNotifiedRequiresRefresh = true;
-      MOZ_ALWAYS_SUCCEEDS(
-          mTranslationTaskQueue->Dispatch(NewRunnableMethod<int64_t, bool>(
-              "CanvasTranslator::NotifyRequiresRefresh", this,
-              &CanvasTranslator::NotifyRequiresRefresh, aTextureId, false)));
+      DispatchToTaskQueue(NewRunnableMethod<int64_t, bool>(
+          "CanvasTranslator::NotifyRequiresRefresh", this,
+          &CanvasTranslator::NotifyRequiresRefresh, aTextureId, false));
     }
     return;
   }
@@ -770,10 +780,9 @@ void CanvasTranslator::NotifyRequiresRefresh(int64_t aTextureId,
 
 void CanvasTranslator::CacheSnapshotShmem(int64_t aTextureId, bool aDispatch) {
   if (aDispatch) {
-    MOZ_ALWAYS_SUCCEEDS(
-        mTranslationTaskQueue->Dispatch(NewRunnableMethod<int64_t, bool>(
-            "CanvasTranslator::CacheSnapshotShmem", this,
-            &CanvasTranslator::CacheSnapshotShmem, aTextureId, false)));
+    DispatchToTaskQueue(NewRunnableMethod<int64_t, bool>(
+        "CanvasTranslator::CacheSnapshotShmem", this,
+        &CanvasTranslator::CacheSnapshotShmem, aTextureId, false));
     return;
   }
 
@@ -837,9 +846,9 @@ ipc::IPCResult CanvasTranslator::RecvClearCachedResources() {
     return IPC_OK();
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
+  DispatchToTaskQueue(
       NewRunnableMethod("CanvasTranslator::ClearCachedResources", this,
-                        &CanvasTranslator::ClearCachedResources)));
+                        &CanvasTranslator::ClearCachedResources));
   return IPC_OK();
 }
 
@@ -1111,7 +1120,6 @@ void CanvasTranslator::ClearTextureInfo() {
     mRemoteTextureOwner->UnregisterAllTextureOwners();
     mRemoteTextureOwner = nullptr;
   }
-  gfx::CanvasRenderThread::FinishShutdownWorkerTaskQueue(mTranslationTaskQueue);
 }
 
 already_AddRefed<gfx::SourceSurface> CanvasTranslator::LookupExternalSurface(

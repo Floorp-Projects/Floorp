@@ -8,10 +8,8 @@
 #define _include_gfx_ipc_CanvasRenderThread_h__
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "nsTArray.h"
 
 class nsIRunnable;
 class nsIThread;
@@ -55,10 +53,6 @@ class CanvasRenderThread final {
 
   static already_AddRefed<TaskQueue> CreateWorkerTaskQueue();
 
-  static void ShutdownWorkerTaskQueue(TaskQueue* aTaskQueue);
-
-  static void FinishShutdownWorkerTaskQueue(TaskQueue* aTaskQueue);
-
   static void Dispatch(already_AddRefed<nsIRunnable> aRunnable);
 
  private:
@@ -66,17 +60,13 @@ class CanvasRenderThread final {
                      nsCOMPtr<nsIThreadPool>&& aWorkers, bool aCreatedThread);
   ~CanvasRenderThread();
 
-  Mutex mMutex;
-
   nsCOMPtr<nsIThread> const mThread;
 
   nsCOMPtr<nsIThreadPool> const mWorkers;
 
-  nsTArray<RefPtr<TaskQueue>> mPendingShutdownTaskQueues MOZ_GUARDED_BY(mMutex);
-
   // True if mThread points to CanvasRender thread, false if mThread points to
   // Compositor/Render thread.
-  const bool mCreatedThread;
+  bool mCreatedThread;
 };
 
 }  // namespace gfx
