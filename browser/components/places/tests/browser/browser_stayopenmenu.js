@@ -202,8 +202,9 @@ add_task(async function testStayopenBookmarksClicks() {
   let toolbarbutton = BT.firstElementChild;
   ok(toolbarbutton, "Folder should be first item on Bookmarks Toolbar.");
   let buttonMenupopup = toolbarbutton.firstElementChild;
-  ok(
-    buttonMenupopup.tagName == "menupopup",
+  Assert.equal(
+    buttonMenupopup.tagName,
+    "menupopup",
     "Found toolbar button's menupopup."
   );
   promiseEvent = BrowserTestUtils.waitForEvent(buttonMenupopup, "popupshown");

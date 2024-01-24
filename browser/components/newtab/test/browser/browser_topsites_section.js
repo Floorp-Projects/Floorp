@@ -189,8 +189,9 @@ test_newtab({
     );
 
     const searchTopSites = content.document.querySelectorAll(".title.pinned");
-    ok(
-      searchTopSites.length >= 1,
+    Assert.greaterOrEqual(
+      searchTopSites.length,
+      1,
       "There should be at least 1 search topsites"
     );
 
@@ -264,7 +265,11 @@ add_task(async function test_search_topsite_remove_engine() {
       );
 
       const searchTopSites = content.document.querySelectorAll(".title.pinned");
-      ok(searchTopSites.length >= 1, "There should be at least one topsite");
+      Assert.greaterOrEqual(
+        searchTopSites.length,
+        1,
+        "There should be at least one topsite"
+      );
       return [searchTopSites[0].innerText.trim(), searchTopSites.length];
     }
   );

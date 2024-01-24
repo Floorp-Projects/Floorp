@@ -133,8 +133,9 @@ var gAllProgressListener = {
 };
 
 function assertCorrectBrowserAndEventOrderForAll(aState, aBrowser) {
-  ok(
-    aBrowser == gTestBrowser,
+  Assert.equal(
+    aBrowser,
+    gTestBrowser,
     aState + " notification came from the correct browser"
   );
   Assert.less(

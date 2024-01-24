@@ -132,8 +132,9 @@ function test() {
       aWin.gBrowser.removeTab(tab_A);
 
       // verify that closedTabCount increased
-      ok(
-        ss.getClosedTabCountForWindow(aWin) > count,
+      Assert.greater(
+        ss.getClosedTabCountForWindow(aWin),
+        count,
         "getClosedTabCountForWindow has increased after closing a tab"
       );
 

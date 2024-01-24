@@ -188,7 +188,7 @@ add_task(async function test_no_heuristic_result() {
       value: "",
       fireInputEvent: true,
     });
-    ok(UrlbarTestUtils.getResultCount(window) > 0, "Has results");
+    Assert.greater(UrlbarTestUtils.getResultCount(window), 0, "Has results");
     let result = await UrlbarTestUtils.getSelectedRow(window);
     Assert.strictEqual(result, null, `Should have no selection`);
     await UrlbarTestUtils.promiseSpeculativeConnections(

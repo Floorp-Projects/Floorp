@@ -219,12 +219,14 @@ async function performLargePopupTests(win) {
     let rect = selectPopup.getBoundingClientRect();
     let marginBottom = parseFloat(getComputedStyle(selectPopup).marginBottom);
     let marginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
-    ok(
-      rect.top - marginTop >= browserRect.top,
+    Assert.greaterOrEqual(
+      rect.top - marginTop,
+      browserRect.top,
       "Popup top position in within browser area"
     );
-    ok(
-      rect.bottom + marginBottom <= browserRect.bottom,
+    Assert.lessOrEqual(
+      rect.bottom + marginBottom,
+      browserRect.bottom,
       "Popup bottom position in within browser area"
     );
 

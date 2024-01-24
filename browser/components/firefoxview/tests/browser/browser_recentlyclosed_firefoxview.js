@@ -247,7 +247,11 @@ add_task(async function test_initial_closed_tab() {
     await switchToFxViewTab(window);
     let [listItems] = await waitForRecentlyClosedTabsList(document);
 
-    ok(listItems.rowEls.length === 1, "Initial list item is rendered.");
+    Assert.strictEqual(
+      listItems.rowEls.length,
+      1,
+      "Initial list item is rendered."
+    );
 
     await cleanup();
   });

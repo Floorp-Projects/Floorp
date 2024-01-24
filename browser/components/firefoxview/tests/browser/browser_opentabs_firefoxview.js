@@ -95,8 +95,9 @@ add_task(async function test_more_menus() {
     let shown, menuHidden;
 
     gBrowser.selectedTab = gBrowser.visibleTabs[0];
-    ok(
-      gBrowser.selectedTab.linkedBrowser.currentURI.spec == "about:blank",
+    Assert.equal(
+      gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+      "about:blank",
       "Selected tab is about:blank"
     );
 

@@ -77,13 +77,14 @@ add_task(async function addOverflowingToolbar() {
     toolbarNode.hasAttribute("overflowing"),
     "Should have an overflowing toolbar."
   );
-  ok(
-    CustomizableUI.getCustomizationTarget(toolbarNode).childElementCount <
-      oldChildCount,
+  Assert.less(
+    CustomizableUI.getCustomizationTarget(toolbarNode).childElementCount,
+    oldChildCount,
     "Should have fewer children."
   );
-  ok(
-    overflowableList.childElementCount > oldOverflowCount,
+  Assert.greater(
+    overflowableList.childElementCount,
+    oldOverflowCount,
     "Should have more overflowed widgets."
   );
 

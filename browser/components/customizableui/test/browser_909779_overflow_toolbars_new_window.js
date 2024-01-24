@@ -18,9 +18,9 @@ add_task(async function () {
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
-  ok(
-    CustomizableUI.getCustomizationTarget(navbar).childElementCount <
-      oldChildCount,
+  Assert.less(
+    CustomizableUI.getCustomizationTarget(navbar).childElementCount,
+    oldChildCount,
     "Should have fewer children."
   );
   let newWindow = await openAndLoadWindow();

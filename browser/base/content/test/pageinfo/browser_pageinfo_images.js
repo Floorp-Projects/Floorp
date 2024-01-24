@@ -21,8 +21,9 @@ add_task(async function test_all_images_mentioned() {
 
       ok(imageTree, "Image tree is null (media tab is broken)");
 
-      ok(
-        imageRowsNum == 7,
+      Assert.equal(
+        imageRowsNum,
+        7,
         "Number of images listed: " + imageRowsNum + ", should be 7"
       );
 

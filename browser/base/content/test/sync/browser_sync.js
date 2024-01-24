@@ -861,8 +861,9 @@ function checkFxAAvatar(fxaStatus) {
       signedin: 'url("chrome://browser/skin/fxa/avatar.svg")',
       "login-failed": 'url("chrome://browser/skin/fxa/avatar.svg")',
     };
-    ok(
-      avatarURL == expected[fxaStatus],
+    Assert.equal(
+      avatarURL,
+      expected[fxaStatus],
       `expected avatar URL to be ${expected[fxaStatus]}, got ${avatarURL}`
     );
   }
@@ -871,7 +872,7 @@ function checkFxAAvatar(fxaStatus) {
 function checkAppMenuFxAText(hideStatus) {
   let fxaText = document.getElementById("appMenu-fxa-text");
   let isHidden = fxaText.hidden || fxaText.style.visibility == "collapse";
-  ok(isHidden == hideStatus, "FxA text has correct hidden state");
+  Assert.equal(isHidden, hideStatus, "FxA text has correct hidden state");
 }
 
 // Only one item visible at a time.

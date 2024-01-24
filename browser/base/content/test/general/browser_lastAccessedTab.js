@@ -8,7 +8,11 @@ const CURRENT_TIME_TOLERANCE_MS = 15;
 
 function isCurrent(tab, msg) {
   const DIFF = Math.abs(Date.now() - tab.lastAccessed);
-  ok(DIFF <= CURRENT_TIME_TOLERANCE_MS, msg + " (difference: " + DIFF + ")");
+  Assert.lessOrEqual(
+    DIFF,
+    CURRENT_TIME_TOLERANCE_MS,
+    msg + " (difference: " + DIFF + ")"
+  );
 }
 
 function nextStep(fn) {
@@ -41,15 +45,20 @@ function step2() {
 }
 
 function step3() {
-  ok(newTab.lastAccessed < Date.now(), "new tab hasn't been selected so far");
+  Assert.less(
+    newTab.lastAccessed,
+    Date.now(),
+    "new tab hasn't been selected so far"
+  );
   gBrowser.selectedTab = newTab;
   isCurrent(newTab, "new tab has the current timestamp after being selected");
   nextStep(step4);
 }
 
 function step4() {
-  ok(
-    originalTab.lastAccessed < Date.now(),
+  Assert.less(
+    originalTab.lastAccessed,
+    Date.now(),
     "original tab has old timestamp after being deselected"
   );
   isCurrent(

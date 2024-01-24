@@ -140,8 +140,9 @@ async function waitForClass(item, className, shouldBePresent = true) {
     return item.classList.contains(className) == shouldBePresent;
   }, `Target class ${className} should be ${shouldBePresent ? "present" : "not present"} on item ${item.id}`);
 
-  ok(
-    item.classList.contains(className) == shouldBePresent,
+  Assert.equal(
+    item.classList.contains(className),
+    shouldBePresent,
     `item.classList.contains(${className}) is ${shouldBePresent} for ${item.id}`
   );
 }

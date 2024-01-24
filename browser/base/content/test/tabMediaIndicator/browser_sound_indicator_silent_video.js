@@ -18,7 +18,11 @@ function check_audio_playing_state(isPlaying) {
   // wait for a while to make sure the video is playing and related event has
   // been dispatched (if any).
   let PLAYING_TIME_SEC = 0.5;
-  ok(PLAYING_TIME_SEC < autoPlay.duration, "The playing time is valid.");
+  Assert.less(
+    PLAYING_TIME_SEC,
+    autoPlay.duration,
+    "The playing time is valid."
+  );
 
   return new Promise(resolve => {
     autoPlay.ontimeupdate = function () {

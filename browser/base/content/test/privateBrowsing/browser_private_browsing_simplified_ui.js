@@ -38,8 +38,9 @@ add_task(async function check_for_simplified_pbm_ui() {
   });
   bookmarksBar = pbmWindow.document.getElementById("PersonalToolbar");
   console.info(bookmarksBar.getAttribute("collapsed"));
-  ok(
-    bookmarksBar.getAttribute("collapsed").toString() == "false",
+  Assert.equal(
+    bookmarksBar.getAttribute("collapsed").toString(),
+    "false",
     "Bookmarks bar is visible in PBM window when showInPrivateBrowsing pref is true"
   );
 

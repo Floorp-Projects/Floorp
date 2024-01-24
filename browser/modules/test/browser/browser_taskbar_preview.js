@@ -58,7 +58,7 @@ function test() {
     3,
     "Expected number of previews after closing selected tab via controller"
   );
-  ok(gBrowser.tabs.length == 3, "Successfully closed a tab");
+  Assert.equal(gBrowser.tabs.length, 3, "Successfully closed a tab");
 
   // Select #1
   ok(

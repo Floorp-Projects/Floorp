@@ -61,8 +61,9 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
     );
   });
 
-  ok(
-    sessionHistoryCount < 2,
+  Assert.less(
+    sessionHistoryCount,
+    2,
     `The test tab has 1 or fewer history entries. sessionHistoryCount=${sessionHistoryCount}`
   );
   // Ensure that this tab is on about:blank

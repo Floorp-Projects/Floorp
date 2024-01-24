@@ -30,8 +30,9 @@ async function verifyLoad(url, testName) {
 
   await SpecialPowers.spawn(browser, [{ url, testName }], function (args) {
     const doc = content.document;
-    ok(
-      doc.documentURI == args.url,
+    Assert.equal(
+      doc.documentURI,
+      args.url,
       "Should have loaded page: " + args.testName
     );
   });
@@ -84,8 +85,9 @@ async function verifyError(url, fallbackWarning, testName) {
           "Correct fallback warning error page title is set: " + args.testName
         );
       } else {
-        ok(
-          actualDataL10nID != "dns-not-found-native-fallback-title2",
+        Assert.notEqual(
+          actualDataL10nID,
+          "dns-not-found-native-fallback-title2",
           "Should not show fallback warning: " + args.testName
         );
       }

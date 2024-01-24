@@ -85,8 +85,9 @@ add_task(async function testHistoryImportStrangeEntries() {
   let [rowCountResult] = await dbConn.execute(
     "SELECT COUNT(*) FROM history_visits"
   );
-  ok(
-    rowCountResult.getResultByName("COUNT(*)") > EXPECTED_MIGRATED_VISTS,
+  Assert.greater(
+    rowCountResult.getResultByName("COUNT(*)"),
+    EXPECTED_MIGRATED_VISTS,
     "There are more total rows than valid rows"
   );
   await dbConn.close();

@@ -171,7 +171,7 @@ function eventsMatch(
       dump(`Expected: ${expectedEvent}`);
       dump("\n");
     }
-    ok(actualEvent === expectedEvent, message);
+    Assert.strictEqual(actualEvent, expectedEvent, message);
   }
 }
 

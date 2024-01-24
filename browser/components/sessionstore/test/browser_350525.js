@@ -118,8 +118,9 @@ add_task(async function () {
 
   // getClosedTabCountForWindow
   let newcount = ss.getClosedTabCountForWindow(window);
-  ok(
-    newcount > count,
+  Assert.greater(
+    newcount,
+    count,
     "after closing a tab, getClosedTabCountForWindow has been incremented"
   );
 

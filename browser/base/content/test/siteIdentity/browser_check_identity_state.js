@@ -119,7 +119,11 @@ add_task(async function chromeUITest() {
   for (let i = 0; i < nonSecureExamplePages.length; i++) {
     console.log(nonSecureExamplePages[i]);
     await BrowserTestUtils.withNewTab(nonSecureExamplePages[i], () => {
-      ok(getIdentityMode() != "chromeUI", "Identity should not be chromeUI");
+      Assert.notEqual(
+        getIdentityMode(),
+        "chromeUI",
+        "Identity should not be chromeUI"
+      );
     });
   }
 });

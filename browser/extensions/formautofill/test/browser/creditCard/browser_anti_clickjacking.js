@@ -64,7 +64,11 @@ add_task(async function test_active_delay() {
       await waitForPopupEnabled(browser);
       const delta = performance.now() - start;
       info(`Popup was disabled for ${delta} ms`);
-      ok(delta >= 1000, "Popup was disabled for at least 1000 ms");
+      Assert.greaterOrEqual(
+        delta,
+        1000,
+        "Popup was disabled for at least 1000 ms"
+      );
 
       // Check the clicking on the menu works now
       firstItem.click();

@@ -140,8 +140,9 @@ async function testPropertyDeltas(
       return;
     }
 
-    ok(
-      matchingIndex >= 0,
+    Assert.greaterOrEqual(
+      matchingIndex,
+      0,
       `${msg} Valid intermediate state. Current: ` +
         stringifyState(currentSizeState)
     );

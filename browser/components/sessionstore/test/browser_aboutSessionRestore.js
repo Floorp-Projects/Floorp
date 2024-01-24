@@ -24,7 +24,7 @@ add_task(async function () {
   ss.setTabState(tab, JSON.stringify(TAB_STATE));
   await promiseTabRestored(tab);
 
-  ok(gBrowser.tabs.length > 1, "we have more than one tab");
+  Assert.greater(gBrowser.tabs.length, 1, "we have more than one tab");
 
   let tabsToggle = browser.contentDocument.getElementById("tabsToggle");
   tabsToggle.click();

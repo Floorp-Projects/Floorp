@@ -67,10 +67,11 @@ add_task(async function () {
     const text = contentDocument.querySelector(".textRecognitionText");
     is(text.children.length, 0, "No results are listed.");
 
-    ok(
+    Assert.greater(
       Services.telemetry
         .getHistogramById("TEXT_RECOGNITION_API_PERFORMANCE")
-        .snapshot().sum > 0,
+        .snapshot().sum,
+      0,
       "Histogram timing was recorded even though there were no results."
     );
 

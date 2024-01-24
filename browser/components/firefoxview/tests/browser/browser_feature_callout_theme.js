@@ -30,9 +30,9 @@ function testStyles({ win, theme }) {
     );
     const scheme = appliedTheme[type];
     for (const name of FeatureCallout.themePropNames) {
-      ok(
-        !!calloutStyle.getPropertyValue(`--fc-${name}-${type}`) ==
-          !!(scheme?.[name] || appliedTheme.all?.[name]),
+      Assert.equal(
+        !!calloutStyle.getPropertyValue(`--fc-${name}-${type}`),
+        !!(scheme?.[name] || appliedTheme.all?.[name]),
         `Theme property --fc-${name}-${type} is set`
       );
     }

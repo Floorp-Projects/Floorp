@@ -61,13 +61,15 @@ add_task(async function () {
           const newTab = openedThing;
 
           if (result == "tab") {
-            ok(
-              gBrowser.selectedTab == newTab,
+            Assert.equal(
+              gBrowser.selectedTab,
+              newTab,
               `${id} with ${eventStr} opened a foreground tab`
             );
           } else {
-            ok(
-              gBrowser.selectedTab != newTab,
+            Assert.notEqual(
+              gBrowser.selectedTab,
+              newTab,
               `${id} with ${eventStr} opened a background tab`
             );
           }

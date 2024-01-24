@@ -221,11 +221,16 @@ add_task(
           uniqueRemoteTypes
         )}`
       );
-      ok(contexts.length >= 2, "There should be at least 2 browsing contexts");
+      Assert.greaterOrEqual(
+        contexts.length,
+        2,
+        "There should be at least 2 browsing contexts"
+      );
 
       if (Services.appinfo.fissionAutostart) {
-        ok(
-          uniqueRemoteTypes.size >= 2,
+        Assert.greaterOrEqual(
+          uniqueRemoteTypes.size,
+          2,
           "Expect at least one cross origin sub frame"
         );
       }

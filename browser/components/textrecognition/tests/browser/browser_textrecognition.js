@@ -97,10 +97,11 @@ add_task(async function () {
       );
     }
 
-    ok(
+    Assert.greater(
       Services.telemetry
         .getHistogramById("TEXT_RECOGNITION_API_PERFORMANCE")
-        .snapshot().sum > 0,
+        .snapshot().sum,
+      0,
       "Text recognition API performance was recorded."
     );
 
@@ -131,7 +132,7 @@ add_task(async function () {
       }
       return false;
     });
-    ok(timing > 0, "Interaction timing was measured.");
+    Assert.greater(timing, 0, "Interaction timing was measured.");
 
     setClipboardText("");
     clearTelemetry();

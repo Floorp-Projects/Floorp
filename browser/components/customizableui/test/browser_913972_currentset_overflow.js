@@ -30,8 +30,9 @@ add_task(async function () {
     CustomizableUI.inDefaultState,
     "Should still be in default state when overflowing."
   );
-  ok(
-    navbarTarget.childElementCount < oldChildCount,
+  Assert.less(
+    navbarTarget.childElementCount,
+    oldChildCount,
     "Should have fewer children."
   );
   window.resizeTo(originalWindowWidth, window.outerHeight);

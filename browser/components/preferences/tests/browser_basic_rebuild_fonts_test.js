@@ -68,7 +68,7 @@ add_task(async function () {
   }
 
   const menuItems = fontFamilyField.querySelectorAll("menuitem");
-  ok(menuItems.length > 1, "There are multiple font menuitems.");
+  Assert.greater(menuItems.length, 1, "There are multiple font menuitems.");
   ok(menuItems[0].selected, "The first (default) font menuitem is selected.");
 
   dispatchMenuItemCommand(menuItems[1]);

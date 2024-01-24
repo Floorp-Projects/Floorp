@@ -63,8 +63,9 @@ add_task(async function testPageActionPopupResize() {
 
       // Tolerate if it is 1px too wide, as that may happen with the current
       // resizing method.
-      ok(
-        Math.abs(dims.window.innerWidth - width) <= 1,
+      Assert.lessOrEqual(
+        Math.abs(dims.window.innerWidth - width),
+        1,
         `Panel window should be ${width}px wide`
       );
     }
@@ -93,15 +94,17 @@ add_task(async function testPageActionPopupResize() {
   let { body, root } = dims;
 
   is(dims.window.innerWidth, 800, "Panel window width");
-  ok(
-    body.clientWidth <= 800,
+  Assert.lessOrEqual(
+    body.clientWidth,
+    800,
     `Panel body width ${body.clientWidth} is less than 800`
   );
   is(body.scrollWidth, 1400, "Panel body scroll width");
 
   is(dims.window.innerHeight, 600, "Panel window height");
-  ok(
-    root.clientHeight <= 600,
+  Assert.lessOrEqual(
+    root.clientHeight,
+    600,
     `Panel root height (${root.clientHeight}px) is less than 600px`
   );
   is(root.scrollHeight, 1400, "Panel root scroll height");
@@ -168,8 +171,9 @@ add_task(async function testPageActionPopupReflow() {
     "Panel body should be wide enough to fit its contents"
   );
 
-  ok(
-    dims.window.innerHeight > 36,
+  Assert.greater(
+    dims.window.innerHeight,
+    36,
     `Panel window height (${dims.window.innerHeight}px) should be taller than two lines of text.`
   );
 

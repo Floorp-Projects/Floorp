@@ -243,7 +243,11 @@ add_task(async function testSearchHistory() {
       textbox.getAttribute("autocompletesearchparam"),
       { value: searchEntries[i], source: "Bug 426329" }
     );
-    ok(count > 0, "form history entry '" + searchEntries[i] + "' should exist");
+    Assert.greater(
+      count,
+      0,
+      "form history entry '" + searchEntries[i] + "' should exist"
+    );
   }
 });
 
@@ -283,7 +287,7 @@ add_task(async function testClearHistory() {
   let count = await FormHistoryTestUtils.count(
     textbox.getAttribute("autocompletesearchparam")
   );
-  ok(count == 0, "History cleared");
+  Assert.equal(count, 0, "History cleared");
 });
 
 function promiseObserver(topic) {

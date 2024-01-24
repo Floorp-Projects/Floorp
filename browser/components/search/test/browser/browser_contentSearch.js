@@ -216,9 +216,9 @@ add_task(async function badImage() {
     e => e.name == engine.name
   );
   ok(!!expectedEngine, "Sanity check: engine should be in expected state");
-  ok(
-    expectedEngine.iconData ===
-      "chrome://browser/skin/search-engine-placeholder.png",
+  Assert.strictEqual(
+    expectedEngine.iconData,
+    "chrome://browser/skin/search-engine-placeholder.png",
     "Sanity check: icon of engine in expected state should be the placeholder: " +
       expectedEngine.iconData
   );

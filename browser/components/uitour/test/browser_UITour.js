@@ -498,8 +498,9 @@ var tests = [
   }),
   function test_getConfigurationVersion(done) {
     function callback(result) {
-      ok(
-        typeof result.version !== "undefined",
+      Assert.notStrictEqual(
+        typeof result.version,
+        "undefined",
         "Check version isn't undefined."
       );
       is(
@@ -519,8 +520,9 @@ var tests = [
   },
   function test_getConfigurationDistribution(done) {
     gContentAPI.getConfiguration("appinfo", result => {
-      ok(
-        typeof result.distribution !== "undefined",
+      Assert.notStrictEqual(
+        typeof result.distribution,
+        "undefined",
         "Check distribution isn't undefined."
       );
       // distribution id defaults to "default" for most builds, and
@@ -538,8 +540,9 @@ var tests = [
       let testDistributionID = "TestDistribution";
       defaults.setCharPref("id", testDistributionID);
       gContentAPI.getConfiguration("appinfo", result2 => {
-        ok(
-          typeof result2.distribution !== "undefined",
+        Assert.notStrictEqual(
+          typeof result2.distribution,
+          "undefined",
           "Check distribution isn't undefined."
         );
         is(
@@ -554,12 +557,14 @@ var tests = [
   },
   function test_getConfigurationProfileAge(done) {
     gContentAPI.getConfiguration("appinfo", result => {
-      ok(
-        typeof result.profileCreatedWeeksAgo === "number",
+      Assert.strictEqual(
+        typeof result.profileCreatedWeeksAgo,
+        "number",
         "profileCreatedWeeksAgo should be number."
       );
-      ok(
-        result.profileResetWeeksAgo === null,
+      Assert.strictEqual(
+        result.profileResetWeeksAgo,
+        null,
         "profileResetWeeksAgo should be null."
       );
 
@@ -569,8 +574,9 @@ var tests = [
           Date.now() - 15 * 24 * 60 * 60 * 1000
         );
         gContentAPI.getConfiguration("appinfo", result2 => {
-          ok(
-            typeof result2.profileResetWeeksAgo === "number",
+          Assert.strictEqual(
+            typeof result2.profileResetWeeksAgo,
+            "number",
             "profileResetWeeksAgo should be number."
           );
           is(

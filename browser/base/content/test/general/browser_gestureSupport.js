@@ -409,7 +409,8 @@ async function test_emitLatchedEvents(eventPrefix, initialDelta, cmd) {
     cmd[dir].callCount = expect[dir] = 0;
   }
 
-  let check = (aDir, aMsg) => ok(cmd[aDir].callCount == expect[aDir], aMsg);
+  let check = (aDir, aMsg) =>
+    Assert.equal(cmd[aDir].callCount, expect[aDir], aMsg);
   let checkBoth = function (aNum, aInc, aDec) {
     let prefix = "Step " + aNum + ": ";
     check("inc", prefix + aInc);
@@ -633,8 +634,8 @@ async function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
     0,
     0
   );
-  ok(cmdInc.callCount == 0, "Increasing command was triggered");
-  ok(cmdDec.callCount == 0, "Decreasing command was triggered");
+  Assert.equal(cmdInc.callCount, 0, "Increasing command was triggered");
+  Assert.equal(cmdDec.callCount, 0, "Decreasing command was triggered");
 
   // Now trigger the threshold.
   cmdInc.callCount = cmdDec.callCount = 0;
@@ -648,8 +649,8 @@ async function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
     0,
     0
   );
-  ok(cmdInc.callCount == 1, "Increasing command was not triggered");
-  ok(cmdDec.callCount == 0, "Decreasing command was triggered");
+  Assert.equal(cmdInc.callCount, 1, "Increasing command was not triggered");
+  Assert.equal(cmdDec.callCount, 0, "Decreasing command was triggered");
 
   // The tracking counter should go to zero. Go back the other way and
   // stop short of triggering the threshold.
@@ -664,8 +665,8 @@ async function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
     0,
     0
   );
-  ok(cmdInc.callCount == 0, "Increasing command was triggered");
-  ok(cmdDec.callCount == 0, "Decreasing command was triggered");
+  Assert.equal(cmdInc.callCount, 0, "Increasing command was triggered");
+  Assert.equal(cmdDec.callCount, 0, "Decreasing command was triggered");
 
   // Now cross the threshold and trigger the decreasing command.
   cmdInc.callCount = cmdDec.callCount = 0;
@@ -679,8 +680,8 @@ async function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
     0,
     0
   );
-  ok(cmdInc.callCount == 0, "Increasing command was triggered");
-  ok(cmdDec.callCount == 1, "Decreasing command was not triggered");
+  Assert.equal(cmdInc.callCount, 0, "Increasing command was triggered");
+  Assert.equal(cmdDec.callCount, 1, "Decreasing command was not triggered");
 
   // Send the wrap-up event. No commands should trigger.
   cmdInc.callCount = cmdDec.callCount = 0;
@@ -694,8 +695,8 @@ async function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
     0,
     0
   );
-  ok(cmdInc.callCount == 0, "Increasing command was triggered");
-  ok(cmdDec.callCount == 0, "Decreasing command was triggered");
+  Assert.equal(cmdInc.callCount, 0, "Increasing command was triggered");
+  Assert.equal(cmdDec.callCount, 0, "Decreasing command was triggered");
 
   // Restore the gesture to its original configuration.
   Services.prefs.setBoolPref(branch + "latched", oldLatchedValue);
@@ -738,10 +739,10 @@ async function test_swipeGestures() {
     0,
     0
   );
-  ok(cmdUp.callCount == 1, "Step 1: Up command was not triggered");
-  ok(cmdDown.callCount == 0, "Step 1: Down command was triggered");
-  ok(cmdLeft.callCount == 0, "Step 1: Left command was triggered");
-  ok(cmdRight.callCount == 0, "Step 1: Right command was triggered");
+  Assert.equal(cmdUp.callCount, 1, "Step 1: Up command was not triggered");
+  Assert.equal(cmdDown.callCount, 0, "Step 1: Down command was triggered");
+  Assert.equal(cmdLeft.callCount, 0, "Step 1: Left command was triggered");
+  Assert.equal(cmdRight.callCount, 0, "Step 1: Right command was triggered");
 
   // DOWN
   resetCounts();
@@ -755,10 +756,10 @@ async function test_swipeGestures() {
     0,
     0
   );
-  ok(cmdUp.callCount == 0, "Step 2: Up command was triggered");
-  ok(cmdDown.callCount == 1, "Step 2: Down command was not triggered");
-  ok(cmdLeft.callCount == 0, "Step 2: Left command was triggered");
-  ok(cmdRight.callCount == 0, "Step 2: Right command was triggered");
+  Assert.equal(cmdUp.callCount, 0, "Step 2: Up command was triggered");
+  Assert.equal(cmdDown.callCount, 1, "Step 2: Down command was not triggered");
+  Assert.equal(cmdLeft.callCount, 0, "Step 2: Left command was triggered");
+  Assert.equal(cmdRight.callCount, 0, "Step 2: Right command was triggered");
 
   // LEFT
   resetCounts();
@@ -772,10 +773,10 @@ async function test_swipeGestures() {
     0,
     0
   );
-  ok(cmdUp.callCount == 0, "Step 3: Up command was triggered");
-  ok(cmdDown.callCount == 0, "Step 3: Down command was triggered");
-  ok(cmdLeft.callCount == 1, "Step 3: Left command was not triggered");
-  ok(cmdRight.callCount == 0, "Step 3: Right command was triggered");
+  Assert.equal(cmdUp.callCount, 0, "Step 3: Up command was triggered");
+  Assert.equal(cmdDown.callCount, 0, "Step 3: Down command was triggered");
+  Assert.equal(cmdLeft.callCount, 1, "Step 3: Left command was not triggered");
+  Assert.equal(cmdRight.callCount, 0, "Step 3: Right command was triggered");
 
   // RIGHT
   resetCounts();
@@ -789,10 +790,14 @@ async function test_swipeGestures() {
     0,
     0
   );
-  ok(cmdUp.callCount == 0, "Step 4: Up command was triggered");
-  ok(cmdDown.callCount == 0, "Step 4: Down command was triggered");
-  ok(cmdLeft.callCount == 0, "Step 4: Left command was triggered");
-  ok(cmdRight.callCount == 1, "Step 4: Right command was not triggered");
+  Assert.equal(cmdUp.callCount, 0, "Step 4: Up command was triggered");
+  Assert.equal(cmdDown.callCount, 0, "Step 4: Down command was triggered");
+  Assert.equal(cmdLeft.callCount, 0, "Step 4: Left command was triggered");
+  Assert.equal(
+    cmdRight.callCount,
+    1,
+    "Step 4: Right command was not triggered"
+  );
 
   // Make sure combinations do not trigger events.
   let combos = [up | left, up | right, down | left, down | right];
@@ -808,11 +813,24 @@ async function test_swipeGestures() {
       0,
       0
     );
-    ok(cmdUp.callCount == 0, "Step 5-" + i + ": Up command was triggered");
-    ok(cmdDown.callCount == 0, "Step 5-" + i + ": Down command was triggered");
-    ok(cmdLeft.callCount == 0, "Step 5-" + i + ": Left command was triggered");
-    ok(
-      cmdRight.callCount == 0,
+    Assert.equal(
+      cmdUp.callCount,
+      0,
+      "Step 5-" + i + ": Up command was triggered"
+    );
+    Assert.equal(
+      cmdDown.callCount,
+      0,
+      "Step 5-" + i + ": Down command was triggered"
+    );
+    Assert.equal(
+      cmdLeft.callCount,
+      0,
+      "Step 5-" + i + ": Left command was triggered"
+    );
+    Assert.equal(
+      cmdRight.callCount,
+      0,
       "Step 5-" + i + ": Right command was triggered"
     );
   }

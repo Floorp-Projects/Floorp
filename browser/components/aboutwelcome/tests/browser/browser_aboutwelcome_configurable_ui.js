@@ -605,8 +605,9 @@ add_task(async function test_aboutwelcome_history_updates_disabled() {
     return content.window.history.length;
   });
 
-  ok(
-    startHistoryLength === endHistoryLength,
+  Assert.strictEqual(
+    startHistoryLength,
+    endHistoryLength,
     "No entries added to the session's history stack with history updates disabled"
   );
 

@@ -94,11 +94,11 @@ add_task(async function test_showSurvey_Enabled() {
             childActor.showMicroSurvey,
             "Show Survey targeting conditions met"
           );
-          ok(
+          Assert.strictEqual(
             content.document
               .getElementById("steps")
-              .getAttribute("data-l10n-id") ===
-              "shopping-onboarding-welcome-steps-indicator-label",
+              .getAttribute("data-l10n-id"),
+            "shopping-onboarding-welcome-steps-indicator-label",
             "Steps indicator has appropriate fluent ID"
           );
           ok(

@@ -67,7 +67,11 @@ function test() {
           firstProgress = false;
           is(isRestoring, 3, "restoring 3 tabs concurrently");
         } else {
-          ok(isRestoring <= 3, "restoring max. 2 tabs concurrently");
+          Assert.lessOrEqual(
+            isRestoring,
+            3,
+            "restoring max. 2 tabs concurrently"
+          );
         }
 
         if (0 == needsRestore) {

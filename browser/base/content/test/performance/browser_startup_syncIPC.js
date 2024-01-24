@@ -424,7 +424,7 @@ add_task(async function () {
         message += `happened ${entry.useCount} but max is ${entry.maxCount}`;
         shouldPass = false;
       }
-      ok(entry.useCount <= entry.maxCount, `${message} ${phase}`);
+      Assert.lessOrEqual(entry.useCount, entry.maxCount, `${message} ${phase}`);
 
       if (entry.useCount == 0 && !entry.ignoreIfUnused) {
         ok(false, `unused known IPC entry ${phase}: ${entry.name}`);

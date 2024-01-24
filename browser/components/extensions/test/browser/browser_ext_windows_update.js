@@ -6,7 +6,11 @@ add_task(async function () {
   function promiseWaitForFocus(window) {
     return new Promise(resolve => {
       waitForFocus(function () {
-        ok(Services.focus.activeWindow === window, "correct window focused");
+        Assert.strictEqual(
+          Services.focus.activeWindow,
+          window,
+          "correct window focused"
+        );
         resolve();
       }, window);
     });

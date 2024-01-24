@@ -307,7 +307,11 @@ add_task(async function testWebNavigationCrossOriginFrames() {
   is(frames[0].frameId, 0, "Top frame has correct frameId.");
   is(frames[0].parentFrameId, -1, "Top parentFrameId is correct.");
 
-  ok(frames[1].frameId > 0, "Cross-origin iframe has non-zero frameId.");
+  Assert.greater(
+    frames[1].frameId,
+    0,
+    "Cross-origin iframe has non-zero frameId."
+  );
   is(frames[1].parentFrameId, 0, "Iframe parentFrameId is correct.");
   is(
     frames[1].url,

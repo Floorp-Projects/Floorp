@@ -91,7 +91,7 @@ add_task(async function test_menu_onclick() {
   await closeActionContextMenu(popup.firstElementChild, kind);
   const clicked = await extension.awaitMessage("click");
   is(clicked.info.pageUrl, "about:blank", "Click info pageUrl is correct");
-  ok(clicked.tab.id > -1, "Click event tab ID is correct");
+  Assert.greater(clicked.tab.id, -1, "Click event tab ID is correct");
 
   await extension.unload();
 });
@@ -140,7 +140,7 @@ add_task(async function test_menu_onshown() {
   // The click still should work after the background was restarted.
   const clicked = await extension.awaitMessage("click");
   is(clicked.info.pageUrl, "about:blank", "Click info pageUrl is correct");
-  ok(clicked.tab.id > -1, "Click event tab ID is correct");
+  Assert.greater(clicked.tab.id, -1, "Click event tab ID is correct");
 
   await extension.unload();
 });

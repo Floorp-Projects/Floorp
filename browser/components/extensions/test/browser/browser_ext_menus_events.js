@@ -548,7 +548,11 @@ add_task(async function test_show_hide_tab_via_tab_panel() {
         gTabsPanel.allTabsViewTabs.children,
         toolbaritem => toolbaritem.tab === contextTab
       );
-      ok(index !== -1, "sanity check: tabs panel has item for the tab");
+      Assert.notStrictEqual(
+        index,
+        -1,
+        "sanity check: tabs panel has item for the tab"
+      );
 
       // Finally, open the context menu on it.
       await openChromeContextMenu(

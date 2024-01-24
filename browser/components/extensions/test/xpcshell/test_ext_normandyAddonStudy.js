@@ -196,14 +196,15 @@ add_task(async function test_getClientMetadata_works() {
       validationScript: async extension => {
         let clientMetadata = await extension.awaitMessage("clientMetadata");
 
-        ok(
-          clientMetadata.updateChannel ===
-            Services.appinfo.defaultUpdateChannel,
+        Assert.strictEqual(
+          clientMetadata.updateChannel,
+          Services.appinfo.defaultUpdateChannel,
           "clientMetadata contains correct updateChannel"
         );
 
-        ok(
-          clientMetadata.fxVersion === Services.appinfo.version,
+        Assert.strictEqual(
+          clientMetadata.fxVersion,
+          Services.appinfo.version,
           "clientMetadata contains correct fxVersion"
         );
 

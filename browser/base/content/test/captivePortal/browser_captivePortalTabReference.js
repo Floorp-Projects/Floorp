@@ -21,11 +21,12 @@ async function checkCaptivePortalTabReference(evt, currState) {
   gBrowser.removeTab(errorTab);
 
   await portalDetected();
-  ok(CPS.state == CPS.LOCKED_PORTAL, "Captive portal is locked again");
+  Assert.equal(CPS.state, CPS.LOCKED_PORTAL, "Captive portal is locked again");
   errorTab = await openCaptivePortalErrorTab();
   let portalTab2 = await openCaptivePortalLoginTab(errorTab);
-  ok(
-    portalTab != portalTab2,
+  Assert.notEqual(
+    portalTab,
+    portalTab2,
     "waitForNewTab in openCaptivePortalLoginTab should not have completed at this point if references were held to the old captive portal tab after login/abort."
   );
   gBrowser.removeTab(portalTab);

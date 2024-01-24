@@ -183,7 +183,7 @@ add_task(async function test_multistage_aboutwelcome_default() {
   await onButtonClick(browser, "button.primary");
 
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  Assert.greaterOrEqual(callCount, 1, `${callCount} Stub was called`);
   let clickCall;
   for (let i = 0; i < callCount; i++) {
     const call = aboutWelcomeActor.onContentMessage.getCall(i);
@@ -313,7 +313,7 @@ add_task(async function test_AWMultistage_Primary_Action() {
 
   await onButtonClick(browser, "button.primary");
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  Assert.greaterOrEqual(callCount, 1, `${callCount} Stub was called`);
 
   let clickCall;
   let performanceCall;
@@ -399,8 +399,9 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
 
   await onButtonClick(browser, "button[value='secondary_button_top']");
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(
-    callCount >= 2,
+  Assert.greaterOrEqual(
+    callCount,
+    2,
     `${callCount} Stub called twice to handle FxA open URL and Telemetry`
   );
 
@@ -487,7 +488,7 @@ add_task(async function test_AWMultistage_Themes() {
   await onButtonClick(browser, "input[value=automatic]");
 
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  Assert.greaterOrEqual(callCount, 1, `${callCount} Stub was called`);
 
   let actionCall;
   let eventCall;
@@ -726,7 +727,7 @@ add_task(async function test_send_aboutwelcome_as_page_in_event_telemetry() {
   await onButtonClick(browser, "button.primary");
 
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  Assert.greaterOrEqual(callCount, 1, `${callCount} Stub was called`);
 
   let eventCall;
   for (let i = 0; i < callCount; i++) {

@@ -17,8 +17,9 @@ add_task(async function testPrivateBrowsingCustomizeModeWidget() {
 
   let normalWidgetArray = CustomizableUI.getUnusedWidgets(gNavToolbox.palette);
   normalWidgetArray = normalWidgetArray.map(w => w.id);
-  ok(
-    normalWidgetArray.indexOf(kWidgetId) > -1,
+  Assert.greater(
+    normalWidgetArray.indexOf(kWidgetId),
+    -1,
     "Widget should appear as unused in non-private window"
   );
 

@@ -101,7 +101,11 @@ add_task(async function test_overrides_update_removal() {
 
   let defaultHomepageURL = HomePage.get();
   let defaultEngineName = (await Services.search.getDefault()).name;
-  ok(defaultEngineName !== "DuckDuckGo", "Default engine is not DuckDuckGo.");
+  Assert.notStrictEqual(
+    defaultEngineName,
+    "DuckDuckGo",
+    "Default engine is not DuckDuckGo."
+  );
 
   let prefPromise = promisePrefChanged(HOMEPAGE_URI);
 
@@ -194,7 +198,11 @@ add_task(async function test_overrides_update_adding() {
 
   let defaultHomepageURL = HomePage.get();
   let defaultEngineName = (await Services.search.getDefault()).name;
-  ok(defaultEngineName !== "DuckDuckGo", "Home page url is not DuckDuckGo.");
+  Assert.notStrictEqual(
+    defaultEngineName,
+    "DuckDuckGo",
+    "Home page url is not DuckDuckGo."
+  );
 
   await extension.startup();
 
@@ -410,7 +418,7 @@ add_task(async function test_default_search_prompts() {
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
   let defaultEngineName = (await Services.search.getDefault()).name;
-  ok(defaultEngineName !== "Example", "Search is not Example.");
+  Assert.notStrictEqual(defaultEngineName, "Example", "Search is not Example.");
 
   // Mock a response from the default search prompt where we
   // say no to setting this as the default when installing.
