@@ -18,3 +18,14 @@ class Browser(BidiModule):
         assert isinstance(result["userContext"], str)
 
         return result["userContext"]
+
+    @command
+    def remove_user_context(
+        self, user_context: str = None
+    ) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = {}
+
+        if user_context is not None:
+            params["userContext"] = user_context
+
+        return params
