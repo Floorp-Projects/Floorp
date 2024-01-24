@@ -173,13 +173,8 @@ CanvasManagerParent::AllocPCanvasParent() {
     MOZ_ASSERT_UNREACHABLE("AllocPCanvasParent without ID");
     return nullptr;
   }
-  RefPtr<TaskQueue> taskQueue = CanvasRenderThread::CreateWorkerTaskQueue();
-  if (NS_WARN_IF(!taskQueue)) {
-    MOZ_ASSERT_UNREACHABLE("AllocPCanvasParent failed to create task queue!");
-    return nullptr;
-  }
-  return MakeAndAddRef<layers::CanvasTranslator>(
-      std::move(taskQueue), mSharedSurfacesHolder, mContentId, mId);
+  return MakeAndAddRef<layers::CanvasTranslator>(mSharedSurfacesHolder,
+                                                 mContentId, mId);
 }
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
