@@ -625,9 +625,12 @@ void nsChildView::SetCursor(const Cursor& aCursor) {
 
   nsBaseWidget::SetCursor(aCursor);
 
-  if (NS_SUCCEEDED([[nsCursorManager sharedInstance]
-            setCustomCursor:aCursor
-          widgetScaleFactor:BackingScaleFactor()])) {
+  bool forceUpdate = mUpdateCursor;
+  mUpdateCursor = false;
+  if (mCustomCursorAllowed && NS_SUCCEEDED([[nsCursorManager sharedInstance]
+                                    setCustomCursor:aCursor
+                                  widgetScaleFactor:BackingScaleFactor()
+                                        forceUpdate:forceUpdate])) {
     return;
   }
 
