@@ -323,12 +323,7 @@ WebGPUParent::WebGPUParent()
                &WebGPUParent::MaintainDevices);
 }
 
-WebGPUParent::~WebGPUParent() {
-  MOZ_ASSERT(mErrorScopeStackByDevice.empty(),
-             "All Devices should have been dropped.");
-  MOZ_ASSERT(mDeviceLostRequests.empty(),
-             "There should be no pending DeviceLostRequest callbacks.");
-}
+WebGPUParent::~WebGPUParent() = default;
 
 void WebGPUParent::MaintainDevices() {
   ffi::wgpu_server_poll_all_devices(mContext.get(), false);
@@ -440,33 +435,6 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   return IPC_OK();
 }
 
-/* static */ void WebGPUParent::DeviceLostCallback(uint8_t* aUserData,
-                                                   uint8_t aReason,
-                                                   const char* aMessage) {
-  DeviceLostRequest* req = reinterpret_cast<DeviceLostRequest*>(aUserData);
-  if (!req->mParent) {
-    // Parent is dead, never mind.
-    return;
-  }
-
-  RawId deviceId = req->mDeviceId;
-
-  // If aReason is 0, that corresponds to the "unknown" reason, which
-  // we treat as a Nothing() value. Any other value (which is positive)
-  // is mapped to the GPUDeviceLostReason values by subtracting 1.
-  Maybe<uint8_t> reason;
-  if (aReason > 0) {
-    uint8_t mappedReasonValue = (aReason - 1u);
-    reason = Some(mappedReasonValue);
-  }
-  nsAutoCString message(aMessage);
-  req->mParent->LoseDevice(deviceId, reason, message);
-
-  // We're no longer tracking the memory for this callback, so erase
-  // it to ensure we don't leak memory.
-  req->mParent->mDeviceLostRequests.erase(deviceId);
-}
-
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     RawId aAdapterId, const ipc::ByteBuf& aByteBuf, RawId aDeviceId,
     AdapterRequestDeviceResolver&& resolver) {
@@ -479,24 +447,10 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     MOZ_ASSERT(maybeError.isSome());
     LoseDevice(aDeviceId, Some(reasonDestroyed), maybeError->message);
     resolver(false);
-    return IPC_OK();
+  } else {
+    mErrorScopeStackByDevice.insert({aDeviceId, {}});
+    resolver(true);
   }
-
-  mErrorScopeStackByDevice.insert({aDeviceId, {}});
-
-  // Setup the device lost callback.
-  std::unique_ptr<DeviceLostRequest> req(
-      new DeviceLostRequest{this, aDeviceId});
-  auto iter = mDeviceLostRequests.insert({aDeviceId, std::move(req)});
-  MOZ_ASSERT(iter.second, "Should be able to insert DeviceLostRequest.");
-  auto record = iter.first;
-  DeviceLostRequest* req_shadow = (record->second).get();
-  ffi::WGPUDeviceLostClosureC callback = {
-      &DeviceLostCallback, reinterpret_cast<uint8_t*>(req_shadow)};
-  ffi::wgpu_server_set_device_lost_callback(mContext.get(), aDeviceId,
-                                            callback);
-
-  resolver(true);
 
 #if defined(XP_WIN)
   HANDLE handle =
@@ -521,9 +475,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
 
 ipc::IPCResult WebGPUParent::RecvDeviceDrop(RawId aDeviceId) {
   ffi::wgpu_server_device_drop(mContext.get(), aDeviceId);
-  MOZ_ASSERT(mDeviceLostRequests.find(aDeviceId) == mDeviceLostRequests.end(),
-             "DeviceLostRequest should have been invoked, then erased.");
-
   mErrorScopeStackByDevice.erase(aDeviceId);
   mLostDeviceIds.Remove(aDeviceId);
   return IPC_OK();
