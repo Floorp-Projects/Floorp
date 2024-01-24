@@ -14,7 +14,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "public/GeckoProfilerReporter.h",
         "public/ProfilerChild.h",
         "public/ProfilerCodeAddressService.h",
-        "public/shared-libraries.h",
     ]
     UNIFIED_SOURCES += [
         "core/PageInformation.cpp",
@@ -175,6 +174,7 @@ EXPORTS += [
     "public/ProfilerControl.h",
     "public/ProfilerParent.h",
     "public/ProfilerRustBindings.h",
+    "public/shared-libraries.h",
 ]
 
 EXPORTS.mozilla += [

@@ -12,7 +12,6 @@
 if CONFIG["MOZ_GECKO_PROFILER"]:
     DEFINES["IMPL_MFBT"] = True
     EXPORTS += [
-        "public/BaseProfilerSharedLibraries.h",
         "public/BaseProfilingStack.h",
     ]
     UNIFIED_SOURCES += [
@@ -76,6 +75,7 @@ GeneratedFile(
 EXPORTS += [
     "!public/ProfilingCategoryList.h",
     "public/BaseProfiler.h",
+    "public/BaseProfilerSharedLibraries.h",
     "public/BaseProfilingCategory.h",
 ]
 
