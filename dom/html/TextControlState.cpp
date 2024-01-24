@@ -1927,6 +1927,21 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
       return rv;
     }
   }
+  // When the default value is empty, we don't call SetValue().  That means that
+  // we have not notified IMEContentObserver of the empty value when the
+  // <textarea> is not dirty (i.e., the default value is mirrored into the
+  // anonymous subtree asynchronously) and the value was changed during a
+  // reframe (i.e., while IMEContentObserver was not observing the mutation of
+  // the anonymous subtree).  Therefore, we notify IMEContentObserver here in
+  // that case.
+  else if (mTextCtrlElement && mTextCtrlElement->IsTextArea() &&
+           !mTextCtrlElement->ValueChanged()) {
+    MOZ_ASSERT(defaultValue.IsEmpty());
+    IMEContentObserver* observer = GetIMEContentObserver();
+    if (observer && observer->WasInitializedWith(*newTextEditor)) {
+      observer->OnTextControlValueChangedWhileNotObservable(defaultValue);
+    }
+  }
 
   DebugOnly<bool> enabledUndoRedo =
       newTextEditor->EnableUndoRedo(TextControlElement::DEFAULT_UNDO_CAP);
@@ -2826,6 +2841,23 @@ bool TextControlState::SetValueWithTextEditor(
                          "TextInputListener::OnEditActionHandled() failed");
     if (rv != NS_ERROR_OUT_OF_MEMORY) {
       rv = rvOnEditActionHandled;
+    }
+  }
+
+  // When the <textarea> is not dirty, the default value is mirrored into the
+  // anonymous subtree asynchronously.  This may occur during a reframe.
+  // Therefore, if IMEContentObserver was initialized with our editor but our
+  // editor is being initialized, it has not been observing the new anonymous
+  // subtree.  In this case, we need to notify IMEContentObserver of the default
+  // value change.
+  if (mTextCtrlElement && mTextCtrlElement->IsTextArea() &&
+      !mTextCtrlElement->ValueChanged() && textEditor->IsBeingInitialized() &&
+      !textEditor->Destroyed()) {
+    IMEContentObserver* observer = GetIMEContentObserver();
+    if (observer && observer->WasInitializedWith(*textEditor)) {
+      nsAutoString currentValue;
+      textEditor->ComputeTextValue(0, currentValue);
+      observer->OnTextControlValueChangedWhileNotObservable(currentValue);
     }
   }
 

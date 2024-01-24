@@ -910,7 +910,11 @@ void HTMLEditor::CreateEventListeners() {
 }
 
 nsresult HTMLEditor::InstallEventListeners() {
-  if (NS_WARN_IF(!IsInitialized()) || NS_WARN_IF(!mEventListener)) {
+  // FIXME InstallEventListeners() should not be called if we failed to set
+  // document or create an event listener.  So, these checks should be
+  // MOZ_DIAGNOSTIC_ASSERT instead.
+  MOZ_ASSERT(GetDocument());
+  if (MOZ_UNLIKELY(!GetDocument()) || NS_WARN_IF(!mEventListener)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -923,14 +927,6 @@ nsresult HTMLEditor::InstallEventListeners() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditorEventListener::Connect() failed");
   return rv;
-}
-
-void HTMLEditor::RemoveEventListeners() {
-  if (!IsInitialized()) {
-    return;
-  }
-
-  EditorBase::RemoveEventListeners();
 }
 
 void HTMLEditor::Detach(
@@ -7002,8 +6998,8 @@ EventTarget* HTMLEditor::GetDOMEventTarget() const {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
-  MOZ_ASSERT(IsInitialized(), "The HTMLEditor has not been initialized yet");
   Document* doc = GetDocument();
+  MOZ_ASSERT(doc, "The HTMLEditor has not been initialized yet");
   if (!doc) {
     return nullptr;
   }
@@ -7076,8 +7072,8 @@ void HTMLEditor::NotifyRootChanged() {
 }
 
 Element* HTMLEditor::GetBodyElement() const {
-  MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
   Document* document = GetDocument();
+  MOZ_ASSERT(document, "The HTMLEditor hasn't been initialized yet");
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }

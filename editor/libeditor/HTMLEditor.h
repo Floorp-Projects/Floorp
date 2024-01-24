@@ -3423,7 +3423,6 @@ class HTMLEditor final : public EditorBase,
 
   void CreateEventListeners() final;
   nsresult InstallEventListeners() final;
-  void RemoveEventListeners() final;
 
   bool ShouldReplaceRootElement() const;
   MOZ_CAN_RUN_SCRIPT void NotifyRootChanged();

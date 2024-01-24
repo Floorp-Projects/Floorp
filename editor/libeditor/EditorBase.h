@@ -130,8 +130,13 @@ class EditorBase : public nsIEditor,
    */
   explicit EditorBase(EditorType aEditorType);
 
-  bool IsInitialized() const { return !!mDocument; }
-  bool Destroyed() const { return mDidPreDestroy; }
+  [[nodiscard]] bool IsInitialized() const {
+    return mDocument && mDidPostCreate;
+  }
+  [[nodiscard]] bool IsBeingInitialized() const {
+    return mDocument && !mDidPostCreate;
+  }
+  [[nodiscard]] bool Destroyed() const { return mDidPreDestroy; }
 
   Document* GetDocument() const { return mDocument; }
   nsPIDOMWindowOuter* GetWindow() const;
@@ -1012,7 +1017,7 @@ class EditorBase : public nsIEditor,
     }
 
     [[nodiscard]] bool IsDataAvailable() const {
-      return mSelection && mEditorBase.IsInitialized();
+      return mSelection && mEditorBase.mDocument;
     }
 
     /**
@@ -2380,7 +2385,7 @@ class EditorBase : public nsIEditor,
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
-  virtual void RemoveEventListeners();
+  void RemoveEventListeners();
   [[nodiscard]] bool IsListeningToEvents() const;
 
   /**

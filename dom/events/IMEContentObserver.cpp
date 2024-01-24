@@ -1209,6 +1209,11 @@ void IMEContentObserver::OnTextControlValueChangedWhileNotObservable(
     const nsAString& aNewValue) {
   MOZ_ASSERT(mEditorBase);
   MOZ_ASSERT(mEditorBase->IsTextEditor());
+  if (!mTextControlValueLength && aNewValue.IsEmpty()) {
+    return;
+  }
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+          ("0x%p OnTextControlValueChangedWhileNotObservable()", this));
   uint32_t newLength = ContentEventHandler::GetNativeTextLength(aNewValue);
   TextChangeData data(0, mTextControlValueLength, newLength, false, false);
   MaybeNotifyIMEOfTextChange(data);
