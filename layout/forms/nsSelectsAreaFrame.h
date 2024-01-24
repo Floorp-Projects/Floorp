@@ -15,6 +15,7 @@ class PresShell;
 
 class nsSelectsAreaFrame final : public nsBlockFrame {
  public:
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
   friend nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aShell,

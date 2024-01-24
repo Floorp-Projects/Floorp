@@ -31,7 +31,12 @@ UNIFIED_SOURCES += [
     "nsMathMLTokenFrame.cpp",
 ]
 
-EXPORTS += ["nsIMathMLFrame.h", "nsMathMLOperators.h"]
+EXPORTS += [
+    "nsIMathMLFrame.h",
+    "nsMathMLContainerFrame.h",
+    "nsMathMLFrame.h",
+    "nsMathMLOperators.h",
+]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
