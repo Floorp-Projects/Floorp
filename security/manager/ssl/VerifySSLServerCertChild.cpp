@@ -104,11 +104,15 @@ SECStatus RemoteProcessCertVerification(
   ipc::Endpoint<PVerifySSLServerCertChild> childEndpoint;
   PVerifySSLServerCert::CreateEndpoints(&parentEndpoint, &childEndpoint);
 
+  // Create a dedicated nsCString, so that our lambda below can take an
+  // ownership stake in the underlying string buffer:
+  nsCString hostName(aHostName);
+
   if (NS_FAILED(net::SocketProcessBackgroundChild::WithActor(
           "SendInitVerifySSLServerCert",
           [endpoint = std::move(parentEndpoint),
            peerCertBytes = std::move(peerCertBytes),
-           hostName = PromiseFlatCString(aHostName), port(aPort),
+           hostName = std::move(hostName), port(aPort),
            originAttributes(aOriginAttributes),
            stapledOCSPResponse = std::move(stapledOCSPResponse),
            sctsFromTLSExtension = std::move(sctsFromTLSExtension),
