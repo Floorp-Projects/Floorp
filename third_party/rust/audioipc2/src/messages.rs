@@ -209,6 +209,7 @@ pub enum ServerMessage {
     ContextGetMaxChannelCount,
     ContextGetMinLatency(StreamParams),
     ContextGetPreferredSampleRate,
+    ContextGetSupportedInputProcessingParams,
     ContextGetDeviceEnumeration(ffi::cubeb_device_type),
     ContextSetupDeviceCollectionCallback,
     ContextRegisterDeviceCollectionChanged(ffi::cubeb_device_type, bool),
@@ -225,6 +226,8 @@ pub enum ServerMessage {
     StreamSetVolume(usize, f32),
     StreamSetName(usize, CString),
     StreamGetCurrentDevice(usize),
+    StreamSetInputMute(usize, bool),
+    StreamSetInputProcessingParams(usize, ffi::cubeb_input_processing_params),
     StreamRegisterDeviceChangeCallback(usize, bool),
 
     #[cfg(target_os = "linux")]
@@ -242,6 +245,7 @@ pub enum ClientMessage {
     ContextMaxChannelCount(u32),
     ContextMinLatency(u32),
     ContextPreferredSampleRate(u32),
+    ContextSupportedInputProcessingParams(ffi::cubeb_input_processing_params),
     ContextEnumeratedDevices(Vec<DeviceInfo>),
     ContextSetupDeviceCollectionCallback(RegisterDeviceCollectionChanged),
     ContextRegisteredDeviceCollectionChanged,
@@ -258,6 +262,8 @@ pub enum ClientMessage {
     StreamVolumeSet,
     StreamNameSet,
     StreamCurrentDevice(Device),
+    StreamInputMuteSet,
+    StreamInputProcessingParamsSet,
     StreamRegisterDeviceChangeCallback,
 
     #[cfg(target_os = "linux")]

@@ -9,7 +9,7 @@ use audioipc::messages::StreamCreateParams;
 use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
 use audioipc::shm::SharedMem;
 use audioipc::{rpccore, sys};
-use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
+use cubeb_backend::{ffi, DeviceRef, Error, InputProcessingParams, Result, Stream, StreamOps};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::ptr;
@@ -300,6 +300,18 @@ impl StreamOps for ClientStream<'_> {
             Ok(d) => Ok(unsafe { DeviceRef::from_ptr(Box::into_raw(Box::new(d.into()))) }),
             Err(e) => Err(e),
         }
+    }
+
+    fn set_input_mute(&mut self, mute: bool) -> Result<()> {
+        assert_not_in_callback();
+        let rpc = self.context.rpc();
+        send_recv!(rpc, StreamSetInputMute(self.token, mute) => StreamInputMuteSet)
+    }
+
+    fn set_input_processing_params(&mut self, params: InputProcessingParams) -> Result<()> {
+        assert_not_in_callback();
+        let rpc = self.context.rpc();
+        send_recv!(rpc, StreamSetInputProcessingParams(self.token, params.bits()) => StreamInputProcessingParamsSet)
     }
 
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()> {

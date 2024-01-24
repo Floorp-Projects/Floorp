@@ -9,8 +9,8 @@
 extern crate cubeb_backend;
 
 use cubeb_backend::{
-    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Ops, Result,
-    Stream, StreamOps, StreamParams, StreamParamsRef,
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType,
+    InputProcessingParams, Ops, Result, Stream, StreamOps, StreamParams, StreamParamsRef,
 };
 use std::ffi::CStr;
 use std::os::raw::c_void;
@@ -42,6 +42,9 @@ impl ContextOps for TestContext {
     }
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         Ok(0u32)
+    }
+    fn supported_input_processing_params(&mut self) -> Result<InputProcessingParams> {
+        Ok(InputProcessingParams::NONE)
     }
     fn enumerate_devices(
         &mut self,
@@ -114,6 +117,14 @@ impl StreamOps for TestStream {
     fn current_device(&mut self) -> Result<&DeviceRef> {
         Ok(unsafe { DeviceRef::from_ptr(0xDEAD_BEEF as *mut _) })
     }
+    fn set_input_mute(&mut self, mute: bool) -> Result<()> {
+        assert_eq!(mute, true);
+        Ok(())
+    }
+    fn set_input_processing_params(&mut self, params: InputProcessingParams) -> Result<()> {
+        assert_eq!(params, InputProcessingParams::ECHO_CANCELLATION);
+        Ok(())
+    }
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()> {
         assert_eq!(device.as_ptr(), 0xDEAD_BEEF as *mut _);
         Ok(())
@@ -168,6 +179,17 @@ fn test_ops_context_preferred_sample_rate() {
         ffi::CUBEB_OK
     );
     assert_eq!(rate, 0);
+}
+
+#[test]
+fn test_ops_context_supported_input_processing_params() {
+    let c: *mut ffi::cubeb = ptr::null_mut();
+    let mut params: ffi::cubeb_input_processing_params = InputProcessingParams::all().bits();
+    assert_eq!(
+        unsafe { OPS.get_supported_input_processing_params.unwrap()(c, &mut params) },
+        ffi::CUBEB_OK
+    );
+    assert_eq!(params, ffi::CUBEB_INPUT_PROCESSING_PARAM_NONE);
 }
 
 #[test]
@@ -242,6 +264,29 @@ fn test_ops_stream_current_device() {
         ffi::CUBEB_OK
     );
     assert_eq!(device, 0xDEAD_BEEF as *mut _);
+}
+
+#[test]
+fn test_ops_stream_set_input_mute() {
+    let s: *mut ffi::cubeb_stream = ptr::null_mut();
+    assert_eq!(
+        unsafe { OPS.stream_set_input_mute.unwrap()(s, 1) },
+        ffi::CUBEB_OK
+    );
+}
+
+#[test]
+fn test_ops_stream_set_input_processing_params() {
+    let s: *mut ffi::cubeb_stream = ptr::null_mut();
+    assert_eq!(
+        unsafe {
+            OPS.stream_set_input_processing_params.unwrap()(
+                s,
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+            )
+        },
+        ffi::CUBEB_OK
+    );
 }
 
 #[test]

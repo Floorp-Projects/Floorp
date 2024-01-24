@@ -25,6 +25,12 @@ pub struct Ops {
     >,
     pub get_preferred_sample_rate:
         Option<unsafe extern "C" fn(context: *mut ffi::cubeb, rate: *mut u32) -> c_int>,
+    pub get_supported_input_processing_params: Option<
+        unsafe extern "C" fn(
+            c: *mut ffi::cubeb,
+            params: *mut ffi::cubeb_input_processing_params,
+        ) -> c_int,
+    >,
     pub enumerate_devices: Option<
         unsafe extern "C" fn(
             context: *mut ffi::cubeb,
@@ -72,6 +78,14 @@ pub struct Ops {
         unsafe extern "C" fn(
             stream: *mut ffi::cubeb_stream,
             device: *mut *mut ffi::cubeb_device,
+        ) -> c_int,
+    >,
+    pub stream_set_input_mute:
+        Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream, mute: c_int) -> c_int>,
+    pub stream_set_input_processing_params: Option<
+        unsafe extern "C" fn(
+            stream: *mut ffi::cubeb_stream,
+            params: ffi::cubeb_input_processing_params,
         ) -> c_int,
     >,
     pub stream_device_destroy: Option<

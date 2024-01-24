@@ -35,8 +35,9 @@ use self::utils::*;
 use atomic;
 use backend::ringbuf::RingBuffer;
 use cubeb_backend::{
-    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Error, Ops,
-    Result, SampleFormat, State, Stream, StreamOps, StreamParams, StreamParamsRef, StreamPrefs,
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Error,
+    InputProcessingParams, Ops, Result, SampleFormat, State, Stream, StreamOps, StreamParams,
+    StreamParamsRef, StreamPrefs,
 };
 use mach::mach_time::{mach_absolute_time, mach_timebase_info};
 use std::cmp;
@@ -2169,6 +2170,9 @@ impl ContextOps for AudioUnitContext {
         })?;
         Ok(rate as u32)
     }
+    fn supported_input_processing_params(&mut self) -> Result<InputProcessingParams> {
+        Ok(InputProcessingParams::NONE)
+    }
     fn enumerate_devices(
         &mut self,
         devtype: DeviceType,
@@ -4105,6 +4109,12 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Err(Error::not_supported())
     }
     fn current_device(&mut self) -> Result<&DeviceRef> {
+        Err(Error::not_supported())
+    }
+    fn set_input_mute(&mut self, _mute: bool) -> Result<()> {
+        Err(Error::not_supported())
+    }
+    fn set_input_processing_params(&mut self, _params: InputProcessingParams) -> Result<()> {
         Err(Error::not_supported())
     }
     #[cfg(target_os = "ios")]

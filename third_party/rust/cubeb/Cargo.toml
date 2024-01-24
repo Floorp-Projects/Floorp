@@ -11,7 +11,7 @@
 
 [package]
 name = "cubeb"
-version = "0.10.3"
+version = "0.12.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = """
 Bindings to libcubeb for interacting with system audio from rust.
@@ -24,7 +24,7 @@ license = "ISC"
 repository = "https://github.com/mozilla/cubeb-rs"
 
 [dependencies.cubeb-core]
-version = "0.10.3"
+version = "0.12.0"
 
 [features]
 gecko-in-tree = ["cubeb-core/gecko-in-tree"]

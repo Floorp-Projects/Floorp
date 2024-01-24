@@ -25,7 +25,7 @@ use std::fmt::Debug;
 
 const WAKE_TOKEN: Token = Token(!0);
 
-thread_local!(static IN_EVENTLOOP: std::cell::RefCell<Option<thread::ThreadId>> = std::cell::RefCell::new(None));
+thread_local!(static IN_EVENTLOOP: std::cell::RefCell<Option<thread::ThreadId>> = const { std::cell::RefCell::new(None) });
 
 fn assert_not_in_event_loop_thread() {
     IN_EVENTLOOP.with(|b| {
