@@ -2033,7 +2033,9 @@ class PresShell final : public nsStubDocumentObserver,
     void Revoke();
 
     MOZ_CAN_RUN_SCRIPT
-    void WillRefresh(TimeStamp aTime) override {
+    void WillRefresh(TimeStamp aTime) override { Run(); }
+
+    MOZ_CAN_RUN_SCRIPT void Run() {
       if (mPresShell) {
         RefPtr<PresShell> shell = mPresShell;
         shell->ProcessSynthMouseMoveEvent(mFromScroll);

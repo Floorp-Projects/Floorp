@@ -418,6 +418,19 @@ void PointerEventHandler::ImplicitlyReleasePointerCapture(WidgetEvent* aEvent) {
 }
 
 /* static */
+void PointerEventHandler::MaybeImplicitlyReleasePointerCapture(
+    WidgetGUIEvent* aEvent) {
+  MOZ_ASSERT(aEvent);
+  const EventMessage pointerEventMessage =
+      PointerEventHandler::ToPointerEventMessage(aEvent);
+  if (pointerEventMessage != ePointerUp &&
+      pointerEventMessage != ePointerCancel) {
+    return;
+  }
+  PointerEventHandler::MaybeProcessPointerCapture(aEvent);
+}
+
+/* static */
 Element* PointerEventHandler::GetPointerCapturingElement(uint32_t aPointerId) {
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
   if (pointerCaptureInfo) {
@@ -564,6 +577,38 @@ void PointerEventHandler::InitPointerEventFromTouch(
 }
 
 /* static */
+EventMessage PointerEventHandler::ToPointerEventMessage(
+    const WidgetGUIEvent* aMouseOrTouchEvent) {
+  MOZ_ASSERT(aMouseOrTouchEvent);
+
+  switch (aMouseOrTouchEvent->mMessage) {
+    case eMouseMove:
+      return ePointerMove;
+    case eMouseUp:
+      return aMouseOrTouchEvent->AsMouseEvent()->mButtons ? ePointerMove
+                                                          : ePointerUp;
+    case eMouseDown: {
+      const WidgetMouseEvent* mouseEvent = aMouseOrTouchEvent->AsMouseEvent();
+      return mouseEvent->mButtons & ~nsContentUtils::GetButtonsFlagForButton(
+                                        mouseEvent->mButton)
+                 ? ePointerMove
+                 : ePointerDown;
+    }
+    case eTouchMove:
+      return ePointerMove;
+    case eTouchEnd:
+      return ePointerUp;
+    case eTouchStart:
+      return ePointerDown;
+    case eTouchCancel:
+    case eTouchPointerCancel:
+      return ePointerCancel;
+    default:
+      return eVoidEvent;
+  }
+}
+
+/* static */
 void PointerEventHandler::DispatchPointerFromMouseOrTouch(
     PresShell* aShell, nsIFrame* aFrame, nsIContent* aContent,
     WidgetGUIEvent* aEvent, bool aDontRetargetEvents, nsEventStatus* aStatus,
@@ -595,24 +640,10 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       return;
     }
 
-    switch (mouseEvent->mMessage) {
-      case eMouseMove:
-        pointerMessage = ePointerMove;
-        break;
-      case eMouseUp:
-        pointerMessage = mouseEvent->mButtons ? ePointerMove : ePointerUp;
-        break;
-      case eMouseDown:
-        pointerMessage =
-            mouseEvent->mButtons & ~nsContentUtils::GetButtonsFlagForButton(
-                                       mouseEvent->mButton)
-                ? ePointerMove
-                : ePointerDown;
-        break;
-      default:
-        return;
+    pointerMessage = PointerEventHandler::ToPointerEventMessage(mouseEvent);
+    if (pointerMessage == eVoidEvent) {
+      return;
     }
-
     WidgetPointerEvent event(*mouseEvent);
     InitPointerEventFromMouse(&event, mouseEvent, pointerMessage);
     event.convertToPointer = mouseEvent->convertToPointer = false;
@@ -633,24 +664,10 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
     WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
     // loop over all touches and dispatch pointer events on each touch
     // copy the event
-    switch (touchEvent->mMessage) {
-      case eTouchMove:
-        pointerMessage = ePointerMove;
-        break;
-      case eTouchEnd:
-        pointerMessage = ePointerUp;
-        break;
-      case eTouchStart:
-        pointerMessage = ePointerDown;
-        break;
-      case eTouchCancel:
-      case eTouchPointerCancel:
-        pointerMessage = ePointerCancel;
-        break;
-      default:
-        return;
+    pointerMessage = PointerEventHandler::ToPointerEventMessage(touchEvent);
+    if (pointerMessage == eVoidEvent) {
+      return;
     }
-
     RefPtr<PresShell> shell(aShell);
     for (uint32_t i = 0; i < touchEvent->mTouches.Length(); ++i) {
       Touch* touch = touchEvent->mTouches[i];

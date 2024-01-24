@@ -15,7 +15,7 @@ add_task(async function testBrowserActionClickCanceled() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
     gURLBar.textbox,
-    { type: "mouseover" },
+    { type: "mousemove" },
     window
   );
 
@@ -50,6 +50,11 @@ add_task(async function testBrowserActionClickCanceled() {
   // Test canceled click.
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
+    { type: "mousemove" },
+    window
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
     { type: "mousedown", button: 0 },
     window
   );
@@ -79,6 +84,11 @@ add_task(async function testBrowserActionClickCanceled() {
   });
   EventUtils.synthesizeMouseAtCenter(
     document.documentElement,
+    { type: "mousemove" },
+    window
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    document.documentElement,
     { type: "mouseup", button: 0 },
     window
   );
@@ -99,6 +109,11 @@ add_task(async function testBrowserActionClickCanceled() {
   );
 
   // Test completed click.
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousemove" },
+    window
+  );
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
     { type: "mousedown", button: 0 },
@@ -159,7 +174,7 @@ add_task(async function testBrowserActionDisabled() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
     gURLBar.textbox,
-    { type: "mouseover" },
+    { type: "mousemove" },
     window
   );
 
@@ -208,6 +223,11 @@ add_task(async function testBrowserActionDisabled() {
   // Test canceled click.
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
+    { type: "mousemove" },
+    window
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
     { type: "mousedown", button: 0 },
     window
   );
@@ -224,6 +244,11 @@ add_task(async function testBrowserActionDisabled() {
   });
   EventUtils.synthesizeMouseAtCenter(
     document.documentElement,
+    { type: "mousemove" },
+    window
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    document.documentElement,
     { type: "mouseup", button: 0 },
     window
   );
@@ -233,6 +258,11 @@ add_task(async function testBrowserActionDisabled() {
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
   // Test completed click.
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousemove" },
+    window
+  );
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
     { type: "mousedown", button: 0 },
@@ -322,13 +352,14 @@ add_task(async function testBrowserActionTabPopulation() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
     win.gURLBar.textbox,
-    { type: "mouseover" },
+    { type: "mousemove" },
     win
   );
 
   await extension.startup();
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
+  EventUtils.synthesizeMouseAtCenter(widget.node, { type: "mousemove" }, win);
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
     { type: "mousedown", button: 0 },
@@ -371,7 +402,7 @@ add_task(async function testClosePopupDuringPreload() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
     gURLBar.textbox,
-    { type: "mouseover" },
+    { type: "mousemove" },
     window
   );
 
@@ -388,6 +419,11 @@ add_task(async function testClosePopupDuringPreload() {
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
 
+  EventUtils.synthesizeMouseAtCenter(
+    widget.node,
+    { type: "mousemove" },
+    window
+  );
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
     { type: "mousedown", button: 0 },
