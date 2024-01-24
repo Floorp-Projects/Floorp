@@ -124,3 +124,31 @@ add_task(async () => {
   BrowserTestUtils.removeTab(tab2);
   await SpecialPowers.popPrefEnv();
 });
+
+/**
+ * Wheel events at the document-level of the window should hide the preview.
+ */
+add_task(async () => {
+  const tabUrl1 = "about:blank";
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
+  const tabUrl2 = "about:blank";
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
+
+  await openPreview(tab1);
+
+  const tabs = document.getElementById("tabbrowser-tabs");
+  const previewHidden = BrowserTestUtils.waitForEvent(
+    document.getElementById("tabbrowser-tab-preview"),
+    "previewhidden"
+  );
+  EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
+    wheel: true,
+    deltaY: -1,
+    deltaMode: WheelEvent.DOM_DELTA_LINE,
+  });
+  await previewHidden;
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  await SpecialPowers.popPrefEnv();
+});
