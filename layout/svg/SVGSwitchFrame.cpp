@@ -89,8 +89,7 @@ void SVGSwitchFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void SVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {
-  nsIFrame* kid = GetActiveChildFrame();
-  if (kid) {
+  if (auto* kid = GetActiveChildFrame()) {
     BuildDisplayListForChild(aBuilder, kid, aLists);
   }
 }
@@ -104,8 +103,7 @@ void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     return;
   }
 
-  nsIFrame* kid = GetActiveChildFrame();
-  if (kid) {
+  if (auto* kid = GetActiveChildFrame()) {
     gfxMatrix tm = aTransform;
     if (kid->GetContent()->IsSVGElement()) {
       tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
@@ -119,7 +117,7 @@ nsIFrame* SVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   return nullptr;
 }
 
-static bool ShouldReflowSVGTextFrameInside(nsIFrame* aFrame) {
+static bool ShouldReflowSVGTextFrameInside(const nsIFrame* aFrame) {
   return aFrame->IsSVGContainerFrame() || aFrame->IsSVGForeignObjectFrame() ||
          !aFrame->IsSVGFrame();
 }
@@ -191,7 +189,7 @@ void SVGSwitchFrame::ReflowSVG() {
 
   OverflowAreas overflowRects;
 
-  nsIFrame* child = GetActiveChildFrame();
+  auto* child = GetActiveChildFrame();
   ReflowAllSVGTextFramesInsideNonActiveChildren(child);
 
   ISVGDisplayableFrame* svgChild = do_QueryFrame(child);
@@ -226,9 +224,8 @@ void SVGSwitchFrame::ReflowSVG() {
 
 SVGBBox SVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
                                             uint32_t aFlags) {
-  nsIFrame* kid = GetActiveChildFrame();
-  ISVGDisplayableFrame* svgKid = do_QueryFrame(kid);
-  if (svgKid) {
+  auto* kid = GetActiveChildFrame();
+  if (ISVGDisplayableFrame* svgKid = do_QueryFrame(kid)) {
     nsIContent* content = kid->GetContent();
     gfxMatrix transform = ThebesMatrix(aToBBoxUserspace);
     if (content->IsSVGElement()) {
@@ -242,17 +239,10 @@ SVGBBox SVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 }
 
 nsIFrame* SVGSwitchFrame::GetActiveChildFrame() {
-  nsIContent* activeChild =
+  auto* activeChild =
       static_cast<dom::SVGSwitchElement*>(GetContent())->GetActiveChild();
 
-  if (activeChild) {
-    for (auto* kid : mFrames) {
-      if (activeChild == kid->GetContent()) {
-        return kid;
-      }
-    }
-  }
-  return nullptr;
+  return activeChild ? activeChild->GetPrimaryFrame() : nullptr;
 }
 
 }  // namespace mozilla
