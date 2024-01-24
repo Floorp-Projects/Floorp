@@ -50,7 +50,7 @@ impl BridgedEngine {
     fn thread_safe_storage_db(&self) -> Result<Arc<ThreadSafeStorageDb>> {
         self.db
             .upgrade()
-            .ok_or_else(|| crate::error::ErrorKind::DatabaseConnectionClosed.into())
+            .ok_or_else(|| crate::error::Error::DatabaseConnectionClosed.into())
     }
 }
 
@@ -184,7 +184,7 @@ impl sync15::engine::BridgedEngine for BridgedEngine {
 
 impl From<anyhow::Error> for crate::error::Error {
     fn from(value: anyhow::Error) -> Self {
-        crate::error::ErrorKind::SyncError(value.to_string()).into()
+        crate::error::Error::SyncError(value.to_string())
     }
 }
 

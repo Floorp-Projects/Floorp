@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[Custom]
+typedef string JsonValue;
+
+namespace webextstorage {
+
+};
+
+enum QuotaReason {
+    "TotalBytes",
+    "ItemBytes",
+    "MaxItems",
+};
+
+[Error]
+interface WebExtStorageApiError {
+    UnexpectedError(string reason);
+    JsonError(string reason);
+    QuotaError(QuotaReason reason);
+};
+
+dictionary StorageValueChange {
+    string key;
+    JsonValue? old_value;
+    JsonValue? new_value;
+};
+
+dictionary StorageChanges {
+    sequence<StorageValueChange> changes;
+};
+
+interface WebExtStorageStore {
+    [Throws=WebExtStorageApiError]
+    constructor(string path);
+
+    [Throws=WebExtStorageApiError]
+    StorageChanges set([ByRef] string ext_id, JsonValue val);
+
+    [Throws=WebExtStorageApiError]
+    JsonValue get([ByRef] string ext_id, JsonValue keys);
+
+    [Throws=WebExtStorageApiError]
+    StorageChanges remove([ByRef] string ext_id, JsonValue keys);
+
+    [Throws=WebExtStorageApiError]
+    StorageChanges clear([ByRef] string ext_id);
+};

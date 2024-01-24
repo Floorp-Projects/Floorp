@@ -9,7 +9,7 @@
 /// a trait in `ffi_support` for a type in `webext_storage`).
 use ffi_support::{ErrorCode, ExternError};
 
-use crate::error::{Error, ErrorKind, QuotaReason};
+use crate::error::{Error, QuotaReason};
 
 mod error_codes {
     /// An unexpected error occurred which likely cannot be meaningfully handled
@@ -34,13 +34,13 @@ mod error_codes {
 
 impl From<Error> for ExternError {
     fn from(err: Error) -> ExternError {
-        let code = ErrorCode::new(match err.kind() {
-            ErrorKind::JsonError(_) => error_codes::INVALID_JSON,
-            ErrorKind::QuotaError(QuotaReason::TotalBytes) => {
-                error_codes::QUOTA_TOTAL_BYTES_EXCEEDED
-            }
-            ErrorKind::QuotaError(QuotaReason::ItemBytes) => error_codes::QUOTA_ITEM_BYTES_EXCEEDED,
-            ErrorKind::QuotaError(QuotaReason::MaxItems) => error_codes::QUOTA_MAX_ITEMS_EXCEEDED,
+        let code = ErrorCode::new(match &err {
+            Error::JsonError(_) => error_codes::INVALID_JSON,
+            Error::QuotaError(reason) => match reason {
+                QuotaReason::ItemBytes => error_codes::QUOTA_ITEM_BYTES_EXCEEDED,
+                QuotaReason::MaxItems => error_codes::QUOTA_MAX_ITEMS_EXCEEDED,
+                QuotaReason::TotalBytes => error_codes::QUOTA_TOTAL_BYTES_EXCEEDED,
+            },
             _ => error_codes::UNEXPECTED,
         });
         ExternError::new_error(code, err.to_string())

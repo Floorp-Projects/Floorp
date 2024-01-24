@@ -1,0 +1,3 @@
+[bindings.kotlin]
+package_name = "mozilla.appservices.webextstorage"
+cdylib_name = "megazord"

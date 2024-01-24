@@ -2,17 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use error_support::{ErrorHandling, GetErrorHandling};
 use interrupt_support::Interrupted;
+use std::fmt;
 
-#[derive(Debug)]
+/// Result enum used by all implementation functions in this crate.
+/// These wll be automagically turned into `WebExtStorageApiError` at the
+/// FFI layer.
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug, Clone, Copy)]
 pub enum QuotaReason {
     TotalBytes,
     ItemBytes,
     MaxItems,
 }
 
+impl fmt::Display for QuotaReason {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            QuotaReason::ItemBytes => write!(f, "ItemBytes"),
+            QuotaReason::MaxItems => write!(f, "MaxItems"),
+            QuotaReason::TotalBytes => write!(f, "TotalBytes"),
+        }
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
-pub enum ErrorKind {
+pub enum WebExtStorageApiError {
+    #[error("Unexpected webext-storage error: {reason}")]
+    UnexpectedError { reason: String },
+
+    #[error("Error parsing JSON data: {reason}")]
+    JsonError { reason: String },
+
+    #[error("Quota exceeded: {reason}")]
+    QuotaError { reason: QuotaReason },
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
     #[error("Quota exceeded: {0:?}")]
     QuotaError(QuotaReason),
 
@@ -60,13 +89,57 @@ pub enum ErrorKind {
     SyncError(String),
 }
 
-error_support::define_error! {
-    ErrorKind {
-        (JsonError, serde_json::Error),
-        (SqlError, rusqlite::Error),
-        (IoError, std::io::Error),
-        (InterruptedError, Interrupted),
-        (Utf8Error, std::str::Utf8Error),
-        (OpenDatabaseError, sql_support::open_database::Error),
+impl GetErrorHandling for Error {
+    type ExternalError = WebExtStorageApiError;
+
+    fn get_error_handling(&self) -> ErrorHandling<Self::ExternalError> {
+        match self {
+            Error::QuotaError(reason) => {
+                log::info!("webext-storage-quota-error");
+                ErrorHandling::convert(WebExtStorageApiError::QuotaError { reason: *reason })
+            }
+            Error::JsonError(e) => {
+                log::info!("webext-storage-json-error");
+                ErrorHandling::convert(WebExtStorageApiError::JsonError {
+                    reason: e.to_string(),
+                })
+            }
+            _ => {
+                log::info!("webext-storage-unexpected-error");
+                ErrorHandling::convert(WebExtStorageApiError::UnexpectedError {
+                    reason: self.to_string(),
+                })
+            }
+        }
+    }
+}
+
+impl From<Error> for WebExtStorageApiError {
+    fn from(err: Error) -> WebExtStorageApiError {
+        match err {
+            Error::JsonError(e) => WebExtStorageApiError::JsonError {
+                reason: e.to_string(),
+            },
+            Error::QuotaError(reason) => WebExtStorageApiError::QuotaError { reason },
+            _ => WebExtStorageApiError::UnexpectedError {
+                reason: err.to_string(),
+            },
+        }
+    }
+}
+
+impl From<rusqlite::Error> for WebExtStorageApiError {
+    fn from(value: rusqlite::Error) -> Self {
+        WebExtStorageApiError::UnexpectedError {
+            reason: value.to_string(),
+        }
+    }
+}
+
+impl From<serde_json::Error> for WebExtStorageApiError {
+    fn from(value: serde_json::Error) -> Self {
+        WebExtStorageApiError::JsonError {
+            reason: value.to_string(),
+        }
     }
 }

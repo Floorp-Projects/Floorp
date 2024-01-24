@@ -6,7 +6,7 @@ use std::{fs::remove_file, path::PathBuf, sync::Arc};
 
 use interrupt_support::SqlInterruptHandle;
 use once_cell::sync::OnceCell;
-use webext_storage::store::Store;
+use webext_storage::store::WebExtStorageStore as Store;
 
 use crate::error::{self, Error};
 

@@ -23,4 +23,22 @@ pub use api::SYNC_MAX_ITEMS;
 pub use api::SYNC_QUOTA_BYTES;
 pub use api::SYNC_QUOTA_BYTES_PER_ITEM;
 
+pub use crate::error::{QuotaReason, WebExtStorageApiError};
+pub use crate::store::WebExtStorageStore;
 pub use api::UsageInfo;
+pub use api::{StorageChanges, StorageValueChange};
+
+uniffi::include_scaffolding!("webext-storage");
+
+use serde_json::Value as JsonValue;
+impl UniffiCustomTypeConverter for JsonValue {
+    type Builtin = String;
+
+    fn into_custom(val: Self::Builtin) -> uniffi::Result<JsonValue> {
+        Ok(serde_json::from_str(val.as_str()).unwrap())
+    }
+
+    fn from_custom(obj: Self) -> Self::Builtin {
+        obj.to_string()
+    }
+}

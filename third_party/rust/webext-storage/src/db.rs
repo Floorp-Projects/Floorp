@@ -214,11 +214,11 @@ pub fn ensure_url_path(p: impl AsRef<Path>) -> Result<Url> {
         if u.scheme() == "file" {
             Ok(u)
         } else {
-            Err(ErrorKind::IllegalDatabasePath(p.as_ref().to_owned()).into())
+            Err(Error::IllegalDatabasePath(p.as_ref().to_owned()))
         }
     } else {
         let p = p.as_ref();
-        let u = Url::from_file_path(p).map_err(|_| ErrorKind::IllegalDatabasePath(p.to_owned()))?;
+        let u = Url::from_file_path(p).map_err(|_| Error::IllegalDatabasePath(p.to_owned()))?;
         Ok(u)
     }
 }
@@ -243,11 +243,11 @@ fn normalize_path(p: impl AsRef<Path>) -> Result<PathBuf> {
     // parent directory, etc.
     let file_name = path
         .file_name()
-        .ok_or_else(|| ErrorKind::IllegalDatabasePath(path.clone()))?;
+        .ok_or_else(|| Error::IllegalDatabasePath(path.clone()))?;
 
     let parent = path
         .parent()
-        .ok_or_else(|| ErrorKind::IllegalDatabasePath(path.clone()))?;
+        .ok_or_else(|| Error::IllegalDatabasePath(path.clone()))?;
 
     let mut canonical = parent.canonicalize()?;
     canonical.push(file_name);
