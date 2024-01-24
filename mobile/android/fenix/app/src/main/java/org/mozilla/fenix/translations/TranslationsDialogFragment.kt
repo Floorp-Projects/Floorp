@@ -26,7 +26,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -45,7 +44,6 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
 
     private var behavior: BottomSheetBehavior<View>? = null
     private val args by navArgs<TranslationsDialogFragmentArgs>()
-    private lateinit var interactor: TranslationsInteractor
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         super.onCreateDialog(savedInstanceState).apply {
@@ -63,14 +61,6 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
-        interactor = TranslationsInteractor(
-            translationsController = TranslationsController(
-                translationUseCase = requireComponents.useCases.sessionUseCases.translate,
-                browserStore = requireComponents.core.store,
-                tabId = args.sessionId,
-            ),
-        )
-
         setContent {
             FirefoxTheme {
                 var translationsVisibility by remember {
@@ -125,14 +115,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                             from = BrowserDirection.FromTranslationsDialogFragment,
                                         )
                                     },
-                                    onTranslateButtonClick = {
-                                        interactor.onTranslate(
-                                            tabId = args.sessionId,
-                                            fromLanguage = null,
-                                            toLanguage = null,
-                                            null,
-                                        )
-                                    },
+                                    onTranslateButtonClick = {},
                                     onNotNowButtonClick = { dismiss() },
                                 )
                             }
