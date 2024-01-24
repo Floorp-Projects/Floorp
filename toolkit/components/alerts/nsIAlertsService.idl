@@ -341,7 +341,7 @@ interface nsIAlertsIconData : nsISupports
 interface nsIAlertsIconURI : nsISupports
 {
   /**
-   * Shows an alert with an icon URI. Web notifications use |moz-anno:|
+   * Shows an alert with an icon URI. Web notifications use |cached-favicon:|
    * URIs to reference favicons from Places. If the page doesn't have a
    * favicon, |aIconURI| will be |null|.
    */

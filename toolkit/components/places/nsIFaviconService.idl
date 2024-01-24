@@ -30,9 +30,9 @@ interface nsIFaviconService : nsISupports
    * nothing but returning the input URI.
    *
    * No validity checking is done. If you pass an icon URI that we've never
-   * seen, you'll get back a URI that references an invalid icon. The moz-anno
-   * protocol handler's special case for "favicon" annotations will resolve
-   * invalid icons to the default icon, although without caching.
+   * seen, you'll get back a URI that references an invalid icon. The
+   * cached-favicon protocol handler's special case for cached favicon will
+   * resolve invalid icons to the default icon, although without caching.
    * For invalid chrome URIs, you'll get a broken image.
    *
    * @param aFaviconURI

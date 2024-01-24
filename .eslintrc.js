@@ -1850,7 +1850,6 @@ module.exports = {
         "toolkit/components/places/tests/browser/browser_visituri_privatebrowsing_perwindowpb.js",
         "toolkit/components/places/tests/browser/redirect_once.sjs",
         "toolkit/components/places/tests/chrome/test_371798.xhtml",
-        "toolkit/components/places/tests/chrome/test_favicon_annotations.xhtml",
         "toolkit/components/printing/tests/head.js",
         "toolkit/components/processtools/tests/browser/browser_test_powerMetrics.js",
         "toolkit/components/processtools/tests/browser/browser_test_procinfo.js",

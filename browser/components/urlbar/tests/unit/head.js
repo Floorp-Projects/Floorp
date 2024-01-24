@@ -662,7 +662,7 @@ function makeRemoteTabResult(
     icon:
       typeof iconUri != "undefined"
         ? iconUri
-        : `moz-anno:favicon:page-icon:${uri}`,
+        : `cached-favicon:page-icon:${uri}`,
     lastUsed: lastUsed * 1000,
   };
 

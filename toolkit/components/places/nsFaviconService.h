@@ -142,6 +142,4 @@ class nsFaviconService final : public nsIFaviconService,
   uint16_t mDefaultIconURIPreferredSize;
 };
 
-#define FAVICON_ANNOTATION_NAME "favicon"
-
 #endif  // nsFaviconService_h_

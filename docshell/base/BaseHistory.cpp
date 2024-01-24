@@ -23,10 +23,11 @@ BaseHistory::BaseHistory() : mTrackedURIs(kTrackedUrisInitialSize) {}
 BaseHistory::~BaseHistory() = default;
 
 static constexpr nsLiteralCString kDisallowedSchemes[] = {
-    "about"_ns,         "blob"_ns,       "data"_ns,     "chrome"_ns,
-    "imap"_ns,          "javascript"_ns, "mailbox"_ns,  "moz-anno"_ns,
-    "news"_ns,          "page-icon"_ns,  "resource"_ns, "view-source"_ns,
-    "moz-extension"_ns,
+    "about"_ns,         "blob"_ns,           "cached-favicon"_ns,
+    "chrome"_ns,        "data"_ns,           "imap"_ns,
+    "javascript"_ns,    "mailbox"_ns,        "news"_ns,
+    "page-icon"_ns,     "resource"_ns,       "view-source"_ns,
+    "moz-extension"_ns, "moz-page-thumb"_ns,
 };
 
 bool BaseHistory::CanStore(nsIURI* aURI) {

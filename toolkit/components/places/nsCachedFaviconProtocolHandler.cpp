@@ -4,16 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Implementation of moz-anno: URLs for accessing favicons.  The urls are sent
- * to the favicon service.  If the favicon service doesn't have the
- * data, a stream containing the default favicon will be returned.
- *
- * The reference to annotations ("moz-anno") is a leftover from previous
- * iterations of this component. As of now the moz-anno protocol is independent
- * of annotations.
+ * Implementation of cached-favicon: URLs for accessing favicons. The urls are
+ * sent to the favicon service. If the favicon service doesn't have the data,
+ * a stream containing the default favicon will be returned.
  */
 
-#include "nsAnnoProtocolHandler.h"
+#include "nsCachedFaviconProtocolHandler.h"
 #include "nsFaviconService.h"
 #include "nsICancelable.h"
 #include "nsIChannel.h"
@@ -241,81 +237,68 @@ faviconAsyncLoader::Cancel(nsresult aStatus) {
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
-//// nsAnnoProtocolHandler
+//// nsCachedFaviconProtocolHandler
 
-NS_IMPL_ISUPPORTS(nsAnnoProtocolHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(nsCachedFaviconProtocolHandler, nsIProtocolHandler)
 
-// nsAnnoProtocolHandler::GetScheme
+// nsCachedFaviconProtocolHandler::GetScheme
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetScheme(nsACString& aScheme) {
-  aScheme.AssignLiteral("moz-anno");
+nsCachedFaviconProtocolHandler::GetScheme(nsACString& aScheme) {
+  aScheme.AssignLiteral("cached-favicon");
   return NS_OK;
 }
 
-// nsAnnoProtocolHandler::NewChannel
+// nsCachedFaviconProtocolHandler::NewChannel
 //
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
-                                  nsIChannel** _retval) {
+nsCachedFaviconProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                           nsIChannel** _retval) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  // annotation info
-  nsCOMPtr<nsIURI> annoURI;
-  nsAutoCString annoName;
-  nsresult rv = ParseAnnoURI(aURI, getter_AddRefs(annoURI), annoName);
+  nsCOMPtr<nsIURI> cachedFaviconURI;
+  nsresult rv = ParseCachedFaviconURI(aURI, getter_AddRefs(cachedFaviconURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Only favicon annotation are supported.
-  if (!annoName.EqualsLiteral(FAVICON_ANNOTATION_NAME))
-    return NS_ERROR_INVALID_ARG;
-
-  return NewFaviconChannel(aURI, annoURI, aLoadInfo, _retval);
+  return NewFaviconChannel(aURI, cachedFaviconURI, aLoadInfo, _retval);
 }
 
-// nsAnnoProtocolHandler::AllowPort
+// nsCachedFaviconProtocolHandler::AllowPort
 //
 //    Don't override any bans on bad ports.
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::AllowPort(int32_t port, const char* scheme,
-                                 bool* _retval) {
+nsCachedFaviconProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                          bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
 
-// nsAnnoProtocolHandler::ParseAnnoURI
+// nsCachedFaviconProtocolHandler::ParseCachedFaviconURI
 //
-//    Splits an annotation URL into its URI and name parts
+//    Get actual URI from cached-favicon URL
 
-nsresult nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI,
-                                             nsCString& aName) {
+nsresult nsCachedFaviconProtocolHandler::ParseCachedFaviconURI(
+    nsIURI* aURI, nsIURI** aResultURI) {
   nsresult rv;
   nsAutoCString path;
   rv = aURI->GetPathQueryRef(path);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t firstColon = path.FindChar(':');
-  if (firstColon <= 0) return NS_ERROR_MALFORMED_URI;
-
-  rv = NS_NewURI(aResultURI, Substring(path, firstColon + 1));
+  rv = NS_NewURI(aResultURI, path);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  aName = Substring(path, 0, firstColon);
   return NS_OK;
 }
 
-nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
-                                                  nsIURI* aAnnotationURI,
-                                                  nsILoadInfo* aLoadInfo,
-                                                  nsIChannel** _channel) {
+nsresult nsCachedFaviconProtocolHandler::NewFaviconChannel(
+    nsIURI* aURI, nsIURI* aCachedFaviconURI, nsILoadInfo* aLoadInfo,
+    nsIChannel** _channel) {
   // Create our channel.  We'll call SetContentType with the right type when
   // we know what it actually is.
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
-      aURI, aLoadInfo, aAnnotationURI,
+      aURI, aLoadInfo, aCachedFaviconURI,
       [](nsIStreamListener* listener, nsIChannel* channel,
-         nsIURI* annotationURI) -> RequestOrReason {
+         nsIURI* cachedFaviconURI) -> RequestOrReason {
         auto fallback = [&]() -> RequestOrReason {
           nsCOMPtr<nsIChannel> chan;
           nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
@@ -334,13 +317,13 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
         nsFaviconService* faviconService =
             nsFaviconService::GetFaviconService();
         nsAutoCString faviconSpec;
-        nsresult rv = annotationURI->GetSpecIgnoringRef(faviconSpec);
+        nsresult rv = cachedFaviconURI->GetSpecIgnoringRef(faviconSpec);
         // Any failures fallback to the default icon channel.
         if (NS_FAILED(rv) || !faviconService) return fallback();
 
         uint16_t preferredSize = UINT16_MAX;
         MOZ_ALWAYS_SUCCEEDS(faviconService->PreferredSizeFromURI(
-            annotationURI, &preferredSize));
+            cachedFaviconURI, &preferredSize));
         nsCOMPtr<mozIStorageStatementCallback> callback =
             new faviconAsyncLoader(channel, listener, preferredSize);
         if (!callback) return fallback();
