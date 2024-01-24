@@ -36,6 +36,8 @@ extern bool str_toString(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_charCodeAt(JSContext* cx, unsigned argc, Value* vp);
 
+extern bool str_codePointAt(JSContext* cx, unsigned argc, Value* vp);
+
 extern bool str_endsWith(JSContext* cx, unsigned argc, Value* vp);
 
 #if JS_HAS_INTL_API

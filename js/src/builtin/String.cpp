@@ -1893,7 +1893,7 @@ bool js::str_charCodeAt(JSContext* cx, unsigned argc, Value* vp) {
  *
  * ES2024 draft rev 7d2644968bd56d54d2886c012d18698ff3f72c35
  */
-static bool str_codePointAt(JSContext* cx, unsigned argc, Value* vp) {
+bool js::str_codePointAt(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "codePointAt");
   CallArgs args = CallArgsFromVp(argc, vp);
 

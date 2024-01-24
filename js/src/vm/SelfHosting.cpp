@@ -2299,6 +2299,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Set_values", SetObject::values, 0, 0),
     JS_INLINABLE_FN("std_String_charCodeAt", str_charCodeAt, 1, 0,
                     StringCharCodeAt),
+    JS_INLINABLE_FN("std_String_codePointAt", str_codePointAt, 1, 0,
+                    StringCodePointAt),
     JS_INLINABLE_FN("std_String_endsWith", str_endsWith, 1, 0, StringEndsWith),
     JS_INLINABLE_FN("std_String_fromCharCode", str_fromCharCode, 1, 0,
                     StringFromCharCode),
