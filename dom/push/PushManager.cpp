@@ -102,7 +102,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
                                 nsTArray<uint8_t>&& aRawP256dhKey,
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
-      : WorkerRunnable(aWorkerPrivate),
+      : WorkerRunnable(aWorkerPrivate, "GetSubscriptionResultRunnable"),
         mProxy(std::move(aProxy)),
         mStatus(aStatus),
         mEndpoint(aEndpoint),
@@ -298,7 +298,7 @@ class PermissionResultRunnable final : public WorkerRunnable {
  public:
   PermissionResultRunnable(PromiseWorkerProxy* aProxy, nsresult aStatus,
                            PermissionState aState)
-      : WorkerRunnable(aProxy->GetWorkerPrivate()),
+      : WorkerRunnable(aProxy->GetWorkerPrivate(), "PermissionResultRunnable"),
         mProxy(aProxy),
         mStatus(aStatus),
         mState(aState) {

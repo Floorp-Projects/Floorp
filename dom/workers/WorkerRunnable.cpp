@@ -53,9 +53,13 @@ const nsIID kWorkerRunnableIID = {
 }  // namespace
 
 #ifdef DEBUG
-WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget)
+WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate, const char* aName,
+                               Target aTarget)
     : mWorkerPrivate(aWorkerPrivate),
       mTarget(aTarget),
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+      mName(aName),
+#  endif
       mCallingCancelWithinRun(false) {
   LOG(("WorkerRunnable::WorkerRunnable [%p]", this));
   MOZ_ASSERT(aWorkerPrivate);
@@ -191,8 +195,23 @@ WorkerRunnable* WorkerRunnable::FromRunnable(nsIRunnable* aRunnable) {
 NS_IMPL_ADDREF(WorkerRunnable)
 NS_IMPL_RELEASE(WorkerRunnable)
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+NS_IMETHODIMP
+WorkerRunnable::GetName(nsACString& aName) {
+  if (mName) {
+    aName.AssignASCII(mName);
+  } else {
+    aName.Truncate();
+  }
+  return NS_OK;
+}
+#endif
+
 NS_INTERFACE_MAP_BEGIN(WorkerRunnable)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
+#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRunnable)
   // kWorkerRunnableIID is special in that it does not AddRef its result.
   if (aIID.Equals(kWorkerRunnableIID)) {
@@ -378,8 +397,9 @@ void WorkerDebuggerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                           bool aDispatchResult) {}
 
 WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
-                                       nsIEventTarget* aSyncLoopTarget)
-    : WorkerRunnable(aWorkerPrivate, WorkerThread),
+                                       nsIEventTarget* aSyncLoopTarget,
+                                       const char* aName)
+    : WorkerRunnable(aWorkerPrivate, aName, WorkerThread),
       mSyncLoopTarget(aSyncLoopTarget) {
 #ifdef DEBUG
   if (mSyncLoopTarget) {
@@ -389,8 +409,9 @@ WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
 }
 
 WorkerSyncRunnable::WorkerSyncRunnable(
-    WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget)
-    : WorkerRunnable(aWorkerPrivate, WorkerThread),
+    WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget,
+    const char* aName)
+    : WorkerRunnable(aWorkerPrivate, aName, WorkerThread),
       mSyncLoopTarget(std::move(aSyncLoopTarget)) {
 #ifdef DEBUG
   if (mSyncLoopTarget) {
@@ -461,8 +482,8 @@ void MainThreadStopSyncLoopRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 #ifdef DEBUG
 WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                                             Target aTarget)
-    : WorkerRunnable(aWorkerPrivate, aTarget) {
+                                             const char* aName, Target aTarget)
+    : WorkerRunnable(aWorkerPrivate, aName, aTarget) {
   MOZ_ASSERT(aWorkerPrivate);
 }
 #endif

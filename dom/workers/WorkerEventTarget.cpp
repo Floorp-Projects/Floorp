@@ -34,7 +34,8 @@ class WrappedControlRunnable final : public WorkerControlRunnable {
  public:
   WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
                          nsCOMPtr<nsIRunnable>&& aInner)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
+      : WorkerControlRunnable(aWorkerPrivate, "WrappedControlRunnable",
+                              WorkerThread),
         mInner(std::move(aInner)) {}
 
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {

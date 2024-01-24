@@ -20,7 +20,8 @@ class ReleaseRefControlRunnable final : public WorkerControlRunnable {
  public:
   ReleaseRefControlRunnable(WorkerPrivate* aWorkerPrivate,
                             already_AddRefed<StrongWorkerRef> aRef)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
+      : WorkerControlRunnable(aWorkerPrivate, "ReleaseRefControlRunnable",
+                              WorkerThread),
         mRef(std::move(aRef)) {
     MOZ_ASSERT(mRef);
   }
