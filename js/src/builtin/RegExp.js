@@ -97,32 +97,12 @@ function AdvanceStringIndex(S, index) {
 
   // Step 4 (skipped).
 
-  // Step 5.
-  var length = S.length;
-
-  // Step 6.
-  if (index + 1 >= length) {
-    return index + 1;
-  }
-
-  // Step 7.
-  var first = callFunction(std_String_charCodeAt, S, index);
-
-  // Step 8.
-  if (first < 0xd800 || first > 0xdbff) {
-    return index + 1;
-  }
-
-  // Step 9.
-  var second = callFunction(std_String_charCodeAt, S, index + 1);
-
-  // Step 10.
-  if (second < 0xdc00 || second > 0xdfff) {
-    return index + 1;
-  }
-
-  // Step 11.
-  return index + 2;
+  // Steps 5-11.
+  var supplementary = (
+    index < S.length &&
+    callFunction(std_String_codePointAt, S, index) > 0xffff
+  );
+  return index + 1 + supplementary;
 }
 
 // ES2023 draft rev 2c78e6f6b5bc6bfbf79dd8a12a9593e5b57afcd2
