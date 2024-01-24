@@ -341,6 +341,21 @@ cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
   return context->ops->get_preferred_sample_rate(context, rate);
 }
 
+int
+cubeb_get_supported_input_processing_params(
+    cubeb * context, cubeb_input_processing_params * params)
+{
+  if (!context || !params) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  if (!context->ops->get_supported_input_processing_params) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  return context->ops->get_supported_input_processing_params(context, params);
+}
+
 void
 cubeb_destroy(cubeb * context)
 {
@@ -498,6 +513,36 @@ cubeb_stream_get_current_device(cubeb_stream * stream,
   }
 
   return stream->context->ops->stream_get_current_device(stream, device);
+}
+
+int
+cubeb_stream_set_input_mute(cubeb_stream * stream, int mute)
+{
+  if (!stream) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  if (!stream->context->ops->stream_set_input_mute) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  return stream->context->ops->stream_set_input_mute(stream, mute);
+}
+
+int
+cubeb_stream_set_input_processing_params(cubeb_stream * stream,
+                                         cubeb_input_processing_params params)
+{
+  if (!stream || !params) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  if (!stream->context->ops->stream_set_input_processing_params) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  return stream->context->ops->stream_set_input_processing_params(stream,
+                                                                  params);
 }
 
 int

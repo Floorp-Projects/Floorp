@@ -11,7 +11,7 @@
 
 [package]
 name = "cubeb-core"
-version = "0.10.7"
+version = "0.12.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = """
 Common types and definitions for cubeb rust and C bindings. Not intended for direct use.
@@ -26,7 +26,7 @@ repository = "https://github.com/mozilla/cubeb-rs"
 version = "1.2.0"
 
 [dependencies.cubeb-sys]
-version = "0.10.7"
+version = "0.12.0"
 
 [features]
 gecko-in-tree = ["cubeb-sys/gecko-in-tree"]

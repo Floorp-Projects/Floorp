@@ -6,8 +6,8 @@
 use backend::cork_state::CorkState;
 use backend::*;
 use cubeb_backend::{
-    ffi, log_enabled, ChannelLayout, DeviceId, DeviceRef, Error, Result, SampleFormat, StreamOps,
-    StreamParamsRef, StreamPrefs,
+    ffi, log_enabled, ChannelLayout, DeviceId, DeviceRef, Error, InputProcessingParams, Result,
+    SampleFormat, StreamOps, StreamParamsRef, StreamPrefs,
 };
 use pulse::{self, CVolumeExt, ChannelMapExt, SampleSpecExt, StreamLatency, USecExt};
 use pulse_ffi::*;
@@ -837,6 +837,14 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
             cubeb_log!("Error: PulseAudio context too old");
             Err(not_supported())
         }
+    }
+
+    fn set_input_mute(&mut self, _mute: bool) -> Result<()> {
+        Err(not_supported())
+    }
+
+    fn set_input_processing_params(&mut self, _params: InputProcessingParams) -> Result<()> {
+        Err(not_supported())
     }
 
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()> {

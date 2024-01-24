@@ -11,7 +11,7 @@
 
 [package]
 name = "cubeb-pulse"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = "Cubeb backed for PulseAudio written in Rust"
 readme = "README.md"
@@ -24,7 +24,7 @@ crate-type = [
 ]
 
 [dependencies]
-cubeb-backend = "0.10.3"
+cubeb-backend = "0.12.0"
 ringbuf = "0.2"
 semver = "1.0"
 

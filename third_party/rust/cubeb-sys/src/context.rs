@@ -6,7 +6,7 @@
 use callbacks::{cubeb_data_callback, cubeb_state_callback};
 use device::cubeb_devid;
 use std::os::raw::{c_char, c_int, c_uint, c_void};
-use stream::{cubeb_stream, cubeb_stream_params};
+use stream::{cubeb_input_processing_params, cubeb_stream, cubeb_stream_params};
 
 pub enum cubeb {}
 
@@ -24,6 +24,10 @@ extern "C" {
         latency_frames: *mut c_uint,
     ) -> c_int;
     pub fn cubeb_get_preferred_sample_rate(context: *mut cubeb, rate: *mut c_uint) -> c_int;
+    pub fn cubeb_get_supported_input_processing_params(
+        context: *mut cubeb,
+        params: *mut cubeb_input_processing_params,
+    ) -> c_int;
     pub fn cubeb_destroy(context: *mut cubeb);
     pub fn cubeb_stream_init(
         context: *mut cubeb,

@@ -3,7 +3,10 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use cubeb_core::{ffi, DeviceCollectionRef, DeviceRef, DeviceType, StreamParams, StreamParamsRef};
+use cubeb_core::{
+    ffi, DeviceCollectionRef, DeviceRef, DeviceType, InputProcessingParams, StreamParams,
+    StreamParamsRef,
+};
 use std::ffi::CStr;
 use std::mem;
 use std::os::raw::{c_char, c_int, c_void};
@@ -38,6 +41,8 @@ macro_rules! capi_new(
             get_max_channel_count: Some($crate::capi::capi_get_max_channel_count::<$ctx>),
             get_min_latency: Some($crate::capi::capi_get_min_latency::<$ctx>),
             get_preferred_sample_rate: Some($crate::capi::capi_get_preferred_sample_rate::<$ctx>),
+            get_supported_input_processing_params:
+                Some($crate::capi::capi_get_supported_input_processing_params::<$ctx>),
             enumerate_devices: Some($crate::capi::capi_enumerate_devices::<$ctx>),
             device_collection_destroy: Some($crate::capi::capi_device_collection_destroy::<$ctx>),
             destroy: Some($crate::capi::capi_destroy::<$ctx>),
@@ -51,6 +56,9 @@ macro_rules! capi_new(
             stream_set_volume: Some($crate::capi::capi_stream_set_volume::<$stm>),
             stream_set_name: Some($crate::capi::capi_stream_set_name::<$stm>),
             stream_get_current_device: Some($crate::capi::capi_stream_get_current_device::<$stm>),
+            stream_set_input_mute: Some($crate::capi::capi_stream_set_input_mute::<$stm>),
+            stream_set_input_processing_params:
+                Some($crate::capi::capi_stream_set_input_processing_params::<$stm>),
             stream_device_destroy: Some($crate::capi::capi_stream_device_destroy::<$stm>),
             stream_register_device_changed_callback:
                 Some($crate::capi::capi_stream_register_device_changed_callback::<$stm>),
@@ -134,6 +142,21 @@ pub unsafe extern "C" fn capi_get_preferred_sample_rate<CTX: ContextOps>(
     let ctx = &mut *(c as *mut CTX);
 
     *rate = _try!(ctx.preferred_sample_rate());
+    ffi::CUBEB_OK
+}
+
+/// # Safety
+///
+/// Entry point from C code.
+///
+/// This function is unsafe because it dereferences the given `c` and `params` pointers.
+/// The caller should ensure those pointers are valid.
+pub unsafe extern "C" fn capi_get_supported_input_processing_params<CTX: ContextOps>(
+    c: *mut ffi::cubeb,
+    params: *mut ffi::cubeb_input_processing_params,
+) -> c_int {
+    let ctx = &mut *(c as *mut CTX);
+    *params = _try!(ctx.supported_input_processing_params()).bits();
     ffi::CUBEB_OK
 }
 
@@ -357,6 +380,36 @@ pub unsafe extern "C" fn capi_stream_get_current_device<STM: StreamOps>(
     let stm = &mut *(s as *mut STM);
 
     *device = _try!(stm.current_device()).as_ptr();
+    ffi::CUBEB_OK
+}
+
+/// # Safety
+///
+/// Entry point from C code.
+///
+/// This function is unsafe because it dereferences the given `s` pointer.
+/// The caller should ensure those pointers are valid.
+pub unsafe extern "C" fn capi_stream_set_input_mute<STM: StreamOps>(
+    s: *mut ffi::cubeb_stream,
+    mute: c_int,
+) -> c_int {
+    let stm = &mut *(s as *mut STM);
+    _try!(stm.set_input_mute(mute != 0));
+    ffi::CUBEB_OK
+}
+
+/// # Safety
+///
+/// Entry point from C code.
+///
+/// This function is unsafe because it dereferences the given `s` pointer.
+/// The caller should ensure those pointers are valid.
+pub unsafe extern "C" fn capi_stream_set_input_processing_params<STM: StreamOps>(
+    s: *mut ffi::cubeb_stream,
+    params: ffi::cubeb_input_processing_params,
+) -> c_int {
+    let stm = &mut *(s as *mut STM);
+    _try!(stm.set_input_processing_params(InputProcessingParams::from_bits_truncate(params)));
     ffi::CUBEB_OK
 }
 

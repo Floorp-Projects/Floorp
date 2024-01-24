@@ -4,8 +4,8 @@
 // accompanying file LICENSE for details.
 
 use cubeb_core::{
-    Context, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Result, Stream, StreamParams,
-    StreamParamsRef,
+    Context, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, InputProcessingParams, Result,
+    Stream, StreamParams, StreamParamsRef,
 };
 use ffi;
 use std::ffi::CStr;
@@ -17,6 +17,7 @@ pub trait ContextOps {
     fn max_channel_count(&mut self) -> Result<u32>;
     fn min_latency(&mut self, params: StreamParams) -> Result<u32>;
     fn preferred_sample_rate(&mut self) -> Result<u32>;
+    fn supported_input_processing_params(&mut self) -> Result<InputProcessingParams>;
     fn enumerate_devices(
         &mut self,
         devtype: DeviceType,
@@ -53,6 +54,8 @@ pub trait StreamOps {
     fn set_volume(&mut self, volume: f32) -> Result<()>;
     fn set_name(&mut self, name: &CStr) -> Result<()>;
     fn current_device(&mut self) -> Result<&DeviceRef>;
+    fn set_input_mute(&mut self, mute: bool) -> Result<()>;
+    fn set_input_processing_params(&mut self, params: InputProcessingParams) -> Result<()>;
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()>;
     fn register_device_changed_callback(
         &mut self,

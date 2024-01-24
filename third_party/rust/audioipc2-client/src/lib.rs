@@ -18,8 +18,8 @@ use audioipc::PlatformHandleType;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
 
-thread_local!(static IN_CALLBACK: std::cell::RefCell<bool> = std::cell::RefCell::new(false));
-thread_local!(static AUDIOIPC_INIT_PARAMS: std::cell::RefCell<Option<AudioIpcInitParams>> = std::cell::RefCell::new(None));
+thread_local!(static IN_CALLBACK: std::cell::RefCell<bool> = const { std::cell::RefCell::new(false) });
+thread_local!(static AUDIOIPC_INIT_PARAMS: std::cell::RefCell<Option<AudioIpcInitParams>> = const { std::cell::RefCell::new(None) });
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]

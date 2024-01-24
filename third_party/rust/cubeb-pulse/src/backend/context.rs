@@ -5,8 +5,8 @@
 
 use backend::*;
 use cubeb_backend::{
-    ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error, Ops,
-    Result, Stream, StreamParams, StreamParamsRef,
+    ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error,
+    InputProcessingParams, Ops, Result, Stream, StreamParams, StreamParamsRef,
 };
 use pulse::{self, ProplistExt};
 use pulse_ffi::*;
@@ -296,6 +296,10 @@ impl ContextOps for PulseContext {
                 Err(Error::error())
             }
         }
+    }
+
+    fn supported_input_processing_params(&mut self) -> Result<InputProcessingParams> {
+        Ok(InputProcessingParams::NONE)
     }
 
     fn enumerate_devices(
