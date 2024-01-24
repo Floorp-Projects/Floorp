@@ -9,12 +9,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  RemoteSettingsConfig: "resource://gre/modules/RustRemoteSettings.sys.mjs",
   SuggestIngestionConstraints: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestionProvider: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestionQuery: "resource://gre/modules/RustSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -167,7 +169,12 @@ export class SuggestBackendRust extends BaseFeature {
     try {
       this.#store = lazy.SuggestStore.init(
         path,
-        SuggestBackendRust._test_remoteSettingsConfig
+        SuggestBackendRust._test_remoteSettingsConfig ??
+          new lazy.RemoteSettingsConfig(
+            lazy.Utils.SERVER_URL,
+            lazy.Utils.actualBucketName("main"),
+            "quicksuggest"
+          )
       );
     } catch (error) {
       this.logger.error("Error initializing SuggestStore:");
