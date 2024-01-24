@@ -15,6 +15,13 @@ add_setup(async function () {
   });
 });
 
+async function promiseTabListsUpdated({ tabLists }) {
+  for (const tabList of tabLists) {
+    await tabList.updateComplete;
+  }
+  await TestUtils.waitForTick();
+}
+
 add_task(async function test_unconfigured_initial_state() {
   const sandbox = setupMocks({
     state: UIState.STATUS_NOT_CONFIGURED,
@@ -674,18 +681,15 @@ add_task(async function search_synced_tabs_recent_browsing() {
     );
     EventUtils.sendString("Mozilla", content);
     await TestUtils.waitForCondition(
-      () =>
-        slot.fullyUpdated &&
-        slot.tabLists.length === 1 &&
-        Promise.all(
-          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
-        ),
+      () => slot.fullyUpdated && slot.tabLists.length === 1,
       "Synced Tabs component is done updating."
     );
+    await promiseTabListsUpdated(slot);
+    info("Scroll first card into view.");
     slot.tabLists[0].scrollIntoView();
     await TestUtils.waitForCondition(
-      () => slot.tabLists[0]?.rowEls.length === 5,
-      "Not all search results are shown yet."
+      () => slot.tabLists[0].rowEls.length === 5,
+      "The first card is populated."
     );
     EventUtils.synthesizeMouseAtCenter(
       recentBrowsing.searchTextbox,
@@ -694,21 +698,17 @@ add_task(async function search_synced_tabs_recent_browsing() {
     );
     EventUtils.synthesizeKey("KEY_Backspace", { repeat: 5 });
     await TestUtils.waitForCondition(
-      () =>
-        slot.fullyUpdated &&
-        slot.tabLists.length === 2 &&
-        Promise.all(
-          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
-        ),
+      () => slot.fullyUpdated && slot.tabLists.length === 2,
       "Synced Tabs component is done updating."
     );
-    info("Scroll synced tabs card into view.");
+    await promiseTabListsUpdated(slot);
+    info("Scroll second card into view.");
     slot.tabLists[1].scrollIntoView();
     await TestUtils.waitForCondition(
       () =>
         slot.tabLists[0].rowEls.length === 5 &&
         slot.tabLists[1].rowEls.length === 1,
-      "Not all search results are shown yet."
+      "Both cards are populated."
     );
     info("Clear the search query.");
     EventUtils.synthesizeKey("KEY_Backspace", { repeat: 2 });
@@ -721,14 +721,10 @@ add_task(async function search_synced_tabs_recent_browsing() {
     );
     EventUtils.sendString("Mozilla", content);
     await TestUtils.waitForCondition(
-      () =>
-        slot.fullyUpdated &&
-        slot.tabLists.length === 2 &&
-        Promise.all(
-          Array.from(slot.tabLists).map(tabList => tabList.updateComplete)
-        ),
+      () => slot.fullyUpdated && slot.tabLists.length === 2,
       "Synced Tabs component is done updating."
     );
+    await promiseTabListsUpdated(slot);
     await TestUtils.waitForCondition(
       () => slot.tabLists[0].rowEls.length === 5,
       "Not all search results are shown yet."
