@@ -14,6 +14,7 @@ const REMOTE_SETTINGS_RECORDS = [
       preModifiers: ["best"],
       postModifiers: ["delivery"],
       locationSigns: [{ keyword: "in", needLocation: true }],
+      yelpModifiers: [],
     },
   },
 ];
