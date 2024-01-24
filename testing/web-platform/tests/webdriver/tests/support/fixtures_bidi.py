@@ -11,6 +11,7 @@ from webdriver.bidi.error import (
     InvalidArgumentException,
     NoSuchFrameException,
     NoSuchScriptException,
+    NoSuchUserContextException,
 )
 from webdriver.bidi.modules.script import ContextTarget
 from webdriver.error import TimeoutException
@@ -388,3 +389,28 @@ def load_static_test_page(bidi_session, url, top_context):
         )
 
     return load_static_test_page
+
+
+@pytest_asyncio.fixture
+async def create_user_context(bidi_session):
+    """Create a user context and ensure it is removed at the end of the test."""
+
+    user_contexts = []
+
+    async def create_user_context():
+        nonlocal user_contexts
+        user_context = await bidi_session.browser.create_user_context()
+        user_contexts.append(user_context)
+
+        return user_context
+
+    yield create_user_context
+
+    # Remove all created user contexts at the end of the test
+    for user_context in user_contexts:
+        try:
+            await bidi_session.browser.remove_user_context(user_context=user_context)
+        except NoSuchUserContextException:
+            # Ignore exceptions in case a specific user context was already
+            # removed during the test.
+            pass
