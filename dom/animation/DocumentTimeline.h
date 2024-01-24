@@ -71,8 +71,7 @@ class DocumentTimeline final : public AnimationTimeline,
 
   Document* GetDocument() const override { return mDocument; }
 
-  bool MaybeUpdateLastRefreshDriverTime(TimeStamp);
-  void MaybeTick(TimeStamp);
+  void UpdateLastRefreshDriverTime(TimeStamp aKnownTime = {});
 
   bool IsMonotonicallyIncreasing() const override { return true; }
 
