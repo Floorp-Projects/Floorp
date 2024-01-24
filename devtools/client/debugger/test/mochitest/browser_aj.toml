@@ -272,3 +272,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_dbg-integration-reloading-uncompressed-sourcemaps.js"]
 
 ["browser_dbg-javascript-tracer.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
