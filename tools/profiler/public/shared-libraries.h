@@ -7,10 +7,6 @@
 #ifndef SHARED_LIBRARIES_H_
 #define SHARED_LIBRARIES_H_
 
-#ifndef MOZ_GECKO_PROFILER
-#  error This header does not have a useful implementation on your platform!
-#endif
-
 #include "nsNativeCharsetUtils.h"
 #include "nsString.h"
 #include <nsID.h>
@@ -117,12 +113,23 @@ static bool CompareAddresses(const SharedLibrary& first,
 
 class SharedLibraryInfo {
  public:
+#ifdef MOZ_GECKO_PROFILER
   static SharedLibraryInfo GetInfoForSelf();
-#ifdef XP_WIN
+#  ifdef XP_WIN
   static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath);
-#endif
+#  endif
 
   static void Initialize();
+#else
+  static SharedLibraryInfo GetInfoForSelf() { return SharedLibraryInfo(); }
+#  ifdef XP_WIN
+  static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath) {
+    return SharedLibraryInfo();
+  }
+#  endif
+
+  static void Initialize() {}
+#endif
 
   void AddSharedLibrary(SharedLibrary entry) { mEntries.push_back(entry); }
 

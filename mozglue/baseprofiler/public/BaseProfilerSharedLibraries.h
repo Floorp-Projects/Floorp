@@ -9,10 +9,6 @@
 
 #include "BaseProfiler.h"
 
-#ifndef MOZ_GECKO_PROFILER
-#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
-#endif
-
 #include <algorithm>
 #include <stdint.h>
 #include <stdlib.h>
@@ -124,12 +120,23 @@ static bool CompareAddresses(const SharedLibrary& first,
 
 class SharedLibraryInfo {
  public:
+#ifdef MOZ_GECKO_PROFILER
   static SharedLibraryInfo GetInfoForSelf();
-#ifdef XP_WIN
+#  ifdef XP_WIN
   static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath);
-#endif
+#  endif
 
   static void Initialize();
+#else
+  static SharedLibraryInfo GetInfoForSelf() { return SharedLibraryInfo(); }
+#  ifdef XP_WIN
+  static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath) {
+    return SharedLibraryInfo();
+  }
+#  endif
+
+  static void Initialize() {}
+#endif
 
   SharedLibraryInfo() {}
 
