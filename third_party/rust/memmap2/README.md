@@ -17,7 +17,7 @@ This is a **fork** of the [memmap-rs](https://github.com/danburkert/memmap-rs) c
 - [x] read-only memory maps
 - [x] stack support (`MAP_STACK` on unix)
 - [x] executable memory maps
-- [ ] huge page support
+- [x] huge page support (linux only)
 
 A list of supported/tested targets can be found in [Actions](https://github.com/RazrFalcon/memmap2-rs/actions).
 
