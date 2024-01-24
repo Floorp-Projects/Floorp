@@ -98,7 +98,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             val packageInfo =
                 requireContext().packageManager.getPackageInfoCompat(requireContext().packageName, 0)
             val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-            val maybeFenixGitHash = if (BuildConfig.GIT_HASH.isNotBlank()) ", ${BuildConfig.GIT_HASH}" else ""
+            val maybeFenixVcsHash = if (BuildConfig.VCS_HASH.isNotBlank()) ", ${BuildConfig.VCS_HASH}" else ""
             val maybeGecko = getString(R.string.gecko_view_abbreviation)
             val geckoVersion =
                 GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
@@ -109,7 +109,7 @@ class AboutFragment : Fragment(), AboutPageListener {
                 "%s (Build #%s)%s\n%s: %s\n%s: %s",
                 packageInfo.versionName,
                 versionCode,
-                maybeFenixGitHash,
+                maybeFenixVcsHash,
                 maybeGecko,
                 geckoVersion,
                 appServicesAbbreviation,

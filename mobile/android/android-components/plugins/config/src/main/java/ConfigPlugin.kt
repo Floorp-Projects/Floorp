@@ -162,21 +162,28 @@ object Config {
     }
 
     /**
-     * Returns the git hash of the currently checked out revision. If there are uncommitted changes,
+     * Returns the git or hg hash of the currently checked out revision. If there are uncommitted changes,
      * a "+" will be appended to the hash, e.g. "c8ba05ad0+".
      */
     @JvmStatic
-    fun getGitHash(): String {
-        val revisionCmd = arrayOf("git", "rev-parse", "--short", "HEAD")
-        val revision = execReadStandardOutOrThrow(revisionCmd)
-
+    fun getVcsHash(): String {
+        val gitRevision: String
+        try {
+            val revisionCmd = arrayOf("git", "rev-parse", "--short", "HEAD")
+            gitRevision = execReadStandardOutOrThrow(revisionCmd)
+        } catch (e: IllegalStateException) {
+            // hg id already appends "+" if the working directory isn't clean
+            val revisionCmd = arrayOf("hg", "id", "--id")
+            val hgRevision = execReadStandardOutOrThrow(revisionCmd)
+            return "hg-$hgRevision"
+        }
         // Append "+" if there are uncommitted changes in the working directory.
         val statusCmd = arrayOf("git", "status", "--porcelain=v2")
         val status = execReadStandardOutOrThrow(statusCmd)
         val hasUnstagedChanges = status.isNotBlank()
         val statusSuffix = if (hasUnstagedChanges) "+" else ""
 
-        return "$revision$statusSuffix"
+        return "git-$gitRevision$statusSuffix"
     }
 
     /**

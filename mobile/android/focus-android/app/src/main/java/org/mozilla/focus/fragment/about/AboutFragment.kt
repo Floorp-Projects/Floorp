@@ -111,14 +111,14 @@ class AboutFragment : BaseSettingsLikeFragment() {
         val servicesIndicator = mozilla.components.Build.applicationServicesVersion
         val packageInfo = requireContext().packageManager.getPackageInfoCompat(requireContext().packageName, 0)
         val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-        val gitHash = if (BuildConfig.GIT_HASH.isNotBlank()) ", ${BuildConfig.GIT_HASH}" else ""
+        val vcsHash = if (BuildConfig.VCS_HASH.isNotBlank()) ", ${BuildConfig.VCS_HASH}" else ""
 
         @Suppress("ImplicitDefaultLocale") // We want LTR in all cases as the version is not translatable.
         return String.format(
             "%s (Build #%s)%s\n%s: %s",
             packageInfo.versionName,
             versionCode + engineIndicator,
-            gitHash,
+            vcsHash,
             servicesAbbreviation,
             servicesIndicator,
         )
