@@ -34,7 +34,7 @@ import pytest
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
                 {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
-                {"group": "manifestA", "status": "ERROR", "duration": 50, "action": "group_result", "line": 9}
+                {"group": "manifestA", "status": "ERROR", "duration": 20, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
             """.strip(),
             id="basic",
@@ -47,7 +47,7 @@ import pytest
             ],
             """
                 {"groups": ["manifest"], "action": "test_groups", "line": 0}
-                {"group": "manifest", "status": null, "duration": null, "action": "group_result", "line": 2}
+                {"group": "manifest", "status": null, "duration": 0, "action": "group_result", "line": 2}
             """.strip(),
             id="missing_test_end",
         ),
@@ -87,7 +87,7 @@ import pytest
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
                 {"test": "test_bar", "subtest": null, "group": "manifestA", "status": "CRASH", "expected": "OK", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 4}
-                {"group": "manifestA", "status": "ERROR", "duration": 50, "action": "group_result", "line": 9}
+                {"group": "manifestA", "status": "ERROR", "duration": 20, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
             """.strip(),
             id="crash_and_group_status",
@@ -114,7 +114,7 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"group": "manifestA", "status": "OK", "duration": 59, "action": "group_result", "line": 10}
+                {"group": "manifestA", "status": "OK", "duration": 29, "action": "group_result", "line": 10}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 10}
             """.strip(),
             id="fail_expected_fail",
@@ -146,7 +146,7 @@ import pytest
                 {"test": "test_baz", "subtest": "Test timed out", "group": "manifestA", "status": "FAIL", "expected": "PASS", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
                 {"test": "test_baz", "subtest": "", "group": "manifestA", "status": "TIMEOUT", "expected": "PASS", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 9}
                 {"test": "manifestA", "group": "manifestA", "signature": "signature", "stackwalk_stderr": null, "stackwalk_stdout": null, "action": "crash", "line": 10}
-                {"group": "manifestA", "status": "ERROR", "duration": 79, "action": "group_result", "line": 12}
+                {"group": "manifestA", "status": "ERROR", "duration": 49, "action": "group_result", "line": 12}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 12}
             """.strip(),
             id="timeout_and_crash",
@@ -172,7 +172,7 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"group": "manifestA", "status": "OK", "duration": 50, "action": "group_result", "line": 9}
+                {"group": "manifestA", "status": "OK", "duration": 20, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
             """.strip(),
             id="crash_expected_crash",
@@ -200,7 +200,7 @@ import pytest
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
                 {"test": "manifestA", "group": "manifestA", "signature": "", "stackwalk_stderr": null, "stackwalk_stdout": null, "action": "crash", "line": 9}
-                {"group": "manifestA", "status": "ERROR", "duration": 50, "action": "group_result", "line": 10}
+                {"group": "manifestA", "status": "ERROR", "duration": 20, "action": "group_result", "line": 10}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 10}
             """.strip(),
             id="assertion_crash_on_shutdown",

@@ -16,6 +16,7 @@ class ErrorSummaryFormatter(BaseFormatter):
         self.groups = defaultdict(
             lambda: {
                 "status": None,
+                "test_times": [],
                 "start": None,
                 "end": None,
             }
@@ -88,10 +89,7 @@ class ErrorSummaryFormatter(BaseFormatter):
     def suite_end(self, data):
         output = []
         for group, info in self.groups.items():
-            if info["start"] is None or info["end"] is None:
-                duration = None
-            else:
-                duration = info["end"] - info["start"]
+            duration = sum(info["test_times"])
 
             output.append(
                 self._output(
@@ -107,12 +105,16 @@ class ErrorSummaryFormatter(BaseFormatter):
         return "".join(output)
 
     def test_start(self, item):
-        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        group = item.get(
+            "group", self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        )
         if group and self.groups[group]["start"] is None:
             self.groups[group]["start"] = item["time"]
 
     def test_status(self, item):
-        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        group = item.get(
+            "group", self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        )
         if group:
             self.groups[group]["status"] = self._get_group_result(group, item)
 
@@ -127,10 +129,16 @@ class ErrorSummaryFormatter(BaseFormatter):
         )
 
     def test_end(self, item):
-        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        group = item.get(
+            "group", self.test_to_group.get(self._clean_test_name(item["test"]), None)
+        )
         if group:
             self.groups[group]["status"] = self._get_group_result(group, item)
-            self.groups[group]["end"] = item["time"]
+            if self.groups[group]["start"]:
+                self.groups[group]["test_times"].append(
+                    item["time"] - self.groups[group]["start"]
+                )
+                self.groups[group]["start"] = None
 
         if not self.dump_passing_tests and "expected" not in item:
             return
