@@ -6,8 +6,6 @@ use std::os::unix::io::{FromRawFd, RawFd};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{io, ptr};
 
-use crate::advice::Advice;
-
 #[cfg(any(
     all(target_os = "linux", not(target_arch = "mips")),
     target_os = "freebsd",
@@ -27,6 +25,24 @@ const MAP_POPULATE: libc::c_int = libc::MAP_POPULATE;
 
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
 const MAP_POPULATE: libc::c_int = 0;
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+const MAP_HUGETLB: libc::c_int = libc::MAP_HUGETLB;
+
+#[cfg(target_os = "linux")]
+const MAP_HUGE_MASK: libc::c_int = libc::MAP_HUGE_MASK;
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+const MAP_HUGE_SHIFT: libc::c_int = libc::MAP_HUGE_SHIFT;
+
+#[cfg(not(any(target_os = "linux", target_os = "android")))]
+const MAP_HUGETLB: libc::c_int = 0;
+
+#[cfg(not(target_os = "linux"))]
+const MAP_HUGE_MASK: libc::c_int = 0;
+
+#[cfg(not(any(target_os = "linux", target_os = "android")))]
+const MAP_HUGE_SHIFT: libc::c_int = 0;
 
 #[cfg(any(
     target_os = "android",
@@ -263,15 +279,24 @@ impl MmapInner {
     }
 
     /// Open an anonymous memory map.
-    pub fn map_anon(len: usize, stack: bool, populate: bool) -> io::Result<MmapInner> {
+    pub fn map_anon(
+        len: usize,
+        stack: bool,
+        populate: bool,
+        huge: Option<u8>,
+    ) -> io::Result<MmapInner> {
         let stack = if stack { MAP_STACK } else { 0 };
         let populate = if populate { MAP_POPULATE } else { 0 };
+        let hugetlb = if huge.is_some() { MAP_HUGETLB } else { 0 };
+        let offset = huge
+            .map(|mask| ((mask as u64) & (MAP_HUGE_MASK as u64)) << MAP_HUGE_SHIFT)
+            .unwrap_or(0);
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,
-            libc::MAP_PRIVATE | libc::MAP_ANON | stack | populate,
+            libc::MAP_PRIVATE | libc::MAP_ANON | stack | populate | hugetlb,
             -1,
-            0,
+            offset,
         )
     }
 
@@ -342,12 +367,12 @@ impl MmapInner {
         self.len
     }
 
-    pub fn advise(&self, advice: Advice, offset: usize, len: usize) -> io::Result<()> {
+    pub fn advise(&self, advice: libc::c_int, offset: usize, len: usize) -> io::Result<()> {
         let alignment = (self.ptr as usize + offset) % page_size();
         let offset = offset as isize - alignment as isize;
         let len = len + alignment;
         unsafe {
-            if libc::madvise(self.ptr.offset(offset), len, advice.0) != 0 {
+            if libc::madvise(self.ptr.offset(offset), len, advice) != 0 {
                 Err(io::Error::last_os_error())
             } else {
                 Ok(())
