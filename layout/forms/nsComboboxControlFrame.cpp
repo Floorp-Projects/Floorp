@@ -80,11 +80,6 @@ nsComboboxControlFrame* NS_NewComboboxControlFrame(PresShell* aPresShell,
                                                    ComputedStyle* aStyle) {
   nsComboboxControlFrame* it = new (aPresShell)
       nsComboboxControlFrame(aStyle, aPresShell->GetPresContext());
-
-  if (it) {
-    it->AddStateBits(NS_BLOCK_STATIC_BFC);
-  }
-
   return it;
 }
 
