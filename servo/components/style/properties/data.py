@@ -442,9 +442,6 @@ class Longhand(Property):
         self.animation_value_type = animation_value_type
 
         self.animatable = animation_value_type != "none"
-        self.transitionable = (
-            animation_value_type != "none" and animation_value_type != "discrete"
-        )
         self.is_animatable_with_computed_value = (
             animation_value_type == "ComputedValue"
             or animation_value_type == "discrete"
@@ -692,16 +689,7 @@ class Shorthand(Property):
                 return True
         return False
 
-    def get_transitionable(self):
-        transitionable = False
-        for sub in self.sub_properties:
-            if sub.transitionable:
-                transitionable = True
-                break
-        return transitionable
-
     animatable = property(get_animatable)
-    transitionable = property(get_transitionable)
 
     @staticmethod
     def type():
@@ -719,7 +707,6 @@ class Alias(object):
         self.servo_2013_pref = original.servo_2013_pref
         self.servo_2020_pref = original.servo_2020_pref
         self.gecko_pref = gecko_pref
-        self.transitionable = original.transitionable
         self.rule_types_allowed = original.rule_types_allowed
         self.flags = original.flags
 

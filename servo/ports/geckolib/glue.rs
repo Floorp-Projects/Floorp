@@ -1203,6 +1203,11 @@ pub struct ShouldTransitionResult {
     old_transition_value_matches: bool,
 }
 
+#[inline]
+fn is_transitionable(prop: PropertyDeclarationId) -> bool {
+    prop.is_animatable() && !prop.is_discrete_animatable()
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     old: &ComputedValues,
@@ -1216,9 +1221,7 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
         return Default::default();
     };
     let prop = prop.as_borrowed();
-    if prop.is_discrete_animatable() &&
-        prop != PropertyDeclarationId::Longhand(LonghandId::Visibility)
-    {
+    if !is_transitionable(prop) {
         return Default::default();
     }
 
@@ -1261,9 +1264,7 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
         return false;
     };
     let prop = prop.as_borrowed();
-    if prop.is_discrete_animatable() &&
-        prop != PropertyDeclarationId::Longhand(LonghandId::Visibility)
-    {
+    if !is_transitionable(prop) {
         return false;
     }
     let Some(value) = AnimationValue::from_computed_values(prop, style) else {
@@ -1421,11 +1422,6 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsAnimatable(prop: &structs::AnimatedPropertyID) -> bool {
     PropertyId::from_gecko_animated_property_id(prop).map_or(false, |p| p.is_animatable())
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_Property_IsTransitionable(prop: &structs::AnimatedPropertyID) -> bool {
-    PropertyId::from_gecko_animated_property_id(prop).map_or(false, |p| p.is_transitionable())
 }
 
 #[no_mangle]
