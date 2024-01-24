@@ -3367,21 +3367,14 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 name = "memmap2"
 version = "0.5.999"
 dependencies = [
- "memmap2 0.8.999",
+ "memmap2 0.8.0",
 ]
 
 [[package]]
 name = "memmap2"
-version = "0.8.999"
-dependencies = [
- "memmap2 0.9.3",
-]
-
-[[package]]
-name = "memmap2"
-version = "0.9.3"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45fd3a57831bf88bc63f8cebc0cf956116276e97fef3966103e96416209f7c92"
+checksum = "43a5a03cefb0d953ec0be133036f14e109412fa594edc2f77227249db66cc3ed"
 dependencies = [
  "libc",
 ]
@@ -3495,7 +3488,7 @@ dependencies = [
  "goblin 0.7.1",
  "libc",
  "mach2",
- "memmap2 0.8.999",
+ "memmap2 0.8.0",
  "memoffset 0.9.0",
  "minidump-common",
  "nix 0.27.1",
@@ -4454,7 +4447,7 @@ dependencies = [
 name = "profiler_helper"
 version = "0.1.0"
 dependencies = [
- "memmap2 0.9.3",
+ "memmap2 0.5.999",
  "object",
  "rustc-demangle",
  "thin-vec",
