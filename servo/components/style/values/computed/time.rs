@@ -9,7 +9,7 @@ use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
 /// A computed `<time>` value.
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, PartialOrd, ToResolvedValue)]
+#[derive(Animate, Clone, Copy, Debug, MallocSizeOf, PartialEq, PartialOrd, ToResolvedValue)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(C)]
 pub struct Time {
