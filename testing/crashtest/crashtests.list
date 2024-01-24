@@ -19,6 +19,7 @@ include ../../dom/fs/test/crashtests/crashtests.list
 include ../../dom/html/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/jsurl/crashtests/crashtests.list
+include ../../dom/media/mediasession/test/crashtests/crashtests.list
 include ../../dom/media/mediasource/test/crashtests/crashtests.list
 include ../../dom/media/test/crashtests/crashtests.list
 include ../../dom/media/webvtt/test/crashtests/crashtests.list
