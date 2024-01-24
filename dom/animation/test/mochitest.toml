@@ -61,8 +61,6 @@ skip-if = ["os == 'win' && bits == 64"] # Bug 1363957
 
 ["mozilla/test_hide_and_show.html"]
 
-["mozilla/test_mainthread_synchronization_pref.html"]
-
 ["mozilla/test_moz_prefixed_properties.html"]
 
 ["mozilla/test_restyles.html"]

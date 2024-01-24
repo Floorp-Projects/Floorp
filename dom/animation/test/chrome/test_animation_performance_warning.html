@@ -44,7 +44,6 @@ SpecialPowers.pushPrefEnv({ "set": [
                             // regardless of platform DPIs.
                             ["layout.css.devPixelsPerPx", 1],
                             ["layout.animation.prerender.partial", false],
-                            ["dom.animations.mainthread-synchronization-with-geometric-animations", true],
                           ] },
                           start);
 
@@ -234,8 +233,7 @@ function testKeyframesWithGeometricProperties() {
           },
           {
             property: 'transform',
-            runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            runningOnCompositor: true,
           }
         ]
       }
@@ -259,8 +257,7 @@ function testKeyframesWithGeometricProperties() {
           },
           {
             property: 'translate',
-            runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            runningOnCompositor: true,
           }
         ]
       }
@@ -298,13 +295,11 @@ function testKeyframesWithGeometricProperties() {
           },
           {
             property: 'transform',
-            runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            runningOnCompositor: true,
           },
           {
             property: 'translate',
-            runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            runningOnCompositor: true,
           }
         ]
       }
@@ -381,8 +376,7 @@ function testSetOfGeometricProperties() {
           },
           {
             property: 'transform',
-            runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            runningOnCompositor: true,
           }
         ]);
     }, `${property} is treated as a geometric property`);
@@ -744,8 +738,7 @@ function testMultipleAnimationsWithGeometricKeyframes() {
             withGeometric: [
               {
                 property: 'transform',
-                runningOnCompositor: false,
-                warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+                runningOnCompositor: true,
               }
             ]
           }
@@ -815,8 +808,7 @@ function testMultipleAnimationsWithGeometricKeyframes() {
               },
               {
                 property: 'transform',
-                runningOnCompositor: false,
-                warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+                runningOnCompositor: true,
               }
             ]
           }
@@ -863,8 +855,7 @@ function testMultipleAnimationsWithGeometricKeyframes() {
               },
               {
                 property: 'translate',
-                runningOnCompositor: false,
-                warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+                runningOnCompositor: true,
               }
             ]
           }
@@ -939,8 +930,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
           expected: [
             {
               property: 'transform',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+              runningOnCompositor: true,
             }
           ]
         },
@@ -956,8 +946,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
           expected: [
             {
               property: 'translate',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+              runningOnCompositor: true,
             }
           ]
         },
@@ -989,8 +978,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
           expected: [
             {
               property: 'transform',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+              runningOnCompositor: true,
             }
           ]
         },
@@ -1001,8 +989,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
           expected: [
             {
               property: 'translate',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+              runningOnCompositor: true,
             }
           ]
         },
@@ -1143,8 +1130,7 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
   }, 'Animations created within the same tick are synchronized'
      + ' (compositor animation created first)');
@@ -1169,15 +1155,13 @@ function testSynchronizedAnimations() {
       animA.effect.getProperties(),
       [
         { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
     assert_animation_property_state_equals(
       animB.effect.getProperties(),
       [
         { property: 'translate',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
   }, 'Animations created within the same tick are synchronized'
      + ' (compositor animation created first/second)');
@@ -1201,15 +1185,13 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       animB.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
     assert_animation_property_state_equals(
       animC.effect.getProperties(),
       [
         { property: 'translate',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
   }, 'Animations created within the same tick are synchronized'
      + ' (compositor animation created second/third)');
@@ -1277,8 +1259,7 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
         },
         { property: 'opacity',
           runningOnCompositor: true
@@ -1396,8 +1377,7 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
   }, 'Animations are synchronized based on when they are started'
      + ' and NOT their start time');
@@ -1418,7 +1398,7 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false } ]);
+          runningOnCompositor: true } ]);
     // Restart animation
     animA.pause();
     animA.play();

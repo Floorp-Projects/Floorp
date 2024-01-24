@@ -1685,13 +1685,6 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
   }
 
   MOZ_ASSERT(mAnimation);
-  // Note: If the geometric animations are using scroll-timeline, we don't need
-  // to synchronize transform animations with them.
-  const bool enableMainthreadSynchronizationWithGeometricAnimations =
-      StaticPrefs::
-          dom_animations_mainthread_synchronization_with_geometric_animations() &&
-      !mAnimation->UsingScrollTimeline();
-
   for (const AnimationProperty& property : mProperties) {
     // If there is a property for animations level that is overridden by
     // !important rules, it should not block other animations from running
@@ -1706,13 +1699,6 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
         effectSet->PropertiesForAnimationsLevel().HasProperty(
             property.mProperty)) {
       continue;
-    }
-    // Check for geometric properties
-    if (enableMainthreadSynchronizationWithGeometricAnimations &&
-        IsGeometricProperty(property.mProperty.mID)) {
-      aPerformanceWarning =
-          AnimationPerformanceWarning::Type::TransformWithGeometricProperties;
-      return true;
     }
 
     // Check for unsupported transform animations

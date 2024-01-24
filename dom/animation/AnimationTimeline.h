@@ -26,19 +26,9 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   explicit AnimationTimeline(nsIGlobalObject* aWindow,
                              RTPCallerType aRTPCallerType);
 
-  // We want to synchronize non-geometric animations that are started at the
-  // same time as geometric ones (e.g., transform animations that are started at
-  // the same time as a width animation).
-  //
-  // We only synchronize animations with animations, and transitions with
-  // transitions.
-  //
-  // TODO: Remove all this once bug 1540906 rides the trains.
   struct TickState {
-    AutoTArray<Animation*, 8> mStartedAnimations;
-    AutoTArray<Animation*, 8> mStartedTransitions;
-    bool mStartedAnyGeometricTransition = false;
-    bool mStartedAnyGeometricAnimation = false;
+    TickState() = default;
+    // Nothing here, but this might be useful in the future.
   };
 
  protected:

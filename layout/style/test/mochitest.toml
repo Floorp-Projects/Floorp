@@ -3,7 +3,6 @@ prefs = [
   "dom.animations-api.compositing.enabled=true",
   "dom.animations-api.getAnimations.enabled=true",
   "dom.animations-api.timelines.enabled=true",
-  "dom.animations.mainthread-synchronization-with-geometric-animations=true",
   "gfx.omta.background-color=true",
   "gfx.font_loader.delay=0",
   "layout.css.container-queries.enabled=true",
