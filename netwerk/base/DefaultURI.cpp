@@ -215,6 +215,9 @@ NS_IMETHODIMP DefaultURI::GetRef(nsACString& aRef) {
 }
 
 NS_IMETHODIMP DefaultURI::EqualsExceptRef(nsIURI* other, bool* _retval) {
+  if (!_retval || !other) {
+    return NS_ERROR_NULL_POINTER;
+  }
   RefPtr<DefaultURI> otherUri;
   nsresult rv = other->QueryInterface(kDefaultURICID, getter_AddRefs(otherUri));
   if (NS_FAILED(rv)) {
