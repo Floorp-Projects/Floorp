@@ -7,7 +7,7 @@ FINAL_TARGET = "_tests/xpcshell/toolkit/crashreporter/test"
 
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.toml", "unit_ipc/xpcshell.toml"]
 if CONFIG["MOZ_PHC"]:
-    XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell-phc.ini", "unit_ipc/xpcshell-phc.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell-phc.toml", "unit_ipc/xpcshell-phc.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 

@@ -7,7 +7,7 @@ no-comment-disable:
     exclude:
         - "**/application.ini"
         - "**/l10n.ini"
-        - dom/canvas/test/webgl-conf/mochitest-errata.ini
+        - dom/canvas/test/webgl-conf/mochitest-errata.toml
         - testing/mozbase/manifestparser/tests
         - testing/web-platform
         - xpcom/tests/unit/data

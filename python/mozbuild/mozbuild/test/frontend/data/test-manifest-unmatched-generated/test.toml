@@ -1,0 +1,4 @@
+[DEFAULT]
+generated-files = "does_not_exist"
+
+["test_foo"]
