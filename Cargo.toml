@@ -117,7 +117,8 @@ terminal_size = { path = "build/rust/terminal_size" }
 # Patch bitflags 1.0 to 2.0
 bitflags = { path = "build/rust/bitflags" }
 
-# Patch memmap2 0.5.x to 0.8.0
+# Patch memmap2 0.5.x and 0.8 to 0.9
+memmap2_0_5 = { package = "memmap2", path = "build/rust/memmap2-0.5" }
 memmap2 = { path = "build/rust/memmap2" }
 
 # Patch cfg-if 0.1 to 1.0
