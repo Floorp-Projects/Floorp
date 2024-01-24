@@ -8,7 +8,7 @@ multiline-skip-if:
     exclude:
         - "**/application.ini"
         - "**/l10n.ini"
-        - dom/canvas/test/webgl-conf/mochitest-errata.toml
+        - dom/canvas/test/webgl-conf/mochitest-errata.ini
         - testing/mozbase/manifestparser/tests
         - testing/web-platform
         - xpcom/tests/unit/data
