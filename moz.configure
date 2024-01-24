@@ -351,8 +351,13 @@ def llvm_tool(name):
 
 
 @template
-def plain_llvm_or_prefixed(name):
-    @depends(llvm_tool(f"llvm-{name}"), toolchain_prefix)
+def plain_llvm_or_prefixed(name, llvm_name=None):
+    # look for a tool, using the following alternatives, in that order:
+    # 1. llvm-${llvm_name}, or llvm-${name} if ${llvm_name} is not provided
+    # 2. ${toolchain_prefix}${name}
+    # 3. ${name}
+
+    @depends(llvm_tool("llvm-{}".format(llvm_name or name)), toolchain_prefix)
     def plain_llvm_or_prefixed(llvm_tool, toolchain_prefix):
         commands = [llvm_tool[0], name]
         for prefix in toolchain_prefix or ():
@@ -776,7 +781,7 @@ check_prog(
 
 check_prog(
     "INSTALL_NAME_TOOL",
-    plain_llvm_or_prefixed("install-name-tool"),
+    plain_llvm_or_prefixed("install_name_tool", llvm_name="install-name-tool"),
     when=compile_environment & target_is_darwin & js_standalone,
     paths=clang_search_path,
 )
