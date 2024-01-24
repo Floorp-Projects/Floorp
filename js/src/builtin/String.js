@@ -819,20 +819,12 @@ function StringIteratorNext() {
     return result;
   }
 
-  var charCount = 1;
-  var first = callFunction(std_String_charCodeAt, S, index);
-  if (first >= 0xd800 && first <= 0xdbff && index + 1 < size) {
-    var second = callFunction(std_String_charCodeAt, S, index + 1);
-    if (second >= 0xdc00 && second <= 0xdfff) {
-      first = (first - 0xd800) * 0x400 + (second - 0xdc00) + 0x10000;
-      charCount = 2;
-    }
-  }
+  var codePoint = callFunction(std_String_codePointAt, S, index);
+  var charCount = 1 + (codePoint > 0xffff);
 
   UnsafeSetReservedSlot(obj, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
 
-  // Communicate |first|'s possible range to the compiler.
-  result.value = callFunction(std_String_fromCodePoint, null, first & 0x1fffff);
+  result.value = callFunction(std_String_fromCodePoint, null, codePoint);
 
   return result;
 }
