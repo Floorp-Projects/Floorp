@@ -311,7 +311,7 @@ class WebPageTest(Layer):
         wpt_test_request_link = self.create_wpt_request_link(options, website)
         send_wpt_test_request = self.request_with_timeout(wpt_test_request_link)[
             "data"
-        ]["jsonUrl"].replace("www.", "")
+        ]["jsonUrl"]
         results_of_test = self.request_with_timeout(send_wpt_test_request)
         return results_of_test
 
