@@ -96,6 +96,12 @@ bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
     return false;
   }
 
+  // TODO(anba): Implement me!
+  if (buffer->isResizable()) {
+    JS_ReportErrorASCII(cx, "Resizable ArrayBuffers not yet supported");
+    return false;
+  }
+
   // Step 6.
   size_t bufferByteLength = buffer->byteLength();
 
