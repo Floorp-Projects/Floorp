@@ -357,9 +357,7 @@ add_task(async function test_filter_priority() {
    */
   class TestProvider extends UrlbarTestUtils.TestProvider {
     constructor(priority, shouldBeInvoked, namePart = "") {
-      super();
-      this._priority = priority;
-      this._name = `${priority}` + namePart;
+      super({ priority, name: `${priority}` + namePart });
       this._shouldBeInvoked = shouldBeInvoked;
     }
     async startQuery(context, add) {

@@ -107,7 +107,7 @@ add_task(async function test() {
 class TipProvider extends UrlbarProvider {
   constructor(results) {
     super();
-    this._results = results;
+    this.results = results;
   }
   get name() {
     return "TestProviderTip";
@@ -123,7 +123,7 @@ class TipProvider extends UrlbarProvider {
   }
   async startQuery(context, addCallback) {
     context.preselected = true;
-    for (const result of this._results) {
+    for (const result of this.results) {
       addCallback(this, result);
     }
   }

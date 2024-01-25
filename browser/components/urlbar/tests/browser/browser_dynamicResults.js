@@ -468,7 +468,7 @@ add_task(async function shouldNavigate() {
      * @param {Function} addCallback - Function to add a result to the query.
      */
     async startQuery(context, addCallback) {
-      for (let result of this._results) {
+      for (let result of this.results) {
         result.payload.searchString = context.searchString;
         result.payload.shouldNavigate = true;
         result.payload.url = DUMMY_PAGE;
@@ -864,7 +864,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
   }
 
   async startQuery(context, addCallback) {
-    for (let result of this._results) {
+    for (let result of this.results) {
       result.payload.searchString = context.searchString;
       addCallback(this, result);
     }

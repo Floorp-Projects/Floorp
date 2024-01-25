@@ -71,9 +71,9 @@ async function do_noExposure(showExposureResults) {
   });
 
   // Make the provider return enough search suggestions to fill the view.
-  gProvider._results = [];
+  gProvider.results = [];
   for (let i = 0; i < MAX_RESULT_COUNT; i++) {
-    gProvider._results.push(
+    gProvider.results.push(
       new UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
         UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -100,7 +100,7 @@ async function do_noExposure(showExposureResults) {
   // since the view is already full.)
   let historyUrl = "https://example.com/history";
   let bookmarkUrl = "https://example.com/bookmark";
-  gProvider._results = [
+  gProvider.results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -253,7 +253,7 @@ async function do_exposure_append({ showExposureResults, cancelSecondQuery }) {
   });
 
   // Make the provider return no results at first.
-  gProvider._results = [];
+  gProvider.results = [];
 
   // Do the first query to open the view.
   info("Doing first query");
@@ -269,7 +269,7 @@ async function do_exposure_append({ showExposureResults, cancelSecondQuery }) {
   // has been updated either way.
   let newSuggestion = "new suggestion";
   let bookmarkUrl = "https://example.com/bookmark";
-  gProvider._results = [
+  gProvider.results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -379,7 +379,7 @@ async function do_exposure_replace({ showExposureResults, cancelSecondQuery }) {
   );
 
   // Make the provider return a search suggestion.
-  gProvider._results = [
+  gProvider.results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -415,7 +415,7 @@ async function do_exposure_replace({ showExposureResults, cancelSecondQuery }) {
   // the view has been updated either way.
   let newSuggestion = "new suggestion";
   let bookmarkUrl = "https://example.com/bookmark";
-  gProvider._results = [
+  gProvider.results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -513,7 +513,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
   finishQueryPromise = null;
 
   async startQuery(context, addCallback) {
-    for (let result of this._results) {
+    for (let result of this.results) {
       addCallback(this, result);
     }
     await this.finishQueryPromise;

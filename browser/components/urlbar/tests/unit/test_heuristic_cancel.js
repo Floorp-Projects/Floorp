@@ -29,7 +29,7 @@ class SlowHeuristicProvider extends TestProvider {
     this._context = context;
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(resolve => setTimeout(resolve, 300));
-    for (let result of this._results) {
+    for (let result of this.results) {
       add(this, result);
     }
   }
@@ -45,7 +45,7 @@ class FastHeuristicProvider extends TestProvider {
 
   async startQuery(context, add) {
     this._context = context;
-    for (let result of this._results) {
+    for (let result of this.results) {
       add(this, result);
     }
     Services.obs.notifyObservers(null, "results-added");

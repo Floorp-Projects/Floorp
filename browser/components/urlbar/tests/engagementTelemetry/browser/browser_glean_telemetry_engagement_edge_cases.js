@@ -53,7 +53,7 @@ class AnotherHeuristicProvider extends UrlbarTestUtils.TestProvider {
   }
 
   async startQuery(context, addCallback) {
-    for (const result of this._results) {
+    for (const result of this.results) {
       addCallback(this, result);
     }
 
