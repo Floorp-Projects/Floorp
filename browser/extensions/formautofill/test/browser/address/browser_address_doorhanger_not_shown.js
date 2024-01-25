@@ -53,14 +53,14 @@ const TESTCASES = [
       "#email": "test@mozilla.org",
       "#tel": "1-650-903-0800",
     },
-    prefs: [["extensions.formautofill.addresses.capture.v2.enabled", false]],
+    prefs: [["extensions.formautofill.addresses.capture.enabled", false]],
   },
 ];
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["extensions.formautofill.addresses.capture.v2.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.addresses.supported", "on"],
     ],
   });

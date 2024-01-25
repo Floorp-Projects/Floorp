@@ -686,10 +686,7 @@ export class FormAutofillParent extends JSWindowActorParent {
   }
 
   _shouldShowSaveAddressPrompt(record) {
-    if (
-      !FormAutofill.isAutofillAddressesCaptureEnabled &&
-      !FormAutofill.isAutofillAddressesCaptureV2Enabled
-    ) {
+    if (!FormAutofill.isAutofillAddressesCaptureEnabled) {
       return false;
     }
 
