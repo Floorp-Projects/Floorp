@@ -77,6 +77,25 @@ fn test_ops_context_preferred_sample_rate() {
 }
 
 #[test]
+fn test_ops_context_supported_input_processing_params() {
+    test_ops_context_operation(
+        "context: supported input processing params",
+        |context_ptr| {
+            let mut params = ffi::CUBEB_INPUT_PROCESSING_PARAM_NONE;
+            let r = unsafe {
+                OPS.get_supported_input_processing_params.unwrap()(context_ptr, &mut params)
+            };
+            assert_eq!(r, ffi::CUBEB_OK);
+            assert_eq!(
+                params,
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+            );
+        },
+    );
+}
+
+#[test]
 fn test_ops_context_enumerate_devices_unknown() {
     test_ops_context_operation("context: enumerate devices (unknown)", |context_ptr| {
         let mut coll = ffi::cubeb_device_collection {
@@ -986,6 +1005,74 @@ fn test_ops_duplex_voice_stream_stop() {
     test_default_duplex_voice_stream_operation("duplex voice stream: stop", |stream| {
         assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
     });
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_mute() {
+    test_default_duplex_voice_stream_operation("duplex voice stream: mute", |stream| {
+        assert_eq!(
+            unsafe { OPS.stream_set_input_mute.unwrap()(stream, 1) },
+            ffi::CUBEB_OK
+        );
+    });
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
+    test_default_duplex_voice_stream_operation("duplex voice stream: mute after start", |stream| {
+        assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+        assert_eq!(
+            unsafe { OPS.stream_set_input_mute.unwrap()(stream, 1) },
+            ffi::CUBEB_OK
+        );
+    });
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_processing_params() {
+    test_default_duplex_voice_stream_operation("duplex voice stream: processing", |stream| {
+        let params: ffi::cubeb_input_processing_params =
+            ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+        assert_eq!(
+            unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
+            ffi::CUBEB_OK
+        );
+    });
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
+    test_default_duplex_voice_stream_operation(
+        "duplex voice stream: processing before start",
+        |stream| {
+            let params: ffi::cubeb_input_processing_params =
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+            assert_eq!(
+                unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
+                ffi::CUBEB_OK
+            );
+            assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+        },
+    );
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_processing_params_after_start() {
+    test_default_duplex_voice_stream_operation(
+        "duplex voice stream: processing after start",
+        |stream| {
+            assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+            let params: ffi::cubeb_input_processing_params =
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+            assert_eq!(
+                unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
+                ffi::CUBEB_OK
+            );
+        },
+    );
 }
 
 #[test]
