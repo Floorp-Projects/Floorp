@@ -1438,6 +1438,10 @@ fn get_channel_count(
                 kAudioStreamTerminalTypeMicrophone
                 | kAudioStreamTerminalTypeHeadsetMicrophone
                 | kAudioStreamTerminalTypeReceiverMicrophone => true,
+                kAudioStreamTerminalTypeUnknown => {
+                    cubeb_log!("Unknown TerminalType for input stream. Ignoring its channels.");
+                    false
+                }
                 t if [
                     kAudioStreamTerminalTypeSpeaker,
                     kAudioStreamTerminalTypeHeadphones,
