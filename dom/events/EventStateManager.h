@@ -64,6 +64,8 @@ class OverOutElementsWrapper final : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
 
+  void ContentRemoved(nsIContent& aContent);
+
   WeakFrame mLastOverFrame;
 
   nsCOMPtr<nsIContent> mLastOverElement;
@@ -75,6 +77,11 @@ class OverOutElementsWrapper final : public nsISupports {
   // The last element on which we fired a out event, or null if
   // the last out event we fired has finished processing.
   nsCOMPtr<nsIContent> mFirstOutEventElement;
+
+  // Once the first mouseover element is removed from the tree, this is set
+  // to true.  Then, mLastOverElement may be an ancestor of the mouseover
+  // element which should be the deepest target of next mouseleave element.
+  bool mLastOverElementRemoved = false;
 };
 
 class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
@@ -1127,9 +1134,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore, ElementState aState,
                                   bool aAddState);
-  static void ResetLastOverForContent(
-      const uint32_t& aIdx, const RefPtr<OverOutElementsWrapper>& aChunk,
-      nsIContent* aClosure);
 
   /**
    * Update the attribute mLastRefPoint of the mouse event. It should be
