@@ -30,11 +30,6 @@ struct FrameIPCTabContext
   uint32_t maxTouchPoints;
 };
 
-struct JSPluginFrameIPCTabContext
-{
-  uint32_t jsPluginId;
-};
-
 // IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
 // iframe/PBrowser's own and containing app-ids and tell you whether the
 // iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
@@ -46,7 +41,6 @@ union IPCTabContext
 {
   PopupIPCTabContext;
   FrameIPCTabContext;
-  JSPluginFrameIPCTabContext;
 };
 
 }

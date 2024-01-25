@@ -19,12 +19,7 @@ namespace mozilla::dom {
 TabContext::TabContext()
     : mInitialized(false),
       mChromeOuterWindowID(0),
-      mJSPluginID(-1),
       mMaxTouchPoints(0) {}
-
-bool TabContext::IsJSPlugin() const { return mJSPluginID >= 0; }
-
-int32_t TabContext::JSPluginId() const { return mJSPluginID; }
 
 uint64_t TabContext::ChromeOuterWindowID() const {
   return mChromeOuterWindowID;
@@ -60,19 +55,7 @@ bool TabContext::SetTabContext(uint64_t aChromeOuterWindowID,
   return true;
 }
 
-bool TabContext::SetTabContextForJSPluginFrame(int32_t aJSPluginID) {
-  NS_ENSURE_FALSE(mInitialized, false);
-
-  mInitialized = true;
-  mJSPluginID = aJSPluginID;
-  return true;
-}
-
 IPCTabContext TabContext::AsIPCTabContext() const {
-  if (IsJSPlugin()) {
-    return IPCTabContext(JSPluginFrameIPCTabContext(mJSPluginID));
-  }
-
   return IPCTabContext(
       FrameIPCTabContext(mChromeOuterWindowID, mMaxTouchPoints));
 }
@@ -80,7 +63,6 @@ IPCTabContext TabContext::AsIPCTabContext() const {
 MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     : mInvalidReason(nullptr) {
   uint64_t chromeOuterWindowID = 0;
-  int32_t jsPluginId = -1;
   uint32_t maxTouchPoints = 0;
 
   switch (aParams.type()) {
@@ -88,13 +70,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       const PopupIPCTabContext& ipcContext = aParams.get_PopupIPCTabContext();
 
       chromeOuterWindowID = ipcContext.chromeOuterWindowID();
-      break;
-    }
-    case IPCTabContext::TJSPluginFrameIPCTabContext: {
-      const JSPluginFrameIPCTabContext& ipcContext =
-          aParams.get_JSPluginFrameIPCTabContext();
-
-      jsPluginId = ipcContext.jsPluginId();
       break;
     }
     case IPCTabContext::TFrameIPCTabContext: {
@@ -109,13 +84,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     }
   }
 
-  bool rv;
-  if (jsPluginId >= 0) {
-    rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
-  } else {
-    rv = mTabContext.SetTabContext(chromeOuterWindowID, maxTouchPoints);
-  }
-  if (!rv) {
+  if (!mTabContext.SetTabContext(chromeOuterWindowID, maxTouchPoints)) {
     mInvalidReason = "Couldn't initialize TabContext.";
   }
 }

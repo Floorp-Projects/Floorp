@@ -8,7 +8,6 @@
 interface nsIChannel;
 interface nsIRequest;
 interface nsIFrame;
-interface nsIPluginTag;
 interface nsIURI;
 
 webidl BrowsingContext;

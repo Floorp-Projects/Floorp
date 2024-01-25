@@ -19,8 +19,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIPermissionManager.h"
-#include "nsPluginHost.h"
-#include "nsPluginTags.h"
 #include "nsIHttpChannel.h"
 #include "nsINestedURI.h"
 #include "nsScriptSecurityManager.h"
@@ -105,12 +103,18 @@ static LogModule* GetObjectLog() {
 #define LOG_ENABLED() MOZ_LOG_TEST(GetObjectLog(), mozilla::LogLevel::Debug)
 
 static bool IsFlashMIME(const nsACString& aMIMEType) {
-  return nsPluginHost::GetSpecialType(aMIMEType) ==
-         nsPluginHost::eSpecialType_Flash;
+  return aMIMEType.LowerCaseEqualsASCII("application/x-shockwave-flash") ||
+         aMIMEType.LowerCaseEqualsASCII("application/futuresplash") ||
+         aMIMEType.LowerCaseEqualsASCII("application/x-shockwave-flash-test");
 }
 
 static bool IsPluginType(nsObjectLoadingContent::ObjectType type) {
   return type == nsObjectLoadingContent::eType_Fallback;
+}
+
+bool nsObjectLoadingContent::IsFallbackMimeType(const nsACString& aMIMEType) {
+  return IsFlashMIME(aMIMEType) ||
+         aMIMEType.LowerCaseEqualsASCII("application/x-test");
 }
 
 ///
@@ -1569,7 +1573,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
 }
 
 uint32_t nsObjectLoadingContent::GetCapabilities() const {
-  return eSupportImages | eSupportPlugins | eSupportDocuments;
+  return eSupportImages | eSupportDocuments;
 }
 
 void nsObjectLoadingContent::Destroy() {
@@ -1653,9 +1657,9 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
   Element* el = AsElement();
   NS_ASSERTION(el, "must be a content");
 
-  // Images, documents and (fake) plugins are always supported.
-  MOZ_ASSERT(GetCapabilities() &
-             (eSupportImages | eSupportDocuments | eSupportPlugins));
+  // Images and documents are always supported.
+  MOZ_ASSERT((GetCapabilities() & (eSupportImages | eSupportDocuments)) ==
+             (eSupportImages | eSupportDocuments));
 
   LOG(
       ("OBJLC [%p]: calling HtmlObjectContentTypeForMIMEType: aMIMEType: %s - "

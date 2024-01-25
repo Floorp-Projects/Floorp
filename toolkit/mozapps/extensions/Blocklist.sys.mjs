@@ -1321,7 +1321,7 @@ var gBlocklistLevel = DEFAULT_LEVEL;
  *          disable - can be used by the nsIBlocklistPrompt to allows users to decide
  *                    whether a soft-blocked add-on should be disabled,
  *          blocked - true if the item is hard-blocked, false otherwise,
- *          item    - the nsIPluginTag or Addon object
+ *          item    - the Addon object
  */
 
 // It is not possible to use the one in Services since it will not successfully
