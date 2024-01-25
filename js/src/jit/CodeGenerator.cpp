@@ -7538,7 +7538,7 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
   gc::Heap initialHeap = lir->mir()->initialHeap();
 
-  TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
+  auto* ttemplate = &templateObject->as<FixedLengthTypedArrayObject>();
 
   size_t n = ttemplate->length();
   MOZ_ASSERT(n <= INT32_MAX,
@@ -7568,7 +7568,7 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   JSObject* templateObject = lir->mir()->templateObject();
   gc::Heap initialHeap = lir->mir()->initialHeap();
 
-  TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
+  auto* ttemplate = &templateObject->as<FixedLengthTypedArrayObject>();
 
   using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, NewTypedArrayWithTemplateAndLength>(

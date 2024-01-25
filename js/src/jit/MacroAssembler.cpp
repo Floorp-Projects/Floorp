@@ -818,11 +818,10 @@ static std::pair<uint32_t, uint32_t> FindStartOfUninitializedAndUndefinedSlots(
   return {startOfUninitialized, startOfUndefined};
 }
 
-void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
-                                         Register lengthReg,
-                                         LiveRegisterSet liveRegs, Label* fail,
-                                         TypedArrayObject* templateObj,
-                                         TypedArrayLength lengthKind) {
+void MacroAssembler::initTypedArraySlots(
+    Register obj, Register temp, Register lengthReg, LiveRegisterSet liveRegs,
+    Label* fail, FixedLengthTypedArrayObject* templateObj,
+    TypedArrayLength lengthKind) {
   MOZ_ASSERT(!templateObj->hasBuffer());
 
   constexpr size_t dataSlotOffset = ArrayBufferViewObject::dataOffset();
