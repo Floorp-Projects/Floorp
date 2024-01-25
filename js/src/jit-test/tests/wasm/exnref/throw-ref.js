@@ -16,10 +16,12 @@ wasmValidateText(`(module
   let {test} = wasmEvalText(`(module
     (tag $a)
     (func (export "test")
-      try_table (result exnref) (catch_all_ref 0)
-        throw $a
+      (block (result exnref)
+        try_table (catch_all_ref 0)
+          throw $a
+        end
         unreachable
-      end
+      )
       throw_ref
     )
   )`).exports;
