@@ -31,13 +31,7 @@ struct CustomElementDefinition;
 nsresult NS_NewElement(mozilla::dom::Element** aResult,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        mozilla::dom::FromParser aFromParser,
-                       const nsAString* aIs);
-
-nsresult NS_NewElement(
-    mozilla::dom::Element** aResult,
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    mozilla::dom::FromParser aFromParser, nsAtom* aIsAtom = nullptr,
-    mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
+                       const nsAString* aIs = nullptr);
 
 nsresult NS_NewXMLElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
