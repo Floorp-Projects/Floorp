@@ -11614,8 +11614,9 @@ void Document::Destroy() {
     mDocumentL10n->Destroy();
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!mPresShell);
-  DropStyleSet();
+  if (!mPresShell) {
+    DropStyleSet();
+  }
 }
 
 void Document::RemovedFromDocShell() {
