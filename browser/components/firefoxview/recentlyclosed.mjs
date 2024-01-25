@@ -190,7 +190,7 @@ class RecentlyClosedTabsInView extends ViewPage {
       recentlyClosedItem.icon = recentlyClosedItem.image;
       recentlyClosedItem.primaryL10nId = "fxviewtabrow-tabs-list-tab";
       recentlyClosedItem.primaryL10nArgs = JSON.stringify({
-        targetURI,
+        targetURI: typeof targetURI === "string" ? targetURI : "",
       });
       recentlyClosedItem.secondaryL10nId =
         "firefoxview-closed-tabs-dismiss-tab";
