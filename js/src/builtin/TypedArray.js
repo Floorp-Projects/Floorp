@@ -577,9 +577,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
   // Step 6.
   assert(fromIndex !== undefined || n === 0, "ToInteger(undefined) is zero");
 
-  // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
-  // This let's us avoid executing the HasProperty operation in step 11.a.
-  len = TypedArrayLength(O);
+  // Reload O.[[ArrayLength]] in case ToInteger() detached or resized the ArrayBuffer.
+  // This lets us avoid executing the HasProperty operation in step 11.a.
+  len = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
 
   assert(
     len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
@@ -652,15 +652,12 @@ function TypedArrayJoin(separator) {
     return "";
   }
 
-  // ToString() might have detached the underlying ArrayBuffer. To avoid
-  // checking for this condition when looping in step 8.c, do it once here.
-  if (TypedArrayLength(O) === 0) {
-    assert(
-      IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
-      "TypedArrays with detached buffers have a length of zero"
-    );
+  var limit = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
 
-    return callFunction(String_repeat, ",", len - 1);
+  // ToString() might have detached or resized the underlying ArrayBuffer. To avoid
+  // checking for this condition when looping in step 8.c, do it once here.
+  if (limit === 0) {
+    return callFunction(String_repeat, separator, len - 1);
   }
 
   assert(
@@ -677,7 +674,7 @@ function TypedArrayJoin(separator) {
   var R = ToString(element0);
 
   // Steps 7-8.
-  for (var k = 1; k < len; k++) {
+  for (var k = 1; k < limit; k++) {
     // Step 8.b.
     var element = O[k];
 
@@ -686,6 +683,10 @@ function TypedArrayJoin(separator) {
 
     // Steps 8.a and 8.c-d.
     R += sep + ToString(element);
+  }
+
+  if (limit < len) {
+    R += callFunction(String_repeat, separator, len - limit);
   }
 
   // Step 9.
@@ -746,9 +747,9 @@ function TypedArrayLastIndexOf(searchElement /*, fromIndex*/) {
   // Step 5.
   var n = ArgumentsLength() > 1 ? ToInteger(GetArgument(1)) : len - 1;
 
-  // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
-  // This let's us avoid executing the HasProperty operation in step 9.a.
-  len = TypedArrayLength(O);
+  // Reload O.[[ArrayLength]] in case ToInteger() detached or resized the ArrayBuffer.
+  // This lets us avoid executing the HasProperty operation in step 9.a.
+  len = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
 
   assert(
     len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
@@ -1254,7 +1255,7 @@ function TypedArraySubarray(begin, end) {
   }
 
   // Step 5.
-  var srcLength = TypedArrayLength(obj);
+  var srcLength = TypedArrayLengthZeroOnOutOfBounds(obj);
 
   // Step 13 (Reordered because otherwise it'd be observable that we reset
   // the byteOffset to zero when the underlying array buffer gets detached).
@@ -2032,16 +2033,16 @@ function TypedArrayWith(index, value) {
     value = ToNumber(value);
   }
 
-  // Reload the array length in case the underlying buffer has been detached.
-  len = TypedArrayLength(O);
+  // Reload the array length in case the underlying buffer has been detached or resized.
+  var currentLen = TypedArrayLengthZeroOnOutOfBounds(O);
   assert(
-    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)) || len === 0,
+    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)) || currentLen === 0,
     "length is set to zero when the buffer has been detached"
   );
 
   // Step 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
   // This check is an inlined version of the IsValidIntegerIndex abstract operation.
-  if (actualIndex < 0 || actualIndex >= len) {
+  if (actualIndex < 0 || actualIndex >= currentLen) {
     ThrowRangeError(JSMSG_BAD_INDEX);
   }
 

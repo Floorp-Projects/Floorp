@@ -1109,6 +1109,20 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
   return true;
 }
 
+// Return the value of [[ArrayLength]] internal slot of the TypedArray. If the
+// length is out-of-bounds, always return zero.
+static bool intrinsic_TypedArrayLengthZeroOnOutOfBounds(JSContext* cx,
+                                                        unsigned argc,
+                                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
+
+  auto* tarr = &args[0].toObject().as<TypedArrayObject>();
+  args.rval().setNumber(tarr->length().valueOr(0));
+  return true;
+}
+
 static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
                                                       unsigned argc,
                                                       Value* vp) {
@@ -2177,6 +2191,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_TypedArrayInitFromPackedArray, 2, 0),
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
+    JS_INLINABLE_FN("TypedArrayLengthZeroOnOutOfBounds",
+                    intrinsic_TypedArrayLengthZeroOnOutOfBounds, 1, 0,
+                    IntrinsicTypedArrayLengthZeroOnOutOfBounds),
     JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
     JS_INLINABLE_FN("UnsafeGetInt32FromReservedSlot",
                     intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0,
