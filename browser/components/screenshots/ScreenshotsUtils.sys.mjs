@@ -770,6 +770,13 @@ export var ScreenshotsUtils = {
    * @returns The canvas
    */
   async createCanvas(region, browser) {
+    region.left = Math.round(region.left);
+    region.right = Math.round(region.right);
+    region.top = Math.round(region.top);
+    region.bottom = Math.round(region.bottom);
+    region.width = Math.round(region.right - region.left);
+    region.height = Math.round(region.bottom - region.top);
+
     this.cropScreenshotRectIfNeeded(region);
 
     let { devicePixelRatio } = region;
