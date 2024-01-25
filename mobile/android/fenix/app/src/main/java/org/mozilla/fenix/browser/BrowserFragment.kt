@@ -230,7 +230,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     context,
                     R.drawable.mozac_ic_translate_24,
                 )!!,
-                contentDescription = "",
+                contentDescription = context.getString(R.string.browser_toolbar_translate),
                 contentDescriptionSelected = "",
                 visible = {
                     translationsAvailable || context.settings().enableTranslations

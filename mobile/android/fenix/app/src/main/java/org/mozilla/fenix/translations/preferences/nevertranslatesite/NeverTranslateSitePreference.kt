@@ -82,12 +82,7 @@ internal fun getNeverTranslateListItemsPreference(): List<NeverTranslateSiteList
     return mutableListOf<NeverTranslateSiteListItemPreference>().apply {
         add(
             NeverTranslateSiteListItemPreference(
-                websiteUrl = "expedia.ca",
-            ),
-        )
-        add(
-            NeverTranslateSiteListItemPreference(
-                websiteUrl = "wikipedia.com",
+                websiteUrl = "mozilla.org",
             ),
         )
     }
