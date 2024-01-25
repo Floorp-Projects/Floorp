@@ -337,18 +337,11 @@ add_task(async function test_expected_distribution_engines() {
     });
     let engines = await SearchTestUtils.searchConfigToEngines(config.engines);
     searchService._engines = engines;
-    if (SearchUtils.newSearchConfigEnabled) {
-      searchService._searchDefault = {
-        id: config.engines[0].identifier,
-        locale: "default",
-      };
-    } else {
-      searchService._searchDefault = {
-        id: config.engines[0].webExtension.id,
-        locale:
-          config.engines[0]?.webExtension?.locale ?? SearchUtils.DEFAULT_TAG,
-      };
-    }
+    searchService._searchDefault = {
+      id: config.engines[0].webExtension.id,
+      locale:
+        config.engines[0]?.webExtension?.locale ?? SearchUtils.DEFAULT_TAG,
+    };
     engines = searchService._sortEnginesByDefaults(engines);
     test(engines);
   }

@@ -45,6 +45,23 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
+// Exported to tests for not splitting ids when building webextension ids.
+export const NON_SPLIT_ENGINE_IDS = [
+  "allegro-pl",
+  "bok-NO",
+  "daum-kr",
+  "faclair-beag",
+  "gulesider-NO",
+  "mapy-cz",
+  "naver-kr",
+  "prisjakt-sv-SE",
+  "seznam-cz",
+  "tyda-sv-SE",
+  "wolnelektury-pl",
+  "yahoo-jp",
+  "yahoo-jp-auctions",
+];
+
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 const QUIT_APPLICATION_TOPIC = "quit-application";
 
@@ -2309,6 +2326,21 @@ export class SearchService {
       }
       e.webExtension.locale =
         e.webExtension?.locale ?? lazy.SearchUtils.DEFAULT_TAG;
+
+      // TODO Bug 1875912 - Remove the webextension.id and webextension.locale when
+      // we're ready to remove old search-config and use search-config-v2 for all
+      // clients. The id in appProvidedSearchEngine should be changed to
+      // engine.identifier.
+      if (lazy.SearchUtils.newSearchConfigEnabled) {
+        let identifierComponents = NON_SPLIT_ENGINE_IDS.includes(e.identifier)
+          ? [e.identifier]
+          : e.identifier.split("-");
+
+        let locale = identifierComponents.slice(1).join("-") || "default";
+
+        e.webExtension.id = identifierComponents[0] + "@search.mozilla.org";
+        e.webExtension.locale = locale;
+      }
     }
 
     return { engines, privateDefault };
@@ -2316,28 +2348,14 @@ export class SearchService {
 
   #setDefaultAndOrdersFromSelector(engines, privateDefault) {
     const defaultEngine = engines[0];
-    if (!lazy.SearchUtils.newSearchConfigEnabled) {
-      this._searchDefault = {
-        id: defaultEngine.webExtension.id,
-        locale: defaultEngine.webExtension.locale,
-      };
-      if (privateDefault) {
-        this.#searchPrivateDefault = {
-          id: privateDefault.webExtension.id,
-          locale: privateDefault.webExtension.locale,
-        };
-      }
-      return;
-    }
-
     this._searchDefault = {
-      id: defaultEngine.identifier,
-      locale: "default",
+      id: defaultEngine.webExtension.id,
+      locale: defaultEngine.webExtension.locale,
     };
     if (privateDefault) {
       this.#searchPrivateDefault = {
-        id: privateDefault.identifier,
-        locale: "default",
+        id: privateDefault.webExtension.id,
+        locale: privateDefault.webExtension.locale,
       };
     }
   }

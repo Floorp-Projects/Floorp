@@ -1,4 +1,5 @@
 import { MockRegistrar } from "resource://testing-common/MockRegistrar.sys.mjs";
+import { NON_SPLIT_ENGINE_IDS } from "resource://gre/modules/SearchService.sys.mjs";
 
 const lazy = {};
 
@@ -203,6 +204,29 @@ export var SearchTestUtils = {
    */
   async searchConfigToEngines(engineConfigurations) {
     let engines = [];
+
+    for (let e of engineConfigurations) {
+      if (!e.webExtension) {
+        e.webExtension = {};
+      }
+      e.webExtension.locale =
+        e.webExtension.locale ?? lazy.SearchUtils.DEFAULT_TAG;
+
+      // TODO Bug 1875912 - Remove the webextension.id and webextension.locale when
+      // we're ready to remove old search-config and use search-config-v2 for all
+      // clients. The id in appProvidedSearchEngine should be changed to
+      // engine.identifier.
+      if (lazy.SearchUtils.newSearchConfigEnabled) {
+        let identifierComponents = NON_SPLIT_ENGINE_IDS.includes(e.identifier)
+          ? [e.identifier]
+          : e.identifier.split("-");
+
+        e.webExtension.locale =
+          identifierComponents.slice(1).join("-") || "default";
+        e.webExtension.id = identifierComponents[0] + "@search.mozilla.org";
+      }
+    }
+
     for (let config of engineConfigurations) {
       let engine = await Services.search.wrappedJSObject._makeEngineFromConfig(
         config
