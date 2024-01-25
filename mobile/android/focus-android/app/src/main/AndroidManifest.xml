@@ -15,6 +15,9 @@
     <!-- Needed to prompt the user to give permission for camera access -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <!-- This is needed because the android.permission.CAMERA above automatically
     adds a requirements for camera hardware and we don't want add those restrictions -->
     <uses-feature
