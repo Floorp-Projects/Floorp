@@ -2022,7 +2022,7 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
   }
   // TypedArrayObject are also native and contain indexed properties.
   if (MOZ_UNLIKELY(obj->is<TypedArrayObject>())) {
-    size_t length = obj->as<TypedArrayObject>().length();
+    size_t length = obj->as<TypedArrayObject>().length().valueOr(0);
     vp[0].setBoolean(uint32_t(index) < length);
     return true;
   }
