@@ -67,35 +67,17 @@ uint64_t WasmReservedBytes();
 //   - NativeObject
 //     - ArrayBufferObjectMaybeShared
 //       - ArrayBufferObject
-//         - FixedLengthArrayBufferObject
-//         - ResizableArrayBufferObject
 //       - SharedArrayBufferObject
-//         - FixedLengthSharedArrayBufferObject
-//         - GrowableSharedArrayBufferObject
 //     - ArrayBufferViewObject
 //       - DataViewObject
-//         - FixedLengthDataViewObject
-//         - ResizableDataViewObject
 //       - TypedArrayObject (declared in vm/TypedArrayObject.h)
-//         - FixedLengthTypedArrayObject
-//           - FixedLengthTypedArrayObjectTemplate<NativeType>, also inheriting
-//             from TypedArrayObjectTemplate<NativeType>
-//             - FixedLengthTypedArrayObjectTemplate<int8_t>
-//             - FixedLengthTypedArrayObjectTemplate<uint8_t>
-//             - ...
-//         - ResizableTypedArrayObject
-//           - ResizableTypedArrayObjectTemplate<NativeType>, also inheriting
-//             from TypedArrayObjectTemplate<NativeType>
-//             - ResizableTypedArrayObjectTemplate<int8_t>
-//             - ResizableTypedArrayObjectTemplate<uint8_t>
-//             - ...
+//         - TypedArrayObjectTemplate
+//           - Int8ArrayObject
+//           - Uint8ArrayObject
+//           - ...
 //
-// Note that |{FixedLength,Resizable}TypedArrayObjectTemplate| is just an
-// implementation detail that makes implementing its various subclasses easier.
-//
-// FixedLengthArrayBufferObject and ResizableArrayBufferObject are also
-// implementation specific types to differentiate between fixed-length and
-// resizable ArrayBuffers.
+// Note that |TypedArrayObjectTemplate| is just an implementation
+// detail that makes implementing its various subclasses easier.
 //
 // ArrayBufferObject and SharedArrayBufferObject are unrelated data types:
 // the racy memory of the latter cannot substitute for the non-racy memory of
@@ -140,7 +122,6 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
  public:
   inline size_t byteLength() const;
   inline bool isDetached() const;
-  inline bool isResizable() const;
   inline SharedMem<uint8_t*> dataPointerEither();
 
   inline bool pinLength(bool pin);
@@ -165,9 +146,6 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   inline bool isWasm() const;
 };
 
-class FixedLengthArrayBufferObject;
-class ResizableArrayBufferObject;
-
 /*
  * ArrayBufferObject
  *
@@ -176,18 +154,12 @@ class ResizableArrayBufferObject;
  * used to construct an ArrayBufferView, or can be created lazily when it is
  * first accessed for a TypedArrayObject that doesn't have an explicit buffer.
  *
- * ArrayBufferObject is an abstract base class and has exactly two concrete
- * subclasses, FixedLengthArrayBufferObject and ResizableArrayBufferObject.
- *
  * ArrayBufferObject (or really the underlying memory) /is not racy/: the
  * memory is private to a single worker.
  */
 class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
-  static bool maxByteLengthGetterImpl(JSContext* cx, const CallArgs& args);
-  static bool resizableGetterImpl(JSContext* cx, const CallArgs& args);
   static bool detachedGetterImpl(JSContext* cx, const CallArgs& args);
-  static bool resizeImpl(JSContext* cx, const CallArgs& args);
   static bool transferImpl(JSContext* cx, const CallArgs& args);
   static bool transferToFixedLengthImpl(JSContext* cx, const CallArgs& args);
 
@@ -207,13 +179,17 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most INT32_MAX
   // on 32-bit platforms. Allow a larger limit on 64-bit platforms.
-  static constexpr size_t ByteLengthLimitForSmallBuffer = INT32_MAX;
+  static constexpr size_t MaxByteLengthForSmallBuffer = INT32_MAX;
 #ifdef JS_64BIT
-  static constexpr size_t ByteLengthLimit =
+  static constexpr size_t MaxByteLength =
       size_t(8) * 1024 * 1024 * 1024;  // 8 GB.
 #else
-  static constexpr size_t ByteLengthLimit = ByteLengthLimitForSmallBuffer;
+  static constexpr size_t MaxByteLength = MaxByteLengthForSmallBuffer;
 #endif
+
+  /** The largest number of bytes that can be stored inline. */
+  static constexpr size_t MaxInlineBytes =
+      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
 
  public:
   enum BufferKind {
@@ -261,9 +237,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
     DETACHED = 0b1000,
 
-    // Resizable ArrayBuffer.
-    RESIZABLE = 0b1'0000,
-
     // This MALLOCED, MAPPED, or EXTERNAL buffer has been prepared for asm.js
     // and cannot henceforth be transferred/detached.  (WASM, USER_OWNED, and
     // INLINE_DATA buffers can't be prepared for asm.js -- although if an
@@ -284,15 +257,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
  protected:
   enum class FillContents { Zero, Uninitialized };
 
-  template <class ArrayBufferType, FillContents FillType>
-  static std::tuple<ArrayBufferType*, uint8_t*>
-  createUninitializedBufferAndData(JSContext* cx, size_t nbytes,
-                                   AutoSetNewObjectMetadata&,
-                                   JS::Handle<JSObject*> proto);
-
   template <FillContents FillType>
   static std::tuple<ArrayBufferObject*, uint8_t*> createBufferAndData(
-      JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata& metadata,
+      JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata&,
       JS::Handle<JSObject*> proto = nullptr);
 
  public:
@@ -373,19 +340,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     WasmArrayRawBuffer* wasmBuffer() const;
   };
 
+  static const JSClass class_;
   static const JSClass protoClass_;
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
-  static bool maxByteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
-
-  static bool resizableGetter(JSContext* cx, unsigned argc, Value* vp);
-
   static bool detachedGetter(JSContext* cx, unsigned argc, Value* vp);
 
   static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
-
-  static bool resize(JSContext* cx, unsigned argc, Value* vp);
 
   static bool transfer(JSContext* cx, unsigned argc, Value* vp);
 
@@ -434,7 +396,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                        ArrayBufferObject* fromBuffer, size_t fromIndex,
                        size_t count);
 
-  template <class ArrayBufferType>
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static uint8_t* stealMallocedContents(JSContext* cx,
@@ -479,10 +440,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return getFixedSlotOffset(FLAGS_SLOT);
   }
 
- protected:
+ private:
   void setFirstView(ArrayBufferViewObject* view);
 
- private:
+  uint8_t* inlineDataPointer() const;
+
   struct FreeInfo {
     JS::BufferContentsFreeFunc freeFunc;
     void* freeUserData;
@@ -501,6 +463,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     }
     return BufferContents(dataPointer(), bufferKind());
   }
+  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
 
   void releaseData(JS::GCContext* gcx);
 
@@ -521,7 +484,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool isExternal() const { return bufferKind() == EXTERNAL; }
 
   bool isDetached() const { return flags() & DETACHED; }
-  bool isResizable() const { return flags() & RESIZABLE; }
   bool isLengthPinned() const { return flags() & PINNED_LENGTH; }
   bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
@@ -588,111 +550,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 };
 
-/**
- * FixedLengthArrayBufferObject
- *
- * ArrayBuffer object with a fixed length. Its length is unmodifiable, except
- * when zeroing it for detached buffers. Supports all possible memory stores
- * for ArrayBuffer objects, including inline data, malloc'ed memory, mapped
- * memory, and user-owner memory.
- *
- * Fixed-length ArrayBuffers can be used for asm.js and WebAssembly.
- */
-class FixedLengthArrayBufferObject : public ArrayBufferObject {
-  friend class ArrayBufferObject;
-
-  uint8_t* inlineDataPointer() const;
-
-  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
-
- public:
-  // Fixed-length ArrayBuffer objects don't have any additional reserved slots.
-  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS;
-
-  /** The largest number of bytes that can be stored inline. */
-  static constexpr size_t MaxInlineBytes =
-      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
-
-  static const JSClass class_;
-};
-
-/**
- * ResizableArrayBufferObject
- *
- * ArrayBuffer object which can both grow and shrink. The maximum byte length it
- * can grow to is set when creating the object. The data of resizable
- * ArrayBuffer object is either stored inline or malloc'ed memory.
- *
- * When a resizable ArrayBuffer object is detached, its maximum byte length
- * slot is set to zero in addition to the byte length slot.
- *
- * Resizable ArrayBuffers can neither be used for asm.js nor WebAssembly.
- */
-class ResizableArrayBufferObject : public ArrayBufferObject {
-  friend class ArrayBufferObject;
-
-  template <FillContents FillType>
-  static std::tuple<ResizableArrayBufferObject*, uint8_t*> createBufferAndData(
-      JSContext* cx, size_t byteLength, size_t maxByteLength,
-      AutoSetNewObjectMetadata& metadata, Handle<JSObject*> proto);
-
-  static ResizableArrayBufferObject* createEmpty(JSContext* cx);
-
- public:
-  static ResizableArrayBufferObject* createZeroed(
-      JSContext* cx, size_t byteLength, size_t maxByteLength,
-      Handle<JSObject*> proto = nullptr);
-
- private:
-  uint8_t* inlineDataPointer() const;
-
-  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
-
-  void setMaxByteLength(size_t length) {
-    MOZ_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
-    setFixedSlot(MAX_BYTE_LENGTH_SLOT, PrivateValue(length));
+inline bool ArrayBufferObjectMaybeShared::pinLength(bool pin) {
+  if (is<ArrayBufferObject>()) {
+    return as<ArrayBufferObject>().pinLength(pin);
   }
-
-  void initialize(size_t byteLength, size_t maxByteLength,
-                  BufferContents contents) {
-    setByteLength(byteLength);
-    setMaxByteLength(maxByteLength);
-    setFlags(RESIZABLE);
-    setFirstView(nullptr);
-    setDataPointer(contents);
-  }
-
-  // Resize this buffer.
-  void resize(size_t newByteLength);
-
-  static ResizableArrayBufferObject* copy(
-      JSContext* cx, size_t newByteLength,
-      JS::Handle<ResizableArrayBufferObject*> source);
-
- public:
-  static const uint8_t MAX_BYTE_LENGTH_SLOT = ArrayBufferObject::RESERVED_SLOTS;
-
-  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS + 1;
-
-  /** The largest number of bytes that can be stored inline. */
-  static constexpr size_t MaxInlineBytes =
-      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
-
-  static const JSClass class_;
-
-  size_t maxByteLength() const {
-    return size_t(getFixedSlot(MAX_BYTE_LENGTH_SLOT).toPrivate());
-  }
-
-  static ResizableArrayBufferObject* copyAndDetach(
-      JSContext* cx, size_t newByteLength,
-      JS::Handle<ResizableArrayBufferObject*> source);
-
- private:
-  static ResizableArrayBufferObject* copyAndDetachSteal(
-      JSContext* cx, size_t newByteLength,
-      JS::Handle<ResizableArrayBufferObject*> source);
-};
+  return false;  // Cannot pin or unpin shared array buffers.
+}
 
 // Create a buffer for a wasm memory, whose type is determined by
 // memory.indexType().
@@ -857,12 +720,6 @@ class WasmArrayRawBuffer {
 };
 
 }  // namespace js
-
-template <>
-inline bool JSObject::is<js::ArrayBufferObject>() const {
-  return is<js::FixedLengthArrayBufferObject>() ||
-         is<js::ResizableArrayBufferObject>();
-}
 
 template <>
 bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const;

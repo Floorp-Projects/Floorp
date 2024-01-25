@@ -644,7 +644,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
     // Typed array elements are configurable, writable properties, so if any
     // elements are present, the typed array can neither be sealed nor frozen.
     if (nobj->is<TypedArrayObject>() &&
-        nobj->as<TypedArrayObject>().length().valueOr(0) > 0) {
+        nobj->as<TypedArrayObject>().length() > 0) {
       *result = false;
       return true;
     }
@@ -2221,22 +2221,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
        id == NameToId(cx->names().detached))) {
     return true;
   }
-
-  if (key == JSProto_ArrayBuffer &&
-      !cx->realm()->creationOptions().getArrayBufferResizableEnabled() &&
-      (id == NameToId(cx->names().maxByteLength) ||
-       id == NameToId(cx->names().resizable) ||
-       id == NameToId(cx->names().resize))) {
-    return true;
-  }
-
-  if (key == JSProto_SharedArrayBuffer &&
-      !cx->realm()->creationOptions().getSharedArrayBufferGrowableEnabled() &&
-      (id == NameToId(cx->names().maxByteLength) ||
-       id == NameToId(cx->names().growable) ||
-       id == NameToId(cx->names().grow))) {
-    return true;
-  }
 #endif
 
   return false;
@@ -3274,15 +3258,15 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     return as<JSFunction>().getAllocKind();
   }
 
-  // Fixed length typed arrays in the nursery may have a lazily allocated
-  // buffer, make sure there is room for the array's fixed data when moving the
-  // array.
-  if (is<FixedLengthTypedArrayObject>() &&
-      !as<FixedLengthTypedArrayObject>().hasBuffer()) {
+  /*
+   * Typed arrays in the nursery may have a lazily allocated buffer, make
+   * sure there is room for the array's fixed data when moving the array.
+   */
+  if (is<TypedArrayObject>() && !as<TypedArrayObject>().hasBuffer()) {
     gc::AllocKind allocKind;
-    if (as<FixedLengthTypedArrayObject>().hasInlineElements()) {
-      size_t nbytes = as<FixedLengthTypedArrayObject>().byteLength();
-      allocKind = FixedLengthTypedArrayObject::AllocKindForLazyBuffer(nbytes);
+    if (as<TypedArrayObject>().hasInlineElements()) {
+      size_t nbytes = as<TypedArrayObject>().byteLength();
+      allocKind = TypedArrayObject::AllocKindForLazyBuffer(nbytes);
     } else {
       allocKind = GetGCObjectKind(getClass());
     }

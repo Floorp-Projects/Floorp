@@ -31,16 +31,9 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* obj) {
   // Update view's data pointer if it moved.
   if (view->hasBuffer()) {
     JSObject* bufferObj = &view->bufferValue().toObject();
-    ArrayBufferObject* buffer = nullptr;
-    if (gc::MaybeForwardedObjectIs<FixedLengthArrayBufferObject>(bufferObj)) {
-      buffer =
-          &gc::MaybeForwardedObjectAs<FixedLengthArrayBufferObject>(bufferObj);
-    } else if (gc::MaybeForwardedObjectIs<ResizableArrayBufferObject>(
-                   bufferObj)) {
-      buffer =
-          &gc::MaybeForwardedObjectAs<ResizableArrayBufferObject>(bufferObj);
-    }
-    if (buffer) {
+    if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(bufferObj)) {
+      auto* buffer = &gc::MaybeForwardedObjectAs<ArrayBufferObject>(bufferObj);
+
       size_t offset = view->byteOffset();
       MOZ_ASSERT_IF(!buffer->dataPointer(), offset == 0);
 
@@ -114,12 +107,12 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   MOZ_ASSERT_IF(!buffer, byteOffset == 0);
   MOZ_ASSERT_IF(buffer, !buffer->isDetached());
 
-  MOZ_ASSERT(byteOffset <= ArrayBufferObject::ByteLengthLimit);
-  MOZ_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
-  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::ByteLengthLimit);
+  MOZ_ASSERT(byteOffset <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::MaxByteLength);
 
   MOZ_ASSERT_IF(is<TypedArrayObject>(),
-                length <= TypedArrayObject::ByteLengthLimit / bytesPerElement);
+                length <= TypedArrayObject::MaxByteLength / bytesPerElement);
 
   // The isSharedMemory property is invariant.  Self-hosting code that
   // sets BUFFER_SLOT or the private slot (if it does) must maintain it by
@@ -145,10 +138,10 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     // nursery-allocated data and we shouldn't see such buffers here.
     MOZ_ASSERT_IF(buffer->byteLength() > 0, !cx->nursery().isInside(ptr));
   } else {
-    MOZ_ASSERT(is<FixedLengthTypedArrayObject>());
+    MOZ_ASSERT(is<TypedArrayObject>());
     MOZ_ASSERT(length * bytesPerElement <=
-               FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT);
-    void* data = fixedData(FixedLengthTypedArrayObject::FIXED_DATA_START);
+               TypedArrayObject::INLINE_BUFFER_LIMIT);
+    void* data = fixedData(TypedArrayObject::FIXED_DATA_START);
     initReservedSlot(DATA_SLOT, PrivateValue(data));
     memset(data, 0, length * bytesPerElement);
 #ifdef DEBUG
@@ -181,13 +174,6 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   }
 
   return true;
-}
-
-bool ArrayBufferViewObject::hasResizableBuffer() const {
-  if (auto* buffer = bufferEither()) {
-    return buffer->isResizable();
-  }
-  return false;
 }
 
 /* JS Public API */
@@ -228,8 +214,8 @@ JS_PUBLIC_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
 
   // TypedArrays (but not DataViews) can have inline data, in which case we
   // need to copy into the given buffer.
-  if (view->is<FixedLengthTypedArrayObject>()) {
-    auto* ta = &view->as<FixedLengthTypedArrayObject>();
+  if (view->is<TypedArrayObject>()) {
+    TypedArrayObject* ta = &view->as<TypedArrayObject>();
     if (ta->hasInlineElements()) {
       size_t bytes = ta->byteLength();
       if (bytes > bufSize) {
@@ -282,8 +268,8 @@ JS_PUBLIC_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
     return 0;
   }
   size_t length = obj->is<DataViewObject>()
-                      ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                      : obj->as<TypedArrayObject>().byteLength().valueOr(0);
+                      ? obj->as<DataViewObject>().byteLength()
+                      : obj->as<TypedArrayObject>().byteLength();
   return length;
 }
 
@@ -292,19 +278,14 @@ bool JS::ArrayBufferView::isDetached() const {
   return obj->as<ArrayBufferViewObject>().hasDetachedBuffer();
 }
 
-bool JS::ArrayBufferView::isResizable() const {
-  MOZ_ASSERT(obj);
-  return obj->as<ArrayBufferViewObject>().hasResizableBuffer();
-}
-
 JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
   }
   size_t offset = obj->is<DataViewObject>()
-                      ? obj->as<DataViewObject>().byteOffset().valueOr(0)
-                      : obj->as<TypedArrayObject>().byteOffset().valueOr(0);
+                      ? obj->as<DataViewObject>().byteOffset()
+                      : obj->as<TypedArrayObject>().byteOffset();
   return offset;
 }
 
@@ -312,8 +293,8 @@ JS_PUBLIC_API mozilla::Span<uint8_t> JS::ArrayBufferView::getData(
     bool* isSharedMemory, const AutoRequireNoGC&) {
   MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
   size_t byteLength = obj->is<DataViewObject>()
-                          ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                          : obj->as<TypedArrayObject>().byteLength().valueOr(0);
+                          ? obj->as<DataViewObject>().byteLength()
+                          : obj->as<TypedArrayObject>().byteLength();
   ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
   *isSharedMemory = view.isSharedMemory();
   return {static_cast<uint8_t*>(view.dataPointerEither().unwrap(
@@ -357,23 +338,15 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
 #ifdef JS_64BIT
   obj = &obj->unwrapAs<ArrayBufferViewObject>();
   size_t len = obj->is<DataViewObject>()
-                   ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                   : obj->as<TypedArrayObject>().byteLength().valueOr(0);
-  return len > ArrayBufferObject::ByteLengthLimitForSmallBuffer;
+                   ? obj->as<DataViewObject>().byteLength()
+                   : obj->as<TypedArrayObject>().byteLength();
+  return len > ArrayBufferObject::MaxByteLengthForSmallBuffer;
 #else
   // Large ArrayBuffers are not supported on 32-bit.
-  static_assert(ArrayBufferObject::ByteLengthLimit ==
-                ArrayBufferObject::ByteLengthLimitForSmallBuffer);
+  static_assert(ArrayBufferObject::MaxByteLength ==
+                ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return false;
 #endif
-}
-
-JS_PUBLIC_API bool JS::IsResizableArrayBufferView(JSObject* obj) {
-  auto* view = &obj->unwrapAs<ArrayBufferViewObject>();
-  if (auto* buffer = view->bufferEither()) {
-    return buffer->isResizable();
-  }
-  return false;
 }
 
 JS_PUBLIC_API bool JS::PinArrayBufferOrViewLength(JSObject* obj, bool pin) {
