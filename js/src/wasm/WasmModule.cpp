@@ -1056,6 +1056,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   JSUseCounter useCounter =
       metadata().isAsmJS() ? JSUseCounter::ASMJS : JSUseCounter::WASM;
   cx->runtime()->setUseCounter(instance, useCounter);
+  SetUseCountersForFeatureUsage(cx, instance, metadata().featureUsage);
 
   if (cx->options().testWasmAwaitTier2()) {
     testingBlockOnTier2Complete();
