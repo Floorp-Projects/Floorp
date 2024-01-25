@@ -2547,6 +2547,22 @@ bool CacheIRCompiler::emitGuardIsTypedArray(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardIsFixedLengthTypedArray(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.branchIfClassIsNotFixedLengthTypedArray(scratch, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);

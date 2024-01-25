@@ -807,6 +807,17 @@ bool WarpCacheIRTranspiler::emitGuardIsTypedArray(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsFixedLengthTypedArray(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsFixedLengthTypedArray::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardHasProxyHandler(ObjOperandId objId,
                                                      uint32_t handlerOffset) {
   MDefinition* obj = getOperand(objId);
