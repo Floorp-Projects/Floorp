@@ -41,20 +41,37 @@ JSObject* Permissions::WrapObject(JSContext* aCx,
 
 namespace {
 
+// Steps to parse PermissionDescriptor in
+// https://w3c.github.io/permissions/#query-method and relevant WebDriver
+// commands
 RefPtr<MozPromise<RefPtr<PermissionStatus>, nsresult, true>>
-CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
+CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermissionDesc,
                        nsPIDOMWindowInner* aWindow, ErrorResult& aRv) {
-  PermissionDescriptor permission;
-  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
-  if (NS_WARN_IF(!permission.Init(aCx, value))) {
+  // Step 2: Let rootDesc be the object permissionDesc refers to, converted to
+  // an IDL value of type PermissionDescriptor.
+  PermissionDescriptor rootDesc;
+  JS::Rooted<JS::Value> permissionDescValue(
+      aCx, JS::ObjectOrNullValue(aPermissionDesc));
+  if (NS_WARN_IF(!rootDesc.Init(aCx, permissionDescValue))) {
+    // Step 3: If the conversion throws an exception, return a promise rejected
+    // with that exception.
+    // Step 4: If rootDesc["name"] is not supported, return a promise rejected
+    // with a TypeError. (This is done by `enum PermissionName`, as the spec
+    // note says: "implementers are encouraged to use their own custom enum
+    // here")
     aRv.NoteJSContextException(aCx);
     return nullptr;
   }
 
-  switch (permission.mName) {
+  // Step 5: Let typedDescriptor be the object permissionDesc refers to,
+  // converted to an IDL value of rootDesc's name's permission descriptor type.
+  // Step 6: If the conversion throws an exception, return a promise rejected
+  // with that exception.
+  // Step 7 - 8 : (Covered by each create method)
+  switch (rootDesc.mName) {
     case PermissionName::Midi: {
       MidiPermissionDescriptor midiPerm;
-      if (NS_WARN_IF(!midiPerm.Init(aCx, value))) {
+      if (NS_WARN_IF(!midiPerm.Init(aCx, permissionDescValue))) {
         aRv.NoteJSContextException(aCx);
         return nullptr;
       }
@@ -68,7 +85,7 @@ CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
     case PermissionName::Push:
     case PermissionName::Persistent_storage:
     case PermissionName::Screen_wake_lock:
-      return PermissionStatus::Create(aWindow, permission.mName);
+      return PermissionStatus::Create(aWindow, rootDesc.mName);
 
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled type");
@@ -80,9 +97,16 @@ CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
 
 }  // namespace
 
+// https://w3c.github.io/permissions/#query-method
 already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
                                              JS::Handle<JSObject*> aPermission,
                                              ErrorResult& aRv) {
+  // Step 1: If this's relevant global object is a Window object, then:
+  // Step 1.1: If the current settings object's associated Document is not fully
+  // active, return a promise rejected with an "InvalidStateError" DOMException.
+  //
+  // TODO(krosylight): The spec allows worker global while we don't, see bug
+  // 1193373.
   if (!mWindow || !mWindow->IsFullyActive()) {
     aRv.ThrowInvalidStateError("The document is not fully active.");
     return nullptr;
@@ -93,6 +117,7 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
+  // Step 2 - 8:
   auto permissionStatusPromise =
       CreatePermissionStatus(aCx, aPermission, mWindow, aRv);
   if (!permissionStatusPromise) {
