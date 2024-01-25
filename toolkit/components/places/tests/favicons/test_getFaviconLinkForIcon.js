@@ -7,7 +7,7 @@
 
 add_task(async function test_basic() {
   // Check these protocols are pass-through.
-  for (let protocol of ["http://", "https://", "page-icon:"]) {
+  for (let protocol of ["http://", "https://"]) {
     let url = PlacesUtils.favicons.getFaviconLinkForIcon(
       Services.io.newURI(protocol + "test/test.png")
     ).spec;
@@ -24,6 +24,7 @@ add_task(async function test_directRequestProtocols() {
     "data:",
     "file:///",
     "moz-page-thumb://",
+    "page-icon:",
     "resource://",
   ]) {
     let url = PlacesUtils.favicons.getFaviconLinkForIcon(

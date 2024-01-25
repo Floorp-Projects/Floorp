@@ -657,10 +657,7 @@ function makeRemoteTabResult(
     url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
     device: [device, UrlbarUtils.HIGHLIGHT.TYPED],
     // Check against undefined so consumers can pass in the empty string.
-    icon:
-      typeof iconUri != "undefined"
-        ? iconUri
-        : `cached-favicon:page-icon:${uri}`,
+    icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
     lastUsed: lastUsed * 1000,
   };
 
