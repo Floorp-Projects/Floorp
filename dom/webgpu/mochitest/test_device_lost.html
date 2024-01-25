@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      const destroy_causes_lost = async function () {
+        const adapter = await navigator.gpu.requestAdapter();
+        ok(adapter !== undefined, "adapter !== undefined");
+        const device = await adapter.requestDevice();
+        ok(device !== undefined, "device !== undefined");
+
+        const lostPromise = device.lost;
+        device.destroy();
+        const deviceLostReason = await lostPromise;
+
+        is(
+          deviceLostReason.reason,
+          "destroyed",
+          "Destroy reason should correspond to GPUDeviceLostReason.destroyed"
+        );
+        is(deviceLostReason.message, "", "Destroy message should be blank");
+      };
+
+      const drop_causes_lost_is_unobservable = async function () {
+        const adapter = await navigator.gpu.requestAdapter();
+        ok(adapter !== undefined, "adapter !== undefined");
+
+        let lostPromise;
+        // Create a scope with a device that will go out of scope
+        // and then be dropped.
+        {
+          const device = await adapter.requestDevice();
+          ok(device !== undefined, "device !== undefined");
+
+          lostPromise = device.lost;
+        }
+
+        SimpleTest.requestFlakyTimeout(
+          "Racing against promise that should never resolve."
+        );
+        const TIMEOUT_MS = 5000;
+        let timeoutPromise = new Promise(resolve => {
+          let timeoutValue = { reason: "timeout" };
+          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+          setTimeout(() => resolve(timeoutValue), TIMEOUT_MS);
+        });
+
+        const firstPromise = await Promise.race([lostPromise, timeoutPromise]);
+        is(
+          firstPromise.reason,
+          "timeout",
+          "timeoutPromise should return before lostPromise."
+        );
+      };
+
+      SimpleTest.waitForExplicitFinish();
+
+      destroy_causes_lost()
+        .then(() => drop_causes_lost_is_unobservable())
+        .catch(e => ok(false, `Unhandled exception ${e}`))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
