@@ -31,15 +31,12 @@ parent:
    * handles for the initial buffers for translation. aBufferSize is the size of
    * each aBufferHandles' memory and the default size. aReaderSem and aWriterSem
    * are handles for the semaphores to handle waiting on either side.
-   * aUseIPDLThread if true, use the IPDL thread instead of the worker pool for
-   * translation requests
    */
   async InitTranslator(TextureType aTextureType, BackendType aBackendType,
                        Handle aHeaderHandle, Handle[] aBufferHandles,
                        uint64_t aBufferSize,
                        CrossProcessSemaphoreHandle aReaderSem,
-                       CrossProcessSemaphoreHandle aWriterSem,
-                       bool aUseIPDLThread);
+                       CrossProcessSemaphoreHandle aWriterSem);
 
   /**
    * Restart the translation from a Stopped state.

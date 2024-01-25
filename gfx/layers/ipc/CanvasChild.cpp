@@ -37,8 +37,7 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
                       Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
                       uint64_t aBufferSize,
                       CrossProcessSemaphoreHandle&& aReaderSem,
-                      CrossProcessSemaphoreHandle&& aWriterSem,
-                      bool aUseIPDLThread) override {
+                      CrossProcessSemaphoreHandle&& aWriterSem) override {
     NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
     if (NS_WARN_IF(!mCanvasChild)) {
       return false;
@@ -46,7 +45,7 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
     return mCanvasChild->SendInitTranslator(
         aTextureType, aBackendType, std::move(aReadHandle),
         std::move(aBufferHandles), aBufferSize, std::move(aReaderSem),
-        std::move(aWriterSem), aUseIPDLThread);
+        std::move(aWriterSem));
   }
 
   bool AddBuffer(Handle&& aBufferHandle, uint64_t aBufferSize) override {
