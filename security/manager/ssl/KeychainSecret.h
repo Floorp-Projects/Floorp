@@ -17,6 +17,8 @@ class ScopedCFType {
  public:
   explicit ScopedCFType(T value) : mValue(value) {}
 
+  MOZ_IMPLICIT ScopedCFType(decltype(nullptr)) : mValue(nullptr) {}
+
   ~ScopedCFType() {
     if (mValue) {
       CFRelease((CFTypeRef)mValue);
