@@ -12783,6 +12783,14 @@
   value: true
   mirror: always
 
+# Inner schemes that are allowed to display application/http-index-format.
+# Set to * to allow all schemes.
+- name: network.http_index_format.allowed_schemes
+  type: String
+  value: "file,moz-gio"
+  mirror: never
+
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
