@@ -970,7 +970,6 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
 
   // mObserver could be null after OnResponseAvailable().
   if (mObserver) {
-    mObserver->OnReportPerformanceTiming();
     mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking,
                              JS::UndefinedHandleValue);
     mObserver = nullptr;
