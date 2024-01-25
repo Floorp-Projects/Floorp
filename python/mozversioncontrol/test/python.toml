@@ -13,7 +13,9 @@ subsuite = "mozversioncontrol"
 
 ["test_get_commit_patches.py"]
 
-["test_get_upstream_remote.py"]
+["test_get_mozilla_remote_args.py"]
+
+["test_get_upstream_remotes.py"]
 
 ["test_push_to_try.py"]
 

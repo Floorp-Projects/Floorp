@@ -10,6 +10,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import (
+    Iterator,
     List,
     Optional,
     Union,
@@ -687,41 +688,41 @@ class GitRepository(Repository):
     def head_ref(self):
         return self._run("rev-parse", "HEAD").strip()
 
-    def get_mozilla_upstream_remote(self) -> Optional[str]:
-        """Return the Mozilla-official upstream remote for this repo."""
+    def get_mozilla_upstream_remotes(self) -> Iterator[str]:
+        """Return the Mozilla-official upstream remotes for this repo."""
         out = self._run("remote", "-v")
         if not out:
-            return None
+            return
 
         remotes = out.splitlines()
         if not remotes:
-            return None
+            return
 
-        # Prefer mozilla-unified, then find any other official-looking remote next.
-        for upstream in ("hg.mozilla.org/mozilla-unified", "hg.mozilla.org"):
-            for line in remotes:
-                name, url, action = line.split()
+        for line in remotes:
+            name, url, action = line.split()
 
-                if upstream in url:
-                    return name
+            # Only consider fetch sources.
+            if action != "(fetch)":
+                continue
 
-        return None
+            # Return any `hg.mozilla.org` remotes, ignoring `try`.
+            if "hg.mozilla.org" in url and not url.endswith("hg.mozilla.org/try"):
+                yield name
 
-    def get_mozilla_remote_arg(self) -> str:
-        """Return a `--remotes` argument to limit revisions to relevant upstreams."""
-        official_remote = self.get_mozilla_upstream_remote()
+    def get_mozilla_remote_args(self) -> List[str]:
+        """Return a list of `--remotes` arguments to limit commits to official remotes."""
+        official_remotes = [
+            f"--remotes={remote}" for remote in self.get_mozilla_upstream_remotes()
+        ]
 
-        # Limit remotes to official Firefox repos where possible.
-        remote_arg = f"--remotes={official_remote}" if official_remote else "--remotes"
-
-        return remote_arg
+        return official_remotes if official_remotes else ["--remotes"]
 
     @property
     def base_ref(self):
-        remote_arg = self.get_mozilla_remote_arg()
+        remote_args = self.get_mozilla_remote_args()
 
         refs = self._run(
-            "rev-list", "HEAD", "--topo-order", "--boundary", "--not", remote_arg
+            "rev-list", "HEAD", "--topo-order", "--boundary", "--not", *remote_args
         ).splitlines()
         if refs:
             return refs[-1][1:]  # boundary starts with a prefix `-`
@@ -881,14 +882,14 @@ class GitRepository(Repository):
 
     def get_branch_nodes(self) -> List[str]:
         """Return a list of commit SHAs for nodes on the current branch."""
-        remote_arg = self.get_mozilla_remote_arg()
+        remote_args = self.get_mozilla_remote_args()
 
         return self._run(
             "log",
             "HEAD",
             "--reverse",
             "--not",
-            remote_arg,
+            *remote_args,
             "--pretty=%H",
         ).splitlines()
 
