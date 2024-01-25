@@ -2229,6 +2229,14 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
        id == NameToId(cx->names().resize))) {
     return true;
   }
+
+  if (key == JSProto_SharedArrayBuffer &&
+      !cx->realm()->creationOptions().getSharedArrayBufferGrowableEnabled() &&
+      (id == NameToId(cx->names().maxByteLength) ||
+       id == NameToId(cx->names().growable) ||
+       id == NameToId(cx->names().grow))) {
+    return true;
+  }
 #endif
 
   return false;
