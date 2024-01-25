@@ -14,7 +14,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
-import android.os.SystemClock
 import android.text.TextUtils
 import android.text.format.DateUtils
 import android.util.AttributeSet
@@ -152,12 +151,6 @@ import java.util.Locale
  */
 @SuppressWarnings("TooManyFunctions", "LargeClass", "LongMethod")
 open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
-    // DO NOT MOVE ANYTHING ABOVE THIS, GETTING INIT TIME IS CRITICAL
-    // we need to store startup timestamp for warm startup. we cant directly store
-    // inside AppStartupTelemetry since that class lives inside components and
-    // components requires context to access.
-    protected val homeActivityInitTimeStampNanoSeconds = SystemClock.elapsedRealtimeNanos()
-
     private lateinit var binding: ActivityHomeBinding
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
