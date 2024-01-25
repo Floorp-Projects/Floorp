@@ -6139,8 +6139,15 @@ nsBrowserAccess.prototype = {
   ) {
     var browsingContext = null;
     var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var guessUserContextIdEnabled =
+      isExternal &&
+      !Services.prefs.getBoolPref(
+        "browser.link.force_default_user_context_id_for_external_opens",
+        false
+      );
     var openingUserContextId =
-      (isExternal && URILoadingHelper.guessUserContextId(aURI)) ||
+      (guessUserContextIdEnabled &&
+        URILoadingHelper.guessUserContextId(aURI)) ||
       Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 
     if (aOpenWindowInfo && isExternal) {
