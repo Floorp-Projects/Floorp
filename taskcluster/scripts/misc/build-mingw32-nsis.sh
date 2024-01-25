@@ -28,7 +28,7 @@ ln -s i686-w64-mingw32-clang++ $MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-g++
 
 # --------------
 
-cd zlib-1.3
+cd zlib-1.3.1
 make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 
 cd ../nsis-3.07-src
@@ -54,7 +54,7 @@ scons \
   CC="clang --sysroot $MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu" \
   CXX="clang++ --sysroot $MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu" \
   XGCC_W32_PREFIX=i686-w64-mingw32- \
-  ZLIB_W32=../zlib-1.3 \
+  ZLIB_W32=../zlib-1.3.1 \
   SKIPUTILS="NSIS Menu,Makensisw" \
   PREFIX_DEST=$INSTALL_DIR/ \
   PREFIX_BIN=bin \
