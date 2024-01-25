@@ -164,8 +164,7 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
   // This method doesn't call nsGenericHTMLFormControlElement intentionally.
   // TODO: It should probably be changed when bug 597242 will be fixed.
-  if (IsEditingHost() || Type() == eType_Document ||
-      Type() == eType_FakePlugin) {
+  if (IsEditingHost() || Type() == eType_Document) {
     if (aTabIndex) {
       *aTabIndex = isFocusable ? attrVal->GetIntegerValue() : 0;
     }

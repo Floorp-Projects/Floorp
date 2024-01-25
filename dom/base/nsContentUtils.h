@@ -3175,10 +3175,8 @@ class nsContentUtils {
    * take that into account.
    *
    * @param aMIMEType  The MIME type of the document being loaded.
-   * @param aNoFakePlugin  If false then this method should consider JS plugins.
    */
-  static uint32_t HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
-                                                   bool aNoFakePlugin);
+  static uint32_t HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType);
 
   /**
    * Detect whether a string is a local-url.

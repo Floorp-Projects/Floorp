@@ -110,8 +110,7 @@ static bool IsFlashMIME(const nsACString& aMIMEType) {
 }
 
 static bool IsPluginType(nsObjectLoadingContent::ObjectType type) {
-  return type == nsObjectLoadingContent::eType_Fallback ||
-         type == nsObjectLoadingContent::eType_FakePlugin;
+  return type == nsObjectLoadingContent::eType_Fallback;
 }
 
 ///
@@ -188,7 +187,7 @@ static bool inline URIEquals(nsIURI* a, nsIURI* b) {
 ///
 
 // Helper to spawn the frameloader.
-void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
+void nsObjectLoadingContent::SetupFrameLoader() {
   mFrameLoader = nsFrameLoader::Create(AsElement(), mNetworkCreated);
   MOZ_ASSERT(mFrameLoader, "nsFrameLoader::Create failed");
 }
@@ -196,7 +195,7 @@ void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
 // Helper to spawn the frameloader and return a pointer to its docshell.
 already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
     nsIURI* aRecursionCheckURI) {
-  SetupFrameLoader(nsFakePluginTag::NOT_JSPLUGIN);
+  SetupFrameLoader();
   if (!mFrameLoader) {
     return nullptr;
   }
@@ -241,7 +240,6 @@ nsObjectLoadingContent::nsObjectLoadingContent()
       mChannelLoaded(false),
       mNetworkCreated(true),
       mContentBlockingEnabled(false),
-      mSkipFakePlugins(false),
       mIsStopping(false),
       mIsLoading(false),
       mScriptRequested(false),
@@ -298,7 +296,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
       nsCString channelType;
       MOZ_ALWAYS_SUCCEEDS(mChannel->GetContentType(channelType));
 
-      if (GetTypeOfContent(channelType, mSkipFakePlugins) != eType_Document) {
+      if (GetTypeOfContent(channelType) != eType_Document) {
         MOZ_CRASH("DocumentChannel request with non-document MIME");
       }
       mContentType = channelType;
@@ -663,7 +661,6 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
       objectType = nsIContentPolicy::TYPE_DOCUMENT;
       break;
     case eType_Fallback:
-    case eType_FakePlugin:
       objectType = GetContentPolicyType();
       break;
     default:
@@ -839,9 +836,8 @@ nsObjectLoadingContent::UpdateObjectParameters() {
     // using `newMime`.
     newMime = TEXT_HTML;
 
-    MOZ_DIAGNOSTIC_ASSERT(
-        GetTypeOfContent(newMime, mSkipFakePlugins) == eType_Document,
-        "How is text/html not eType_Document?");
+    MOZ_DIAGNOSTIC_ASSERT(GetTypeOfContent(newMime) == eType_Document,
+                          "How is text/html not eType_Document?");
   } else if (newChannel && mChannel) {
     nsCString channelType;
     rv = mChannel->GetContentType(channelType);
@@ -871,9 +867,8 @@ nsObjectLoadingContent::UpdateObjectParameters() {
       stateInvalid = true;
     }
 
-    ObjectType typeHint = newMime.IsEmpty()
-                              ? eType_Null
-                              : GetTypeOfContent(newMime, mSkipFakePlugins);
+    ObjectType typeHint =
+        newMime.IsEmpty() ? eType_Null : GetTypeOfContent(newMime);
 
     //
     // In order of preference:
@@ -941,7 +936,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   //  6) Otherwise, type null to indicate unloadable content (fallback)
   //
 
-  ObjectType newMime_Type = GetTypeOfContent(newMime, mSkipFakePlugins);
+  ObjectType newMime_Type = GetTypeOfContent(newMime);
 
   if (stateInvalid) {
     newType = eType_Null;
@@ -1309,11 +1304,6 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     case eType_Fallback:
       // Handled below, silence compiler warnings
       break;
-    case eType_FakePlugin:
-      // We're now in the process of removing FakePlugin. See bug 1529133.
-      MOZ_CRASH(
-          "Shouldn't reach here! This means there's a fakeplugin trying to be "
-          "loaded.");
   }
 
   //
@@ -1659,7 +1649,7 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 }
 
 nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
-    const nsCString& aMIMEType, bool aNoFakePlugin) {
+    const nsCString& aMIMEType) {
   Element* el = AsElement();
   NS_ASSERTION(el, "must be a content");
 
@@ -1671,9 +1661,8 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
       ("OBJLC [%p]: calling HtmlObjectContentTypeForMIMEType: aMIMEType: %s - "
        "el: %p\n",
        this, aMIMEType.get(), el));
-  auto ret =
-      static_cast<ObjectType>(nsContentUtils::HtmlObjectContentTypeForMIMEType(
-          aMIMEType, aNoFakePlugin));
+  auto ret = static_cast<ObjectType>(
+      nsContentUtils::HtmlObjectContentTypeForMIMEType(aMIMEType));
   LOG(("OBJLC [%p]: called HtmlObjectContentTypeForMIMEType\n", this));
   return ret;
 }
@@ -1747,27 +1736,7 @@ void nsObjectLoadingContent::ConfigureFallback() {
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::Reload(bool aClearActivation) {
-  if (aClearActivation) {
-    mSkipFakePlugins = false;
-  }
-
-  return LoadObject(true, true);
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::SkipFakePlugins() {
-  if (!nsContentUtils::IsCallerChrome()) return NS_ERROR_NOT_AVAILABLE;
-
-  mSkipFakePlugins = true;
-
-  // If we're showing a fake plugin now, reload
-  if (mType == eType_FakePlugin) {
-    return LoadObject(true, true);
-  }
-
-  return NS_OK;
-}
+nsObjectLoadingContent::Reload() { return LoadObject(true, true); }
 
 NS_IMETHODIMP
 nsObjectLoadingContent::UpgradeLoadToDocument(

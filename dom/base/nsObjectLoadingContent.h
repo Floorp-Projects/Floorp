@@ -52,10 +52,6 @@ class nsObjectLoadingContent : public nsIStreamListener,
     // types display an transparent region in their place.
     // (Special plugins that have an HTML fallback are eType_Null)
     eType_Fallback = TYPE_FALLBACK,
-    // Content is a fake plugin, which loads as a document but behaves as a
-    // plugin (see nsPluginHost::CreateFakePlugin).  Currently only used for
-    // pdf.js.
-    eType_FakePlugin = TYPE_FAKE_PLUGIN,
     // Content is a subdocument, possibly SVG
     eType_Document = TYPE_DOCUMENT,
     // Content is unknown and should be represented by an empty element,
@@ -98,13 +94,9 @@ class nsObjectLoadingContent : public nsIStreamListener,
     CopyUTF8toUTF16(mContentType, aType);
   }
   uint32_t DisplayedType() const { return mType; }
-  void Reload(bool aClearActivation, mozilla::ErrorResult& aRv) {
-    aRv = Reload(aClearActivation);
-  }
+  void Reload(mozilla::ErrorResult& aRv) { aRv = Reload(); }
   nsIURI* GetSrcURI() const { return mURI; }
 
-  // FIXME rename this
-  void SkipFakePlugins(mozilla::ErrorResult& aRv) { aRv = SkipFakePlugins(); }
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -350,7 +342,7 @@ class nsObjectLoadingContent : public nsIStreamListener,
    */
   bool CheckProcessPolicy(int16_t* aContentPolicy);
 
-  void SetupFrameLoader(int32_t aJSPluginId);
+  void SetupFrameLoader();
 
   /**
    * Helper to spawn mFrameLoader and return a pointer to its docshell
@@ -385,14 +377,12 @@ class nsObjectLoadingContent : public nsIStreamListener,
    * support the given MIME type as, taking capabilities and plugin state
    * into account
    *
-   * @param aNoFakePlugin Don't select a fake plugin handler as a valid type,
-   *                      as when SkipFakePlugins() is called.
    * @return The ObjectType enum value that we would attempt to load
    *
    * NOTE this does not consider whether the content would be suppressed by
    *      click-to-play or other content policy checks
    */
-  ObjectType GetTypeOfContent(const nsCString& aMIMEType, bool aNoFakePlugin);
+  ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
   /**
    * Used for identifying whether we can rewrite a youtube flash embed to
@@ -474,9 +464,6 @@ class nsObjectLoadingContent : public nsIStreamListener,
 
   // Whether content blocking is enabled or not for this object.
   bool mContentBlockingEnabled : 1;
-
-  // If we should not use fake plugins until the next type change
-  bool mSkipFakePlugins : 1;
 
   // Protects DoStopPlugin from reentry (bug 724781).
   bool mIsStopping : 1;
