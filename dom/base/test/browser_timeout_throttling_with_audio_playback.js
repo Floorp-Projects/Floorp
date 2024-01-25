@@ -50,7 +50,11 @@ async function runTest(url) {
       });
     }
   );
-  ok(timeout <= kMinTimeoutBackground, `Got the correct timeout (${timeout})`);
+  Assert.lessOrEqual(
+    timeout,
+    kMinTimeoutBackground,
+    `Got the correct timeout (${timeout})`
+  );
 
   // All done.
   BrowserTestUtils.removeTab(newTab);

@@ -214,7 +214,11 @@ async function do_fault_injection_test({
 
     if (consumeQuotaOrigin === SAME_GROUP_ORIGIN) {
       const sameGroupUsage = await get_qm_origin_usage(SAME_GROUP_ORIGIN);
-      ok(sameGroupUsage === 0, "same group usage should be mitigated");
+      Assert.strictEqual(
+        sameGroupUsage,
+        0,
+        "same group usage should be mitigated"
+      );
     }
   }
 }

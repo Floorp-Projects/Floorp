@@ -42,7 +42,7 @@ async function testSteps() {
     info("Checking archive file size");
 
     let fileSize = archiveFile.fileSize;
-    ok(fileSize > 0, "archive file size is greater than zero");
+    Assert.greater(fileSize, 0, "archive file size is greater than zero");
   }
 
   // Profile 1 - Nonexistent apps store file.
@@ -136,7 +136,7 @@ async function testSteps() {
   installPackage("createLocalStorage_profile");
 
   let fileSize = appsStoreFile.fileSize;
-  ok(fileSize > 0, "apps store file size is greater than zero");
+  Assert.greater(fileSize, 0, "apps store file size is greater than zero");
 
   checkArchiveFileNotExists();
 

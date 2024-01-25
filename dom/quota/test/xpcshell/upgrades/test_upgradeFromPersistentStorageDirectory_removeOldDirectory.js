@@ -97,6 +97,6 @@ async function testSteps() {
   info("Verifying usage result");
 
   const usageResult = result[0];
-  ok(usageResult.origin == url, "Origin equals");
-  ok(usageResult.lastAccessed == lastAccessed, "LastAccessed equals");
+  Assert.equal(usageResult.origin, url, "Origin equals");
+  Assert.equal(usageResult.lastAccessed, lastAccessed, "LastAccessed equals");
 }

@@ -27,7 +27,7 @@ function listen5xxCodeHandler(metadata, response) {
 
 function resubscribeHandler(metadata, response) {
   ok(true, "Ask for new subscription");
-  ok(retries == 3, "Should retry 2 times.");
+  Assert.equal(retries, 3, "Should retry 2 times.");
   handlerDone();
   response.setHeader(
     "Location",

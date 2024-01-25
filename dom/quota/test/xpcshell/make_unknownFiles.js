@@ -68,7 +68,11 @@ async function testSteps() {
     request = initTemporaryOrigin("default", principal);
     await requestFinished(request);
 
-    ok(request.result === true, "The origin directory was created");
+    Assert.strictEqual(
+      request.result,
+      true,
+      "The origin directory was created"
+    );
 
     createUnknownFileIn(originRelativePath);
     createUnknownDirectoryIn(originRelativePath);

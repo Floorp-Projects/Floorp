@@ -37,7 +37,11 @@ addTest(async function testSimpleDB() {
     await requestFinished(request);
     ok(false, "Should have thrown!");
   } catch (ex) {
-    ok(request.resultCode == NS_ERROR_STORAGE_BUSY, "Good result code.");
+    Assert.equal(
+      request.resultCode,
+      NS_ERROR_STORAGE_BUSY,
+      "Good result code."
+    );
   }
 
   request = database.close();

@@ -389,14 +389,14 @@ add_task(async function test() {
       ", Fetch: " +
       telemetrySums.SERVICEWORKER_RUNNING_MAX_Fetch
   );
-  ok(
-    telemetrySums.SERVICE_WORKER_RUNNING_All >
-      initialSums.SERVICE_WORKER_RUNNING_All,
+  Assert.greater(
+    telemetrySums.SERVICE_WORKER_RUNNING_All,
+    initialSums.SERVICE_WORKER_RUNNING_All,
     "ServiceWorker running count changed"
   );
-  ok(
-    telemetrySums.SERVICE_WORKER_RUNNING_Fetch >
-      initialSums.SERVICE_WORKER_RUNNING_Fetch,
+  Assert.greater(
+    telemetrySums.SERVICE_WORKER_RUNNING_Fetch,
+    initialSums.SERVICE_WORKER_RUNNING_Fetch,
     "ServiceWorker running count changed"
   );
   // We don't use ok()'s for MAX because MAX may have been set before we

@@ -53,9 +53,9 @@ async function test_navigation(nextPage, shouldCancel) {
 
   const timedOut = result === "timeout";
   if (shouldCancel) {
-    ok(timedOut === false, "expected next page to be loaded");
+    Assert.strictEqual(timedOut, false, "expected next page to be loaded");
   } else {
-    ok(timedOut === true, "expected timeout");
+    Assert.strictEqual(timedOut, true, "expected timeout");
   }
 
   BrowserTestUtils.removeTab(tab);

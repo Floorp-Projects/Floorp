@@ -17,20 +17,24 @@ add_task(async function testSteps() {
   ok(requestList.length, "should have at least one request in cache");
   for (const request of requestList) {
     ok(request, "each request in list should be non-null");
-    ok(
-      request.redirect === "follow",
+    Assert.strictEqual(
+      request.redirect,
+      "follow",
       'request.redirect should default to "follow"'
     );
-    ok(
-      request.cache === "default",
+    Assert.strictEqual(
+      request.cache,
+      "default",
       'request.cache should have been updated to "default"' + request.cache
     );
-    ok(
-      request.mode === "navigate",
+    Assert.strictEqual(
+      request.mode,
+      "navigate",
       'request.mode should have been updated to "navigate"'
     );
-    ok(
-      request.referrerPolicy === "no-referrer-when-downgrade",
+    Assert.strictEqual(
+      request.referrerPolicy,
+      "no-referrer-when-downgrade",
       'request.referrerPolicy should have been updated to "no-referrer-when-downgrade"'
     );
   }
@@ -46,14 +50,16 @@ add_task(async function testSteps() {
     ok(response, "each response should be non-null");
     // reponse.url is a empty string in current test file. It should test for
     // not being a empty string once thet test file is updated.
-    ok(
-      typeof response.url === "string",
+    Assert.strictEqual(
+      typeof response.url,
+      "string",
       "each response.url should be a string"
     );
     // reponse.redirected may be changed once test file is updated. It should
     // be false since current reponse.url is a empty string.
-    ok(
-      response.redirected === false,
+    Assert.strictEqual(
+      response.redirected,
+      false,
       "each response.redirected should be false"
     );
     Assert.equal(

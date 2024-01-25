@@ -125,7 +125,7 @@ add_task(async function testSteps() {
     }
 
     let usage = await readUsageFromUsageFile(usageFile);
-    ok(usage == data.usage, "Correct usage");
+    Assert.equal(usage, data.usage, "Correct usage");
   }
 
   async function clearTestOrigin() {

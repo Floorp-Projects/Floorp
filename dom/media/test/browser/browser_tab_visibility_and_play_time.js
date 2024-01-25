@@ -67,7 +67,7 @@ async function openMediaTab(url) {
     };
 
     content.assertAttributeDefined = (videoChrome, checkType) => {
-      ok(videoChrome[checkType] != undefined, `${checkType} exists`);
+      Assert.notEqual(videoChrome[checkType], undefined, `${checkType} exists`);
     };
     content.assertValueEqualTo = (videoChrome, checkType, expectedValue) => {
       content.assertAttributeDefined(videoChrome, checkType);
@@ -81,8 +81,9 @@ async function openMediaTab(url) {
       content.assertAttributeDefined(videoChrome, checkType);
       const valueSnapshot = videoChrome[checkType];
       await content.waitForOnTimeUpdate(videoChrome);
-      ok(
-        videoChrome[checkType] > valueSnapshot,
+      Assert.greater(
+        videoChrome[checkType],
+        valueSnapshot,
         `${checkType} keeps increasing`
       );
     };
@@ -90,8 +91,9 @@ async function openMediaTab(url) {
       content.assertAttributeDefined(videoChrome, checkType);
       const valueSnapshot = videoChrome[checkType];
       await content.sleep(1000);
-      ok(
-        videoChrome[checkType] == valueSnapshot,
+      Assert.equal(
+        videoChrome[checkType],
+        valueSnapshot,
         `${checkType} keeps unchanged`
       );
     };

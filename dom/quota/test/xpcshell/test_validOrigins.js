@@ -88,8 +88,9 @@ async function testSteps() {
 
     let dir = getRelativeFile(basePath + origin.dirName);
     ok(dir.exists(), "Origin was created");
-    ok(
-      origin.dirName === dir.leafName,
+    Assert.strictEqual(
+      origin.dirName,
+      dir.leafName,
       `Origin ${origin.dirName} was created expectedly`
     );
   }

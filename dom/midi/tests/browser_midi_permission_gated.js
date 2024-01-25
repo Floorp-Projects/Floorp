@@ -411,8 +411,9 @@ add_task(async function testRequestMIDIAccess() {
     "requestMIDIAccess was rejected without user prompt"
   );
   let denyIntervalElapsed = performance.now() - denyIntervalStart;
-  ok(
-    denyIntervalElapsed >= 3000,
+  Assert.greaterOrEqual(
+    denyIntervalElapsed,
+    3000,
     `Rejection should be delayed by a randomized interval no less than 3 seconds (got ${
       denyIntervalElapsed / 1000
     } seconds)`

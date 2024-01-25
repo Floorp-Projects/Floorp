@@ -256,7 +256,11 @@ add_task(async function test_manual_unblocking() {
           shouldNotifyDownloadUI(),
         ]);
         await download.unblock();
-        ok(download.error == null, "There should be no error after unblocking");
+        Assert.equal(
+          download.error,
+          null,
+          "There should be no error after unblocking"
+        );
       },
       "A Blocked Download Should succeeded to Download after a Manual unblock"
     );
@@ -314,7 +318,11 @@ add_task(async function download_open_insecure_SVG() {
 
       let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
       await download.unblock();
-      ok(download.error == null, "There should be no error after unblocking");
+      Assert.equal(
+        download.error,
+        null,
+        "There should be no error after unblocking"
+      );
 
       let tab = await newTabPromise;
 

@@ -200,8 +200,9 @@ add_task(async function testEncryptedMediaPlayback() {
     telemetrySums.VIDEO_CLEARKEY_PLAY_TIME_MS,
     "Play time should be the same as clearkey play time"
   );
-  ok(
-    telemetrySums.VIDEO_PLAY_TIME_MS > 0,
+  Assert.greater(
+    telemetrySums.VIDEO_PLAY_TIME_MS,
+    0,
     "Should have a play time greater than zero"
   );
 });
@@ -228,8 +229,9 @@ add_task(async function testChangingFromEncryptedToUnencrypted() {
     telemetrySums.VIDEO_CLEARKEY_PLAY_TIME_MS,
     "Play time should be the same as clearkey play time because the media element still has a media keys attached"
   );
-  ok(
-    telemetrySums.VIDEO_PLAY_TIME_MS > 0,
+  Assert.greater(
+    telemetrySums.VIDEO_PLAY_TIME_MS,
+    0,
     "Should have a play time greater than zero"
   );
 });
@@ -258,8 +260,9 @@ add_task(
       0,
       "Clearkey play time should be 0"
     );
-    ok(
-      telemetrySums.VIDEO_PLAY_TIME_MS > 0,
+    Assert.greater(
+      telemetrySums.VIDEO_PLAY_TIME_MS,
+      0,
       "Should have a play time greater than zero"
     );
   }

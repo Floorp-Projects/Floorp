@@ -14,5 +14,9 @@ add_task(async function testSteps() {
   let cache = await caches.open("test");
   let response = await cache.match("https://www.mozilla.org");
   ok(!!response, "Upgrade from 25 to 26 do succeed");
-  ok(response.type === "opaque", "The response type does be opaque");
+  Assert.strictEqual(
+    response.type,
+    "opaque",
+    "The response type does be opaque"
+  );
 });

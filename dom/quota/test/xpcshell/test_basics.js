@@ -43,7 +43,7 @@ function* testSteps() {
   getCurrentUsage(grabUsageAndContinueHandler);
   let usage = yield undefined;
 
-  ok(usage == 0, "Usage is zero");
+  Assert.equal(usage, 0, "Usage is zero");
 
   info("Verifying initialization status");
 
@@ -73,7 +73,7 @@ function* testSteps() {
   getCurrentUsage(grabUsageAndContinueHandler);
   usage = yield undefined;
 
-  ok(usage > 0, "Usage is not zero");
+  Assert.greater(usage, 0, "Usage is not zero");
 
   info("Verifying initialization status");
 
@@ -102,7 +102,7 @@ function* testSteps() {
   request = init(continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
+  Assert.equal(request.resultCode, NS_OK, "Initialization succeeded");
 
   exists = file.exists();
   ok(exists, "Storage file does exist");
@@ -117,7 +117,7 @@ function* testSteps() {
   request = initPersistentOrigin(getCurrentPrincipal(), continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
+  Assert.equal(request.resultCode, NS_OK, "Initialization succeeded");
 
   ok(request.result, "Origin directory was created");
 

@@ -211,29 +211,34 @@ function testInDocument(doc, documentID) {
     if (!("wrappedJSObject" in doc)) {
       return;
     }
-    ok(
-      doc.wrappedJSObject.nodePrincipal === undefined,
+    Assert.strictEqual(
+      doc.wrappedJSObject.nodePrincipal,
+      undefined,
       "Must not have document principal for " + documentID
     );
-    ok(
-      doc.wrappedJSObject.baseURIObject === undefined,
+    Assert.strictEqual(
+      doc.wrappedJSObject.baseURIObject,
+      undefined,
       "Must not have document base URI for " + documentID
     );
-    ok(
-      doc.wrappedJSObject.documentURIObject === undefined,
+    Assert.strictEqual(
+      doc.wrappedJSObject.documentURIObject,
+      undefined,
       "Must not have document URI for " + documentID
     );
 
     for (var i = 0; i < allNodes.length; ++i) {
-      ok(
-        allNodes[i].wrappedJSObject.nodePrincipal === undefined,
+      Assert.strictEqual(
+        allNodes[i].wrappedJSObject.nodePrincipal,
+        undefined,
         "Unexpected principal appears for " +
           allNodes[i].nodeName +
           " in " +
           documentID
       );
-      ok(
-        allNodes[i].wrappedJSObject.baseURIObject === undefined,
+      Assert.strictEqual(
+        allNodes[i].wrappedJSObject.baseURIObject,
+        undefined,
         "Unexpected base URI appears for " +
           allNodes[i].nodeName +
           " in " +

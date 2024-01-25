@@ -72,7 +72,7 @@ add_task(async function testSteps() {
   installPackage("archive_profile");
 
   let fileSize = archiveFile.fileSize;
-  ok(fileSize > 0, "archive file size is greater than zero");
+  Assert.greater(fileSize, 0, "archive file size is greater than zero");
 
   checkStorage();
 });

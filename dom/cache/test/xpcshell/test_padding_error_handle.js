@@ -53,7 +53,7 @@ add_task(async function testSteps() {
   createTempPaddingFile();
 
   let cacheEntries = await cache.keys("https://foo.com");
-  ok(cacheEntries.length === 1, "Cache.put does succeed");
+  Assert.strictEqual(cacheEntries.length, 1, "Cache.put does succeed");
 
   ok(
     temporaryPaddingFile.exists(),

@@ -154,7 +154,11 @@ async function testNavigations() {
   });
   await loaded;
 
-  ok(gTestCounter === 7, "testing that all five actions have been tested.");
+  Assert.strictEqual(
+    gTestCounter,
+    7,
+    "testing that all five actions have been tested."
+  );
 
   Services.obs.removeObserver(checkSecFetchUser, "http-on-stop-request");
 }

@@ -82,7 +82,7 @@ function createAudioContext() {
 async function checkingAudioContextRunningState() {
   let ac = content.ac;
   await ac.notAllowedToStart;
-  ok(ac.state === "suspended", `AudioContext is not started yet.`);
+  Assert.strictEqual(ac.state, "suspended", `AudioContext is not started yet.`);
 }
 
 function resumeWithoutExpectedSuccess() {
@@ -105,7 +105,7 @@ function resumeWithExpectedSuccess() {
   let ac = content.ac;
   ac.resumePromises.push(ac.resume());
   return Promise.all(ac.resumePromises).then(() => {
-    ok(ac.state == "running", "audio context starts running");
+    Assert.equal(ac.state, "running", "audio context starts running");
   });
 }
 

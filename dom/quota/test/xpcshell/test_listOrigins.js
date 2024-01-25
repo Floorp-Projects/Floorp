@@ -12,7 +12,11 @@ async function testSteps() {
 
   function verifyResult(result, expectedOrigins) {
     ok(result instanceof Array, "Got an array object");
-    ok(result.length == expectedOrigins.length, "Correct number of elements");
+    Assert.equal(
+      result.length,
+      expectedOrigins.length,
+      "Correct number of elements"
+    );
 
     info("Sorting elements");
 
@@ -29,7 +33,11 @@ async function testSteps() {
     info("Verifying elements");
 
     for (let i = 0; i < result.length; i++) {
-      ok(result[i] == expectedOrigins[i], "Result matches expected origin");
+      Assert.equal(
+        result[i],
+        expectedOrigins[i],
+        "Result matches expected origin"
+      );
     }
   }
 

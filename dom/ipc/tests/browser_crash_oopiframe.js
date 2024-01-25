@@ -66,7 +66,7 @@ async function testFrameCrash(numTabs) {
   info("Waiting for oop-browser-crashed event.");
   await eventFiredPromise.then(event => {
     ok(!event.isTopFrame, "should not be reporting top-level frame crash");
-    ok(event.childID != 0, "childID is non-zero");
+    Assert.notEqual(event.childID, 0, "childID is non-zero");
 
     isnot(
       event.browsingContextId,

@@ -216,7 +216,7 @@ function resumeWithExpectedSuccess() {
   let ac = content.ac;
   ac.resumePromises.push(ac.resume());
   return Promise.all(ac.resumePromises).then(() => {
-    ok(ac.state == "running", "audio context starts running");
+    Assert.equal(ac.state, "running", "audio context starts running");
   });
 }
 

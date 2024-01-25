@@ -58,8 +58,9 @@ async function testSteps() {
       ok(false, "Should have thrown");
     } catch (e) {
       ok(true, "Should have thrown");
-      ok(
-        e.resultCode === NS_ERROR_FILE_NO_DEVICE_SPACE,
+      Assert.strictEqual(
+        e.resultCode,
+        NS_ERROR_FILE_NO_DEVICE_SPACE,
         "Threw right result code"
       );
     }

@@ -65,7 +65,7 @@ function* testSteps() {
   let request = init(continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
+  Assert.equal(request.resultCode, NS_OK, "Initialization succeeded");
 
   info("Verifying storage");
 
@@ -89,8 +89,8 @@ function* testSteps() {
     yield undefined;
 
     let paddingFileInfo = new Float64Array(fileReader.result);
-    ok(paddingFileInfo.length == 1, "Padding file does take 64 bytes.");
-    ok(paddingFileInfo[0] == 0, "Padding size does default to zero.");
+    Assert.equal(paddingFileInfo.length, 1, "Padding file does take 64 bytes.");
+    Assert.equal(paddingFileInfo[0], 0, "Padding size does default to zero.");
   }
 
   finishTest();

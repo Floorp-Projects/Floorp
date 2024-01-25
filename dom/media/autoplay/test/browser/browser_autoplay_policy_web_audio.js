@@ -55,10 +55,14 @@ async function checkIfAudioContextIsAllowedToStart(isAllowedToStart) {
   const ac = content.ac;
   if (isAllowedToStart) {
     await ac.allowedToStart;
-    ok(ac.state === "running", `AudioContext is running.`);
+    Assert.strictEqual(ac.state, "running", `AudioContext is running.`);
   } else {
     await ac.notAllowedToStart;
-    ok(ac.state === "suspended", `AudioContext is not started yet.`);
+    Assert.strictEqual(
+      ac.state,
+      "suspended",
+      `AudioContext is not started yet.`
+    );
   }
 }
 

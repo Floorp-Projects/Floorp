@@ -12,7 +12,7 @@ function test() {
 
   let browser = newTab.linkedBrowser;
   let frameLoader = browser.frameLoader;
-  ok(frameLoader !== null, "frameLoader looks okay");
+  Assert.notStrictEqual(frameLoader, null, "frameLoader looks okay");
 
   browser.messageManager.loadFrameScript(
     "data:,(" + frameScript.toString() + ")()",
@@ -20,10 +20,15 @@ function test() {
   );
 
   browser.messageManager.addMessageListener("Test:Message", msg => {
-    ok(msg.target === browser, "<browser> is correct");
-    ok(msg.targetFrameLoader === frameLoader, "frameLoader is correct");
-    ok(
-      browser.frameLoader === msg.targetFrameLoader,
+    Assert.strictEqual(msg.target, browser, "<browser> is correct");
+    Assert.strictEqual(
+      msg.targetFrameLoader,
+      frameLoader,
+      "frameLoader is correct"
+    );
+    Assert.strictEqual(
+      browser.frameLoader,
+      msg.targetFrameLoader,
       "browser frameloader is correct"
     );
   });

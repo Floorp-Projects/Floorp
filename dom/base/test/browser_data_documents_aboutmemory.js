@@ -16,5 +16,5 @@ add_task(async function () {
   await new Promise(r =>
     mgr.getReports(handleReport, null, r, null, /* anonymized = */ false)
   );
-  ok(amount > 0, "Got data documents amount");
+  Assert.greater(amount, 0, "Got data documents amount");
 });

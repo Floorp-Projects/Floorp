@@ -87,19 +87,29 @@ async function run_test_browser_refresh(forceRevalidate) {
   );
 
   if (!forceRevalidate) {
-    ok(attributes.imageDataURL === imageDataURL, "Image should use cache");
+    Assert.strictEqual(
+      attributes.imageDataURL,
+      imageDataURL,
+      "Image should use cache"
+    );
   } else {
-    ok(attributes.imageDataURL !== imageDataURL, "Image should be revalidated");
+    Assert.notStrictEqual(
+      attributes.imageDataURL,
+      imageDataURL,
+      "Image should be revalidated"
+    );
   }
 
   if (!forceRevalidate) {
-    ok(
-      attributes.expiredResourceCacheControl === expiredResourceCacheControl,
+    Assert.strictEqual(
+      attributes.expiredResourceCacheControl,
+      expiredResourceCacheControl,
       "max-age shouldn't be changed after reload because it didn't revalidate"
     );
   } else {
-    ok(
-      attributes.expiredResourceCacheControl !== expiredResourceCacheControl,
+    Assert.notStrictEqual(
+      attributes.expiredResourceCacheControl,
+      expiredResourceCacheControl,
       "max-age should be changed after reload because it got revalidated"
     );
   }

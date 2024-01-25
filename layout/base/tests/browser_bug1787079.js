@@ -64,12 +64,14 @@ add_task(async function test() {
     }
   );
 
-  ok(
-    originalInnerWidth < innerWidth,
+  Assert.less(
+    originalInnerWidth,
+    innerWidth,
     "window.innerWidth on a lower DPI should be greater than the original"
   );
-  ok(
-    originalInnerHeight < innerHeight,
+  Assert.less(
+    originalInnerHeight,
+    innerHeight,
     "window.innerHeight on a lower DPI should be greater than the original"
   );
 

@@ -50,7 +50,7 @@ async function testSteps() {
 
   info("Verifying last access time");
 
-  ok(getLastAccessTime() == INT64_MIN, "Correct last access time");
+  Assert.equal(getLastAccessTime(), INT64_MIN, "Correct last access time");
 
   info("Initializing");
 
@@ -64,5 +64,5 @@ async function testSteps() {
 
   info("Verifying last access time");
 
-  ok(getLastAccessTime() != INT64_MIN, "Correct last access time");
+  Assert.notEqual(getLastAccessTime(), INT64_MIN, "Correct last access time");
 }
