@@ -5804,7 +5804,10 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     appini->GetParent(getter_AddRefs(mAppData->directory));
   }
 
-  if (!mAppData->remotingName) {
+  const char* appRemotingName = getenv("MOZ_APP_REMOTINGNAME");
+  if (appRemotingName) {
+    mAppData->remotingName = appRemotingName;
+  } else if (!mAppData->remotingName) {
     mAppData->remotingName = mAppData->name;
   }
   // used throughout this file
