@@ -22,9 +22,10 @@ dictionary PermissionDescriptor {
   required PermissionName name;
 };
 
+// https://webaudio.github.io/web-midi-api/#permissions-integration
 [GenerateInit]
 dictionary MidiPermissionDescriptor : PermissionDescriptor {
-  boolean sysex;
+  boolean sysex = false;
 };
 
 // We don't implement `PushPermissionDescriptor` because we use a background

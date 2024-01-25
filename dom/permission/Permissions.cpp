@@ -59,8 +59,7 @@ CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
         return nullptr;
       }
 
-      bool sysex = midiPerm.mSysex.WasPassed() && midiPerm.mSysex.Value();
-      return MidiPermissionStatus::Create(aWindow, sysex);
+      return MidiPermissionStatus::Create(aWindow, midiPerm.mSysex);
     }
     case PermissionName::Storage_access:
       return StorageAccessPermissionStatus::Create(aWindow);
