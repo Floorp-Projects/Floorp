@@ -38,7 +38,6 @@ class SettingsAdvancedTest {
     private val youTubeFullLink = itemContainingText("Youtube full link")
     private val playStoreLink = itemContainingText("Playstore link")
     private val playStoreUrl = "play.google.com"
-    private val youTubePage = "vnd.youtube://".toUri()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
@@ -311,7 +310,7 @@ class SettingsAdvancedTest {
         }
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(youTubePage) {
+        }.enterURLAndEnterToBrowser("https://m.youtube.com/".toUri()) {
             waitForPageToLoad()
             verifyOpenLinksInAppsCFRExists(true)
             clickOpenLinksInAppsDismissCFRButton()
