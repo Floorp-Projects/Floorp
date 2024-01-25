@@ -329,22 +329,26 @@ static void ReportOutOfBounds(JSContext* cx, TypedArrayObject* typedArray) {
 
 namespace {
 
-static FixedLengthTypedArrayObject* NewTypedArrayObject(JSContext* cx,
-                                                        const JSClass* clasp,
-                                                        HandleObject proto,
-                                                        gc::AllocKind allocKind,
-                                                        gc::Heap heap) {
+template <class TypedArrayType>
+static TypedArrayType* NewTypedArrayObject(JSContext* cx, const JSClass* clasp,
+                                           HandleObject proto,
+                                           gc::AllocKind allocKind,
+                                           gc::Heap heap) {
   MOZ_ASSERT(proto);
 
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, clasp));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  // Typed arrays can store data inline so we only use fixed slots to cover the
-  // reserved slots, ignoring the AllocKind.
+  static_assert(std::is_same_v<TypedArrayType, FixedLengthTypedArrayObject> ||
+                std::is_same_v<TypedArrayType, ResizableTypedArrayObject>);
+
+  // Fixed length typed arrays can store data inline so we only use fixed slots
+  // to cover the reserved slots, ignoring the AllocKind.
   MOZ_ASSERT(ClassCanHaveFixedData(clasp));
-  constexpr size_t nfixed = FixedLengthTypedArrayObject::RESERVED_SLOTS;
+  constexpr size_t nfixed = TypedArrayType::RESERVED_SLOTS;
   static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
-  static_assert(nfixed == FixedLengthTypedArrayObject::FIXED_DATA_START);
+  static_assert(!std::is_same_v<TypedArrayType, FixedLengthTypedArrayObject> ||
+                nfixed == FixedLengthTypedArrayObject::FIXED_DATA_START);
 
   Rooted<SharedShape*> shape(
       cx,
@@ -354,18 +358,21 @@ static FixedLengthTypedArrayObject* NewTypedArrayObject(JSContext* cx,
     return nullptr;
   }
 
-  return NativeObject::create<FixedLengthTypedArrayObject>(cx, allocKind, heap,
-                                                           shape);
+  return NativeObject::create<TypedArrayType>(cx, allocKind, heap, shape);
 }
 
 template <typename NativeType>
 class FixedLengthTypedArrayObjectTemplate;
 
 template <typename NativeType>
+class ResizableTypedArrayObjectTemplate;
+
+template <typename NativeType>
 class TypedArrayObjectTemplate {
   friend class js::TypedArrayObject;
 
   using FixedLengthTypedArray = FixedLengthTypedArrayObjectTemplate<NativeType>;
+  using ResizableTypedArray = ResizableTypedArrayObjectTemplate<NativeType>;
 
   static constexpr auto MaxByteLength = TypedArrayObject::MaxByteLength;
   static constexpr auto INLINE_BUFFER_LIMIT =
@@ -557,7 +564,8 @@ class TypedArrayObjectTemplate {
   // length ) Steps 5-8.
   static bool computeAndCheckLength(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> bufferMaybeUnwrapped,
-      uint64_t byteOffset, uint64_t lengthIndex, size_t* length) {
+      uint64_t byteOffset, uint64_t lengthIndex, size_t* length,
+      bool* autoLength) {
     MOZ_ASSERT(byteOffset % BYTES_PER_ELEMENT == 0);
     MOZ_ASSERT(byteOffset < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
     MOZ_ASSERT_IF(lengthIndex != UINT64_MAX,
@@ -570,18 +578,28 @@ class TypedArrayObjectTemplate {
       return false;
     }
 
-    // TODO(anba): Implement me!
-    if (bufferMaybeUnwrapped->isResizable()) {
-      JS_ReportErrorASCII(cx, "Resizable ArrayBuffers not yet supported");
-      return false;
-    }
-
     // Step 6.
     size_t bufferByteLength = bufferMaybeUnwrapped->byteLength();
     MOZ_ASSERT(bufferByteLength <= MaxByteLength);
 
     size_t len;
     if (lengthIndex == UINT64_MAX) {
+      // Check if |byteOffset| valid.
+      if (byteOffset > bufferByteLength) {
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr,
+            JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_LENGTH_BOUNDS,
+            Scalar::name(ArrayTypeID()));
+        return false;
+      }
+
+      // Resizable buffers without an explicit length are auto-length.
+      if (bufferMaybeUnwrapped->isResizable()) {
+        *length = 0;
+        *autoLength = true;
+        return true;
+      }
+
       // Steps 7.a and 7.c.
       if (bufferByteLength % BYTES_PER_ELEMENT != 0) {
         // The given byte array doesn't map exactly to
@@ -590,15 +608,6 @@ class TypedArrayObjectTemplate {
                                   JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_MISALIGNED,
                                   Scalar::name(ArrayTypeID()),
                                   Scalar::byteSizeString(ArrayTypeID()));
-        return false;
-      }
-
-      if (byteOffset > bufferByteLength) {
-        // |byteOffset| is invalid.
-        JS_ReportErrorNumberASCII(
-            cx, GetErrorMessage, nullptr,
-            JSMSG_TYPED_ARRAY_CONSTRUCT_OFFSET_LENGTH_BOUNDS,
-            Scalar::name(ArrayTypeID()));
         return false;
       }
 
@@ -624,6 +633,7 @@ class TypedArrayObjectTemplate {
 
     MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
     *length = len;
+    *autoLength = false;
     return true;
   }
 
@@ -635,13 +645,20 @@ class TypedArrayObjectTemplate {
       uint64_t byteOffset, uint64_t lengthIndex, HandleObject proto) {
     // Steps 5-8.
     size_t length = 0;
-    if (!computeAndCheckLength(cx, buffer, byteOffset, lengthIndex, &length)) {
+    bool autoLength = false;
+    if (!computeAndCheckLength(cx, buffer, byteOffset, lengthIndex, &length,
+                               &autoLength)) {
       return nullptr;
     }
 
-    // Steps 9-13.
-    return FixedLengthTypedArray::makeInstance(cx, buffer, byteOffset, length,
-                                               proto);
+    if (!buffer->isResizable()) {
+      // Steps 9-13.
+      return FixedLengthTypedArray::makeInstance(cx, buffer, byteOffset, length,
+                                                 proto);
+    }
+
+    return ResizableTypedArray::makeInstance(cx, buffer, byteOffset, length,
+                                             autoLength, proto);
   }
 
   // Create a TypedArray object in another compartment.
@@ -677,8 +694,9 @@ class TypedArrayObjectTemplate {
     unwrappedBuffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
 
     size_t length = 0;
+    bool autoLength = false;
     if (!computeAndCheckLength(cx, unwrappedBuffer, byteOffset, lengthIndex,
-                               &length)) {
+                               &length, &autoLength)) {
       return nullptr;
     }
 
@@ -701,8 +719,13 @@ class TypedArrayObjectTemplate {
         return nullptr;
       }
 
-      typedArray = FixedLengthTypedArray::makeInstance(
-          cx, unwrappedBuffer, byteOffset, length, wrappedProto);
+      if (!unwrappedBuffer->isResizable()) {
+        typedArray = FixedLengthTypedArray::makeInstance(
+            cx, unwrappedBuffer, byteOffset, length, wrappedProto);
+      } else {
+        typedArray = ResizableTypedArray::makeInstance(
+            cx, unwrappedBuffer, byteOffset, length, autoLength, wrappedProto);
+      }
       if (!typedArray) {
         return nullptr;
       }
@@ -831,14 +854,15 @@ class FixedLengthTypedArrayObjectTemplate
     if (!proto) {
       return nullptr;
     }
-    return NewTypedArrayObject(cx, instanceClass(), proto, allocKind, heap);
+    return NewTypedArrayObject<FixedLengthTypedArrayObject>(
+        cx, instanceClass(), proto, allocKind, heap);
   }
 
   static FixedLengthTypedArrayObject* makeProtoInstance(
       JSContext* cx, HandleObject proto, gc::AllocKind allocKind) {
     MOZ_ASSERT(proto);
-    return NewTypedArrayObject(cx, instanceClass(), proto, allocKind,
-                               gc::Heap::Default);
+    return NewTypedArrayObject<FixedLengthTypedArrayObject>(
+        cx, instanceClass(), proto, allocKind, gc::Heap::Default);
   }
 
   static FixedLengthTypedArrayObject* makeInstance(
@@ -967,6 +991,72 @@ class FixedLengthTypedArrayObjectTemplate
     }
 
     initTypedArrayData(obj, buf, nbytes, allocKind);
+
+    return obj;
+  }
+};
+
+template <typename NativeType>
+class ResizableTypedArrayObjectTemplate
+    : public ResizableTypedArrayObject,
+      public TypedArrayObjectTemplate<NativeType> {
+  friend class js::TypedArrayObject;
+
+  using TypedArrayTemplate = TypedArrayObjectTemplate<NativeType>;
+
+ public:
+  using TypedArrayTemplate::ArrayTypeID;
+  using TypedArrayTemplate::BYTES_PER_ELEMENT;
+  using TypedArrayTemplate::protoKey;
+
+  static inline const JSClass* instanceClass() {
+    static_assert(ArrayTypeID() <
+                  std::size(TypedArrayObject::resizableClasses));
+    return &TypedArrayObject::resizableClasses[ArrayTypeID()];
+  }
+
+  static ResizableTypedArrayObject* newBuiltinClassInstance(
+      JSContext* cx, gc::AllocKind allocKind) {
+    RootedObject proto(cx, GlobalObject::getOrCreatePrototype(cx, protoKey()));
+    if (!proto) {
+      return nullptr;
+    }
+    return NewTypedArrayObject<ResizableTypedArrayObject>(
+        cx, instanceClass(), proto, allocKind, gc::Heap::Default);
+  }
+
+  static ResizableTypedArrayObject* makeProtoInstance(JSContext* cx,
+                                                      HandleObject proto,
+                                                      gc::AllocKind allocKind) {
+    MOZ_ASSERT(proto);
+    return NewTypedArrayObject<ResizableTypedArrayObject>(
+        cx, instanceClass(), proto, allocKind, gc::Heap::Default);
+  }
+
+  static ResizableTypedArrayObject* makeInstance(
+      JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
+      size_t byteOffset, size_t len, bool autoLength, HandleObject proto) {
+    MOZ_ASSERT(buffer);
+    MOZ_ASSERT(buffer->isResizable());
+    MOZ_ASSERT(!buffer->isDetached());
+    MOZ_ASSERT(!autoLength || len == 0,
+               "length is zero for 'auto' length views");
+    MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
+
+    gc::AllocKind allocKind = gc::GetGCObjectKind(instanceClass());
+
+    AutoSetNewObjectMetadata metadata(cx);
+    ResizableTypedArrayObject* obj;
+    if (proto) {
+      obj = makeProtoInstance(cx, proto, allocKind);
+    } else {
+      obj = newBuiltinClassInstance(cx, allocKind);
+    }
+    if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
+      return nullptr;
+    }
+
+    obj->setFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(autoLength));
 
     return obj;
   }
@@ -3069,8 +3159,10 @@ bool js::intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc,
       return nullptr;                                                         \
     }                                                                         \
     const JSClass* clasp = obj->getClass();                                   \
-    if (clasp !=                                                              \
-        FixedLengthTypedArrayObjectTemplate<NativeType>::instanceClass()) {   \
+    if (clasp != FixedLengthTypedArrayObjectTemplate<                         \
+                     NativeType>::instanceClass() &&                          \
+        clasp !=                                                              \
+            ResizableTypedArrayObjectTemplate<NativeType>::instanceClass()) { \
       return nullptr;                                                         \
     }                                                                         \
     return obj;                                                               \
