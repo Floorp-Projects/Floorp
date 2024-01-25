@@ -2384,6 +2384,10 @@ ArrayBufferObject::extractStructuredCloneContents(
 
   CheckStealPreconditions(buffer, cx);
 
+  // We don't yet support extracting the contents of resizable buffers.
+  MOZ_ASSERT(!buffer->isResizable(),
+             "extracting the contents of resizable buffers not supported");
+
   BufferContents contents = buffer->contents();
 
   switch (contents.kind()) {
