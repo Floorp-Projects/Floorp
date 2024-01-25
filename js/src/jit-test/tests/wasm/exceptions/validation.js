@@ -136,10 +136,11 @@ function testValidateThrow() {
   validSimd = `(module
                 (tag $exn (param v128))
                 (func (export "f") (param v128) (result v128)
-                  (try (result v128)
-                    (do (v128.const f64x2 1 2)
-                        (throw $exn))
-                    (catch $exn))))`;
+                  try (result v128)
+                    (v128.const f64x2 1 2)
+                      (throw $exn)
+                  catch $exn
+                  end))`;
 
   invalid0 = `(module
                 (type (func (param i32)))

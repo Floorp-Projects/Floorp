@@ -40,21 +40,21 @@
              (throw $localExn
                (i32.const 9)))
            (func (export "testFunc") (result i32)
-             (try (result i32)
-               (do
-                 ${callInstruction}
-                 ;; All the rest should not be reachable.
-                 (call $anotherLocalFuncThrowsExn)
-                 (throw $exn)
-                 (call $throwsLocalExn)
-                 unreachable)
-               (catch $localExn)
-               (catch $exn
-                 (i32.load8_u
-                   (i32.const 0)))
-               (catch $exn
-                 ;; This should be ignored.
-                 unreachable))))`,
+             try (result i32)
+               ${callInstruction}
+               ;; All the rest should not be reachable.
+               (call $anotherLocalFuncThrowsExn)
+               (throw $exn)
+               (call $throwsLocalExn)
+               unreachable
+             catch $localExn
+             catch $exn
+               (i32.load8_u
+                 (i32.const 0))
+             catch $exn
+               ;; This should be ignored.
+               unreachable
+             end))`,
         { m: exports }
       ).exports.testFunc(),
       'foo'.charCodeAt(0)

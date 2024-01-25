@@ -245,10 +245,11 @@ if (wasmSimdEnabled()) {
            (func (export "f") (result i32) (local v128)
              (v128.const i32x4 1 2 3 4)
              (local.tee 0)
-             (try (param v128) (result v128)
-               (do (call $throws))
-               (catch $exn)
-               (catch_all (v128.const i32x4 5 6 7 8)))
+             try (param v128) (result v128)
+               (call $throws)
+             catch $exn
+             catch_all (v128.const i32x4 5 6 7 8)
+             end
              (local.get 0)
              (i32x4.eq)
              (i32x4.all_true)))`;
@@ -301,18 +302,18 @@ assertEq(
                  (then
                    (return (i32.const 440)))
                  (else
-                   (try
-                     (do
-                       (if (i32.eq (local.get $depth_to_throw_exn)
-                                   (local.get $loop_counter))
-                         (then
-                           (throw $exn))
-                         (else
-                           (local.set $loop_counter
-                                      (i32.sub (local.get $loop_counter)
-                                               (i32.const 1))))))
-                     (catch $exn (br $catch))
-                     (catch_all))))
+                   try
+                     (if (i32.eq (local.get $depth_to_throw_exn)
+                                 (local.get $loop_counter))
+                       (then
+                         (throw $exn))
+                       (else
+                         (local.set $loop_counter
+                                    (i32.sub (local.get $loop_counter)
+                                             (i32.const 1)))))
+                   catch $exn (br $catch)
+                   catch_all
+                   end))
                (br $loop))
              (return (i32.const 10001)))
          (i32.const 10000)))`
@@ -393,12 +394,14 @@ assertEq(
     `(module
        (tag $exn)
        (func (export "f") (result i32)
-         (try
-           (do throw $exn)
-           (catch $exn
-             (try
-               (do (throw $exn))
-               (catch $exn))))
+         try
+           throw $exn
+         catch $exn
+           try
+             (throw $exn)
+           catch $exn
+           end
+         end
          (i32.const 27)))`
   ).exports.f(),
   27
@@ -413,22 +416,25 @@ assertEq(
              (throw $exn))
            (func (export "f") (param $arg i32) (result i32)
              (block (result i32)
-               (try (result i32)
-                 (do
-                   (call $throw)
-                   (unreachable))
-                 (catch $exn
-                   (if (result i32)
-                     (local.get $arg)
-                     (then
-                       (try (result i32)
-                         (do
-                           (call $throw)
-                           (unreachable))
-                         (catch $exn
-                           (i32.const 27))))
-                     (else
-                       (i32.const 11))))))))`
+               try (result i32)
+                 (call $throw)
+                 (unreachable)
+               catch $exn
+                 (if (result i32)
+                   (local.get $arg)
+                   (then
+                     try (result i32)
+                       (call $throw)
+                       (unreachable)
+                     catch $exn
+                       (i32.const 27)
+                     end)
+                   (else
+                     (i32.const 11))
+                  )
+                end
+              )
+            ))`
       ).exports.f;
 
   assertEq(nested_throw_in_block_and_in_catch(1), 27);
@@ -441,16 +447,17 @@ assertEq(
        (tag $thrownExn)
        (tag $notThrownExn)
        (func (export "f") (result i32)
-         (try (result i32)
-           (do
-             (try (result i32)
-               (do (throw $thrownExn))
-               (catch $notThrownExn
-                 (i32.const 19))
-               (catch $thrownExn
-                 (i32.const 20))
-               (catch_all
-                 (i32.const 21)))))))`
+         try (result i32)
+            try (result i32)
+               (throw $thrownExn)
+            catch $notThrownExn
+               (i32.const 19)
+            catch $thrownExn
+               (i32.const 20)
+            catch_all
+               (i32.const 21)
+            end
+         end))`
   ).exports.f(),
   20
 );
@@ -462,24 +469,25 @@ assertEq(
        (tag $thrownExn)
        (tag $notThrownExn)
        (func (export "f") (result i32) (local i32)
-         (try
-           (do
-             (try
-               (do
-                 (try
-                   (do (throw $thrownExn))
-                   (catch $notThrownExn
-                     (local.set 0
-                       (i32.or (local.get 0)
-                               (i32.const 1))))))
-               (catch $notThrownExn
+         try
+           try
+             try
+               (throw $thrownExn)
+              catch $notThrownExn
                  (local.set 0
                    (i32.or (local.get 0)
-                           (i32.const 2))))))
-           (catch $thrownExn
+                           (i32.const 1)))
+              end
+             catch $notThrownExn
+               (local.set 0
+                 (i32.or (local.get 0)
+                         (i32.const 2)))
+             end
+           catch $thrownExn
              (local.set 0
                (i32.or (local.get 0)
-                       (i32.const 4)))))
+                       (i32.const 4)))
+           end
          (local.get 0)))`
   ).exports.f(),
   4
@@ -783,12 +791,14 @@ assertEq(
        (tag $exn4)
        (tag $exn5)
        (func (export "f") (result i32)
-         (try (result i32)
-           (do (throw $exn4))
-           (catch $exn5 (i32.const 5))
-           (catch $exn2 (i32.const 2))
-           (catch $exn4 (i32.const 4)) ;; Caught here.
-           (catch $exn4 (i32.const 44)))))`
+         try (result i32)
+           (throw $exn4)
+          catch $exn5 (i32.const 5)
+          catch $exn2 (i32.const 2)
+          catch $exn4 (i32.const 4) ;; Caught here.
+          catch $exn4 (i32.const 44)
+          end
+        ))`
   ).exports.f(),
   4
 );
@@ -1002,23 +1012,24 @@ assertErrorMessage(
           (if (param i32 i32) (result i32)
             (i32.eqz (local.get $denominator))
             (then
-              (try (param i32 i32)
-                (do (throw $divexn))
-                (delegate 0))
+              try (param i32 i32)
+                (throw $divexn)
+              delegate 0
               (i32.const 9))
             (else
               i32.div_u)))
        (func $safediv (export "safediv") ${divFunctypeInline}
           (local.get $numerator)
           (local.get $denominator)
-          (try (param i32 i32) (result i32)
-            (do
-              (call $throwingdiv))
-            (catch $notThrownExn)
-            (catch $divexn
-              i32.add)
-            (catch_all
-              (i32.const 44)))))`
+          try (param i32 i32) (result i32)
+              (call $throwingdiv)
+          catch $notThrownExn
+          catch $divexn
+            i32.add
+          catch_all
+            (i32.const 44)
+          end
+        ))`
   ).exports.safediv;
 
   assertEq(safediv(6, 3), 2);
@@ -1171,11 +1182,13 @@ assertEq(
     `(module
        (tag (param i32))
        (func (export "f") (result i32)
-         (try (result i32)
-           (do (i32.const 1))
-           (catch 0
-             (rethrow 0)
-             (i32.const 2)))))`
+         try (result i32)
+           (i32.const 1)
+         catch 0
+           (rethrow 0)
+           (i32.const 2)
+         end
+       ))`
   ).exports.f(),
   1
 );
@@ -1185,14 +1198,17 @@ assertEq(
     `(module
        (tag (param i32))
        (func (export "f") (result i32)
-         (try (result i32)
-           (do (try
-                 (do (i32.const 13)
-                     (throw 0))
-                 (catch 0
-                   (rethrow 0)))
-               (unreachable))
-           (catch 0))))`
+         try (result i32)
+           try
+             (i32.const 13)
+             (throw 0)
+            catch 0
+              (rethrow 0)
+            end
+           (unreachable)
+         catch 0
+         end
+       ))`
   ).exports.f(),
   13
 );
@@ -1202,16 +1218,18 @@ assertEq(
     `(module
        (tag)
        (func (export "f") (result i32)
-         (try (result i32)
-           (do
-             (try
-               (do (throw 0))
-               (catch 0
-                 (i32.const 4)
-                 (rethrow 0)))
-             (unreachable))
-           (catch 0
-              (i32.const 13)))))`
+         try (result i32)
+           try
+             (throw 0)
+           catch 0
+             (i32.const 4)
+             (rethrow 0)
+           end
+           (unreachable)
+         catch 0
+            (i32.const 13)
+         end
+       ))`
   ).exports.f(),
   13
 );
@@ -1221,15 +1239,18 @@ assertEq(
     `(module
        (tag (param i32))
        (func (export "f") (result i32)
-         (try (result i32)
-           (do (try
-                 (do (i32.const 13)
-                     (throw 0))
-                 (catch 0
-                   (i32.const 111)
-                   (rethrow 0)))
-               (i32.const 222))
-           (catch 0))))`
+         try (result i32)
+           try
+             (i32.const 13)
+             (throw 0)
+           catch 0
+             (i32.const 111)
+             (rethrow 0)
+           end
+           (i32.const 222)
+         catch 0
+       end
+     ))`
   ).exports.f(),
   13
 );
@@ -1494,34 +1515,35 @@ assertEq(
          ;; The loop is counting down.
          (local.get $maximum_loop_iterations)
          (local.set $loop_countdown)
-         (try $catch_exn (result i32)
-           (do
-             (try
-               (do
-                 (loop $loop
-                   ;; Counts how many times the loop was started.
-                   (local.set $loop_verifier
-                              (i32.add (i32.const 1)
-                                       (local.get $loop_verifier)))
-                   (if (i32.eqz (local.get $loop_countdown))
-                     (then (return (i32.const 440)))
-                     (else
-                       (try $rethrow_label
-                         (do
-                           (if (i32.eq (local.get $depth_to_throw_exn)
-                                       (local.get $loop_countdown))
-                               (then (throw $exn))
-                               (else
-                                 (local.set $loop_countdown
-                                            (i32.sub (local.get $loop_countdown)
-                                                     (i32.const 1))))))
-                         (catch $exn (try
-                                       (do (rethrow $rethrow_label))
-                                       (delegate $catch_exn))))))
-                   (br $loop)))
-               (catch_all unreachable))
-             (i32.const 2000))
-           (catch_all (i32.const 10000)))
+         try $catch_exn (result i32)
+           try
+             (loop $loop
+               ;; Counts how many times the loop was started.
+               (local.set $loop_verifier
+                          (i32.add (i32.const 1)
+                                   (local.get $loop_verifier)))
+               (if (i32.eqz (local.get $loop_countdown))
+                 (then (return (i32.const 440)))
+                 (else
+                   try $rethrow_label
+                     (if (i32.eq (local.get $depth_to_throw_exn)
+                                 (local.get $loop_countdown))
+                         (then (throw $exn))
+                         (else
+                           (local.set $loop_countdown
+                                      (i32.sub (local.get $loop_countdown)
+                                               (i32.const 1)))))
+                   catch $exn try
+                               (rethrow $rethrow_label)
+                              delegate $catch_exn
+                   end
+                 ))
+               (br $loop))
+             catch_all unreachable
+             end
+             (i32.const 2000)
+         catch_all (i32.const 10000)
+         end
          (i32.add (local.get $loop_verifier))))`
   ).exports.f(3, 5),
   10003
