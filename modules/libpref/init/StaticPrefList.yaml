@@ -2491,6 +2491,14 @@
   mirror: always
 #endif
 
+# Whether Gecko keeps store or forgets the last deepest "enter" event target for
+# the next "enter" or "leave" event dispatching when the last "over" event
+# target is removed from the DOM tree.
+- name: dom.events.mouse-pointer-boundary.keep-enter-targets-after-over-target-removed
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Whether .offset{X,Y} for events targeted at SVG nodes returns bounds relative
 # to the outer SVG.
 - name: dom.events.offset-in-svg-relative-to-svg-root
