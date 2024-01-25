@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1705981670999,
+      "derHash": "edV7Fd+mXChw6v4Rtjd2WQnP6Te0nBXOfxlAMMqzla0=",
+      "subject": "CN=DigiCert Global Root G2,OU=www.digicert.com,O=DigiCert Inc,C=US",
+      "subjectDN": "MGExCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f2e183bb8adad66608733a2817b33625fa77430aedac090ac258cb9b32b84bab",
+        "size": 1618,
+        "filename": "i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl_s2uC_CY=.pem",
+        "location": "security-state-staging/intermediates/938b215a-776f-42e1-8cba-efd54169311d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=",
+      "crlite_enrolled": false,
+      "id": "57b18913-6deb-4a87-b1e2-3379aeecfc35",
+      "last_modified": 1705982223073
+    },
+    {
       "schema": 1705503186346,
       "derHash": "BOgIYDvkayU0Vi494jf0rnq+K14xQdjexHCoIjcNPbc=",
       "subject": "CN=GlobalSign Atlas E46 EV TLS CA 2024 Q2,O=GlobalSign nv-sa,C=BE",
@@ -29899,5 +29917,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1705503423155
+  "timestamp": 1705982223073
 }
