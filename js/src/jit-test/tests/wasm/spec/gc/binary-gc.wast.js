@@ -20,7 +20,7 @@ assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
     "\\01"                     ;; Type section id
-    "\\05"                     ;; Type section length
+    "\\04"                     ;; Type section length
     "\\01"                     ;; Types vector length
     "\\5e"                     ;; Array type, -0x22
     "\\78"                     ;; Storage type: i8 or -0x08

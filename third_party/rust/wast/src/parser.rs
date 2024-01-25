@@ -2,11 +2,10 @@
 //!
 //! This module contains the traits, abstractions, and utilities needed to
 //! define custom parsers for WebAssembly text format items. This module exposes
-//! a recursive descent parsing strategy and centers around the
-//! [`Parse`](crate::parser::Parse) trait for defining new fragments of
-//! WebAssembly text syntax.
+//! a recursive descent parsing strategy and centers around the [`Parse`] trait
+//! for defining new fragments of WebAssembly text syntax.
 //!
-//! The top-level [`parse`](crate::parser::parse) function can be used to fully parse AST fragments:
+//! The top-level [`parse`] function can be used to fully parse AST fragments:
 //!
 //! ```
 //! use wast::Wat;
@@ -20,8 +19,7 @@
 //! # }
 //! ```
 //!
-//! and you can also define your own new syntax with the
-//! [`Parse`](crate::parser::Parse) trait:
+//! and you can also define your own new syntax with the [`Parse`] trait:
 //!
 //! ```
 //! use wast::kw;

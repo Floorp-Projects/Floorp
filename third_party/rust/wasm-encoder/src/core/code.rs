@@ -310,10 +310,6 @@ pub enum Instruction<'a> {
     Loop(BlockType),
     If(BlockType),
     Else,
-    Try(BlockType),
-    Delegate(u32),
-    Catch(u32),
-    CatchAll,
     End,
     Br(u32),
     BrIf(u32),
@@ -323,11 +319,25 @@ pub enum Instruction<'a> {
     Return,
     Call(u32),
     CallRef(u32),
-    CallIndirect { ty: u32, table: u32 },
+    CallIndirect {
+        ty: u32,
+        table: u32,
+    },
     ReturnCallRef(u32),
     ReturnCall(u32),
-    ReturnCallIndirect { ty: u32, table: u32 },
+    ReturnCallIndirect {
+        ty: u32,
+        table: u32,
+    },
+    TryTable(BlockType, Cow<'a, [Catch]>),
     Throw(u32),
+    ThrowRef,
+
+    // Deprecated exception-handling instructions
+    Try(BlockType),
+    Delegate(u32),
+    Catch(u32),
+    CatchAll,
     Rethrow(u32),
 
     // Parametric instructions.
@@ -367,9 +377,15 @@ pub enum Instruction<'a> {
     I64Store32(MemArg),
     MemorySize(u32),
     MemoryGrow(u32),
-    MemoryInit { mem: u32, data_index: u32 },
+    MemoryInit {
+        mem: u32,
+        data_index: u32,
+    },
     DataDrop(u32),
-    MemoryCopy { src_mem: u32, dst_mem: u32 },
+    MemoryCopy {
+        src_mem: u32,
+        dst_mem: u32,
+    },
     MemoryFill(u32),
     MemoryDiscard(u32),
 
@@ -526,28 +542,69 @@ pub enum Instruction<'a> {
     // GC types instructions.
     StructNew(u32),
     StructNewDefault(u32),
-    StructGet(u32, u32),
-    StructGetS(u32, u32),
-    StructGetU(u32, u32),
-    StructSet(u32, u32),
+    StructGet {
+        struct_type_index: u32,
+        field_index: u32,
+    },
+    StructGetS {
+        struct_type_index: u32,
+        field_index: u32,
+    },
+    StructGetU {
+        struct_type_index: u32,
+        field_index: u32,
+    },
+    StructSet {
+        struct_type_index: u32,
+        field_index: u32,
+    },
 
     ArrayNew(u32),
     ArrayNewDefault(u32),
-    ArrayNewFixed(u32, u32),
-    ArrayNewData(u32, u32),
-    ArrayNewElem(u32, u32),
+    ArrayNewFixed {
+        array_type_index: u32,
+        array_size: u32,
+    },
+    ArrayNewData {
+        array_type_index: u32,
+        array_data_index: u32,
+    },
+    ArrayNewElem {
+        array_type_index: u32,
+        array_elem_index: u32,
+    },
     ArrayGet(u32),
     ArrayGetS(u32),
     ArrayGetU(u32),
     ArraySet(u32),
     ArrayLen,
     ArrayFill(u32),
-    ArrayCopy(u32, u32),
-    ArrayInitData(u32, u32),
-    ArrayInitElem(u32, u32),
-
-    RefTest(RefType),
-    RefCast(RefType),
+    ArrayCopy {
+        array_type_index_dst: u32,
+        array_type_index_src: u32,
+    },
+    ArrayInitData {
+        array_type_index: u32,
+        array_data_index: u32,
+    },
+    ArrayInitElem {
+        array_type_index: u32,
+        array_elem_index: u32,
+    },
+    RefTestNonNull(HeapType),
+    RefTestNullable(HeapType),
+    RefCastNonNull(HeapType),
+    RefCastNullable(HeapType),
+    BrOnCast {
+        relative_depth: u32,
+        from_ref_type: RefType,
+        to_ref_type: RefType,
+    },
+    BrOnCastFail {
+        relative_depth: u32,
+        from_ref_type: RefType,
+        to_ref_type: RefType,
+    },
     AnyConvertExtern,
     ExternConvertAny,
 
@@ -556,14 +613,20 @@ pub enum Instruction<'a> {
     I31GetU,
 
     // Bulk memory instructions.
-    TableInit { elem_index: u32, table: u32 },
+    TableInit {
+        elem_index: u32,
+        table: u32,
+    },
     ElemDrop(u32),
     TableFill(u32),
     TableSet(u32),
     TableGet(u32),
     TableGrow(u32),
     TableSize(u32),
-    TableCopy { src_table: u32, dst_table: u32 },
+    TableCopy {
+        src_table: u32,
+        dst_table: u32,
+    },
 
     // SIMD instructions.
     V128Load(MemArg),
@@ -580,14 +643,38 @@ pub enum Instruction<'a> {
     V128Load32Zero(MemArg),
     V128Load64Zero(MemArg),
     V128Store(MemArg),
-    V128Load8Lane { memarg: MemArg, lane: Lane },
-    V128Load16Lane { memarg: MemArg, lane: Lane },
-    V128Load32Lane { memarg: MemArg, lane: Lane },
-    V128Load64Lane { memarg: MemArg, lane: Lane },
-    V128Store8Lane { memarg: MemArg, lane: Lane },
-    V128Store16Lane { memarg: MemArg, lane: Lane },
-    V128Store32Lane { memarg: MemArg, lane: Lane },
-    V128Store64Lane { memarg: MemArg, lane: Lane },
+    V128Load8Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Load16Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Load32Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Load64Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Store8Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Store16Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Store32Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
+    V128Store64Lane {
+        memarg: MemArg,
+        lane: Lane,
+    },
     V128Const(i128),
     I8x16Shuffle([Lane; 16]),
     I8x16ExtractLaneS(Lane),
@@ -930,6 +1017,9 @@ impl Encode for Instruction<'_> {
                 sink.push(0x09);
                 l.encode(sink);
             }
+            Instruction::ThrowRef => {
+                sink.push(0x0A);
+            }
             Instruction::End => sink.push(0x0B),
             Instruction::Br(l) => {
                 sink.push(0x0C);
@@ -994,6 +1084,12 @@ impl Encode for Instruction<'_> {
             Instruction::TypedSelect(ty) => {
                 sink.push(0x1c);
                 [ty].encode(sink);
+            }
+
+            Instruction::TryTable(ty, ref catches) => {
+                sink.push(0x1f);
+                ty.encode(sink);
+                catches.encode(sink);
             }
 
             // Variable instructions.
@@ -1360,28 +1456,40 @@ impl Encode for Instruction<'_> {
                 sink.push(0x01);
                 type_index.encode(sink);
             }
-            Instruction::StructGet(type_index, field_index) => {
+            Instruction::StructGet {
+                struct_type_index,
+                field_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x02);
-                type_index.encode(sink);
+                struct_type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructGetS(type_index, field_index) => {
+            Instruction::StructGetS {
+                struct_type_index,
+                field_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x03);
-                type_index.encode(sink);
+                struct_type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructGetU(type_index, field_index) => {
+            Instruction::StructGetU {
+                struct_type_index,
+                field_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x04);
-                type_index.encode(sink);
+                struct_type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructSet(type_index, field_index) => {
+            Instruction::StructSet {
+                struct_type_index,
+                field_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x05);
-                type_index.encode(sink);
+                struct_type_index.encode(sink);
                 field_index.encode(sink);
             }
             Instruction::ArrayNew(type_index) => {
@@ -1394,23 +1502,32 @@ impl Encode for Instruction<'_> {
                 sink.push(0x07);
                 type_index.encode(sink);
             }
-            Instruction::ArrayNewFixed(type_index, size) => {
+            Instruction::ArrayNewFixed {
+                array_type_index,
+                array_size,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x08);
-                type_index.encode(sink);
-                size.encode(sink);
+                array_type_index.encode(sink);
+                array_size.encode(sink);
             }
-            Instruction::ArrayNewData(type_index, data_index) => {
+            Instruction::ArrayNewData {
+                array_type_index,
+                array_data_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x09);
-                type_index.encode(sink);
-                data_index.encode(sink);
+                array_type_index.encode(sink);
+                array_data_index.encode(sink);
             }
-            Instruction::ArrayNewElem(type_index, elem_index) => {
+            Instruction::ArrayNewElem {
+                array_type_index,
+                array_elem_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x0a);
-                type_index.encode(sink);
-                elem_index.encode(sink);
+                array_type_index.encode(sink);
+                array_elem_index.encode(sink);
             }
             Instruction::ArrayGet(type_index) => {
                 sink.push(0xfb);
@@ -1441,55 +1558,80 @@ impl Encode for Instruction<'_> {
                 sink.push(0x10);
                 type_index.encode(sink);
             }
-            Instruction::ArrayCopy(dst_type_index, src_type_index) => {
+            Instruction::ArrayCopy {
+                array_type_index_dst,
+                array_type_index_src,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x11);
-                dst_type_index.encode(sink);
-                src_type_index.encode(sink);
+                array_type_index_dst.encode(sink);
+                array_type_index_src.encode(sink);
             }
-            Instruction::ArrayInitData(type_index, data_index) => {
+            Instruction::ArrayInitData {
+                array_type_index,
+                array_data_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x12);
-                type_index.encode(sink);
-                data_index.encode(sink);
+                array_type_index.encode(sink);
+                array_data_index.encode(sink);
             }
-            Instruction::ArrayInitElem(type_index, elem_index) => {
+            Instruction::ArrayInitElem {
+                array_type_index,
+                array_elem_index,
+            } => {
                 sink.push(0xfb);
                 sink.push(0x13);
-                type_index.encode(sink);
-                elem_index.encode(sink);
+                array_type_index.encode(sink);
+                array_elem_index.encode(sink);
             }
-            Instruction::RefTest(RefType {
-                nullable: false,
-                heap_type,
-            }) => {
+            Instruction::RefTestNonNull(heap_type) => {
                 sink.push(0xfb);
                 sink.push(0x14);
                 heap_type.encode(sink);
             }
-            Instruction::RefTest(RefType {
-                nullable: true,
-                heap_type,
-            }) => {
+            Instruction::RefTestNullable(heap_type) => {
                 sink.push(0xfb);
                 sink.push(0x15);
                 heap_type.encode(sink);
             }
-            Instruction::RefCast(RefType {
-                nullable: false,
-                heap_type,
-            }) => {
+            Instruction::RefCastNonNull(heap_type) => {
                 sink.push(0xfb);
                 sink.push(0x16);
                 heap_type.encode(sink);
             }
-            Instruction::RefCast(RefType {
-                nullable: true,
-                heap_type,
-            }) => {
+            Instruction::RefCastNullable(heap_type) => {
                 sink.push(0xfb);
                 sink.push(0x17);
                 heap_type.encode(sink);
+            }
+            Instruction::BrOnCast {
+                relative_depth,
+                from_ref_type,
+                to_ref_type,
+            } => {
+                sink.push(0xfb);
+                sink.push(0x18);
+                let cast_flags =
+                    (from_ref_type.nullable as u8) | ((to_ref_type.nullable as u8) << 1);
+                sink.push(cast_flags);
+                relative_depth.encode(sink);
+                from_ref_type.heap_type.encode(sink);
+                to_ref_type.heap_type.encode(sink);
+            }
+            Instruction::BrOnCastFail {
+                relative_depth,
+                from_ref_type,
+                to_ref_type,
+            } => {
+                sink.push(0xfb);
+                sink.push(0x19);
+                let cast_flags =
+                    (from_ref_type.nullable as u8) | ((to_ref_type.nullable as u8) << 1);
+                sink.push(cast_flags);
+                relative_depth.encode(sink);
+                from_ref_type.heap_type.encode(sink);
+                to_ref_type.heap_type.encode(sink);
             }
             Instruction::AnyConvertExtern => {
                 sink.push(0xfb);
@@ -2980,6 +3122,40 @@ impl Encode for Instruction<'_> {
                 sink.push(0xFE);
                 sink.push(0x4E);
                 memarg.encode(sink);
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+#[allow(missing_docs)]
+pub enum Catch {
+    One { tag: u32, label: u32 },
+    OneRef { tag: u32, label: u32 },
+    All { label: u32 },
+    AllRef { label: u32 },
+}
+
+impl Encode for Catch {
+    fn encode(&self, sink: &mut Vec<u8>) {
+        match self {
+            Catch::One { tag, label } => {
+                sink.push(0x00);
+                tag.encode(sink);
+                label.encode(sink);
+            }
+            Catch::OneRef { tag, label } => {
+                sink.push(0x01);
+                tag.encode(sink);
+                label.encode(sink);
+            }
+            Catch::All { label } => {
+                sink.push(0x02);
+                label.encode(sink);
+            }
+            Catch::AllRef { label } => {
+                sink.push(0x03);
+                label.encode(sink);
             }
         }
     }

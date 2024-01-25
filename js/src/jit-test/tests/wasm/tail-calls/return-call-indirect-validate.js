@@ -3,7 +3,7 @@
 wasmValidateText(
     `(module
        (type (func))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $arity-1-vs-0
          (return_call_indirect (type 0)
                                (i32.const 1) (i32.const 0))))`);
@@ -11,7 +11,7 @@ wasmValidateText(
 wasmValidateText(
     `(module
        (type (func))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $arity-1-vs-0
          (return_call_indirect (type 0)
                                (f64.const 2) (i32.const 1) (i32.const 0))))`);
@@ -31,7 +31,7 @@ function validateConst(type, value) {
              (${type}.const ${value}))
            (func $t (result ${type})
              (return_call $type-${type}))
-           (table anyfunc (elem $const-${type})))`);
+           (table funcref (elem $const-${type})))`);
 }
 for (let {type, value} of constants) {
     validateConst(type, value);
@@ -46,7 +46,7 @@ function validateOneArg(type, value) {
            (func $t (result ${type})
              (return_call_indirect (type $f-${type}) (${type}.const ${value})
                                    (i32.const 0)))
-           (table anyfunc (elem $id-${type})))`);
+           (table funcref (elem $id-${type})))`);
 }
 for (let {type, value} of constants) {
     validateOneArg(type, value);
@@ -62,7 +62,7 @@ function validateTwoArgs(t0, v0, t1, v1) {
              (return_call_indirect (type $f)
                                    (${t0}.const ${v0}) (${t1}.const ${v1})
                                    (i32.const 0)))
-           (table anyfunc (elem $second-${t0}-${t1})))`);
+           (table funcref (elem $second-${t0}-${t1})))`);
 }
 for (let {type: t0, value: v0} of constants) {
     for (let {type: t1, value: v1} of constants) {
@@ -83,7 +83,7 @@ wasmValidateText(
          (return_call $dispatch1 (i32.const 0) (i64.const 1)))
        (func $t2 (result i64)
          (return_call $dispatch2 (i32.const 100)))
-       (table anyfunc (elem $id-i64)))`);
+       (table funcref (elem $id-i64)))`);
 
 wasmValidateText(
     `(module
@@ -101,7 +101,7 @@ wasmValidateText(
                (i64.mul (local.get 0) (local.get 1))
                (i32.const 0)))))
 
-       (table anyfunc (elem $fac-acc)))`);
+       (table funcref (elem $fac-acc)))`);
 
 wasmValidateText(
     `(module
@@ -120,7 +120,7 @@ wasmValidateText(
              (return_call_indirect (type $t)
                (i32.sub (local.get 0) (i32.const 1))
                (i32.const 0)))))
-       (table anyfunc (elem $even $odd)))`);
+       (table funcref (elem $even $odd)))`);
 
 wasmFailValidateText(
     `(module
@@ -132,7 +132,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-void-vs-num
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
     /unused values not explicitly dropped/);
@@ -140,7 +140,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-void-vs-num (result i32)
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
     /type mismatch: expected 1 values, got 0 values/);
@@ -148,7 +148,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (result i64)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-num-vs-num
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
     /type mismatch: expected 0 values, got 1 values/);
@@ -156,7 +156,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (result i64)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-num-vs-num (result i32)
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
     /expression has type i64 but expected i32/);
@@ -164,7 +164,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $arity-0-vs-1
          (return_call_indirect (type 0) (i32.const 0))))`,
     /popping value from empty stack/);
@@ -172,7 +172,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param f64 i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $arity-0-vs-2
          (return_call_indirect (type 0) (i32.const 0))))`,
     /popping value from empty stack/);
@@ -180,7 +180,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-func-void-vs-i32
          (return_call_indirect (type 0) (i32.const 1) (nop))))`,
     /popping value from empty stack/);
@@ -188,7 +188,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-func-num-vs-i32
          (return_call_indirect (type 0) (i32.const 0) (i64.const 1))))`,
     /expression has type i64 but expected i32/);
@@ -196,7 +196,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32 i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-first-void-vs-num
          (return_call_indirect (type 0) (nop) (i32.const 1) (i32.const 0))
        ))`,
@@ -205,7 +205,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32 i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-second-void-vs-num
          (return_call_indirect (type 0) (i32.const 1) (nop) (i32.const 0))))`,
     /popping value from empty stack/);
@@ -213,7 +213,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param i32 f64)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-first-num-vs-num
          (return_call_indirect (type 0)
                                (f64.const 1) (i32.const 1) (i32.const 0))))`,
@@ -222,7 +222,7 @@ wasmFailValidateText(
 wasmFailValidateText(
     `(module
        (type (func (param f64 i32)))
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $type-second-num-vs-num
          (return_call_indirect (type 0)
                                (i32.const 1) (f64.const 1) (i32.const 0))))`,
@@ -230,14 +230,14 @@ wasmFailValidateText(
 
 wasmFailValidateText(
     `(module
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $unbound-type
          (return_call_indirect (type 1) (i32.const 0))))`,
     /signature index out of range/);
 
 wasmFailValidateText(
     `(module
-       (table 0 anyfunc)
+       (table 0 funcref)
        (func $large-type
          (return_call_indirect (type 1012321300) (i32.const 0))))`,
          /signature index out of range/);

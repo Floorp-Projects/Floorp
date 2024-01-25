@@ -28,7 +28,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bitflags = "2.4.0"
+bitflags = "2.4.1"
 ```
 
 and this to your source code:
@@ -46,11 +46,17 @@ use bitflags::bitflags;
 
 // The `bitflags!` macro generates `struct`s that manage a set of flags.
 bitflags! {
+    /// Represents a set of flags.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     struct Flags: u32 {
+        /// The value `A`, at bit position `0`.
         const A = 0b00000001;
+        /// The value `B`, at bit position `1`.
         const B = 0b00000010;
+        /// The value `C`, at bit position `2`.
         const C = 0b00000100;
+
+        /// The combination of `A`, `B`, and `C`.
         const ABC = Self::A.bits() | Self::B.bits() | Self::C.bits();
     }
 }

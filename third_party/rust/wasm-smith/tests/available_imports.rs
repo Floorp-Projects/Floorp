@@ -3,7 +3,7 @@
 use arbitrary::{Arbitrary, Unstructured};
 use rand::{rngs::SmallRng, RngCore, SeedableRng};
 use std::collections::HashMap;
-use wasm_smith::{Config, Module, SwarmConfig};
+use wasm_smith::{Config, Module};
 use wasmparser::{Parser, TypeRef, ValType};
 use wasmparser::{Validator, WasmFeatures};
 
@@ -33,14 +33,16 @@ fn smoke_test_imports_config() {
             for payload in Parser::new(0).parse_all(&wasm_bytes) {
                 let payload = payload.unwrap();
                 if let wasmparser::Payload::TypeSection(rdr) = payload {
-                    // Gather the signature types to later check function types against.
+                    // Gather the signature types to later check function types
+                    // against.
                     for ty in rdr.into_iter_err_on_gc_types() {
                         sig_types.push(ty.unwrap());
                     }
                 } else if let wasmparser::Payload::ImportSection(rdr) = payload {
-                    // Read out imports, checking that they all are within the list of expected
-                    // imports (i.e. we don't generate arbitrary ones), and that we handle the
-                    // logic correctly (i.e. signature types are as expected)
+                    // Read out imports, checking that they all are within the
+                    // list of expected imports (i.e. we don't generate
+                    // arbitrary ones), and that we handle the logic correctly
+                    // (i.e. signature types are as expected)
                     for import in rdr {
                         let import = import.unwrap();
                         use AvailableImportKind as I;
@@ -82,9 +84,10 @@ fn smoke_test_imports_config() {
                 }
             }
 
-            // Verify that we have seen both instances with partial imports (i.e. we don't always
-            // just copy over all the imports from the example module) and also that we eventually
-            // observe all of the imports being used (i.e. selection is reasonably random)
+            // Verify that we have seen both instances with partial imports
+            // (i.e. we don't always just copy over all the imports from the
+            // example module) and also that we eventually observe all of the
+            // imports being used (i.e. selection is reasonably random)
             for (m, f, _) in &available[..] {
                 let seen = imports_seen[&(*m, *f)];
                 let global_seen = global_imports_seen
@@ -113,10 +116,11 @@ enum AvailableImportKind {
 fn import_config(
     u: &mut Unstructured,
 ) -> (
-    SwarmConfig,
+    Config,
     Vec<(&'static str, &'static str, AvailableImportKind)>,
 ) {
-    let mut config = SwarmConfig::arbitrary(u).expect("arbitrary swarm");
+    let mut config = Config::arbitrary(u).expect("arbitrary swarm");
+    config.gc_enabled = false;
     config.exceptions_enabled = u.arbitrary().expect("exceptions enabled for swarm");
     let available = {
         use {AvailableImportKind::*, ValType::*};
@@ -156,29 +160,30 @@ fn import_config(
     (config, available)
 }
 
-fn parser_features_from_config(config: &impl Config) -> WasmFeatures {
+fn parser_features_from_config(config: &Config) -> WasmFeatures {
     WasmFeatures {
         mutable_global: true,
-        saturating_float_to_int: config.saturating_float_to_int_enabled(),
-        sign_extension: config.sign_extension_ops_enabled(),
-        reference_types: config.reference_types_enabled(),
-        multi_value: config.multi_value_enabled(),
-        bulk_memory: config.bulk_memory_enabled(),
-        simd: config.simd_enabled(),
-        relaxed_simd: config.relaxed_simd_enabled(),
-        multi_memory: config.max_memories() > 1,
-        exceptions: config.exceptions_enabled(),
-        memory64: config.memory64_enabled(),
-        tail_call: config.tail_call_enabled(),
+        saturating_float_to_int: config.saturating_float_to_int_enabled,
+        sign_extension: config.sign_extension_ops_enabled,
+        reference_types: config.reference_types_enabled,
+        multi_value: config.multi_value_enabled,
+        bulk_memory: config.bulk_memory_enabled,
+        simd: config.simd_enabled,
+        relaxed_simd: config.relaxed_simd_enabled,
+        multi_memory: config.max_memories > 1,
+        exceptions: config.exceptions_enabled,
+        memory64: config.memory64_enabled,
+        tail_call: config.tail_call_enabled,
+        function_references: config.gc_enabled,
+        gc: config.gc_enabled,
 
         threads: false,
         floats: true,
         extended_const: false,
         component_model: false,
-        function_references: false,
         memory_control: false,
-        gc: false,
         component_model_values: false,
+        component_model_nested_names: false,
     }
 }
 
@@ -187,9 +192,11 @@ fn validate(validator: &mut Validator, bytes: &[u8]) {
         Ok(_) => return,
         Err(e) => e,
     };
+    eprintln!("Writing Wasm to `test.wasm`");
     drop(std::fs::write("test.wasm", &bytes));
     if let Ok(text) = wasmprinter::print_bytes(bytes) {
+        eprintln!("Writing WAT to `test.wat`");
         drop(std::fs::write("test.wat", &text));
     }
-    panic!("wasm failed to validate {:?}", err);
+    panic!("wasm failed to validate: {}", err);
 }

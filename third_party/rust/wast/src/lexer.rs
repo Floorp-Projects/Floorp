@@ -445,7 +445,11 @@ impl<'a> Lexer<'a> {
             // `reserved` token is part of the annotations proposal.
             b';' => match remaining.get(1) {
                 Some(b';') => {
-                    let comment = self.split_until(pos, b'\n');
+                    let remaining = &self.input[*pos..];
+                    let byte_pos = memchr::memchr2(b'\n', b'\r', remaining.as_bytes())
+                        .unwrap_or(remaining.len());
+                    *pos += byte_pos;
+                    let comment = &remaining[..byte_pos];
                     self.check_confusing_comment(*pos, comment)?;
                     Ok(Some(TokenKind::LineComment))
                 }
@@ -469,13 +473,6 @@ impl<'a> Lexer<'a> {
                 Err(self.error(*pos, LexError::Unexpected(ch)))
             }
         }
-    }
-
-    fn split_until(&self, pos: &mut usize, byte: u8) -> &'a str {
-        let remaining = &self.input[*pos..];
-        let byte_pos = memchr::memchr(byte, remaining.as_bytes()).unwrap_or(remaining.len());
-        *pos += byte_pos;
-        &remaining[..byte_pos]
     }
 
     fn skip_ws(&self, pos: &mut usize) {
@@ -1185,6 +1182,8 @@ mod tests {
         assert_eq!(get_line_comment(";; xyz\nabc"), ";; xyz");
         assert_eq!(get_line_comment(";;\nabc"), ";;");
         assert_eq!(get_line_comment(";;   \nabc"), ";;   ");
+        assert_eq!(get_line_comment(";;   \rabc"), ";;   ");
+        assert_eq!(get_line_comment(";;   \r\nabc"), ";;   ");
     }
 
     #[test]

@@ -33,13 +33,50 @@ impl Module {
         }
 
         let mut section = wasm_encoder::TypeSection::new();
-        for ty in &self.types {
-            match ty {
-                Type::Func(ty) => {
-                    section.function(ty.params.iter().cloned(), ty.results.iter().cloned());
-                }
+
+        for group in &self.rec_groups {
+            if group.end - group.start == 1 {
+                let ty = &self.types[group.start];
+                section.subtype(&wasm_encoder::SubType {
+                    is_final: ty.is_final,
+                    supertype_idx: ty.supertype,
+                    composite_type: match &ty.composite_type {
+                        CompositeType::Array(a) => wasm_encoder::CompositeType::Array(a.clone()),
+                        CompositeType::Func(f) => {
+                            wasm_encoder::CompositeType::Func(wasm_encoder::FuncType::new(
+                                f.params.iter().cloned(),
+                                f.results.iter().cloned(),
+                            ))
+                        }
+                        CompositeType::Struct(s) => wasm_encoder::CompositeType::Struct(s.clone()),
+                    },
+                });
+            } else {
+                section.rec(
+                    self.types[group.clone()]
+                        .iter()
+                        .map(|ty| wasm_encoder::SubType {
+                            is_final: ty.is_final,
+                            supertype_idx: ty.supertype,
+                            composite_type: match &ty.composite_type {
+                                CompositeType::Array(a) => {
+                                    wasm_encoder::CompositeType::Array(a.clone())
+                                }
+                                CompositeType::Func(f) => {
+                                    wasm_encoder::CompositeType::Func(wasm_encoder::FuncType::new(
+                                        f.params.iter().cloned(),
+                                        f.results.iter().cloned(),
+                                    ))
+                                }
+                                CompositeType::Struct(s) => {
+                                    wasm_encoder::CompositeType::Struct(s.clone())
+                                }
+                            },
+                        }),
+                );
             }
         }
+
         module.section(&section);
     }
 
@@ -184,7 +221,7 @@ impl Module {
 
     fn encode_data_count(&self, module: &mut wasm_encoder::Module) {
         // Without bulk memory there's no need for a data count section,
-        if !self.config.bulk_memory_enabled() {
+        if !self.config.bulk_memory_enabled {
             return;
         }
         // ... and also if there's no data no need for a data count section.

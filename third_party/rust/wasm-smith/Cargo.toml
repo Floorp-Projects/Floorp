@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-smith"
-version = "0.13.0"
+version = "0.15.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/benches/corpus"]
 description = "A WebAssembly test case generator"
@@ -31,9 +31,18 @@ repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wa
 name = "corpus"
 harness = false
 
+[dependencies.anyhow]
+version = "1.0.58"
+optional = true
+
 [dependencies.arbitrary]
 version = "1.1.0"
 features = ["derive"]
+
+[dependencies.clap]
+version = "4.0.0"
+features = ["derive"]
+optional = true
 
 [dependencies.flagset]
 version = "0.4"
@@ -53,10 +62,14 @@ version = "1.0.166"
 optional = true
 
 [dependencies.wasm-encoder]
-version = "0.38.0"
+version = "0.40.0"
 
 [dependencies.wasmparser]
-version = "0.118.0"
+version = "0.120.0"
+optional = true
+
+[dependencies.wat]
+version = "1.0.84"
 optional = true
 
 [dev-dependencies.criterion]
@@ -67,13 +80,21 @@ version = "0.8.4"
 features = ["small_rng"]
 
 [dev-dependencies.wasmparser]
-version = "0.118.0"
+version = "0.120.0"
 
 [features]
 _internal_cli = [
+    "anyhow",
+    "clap",
+    "flagset/serde",
     "serde",
     "serde_derive",
     "wasmparser",
+    "wat",
+]
+wasmparser = [
+    "dep:wasmparser",
+    "wasm-encoder/wasmparser",
 ]
 
 [target."cfg(not(target_family = \"wasm\"))".dev-dependencies.libfuzzer-sys]

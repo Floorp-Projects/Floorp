@@ -124,11 +124,14 @@ impl CoreType {
                 let mut enc_mod_ty = wasm_encoder::ModuleType::new();
                 for def in &mod_ty.defs {
                     match def {
-                        ModuleTypeDef::TypeDef(crate::core::Type::Func(func_ty)) => {
+                        ModuleTypeDef::TypeDef(crate::core::CompositeType::Func(func_ty)) => {
                             enc_mod_ty.ty().function(
                                 func_ty.params.iter().copied(),
                                 func_ty.results.iter().copied(),
                             );
+                        }
+                        ModuleTypeDef::TypeDef(_) => {
+                            unimplemented!("non-func types in a component's module type")
                         }
                         ModuleTypeDef::OuterAlias { count, i, kind } => match kind {
                             CoreOuterAliasKind::Type(_) => {

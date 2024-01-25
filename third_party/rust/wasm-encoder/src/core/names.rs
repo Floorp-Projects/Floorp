@@ -154,6 +154,14 @@ impl NameSection {
         names.encode(&mut self.bytes);
     }
 
+    /// Appends a subsection for the names of all tags in this wasm module.
+    ///
+    /// This section should come after the data name subsection (if present).
+    pub fn tag(&mut self, names: &NameMap) {
+        self.subsection_header(Subsection::Tag, names.size());
+        names.encode(&mut self.bytes);
+    }
+
     /// Appends a subsection for the names of fields within types in this
     /// wasm module.
     ///
