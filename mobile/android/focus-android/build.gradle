@@ -88,6 +88,10 @@ allprojects {
                 }
             }
         }
+
+        maven {
+            url "${gradle.mozconfig.topobjdir}/gradle/maven"
+        }
     }
 }
 
