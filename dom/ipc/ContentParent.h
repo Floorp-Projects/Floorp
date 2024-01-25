@@ -38,7 +38,6 @@
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
 #include "nsTHashSet.h"
-#include "nsPluginTags.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIDOMProcessParent.h"
@@ -219,14 +218,6 @@ class ContentParent final : public PContentParent,
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND);
 
   /**
-   * Get or create a content process for a JS plugin. aPluginID is the id of the
-   * JS plugin
-   * (@see nsFakePlugin::mId). There is a maximum of one process per JS plugin.
-   */
-  static already_AddRefed<ContentParent> GetNewOrUsedJSPluginProcess(
-      uint32_t aPluginID, const hal::ProcessPriority& aPriority);
-
-  /**
    * Get or create a content process for the given TabContext.  aFrameElement
    * should be the frame/iframe element with which this process will
    * associated.
@@ -391,9 +382,6 @@ class ContentParent final : public PContentParent,
   bool IsDead() const { return mLifecycleState == LifecycleState::DEAD; }
 
   bool IsForBrowser() const { return mIsForBrowser; }
-  bool IsForJSPlugin() const {
-    return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN;
-  }
 
   GeckoChildProcessHost* Process() const { return mSubprocess; }
 
@@ -690,8 +678,6 @@ class ContentParent final : public PContentParent,
    */
   static nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>*
       sBrowserContentParents;
-  static mozilla::StaticAutoPtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
-      sJSPluginContentParents;
   static mozilla::StaticAutoPtr<LinkedList<ContentParent>> sContentParents;
 
   /**
@@ -728,11 +714,7 @@ class ContentParent final : public PContentParent,
       bool aLoadUri, nsIContentSecurityPolicy* aCsp,
       const OriginAttributes& aOriginAttributes);
 
-  explicit ContentParent(int32_t aPluginID) : ContentParent(""_ns, aPluginID) {}
-  explicit ContentParent(const nsACString& aRemoteType)
-      : ContentParent(aRemoteType, nsFakePluginTag::NOT_JSPLUGIN) {}
-
-  ContentParent(const nsACString& aRemoteType, int32_t aPluginID);
+  explicit ContentParent(const nsACString& aRemoteType);
 
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
@@ -795,9 +777,9 @@ class ContentParent final : public PContentParent,
   void RemoveFromList();
 
   /**
-   * Return if the process has an active worker or JSPlugin
+   * Return if the process has an active worker.
    */
-  bool HasActiveWorkerOrJSPlugin();
+  bool HasActiveWorker();
 
   /**
    * Decide whether the process should be kept alive even when it would normally
@@ -1465,12 +1447,6 @@ class ContentParent final : public PContentParent,
 
   ContentParentId mChildID;
   int32_t mGeolocationWatchID;
-
-  // This contains the id for the JS plugin (@see nsFakePluginTag) if this is
-  // the ContentParent for a process containing iframes for that JS plugin. If
-  // this is not a ContentParent for a JS plugin then it contains the value
-  // nsFakePluginTag::NOT_JSPLUGIN.
-  int32_t mJSPluginID;
 
   // After we destroy the last Browser, we also start a timer to ensure
   // that even content processes that are not responding will get a

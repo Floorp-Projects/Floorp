@@ -234,7 +234,6 @@
 #include "nsMemoryReporterManager.h"
 #include "nsOpenURIInFrameParams.h"
 #include "nsPIWindowWatcher.h"
-#include "nsPluginTags.h"
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsSHistory.h"
@@ -595,8 +594,6 @@ ProcessID GetTelemetryProcessID(const nsACString& remoteType) {
 
 }  // anonymous namespace
 
-StaticAutoPtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
-    ContentParent::sJSPluginContentParents;
 StaticAutoPtr<LinkedList<ContentParent>> ContentParent::sContentParents;
 StaticRefPtr<ContentParent> ContentParent::sRecycledE10SProcess;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -809,8 +806,7 @@ void ContentParent::ReleaseCachedProcesses() {
     // Ensure the process cannot be claimed between check and MarkAsDead.
     RecursiveMutexAutoLock lock(cp->ThreadsafeHandleMutex());
 
-    if (cp->ManagedPBrowserParent().Count() == 0 &&
-        !cp->HasActiveWorkerOrJSPlugin() &&
+    if (cp->ManagedPBrowserParent().Count() == 0 && !cp->HasActiveWorker() &&
         cp->mRemoteType == DEFAULT_REMOTE_TYPE) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
               ("  Shutdown %p (%s)", cp.get(), cp->mRemoteType.get()));
@@ -824,11 +820,10 @@ void ContentParent::ReleaseCachedProcesses() {
       // message manager.
       cp->ShutDownMessageManager();
     } else {
-      MOZ_LOG(
-          ContentParent::GetLog(), LogLevel::Debug,
-          ("  Skipping %p (%s), count %d, HasActiveWorkerOrJSPlugin %d",
-           cp.get(), cp->mRemoteType.get(), cp->ManagedPBrowserParent().Count(),
-           cp->HasActiveWorkerOrJSPlugin()));
+      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+              ("  Skipping %p (%s), count %d, HasActiveWorker %d", cp.get(),
+               cp->mRemoteType.get(), cp->ManagedPBrowserParent().Count(),
+               cp->HasActiveWorker()));
     }
   }
 }
@@ -1198,31 +1193,6 @@ bool ContentParent::WaitForLaunchSync(ProcessPriority aPriority) {
   return false;
 }
 
-/*static*/
-already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
-    uint32_t aPluginID, const hal::ProcessPriority& aPriority) {
-  RefPtr<ContentParent> p;
-  if (sJSPluginContentParents) {
-    p = sJSPluginContentParents->Get(aPluginID);
-  } else {
-    sJSPluginContentParents = new nsTHashMap<nsUint32HashKey, ContentParent*>();
-  }
-
-  if (p) {
-    return p.forget();
-  }
-
-  p = new ContentParent(aPluginID);
-
-  if (!p->LaunchSubprocessSync(aPriority)) {
-    return nullptr;
-  }
-
-  sJSPluginContentParents->InsertOrUpdate(aPluginID, p);
-
-  return p.forget();
-}
-
 static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {
   // Propagate the private-browsing status of the element's parent
   // docshell to the remote docshell, via the chrome flags.
@@ -1472,13 +1442,8 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   if (aOpenerContentParent && !aOpenerContentParent->IsShuttingDown()) {
     constructorSender = aOpenerContentParent;
   } else {
-    if (aContext.IsJSPlugin()) {
-      constructorSender = GetNewOrUsedJSPluginProcess(
-          aContext.JSPluginId(), PROCESS_PRIORITY_FOREGROUND);
-    } else {
-      constructorSender = GetNewOrUsedBrowserProcess(
-          remoteType, aBrowsingContext->Group(), PROCESS_PRIORITY_FOREGROUND);
-    }
+    constructorSender = GetNewOrUsedBrowserProcess(
+        remoteType, aBrowsingContext->Group(), PROCESS_PRIORITY_FOREGROUND);
     if (!constructorSender) {
       return nullptr;
     }
@@ -1951,19 +1916,13 @@ void ContentParent::AssertNotInPool() {
   MOZ_RELEASE_ASSERT(!mIsInPool);
 
   MOZ_RELEASE_ASSERT(sRecycledE10SProcess != this);
-  if (IsForJSPlugin()) {
-    MOZ_RELEASE_ASSERT(!sJSPluginContentParents ||
-                       !sJSPluginContentParents->Get(mJSPluginID));
-  } else {
-    MOZ_RELEASE_ASSERT(
-        !sBrowserContentParents ||
-        !sBrowserContentParents->Contains(mRemoteType) ||
-        !sBrowserContentParents->Get(mRemoteType)->Contains(this));
+  MOZ_RELEASE_ASSERT(!sBrowserContentParents ||
+                     !sBrowserContentParents->Contains(mRemoteType) ||
+                     !sBrowserContentParents->Get(mRemoteType)->Contains(this));
 
-    for (const auto& group : mGroups) {
-      MOZ_RELEASE_ASSERT(group->GetHostProcess(mRemoteType) != this,
-                         "still a host process for one of our groups?");
-    }
+  for (const auto& group : mGroups) {
+    MOZ_RELEASE_ASSERT(group->GetHostProcess(mRemoteType) != this,
+                       "still a host process for one of our groups?");
   }
 }
 
@@ -1974,16 +1933,6 @@ void ContentParent::AssertAlive() {
 }
 
 void ContentParent::RemoveFromList() {
-  if (IsForJSPlugin()) {
-    if (sJSPluginContentParents) {
-      sJSPluginContentParents->Remove(mJSPluginID);
-      if (!sJSPluginContentParents->Count()) {
-        sJSPluginContentParents = nullptr;
-      }
-    }
-    return;
-  }
-
   if (!mIsInPool) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     AssertNotInPool();
@@ -2327,11 +2276,7 @@ void ContentParent::StopRecyclingE10SOnly(bool aForeground) {
   }
 }
 
-bool ContentParent::HasActiveWorkerOrJSPlugin() {
-  if (IsForJSPlugin()) {
-    return true;
-  }
-
+bool ContentParent::HasActiveWorker() {
   // If we have active workers, we need to stay alive.
   {
     // Most of the times we'll get here with the mutex acquired, but still.
@@ -2344,7 +2289,7 @@ bool ContentParent::HasActiveWorkerOrJSPlugin() {
 }
 
 bool ContentParent::ShouldKeepProcessAlive() {
-  if (HasActiveWorkerOrJSPlugin()) {
+  if (HasActiveWorker()) {
     return true;
   }
 
@@ -2869,7 +2814,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
       });
 }
 
-ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
+ContentParent::ContentParent(const nsACString& aRemoteType)
     : mSubprocess(nullptr),
       mLaunchTS(TimeStamp::Now()),
       mLaunchYieldTS(mLaunchTS),
@@ -2878,7 +2823,6 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mRemoteType(aRemoteType),
       mChildID(gContentChildID++),
       mGeolocationWatchID(-1),
-      mJSPluginID(aJSPluginID),
       mThreadsafeHandle(
           new ThreadsafeContentParentHandle(this, mChildID, mRemoteType)),
       mNumDestroyingTabs(0),
@@ -2899,9 +2843,6 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mBlockShutdownCalled(false),
 #endif
       mHangMonitorActor(nullptr) {
-  MOZ_DIAGNOSTIC_ASSERT(!IsForJSPlugin(),
-                        "XXX(nika): How are we creating a JSPlugin?");
-
   mRemoteTypeIsolationPrincipal =
       CreateRemoteTypeIsolationPrincipal(aRemoteType);
 

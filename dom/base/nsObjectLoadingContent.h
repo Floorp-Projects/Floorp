@@ -73,6 +73,8 @@ class nsObjectLoadingContent : public nsIStreamListener,
     mNetworkCreated = aNetworkCreated;
   }
 
+  static bool IsFallbackMimeType(const nsACString& aMimeType);
+
   // Helper for WebIDL NeedResolve
   bool DoResolve(
       JSContext* aCx, JS::Handle<JSObject*> aObject, JS::Handle<jsid> aId,
@@ -171,21 +173,20 @@ class nsObjectLoadingContent : public nsIStreamListener,
 
   enum Capabilities {
     eSupportImages = 1u << 0,     // Images are supported (imgILoader)
-    eSupportPlugins = 1u << 1,    // Plugins are supported (nsIPluginHost)
-    eSupportDocuments = 1u << 2,  // Documents are supported
+    eSupportDocuments = 1u << 1,  // Documents are supported
                                   // (DocumentLoaderFactory)
                                   // This flag always includes SVG
 
     // Node supports class ID as an attribute, and should fallback if it is
     // present, as class IDs are not supported.
-    eFallbackIfClassIDPresent = 1u << 3,
+    eFallbackIfClassIDPresent = 1u << 2,
 
     // If possible to get a *plugin* type from the type attribute *or* file
     // extension, we can use that type and begin loading the plugin before
     // opening a channel.
     // A side effect of this is if the channel fails, the plugin is still
     // running.
-    eAllowPluginSkipChannel = 1u << 4
+    eAllowPluginSkipChannel = 1u << 3
   };
 
   /**

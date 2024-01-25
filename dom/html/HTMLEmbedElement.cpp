@@ -223,8 +223,7 @@ void HTMLEmbedElement::StartObjectLoad(bool aNotify, bool aForceLoad) {
 }
 
 uint32_t HTMLEmbedElement::GetCapabilities() const {
-  return eSupportPlugins | eAllowPluginSkipChannel | eSupportImages |
-         eSupportDocuments;
+  return eAllowPluginSkipChannel | eSupportImages | eSupportDocuments;
 }
 
 void HTMLEmbedElement::DestroyContent() {

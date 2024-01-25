@@ -68,7 +68,6 @@ DIRS += [
     "locks",
     "network",
     "permission",
-    "plugins/base",
     "prototype",
     "indexedDB",
     "system",

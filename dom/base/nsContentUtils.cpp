@@ -56,6 +56,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozIDOMWindow.h"
 #include "nsIOService.h"
+#include "nsObjectLoadingContent.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/ArrayUtils.h"
@@ -312,7 +313,6 @@
 #include "nsIObserverService.h"
 #include "nsIParserUtils.h"
 #include "nsIPermissionManager.h"
-#include "nsIPluginTag.h"
 #include "nsIPrincipal.h"
 #include "nsIProperties.h"
 #include "nsIProtocolHandler.h"
@@ -357,7 +357,6 @@
 #include "nsPIDOMWindowInlines.h"
 #include "nsParser.h"
 #include "nsParserConstants.h"
-#include "nsPluginHost.h"
 #include "nsPoint.h"
 #include "nsPointerHashKeys.h"
 #include "nsPresContext.h"
@@ -10556,9 +10555,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 
-  bool isSpecialPlugin = nsPluginHost::GetSpecialType(aMIMEType) !=
-                         nsPluginHost::eSpecialType_None;
-  if (isSpecialPlugin) {
+  if (nsObjectLoadingContent::IsFallbackMimeType(aMIMEType)) {
     return nsIObjectLoadingContent::TYPE_FALLBACK;
   }
 

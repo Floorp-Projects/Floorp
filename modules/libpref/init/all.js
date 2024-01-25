@@ -1979,9 +1979,6 @@ pref("dom.global_stop_script", true);
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);
 
-// The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
-pref("plugin.default.state", 2);
-
 // Enable multi by default.
 #if !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
   pref("dom.ipc.processCount", 8);
