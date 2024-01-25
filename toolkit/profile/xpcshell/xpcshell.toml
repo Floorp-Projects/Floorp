@@ -34,8 +34,6 @@ skip-if = ["os == 'android'"]
 
 ["test_profile_reset.js"]
 
-["test_register_app_services_logger.js"]
-
 ["test_remove.js"]
 
 ["test_remove_default.js"]
