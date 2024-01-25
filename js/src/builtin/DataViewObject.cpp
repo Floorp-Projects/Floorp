@@ -247,7 +247,7 @@ bool DataViewObject::getAndCheckConstructorArgs(
                               JSMSG_OFFSET_OUT_OF_BUFFER);
     return false;
   }
-  MOZ_ASSERT(offset <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(offset <= ArrayBufferObject::ByteLengthLimit);
 
   uint64_t viewByteLength = 0;
   bool autoLength = false;
@@ -275,7 +275,7 @@ bool DataViewObject::getAndCheckConstructorArgs(
       return false;
     }
   }
-  MOZ_ASSERT(viewByteLength <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(viewByteLength <= ArrayBufferObject::ByteLengthLimit);
 
   *byteOffsetPtr = offset;
   *byteLengthPtr = viewByteLength;

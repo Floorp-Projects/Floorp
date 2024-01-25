@@ -109,7 +109,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
                                          MutableHandleObject res);
 
   // Maximum allowed byte length for any typed array.
-  static constexpr size_t MaxByteLength = ArrayBufferObject::MaxByteLength;
+  static constexpr size_t ByteLengthLimit = ArrayBufferObject::ByteLengthLimit;
 
   static bool isOriginalLengthGetter(Native native);
 

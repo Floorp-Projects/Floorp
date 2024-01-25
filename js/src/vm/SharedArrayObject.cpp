@@ -40,7 +40,7 @@ static size_t WasmSharedArrayAccessibleSize(size_t length) {
 }
 
 static size_t NonWasmSharedArrayAllocSize(size_t length) {
-  MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
   return sizeof(SharedArrayRawBuffer) + length;
 }
 
@@ -60,8 +60,8 @@ static size_t SharedArrayMappedSize(bool isWasm, size_t length) {
 SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(bool isGrowable,
                                                      size_t length,
                                                      size_t maxLength) {
-  MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxByteLength);
-  MOZ_RELEASE_ASSERT(maxLength <= ArrayBufferObject::MaxByteLength);
+  MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
+  MOZ_RELEASE_ASSERT(maxLength <= ArrayBufferObject::ByteLengthLimit);
   MOZ_ASSERT_IF(!isGrowable, length == maxLength);
   MOZ_ASSERT_IF(isGrowable, length <= maxLength);
 
@@ -84,7 +84,7 @@ WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
   MOZ_ASSERT(initialPages.hasByteLength());
   size_t length = initialPages.byteLength();
 
-  MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
 
   size_t accessibleSize = WasmSharedArrayAccessibleSize(length);
   if (accessibleSize < length) {
@@ -144,7 +144,7 @@ bool WasmSharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
     return false;
   }
   MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
-             newPages.byteLength() <= ArrayBufferObject::MaxByteLength);
+             newPages.byteLength() <= ArrayBufferObject::ByteLengthLimit);
 
   // We have checked against the clamped maximum and so we know we can convert
   // to byte lengths now.
@@ -469,7 +469,7 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
 
   // 24.2.1.1, step 3 (Inlined 6.2.7.2 CreateSharedByteDataBlock, step 2).
   // Refuse to allocate too large buffers.
-  if (byteLength > ArrayBufferObject::MaxByteLength) {
+  if (byteLength > ArrayBufferObject::ByteLengthLimit) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SHARED_ARRAY_BAD_LENGTH);
     return false;
@@ -794,7 +794,7 @@ JS_PUBLIC_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
 JS_PUBLIC_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx, size_t nbytes) {
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
-  if (nbytes > ArrayBufferObject::MaxByteLength) {
+  if (nbytes > ArrayBufferObject::ByteLengthLimit) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SHARED_ARRAY_BAD_LENGTH);
     return nullptr;
