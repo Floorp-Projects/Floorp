@@ -293,8 +293,9 @@ class ElementSpecific {
    * case the two memory ranges overlap.
    */
   static bool setFromTypedArray(Handle<TypedArrayObject*> target,
+                                size_t targetLength,
                                 Handle<TypedArrayObject*> source,
-                                size_t offset) {
+                                size_t sourceLength, size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -302,17 +303,20 @@ class ElementSpecific {
                "calling wrong setFromTypedArray specialization");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
+    MOZ_ASSERT(*target->length() >= targetLength, "target isn't shrunk");
+    MOZ_ASSERT(*source->length() >= sourceLength, "source isn't shrunk");
 
-    MOZ_ASSERT(offset <= target->length());
-    MOZ_ASSERT(source->length() <= target->length() - offset);
+    MOZ_ASSERT(offset <= targetLength);
+    MOZ_ASSERT(sourceLength <= targetLength - offset);
 
     if (TypedArrayObject::sameBuffer(target, source)) {
-      return setFromOverlappingTypedArray(target, source, offset);
+      return setFromOverlappingTypedArray(target, targetLength, source,
+                                          sourceLength, offset);
     }
 
     SharedMem<T*> dest =
         target->dataPointerEither().template cast<T*>() + offset;
-    size_t count = source->length();
+    size_t count = sourceLength;
 
     if (source->type() == target->type()) {
       Ops::podCopy(dest, source->dataPointerEither().template cast<T*>(),
@@ -413,33 +417,33 @@ class ElementSpecific {
                "target type and NativeType must match");
     MOZ_ASSERT(!source->is<TypedArrayObject>(),
                "use setFromTypedArray instead of this method");
-    MOZ_ASSERT_IF(target->hasDetachedBuffer(), target->length() == 0);
-    MOZ_ASSERT_IF(!target->hasDetachedBuffer(), offset <= target->length());
-    MOZ_ASSERT_IF(!target->hasDetachedBuffer(),
-                  len <= target->length() - offset);
+    MOZ_ASSERT_IF(target->hasDetachedBuffer(), target->length().isNothing());
 
     size_t i = 0;
-    if (source->is<NativeObject>() && !target->hasDetachedBuffer()) {
-      // Attempt fast-path infallible conversion of dense elements up to
-      // the first potentially side-effectful lookup or conversion.
-      size_t bound = std::min<size_t>(
-          source->as<NativeObject>().getDenseInitializedLength(), len);
+    if (source->is<NativeObject>()) {
+      size_t targetLength = target->length().valueOr(0);
+      if (offset <= targetLength && len <= targetLength - offset) {
+        // Attempt fast-path infallible conversion of dense elements up to
+        // the first potentially side-effectful lookup or conversion.
+        size_t bound = std::min<size_t>(
+            source->as<NativeObject>().getDenseInitializedLength(), len);
 
-      SharedMem<T*> dest =
-          target->dataPointerEither().template cast<T*>() + offset;
+        SharedMem<T*> dest =
+            target->dataPointerEither().template cast<T*>() + offset;
 
-      MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
-                 "the following loop must abort on holes");
+        MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
+                   "the following loop must abort on holes");
 
-      const Value* srcValues = source->as<NativeObject>().getDenseElements();
-      for (; i < bound; i++) {
-        if (!canConvertInfallibly(srcValues[i])) {
-          break;
+        const Value* srcValues = source->as<NativeObject>().getDenseElements();
+        for (; i < bound; i++) {
+          if (!canConvertInfallibly(srcValues[i])) {
+            break;
+          }
+          Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
         }
-        Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
-      }
-      if (i == len) {
-        return true;
+        if (i == len) {
+          return true;
+        }
       }
     }
 
@@ -463,7 +467,7 @@ class ElementSpecific {
 
       // Ignore out-of-bounds writes, but still execute getElement/valueToNative
       // because of observable side-effects.
-      if (offset + i >= target->length()) {
+      if (offset + i >= target->length().valueOr(0)) {
         continue;
       }
 
@@ -482,9 +486,9 @@ class ElementSpecific {
   /*
    * Copy |source| into the typed array |target|.
    */
-  static bool initFromIterablePackedArray(JSContext* cx,
-                                          Handle<TypedArrayObject*> target,
-                                          Handle<ArrayObject*> source) {
+  static bool initFromIterablePackedArray(
+      JSContext* cx, Handle<FixedLengthTypedArrayObject*> target,
+      Handle<ArrayObject*> source) {
     MOZ_ASSERT(target->type() == TypeIDOfType<T>::id,
                "target type and NativeType must match");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
@@ -541,8 +545,9 @@ class ElementSpecific {
 
  private:
   static bool setFromOverlappingTypedArray(Handle<TypedArrayObject*> target,
+                                           size_t targetLength,
                                            Handle<TypedArrayObject*> source,
-                                           size_t offset) {
+                                           size_t sourceLength, size_t offset) {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
@@ -550,16 +555,18 @@ class ElementSpecific {
                "calling wrong setFromTypedArray specialization");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
+    MOZ_ASSERT(*target->length() >= targetLength, "target isn't shrunk");
+    MOZ_ASSERT(*source->length() >= sourceLength, "source isn't shrunk");
     MOZ_ASSERT(TypedArrayObject::sameBuffer(target, source),
                "the provided arrays don't actually overlap, so it's "
                "undesirable to use this method");
 
-    MOZ_ASSERT(offset <= target->length());
-    MOZ_ASSERT(source->length() <= target->length() - offset);
+    MOZ_ASSERT(offset <= targetLength);
+    MOZ_ASSERT(sourceLength <= targetLength - offset);
 
     SharedMem<T*> dest =
         target->dataPointerEither().template cast<T*>() + offset;
-    size_t len = source->length();
+    size_t len = sourceLength;
 
     if (source->type() == target->type()) {
       SharedMem<T*> src = source->dataPointerEither().template cast<T*>();
