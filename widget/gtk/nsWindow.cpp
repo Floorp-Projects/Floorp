@@ -369,7 +369,9 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
   }
 
   guint timestamp = gdk_event_get_time(static_cast<GdkEvent*>(aGdkEvent));
-  if (timestamp == GDK_CURRENT_TIME) return;
+  if (timestamp == GDK_CURRENT_TIME) {
+    return;
+  }
 
   sLastUserInputTime = timestamp;
 }
@@ -546,7 +548,9 @@ nsresult nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
 }
 
 void nsWindow::OnDestroy(void) {
-  if (mOnDestroyCalled) return;
+  if (mOnDestroyCalled) {
+    return;
+  }
 
   mOnDestroyCalled = true;
 
@@ -798,7 +802,10 @@ void nsWindow::ReparentNativeWidget(nsIWidget* aNewParent) {
 
 void nsWindow::SetModal(bool aModal) {
   LOG("nsWindow::SetModal %d\n", aModal);
-  if (mIsDestroyed) return;
+  if (mIsDestroyed) {
+    return;
+  }
+
   gtk_window_set_modal(GTK_WINDOW(mShell), aModal ? TRUE : FALSE);
 }
 
@@ -944,7 +951,9 @@ void nsWindow::ApplySizeConstraints() {
 }
 
 void nsWindow::Show(bool aState) {
-  if (aState == mIsShown) return;
+  if (aState == mIsShown) {
+    return;
+  }
 
   mIsShown = aState;
 
@@ -3353,7 +3362,9 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
 }
 
 void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
-  if (!mGdkWindow) return;
+  if (!mGdkWindow) {
+    return;
+  }
 
   GdkRectangle rect = DevicePixelsToGdkRectRoundOut(aRect);
   gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
@@ -3442,9 +3453,11 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 }
 
 nsresult nsWindow::SetTitle(const nsAString& aTitle) {
-  if (!mShell) return NS_OK;
+  if (!mShell) {
+    return NS_OK;
+  }
 
-    // convert the string into utf8 and set the title.
+  // convert the string into utf8 and set the title.
 #define UTF8_FOLLOWBYTE(ch) (((ch) & 0xC0) == 0x80)
   NS_ConvertUTF16toUTF8 titleUTF8(aTitle);
   if (titleUTF8.Length() > NS_WINDOW_TITLE_MAX_LENGTH) {
@@ -3460,7 +3473,9 @@ nsresult nsWindow::SetTitle(const nsAString& aTitle) {
 }
 
 void nsWindow::SetIcon(const nsAString& aIconSpec) {
-  if (!mShell) return;
+  if (!mShell) {
+    return;
+  }
 
   nsAutoCString iconName;
 
@@ -3766,7 +3781,9 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 #endif
 
   nsIWidgetListener* listener = GetListener();
-  if (!listener) return FALSE;
+  if (!listener) {
+    return FALSE;
+  }
 
   LOG("nsWindow::OnExposeEvent GdkWindow [%p] XID [0x%lx]", mGdkWindow,
       GetX11Window());
@@ -3808,12 +3825,16 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 
     // If the window has been destroyed during the will paint notification,
     // there is nothing left to do.
-    if (!mGdkWindow) return TRUE;
+    if (!mGdkWindow) {
+      return TRUE;
+    }
 
     // Re-get the listener since the will paint notification might have
     // killed it.
     listener = GetListener();
-    if (!listener) return FALSE;
+    if (!listener) {
+      return FALSE;
+    }
   }
 
   if (knowsCompositor && layerManager && layerManager->NeedsComposite()) {
@@ -3857,7 +3878,9 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
     // Re-get the listener since the will paint notification might have
     // killed it.
     listener = GetListener();
-    if (!listener) return TRUE;
+    if (!listener) {
+      return TRUE;
+    }
 
     listener->DidPaintWindow();
     return TRUE;
@@ -3930,7 +3953,9 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
       // Re-get the listener since the will paint notification might have
       // killed it.
       listener = GetListener();
-      if (!listener) return TRUE;
+      if (!listener) {
+        return TRUE;
+      }
     }
   }
 
@@ -6425,7 +6450,9 @@ void nsWindow::RefreshWindowClass(void) {
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
     XClassHint* class_hint = XAllocClassHint();
-    if (!class_hint) return;
+    if (!class_hint) {
+      return;
+    }
 
     const char* res_name =
         !mGtkWindowAppName.IsEmpty() ? mGtkWindowAppName.get() : gAppData->name;
@@ -6466,7 +6493,9 @@ void nsWindow::RefreshWindowClass(void) {
 void nsWindow::SetWindowClass(const nsAString& xulWinType,
                               const nsAString& xulWinClass,
                               const nsAString& xulWinName) {
-  if (!mShell) return;
+  if (!mShell) {
+    return;
+  }
 
   // If window type attribute is set, parse it into name and role
   if (!xulWinType.IsEmpty()) {
@@ -7041,7 +7070,9 @@ bool nsWindow::DoDrawTilebarCorners() {
 }
 
 void nsWindow::ResizeTransparencyBitmap() {
-  if (!mTransparencyBitmap) return;
+  if (!mTransparencyBitmap) {
+    return;
+  }
 
   if (mBounds.width == mTransparencyBitmapWidth &&
       mBounds.height == mTransparencyBitmapHeight) {
@@ -7138,14 +7169,18 @@ void nsWindow::ApplyTransparencyBitmap() {
 }
 
 void nsWindow::ClearTransparencyBitmap() {
-  if (!mTransparencyBitmap) return;
+  if (!mTransparencyBitmap) {
+    return;
+  }
 
   delete[] mTransparencyBitmap;
   mTransparencyBitmap = nullptr;
   mTransparencyBitmapWidth = 0;
   mTransparencyBitmapHeight = 0;
 
-  if (!mShell) return;
+  if (!mShell) {
+    return;
+  }
 
 #ifdef MOZ_X11
   if (MOZ_UNLIKELY(!mGdkWindow)) {
@@ -7245,7 +7280,9 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
   if (maskUpdate) {
     cairo_surface_t* surface = cairo_image_surface_create(
         CAIRO_FORMAT_A8, mTransparencyBitmapWidth, radius);
-    if (!surface) return;
+    if (!surface) {
+      return;
+    }
 
     cairo_t* cr = cairo_create(surface);
 
@@ -7313,7 +7350,9 @@ nsWindow* nsWindow::GetContainerWindow() const {
 void nsWindow::SetUrgencyHint(GtkWidget* top_window, bool state) {
   LOG("  nsWindow::SetUrgencyHint widget %p\n", top_window);
 
-  if (!top_window) return;
+  if (!top_window) {
+    return;
+  }
 
   // TODO: Use xdg-activation on Wayland?
   gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
@@ -7324,7 +7363,9 @@ void nsWindow::SetDefaultIcon(void) { SetIcon(u"default"_ns); }
 gint nsWindow::ConvertBorderStyles(BorderStyle aStyle) {
   gint w = 0;
 
-  if (aStyle == BorderStyle::Default) return -1;
+  if (aStyle == BorderStyle::Default) {
+    return -1;
+  }
 
   // note that we don't handle BorderStyle::Close yet
   if (aStyle & BorderStyle::All) w |= GDK_DECOR_ALL;
@@ -7945,7 +7986,9 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
   if (newType != 0xff && !gdkcursor) {
     GdkPixbuf* cursor_pixbuf =
         gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
-    if (!cursor_pixbuf) return nullptr;
+    if (!cursor_pixbuf) {
+      return nullptr;
+    }
 
     guchar* data = gdk_pixbuf_get_pixels(cursor_pixbuf);
 
@@ -8155,7 +8198,9 @@ static gboolean motion_notify_event_cb(GtkWidget* widget,
   UpdateLastInputEventTime(event);
 
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnMotionNotifyEvent(event);
 
@@ -8167,7 +8212,9 @@ static gboolean button_press_event_cb(GtkWidget* widget,
   UpdateLastInputEventTime(event);
 
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnButtonPressEvent(event);
 
@@ -8183,7 +8230,9 @@ static gboolean button_release_event_cb(GtkWidget* widget,
   UpdateLastInputEventTime(event);
 
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnButtonReleaseEvent(event);
 
@@ -8192,7 +8241,9 @@ static gboolean button_release_event_cb(GtkWidget* widget,
 
 static gboolean focus_in_event_cb(GtkWidget* widget, GdkEventFocus* event) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnContainerFocusInEvent(event);
 
@@ -8201,7 +8252,9 @@ static gboolean focus_in_event_cb(GtkWidget* widget, GdkEventFocus* event) {
 
 static gboolean focus_out_event_cb(GtkWidget* widget, GdkEventFocus* event) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnContainerFocusOutEvent(event);
 
@@ -8230,7 +8283,9 @@ static gboolean focus_out_event_cb(GtkWidget* widget, GdkEventFocus* event) {
 static GdkFilterReturn popup_take_focus_filter(GdkXEvent* gdk_xevent,
                                                GdkEvent* event, gpointer data) {
   auto* xevent = static_cast<XEvent*>(gdk_xevent);
-  if (xevent->type != ClientMessage) return GDK_FILTER_CONTINUE;
+  if (xevent->type != ClientMessage) {
+    return GDK_FILTER_CONTINUE;
+  }
 
   XClientMessageEvent& xclient = xevent->xclient;
   if (xclient.message_type != gdk_x11_get_xatom_by_name("WM_PROTOCOLS")) {
@@ -8245,17 +8300,23 @@ static GdkFilterReturn popup_take_focus_filter(GdkXEvent* gdk_xevent,
   guint32 timestamp = xclient.data.l[1];
 
   GtkWidget* widget = get_gtk_widget_for_gdk_window(event->any.window);
-  if (!widget) return GDK_FILTER_CONTINUE;
+  if (!widget) {
+    return GDK_FILTER_CONTINUE;
+  }
 
   GtkWindow* parent = gtk_window_get_transient_for(GTK_WINDOW(widget));
-  if (!parent) return GDK_FILTER_CONTINUE;
+  if (!parent) {
+    return GDK_FILTER_CONTINUE;
+  }
 
   if (gtk_window_is_active(parent)) {
     return GDK_FILTER_REMOVE;  // leave input focus on the parent
   }
 
   GdkWindow* parent_window = gtk_widget_get_window(GTK_WIDGET(parent));
-  if (!parent_window) return GDK_FILTER_CONTINUE;
+  if (!parent_window) {
+    return GDK_FILTER_CONTINUE;
+  }
 
   // In case the parent has not been deiconified.
   gdk_window_show_unraised(parent_window);
@@ -8275,7 +8336,9 @@ static gboolean key_press_event_cb(GtkWidget* widget, GdkEventKey* event) {
 
   // find the window with focus and dispatch this event to that widget
   nsWindow* window = get_window_for_gtk_widget(widget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   RefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
@@ -8320,7 +8383,9 @@ static gboolean key_release_event_cb(GtkWidget* widget, GdkEventKey* event) {
 
   // find the window with focus and dispatch this event to that widget
   nsWindow* window = get_window_for_gtk_widget(widget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   RefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
   return focusWindow->OnKeyReleaseEvent(event);
@@ -8329,14 +8394,18 @@ static gboolean key_release_event_cb(GtkWidget* widget, GdkEventKey* event) {
 static gboolean property_notify_event_cb(GtkWidget* aWidget,
                                          GdkEventProperty* aEvent) {
   RefPtr<nsWindow> window = get_window_for_gdk_window(aEvent->window);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   return window->OnPropertyNotifyEvent(aWidget, aEvent);
 }
 
 static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event) {
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnScrollEvent(event);
 
@@ -8393,7 +8462,9 @@ static void hierarchy_changed_cb(GtkWidget* widget,
 static gboolean window_state_event_cb(GtkWidget* widget,
                                       GdkEventWindowState* event) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   window->OnWindowStateEvent(widget, event);
 
@@ -8582,7 +8653,9 @@ static void drag_leave_event_cb(GtkWidget* aWidget,
 gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
                                gint aX, gint aY, guint aTime) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   // figure out which internal widget this drag motion actually happened on
   nscoord retx = 0;
@@ -8617,7 +8690,9 @@ static void drag_data_received_event_cb(GtkWidget* aWidget,
                                         guint aInfo, guint aTime,
                                         gpointer aData) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
-  if (!window) return;
+  if (!window) {
+    return;
+  }
 
   window->OnDragDataReceivedEvent(aWidget, aDragContext, aX, aY, aSelectionData,
                                   aInfo, aTime, aData);
