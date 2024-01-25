@@ -1446,7 +1446,8 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // parameter passing might be live. Rewriting uses of these terms
       // in resume points may affect the interpreter's behavior. Rather
       // than doing a more sophisticated analysis, just ignore these.
-      if (ins->isUnbox() || ins->isParameter() || ins->isBoxNonStrictThis()) {
+      if (ins->isUnbox() || ins->isParameter() || ins->isBoxNonStrictThis() ||
+          ins->isOsrValue()) {
         continue;
       }
 
@@ -1455,6 +1456,15 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // but are still needed if we bail out. They can recover on bailout.
       if (ins->isRecoveredOnBailout()) {
         MOZ_ASSERT(ins->canRecoverOnBailout());
+        continue;
+      }
+
+      // If an instruction can be recovered on bailout, but it has a resume
+      // point, then do not attempt to remove its uses. The reason being that
+      // this is likely to be an allocation which would be flagged as recovered
+      // on bailout by the Sink phase, as long as it is captured by resume
+      // points, but it would not be removed by DCE as it has a resume point.
+      if (ins->canRecoverOnBailout() && ins->resumePoint()) {
         continue;
       }
 
@@ -1470,7 +1480,11 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // (not resume point). This requires the instructions in the block
       // to be numbered, ensured by running this immediately after alias
       // analysis.
-      uint32_t maxDefinition = 0;
+      //
+      // The fact that the consumers are in the same block is a cheap way to
+      // ensure that there is no need for block domination question, nor any Phi
+      // at a loop edge.
+      uint32_t lastConsumerId = 0;
       for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd();
            uses++) {
         MNode* consumer = uses->consumer();
@@ -1480,7 +1494,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
           // stack, so it has to be computed.
           MResumePoint* resume = consumer->toResumePoint();
           if (resume->isObservableOperand(*uses)) {
-            maxDefinition = UINT32_MAX;
+            lastConsumerId = UINT32_MAX;
             break;
           }
           continue;
@@ -1488,26 +1502,36 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
 
         MDefinition* def = consumer->toDefinition();
         if (def->block() != *block || def->isBox() || def->isPhi()) {
-          maxDefinition = UINT32_MAX;
+          lastConsumerId = UINT32_MAX;
           break;
         }
-        maxDefinition = std::max(maxDefinition, def->id());
+        lastConsumerId = std::max(lastConsumerId, def->id());
       }
-      if (maxDefinition == UINT32_MAX) {
+      if (lastConsumerId == UINT32_MAX) {
         continue;
       }
 
       // Walk the uses a second time, removing any in resume points after
       // the last use in a definition.
+      //
+      // Given that all consumers are in the same block as the definition, and
+      // there is not observable operand, then we can replace this operand in
+      // any resume point which is after the last consumer. This means, in a
+      // different block or located after the last consumer.
       for (MUseIterator uses(ins->usesBegin()); uses != ins->usesEnd();) {
         MUse* use = *uses++;
         if (use->consumer()->isDefinition()) {
+          MOZ_ASSERT(*block == use->consumer()->block());
           continue;
         }
+
         MResumePoint* mrp = use->consumer()->toResumePoint();
-        if (mrp->block() != *block || !mrp->instruction() ||
-            mrp->instruction() == *ins ||
-            mrp->instruction()->id() <= maxDefinition) {
+
+        // The transformation below would remove the instruction from the
+        // operand of the resume point. This condition is used to preserve any
+        // resume point which value might flow in one of the live consumers.
+        if (mrp->block() == *block &&
+            (!mrp->instruction() || mrp->instruction()->id() <= lastConsumerId)) {
           continue;
         }
 
