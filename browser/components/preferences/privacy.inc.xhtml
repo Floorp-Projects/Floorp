@@ -402,8 +402,8 @@
 
   <hbox data-subcategory="sitedata" align="baseline">
     <vbox flex="1">
-      <description class="description-with-side-element description-deemphasized" flex="1">
-        <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
+      <description class="description-with-side-element" flex="1">
+        <html:span id="totalSiteDataSize" class="tail-with-learn-more section-description"></html:span>
         <html:a is="moz-support-link"
                 id="siteDataLearnMoreLink"
                 data-l10n-id="sitedata-learn-more"
@@ -463,8 +463,8 @@
   <label><html:h2 data-l10n-id="cookie-banner-blocker-header" /></label>
   <vbox flex="1">
     <hbox>
-      <description class="description-deemphasized">
-        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-blocker-description" ></html:span>
+      <description>
+        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more section-description" data-l10n-id="cookie-banner-blocker-description" ></html:span>
         <html:a is="moz-support-link" id="cookieBannerHandlingLearnMore" class="learnMore"  data-l10n-id="cookie-banner-learn-more" support-page="cookie-banner-reduction"/>
       </description>
     </hbox>
@@ -713,10 +713,10 @@
   <!-- The hbox around the buttons is to compute the search tooltip position properly -->
   <vbox>
     <hbox id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="geo-icon permission-icon" />
         <label id="locationPermissionsLabel" data-l10n-id="permissions-location"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="locationSettingsButton"
                 is="highlightable-button"
@@ -734,10 +734,10 @@
     </hbox>
 
     <hbox id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="camera-icon permission-icon" />
         <label id="cameraPermissionsLabel" data-l10n-id="permissions-camera"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="cameraSettingsButton"
                 is="highlightable-button"
@@ -755,10 +755,10 @@
     </hbox>
 
     <hbox id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="microphone-icon permission-icon" />
         <label id="microphonePermissionsLabel" data-l10n-id="permissions-microphone"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="microphoneSettingsButton"
                 is="highlightable-button"
@@ -776,10 +776,10 @@
     </hbox>
 
     <hbox id="speakerSettingsRow" align="center" role="group" aria-labelledby="speakerPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="speaker-icon permission-icon" />
         <label id="speakerPermissionsLabel" data-l10n-id="permissions-speaker"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="speakerSettingsButton"
                 is="highlightable-button"
@@ -795,7 +795,7 @@
     </hbox>
 
     <hbox id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="desktop-notification-icon permission-icon" />
         <label id="notificationPermissionsLabel"
                class="tail-with-learn-more"
@@ -806,7 +806,7 @@
                 data-l10n-id="permissions-notification-link"
                 support-page="push"
         />
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="notificationSettingsButton"
                 is="highlightable-button"
@@ -828,11 +828,11 @@
     </vbox>
 
     <hbox id="autoplaySettingsRow" align="center" role="group" aria-labelledby="autoplayPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="autoplay-icon permission-icon" />
         <label id="autoplayPermissionsLabel"
                data-l10n-id="permissions-autoplay"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="autoplaySettingsButton"
                 is="highlightable-button"
@@ -848,10 +848,10 @@
     </hbox>
 
     <hbox id="xrSettingsRow" align="center" role="group" aria-labelledby="xrPermissionsLabel">
-      <hbox flex="1">
+      <description flex="1">
         <image class="xr-icon permission-icon" />
         <label id="xrPermissionsLabel" data-l10n-id="permissions-xr"/>
-      </hbox>
+      </description>
       <hbox pack="end">
         <button id="xrSettingsButton"
                 is="highlightable-button"
@@ -919,8 +919,8 @@
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="collection-header2" data-l10n-attrs="searchkeywords"/></label>
 
-  <description class="description-deemphasized">
-    <html:span class="tail-with-learn-more" data-l10n-id="collection-description"/>
+  <description>
+    <label class="tail-with-learn-more section-description" data-l10n-id="collection-description"/>
     <html:a id="dataCollectionPrivacyNotice"
            class="learnMore"
            data-l10n-id="collection-privacy-notice"/>
@@ -940,7 +940,7 @@
     </description>
   </hbox>
   <vbox data-subcategory="reports">
-    <html:span flex="1">
+    <description flex="1">
       <checkbox id="submitHealthReportBox"
                 data-l10n-id="collection-health-report"
                 class="tail-with-learn-more"/>
@@ -960,7 +960,7 @@
           />
         </hbox>
       </vbox>
-    </html:span>
+    </description>
 #ifndef MOZ_TELEMETRY_REPORTING
   <description id="TelemetryDisabledDesc"
     class="indent tip-caption" control="telemetryGroup"
@@ -1118,7 +1118,7 @@
 <groupbox id="httpsOnlyBox" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="httpsonly-header"/></label>
   <vbox data-subcategory="httpsonly" flex="1">
-    <description id="httpsOnlyDescription" class="description-deemphasized" data-l10n-id="httpsonly-description"/>
+    <label id="httpsOnlyDescription" class="section-description" data-l10n-id="httpsonly-description"/>
     <html:a is="moz-support-link"
             id="httpsOnlyLearnMore"
             class="learnMore"
@@ -1162,7 +1162,7 @@
 <groupbox id="dohBox" data-category="panePrivacy" data-subcategory="doh" hidden="true" class="highlighting-group">
   <label class="search-header" searchkeywords="doh trr" hidden="true"><html:h2 data-l10n-id="preferences-doh-header"/></label>
   <vbox flex="1">
-    <description id="dohDescription" class="tail-with-learn-more description-deemphasized" data-l10n-id="preferences-doh-description2"></description>
+    <html:span id="dohDescription" class="tail-with-learn-more" data-l10n-id="preferences-doh-description2"></html:span>
     <html:a is="moz-support-link"
             id="dohLearnMore"
             class="learnMore"
