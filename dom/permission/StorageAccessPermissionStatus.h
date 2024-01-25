@@ -13,11 +13,9 @@ namespace mozilla::dom {
 
 class StorageAccessPermissionStatus final : public PermissionStatus {
  public:
-  static RefPtr<CreatePromise> Create(nsPIDOMWindowInner* aWindow);
-
- private:
   explicit StorageAccessPermissionStatus(nsPIDOMWindowInner* aWindow);
 
+ private:
   RefPtr<SimplePromise> UpdateState() override;
 
   bool MaybeUpdatedBy(nsIPermission* aPermission) const override;

@@ -16,24 +16,6 @@
 
 namespace mozilla::dom {
 
-/* static */
-RefPtr<PermissionStatus::CreatePromise> PermissionStatus::Create(
-    nsPIDOMWindowInner* aWindow, PermissionName aName) {
-  RefPtr<PermissionStatus> status = new PermissionStatus(aWindow, aName);
-  return status->Init()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [status](nsresult aOk) {
-        MOZ_ASSERT(NS_SUCCEEDED(aOk));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndResolve(status, __func__);
-      },
-      [](nsresult aError) {
-        MOZ_ASSERT(NS_FAILED(aError));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndReject(aError, __func__);
-      });
-}
-
 PermissionStatus::PermissionStatus(nsPIDOMWindowInner* aWindow,
                                    PermissionName aName)
     : DOMEventTargetHelper(aWindow),
@@ -71,7 +53,7 @@ JSObject* PermissionStatus::WrapObject(JSContext* aCx,
   return PermissionStatus_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsLiteralCString PermissionStatus::GetPermissionType() {
+nsLiteralCString PermissionStatus::GetPermissionType() const {
   return PermissionNameToType(mName);
 }
 

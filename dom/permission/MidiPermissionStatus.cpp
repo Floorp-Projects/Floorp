@@ -11,29 +11,11 @@
 
 namespace mozilla::dom {
 
-/* static */
-RefPtr<PermissionStatus::CreatePromise> MidiPermissionStatus::Create(
-    nsPIDOMWindowInner* aWindow, bool aSysex) {
-  RefPtr<PermissionStatus> status = new MidiPermissionStatus(aWindow, aSysex);
-  return status->Init()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [status](nsresult aOk) {
-        MOZ_ASSERT(NS_SUCCEEDED(aOk));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndResolve(status, __func__);
-      },
-      [](nsresult aError) {
-        MOZ_ASSERT(NS_FAILED(aError));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndReject(aError, __func__);
-      });
-}
-
 MidiPermissionStatus::MidiPermissionStatus(nsPIDOMWindowInner* aWindow,
                                            bool aSysex)
     : PermissionStatus(aWindow, PermissionName::Midi), mSysex(aSysex) {}
 
-nsLiteralCString MidiPermissionStatus::GetPermissionType() {
+nsLiteralCString MidiPermissionStatus::GetPermissionType() const {
   return mSysex ? "midi-sysex"_ns : "midi"_ns;
 }
 
