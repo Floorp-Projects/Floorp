@@ -1991,8 +1991,8 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::SharedArrayBuffer:
       MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
       break;
-    case GuardClassKind::DataView:
-      MOZ_ASSERT(obj->is<DataViewObject>());
+    case GuardClassKind::FixedLengthDataView:
+      MOZ_ASSERT(obj->is<FixedLengthDataViewObject>());
       break;
     case GuardClassKind::Set:
       MOZ_ASSERT(obj->is<SetObject>());
@@ -2152,10 +2152,11 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
 AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
                                                      ObjOperandId objId,
                                                      HandleId id) {
-  if (!obj->is<DataViewObject>()) {
+  // TODO: Support resizable dataviews. (bug 1842999)
+  if (!obj->is<FixedLengthDataViewObject>()) {
     return AttachDecision::NoAction;
   }
-  auto* dv = &obj->as<DataViewObject>();
+  auto* dv = &obj->as<FixedLengthDataViewObject>();
 
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
@@ -6335,7 +6336,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayIsArray() {
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
     Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
-  if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
+  // TODO: Support resizable dataviews. (bug 1842999)
+  if (!thisval_.isObject() ||
+      !thisval_.toObject().is<FixedLengthDataViewObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -6351,7 +6354,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
     return AttachDecision::NoAction;
   }
 
-  DataViewObject* dv = &thisval_.toObject().as<DataViewObject>();
+  auto* dv = &thisval_.toObject().as<FixedLengthDataViewObject>();
 
   // Bounds check the offset.
   if (offsetInt64 < 0 ||
@@ -6379,7 +6382,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
   emitOptimisticClassGuard(objId, &thisval_.toObject(),
-                           GuardClassKind::DataView);
+                           GuardClassKind::FixedLengthDataView);
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
@@ -6407,7 +6410,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
     Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
-  if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
+  // TODO: Support resizable dataviews. (bug 1842999)
+  if (!thisval_.isObject() ||
+      !thisval_.toObject().is<FixedLengthDataViewObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -6426,7 +6431,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
     return AttachDecision::NoAction;
   }
 
-  DataViewObject* dv = &thisval_.toObject().as<DataViewObject>();
+  auto* dv = &thisval_.toObject().as<FixedLengthDataViewObject>();
 
   // Bounds check the offset.
   if (offsetInt64 < 0 ||
@@ -6445,7 +6450,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
   emitOptimisticClassGuard(objId, &thisval_.toObject(),
-                           GuardClassKind::DataView);
+                           GuardClassKind::FixedLengthDataView);
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
