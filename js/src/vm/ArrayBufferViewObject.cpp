@@ -31,9 +31,16 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* obj) {
   // Update view's data pointer if it moved.
   if (view->hasBuffer()) {
     JSObject* bufferObj = &view->bufferValue().toObject();
-    if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(bufferObj)) {
-      auto* buffer = &gc::MaybeForwardedObjectAs<ArrayBufferObject>(bufferObj);
-
+    ArrayBufferObject* buffer = nullptr;
+    if (gc::MaybeForwardedObjectIs<FixedLengthArrayBufferObject>(bufferObj)) {
+      buffer =
+          &gc::MaybeForwardedObjectAs<FixedLengthArrayBufferObject>(bufferObj);
+    } else if (gc::MaybeForwardedObjectIs<ResizableArrayBufferObject>(
+                   bufferObj)) {
+      buffer =
+          &gc::MaybeForwardedObjectAs<ResizableArrayBufferObject>(bufferObj);
+    }
+    if (buffer) {
       size_t offset = view->byteOffset();
       MOZ_ASSERT_IF(!buffer->dataPointer(), offset == 0);
 

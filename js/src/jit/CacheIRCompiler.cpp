@@ -2175,8 +2175,8 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::PlainObject:
       clasp = &PlainObject::class_;
       break;
-    case GuardClassKind::ArrayBuffer:
-      clasp = &ArrayBufferObject::class_;
+    case GuardClassKind::FixedLengthArrayBuffer:
+      clasp = &FixedLengthArrayBufferObject::class_;
       break;
     case GuardClassKind::SharedArrayBuffer:
       clasp = &SharedArrayBufferObject::class_;
@@ -2521,10 +2521,13 @@ bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
   }
 
   masm.loadObjClassUnsafe(obj, scratch);
-  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(&ArrayBufferObject::class_),
+  masm.branchPtr(Assembler::Equal, scratch,
+                 ImmPtr(&FixedLengthArrayBufferObject::class_),
                  failure->label());
   masm.branchPtr(Assembler::Equal, scratch,
                  ImmPtr(&SharedArrayBufferObject::class_), failure->label());
+  masm.branchPtr(Assembler::Equal, scratch,
+                 ImmPtr(&ResizableArrayBufferObject::class_), failure->label());
   return true;
 }
 
