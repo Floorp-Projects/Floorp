@@ -19,7 +19,6 @@
 #endif
 
 #include <string.h>          // for memset
-#include "mozilla/Scoped.h"  // for SCOPED_TEMPLATE
 
 namespace mozilla {
 
@@ -55,20 +54,6 @@ void FindVisualAndDepth(Display* aDisplay, VisualID aVisualID, Visual** aVisual,
  */
 
 void FinishX(Display* aDisplay);
-
-/**
- * Invoke XFree() on a pointer to memory allocated by Xlib (if the
- * pointer is nonnull) when this class goes out of scope.
- */
-template <typename T>
-struct ScopedXFreePtrTraits {
-  typedef T* type;
-  static T* empty() { return nullptr; }
-  static void release(T* ptr) {
-    if (ptr != nullptr) XFree(ptr);
-  }
-};
-SCOPED_TEMPLATE(ScopedXFree, ScopedXFreePtrTraits)
 
 }  // namespace mozilla
 

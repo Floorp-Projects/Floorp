@@ -736,12 +736,11 @@ class GtkVsyncSource final : public VsyncSource {
     Window root = DefaultRootWindow(mXDisplay);
     int screen = DefaultScreen(mXDisplay);
 
-    ScopedXFree<GLXFBConfig> cfgs;
     GLXFBConfig config;
     int visid;
     bool forWebRender = false;
     if (!gl::GLContextGLX::FindFBConfigForWindow(
-            mXDisplay, screen, root, &cfgs, &config, &visid, forWebRender)) {
+            mXDisplay, screen, root, &config, &visid, forWebRender)) {
       lock.NotifyAll();
       return;
     }
