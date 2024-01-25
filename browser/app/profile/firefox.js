@@ -782,8 +782,13 @@ pref("browser.shopping.experience2023.survey.hasSeen", false);
 // Number of PDP visits used to display shopping survey
 pref("browser.shopping.experience2023.survey.pdpVisits", 0);
 
-// Opens the shopping sidebar automatically when viewing a PDP
-pref("browser.shopping.experience2023.autoOpen", true);
+// Enables the auto-open feature for the shopping sidebar,
+// including new callouts and settings UI changes
+// (this is just the feature flag).
+pref("browser.shopping.experience2023.autoOpen.enabled", true);
+
+// Opens the shopping sidebar automatically when viewing a PDP.
+pref("browser.shopping.experience2023.autoOpen.userEnabled", true);
 
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
