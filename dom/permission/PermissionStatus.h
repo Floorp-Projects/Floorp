@@ -21,11 +21,9 @@ class PermissionStatus : public DOMEventTargetHelper {
   friend class PermissionObserver;
 
  public:
-  using CreatePromise = MozPromise<RefPtr<PermissionStatus>, nsresult, true>;
   using SimplePromise = MozPromise<nsresult, nsresult, true>;
 
-  static RefPtr<CreatePromise> Create(nsPIDOMWindowInner* aWindow,
-                                      PermissionName aName);
+  PermissionStatus(nsPIDOMWindowInner* aWindow, PermissionName aName);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -43,8 +41,6 @@ class PermissionStatus : public DOMEventTargetHelper {
  protected:
   ~PermissionStatus();
 
-  PermissionStatus(nsPIDOMWindowInner* aWindow, PermissionName aName);
-
   /**
    * This method returns the internal permission type, which should be equal to
    * the permission name for all but the MIDI permission because of the SysEx
@@ -55,7 +51,7 @@ class PermissionStatus : public DOMEventTargetHelper {
    * boolean, which is used to determine whether to return "midi" or
    * "midi-sysex" for the MIDI permission.
    */
-  virtual nsLiteralCString GetPermissionType();
+  virtual nsLiteralCString GetPermissionType() const;
 
  private:
   virtual RefPtr<SimplePromise> UpdateState();

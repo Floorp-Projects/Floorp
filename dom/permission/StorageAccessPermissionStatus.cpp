@@ -16,24 +16,6 @@
 
 namespace mozilla::dom {
 
-// static
-RefPtr<PermissionStatus::CreatePromise> StorageAccessPermissionStatus::Create(
-    nsPIDOMWindowInner* aWindow) {
-  RefPtr<PermissionStatus> status = new StorageAccessPermissionStatus(aWindow);
-  return status->Init()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [status](nsresult aOk) {
-        MOZ_ASSERT(NS_SUCCEEDED(aOk));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndResolve(status, __func__);
-      },
-      [](nsresult aError) {
-        MOZ_ASSERT(NS_FAILED(aError));
-        return MozPromise<RefPtr<PermissionStatus>, nsresult,
-                          true>::CreateAndReject(aError, __func__);
-      });
-}
-
 StorageAccessPermissionStatus::StorageAccessPermissionStatus(
     nsPIDOMWindowInner* aWindow)
     : PermissionStatus(aWindow, PermissionName::Storage_access) {}
