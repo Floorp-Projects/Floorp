@@ -116,6 +116,10 @@ const lazy = createLazyLoaders({
 // Their values for the en-US locale are in the files:
 //   devtools/client/locales/en-US/perftools.ftl
 //   browser/locales/en-US/browser/appmenu.ftl
+//
+// IMPORTANT NOTE: Please keep the existing profiler presets in sync with their
+// Fenix counterparts and consider adding any new presets to Fenix:
+// https://github.com/mozilla-mobile/firefox-android/blob/1d177e7e78d027e8ab32cedf0fc68316787d7454/fenix/app/src/main/java/org/mozilla/fenix/perf/ProfilerUtils.kt
 
 /** @type {Presets} */
 const presets = {
