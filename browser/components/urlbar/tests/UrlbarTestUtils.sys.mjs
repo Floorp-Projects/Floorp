@@ -127,6 +127,13 @@ export var UrlbarTestUtils = {
    *        userTypedValued, triggers engagement event telemetry, etc.)
    * @param {number} [options.selectionStart] The input's selectionStart
    * @param {number} [options.selectionEnd] The input's selectionEnd
+   * @param {boolean} [options.reopenOnBlur] Whether this method should repoen
+   *        the view if the input is blurred before the query finishes. This is
+   *        necessary to work around spurious blurs in CI, which close the view
+   *        and cancel the query, defeating the typical use of this method where
+   *        your test waits for the query to finish. However, this behavior
+   *        isn't always desired, for example if your test intentionally blurs
+   *        the input before the query finishes. In that case, pass false.
    */
   async promiseAutocompleteResultPopup({
     window,
@@ -135,6 +142,7 @@ export var UrlbarTestUtils = {
     fireInputEvent = true,
     selectionStart = -1,
     selectionEnd = -1,
+    reopenOnBlur = true,
   } = {}) {
     if (this.SimpleTest) {
       await this.SimpleTest.promiseFocus(window);
@@ -176,14 +184,13 @@ export var UrlbarTestUtils = {
     // until showing popup, timeout failure happens since the expected poup
     // never be shown. To avoid this, if losing the focus, retry setup to open
     // popup.
-    const blurListener = () => {
-      setup();
-    };
-    window.gURLBar.inputField.addEventListener("blur", blurListener, {
-      once: true,
-    });
+    if (reopenOnBlur) {
+      window.gURLBar.inputField.addEventListener("blur", setup, { once: true });
+    }
     const result = await this.promiseSearchComplete(window);
-    window.gURLBar.inputField.removeEventListener("blur", blurListener);
+    if (reopenOnBlur) {
+      window.gURLBar.inputField.removeEventListener("blur", setup);
+    }
     return result;
   },
 

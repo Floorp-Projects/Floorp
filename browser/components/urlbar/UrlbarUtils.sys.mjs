@@ -633,20 +633,24 @@ export var UrlbarUtils = {
   /**
    * Get the number of rows a result should span in the autocomplete dropdown.
    *
-   * @param {UrlbarResult} result The result being created.
+   * @param {UrlbarResult} result The result.
+   * @param {bool} includeExposureResultHidden If false and
+   *   `result.exposureResultHidden` is true, zero will be returned since the
+   *   result should be hidden and not take up any rows at all. Otherwise the
+   *   result's true span is returned.
    * @returns {number}
    *          The number of rows the result should span in the autocomplete
    *          dropdown.
    */
-  getSpanForResult(result) {
-    if (result.resultSpan) {
-      return result.resultSpan;
-    }
-
+  getSpanForResult(result, { includeExposureResultHidden = false } = {}) {
     // We know this result will be hidden in the final view so assign it
     // a span of zero.
-    if (result.exposureResultHidden) {
+    if (result.exposureResultHidden && !includeExposureResultHidden) {
       return 0;
+    }
+
+    if (result.resultSpan) {
+      return result.resultSpan;
     }
 
     switch (result.type) {

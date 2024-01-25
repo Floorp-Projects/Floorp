@@ -1203,12 +1203,6 @@ export class UrlbarView {
       // suggestedIndex result that couldn't replace a current result.
       if (!seenMisplacedResult) {
         let result = results[resultIndex];
-        // skip this result if it is supposed to be hidden from the view.
-        if (result.exposureResultHidden) {
-          this.#addExposure(result);
-          resultIndex++;
-          continue;
-        }
         seenSearchSuggestion =
           seenSearchSuggestion ||
           (!row.result.heuristic && this.#resultIsSearchSuggestion(row.result));
@@ -1216,11 +1210,18 @@ export class UrlbarView {
           this.#rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion)
         ) {
           // We can replace the row's current result with the new one.
-          this.#updateRow(row, result);
+          if (result.exposureResultHidden) {
+            this.#addExposure(result);
+          } else {
+            this.#updateRow(row, result);
+          }
           resultIndex++;
           continue;
         }
-        if (result.hasSuggestedIndex || row.result.hasSuggestedIndex) {
+        if (
+          (result.hasSuggestedIndex || row.result.hasSuggestedIndex) &&
+          !result.exposureResultHidden
+        ) {
           seenMisplacedResult = true;
         }
       }
@@ -1242,14 +1243,11 @@ export class UrlbarView {
     // Add remaining results, if we have fewer rows than results.
     for (; resultIndex < results.length; ++resultIndex) {
       let result = results[resultIndex];
-      // skip this result if it is supposed to be hidden from the view.
-      if (result.exposureResultHidden) {
-        this.#addExposure(result);
-        continue;
-      }
-      let row = this.#createRow();
-      this.#updateRow(row, result);
-      if (!seenMisplacedResult && result.hasSuggestedIndex) {
+      if (
+        !seenMisplacedResult &&
+        result.hasSuggestedIndex &&
+        !result.exposureResultHidden
+      ) {
         if (result.isSuggestedIndexRelativeToGroup) {
           // We can't know at this point what the right index of a group-
           // relative suggestedIndex result will be. To avoid all all possible
@@ -1274,14 +1272,23 @@ export class UrlbarView {
           }
         }
       }
-      let newVisibleSpanCount =
-        visibleSpanCount + lazy.UrlbarUtils.getSpanForResult(result);
-      if (
-        newVisibleSpanCount <= this.#queryContext.maxResults &&
-        !seenMisplacedResult
-      ) {
-        // The new row can be visible.
-        visibleSpanCount = newVisibleSpanCount;
+      let newSpanCount =
+        visibleSpanCount +
+        lazy.UrlbarUtils.getSpanForResult(result, {
+          includeExposureResultHidden: true,
+        });
+      let canBeVisible =
+        newSpanCount <= this.#queryContext.maxResults && !seenMisplacedResult;
+      if (result.exposureResultHidden) {
+        if (canBeVisible) {
+          this.#addExposure(result);
+        }
+        continue;
+      }
+      let row = this.#createRow();
+      this.#updateRow(row, result);
+      if (canBeVisible) {
+        visibleSpanCount = newSpanCount;
       } else {
         // The new row must be hidden at first because the view is already
         // showing maxResults spans, or we encountered a new suggestedIndex
