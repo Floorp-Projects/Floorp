@@ -81,7 +81,6 @@ def configure_gradlew(config, job, taskdesc):
     worker.setdefault("env", {}).update(
         {
             "ANDROID_SDK_ROOT": path.join(fetches_dir, "android-sdk-linux"),
-            # TODO: switch to offline builds
             "GRADLE_USER_HOME": path.join(
                 topsrc_dir, "mobile/android/gradle/dotgradle-online"
             ),
