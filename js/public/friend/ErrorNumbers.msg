@@ -678,6 +678,7 @@ MSG_DEF(JSMSG_SHORT_TYPED_ARRAY_RETURNED, 2, JSEXN_TYPEERR, "expected TypedArray
 MSG_DEF(JSMSG_TYPED_ARRAY_NOT_COMPATIBLE, 2, JSEXN_TYPEERR, "{0} elements are incompatible with {1}")
 MSG_DEF(JSMSG_ARRAYBUFFER_REQUIRED, 0, JSEXN_TYPEERR, "ArrayBuffer object required")
 MSG_DEF(JSMSG_ARRAYBUFFER_LENGTH_LARGER_THAN_MAXIMUM, 0, JSEXN_RANGEERR, "byte length is larger than maximum byte length")
+MSG_DEF(JSMSG_ARRAYBUFFER_NON_RESIZABLE, 0, JSEXN_TYPEERR, "can't resize non-resizable ArrayBuffer")
 MSG_DEF(JSMSG_ARRAYBUFFER_COPY_RANGE, 0, JSEXN_RANGEERR, "ArrayBuffer range incorrect for copying")
 
 // Shared array buffer
