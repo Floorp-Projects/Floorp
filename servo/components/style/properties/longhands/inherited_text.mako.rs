@@ -149,52 +149,26 @@ ${helpers.predefined_type(
     affects="layout",
 )}
 
-<%helpers:single_keyword
-    name="white-space"
-    values="normal pre nowrap pre-wrap pre-line"
-    engines="gecko servo-2013 servo-2020",
-    extra_gecko_values="break-spaces -moz-pre-space"
-    gecko_enum_prefix="StyleWhiteSpace"
-    needs_conversion="True"
-    animation_value_type="discrete"
-    spec="https://drafts.csswg.org/css-text/#propdef-white-space"
-    servo_restyle_damage="rebuild_and_reflow"
-    affects="layout"
->
-    % if engine in ["servo-2013", "servo-2020"]:
-    impl SpecifiedValue {
-        pub fn allow_wrap(&self) -> bool {
-            match *self {
-                SpecifiedValue::Nowrap |
-                SpecifiedValue::Pre => false,
-                SpecifiedValue::Normal |
-                SpecifiedValue::PreWrap |
-                SpecifiedValue::PreLine => true,
-            }
-        }
+// TODO: `white-space-collapse: discard` not yet supported
+${helpers.single_keyword(
+    name="white-space-collapse",
+    values="collapse preserve preserve-breaks preserve-spaces break-spaces",
+    engines="gecko",
+    gecko_enum_prefix="StyleWhiteSpaceCollapse",
+    animation_value_type="discrete",
+    spec="https://drafts.csswg.org/css-text-4/#propdef-white-space-collapse",
+    affects="layout",
+)}
 
-        pub fn preserve_newlines(&self) -> bool {
-            match *self {
-                SpecifiedValue::Normal |
-                SpecifiedValue::Nowrap => false,
-                SpecifiedValue::Pre |
-                SpecifiedValue::PreWrap |
-                SpecifiedValue::PreLine => true,
-            }
-        }
-
-        pub fn preserve_spaces(&self) -> bool {
-            match *self {
-                SpecifiedValue::Normal |
-                SpecifiedValue::Nowrap |
-                SpecifiedValue::PreLine => false,
-                SpecifiedValue::Pre |
-                SpecifiedValue::PreWrap => true,
-            }
-        }
-    }
-    % endif
-</%helpers:single_keyword>
+${helpers.single_keyword(
+    name="text-wrap-mode",
+    values="wrap nowrap",
+    engines="gecko",
+    gecko_enum_prefix="StyleTextWrapMode",
+    animation_value_type="discrete",
+    spec="https://drafts.csswg.org/css-text-4/#propdef-text-wrap-mode",
+    affects="layout",
+)}
 
 ${helpers.predefined_type(
     "text-shadow",
