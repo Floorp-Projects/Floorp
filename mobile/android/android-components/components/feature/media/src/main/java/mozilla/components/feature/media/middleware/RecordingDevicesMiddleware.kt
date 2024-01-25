@@ -220,7 +220,7 @@ internal sealed class RecordingState {
         override val titleResource = R.string.mozac_feature_media_sharing_camera_and_microphone
         override val textResource = R.string.mozac_feature_media_sharing_camera_and_microphone_text
         override val reminderTextResource =
-            R.string.mozac_feature_media_sharing_camera_and_microphone_reminder_text
+            R.string.mozac_feature_media_sharing_camera_and_microphone_reminder_text_2
     }
 
     object Camera : RecordingState() {
@@ -236,7 +236,7 @@ internal sealed class RecordingState {
         override val titleResource = R.string.mozac_feature_media_sharing_microphone
         override val textResource = R.string.mozac_feature_media_sharing_microphone_text
         override val reminderTextResource =
-            R.string.mozac_feature_media_sharing_microphone_reminder_text
+            R.string.mozac_feature_media_sharing_microphone_reminder_text_2
     }
 
     object None : RecordingState() {
