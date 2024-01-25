@@ -231,7 +231,7 @@ input[type="text"] {
 
 .error-message {
   font-size: 12px;
-  color: var(--in-content-error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
+  color: var(--text-color-error);
   margin-top: 4px;
 }
 
