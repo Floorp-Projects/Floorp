@@ -153,10 +153,7 @@ tags = "openwindow"
 ["test_printer_default_settings.html"]
 
 ["test_printpreview.xhtml"]
-skip-if = [
-  "os == 'linux' && bits == 32", # Disabled on Linux32 for bug 1278957
-  "verify && os == 'win'",
-]
+skip-if = ["verify && os == 'win'"]
 
 ["test_printpreview_bug396024.xhtml"]
 skip-if = ["verify && os == 'win'"]

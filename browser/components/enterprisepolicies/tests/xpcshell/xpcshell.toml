@@ -1,5 +1,5 @@
 [DEFAULT]
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 firefox-appdir = "browser"
 head = "head.js"
 support-files = ["policytest_v0.1.xpi"]

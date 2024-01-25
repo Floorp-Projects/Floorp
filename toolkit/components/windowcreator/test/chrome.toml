@@ -11,4 +11,4 @@ support-files = [
 ["test_bug1192654.html"]
 
 ["test_bug449141.html"]
-skip-if = ["toolkit == 'android'"]
+skip-if = ["os == 'android'"]

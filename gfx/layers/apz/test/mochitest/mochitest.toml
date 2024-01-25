@@ -62,7 +62,8 @@ skip-if = ["os == 'android'"]  # mouse events not supported on mobile
 ["test_group_hittest-2.html"]
 skip-if = [
   "os == 'android'",  # mouse events not supported on mobile
-  "os == 'win' && (bits == 32 || asan)",
+  "win11_2009 && bits == 32",
+  "win11_2009 && asan",
   "os == 'linux' && asan",  # stack is not large enough for the test
   "display == 'wayland' && os_version == '22.04'",  # Bug 1857059
   "http3",
@@ -72,7 +73,8 @@ skip-if = [
 ["test_group_hittest-3.html"]
 skip-if = [
   "os == 'android'",  # mouse events not supported on mobile
-  "os == 'win' && (bits == 32 || asan)",
+  "win11_2009 && bits == 32",
+  "win11_2009 && asan",
   "http3",
   "http2",
 ]

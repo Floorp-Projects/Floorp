@@ -298,7 +298,6 @@ skip-if = ["debug"] # Bug 1250058 - Docshell leak on debug
 ["browser_inspector_inspect_loading_document.js"]
 
 ["browser_inspector_inspect_mutated_node.js"]
-skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_inspector_inspect_node_contextmenu.js"]
 

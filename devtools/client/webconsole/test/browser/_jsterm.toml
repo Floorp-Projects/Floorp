@@ -34,14 +34,14 @@ support-files = [
 ["browser_jsterm_add_edited_input_to_history.js"]
 
 ["browser_jsterm_autocomplete-properties-with-non-alphanumeric-names.js"]
-skip-if = ["debug && os == 'win' && bits == 32"] # Bug 1620856
+skip-if = ["win11_2009 && debug && bits == 32"] # Bug 1620856
 
 ["browser_jsterm_autocomplete_accept_no_scroll.js"]
 
 ["browser_jsterm_autocomplete_array_no_index.js"]
 
 ["browser_jsterm_autocomplete_arrow_keys.js"]
-skip-if = ["debug && os == 'win' && bits == 32"] # Bug 1620856
+skip-if = ["win11_2009 && debug && bits == 32"] # Bug 1620856
 
 ["browser_jsterm_autocomplete_await.js"]
 

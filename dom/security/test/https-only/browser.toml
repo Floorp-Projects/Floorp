@@ -49,7 +49,7 @@ support-files = ["file_save_as.html"]
 support-files = ["file_user_gesture.html"]
 
 ["browser_websocket_exceptions.js"]
-skip-if = ["toolkit == 'android'"] # WebSocket tests are not supported on Android Yet. Bug 1566168.
+skip-if = ["os == 'android'"] # WebSocket tests are not supported on Android Yet. Bug 1566168.
 support-files = [
   "file_websocket_exceptions.html",
   "file_websocket_exceptions_iframe.html",

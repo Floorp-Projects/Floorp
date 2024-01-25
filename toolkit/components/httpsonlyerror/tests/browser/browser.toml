@@ -9,7 +9,7 @@ support-files = ["file_errorpage_timeout_server.sjs"]
 
 ["browser_errorpage_www_suggestion.js"]
 support-files = ["file_errorpage_www_suggestion.html"]
-skip-if = ["toolkit == 'android'"] # no https-only errorpage support in android
+skip-if = ["os == 'android'"] # no https-only errorpage support in android
 
 ["browser_exception.js"]
 support-files = ["file_upgrade_insecure_server.sjs"]

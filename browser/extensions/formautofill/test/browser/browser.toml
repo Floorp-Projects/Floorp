@@ -30,7 +30,6 @@ skip-if = [
 ["browser_editAddressDialog.js"]
 skip-if = [
   "verify",
-  "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1797751
 ]
 

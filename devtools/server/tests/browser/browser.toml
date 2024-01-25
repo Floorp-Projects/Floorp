@@ -156,7 +156,6 @@ skip-if = ["true"] # Bug 1183605
 ["browser_inspector-isScrollable.js"]
 
 ["browser_inspector-mutations-childlist.js"]
-skip-if = ["win10_2004 && fission && debug && socketprocess_networking"] # high frequency intermittent
 
 ["browser_inspector-release.js"]
 
@@ -198,7 +197,6 @@ https_first_disabled = true
 skip-if = [
   "debug", # Bug 1715916 - test is having race conditions on slow hardware
   "tsan", # high frequency intermittent
-  "win10_2004 && asan && fission", # high frequency intermittent
   "win11_2009 && asan", # high frequency intermittent
 ]
 

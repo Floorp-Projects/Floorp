@@ -59,8 +59,6 @@ prefs = [
 ["test_arrowpanel.xhtml"]
 skip-if = [
   "os == 'win' && verify",
-  "debug && os == 'win' && bits == 32", # Bug 1546256
-  "win10_2004", # Bug 1727507
   "win10_2009", # Bug 1727507
   "win11_2009", # Bug 1797751
 ]
@@ -76,7 +74,7 @@ skip-if = [
 ["test_autocomplete_emphasis.xhtml"]
 
 ["test_autocomplete_mac_caret.xhtml"]
-skip-if = ["toolkit != 'cocoa'"]
+run-if = ["os == 'mac'"]
 
 ["test_autocomplete_placehold_last_complete.xhtml"]
 
@@ -87,10 +85,13 @@ skip-if = [
 ["test_browser_drop.xhtml"]
 
 ["test_bug1048178.xhtml"]
-skip-if = ["toolkit == 'cocoa'"]
+skip-if = ["apple_catalina"]
 
 ["test_bug263683.xhtml"]
-skip-if = ["debug && (os == 'win' || os == 'linux')"]
+skip-if = [
+  "debug && os == 'linux'",
+  "debug && os == 'win'",
+]
 
 ["test_bug304188.xhtml"]
 skip-if = ["true"]
@@ -131,7 +132,7 @@ support-files = ["bug451540_window.xhtml"]
 ["test_bug562554.xhtml"]
 
 ["test_bug624329.xhtml"]
-fail-if = ["(os == 'linux' && os_version == '18.04')"]  # Bug 1600194
+fail-if = ["os == 'linux' && os_version == '18.04'"]  # Bug 1600194
 
 ["test_bug792324.xhtml"]
 
@@ -139,7 +140,7 @@ fail-if = ["(os == 'linux' && os_version == '18.04')"]  # Bug 1600194
 
 ["test_chromemargin.xhtml"]
 support-files = "window_chromemargin.xhtml"
-skip-if = ["toolkit == 'cocoa'"]
+skip-if = ["apple_catalina"]
 
 ["test_closemenu_attribute.xhtml"]
 
@@ -148,7 +149,7 @@ skip-if = ["toolkit == 'cocoa'"]
 ["test_contextmenu_rtl.xhtml"]
 
 ["test_cursorsnap.xhtml"]
-disabled = true # INI file had 'disabled = '
+disabled = true
 #skip-if = os != 'win'
 support-files = [
   "window_cursorsnap_dialog.xhtml",
@@ -172,7 +173,7 @@ support-files = [
 ["test_editor_for_input_with_autocomplete.html"]
 
 ["test_findbar.xhtml"]
-skip-if = ["os == 'mac' && os_version == '10.15'"] # macosx1014/15 due to 1550078
+skip-if = ["apple_catalina"] # macosx1014/15 due to 1550078
 
 ["test_findbar_entireword.xhtml"]
 
@@ -241,10 +242,13 @@ support-files = [
 support-files = ["window_navigate_persist.html"]
 
 ["test_notificationbox.xhtml"]
-skip-if = ["(os == 'linux' && debug) || (os == 'win')"] # Bug 1429649
+skip-if = [
+  "os == 'linux' && debug", # Bug 1429649
+  "os == 'win'", # Bug 1429649
+]
 
 ["test_panel.xhtml"]
-skip-if = ["os == 'mac' && os_version == '10.15'"] # macosx1014 due to 1550078
+skip-if = ["apple_catalina"] # macosx1014 due to 1550078
 
 ["test_panel_anchoradjust.xhtml"]
 
@@ -252,7 +256,7 @@ skip-if = ["os == 'mac' && os_version == '10.15'"] # macosx1014 due to 1550078
 # textboxes and lists only, so skip this test on Mac
 ["test_panel_focus.xhtml"]
 support-files = "window_panel_focus.xhtml"
-skip-if = ["toolkit == 'cocoa'"]
+skip-if = ["apple_catalina"]
 
 ["test_panel_hover_menu.xhtml"]
 
@@ -267,14 +271,14 @@ skip-if = ["os == 'linux'"] # 1167694
 
 ["test_popup_attribute.xhtml"]
 skip-if = [
-  "os == 'linux' && asan", # Bug 1582610
-  "os == 'mac' && debug", # Bug 1281360
+  "os == 'linux' && os_version == '18.04' && asan", # Bug 1582610
+  "apple_catalina && debug", # Bug 1281360
 ]
 
 ["test_popup_button.xhtml"]
 skip-if = [
-  "os == 'linux' && asan", # Bug 1582610
-  "os == 'mac' && debug", # Bug 1281360
+  "os == 'linux' && os_version == '18.04' && asan", # Bug 1582610
+  "apple_catalina && debug", # Bug 1281360
 ]
 
 ["test_popup_coords.xhtml"]
@@ -332,7 +336,7 @@ support-files = ["window_preferences_onsyncfrompreference.xhtml"]
 
 ["test_tooltip.xhtml"]
 skip-if = [
-  "os == 'mac'", # Bug 1141245, frequent timeouts on OSX 10.14, Windows
+  "apple_catalina", # Bug 1141245, frequent timeouts on OSX 10.14, Windows
   "os == 'win'", # Bug 1141245, frequent timeouts on OSX 10.14, Windows
 ]
 

@@ -10,13 +10,13 @@ support-files = [
 # Privacy relevant
 
 ["test_bug1123480.xhtml"]
-skip-if = ["os == 'win' && bits == 32"]
+skip-if = ["win11_2009 && bits == 32"]
 
 ["test_bug343416.xhtml"]
 skip-if = ["debug"]
 
 ["test_bug428405.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug429954.xhtml"]
 support-files = ["window_bug429954.xhtml"]
@@ -24,31 +24,31 @@ support-files = ["window_bug429954.xhtml"]
 ["test_bug444800.xhtml"]
 
 ["test_bug466599.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug478536.xhtml"]
 skip-if = ["true"] # Bug 561929
 support-files = ["window_bug478536.xhtml"]
 
 ["test_bug485118.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug517396.xhtml"]
-skip-if = ["(verify && (os == 'win'))"]
+skip-if = ["verify && os == 'win'"]
 
 ["test_bug522217.xhtml"]
 tags = "fullscreen"
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 support-files = ["window_bug522217.xhtml"]
 
 ["test_bug538242.xhtml"]
 support-files = ["window_bug538242.xhtml"]
 
 ["test_bug565392.html"]
-skip-if = ["toolkit != 'windows'"]
+run-if = ["os == 'win'"]
 
 ["test_bug586713.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 support-files = ["bug586713_window.xhtml"]
 
 ["test_bug593307.xhtml"]
@@ -59,12 +59,10 @@ support-files = [
 
 ["test_bug596600.xhtml"]
 support-files = "file_bug596600.html"
-skip-if = [
-  "toolkit != 'cocoa'", # Cocoa widget test
-]
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug673301.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug760802.xhtml"]
 
@@ -128,67 +126,71 @@ support-files = ["window_imestate_iframes.html"]
 support-files = ["file_input_events_on_deactive_window.html"]
 
 ["test_key_event_counts.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_keycodes.xhtml"]
 
 ["test_mouse_scroll.xhtml"]
-skip-if = ["toolkit != 'windows'"] # Windows widget test
+run-if = ["os == 'win'"] # windows widget test
 support-files = [
   "window_mouse_scroll_win.html",
   "window_mouse_scroll_win_2.html",
 ]
 
 ["test_native_key_bindings_mac.html"]
+run-if = ["os == 'mac'"] # Cocoa widget test
 skip-if = [
-  "toolkit != 'cocoa'", # Cocoa widget test
   "verify",
 ]
 
 ["test_native_menus.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 support-files = ["native_menus_window.xhtml"]
 
 ["test_panel_mouse_coords.xhtml"]
-skip-if = ["toolkit == 'windows'"] # bug 1009955
+skip-if = ["os == 'win'"] # bug 1009955
 
 ["test_platform_colors.xhtml"]
 skip-if = ["true"] # Bug 1207190
 
 ["test_position_on_resize.xhtml"]
 skip-if = [
-  "verify && (os == 'win')",
-  "(os == 'linux' && bits == 64)", # Bug 1616760
+  "verify && os == 'win'",
+  "os == 'linux' && bits == 64", # Bug 1616760
 ]
 
 ["test_secure_input.html"]
+run-if = ["os == 'mac'"] # Cocoa widget test
 support-files = ["file_secure_input.html"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
 
 ["test_sizemode_events.xhtml"]
 
 ["test_standalone_native_menu.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 support-files = ["standalone_native_menu_window.xhtml"]
 
 ["test_surrogate_pair_native_key_handling.xhtml"]
-skip-if = ["toolkit != 'windows'"] # Windows widget test
+run-if = ["os == 'win'"] # Windows widget test
 
 ["test_system_font_changes.xhtml"]
 support-files = ["system_font_changes.xhtml"]
-run-if = ["toolkit == 'gtk'"] # Currently the test works on only gtk3
+run-if = ["os == 'linux'"] # Currently the test works on only gtk3
 
 ["test_system_status_bar.xhtml"]
-skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
+run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_taskbar_progress.xhtml"]
 skip-if = [
-  "toolkit != 'cocoa' && toolkit != 'windows'",
-  "(os == 'win' && os_version == '10.0' && !ccov)", # Bug 1456811
+  "os == 'linux'",
+  "os == 'android'",
+  "win10_2009 && !ccov", # Bug 1456811
 ]
 
 ["test_transferable_overflow.xhtml"]
-skip-if = ["(verify && (os == 'mac' || os == 'linux'))"]
+skip-if = [
+  "verify && apple_catalina",
+  "verify && os == 'linux'",
+]
 
 ["test_wheeltransaction.xhtml"]
 support-files = ["window_wheeltransaction.xhtml"]

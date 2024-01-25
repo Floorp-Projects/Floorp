@@ -31,7 +31,7 @@ environment = [
 skip-if = [
   "apple_silicon", # bug 1707724
   "socketprocess_networking",
-  "os == 'win' && bits == 32",
+  "win11_2009 && bits == 32",
   "os == 'win' && msix", # Bug 1833639
 ]
 

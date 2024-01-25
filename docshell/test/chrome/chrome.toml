@@ -67,20 +67,18 @@ skip-if = ["true"] # bug 1393441
 ["test_bug298622.xhtml"]
 
 ["test_bug301397.xhtml"]
-skip-if = ["(os == 'win' && processor == 'aarch64')"] # bug 1533819
 
 ["test_bug303267.xhtml"]
 
 ["test_bug311007.xhtml"]
 
 ["test_bug321671.xhtml"]
-skip-if = ["(os == 'mac' && !debug)"] # Bug 1784831
+skip-if = ["os == 'mac' && !debug"] # Bug 1784831
 
 ["test_bug360511.xhtml"]
-skip-if = ["(os == 'win' && processor == 'x86')"]
+skip-if = ["os == 'win' && processor == 'x86'"]
 
 ["test_bug364461.xhtml"]
-skip-if = ["(os == 'win' && processor == 'aarch64')"] # bug 1533814
 
 ["test_bug396519.xhtml"]
 

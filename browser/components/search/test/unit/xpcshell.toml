@@ -3,7 +3,7 @@ support-files = [
   "../../../../../services/settings/dumps/main/search-config-v2.json",
 ]
 prefs = ["browser.search.log=true"]
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 firefox-appdir = "browser"
 
 ["test_search_telemetry_categorization_logic.js"]

@@ -1,7 +1,7 @@
 [DEFAULT]
 head = "head.js"
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 
 ["test_DownloadLastDir_basics.js"]
 

@@ -128,10 +128,6 @@ info["apple_catalina"] = False
 if info["os"] == "mac" and float(os_version) == 10.15:
     info["apple_catalina"] = True
 
-info["win10_2004"] = False
-if info["os"] == "win" and version == "10.0.19041":
-    info["win10_2004"] = True
-
 info["win10_2009"] = False
 if info["os"] == "win" and version == "10.0.19045":
     info["win10_2009"] = True

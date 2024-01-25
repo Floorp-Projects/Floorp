@@ -85,8 +85,7 @@ tags = "mcb"
 ["browser_force_process_selector.js"]
 skip-if = [
   "verify",
-  "(os == 'win' && os_version == '10.0' && bits == 64 && asan)",
-  "(os == 'linux' && bits == 64 && os_version == '18.04' && asan)", # this only makes sense with e10s-multi , Bug 1651357
+  "os == 'linux' && bits == 64 && os_version == '18.04' && asan", # this only makes sense with e10s-multi , Bug 1651357
 ]
 
 ["browser_form_validity_popup_submit.js"]
@@ -102,8 +101,8 @@ skip-if = ["fission"] # Fails with Fission, and we're unlikely to spend time to 
 
 ["browser_multiple_popups.js"]
 skip-if = [
-  "os == 'win' && !debug",
-  "os == 'mac' && !debug", # Bug 1505235, Bug 1661132 (osx)
+  "os == 'win' && !debug", # Bug 1505235
+  "os == 'mac' && !debug", # Bug 1661132 (osx)
   "socketprocess_networking",
 ]
 support-files = ["browser_multiple_popups.html"]

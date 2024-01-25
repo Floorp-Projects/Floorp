@@ -10,7 +10,6 @@ support-files = ["loadDelayedReply.sjs"]
 skip-if = [
   "apple_silicon && !debug", # Bug 1786514
   "apple_catalina && !debug", # Bug 1786514
-  "win10_2004 && !debug", # Bug 1786514
 ]
 support-files = ["test_page.html"]
 

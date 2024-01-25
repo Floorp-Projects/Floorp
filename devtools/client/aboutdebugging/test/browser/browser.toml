@@ -43,7 +43,6 @@ tags = "webextensions"
 skip-if = [
   "verify && debug", # verify: crashes on shutdown, timeouts
   "os == 'linux' && debug", # linux debug Bug 1299001
-  "win10_2004 && !debug", # Bug 1744778
 ]
 tags = "webextensions"
 

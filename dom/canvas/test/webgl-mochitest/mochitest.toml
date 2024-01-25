@@ -173,7 +173,7 @@ skip-if = ["display == 'wayland'"]
 ["test_sab_with_webgl.html"]
 
 ["test_tex_large_uploads.html"]
-skip-if = ["os == 'win' && debug && bits == 32"] # bug 1705863
+skip-if = ["win11_2009 && debug && bits == 32"] # bug 1705863
 support-files = ["blank_15000x10000.png"]
 
 ["test_tex_pbo.html"]
@@ -187,27 +187,27 @@ support-files = ["blank_15000x10000.png"]
 ["test_vertexattrib4f_update.html"]
 
 ["test_video_fastpath_mp4.html"]
-skip-if = ["os == 'win' && bits == 32"] # No fast video path for h264 decoder (done in RDD, can't be read in content)
+skip-if = ["win11_2009 && bits == 32"] # No fast video path for h264 decoder (done in RDD, can't be read in content)
 
 ["test_video_fastpath_theora.html"]
 skip-if = [
   "os == 'linux'",
   "os == 'mac'",
-  "os == 'win' && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
 ]
 
 ["test_video_fastpath_vp8.html"]
 skip-if = [
   "os == 'linux'",
   "os == 'mac'",
-  "os == 'win' && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
 ]
 
 ["test_video_fastpath_vp9.html"]
 skip-if = [
   "os == 'linux'",
   "os == 'mac'",
-  "os == 'win' && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
 ]
 
 ["test_webgl2_alpha_luminance.html"]

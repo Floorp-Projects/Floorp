@@ -30,7 +30,6 @@ support-files = ["file_mixed_content_auto_upgrade_display_console.html"]
 
 ["browser_test_mixed_content_download.js"]
 skip-if = [
-  "win10_2004 && debug", # Bug 1723573
   "win11_2009", # Bug 1784764
   "os == 'linux' && !debug", # Bug 1784764
 ]

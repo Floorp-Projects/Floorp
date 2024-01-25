@@ -355,7 +355,6 @@ skip-if = ["os == 'linux' && fission && tsan"] # high frequency intermittent
 
 ["browser_newWindowDrop.js"]
 https_first_disabled = true
-skip-if = ["os == 'win' && os_version == '6.1'"] # bug 1715862
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_new_http_window_opened_from_file_tab.js"]
@@ -388,7 +387,7 @@ https_first_disabled = true
 skip-if = [
   "os == 'mac'",
   "os == 'linux' && !debug",
-  "os == 'win' && bits == 32",
+  "win11_2009 && bits == 32",
 ] # Bug 1559410 for all instances
 support-files = [
   "refresh_header.sjs",
@@ -463,7 +462,6 @@ https_first_disabled = true
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_tab_drag_drop_perwindow.js"]
-skip-if = ["os == 'win' && os_version == '6.1' && bits == 32"] # bug 1717587
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_tab_dragdrop.js"]
@@ -471,7 +469,7 @@ skip-if = ["true"] # Bug 1312436, Bug 1388973
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_tab_dragdrop2.js"]
-skip-if = ["os == 'win' && bits == 32 && !debug"] # high frequency win7 intermittent: crash
+skip-if = ["win11_2009 && bits == 32 && !debug"] # high frequency win7 intermittent: crash
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_tabfocus.js"]
