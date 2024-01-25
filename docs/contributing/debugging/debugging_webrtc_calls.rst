@@ -224,7 +224,7 @@ The `Save Page` button expands all the sections and presents a dialog to save
 the contents of the page. This will produce an HTML file suitable for attaching
 to bug reports.
 
-In the event of a WebRTC issue, the `Enable WebRTC Log Preset` button is a very
+In the event of a WebRTC issue, the :code:`Enable WebRTC Log Preset` button is a very
 quick way to start logging. Pressing that button will open a new tab with
 `about:logging <about:logging>`__ with the :code:`webrtc` preset selected. This
 preset contains all :ref:`standard-logging-modules`. Logging
@@ -288,7 +288,7 @@ diagnostic stats:
 
 In this image we can see that there are 0 milliseconds of jitter, and 32
 milliseconds of round trip delay. This call should not be experiencing any
-noticeable delay. See the `Delay Calculation<#delay-calculation>`__
+noticeable delay. See the `Delay Calculation <#delay-calculation>`__
 appendix section below for some more detail.
 
 If the perceived delay is larger than the estimated delay that could
@@ -696,7 +696,8 @@ depending on network circumstances.
 .. note::
    A list of media codecs with playback support are available in the Media
    section of `about:support#media <about:support#media>`__ . Not all media
-   codecs present and available to Firefox for playback are supported in WebRTC calls.
+   codecs present and available to Firefox for playback are supported in WebRTC
+   calls.
 
 To check the current factors, including preferences, that are being used to
 calculate availability beyond codec presence, one can check the `Media Context`
@@ -706,6 +707,9 @@ section of about:webrtc.
    :alt: example about:webrtc media context values
 
 .. _running-webrtc-tests:
+
+For an in-depth reference covering the codecs available through WebRTC please
+see the MDN Page: `Codecs Used by WebRTC <https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs>`__.
 
 Running WebRTC Tests
 --------------------
@@ -797,7 +801,7 @@ Test Atlas
      - fuzzing
      -
 
-.. _web-platform-tests:
+.. _webrtc-web-platform-tests:
 
 Web Platform Tests
 ~~~~~~~~~~~~~~~~~~
