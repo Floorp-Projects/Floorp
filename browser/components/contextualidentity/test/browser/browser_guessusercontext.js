@@ -27,6 +27,9 @@ async function openTabInUserContext(uri, userContextId, win = window) {
 }
 
 registerCleanupFunction(async function cleanup() {
+  Services.prefs.clearUserPref(
+    "browser.link.force_default_user_context_id_for_external_opens"
+  );
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.selectedTab, { animate: false });
   }
@@ -69,19 +72,7 @@ add_task(async function test() {
   is(guessUserContextId(HOST_EXAMPLE), WORK, "forgets closed window");
 
   // Check the opener flow more directly
-  let browsingContext = window.browserDOMWindow.openURI(
-    makeURI(HOST_EXAMPLE.spec + "?new"),
-    null,
-    Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-    Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL,
-    Services.scriptSecurityManager.getSystemPrincipal()
-  );
-  await BrowserTestUtils.browserLoaded(browsingContext.embedderElement);
-  is(
-    browsingContext.embedderElement,
-    gBrowser.selectedBrowser,
-    "opener selected"
-  );
+  openURIFromExternal(HOST_EXAMPLE.spec + "?new");
   is(
     gBrowser.selectedTab.getAttribute("usercontextid"),
     WORK.toString(),
@@ -93,4 +84,32 @@ add_task(async function test() {
     DEFAULT,
     "still matches default container"
   );
+
+  // Force into default with the pref from https://bugzilla.mozilla.org/show_bug.cgi?id=1692124
+  Services.prefs.setBoolPref(
+    "browser.link.force_default_user_context_id_for_external_opens",
+    true
+  );
+  openURIFromExternal(HOST_EXAMPLE.spec + "?new");
+  is(
+    gBrowser.selectedTab.getAttribute("usercontextid"),
+    "",
+    "opener flow with default user context ID forced by pref"
+  );
 });
+
+async function openURIFromExternal(spec) {
+  let browsingContext = window.browserDOMWindow.openURI(
+    makeURI(spec),
+    null,
+    Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+    Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
+  await BrowserTestUtils.browserLoaded(browsingContext.embedderElement);
+  is(
+    browsingContext.embedderElement,
+    gBrowser.selectedBrowser,
+    "opener selected"
+  );
+}
