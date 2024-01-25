@@ -5353,8 +5353,10 @@ HTMLEditor::AutoMoveOneLineHandler::ConsiderWhetherPreserveWhiteSpaceStyle(
     // If the content has different `white-space` style from <pre>, we
     // shouldn't treat it as a descendant of <pre> because web apps or
     // the user intent to treat the white-spaces in aContent not as `pre`.
-    if (EditorUtils::GetComputedWhiteSpaceStyle(aContent).valueOr(
-            StyleWhiteSpace::Normal) != StyleWhiteSpace::Pre) {
+    if (EditorUtils::GetComputedWhiteSpaceStyles(aContent).valueOr(std::pair(
+            StyleWhiteSpaceCollapse::Collapse, StyleTextWrapMode::Wrap)) !=
+        std::pair(StyleWhiteSpaceCollapse::Preserve,
+                  StyleTextWrapMode::Nowrap)) {
       return false;
     }
     for (const Element* element :
@@ -5801,52 +5803,67 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeOrChildrenWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsInContentNode());
 
-  const auto destWhiteSpaceStyle = [&]() -> Maybe<StyleWhiteSpace> {
+  const auto destWhiteSpaceStyles =
+      [&]() -> Maybe<std::pair<StyleWhiteSpaceCollapse, StyleTextWrapMode>> {
     if (aPreserveWhiteSpaceStyle == PreserveWhiteSpaceStyle::No ||
         !aPointToInsert.IsInContentNode()) {
       return Nothing();
     }
-    auto style = EditorUtils::GetComputedWhiteSpaceStyle(
+    auto styles = EditorUtils::GetComputedWhiteSpaceStyles(
         *aPointToInsert.ContainerAs<nsIContent>());
-    if (NS_WARN_IF(style.isSome() &&
-                   style.value() == StyleWhiteSpace::PreSpace)) {
+    if (NS_WARN_IF(styles.isSome() &&
+                   styles.value().first ==
+                       StyleWhiteSpaceCollapse::PreserveSpaces)) {
       return Nothing();
     }
-    return style;
+    return styles;
   }();
-  const auto srcWhiteSpaceStyle = [&]() -> Maybe<StyleWhiteSpace> {
+  const auto srcWhiteSpaceStyles =
+      [&]() -> Maybe<std::pair<StyleWhiteSpaceCollapse, StyleTextWrapMode>> {
     if (aPreserveWhiteSpaceStyle == PreserveWhiteSpaceStyle::No) {
       return Nothing();
     }
-    auto style = EditorUtils::GetComputedWhiteSpaceStyle(aContentToMove);
-    if (NS_WARN_IF(style.isSome() &&
-                   style.value() == StyleWhiteSpace::PreSpace)) {
+    auto styles = EditorUtils::GetComputedWhiteSpaceStyles(aContentToMove);
+    if (NS_WARN_IF(styles.isSome() &&
+                   styles.value().first ==
+                       StyleWhiteSpaceCollapse::PreserveSpaces)) {
       return Nothing();
     }
-    return style;
+    return styles;
   }();
-  const auto GetWhiteSpaceStyleValue = [](StyleWhiteSpace aStyleWhiteSpace) {
-    switch (aStyleWhiteSpace) {
-      case StyleWhiteSpace::Normal:
+  // Get the `white-space` shorthand form for the given collapse + mode pair.
+  const auto GetWhiteSpaceStyleValue =
+      [](std::pair<StyleWhiteSpaceCollapse, StyleTextWrapMode> aStyles) {
+        if (aStyles.second == StyleTextWrapMode::Wrap) {
+          switch (aStyles.first) {
+            case StyleWhiteSpaceCollapse::Collapse:
+              return u"normal"_ns;
+            case StyleWhiteSpaceCollapse::Preserve:
+              return u"pre-wrap"_ns;
+            case StyleWhiteSpaceCollapse::PreserveBreaks:
+              return u"pre-line"_ns;
+            case StyleWhiteSpaceCollapse::PreserveSpaces:
+              return u"preserve-spaces"_ns;
+            case StyleWhiteSpaceCollapse::BreakSpaces:
+              return u"break-spaces"_ns;
+          }
+        } else {
+          switch (aStyles.first) {
+            case StyleWhiteSpaceCollapse::Collapse:
+              return u"nowrap"_ns;
+            case StyleWhiteSpaceCollapse::Preserve:
+              return u"pre"_ns;
+            case StyleWhiteSpaceCollapse::PreserveBreaks:
+              return u"nowrap preserve-breaks"_ns;
+            case StyleWhiteSpaceCollapse::PreserveSpaces:
+              return u"nowrap preserve-spaces"_ns;
+            case StyleWhiteSpaceCollapse::BreakSpaces:
+              return u"nowrap break-spaces"_ns;
+          }
+        }
+        MOZ_ASSERT_UNREACHABLE("all values should be handled above!");
         return u"normal"_ns;
-      case StyleWhiteSpace::Pre:
-        return u"pre"_ns;
-      case StyleWhiteSpace::Nowrap:
-        return u"nowrap"_ns;
-      case StyleWhiteSpace::PreWrap:
-        return u"pre-wrap"_ns;
-      case StyleWhiteSpace::PreLine:
-        return u"pre-line"_ns;
-      case StyleWhiteSpace::BreakSpaces:
-        return u"break-spaces"_ns;
-      case StyleWhiteSpace::PreSpace:
-        MOZ_ASSERT_UNREACHABLE("Don't handle -moz-pre-space");
-        return u""_ns;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Handle the new white-space value");
-        return u""_ns;
-    }
-  };
+      };
 
   if (aRemoveIfCommentNode == RemoveIfCommentNode::Yes &&
       aContentToMove.IsComment()) {
@@ -5872,15 +5889,15 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeOrChildrenWithTransaction(
     // Preserve white-space in the new position with using `style` attribute.
     // This is additional path from point of view of our traditional behavior.
     // Therefore, ignore errors especially if we got unexpected DOM tree.
-    if (destWhiteSpaceStyle.isSome() && srcWhiteSpaceStyle.isSome() &&
-        destWhiteSpaceStyle.value() != srcWhiteSpaceStyle.value()) {
+    if (destWhiteSpaceStyles.isSome() && srcWhiteSpaceStyles.isSome() &&
+        destWhiteSpaceStyles.value() != srcWhiteSpaceStyles.value()) {
       // Set `white-space` with `style` attribute if it's nsStyledElement.
       if (nsStyledElement* styledElement =
               nsStyledElement::FromNode(&aContentToMove)) {
         DebugOnly<nsresult> rvIgnored =
             CSSEditUtils::SetCSSPropertyWithTransaction(
                 *this, MOZ_KnownLive(*styledElement), *nsGkAtoms::white_space,
-                GetWhiteSpaceStyleValue(srcWhiteSpaceStyle.value()));
+                GetWhiteSpaceStyleValue(srcWhiteSpaceStyles.value()));
         if (NS_WARN_IF(Destroyed())) {
           return Err(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -5900,7 +5917,7 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeOrChildrenWithTransaction(
         }
         nsAutoString styleAttrValue(u"white-space: "_ns);
         styleAttrValue.Append(
-            GetWhiteSpaceStyleValue(srcWhiteSpaceStyle.value()));
+            GetWhiteSpaceStyleValue(srcWhiteSpaceStyles.value()));
         IgnoredErrorResult error;
         newSpanElement->SetAttr(nsGkAtoms::style, styleAttrValue, error);
         NS_WARNING_ASSERTION(!error.Failed(),

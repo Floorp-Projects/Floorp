@@ -46,6 +46,110 @@
     }
 </%helpers:shorthand>
 
+<%helpers:shorthand
+    name="white-space"
+    engines="gecko"
+    sub_properties="text-wrap-mode white-space-collapse"
+    spec="https://www.w3.org/TR/css-text-4/#white-space-property"
+>
+    use crate::properties::longhands::{text_wrap_mode, white_space_collapse};
+
+    pub fn parse_value<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Longhands, ParseError<'i>> {
+        use white_space_collapse::computed_value::T as Collapse;
+        use text_wrap_mode::computed_value::T as Wrap;
+
+        fn parse_special_shorthands<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Longhands, ParseError<'i>> {
+            let (mode, collapse) = try_match_ident_ignore_ascii_case! { input,
+                "normal" => (Wrap::Wrap, Collapse::Collapse),
+                "pre" => (Wrap::Nowrap, Collapse::Preserve),
+                "pre-wrap" => (Wrap::Wrap, Collapse::Preserve),
+                "pre-line" => (Wrap::Wrap, Collapse::PreserveBreaks),
+                // TODO: deprecate/remove -moz-pre-space; the white-space-collapse: preserve-spaces value
+                // should serve this purpose?
+                "-moz-pre-space" => (Wrap::Wrap, Collapse::PreserveSpaces),
+            };
+            Ok(expanded! {
+                text_wrap_mode: mode,
+                white_space_collapse: collapse,
+            })
+        }
+
+        if let Ok(result) = input.try_parse(parse_special_shorthands) {
+            return Ok(result);
+        }
+
+        let mut wrap = None;
+        let mut collapse = None;
+
+        loop {
+            if wrap.is_none() {
+                if let Ok(value) = input.try_parse(|input| text_wrap_mode::parse(context, input)) {
+                    wrap = Some(value);
+                    continue
+                }
+            }
+            if collapse.is_none() {
+                if let Ok(value) = input.try_parse(|input| white_space_collapse::parse(context, input)) {
+                    collapse = Some(value);
+                    continue
+                }
+            }
+            break
+        }
+
+        if wrap.is_some() || collapse.is_some() {
+            Ok(expanded! {
+                text_wrap_mode: unwrap_or_initial!(text_wrap_mode, wrap),
+                white_space_collapse: unwrap_or_initial!(white_space_collapse, collapse),
+            })
+        } else {
+            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        }
+    }
+
+    impl<'a> ToCss for LonghandsToSerialize<'a>  {
+        fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            use white_space_collapse::computed_value::T as Collapse;
+            use text_wrap_mode::computed_value::T as Wrap;
+
+            match *self.text_wrap_mode {
+                Wrap::Wrap => {
+                    match *self.white_space_collapse {
+                        Collapse::Collapse => return dest.write_str("normal"),
+                        Collapse::Preserve => return dest.write_str("pre-wrap"),
+                        Collapse::PreserveBreaks => return dest.write_str("pre-line"),
+                        Collapse::PreserveSpaces => return dest.write_str("-moz-pre-space"),
+                        _ => (),
+                    }
+                },
+                Wrap::Nowrap => {
+                    if let Collapse::Preserve = *self.white_space_collapse {
+                        return dest.write_str("pre");
+                    }
+                },
+            }
+
+            let mut has_value = false;
+            if *self.white_space_collapse != Collapse::Collapse {
+                self.white_space_collapse.to_css(dest)?;
+                has_value = true;
+            }
+
+            if *self.text_wrap_mode != Wrap::Wrap {
+                if has_value {
+                    dest.write_char(' ')?;
+                }
+                self.text_wrap_mode.to_css(dest)?;
+            }
+
+            Ok(())
+        }
+    }
+</%helpers:shorthand>
+
 // CSS Compatibility
 // https://compat.spec.whatwg.org/
 <%helpers:shorthand name="-webkit-text-stroke"

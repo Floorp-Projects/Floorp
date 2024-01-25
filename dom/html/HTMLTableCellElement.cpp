@@ -163,7 +163,7 @@ void HTMLTableCellElement::MapAttributesIntoRule(
     MappedDeclarationsBuilder& aBuilder) {
   MapImageSizeAttributesInto(aBuilder);
 
-  if (!aBuilder.PropertyIsSet(eCSSProperty_white_space)) {
+  if (!aBuilder.PropertyIsSet(eCSSProperty_text_wrap_mode)) {
     // nowrap: enum
     if (aBuilder.GetAttr(nsGkAtoms::nowrap)) {
       // See if our width is not a nonzero integer width.
@@ -171,8 +171,8 @@ void HTMLTableCellElement::MapAttributesIntoRule(
       nsCompatibility mode = aBuilder.Document().GetCompatibilityMode();
       if (!value || value->Type() != nsAttrValue::eInteger ||
           value->GetIntegerValue() == 0 || eCompatibility_NavQuirks != mode) {
-        aBuilder.SetKeywordValue(eCSSProperty_white_space,
-                                 StyleWhiteSpace::Nowrap);
+        aBuilder.SetKeywordValue(eCSSProperty_text_wrap_mode,
+                                 StyleTextWrapMode::Nowrap);
       }
     }
   }
