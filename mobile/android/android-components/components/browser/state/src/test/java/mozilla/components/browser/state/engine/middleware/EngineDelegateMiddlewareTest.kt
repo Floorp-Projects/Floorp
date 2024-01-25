@@ -5,7 +5,9 @@
 package mozilla.components.browser.state.engine.middleware
 
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.createCustomTab
@@ -13,12 +15,15 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers
@@ -741,5 +746,68 @@ class EngineDelegateMiddlewareTest {
 
         verify(engineSession1).purgeHistory()
         verify(engineSession2).purgeHistory()
+    }
+
+    @Test
+    fun `TranslateAction correctly sets progress state AND begins a translation`() {
+        val tab = createTab("https://www.mozilla.org")
+        val engineSession: EngineSession = mock()
+        val engine: Engine = mock()
+        doReturn(engineSession).`when`(engine).createSession()
+        val store = BrowserStore(
+            middleware = EngineMiddleware.create(
+                engine = engine,
+                scope = scope,
+            ),
+            initialState = BrowserState(
+                tabs = listOf(tab),
+            ),
+        )
+
+        assertFalse(store.state.findTab(tab.id)?.translationsState?.isTranslateProcessing!!)
+
+        store.dispatch(
+            TranslationsAction.TranslateAction(
+                tabId = tab.id,
+                fromLanguage = "es",
+                toLanguage = "en",
+                options = null,
+            ),
+        ).joinBlocking()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(engineSession).requestTranslate(any(), any(), any())
+        assertTrue(store.state.findTab(tab.id)?.translationsState?.isTranslateProcessing!!)
+    }
+
+    @Test
+    fun `TranslateRestoreAction correctly sets progress state AND begins a restore`() {
+        val tab = createTab("https://www.mozilla.org")
+        val engineSession: EngineSession = mock()
+        val engine: Engine = mock()
+        doReturn(engineSession).`when`(engine).createSession()
+        val store = BrowserStore(
+            middleware = EngineMiddleware.create(
+                engine = engine,
+                scope = scope,
+            ),
+            initialState = BrowserState(
+                tabs = listOf(tab),
+            ),
+        )
+
+        assertFalse(store.state.findTab(tab.id)?.translationsState?.isRestoreProcessing!!)
+
+        store.dispatch(
+            TranslationsAction.TranslateRestoreAction(tabId = tab.id),
+        ).joinBlocking()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(engineSession).requestTranslationRestore()
+        assertTrue(store.state.findTab(tab.id)?.translationsState?.isRestoreProcessing!!)
     }
 }

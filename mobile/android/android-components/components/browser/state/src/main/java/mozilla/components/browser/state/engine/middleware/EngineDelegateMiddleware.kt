@@ -44,10 +44,16 @@ internal class EngineDelegateMiddleware(
             is EngineAction.ExitFullScreenModeAction -> exitFullScreen(context.store, action)
             is EngineAction.SaveToPdfAction -> saveToPdf(context.store, action)
             is EngineAction.PrintContentAction -> printContent(context.store, action)
-            is TranslationsAction.TranslateAction -> translate(context.store, action)
-            is TranslationsAction.TranslateRestoreAction -> translateRestoreOriginal(context.store, action)
             is EngineAction.ClearDataAction -> clearData(context.store, action)
             is EngineAction.PurgeHistoryAction -> purgeHistory(context.state)
+            is TranslationsAction.TranslateAction -> {
+                next(action)
+                translate(context.store, action)
+            }
+            is TranslationsAction.TranslateRestoreAction -> {
+                next(action)
+                translateRestoreOriginal(context.store, action)
+            }
             else -> next(action)
         }
     }
