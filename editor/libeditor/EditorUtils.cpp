@@ -89,8 +89,8 @@ bool EditorUtils::IsDescendantOf(const nsINode& aNode, const nsINode& aParent,
 }
 
 // static
-Maybe<std::pair<StyleWhiteSpaceCollapse, StyleTextWrapMode>>
-EditorUtils::GetComputedWhiteSpaceStyles(const nsIContent& aContent) {
+Maybe<StyleWhiteSpace> EditorUtils::GetComputedWhiteSpaceStyle(
+    const nsIContent& aContent) {
   if (MOZ_UNLIKELY(!aContent.IsElement() && !aContent.GetParentElement())) {
     return Nothing();
   }
@@ -101,9 +101,7 @@ EditorUtils::GetComputedWhiteSpaceStyles(const nsIContent& aContent) {
   if (NS_WARN_IF(!elementStyle)) {
     return Nothing();
   }
-  const auto* styleText = elementStyle->StyleText();
-  return Some(
-      std::pair(styleText->mWhiteSpaceCollapse, styleText->mTextWrapMode));
+  return Some(elementStyle->StyleText()->mWhiteSpace);
 }
 
 // static
@@ -166,8 +164,7 @@ bool EditorUtils::IsOnlyNewLinePreformatted(const nsIContent& aContent) {
     return false;
   }
 
-  return elementStyle->StyleText()->mWhiteSpaceCollapse ==
-         StyleWhiteSpaceCollapse::PreserveBreaks;
+  return elementStyle->StyleText()->mWhiteSpace == StyleWhiteSpace::PreLine;
 }
 
 // static
