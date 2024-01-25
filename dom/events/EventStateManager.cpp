@@ -6891,6 +6891,12 @@ void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
     return;
   }
 
+  if (!StaticPrefs::
+          dom_events_mouse_pointer_boundary_keep_enter_targets_after_over_target_removed()) {
+    mDeepestEnterEventTarget = nullptr;
+    return;
+  }
+
   if (mDispatchingOverEventTarget &&
       (mDeepestEnterEventTarget == mDispatchingOverEventTarget ||
        nsContentUtils::ContentIsFlattenedTreeDescendantOf(
