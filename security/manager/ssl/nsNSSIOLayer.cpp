@@ -42,7 +42,6 @@
 #include "nsClientAuthRemember.h"
 #include "nsContentUtils.h"
 #include "nsISocketProvider.h"
-#include "nsISocketTransport.h"
 #include "nsIWebProgressListener.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSComponent.h"
@@ -1409,7 +1408,7 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   // Enable ECH GREASE if suitable. Has no impact if 'real' ECH is being used.
   if (range.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
       !(infoObject->GetProviderFlags() & (nsISocketProvider::BE_CONSERVATIVE |
-                                          nsISocketTransport::DONT_TRY_ECH)) &&
+                                          nsISocketProvider::DONT_TRY_ECH)) &&
       StaticPrefs::security_tls_ech_grease_probability()) {
     if ((RandomUint64().valueOr(0) % 100) >=
         100 - StaticPrefs::security_tls_ech_grease_probability()) {
@@ -1435,7 +1434,7 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   if (StaticPrefs::security_tls_enable_kyber() &&
       range.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
       !(infoObject->GetProviderFlags() &
-        (nsISocketProvider::BE_CONSERVATIVE | nsISocketTransport::IS_RETRY))) {
+        (nsISocketProvider::BE_CONSERVATIVE | nsISocketProvider::IS_RETRY))) {
     const SSLNamedGroup namedGroups[] = {
         ssl_grp_kem_xyber768d00, ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1,
         ssl_grp_ec_secp384r1,    ssl_grp_ec_secp521r1,  ssl_grp_ffdhe_2048,
