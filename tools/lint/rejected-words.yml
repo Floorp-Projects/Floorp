@@ -118,7 +118,6 @@ avoid-blacklist-and-whitelist:
         - dom/media/webm/WebMDecoder.cpp
         - dom/media/webrtc/transport/stun_socket_filter.cpp
         - dom/media/webrtc/transport/test/ice_unittest.cpp
-        - dom/plugins/base/nsPluginHost.h
         - dom/tests/mochitest/dom-level0/idn_child.html
         - dom/tests/mochitest/dom-level0/test_setting_document.domain_idn.html
         - dom/tests/mochitest/whatwg/test_postMessage_origin.xhtml
