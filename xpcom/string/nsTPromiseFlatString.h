@@ -7,6 +7,7 @@
 #ifndef nsTPromiseFlatString_h
 #define nsTPromiseFlatString_h
 
+#include "mozilla/Attributes.h"
 #include "nsTString.h"
 
 /**
@@ -69,7 +70,7 @@
  */
 
 template <typename T>
-class nsTPromiseFlatString : public nsTString<T> {
+class MOZ_STACK_CLASS nsTPromiseFlatString : public nsTString<T> {
  public:
   typedef nsTPromiseFlatString<T> self_type;
   typedef nsTString<T> base_string_type;
