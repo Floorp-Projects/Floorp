@@ -316,11 +316,6 @@
                 "type": "string",
                 "maxLength": 100
               },
-              "optional": {
-                "title": "Optional",
-                "description": "This search engine is presented as an option that the user may enable. It is not included in the initial list of search engines. If not specified, defaults to false.",
-                "type": "boolean"
-              },
               "partnerCode": {
                 "$ref": "#/definitions/partnerCode"
               },
@@ -342,6 +337,11 @@
                 },
                 "partnerCode": {
                   "$ref": "#/definitions/partnerCode"
+                },
+                "optional": {
+                  "title": "Optional",
+                  "description": "This search engine is presented as an option that the user may enable. It is not included in the initial list of search engines. If not specified, defaults to false.",
+                  "type": "boolean"
                 },
                 "telemetrySuffix": {
                   "title": "Telemetry Suffix",

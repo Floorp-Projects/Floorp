@@ -285,6 +285,58 @@ const CONFIG_CHANNEL_APPLICATION = [
   },
 ];
 
+const CONFIG_OPTIONAL = [
+  {
+    recordType: "engine",
+    identifier: "engine-optional-true",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          applications: ["firefox"],
+        },
+        optional: true,
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-optional-false",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          applications: ["firefox"],
+        },
+        optional: false,
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-optional-undefined",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          applications: ["firefox"],
+        },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const CONFIG_VERSIONS = [
   {
     recordType: "engine",
@@ -726,5 +778,18 @@ add_task(async function test_engine_selector_match_version() {
     },
     [],
     "Should match no engines with no matching versions."
+  );
+});
+
+add_task(async function test_engine_selector_does_not_match_optional_engines() {
+  await assertActualEnginesEqualsExpected(
+    CONFIG_OPTIONAL,
+    {
+      locale: "en-CA",
+      region: "CA",
+      appName: "firefox",
+    },
+    ["engine-optional-false", "engine-optional-undefined"],
+    "Should match engines where optional flag is false or undefined"
   );
 });

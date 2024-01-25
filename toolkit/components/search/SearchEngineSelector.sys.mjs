@@ -396,6 +396,11 @@ export class SearchEngineSelector {
       }
     }
 
+    // Skip the optional flag for Desktop, it's a feature only on Android.
+    if (config.optional) {
+      return false;
+    }
+
     return (
       this.#matchesRegionAndLocale(
         user.region,
