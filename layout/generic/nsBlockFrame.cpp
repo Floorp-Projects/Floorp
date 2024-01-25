@@ -1470,8 +1470,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   // Whether to apply text-wrap: balance behavior.
-  bool tryBalance = StyleText()->mTextWrap == StyleTextWrap::Balance &&
-                    !GetPrevContinuation();
+  bool tryBalance =
+      StyleText()->mTextWrapStyle == StyleTextWrapStyle::Balance &&
+      !GetPrevContinuation();
 
   // Struct used to hold the "target" number of lines or clamp position to
   // maintain when doing text-wrap: balance.
