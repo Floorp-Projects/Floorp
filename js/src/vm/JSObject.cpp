@@ -2221,6 +2221,14 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
        id == NameToId(cx->names().detached))) {
     return true;
   }
+
+  if (key == JSProto_ArrayBuffer &&
+      !cx->realm()->creationOptions().getArrayBufferResizableEnabled() &&
+      (id == NameToId(cx->names().maxByteLength) ||
+       id == NameToId(cx->names().resizable) ||
+       id == NameToId(cx->names().resize))) {
+    return true;
+  }
 #endif
 
   return false;
