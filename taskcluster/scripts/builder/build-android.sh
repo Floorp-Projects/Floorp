@@ -19,8 +19,7 @@ ac_add_options --without-google-safebrowsing-api-keyfile
 ac_add_options --disable-nodejs
 unset NODEJS
 
-# TODO: switch to offline builds
-export GRADLE_MAVEN_REPOSITORIES="file://$MOZ_FETCHES_DIR/geckoview","https://maven.mozilla.org/maven2/","https://maven.google.com/","https://repo.maven.apache.org/maven2/","https://plugins.gradle.org/m2/"
+export GRADLE_MAVEN_REPOSITORIES="file://$MOZ_FETCHES_DIR/geckoview","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/mozilla","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/google","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/central","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-plugins","file:///$MOZ_FETCHES_DIR/plugins.gradle.org/m2"
 EOF
 export MOZCONFIG=$mozconfig
 
