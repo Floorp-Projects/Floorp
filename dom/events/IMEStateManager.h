@@ -22,6 +22,7 @@ namespace mozilla {
 class EditorBase;
 class EventDispatchingCallback;
 class IMEContentObserver;
+class PseudoFocusChangeRunnable;
 class TextCompositionArray;
 class TextComposition;
 
@@ -383,6 +384,26 @@ class IMEStateManager {
    */
   static bool HasActiveChildSetInputContext();
 
+  /**
+   * This is the runner of OnInstalledMenuKeyboardListener(), called by
+   * PseudoFocusChangeRunnable maybe asynchronously.
+   *
+   * @param aCaller             The caller instance, used only for debug.
+   * @param aSetPseudoFocus     Whether the menu keyboard listener is installed
+   *                            or uninstalled when
+   *                            OnInstalledMenuKeyboardListener() is called and
+   *                            the PseudoFocusChangeRunnable instance is
+   *                            created.
+   * @param aFocusedPresContextAtRequested
+   *                            sFocusedPresContext when
+   *                            OnInstalledMenuKeyboardListener() is called and
+   *                            the PseudoFocusChangeRunnable instance is
+   *                            created.
+   */
+  MOZ_CAN_RUN_SCRIPT static void SetMenubarPseudoFocus(
+      PseudoFocusChangeRunnable* aCaller, bool aSetPseudoFocus,
+      nsPresContext* aFocusedPresContextAtRequested);
+
   // sFocusedElement and sFocusedPresContext are the focused content and
   // PresContext.  If a document has focus but there is no focused element,
   // sFocusedElement may be nullptr.
@@ -493,6 +514,11 @@ class IMEStateManager {
    private:
     bool mOldValue;
   };
+
+  // OnInstalledMenuKeyboardListener may be called when it's not safe.
+  // Therefore, it tries to update with adding this as a script runner.
+  static StaticRefPtr<PseudoFocusChangeRunnable> sPseudoFocusChangeRunnable;
+  friend class PseudoFocusChangeRunnable;
 };
 
 }  // namespace mozilla
