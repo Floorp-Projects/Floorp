@@ -1091,7 +1091,21 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->length().valueOr(0));
+
+  mozilla::Maybe<size_t> length = tarr->length();
+  if (!length) {
+    // Return zero for detached buffers to match JIT code.
+    if (tarr->hasDetachedBuffer()) {
+      args.rval().setInt32(0);
+      return true;
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
+    return false;
+  }
+
+  args.rval().setNumber(*length);
   return true;
 }
 
@@ -1108,7 +1122,20 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
     return false;
   }
 
-  args.rval().setNumber(obj->length().valueOr(0));
+  mozilla::Maybe<size_t> length = obj->length();
+  if (!length) {
+    // Return zero for detached buffers to match JIT code.
+    if (obj->hasDetachedBuffer()) {
+      args.rval().setInt32(0);
+      return true;
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
+    return false;
+  }
+
+  args.rval().setNumber(*length);
   return true;
 }
 
