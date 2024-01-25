@@ -1397,7 +1397,7 @@ static bool TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ByteOffsetGetterImpl(JSContext* cx, const CallArgs& args) {
   auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
-  args.rval().set(tarr->byteOffsetValue());
+  args.rval().setNumber(tarr->byteOffset());
   return true;
 }
 
@@ -2255,7 +2255,7 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
   if (object->is<DataViewObject>()) {
     DataViewObject& view = object->as<DataViewObject>();
     *dataPointer = view.dataPointerEither().cast<uint8_t*>();
-    *byteLength = view.byteLength();
+    *byteLength = view.byteLength().valueOr(0);
     return true;
   }
 

@@ -1369,13 +1369,9 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
-  Rooted<DataViewObject*> view(context(), obj->maybeUnwrapAs<DataViewObject>());
+  Rooted<FixedLengthDataViewObject*> view(
+      context(), obj->maybeUnwrapAs<FixedLengthDataViewObject>());
   JSAutoRealm ar(context(), view);
-
-  // TODO(anba): Support resizable DataView objects.
-  if (view->is<ResizableDataViewObject>()) {
-    return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
-  }
 
   if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, 0)) {
     return false;
@@ -2129,8 +2125,12 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
       if (obj->canUnwrapAs<TypedArrayObject>()) {
         return writeTypedArray(obj);
       }
-      if (obj->canUnwrapAs<DataViewObject>()) {
+      if (obj->canUnwrapAs<FixedLengthDataViewObject>()) {
         return writeDataView(obj);
+      }
+      if (obj->canUnwrapAs<ResizableDataViewObject>()) {
+        // TODO(anba): support resizable.
+        return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
       }
       if (wasm::IsSharedWasmMemoryObject(obj)) {
         return writeSharedWasmMemory(obj);
