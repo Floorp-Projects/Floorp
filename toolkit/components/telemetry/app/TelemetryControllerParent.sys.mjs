@@ -666,7 +666,7 @@ var Impl = {
       // Previous aborted-session might have been with a canary client ID.
       // Don't send it.
       if (ping.clientId != Utils.knownClientID) {
-        await lazy.TelemetryStorage.addPendingPing(ping);
+        await lazy.TelemetryStorage.savePendingPing(ping);
         await lazy.TelemetryArchive.promiseArchivePing(ping);
       }
     } catch (e) {
