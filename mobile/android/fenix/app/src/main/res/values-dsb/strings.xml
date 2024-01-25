@@ -717,6 +717,8 @@
     <string name="preferences_sync_bookmarks">Cytańske znamjenja</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Pśizjawjenja</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Gronidła</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Wócynjone rejtarki</string>
     <!-- Preference for signing out -->
@@ -743,6 +745,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kreditowe kórty</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Płaśeńske metody</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adrese</string>
 
@@ -1687,8 +1691,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Pśizjawjenja a gronidła</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Gronidła</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Pśizjawjenja a gronidła składowaś</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Gronidła składowaś</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Pśed składowanim se pšašaś</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1705,26 +1713,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Pśizjawjenje pśidaś</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Gronidło pśidaś</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Pśizjawjenja synchronizěrowaś</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Gronidła synchronizěrowaś</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Pśizjawjenja mjazy rědami synchronizěrowaś</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Gronidła pśez rědy synchronizěrowaś</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Skłaźone pśizjawjenja</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Skłaźone gronidła</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Pśizjawjenja, kótarež składujośo abo z %s synchronizěrujośo, se how pokažu.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Gronidła, kótarež składujośo abo z %s synchronizěrujośo, se how nalicyju. Wšykne gronidła, kótarež składujośo, se koděruju.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Zgóńśo wěcej wó Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Zgóńśo wěcej wó sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Wuwześa</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Pśizjawjenja a gronidła, kótarež se njeskładuju, se how pokažu.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s gronidła za sedła njeskładujo, kótarež su how nalicone.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Pśizjawjenja a gronidła se za toś te sedła njeskładuju.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s gronidła za toś te sedła njeskładujo.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Wšykne wuwześa wulašowaś</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Pśizjawjenja pytaś</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Gronidła pśepytaś</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sedło</string>
     <!-- The header for the username for a login -->
@@ -1754,10 +1781,16 @@
     <string name="saved_login_hide_password">Gronidła schowaś</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Za zwobraznjowanje wašych skłaźonych pśizjawjenjow wótwóriś</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Za zwobraznjowanje wašych skłaźonych kreditowych gronidłow wótwóriś</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Zawěsććo swóje pśizjawjenja a gronidła</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zawěsććo swóje skłaźone gronidła</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym pśizjawjenjam a gronidłam zajźował, jolic něchten drugi ma waš rěd.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym gronidłam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pózdźej</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1777,6 +1810,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Meni pśizjawjeńskich datow sortěrowaś</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Meni „Gronidła sortěrowaś“</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Awtomatiski wupołniś</string>
@@ -1784,10 +1820,16 @@
     <string name="preferences_addresses">Adrese</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kreditowe kórty</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Płaśeńske metody</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Kórty składowaś a awtomatiski wupołniś</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Płaśeńske metody składowaś a wupołniś</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Daty su skoděrowane</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s wšykne płaśeńske metody koděrujo, kótarež składujośo</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kórty pśez rědy synchronizěrowaś</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1795,16 +1837,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kreditowu kórtu pśidaś</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Kórtu pśidaś</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Skłaźone kórty zastojaś</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kórty zastojaś</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Adresu pśidaś</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adrese zastojaś</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Adrese składowaś a awtomatiski wupołniś</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Adrese składowaś a wupołniś</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Informacije ako licby, e-mailowe a rozpósłańske adrese zapśimjeś</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Wopśimujo telefonowe numery a e-mailowe adrese</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kórtu pśidaś</string>
@@ -1826,6 +1877,8 @@
     <string name="credit_cards_delete_card_button">Kórtu wulašowaś</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Cośo napšawdu toś tu kreditowu kórtu lašowaś?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Kórtu wulašowaś?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Lašowaś</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1841,14 +1894,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Pšosym zapódajśo płaśiwy numer kreditoweje kórty</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Zapódajśo płaśiwy kórtowy numer</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Pšosym wupołńśo toś to pólo</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Pśidajśo mě</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Za zwobraznjowanje wašych skłaźonych kreditowych kórtow wótwóriś</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Kreditowe kórty zawěsćiś</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Zawěsććo swóje skłaźone płaśeńske metody</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym kreditowym kórtam zajźował, jolic něchten drugi ma waš rěd.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym kórtam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Něnto konfigurěrowaś</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1859,6 +1920,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Blokěrowanje wótpóraś, aby se skłaźone informacije kreditoweje kórty wužywali</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Wótwóriś, aby wy skłaźone płaśeńske metody wužywał</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adresu pśidaś</string>
     <!-- Title of the "Edit address" screen -->
@@ -1896,6 +1959,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Cośo napšawdu toś tu adresu wulašowaś?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Toś tu adresu lašowaś?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Lašowaś</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1994,30 +2059,52 @@
     <string name="login_menu_edit_button">Wobźěłaś</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Cośo napšawdu toś to pśizjawjenje lašowaś?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Cośo napšawdu toś to gronidło lašowaś?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Lašowaś</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Pśetergnuś</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Pśizjawjeńske nastajenja</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Gronidłowe nastajenja</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Wobźěłujobne tekstowe pólo za webadresu pśizjawjenja.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za adresu websedła gronidła.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Wobźěłujobne tekstowe pólo za wužywaŕske mě pśizjawjenja.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za wužywaŕske mě gronidła.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Wobźěłujobne tekstowe pólo za gronidło pśizjawjenja.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za gronidło.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Změny pśizjawjenja składowaś</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Změny składowaś.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Wobźěłaś</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Gronidło wobźěłaś</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Nowe pśizjawjenje pśidaś</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Gronidło pśidaś</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Gronidło trěbne</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Gronidło zapódaś</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Wužywaŕske mě trěbne.</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Wužywaŕske mě zapódaś</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostmě trěbne.</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Webadresu zapódaś</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Głosowe pytanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2394,6 +2481,10 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s nigda njepśełožowaś</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Njepśełožujśo nigda toś to sedło</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Pśepisujo wšykne druge nastajenja</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Pśepisujo póbitowanja za pśełožowanje</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Pśełožowańske nastajenja</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

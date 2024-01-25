@@ -11,6 +11,21 @@
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Kamera in mikrofon sta vključena</string>
 
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Tapnite, da odprete zavihek, ki uporablja kamero.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Tapnite, da odprete zavihek, ki uporablja mikrofon.</string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Tapnite, da odprete zavihek, ki uporablja mikrofon in kamero.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Opomnik: %1$s še vedno uporablja kamero. Tapnite, da odprete zavihek.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">Opomnik: %1$s še vedno uporablja mikrofon. Tapnite, da odprete zavihek</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">Opomnik: %1$s še vedno uporablja mikrofon in kamero. Tapnite, da odprete zavihek</string>
+
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Predvajaj</string>
 

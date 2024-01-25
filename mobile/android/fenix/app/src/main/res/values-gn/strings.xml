@@ -330,13 +330,18 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ani ko’ág̃a</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox marandu’i ñemigua</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Rovy’ã eimére tekorosãme</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Ore kundahára ojeykekóva viru rehegua’ỹva oipytyvõ mba’apohaguasukuéra nde rapykuehóvo ñemihápe ñandutípe.\n\nEikuaavéta ore marandu’i ñemiguápe.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Ore kundahára oykeko atyguasu viru’ỹgua oipytyvõ omboykévo umi mba’apohaguasu ani nde rapykueho ñanduti rupive.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Ore kundahára ojeykekóva viru rehegua’ỹva oipytyvõ mba’apohaguasukuéra nde rapykuehóvo ñemihápe ñandutípe.\n\nEikuaavéta ore marandu’i ñemiguápe.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">marandu’i ñemiguáva</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">marandu’i ñemiguáva</string>
 
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Ejapo kundahára ijypyguávarõ</string>
@@ -726,6 +731,8 @@
     <string name="preferences_sync_bookmarks">Techaukaha</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Tembiapo ñepyrũ</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Tendayke ijurujáva</string>
     <!-- Preference for signing out -->
@@ -752,6 +759,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kuatia’atã ñemurã</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Mba’éicha ehepyme’ẽta</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Kundaharape</string>
 
@@ -1720,8 +1729,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Eñongatu tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Eñongatu ñe’ẽñemi</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Ejerure ñemoneĩ eñongatu hag̃ua</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1740,16 +1753,25 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Embojuaju jeike</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Embojuaju ñe’ẽñemi</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Embojuehe tembiapo ñepyrũ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Embojuehe ñe’ẽñemi</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Embojuehe tembiapo ñepyrũ mba’e’oka pa’ũme</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Tembiapo ñepyrũ ñongatupyre</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Ñe’ẽñemi ñongatupyre</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Ko’ápe ojehecháta tembiapo ñepyrũ eñongatu térã embojuehéva %s ndive.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Eikuaave Sync rehegua</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Eikuaave ñembojuehe rehegua</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Oĩ’ỹva</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1760,6 +1782,8 @@
     <string name="preferences_passwords_exceptions_remove_all">Emboguete opaite oĩ’ỹva</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Eheka tembiapo ñepyrũ</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Eheka ñe’ẽñemi</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Tenda</string>
     <!-- The header for the username for a login -->
@@ -1812,6 +1836,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Emoĩporã poravorã tembiapo ñepyrũgua</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Emoĩporã ñe’ẽñemi poravorã</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Myanyhẽ jehegui</string>
@@ -1819,9 +1846,13 @@
     <string name="preferences_addresses">Kundaharape</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kuatia’atã ñemurã</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Mba’éicha ehepyme’ẽta</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Eñongatu ha emyanyhẽ kuatia’atã</string>
 
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ mba’éicha ehepyme’ẽta</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Mba’ekuaarã ipapapypa</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1831,8 +1862,12 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Embojuaju kuatia’atã ñemurã</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Embojuaju kuatia’atã</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Eñangareko kuatia’atã ñongatupyrére</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Eñangareko kuatia’atã</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Embojuaju kundaharape</string>
     <!-- Preference option for managing saved addresses -->
@@ -1840,6 +1875,8 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Eñongatu ha emyanyhẽ kundaharape</string>
 
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ kundaharape</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Emoĩ marandu ipapapy, ñanduti veve ha kundaharape ñemondorãva</string>
 
@@ -1863,6 +1900,8 @@
     <string name="credit_cards_delete_card_button">Emboguete kuatia’atã</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">¿Emboguesépa añetehápe ko kuatia’atã ñemurã?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">¿Emboguete kuatia’atã?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Mboguete</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1880,6 +1919,8 @@
 
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Ikatúpiko emyanyhẽ ko kora</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Embojuaju téra</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Embojuruja ehecha hag̃ua kuatia’atã ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -2039,6 +2080,8 @@
     <string name="dialog_delete_negative">Heja</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Jeporavorã tembiapo ñepyrũgua</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Ñe’ẽñemi jeporavorã</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Moñe’ẽha kora isako’ikuaáava ñanduti kundaharape rembiapo ñepyrũme.</string>
     <!--  The editable text field for a login's username. -->
@@ -2047,14 +2090,24 @@
     <string name="saved_login_password_description">Moñe’ẽha kora isako’ikuaáava ñe’ẽñemi rembiapo ñepyrũme.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Eñongatu moambue tembiapo ñepyrũme.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Moambue ñongatu.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Mbosako’i</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Embosako’i ñe’ẽñemi</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Embojuaju terarenda pyahu</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Embojuaju ñe’ẽñemi</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Tekotevẽ ñe’ẽñemi</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Emoinge ñe’ẽñemi</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Poruhára réra jerurepyre</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Ehai poruhára réra</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Mohendahavusu réra jerurepyre</string>
     <!-- Voice search button content description  -->

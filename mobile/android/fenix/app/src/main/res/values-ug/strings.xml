@@ -712,6 +712,8 @@
     <string name="preferences_sync_bookmarks">خەتكۈچ</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">كىرىش</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">ئىم</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">بەتكۈچ ئاچ</string>
     <!-- Preference for signing out -->
@@ -736,6 +738,8 @@
     <string name="default_device_name_2">%2$s %3$s دىكى %1$s</string>
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">ئىناۋەتلىك كارتا</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">چىقىم قىلىش ئۇسۇلى</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ئادرېس</string>
 
@@ -1678,8 +1682,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">كىرىش ۋە ئىم</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">ئىم</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">كىرىش ۋە ئىم ساقلا</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">ئىم ساقلا</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">ساقلاشنى سورا</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1695,26 +1703,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">كىرىشنى قوش</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">ئىم قوش</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">كىرىشنى قەدەمداشلا</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">ئىم قەدەمداشلا</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">ئۈسكۈنىلەر ئارا قەدەمداشلا</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">ئىمنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ساقلانغان كىرىش</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">ساقلانغان ئىم</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">سىز ساقلىغان كىرىش ياكى %s بىلەن بولغان قەدەمداش بۇ جايدا كۆرۈنىدۇ.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">سىز ساقلىغان ياكى %s غا قەدەمداشلىغان ئىم بۇ يەردە كۆرسىتىلىدۇ. سىز ساقلىغان بارلىق ئىم مەخپىيلەشتۈرۈلگەن.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">قەدەمداش ھەققىدىكى تەپسىلاتلار.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">قەدەمداش ھەققىدىكى تەپسىلاتلار</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">مۇستەسنا</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">ساقلانمىغان كىرىش ۋە ئىم بۇ يەردە كۆرسىتىلىدۇ.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">بۇ جايدا كۆرسىتىلگەن تور بېكەتلەر ئۈچۈن %s ئىم ساقلىمايدۇ.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">بۇ تور بېكەتلەرنىڭ كىرىش ۋە ئىم ئۇچۇرلىرى ساقلانمايدۇ.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">بۇ تور بېكەتلەر ئۈچۈن %s ئىم ساقلىمايدۇ.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ھەممە مۇستەسنالارنى ئۆچۈرىدۇ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">كىرىش خاتىرىسىنى ئىزدە</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">پارول ئىزدەش</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">بېكەت</string>
     <!-- The header for the username for a login -->

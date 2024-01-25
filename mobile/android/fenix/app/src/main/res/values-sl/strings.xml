@@ -2484,6 +2484,11 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Samodejno prevajanje</string>
 
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Ponudi prevajanje (privzeto)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s naj ponuja prevod strani v tem jeziku.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">Vedno prevedi</string>
     <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -2535,6 +2540,11 @@
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">Prekliči</string>
 
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Orodja za razhroščevanje</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Pojdi nazaj</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Orodja za zavihke</string>
     <!-- The title of the tab count section in Tab Tools. -->

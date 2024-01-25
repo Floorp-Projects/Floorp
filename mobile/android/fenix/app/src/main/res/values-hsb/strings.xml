@@ -1928,6 +1928,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Blokowanje zběhnyć, zo bychu so składowane informacije kreditneje karty wužiwali</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Wotewrěć, zo byšće składowane płaćenske metody wužiwał</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adresu přidać</string>
     <!-- Title of the "Edit address" screen -->
@@ -2487,6 +2489,10 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <string name="translation_option_bottom_sheet_never_translate_in_language">Ženje njepřełožować: %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Tute websydło ženje njepřełožić</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Přepisuje wšě druhe nastajenja</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Přepisuje poskitki za přełožowanje</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Přełožowanske nastajenja</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

@@ -702,6 +702,8 @@
     <string name="preferences_sync_bookmarks">Zabilješke</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Lozinke</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Otvori tabove</string>
     <!-- Preference for signing out -->
@@ -728,6 +730,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kreditne kartice</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Načini plaćanja</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adrese</string>
 
@@ -1665,8 +1669,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave i lozinke</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Lozinke</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Spašene prijave i lozinke</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Sačuvaj lozinke</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Pitaj za spašavanje</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1683,26 +1691,46 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Dodaj prijavu</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Dodaj lozinku</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinkroniziraj prijave</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sinhronizuj lozinke</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sinhronizirajte prijave na svim uređajima</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sinhronizuj lozinke na svim uređajima</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Spašene prijave</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Sačuvane lozinke</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Prijave koje spasite ili sinhronizujete sa %s će se prikazati ovdje.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Lozinke koje sačuvate ili sinhronizujete sa %s će biti navedene ovdje. Sve lozinke koje sačuvate su šifrovane.
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Saznajte više o Syncu.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Saznajte više o sinhronizaciji</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Izuzeci</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Prijave i lozinke koje nisu spašene će biti prikazane ovdje.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s neće sačuvati lozinke za web stranice navedene ovdje.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Prijave i lozinke neće biti spašene za ove web stranice.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s neće sačuvati lozinke za ove stranice.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Obriši sve izuzetke</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Pretraži prijave</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Traži lozinke</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stranica</string>
     <!-- The header for the username for a login -->
@@ -1732,10 +1760,16 @@
     <string name="saved_login_hide_password">Sakrij lozinku</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Otključajte za pregled spašenih prijava</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Otključajte da vidite sačuvane lozinke</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Osigurajte svoje prijave i lozinke</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Osigurajte svoje sačuvane lozinke</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Podesite pattern za zaključavanje uređaja, PIN ili lozinku da zaštitite vaše spašene prijave i lozinke od pristupa druge osobe koja ima vaš uređaj.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Postavite obrazac za zaključavanje uređaja, PIN ili lozinku da zaštitite svoje sačuvane lozinke od pristupa ako neko drugi ima vaš uređaj.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Kasnije</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1754,6 +1788,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortiraj meni prijava</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Meni za sortiranje lozinki</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Automatsko popunjavanje</string>
@@ -1761,27 +1798,42 @@
     <string name="preferences_addresses">Adrese</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kreditne kartice</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Načini plaćanja</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Sačuvajte i automatski popunjavajte kartice</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Sačuvaj i popuni načine plaćanja</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Podaci su šifrovani</string>
 
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s šifruje sve načine plaćanja koje sačuvate</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinhronizujte kartice na svim uređajima</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sinhronizuj kartice</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Dodaj kreditnu karticu</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Dodaj karticu</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Upravljaj sačuvanim karticama</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Upravljajte karticama</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Dodaj adresu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Upravljaj adresama</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Sačuvajte i automatski popunjavajte adrese</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Sačuvajte i popunite adrese</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Uključite informacije kao što su brojevi, e-mail i adrese za dostavu</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Uključuje brojeve telefona i email adrese</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj karticu</string>
@@ -1803,6 +1855,8 @@
     <string name="credit_cards_delete_card_button">Izbriši karticu</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Jeste li sigurni da želite izbrisati ovu kreditnu karticu?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Izbrisati karticu?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Izbriši</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1815,14 +1869,22 @@
     <string name="credit_cards_saved_cards">Sačuvane kartice</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Unesite važeći broj kreditne kartice</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Unesite važeći broj kartice</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Molimo popunite ovo polje</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Dodaj ime</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Otključajte da vidite svoje sačuvane kartice</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Osigurajte svoje kreditne kartice</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Osigurajte svoje sačuvane načine plaćanja</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Postavite obrazac za zaključavanje uređaja, PIN ili lozinku da zaštitite svoje sačuvane kreditne kartice od pristupa ako neko drugi ima vaš uređaj.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Postavite obrazac za zaključavanje uređaja, PIN ili lozinku da zaštitite svoje sačuvane kartice od pristupa ako neko drugi ima vaš uređaj.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Podesi odmah</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1832,6 +1894,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Otključajte za korištenje sačuvanih podataka o kreditnoj kartici</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Otključajte da koristite sačuvane načine plaćanja</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Dodaj adresu</string>
     <!-- Title of the "Edit address" screen -->
@@ -1868,6 +1932,8 @@
     <string name="addressess_delete_address_button">Izbriši adresu</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Jeste li sigurni da želite izbrisati ovu adresu?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Izbrisati ovu adresu?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Izbriši</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1966,31 +2032,53 @@
     <string name="login_menu_edit_button">Uredi</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Da li ste sigurni da želite obrisati ovu prijavu?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Jeste li sigurni da želite izbrisati ovu lozinku?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Obriši</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Otkaži</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Opcije prijave</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opcije lozinke</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Izmjenjivo tekstualno polje za web adresu prijave.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Tekstualno polje koje se može uređivati za adresu web stranice lozinke.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Izmjenjivo tekstualno polje za korisničko ime prijave.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Tekstualno polje koje se može uređivati za korisničko ime lozinke.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Izmjenjivo tekstualno polje za lozinku prijave.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Tekstualno polje koje se može uređivati za lozinku.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Spasite izmjene za prijavu.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Sačuvaj promjene.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Uredi</string>
 
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Uredi lozinku</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Dodaj novu prijavu</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Dodaj lozinku</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Potrebna lozinka</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Unesite lozinku</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Korisničko ime je obavezno</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Unesite korisničko ime</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Ime hosta je obavezno</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Unesite web adresu</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Glasovna pretraga</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2362,6 +2450,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Nikada ne prevodi %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Nikad ne prevodi ovu stranicu</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Poništava sve ostale postavke</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Poništava ponude za prevođenje</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Postavke prijevoda</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

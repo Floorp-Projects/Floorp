@@ -726,6 +726,8 @@
     <string name="preferences_sync_bookmarks">Kirjanmerkit</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Kirjautumistiedot</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Salasanat</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Avoimet välilehdet</string>
     <!-- Preference for signing out -->
@@ -752,6 +754,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Luottokortit</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Maksutavat</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Osoitteet</string>
 
@@ -1707,8 +1711,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Käyttäjätunnukset ja salasanat</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Salasanat</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Tallenna käyttäjätunnukset ja salasanat</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Tallenna salasanat</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Kysy tallennusta</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1726,26 +1734,45 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Lisää kirjautumistieto</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Lisää salasana</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkronoi kirjautumistiedot</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Synkronoi salasanat</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Synkronoi kirjautumistiedot laitteiden välillä</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Synkronoi salasanat eri laitteiden välillä</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Tallennetut kirjautumistiedot</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Tallennetut salasanat</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">%siin tallentamasi tai synkronoimasi kirjautumistiedot näkyvät täällä.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%siin tallentamasi tai synkronoimasi salasanat näkyvät tässä. Kaikki tallentamasi salasanat ovat salattuja.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Lue lisää Syncista.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Lisätietoja synkronoinnista</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Poikkeukset</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Käyttäjätunnukset ja salanat, joita ei tallenneta, näytetään täällä.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s ei tallenna tässä lueteltujen sivustojen salasanoja.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Käyttäjätunnuksia ja salasanoja ei tallenneta näille sivustoille.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s ei tallenna näiden sivustojen salasanoja.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Poista kaikki poikkeukset</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Etsi kirjautumistiedoista</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Etsi salasanoja</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sivusto</string>
     <!-- The header for the username for a login -->
@@ -1774,10 +1801,16 @@
     <string name="saved_login_hide_password">Piilota salasana</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Avaa lukitus nähdäksesi tallennetut kirjautumistiedot</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Avaa lukitus nähdäksesi tallennetut salasanat</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Suojaa käyttäjätunnuksesi ja salasanasi</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Suojaa tallennetut salasanat</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut kirjautumistiedot ja salasanat siltä varalta, että joku saa laitteesi haltuunsa.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja salasanojasi, jos laitteesi on jollain toisella.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Myöhemmin</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1797,6 +1830,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Järjestä kirjautumistietojen valikko</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Salasanojen järjestysvalikko</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Automaattinen täyttö</string>
@@ -1804,10 +1840,16 @@
     <string name="preferences_addresses">Osoitteet</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Luottokortit</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Maksutavat</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Tallenna ja täytä kortit automaattisesti</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Tallenna ja täytä maksutavat</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Tiedot on salattu</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s salaa kaikki tallentamasi maksutavat</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkronoi kortit laitteiden välillä</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1815,16 +1857,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Lisää luottokortti</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Lisää kortti</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Hallinnoi tallennettuja kortteja</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Hallitse kortteja</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Lisää osoite</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Hallitse osoitteita</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Tallenna ja täytä osoitteet automaattisesti</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Tallenna ja täytä osoitteet</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Sisällytä tiedot kuten numerot, sähköpostiosoitteet ja toimitusosoitteet</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Sisältää puhelinnumerot ja sähköpostiosoitteet</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Lisää kortti</string>
@@ -1846,6 +1897,8 @@
     <string name="credit_cards_delete_card_button">Poista kortti</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Haluatko varmasti poistaa tämän luottokortin?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Poistetaanko kortti?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Poista</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1861,14 +1914,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Kirjoita kelvollinen luottokortin numero</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Anna kelvollinen kortin numero</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Täytä tämä kenttä</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Lisää nimi</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Avaa lukitus nähdäksesi tallennetut kortit</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Suojaa luottokorttisi</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Suojaa tallennetut maksutavat</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut luottokorttitiedot siltä varalta, että joku saa laitteesi haltuunsa.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja korttejasi, jos laitteesi on jollain toisella.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Aseta nyt</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1879,6 +1940,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Avaa lukitus käyttääksesi tallennettuja luottokorttitietoja</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Avaa lukitus käyttääksesi tallennettuja maksutapoja</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Lisää osoite</string>
     <!-- Title of the "Edit address" screen -->
@@ -1916,6 +1979,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Haluatko varmasti poistaa tämän osoitteen?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Poistetaanko tämä osoite?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Poista</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2015,6 +2080,8 @@
     <string name="login_menu_edit_button">Muokkaa</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Haluatko varmasti poistaa tämän kirjautumistiedon?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Haluatko varmasti poistaa tämän salasanan?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Poista</string>
     <!-- Negative action of a dialog asking to delete login -->
@@ -2029,16 +2096,28 @@
     <string name="saved_login_password_description">Muokattava tekstikenttä kirjautumisen salasanaa varten.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Tallenna muutokset kirjautumistietoihin.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Tallenna muutokset.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Muokkaa</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Muokkaa salasanaa</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Lisää uusi kirjautumistieto</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Lisää salasana</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Salasana vaaditaan</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Kirjoita salasana</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Käyttäjätunnus vaaditaan</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Kirjoita käyttäjätunnus</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Isäntänimi vaaditaan</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Kirjoita verkko-osoite</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Äänihaku</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->

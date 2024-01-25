@@ -311,12 +311,12 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ket bremañ</string>
 
-    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ho surentez a zo talvoudus deomp</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">evezhiadennoù a-fet buhez prevez</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">evezhiadennoù a-fet buhez prevez</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Lakaat da verdeer dre ziouer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -648,6 +648,8 @@
     <string name="preferences_sync_bookmarks">Sinedoù</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Titouroù kennaskañ</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Gerioù-tremen</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Ivinelloù digor</string>
     <!-- Preference for signing out -->
@@ -675,6 +677,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Kartennoù kred</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Doareoù paeañ</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Chomlecʼhioù</string>
 
@@ -1252,6 +1256,10 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Serriñ an ivinelloù prevez</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">Serriñ an ivinelloù prevez?</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
 
@@ -1602,8 +1610,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Titouroù kennaskañ</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Gerioù-tremen</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Enrollañ an titouroù kennaskañ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Enrollañ ar gerioù-tremen</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Goulenn a-raok enrollañ</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1621,12 +1633,19 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Ouzhpennañ titouroù kennaskañ</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Ouzhpennañ ur ger-tremen</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Goubredañ an titouroù kennaskañ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Goubredañ ar gerioù-tremen</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Goubredañ an titouroù kennaskañ dre an trevnadoù</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Titouroù kennaskañ enrollet</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Gerioù-tremen enrollet</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">An titouroù kennaskañ a enrollit pe c’houbredit e %s a vo diskouezet amañ.</string>
     <!-- Preference to access list of saved logins -->
@@ -1641,6 +1660,8 @@
     <string name="preferences_passwords_exceptions_remove_all">Dilemel an holl nemedennoù</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Klask titouroù kennaskañ</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Klask er gerioù-tremen</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Lec’hienn</string>
     <!-- The header for the username for a login -->
@@ -1672,6 +1693,8 @@
     <string name="logins_biometric_prompt_message">Dibrennit evit gwelet ho titouroù kennaskañ enrollet</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Diogelit ho titouroù kennaskañ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Diogelit ho kerioù-tremen enrollet</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Arventennit ur patrom morailh, ur PIN pe ur ger-tremen evit gwareziñ ho titouroù kennaskañ enrollet da vezañ lennet gant unan bennak all.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1698,8 +1721,12 @@
     <string name="preferences_addresses">Chomlec’hioù</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kartennoù kred</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Doareoù paeañ</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Enrollañ ha leuniañ ar c’hartennoù en un doare emgefreek</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Enrollañ ha leuniañ an doareoù paeañ</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Rineget eo ar roadennoù</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1708,9 +1735,13 @@
     <string name="preferences_credit_cards_sync_cards">Goubredañ ar c\'hartennoù</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ouzhpennañ ur gartenn gred</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Ouzhpennañ ur gartenn</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Merañ ar c’hartennoù enrollet</string>
 
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Merañ ar c’hartennoù</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Ouzhpennañ ur chomlec’h</string>
     <!-- Preference option for managing saved addresses -->
@@ -1718,6 +1749,8 @@
 
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Enrollañ ha leuniañ ar chomlec’hioù en un doare emgefreek</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Enrollañ ha leuniañ ar chomlec’hioù</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Enkorfañ a ra titouroù evel niverennoù, posteloù ha chomlec’hioù</string>
 
@@ -1742,6 +1775,8 @@
     <string name="credit_cards_delete_card_button">Dilemel ar gartenn</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Ha fellout a ra deocʼh dilemel ar gartenn gred-mañ?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Dilemel ar gartenn?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Dilemel</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1756,13 +1791,19 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Biziatait un niverenn kartenn gred talvoudek mar plij.</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Enankit un niverenn gartenn reizh</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Mar plij, leugnit ar maez-mañ</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Ouzhpennañ un anv</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Dibrennit da welet ho kartennoù enrollet</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Diogelit ho kartennoù kred</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Diogelit ho toareoù paeañ enrollet</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Arventennit ur patrom prennañ, ur PIN pe ur ger-tremen evit gwareziñ ho kartennoù kred enrollet ma vez ho trevnad gant unan bennak all.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1812,6 +1853,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Ha sur oc’h e fell deoc’h dilemel ar chomlec’h-mañ?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Dilemel ar chomlec’h-mañ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Dilemel</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1909,6 +1952,8 @@
     <string name="login_menu_edit_button">Embann</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Sur oc’h e fell deoc’h dilemel an titour-kennaskañ-mañ?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Sur ocʼh e fell deocʼh dilemel ar ger-tremen-mañ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Dilemel</string>
     <!-- Negative action of a dialog asking to delete login -->
@@ -1923,16 +1968,28 @@
     <string name="saved_login_password_description">Ar vaezienn destenn kemmus evit ger-tremen an titour kennaskañ.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Enrollañ ar c’hemmoù d’an titouroù kennaskañ.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Enrollañ ar cʼhemmoù.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Embann</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Aozañ ar ger-tremen</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Ouzhpennañ titouroù kennaskañ nevez</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Ouzhpennañ ur ger-tremen</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Ger-tremen azgoulennet</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Enankit ur ger-tremen</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Anv-implijer rekis</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Enankit un anv-implijer</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Anv an ostiz rekis</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Enankit ur chomlecʼh web</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Klask dre vouezh</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2196,6 +2253,9 @@
 
     <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
     <string name="a11y_heading">%s, titl</string>
+
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">Ereoù</string>
 
     <!-- Translations feature-->
 
