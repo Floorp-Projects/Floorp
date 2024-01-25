@@ -38,7 +38,7 @@ addTest(function testComputed() {
       // Test a smattering of properties that include some system-defined
       // props, some props that were defined in this node's stylesheet,
       // and some default props.
-      is(computed["white-space"].value, "normal", "Default value should appear");
+      is(computed["white-space-collapse"].value, "collapse", "Default value should appear");
       is(computed.display.value, "block", "System stylesheet item should appear");
       is(computed.cursor.value, "crosshair", "Included stylesheet rule should appear");
       is(computed.color.value, "rgb(255, 0, 0)",
@@ -58,7 +58,7 @@ addTest(function testComputedUserMatched() {
     gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
       return gStyles.getComputed(node, { filter: "user", markMatched: true });
     }).then(computed => {
-      ok(!computed["white-space"].matched, "Default style shouldn't match");
+      ok(!computed["white-space-collapse"].matched, "Default style shouldn't match");
       ok(!computed.display.matched, "Only user styles should match");
       ok(computed.cursor.matched, "Asked for matched, should get it");
       ok(computed.color.matched, "Asked for matched, should get it");
@@ -72,7 +72,7 @@ addTest(function testComputedSystemMatched() {
     gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
       return gStyles.getComputed(node, { filter: "ua", markMatched: true });
     }).then(computed => {
-      ok(!computed["white-space"].matched, "Default style shouldn't match");
+      ok(!computed["white-space-collapse"].matched, "Default style shouldn't match");
       ok(computed.display.matched, "System stylesheets should match");
       ok(computed.cursor.matched, "Asked for matched, should get it");
       ok(computed.color.matched, "Asked for matched, should get it");
@@ -86,7 +86,7 @@ addTest(function testComputedUserOnlyMatched() {
     gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
       return gStyles.getComputed(node, { filter: "user", onlyMatched: true });
     }).then(computed => {
-      ok(!("white-space" in computed), "Default style shouldn't exist");
+      ok(!("white-space-collapse" in computed), "Default style shouldn't exist");
       ok(!("display" in computed), "System stylesheets shouldn't exist");
       ok(("cursor" in computed), "User items should exist.");
       ok(("color" in computed), "User items should exist.");
@@ -100,7 +100,7 @@ addTest(function testComputedSystemOnlyMatched() {
     gWalker.querySelector(gWalker.rootNode, "#computed-test-node").then(node => {
       return gStyles.getComputed(node, { filter: "ua", onlyMatched: true });
     }).then(computed => {
-      ok(!("white-space" in computed), "Default style shouldn't exist");
+      ok(!("white-space-collapse" in computed), "Default style shouldn't exist");
       ok(("display" in computed), "System stylesheets should exist");
       ok(("cursor" in computed), "User items should exist.");
       ok(("color" in computed), "User items should exist.");
