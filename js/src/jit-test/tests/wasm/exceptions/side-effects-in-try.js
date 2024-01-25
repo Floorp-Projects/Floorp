@@ -131,35 +131,35 @@ function testSideEffectsOnLocals() {
              ${throwValues}
              ${localThrow})
          (func (export "testFunc") ${testFuncTypeInline}
-           (try (result ${resultTypes} ${v128Type})
-             (do
-               ;; Locals not set.
-               (i32.const 0) ;; Predicate for $throwif.
-               (call $throwif)  ;; So this doesn't throw.
-               ;; Set correct locals before throw to be caught.
-               ${correctLocalValues}
-               (local.get $argCorrectRef)
-               ${correctV128}
-               ${localsSet}
-               ;; Next up should be $exn being thrown locally or via a call.`;
+           try (result ${resultTypes} ${v128Type})
+             ;; Locals not set.
+             (i32.const 0) ;; Predicate for $throwif.
+             (call $throwif)  ;; So this doesn't throw.
+             ;; Set correct locals before throw to be caught.
+             ${correctLocalValues}
+             (local.get $argCorrectRef)
+             ${correctV128}
+             ${localsSet}
+             ;; Next up should be $exn being thrown locally or via a call.`;
 
   let moduleRest = ` ;; The above throw to $exn should be caught here --------.
-               ;; Set wrong locals after throw to be caught.              ;;    |
-               ${wrongValues}                                             ;;    |
-               (local.get $argWrongRef) ;; The wrong externref param.     ;;    |
-               ${wrongV128}                                               ;;    |
-               ${localsSet}                                               ;;    |
-               (call $wontThrow)                                          ;;    |
-               ${wrongValues}                                             ;;    |
-               ${localsGet});; End of try code.                           ;;    |
-             (catch $emptyExn                                             ;;    |
-               ${wrongValues}                                             ;;    |
-               ${localsGet})                                              ;;    |
-             (catch $exn ;; <---------------------------------------------------'
-               ${localsGet})
-             (catch_all
-               ${wrongValues}
-               ${localsGet}))
+             ;; Set wrong locals after throw to be caught.              ;;    |
+             ${wrongValues}                                             ;;    |
+             (local.get $argWrongRef) ;; The wrong externref param.     ;;    |
+             ${wrongV128}                                               ;;    |
+             ${localsSet}                                               ;;    |
+             (call $wontThrow)                                          ;;    |
+             ${wrongValues}                                             ;;    |
+             ${localsGet} ;; End of try code.                           ;;    |
+           catch $emptyExn                                              ;;    |
+             ${wrongValues}                                             ;;    |
+             ${localsGet}                                               ;;    |
+           catch $exn  ;; <---------------------------------------------------'
+             ${localsGet}
+           catch_all
+             ${wrongValues}
+             ${localsGet}
+           end
            ;; Check if the local has the correct v128 value.
            ${checkV128Value}))`;
 
@@ -208,16 +208,16 @@ function testGlobals() {
            (import "m" "throws" (func $throws))
            (global (mut ${type}) (${type}.const ${initialValue}))
            (func (export "testFunc") (result ${type})
-             (try (result ${type})
-               (do
-                 (global.set 0 (${type}.const ${resultValue}))
-                 (call $throws)
-                 (global.set 0 (${type}.const ${wrongValue}))
-                 (global.get 0))
-               (catch $notThrownExn
-                 (${type}.const ${wrongValue}))
-               (catch $exn
-                 (global.get 0)))))`,
+             try (result ${type})
+               (global.set 0 (${type}.const ${resultValue}))
+               (call $throws)
+               (global.set 0 (${type}.const ${wrongValue}))
+               (global.get 0)
+             catch $notThrownExn
+               (${type}.const ${wrongValue})
+             catch $exn
+               (global.get 0)
+             end))`,
         { m: exports }
       ).exports.testFunc(), coercion(resultValue));
   };

@@ -4,48 +4,56 @@ load(libdir + "eqArrayHelper.js");
 
 {
   let catchlessTry = `
-           (try
-             (do (call $gc)
-                 (throw $exn)))`;
+            try
+             (call $gc)
+             (throw $exn)
+            end`;
   let rethrow0 = `
-           (try
-             (do (call $gc)
-                 (throw $exn))
-             (catch $exn (rethrow 0)))`;
+            try
+             (call $gc)
+             (throw $exn)
+            catch $exn
+              (rethrow 0)
+            end`;
   let rethrow1 = `
-           (try
-             (do (throw $exn))
-             (catch_all
-               (try
-                 (do (throw $exn))
-                 (catch $exn (rethrow 1)))))`;
+           try
+             (throw $exn)
+           catch_all
+               try
+                 (throw $exn)
+               catch $exn
+                 (rethrow 1)
+               end
+           end`;
   let delegate0 = `
-           (try
-             (do (call $gc)
-                 (throw $exn))
-             (delegate 0))`;
+           try
+             (call $gc)
+             (throw $exn)
+           delegate 0`;
   let delegate1 = `
            (block
-             (try
-               (do (call $gc)
-                   (throw $exn))
-               (delegate 1)))`;
+             try
+               (call $gc)
+               (throw $exn)
+             delegate 1)`;
   let delegate0InCatch = `
-            (try
-              (do (throw $exn))
-              (catch_all
-                (try
-                  (do (call $gc)
-                      (throw $exn))
-                  (delegate 0))))`;
+            try
+              (throw $exn)
+            catch_all
+                try
+                  (call $gc)
+                  (throw $exn)
+                delegate 0
+            end`;
   let delegate1InCatch = `
-            (try
-              (do (throw $exn))
-              (catch_all
-                (try
-                  (do (call $gc)
-                      (throw $exn))
-                  (delegate 1))))`;
+            try
+              throw $exn
+            catch_all
+              try
+                (call $gc)
+                (throw $exn)
+              delegate 1
+            end`;
 
   let rethrowingBodies = [catchlessTry, rethrow0, delegate0, delegate1,
                           rethrow1, delegate0InCatch, delegate1InCatch];
@@ -67,10 +75,13 @@ load(libdir + "eqArrayHelper.js");
            (import "m" "throwExn" (func $throwExn (type $indirectFunctype)))
            (table funcref (elem $throwExn))
            (func (export "testFunc") (result i32)
-             (try (result i32)
-               (do (call_indirect (type $indirectFunctype) (i32.const 0))
-                   (i32.const 0))
-               (catch $exn (i32.const 1)))))`;
+             try (result i32)
+               (call_indirect (type $indirectFunctype) (i32.const 0))
+                   (i32.const 0)
+             catch $exn (i32.const 1)
+             end
+           )
+         )`;
 
     let testFunction = wasmEvalText(mod, { m : exports}).exports.testFunc;
     assertEq(testFunction(), 1);
@@ -118,19 +129,20 @@ load(libdir + "eqArrayHelper.js");
          (local.get 3) ;; f64
          (local.get 4) ;; ref
          (local.get 5) ;; v128 or i32
-         (try (param i32 i64 f32 f64 externref ${v128Type})
-           (do
-             (if (param i32 i64 f32 f64 externref ${v128Type})
-               (local.get $ifPredicate)
-               (then (throw $exn))
-               (else (throw $exn))))
-           (catch $exn
-              (try (param i32 i64 f32 f64 externref ${v128Type})
-                (do (throw $exn))
-                (catch_all (rethrow 1))))
-           (catch_all))
-           unreachable)
-         (func $throwEmptyExn (export "throwEmptyExn")
+          try (param i32 i64 f32 f64 externref ${v128Type})
+            (if (param i32 i64 f32 f64 externref ${v128Type})
+              (local.get $ifPredicate)
+              (then (throw $exn))
+              (else (throw $exn)))
+          catch $exn
+            try (param i32 i64 f32 f64 externref ${v128Type})
+              (throw $exn)
+            catch_all (rethrow 1)
+            end
+          catch_all
+          end
+          unreachable)
+       (func $throwEmptyExn (export "throwEmptyExn")
                               (param i32 i64 f32 f64 externref ${v128Type})
                               (result i32 i64 f32 f64 externref ${v128Type})
            (throw $emptyExn)
@@ -167,56 +179,57 @@ load(libdir + "eqArrayHelper.js");
                                    ;; The last i32 result is the v128 check.
                                    (result i32 i64 f32 f64 externref i32)
                                    (local $ifPredicate i32)
-           (try (result i32 i64 f32 f64 externref i32)
-             (do
-               ;; Wrong values
-               (i32.const 5)
-               (i64.const 6)
-               (f32.const 0.1)
-               (f64.const 0.6437)
-               (local.get $wrongRef)
-               ${wrongV128}
-               ;; throwEmptyExn
-               (call_indirect (type $indirectFunctype) (i32.const 1))
-               drop ;; Drop the last v128 value.
-               (i32.const 0))
-             (catch_all
-               (try (result i32 i64 f32 f64 externref ${v128Type})
-                 (do ;; Values to throw.
-                   (i32.const 2)
-                   (i64.const 3)
-                   (f32.const 4)
-                   (f64.const 13.37)
-                   (local.get $correctRef)
-                   ${correctV128}
-                   (call_indirect (type $indirectFunctype) (i32.const 2)) ;; returnArgs
-                   (call_indirect (type $indirectFunctype) (i32.const 0)) ;; throwExn
-                   drop drop ;; Drop v128 and externref to do trivial and irrelevant ops.
-                   (f64.const 5)
-                   (f64.add)
-                   (local.get $wrongRef)
-                   ${wrongV128}
-                   ;; throwEmptyExn
-                   (call_indirect (type $indirectFunctype) (i32.const 1))
-                   unreachable)
-                 (catch $emptyExn
-                    ;; Wrong values
-                    (i32.const 5)
-                    (i64.const 6)
-                    (f32.const 0.1)
-                    (f64.const 0.6437)
-                    (local.get $wrongRef)
-                    ${wrongV128})
-                 (catch $exn)
-                 (catch_all
-                   ;; Wrong values
-                   (i32.const 5)
-                   (i64.const 6)
-                   (f32.const 0.1)
-                   (f64.const 0.6437)
-                   (local.get $wrongRef)
-                   ${wrongV128}))
-               ${checkV128Value}))))`;
+           try (result i32 i64 f32 f64 externref i32)
+             ;; Wrong values
+             (i32.const 5)
+             (i64.const 6)
+             (f32.const 0.1)
+             (f64.const 0.6437)
+             (local.get $wrongRef)
+             ${wrongV128}
+             ;; throwEmptyExn
+             (call_indirect (type $indirectFunctype) (i32.const 1))
+             drop ;; Drop the last v128 value.
+             (i32.const 0)
+           catch_all
+              try (result i32 i64 f32 f64 externref ${v128Type})
+                 ;; Values to throw.
+                 (i32.const 2)
+                 (i64.const 3)
+                 (f32.const 4)
+                 (f64.const 13.37)
+                 (local.get $correctRef)
+                 ${correctV128}
+                 (call_indirect (type $indirectFunctype) (i32.const 2)) ;; returnArgs
+                 (call_indirect (type $indirectFunctype) (i32.const 0)) ;; throwExn
+                 drop drop ;; Drop v128 and externref to do trivial and irrelevant ops.
+                 (f64.const 5)
+                 (f64.add)
+                 (local.get $wrongRef)
+                 ${wrongV128}
+                 ;; throwEmptyExn
+                 (call_indirect (type $indirectFunctype) (i32.const 1))
+                 unreachable
+              catch $emptyExn
+                  ;; Wrong values
+                  (i32.const 5)
+                  (i64.const 6)
+                  (f32.const 0.1)
+                  (f64.const 0.6437)
+                  (local.get $wrongRef)
+                  ${wrongV128}
+              catch $exn
+              catch_all
+                 ;; Wrong values
+                 (i32.const 5)
+                 (i64.const 6)
+                 (f32.const 0.1)
+                 (f64.const 0.6437)
+                 (local.get $wrongRef)
+                 ${wrongV128}
+              end
+              ${checkV128Value}
+            end))`;
 
   let testAllValtypes = wasmEvalText(mod, { m : exports}).exports.testFunc;
   assertEqArray(testAllValtypes("foo", "bar"),
