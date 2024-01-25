@@ -108,12 +108,12 @@ class StartupPathProviderTest {
     }
 
     @Test
-    fun `GIVEN the app is launched to the homescreen and stopped WHEN getting the start up path THEN it is not set`() {
+    fun `GIVEN the app is launched to the homescreen with MAIN and stopped WHEN getting the start up path THEN it set to MAIN`() {
         every { intent.action } returns Intent.ACTION_MAIN
         launchApp(intent)
         stopLaunchedApp()
 
-        assertEquals(StartupPath.NOT_SET, provider.startupPathForActivity)
+        assertEquals(StartupPath.MAIN, provider.startupPathForActivity)
     }
 
     @Test
@@ -129,13 +129,13 @@ class StartupPathProviderTest {
     }
 
     @Test
-    fun `GIVEN the app is launched to the homescreen, stopped, and relaunched warm from the app switcher WHEN getting the start up path THEN it is not set`() {
+    fun `GIVEN the app is launched to the homescreen with MAIN, stopped, and relaunched warm from the app switcher WHEN getting the start up path THEN it set to MAIN'`() {
         every { intent.action } returns Intent.ACTION_MAIN
         launchApp(intent)
         stopLaunchedApp()
         startStoppedAppFromAppSwitcher()
 
-        assertEquals(StartupPath.NOT_SET, provider.startupPathForActivity)
+        assertEquals(StartupPath.MAIN, provider.startupPathForActivity)
     }
 
     @Test
@@ -159,7 +159,7 @@ class StartupPathProviderTest {
     }
 
     @Test
-    fun `GIVEN the app is launched, stopped, started from the app switcher and receives an intent in the foreground WHEN getting the start up path THEN it returns not set`() {
+    fun `GIVEN the app is launched with MAIN, stopped, started from the app switcher and receives an intent in the foreground WHEN getting the start up path THEN it returns MAIN`() {
         every { intent.action } returns Intent.ACTION_MAIN
         launchApp(intent)
         stopLaunchedApp()
@@ -167,7 +167,7 @@ class StartupPathProviderTest {
         every { intent.action } returns Intent.ACTION_VIEW
         receiveIntentInForeground(intent)
 
-        assertEquals(StartupPath.NOT_SET, provider.startupPathForActivity)
+        assertEquals(StartupPath.MAIN, provider.startupPathForActivity)
     }
 
     private fun launchApp(intent: Intent) {

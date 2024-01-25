@@ -612,7 +612,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         privateNotificationObserver?.stop()
         components.notificationsDelegate.unBindActivity(this)
 
-        if (this !is ExternalAppBrowserActivity) {
+        val activityStartedWithLink = startupPathProvider.startupPathForActivity == StartupPathProvider.StartupPath.VIEW
+        if (this !is ExternalAppBrowserActivity && !activityStartedWithLink) {
             stopMediaSession()
         }
     }

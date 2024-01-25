@@ -100,7 +100,6 @@ class StartupPathProvider {
 
         override fun onStop(owner: LifecycleOwner) {
             // Clear existing state.
-            startupPathForActivity = StartupPath.NOT_SET
             wasResumedSinceStartedState = false
         }
     }
