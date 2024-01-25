@@ -176,14 +176,23 @@ const char* nsNameSpaceManager::GetNameSpaceDisplayName(uint32_t aNameSpaceID) {
 nsresult NS_NewElement(Element** aResult,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        FromParser aFromParser, const nsAString* aIs) {
+  RefPtr<nsAtom> isAtom = aIs ? NS_AtomizeMainThread(*aIs) : nullptr;
+  return NS_NewElement(aResult, std::move(aNodeInfo), aFromParser, isAtom);
+}
+
+nsresult NS_NewElement(Element** aResult,
+                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                       FromParser aFromParser, nsAtom* aIsAtom,
+                       CustomElementDefinition* aDefinition) {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
-  RefPtr<nsAtom> isAtom = aIs ? NS_AtomizeMainThread(*aIs) : nullptr;
   if (ns == kNameSpaceID_XHTML) {
-    return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, isAtom);
+    return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, aIsAtom,
+                             aDefinition);
   }
   if (ns == kNameSpaceID_XUL) {
-    return NS_NewXULElement(aResult, ni.forget(), aFromParser, isAtom);
+    return NS_NewXULElement(aResult, ni.forget(), aFromParser, aIsAtom,
+                            aDefinition);
   }
   if (ns == kNameSpaceID_MathML) {
     // If the mathml.disabled pref. is true, convert all MathML nodes into

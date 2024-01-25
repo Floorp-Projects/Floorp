@@ -41,12 +41,15 @@
 #include "nsMimeTypes.h"
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsTextNode.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/Comment.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/MutationObservers.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
@@ -471,17 +474,53 @@ nsresult nsXMLContentSink::CreateElement(
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   RefPtr<Element> element;
 
+  // https://html.spec.whatwg.org/#create-an-element-for-the-token
+  // Step 5: Let is be the value of the "is" attribute in the given token, if
+  // such an attribute exists, or null otherwise.
   const char16_t* is = nullptr;
-  if ((aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML) ||
-       aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) &&
-      FindIsAttrValue(aAtts, &is)) {
-    const nsDependentString isStr(is);
-    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser,
-                       &isStr);
-  } else {
-    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser);
+  RefPtr<nsAtom> isAtom;
+  uint32_t namespaceID = ni->NamespaceID();
+  bool isXHTMLOrXUL =
+      namespaceID == kNameSpaceID_XHTML || namespaceID == kNameSpaceID_XUL;
+  if (isXHTMLOrXUL && FindIsAttrValue(aAtts, &is)) {
+    isAtom = NS_AtomizeMainThread(nsDependentString(is));
   }
 
+  // Step 6: Let definition be the result of looking up a custom element
+  // definition given document, given namespace, local name, and is.
+  // Step 7: If definition is non-null and the parser was not created as part of
+  // the HTML fragment parsing algorithm, then let will execute script be true.
+  // Otherwise, let it be false.
+  //
+  // Note that the check that the parser was not created as part of the HTML
+  // fragment parsing algorithm is done by the check for a non-null mDocument.
+  CustomElementDefinition* customElementDefinition = nullptr;
+  nsAtom* nameAtom = ni->NameAtom();
+  if (mDocument && !mDocument->IsLoadedAsData() && isXHTMLOrXUL &&
+      (isAtom || nsContentUtils::IsCustomElementName(nameAtom, namespaceID))) {
+    nsAtom* typeAtom = is ? isAtom.get() : nameAtom;
+
+    MOZ_ASSERT(nameAtom->Equals(ni->LocalName()));
+    customElementDefinition = nsContentUtils::LookupCustomElementDefinition(
+        mDocument, nameAtom, namespaceID, typeAtom);
+  }
+
+  if (customElementDefinition) {
+    // Since we are possibly going to run a script for the custom element
+    // constructor, we should first flush any remaining elements.
+    FlushTags();
+    { nsAutoMicroTask mt; }
+
+    Maybe<AutoCEReaction> autoCEReaction;
+    if (auto* docGroup = mDocument->GetDocGroup()) {
+      autoCEReaction.emplace(docGroup->CustomElementReactionsStack(), nullptr);
+    }
+    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser,
+                       isAtom, customElementDefinition);
+  } else {
+    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser,
+                       isAtom);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
@@ -566,6 +605,11 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
 
     // Always check the clock in nsContentSink right after a script
     StopDeflecting();
+
+    // Flush any previously parsed elements before executing a script, in order
+    // to prevent a script that adds a mutation observer from observing that
+    // script element being adding to the tree.
+    FlushTags();
 
     // Now tell the script that it's ready to go. This may execute the script
     // or return true, or neither if the script doesn't need executing.
