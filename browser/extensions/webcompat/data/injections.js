@@ -426,6 +426,23 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1790750",
+    platform: "all",
+    domain: "relearnings.com",
+    bug: "1790750",
+    contentScripts: {
+      matches: [
+        "https://relearnings.com/linkedinlearning.html", // Bug 1790750
+      ],
+      js: [
+        {
+          file: "injections/js/bug1790750-relearnings.com-linkedinlearning-iframe-fix.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
     id: "bug1859617",
     platform: "all",
     domain: "Sites relying on there being no window.InstallTrigger",

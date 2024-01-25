@@ -92,6 +92,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1739489-draftjs-beforeinput.js",
     "injections/js/bug1769762-tiktok.com-plugins-shim.js",
     "injections/js/bug1774005-installtrigger-shim.js",
+    "injections/js/bug1790750-relearnings.com-linkedinlearning-iframe-fix.js",
     "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
     "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
     "injections/js/bug1818818-fastclick-legacy-shim.js",
