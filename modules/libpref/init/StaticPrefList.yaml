@@ -7611,6 +7611,11 @@
     value: true
     mirror: always
 
+-   name: javascript.options.wasm_exnref
+    type: bool
+    value: @IS_EARLY_BETA_OR_EARLIER@
+    mirror: always
+
 #if defined(ENABLE_WASM_FUNCTION_REFERENCES)
 -   name: javascript.options.wasm_function_references
     type: bool
