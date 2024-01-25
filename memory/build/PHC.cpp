@@ -337,21 +337,32 @@ static const size_t kAllPagesJemallocSize = kAllPagesSize - kPageSize;
 // The maximum time.
 static const Time kMaxTime = ~(Time(0));
 
-// Truncate aRnd to the range (1 .. aAvgDelay*2). If aRnd is random, this
+// The average delay before doing any page allocations at the start of a
+// process. Note that roughly 1 million allocations occur in the main process
+// while starting the browser. The delay range is 1..kAvgFirstAllocDelay*2.
+static const Delay kAvgFirstAllocDelay = 64 * 1024;
+
+// The average delay until the next attempted page allocation, once we get past
+// the first delay. The delay range is 1..kAvgAllocDelay*2.
+static const Delay kAvgAllocDelay = 16 * 1024;
+
+// The average delay before reusing a freed page. Should be significantly larger
+// than kAvgAllocDelay, otherwise there's not much point in having it. The delay
+// range is (kAvgAllocDelay / 2)..(kAvgAllocDelay / 2 * 3). This is different to
+// the other delay ranges in not having a minimum of 1, because that's such a
+// short delay that there is a high likelihood of bad stacks in any crash
+// report.
+static const Delay kAvgPageReuseDelay = 256 * 1024;
+
+// Truncate aRnd to the range (1 .. AvgDelay*2). If aRnd is random, this
 // results in an average value of aAvgDelay + 0.5, which is close enough to
-// aAvgDelay. aAvgDelay must be a power-of-two for speed.
-constexpr Delay Rnd64ToDelay(Delay aAvgDelay, uint64_t aRnd) {
-  MOZ_ASSERT(IsPowerOfTwo(aAvgDelay), "must be a power of two");
+// aAvgDelay. aAvgDelay must be a power-of-two (otherwise it will crash) for
+// speed.
+template <Delay AvgDelay>
+constexpr Delay Rnd64ToDelay(uint64_t aRnd) {
+  static_assert(IsPowerOfTwo(AvgDelay), "must be a power of two");
 
-  return (aRnd & (uint64_t(aAvgDelay) * 2 - 1)) + 1;
-}
-
-constexpr Delay CheckProbability(int64_t aProb) {
-  // Limit delays calculated from prefs to 0x80000000, this is the largest
-  // power-of-two that fits in a Delay since it is a uint32_t.
-  // The minimum is 2 that way not every allocation goes straight to PHC.
-  return RoundUpPow2(
-      std::min(std::max(aProb, int64_t(2)), int64_t(0x80000000)));
+  return aRnd % (AvgDelay * 2) + 1;
 }
 
 // Maps a pointer to a PHC-specific structure:
@@ -426,11 +437,10 @@ class GAtomic {
 
   static void SetAllocDelay(Delay aAllocDelay) { sAllocDelay = aAllocDelay; }
 
-  static bool AllocDelayHasWrapped(Delay aAvgAllocDelay,
-                                   Delay aAvgFirstAllocDelay) {
+  static bool AllocDelayHasWrapped() {
     // Delay is unsigned so we can't test for less that zero.  Instead test if
     // it has wrapped around by comparing with the maximum value we ever use.
-    return sAllocDelay > 2 * std::max(aAvgAllocDelay, aAvgFirstAllocDelay);
+    return sAllocDelay > 2 * std::max(kAvgAllocDelay, kAvgFirstAllocDelay);
   }
 
  private:
@@ -862,23 +872,7 @@ class GMut {
   }
 
   using PHCState = mozilla::phc::PHCState;
-  void SetState(PHCState aState) {
-    if (mPhcState != PHCState::Enabled && aState == PHCState::Enabled) {
-      MutexAutoLock lock(GMut::sMutex);
-      GAtomic::Init(Rnd64ToDelay(mAvgFirstAllocDelay, Random64(lock)));
-    }
-
-    mPhcState = aState;
-  }
-
-  void SetProbabilities(int64_t aAvgDelayFirst, int64_t aAvgDelayNormal,
-                        int64_t aAvgDelayPageReuse) {
-    MutexAutoLock lock(GMut::sMutex);
-
-    mAvgFirstAllocDelay = CheckProbability(aAvgDelayFirst);
-    mAvgAllocDelay = CheckProbability(aAvgDelayNormal);
-    mAvgPageReuseDelay = CheckProbability(aAvgDelayPageReuse);
-  }
+  void SetState(PHCState aState) { mPhcState = aState; }
 
  private:
   template <int N>
@@ -944,32 +938,6 @@ class GMut {
   // eventually get the update.
   Atomic<PHCState, Relaxed> mPhcState =
       Atomic<PHCState, Relaxed>(DEFAULT_STATE);
-
-  // The average delay before doing any page allocations at the start of a
-  // process. Note that roughly 1 million allocations occur in the main process
-  // while starting the browser. The delay range is 1..gAvgFirstAllocDelay*2.
-  Delay mAvgFirstAllocDelay = 64 * 1024;
-
-  // The average delay until the next attempted page allocation, once we get
-  // past the first delay. The delay range is 1..kAvgAllocDelay*2.
-  Delay mAvgAllocDelay = 16 * 1024;
-
-  // The average delay before reusing a freed page. Should be significantly
-  // larger than kAvgAllocDelay, otherwise there's not much point in having it.
-  // The delay range is (kAvgAllocDelay / 2)..(kAvgAllocDelay / 2 * 3). This is
-  // different to the other delay ranges in not having a minimum of 1, because
-  // that's such a short delay that there is a high likelihood of bad stacks in
-  // any crash report.
-  Delay mAvgPageReuseDelay = 256 * 1024;
-
- public:
-  Delay GetAvgAllocDelay(const MutexAutoLock&) { return mAvgAllocDelay; }
-  Delay GetAvgFirstAllocDelay(const MutexAutoLock&) {
-    return mAvgFirstAllocDelay;
-  }
-  Delay GetAvgPageReuseDelay(const MutexAutoLock&) {
-    return mAvgPageReuseDelay;
-  }
 };
 
 Mutex GMut::sMutex;
@@ -1065,11 +1033,13 @@ class GTls {
 
   static void EnableOnCurrentThread() {
     MOZ_ASSERT(GTls::tlsIsDisabled.get());
-    MutexAutoLock lock(GMut::sMutex);
-    Delay avg_delay = gMut->GetAvgAllocDelay(lock);
-    Delay avg_first_delay = gMut->GetAvgFirstAllocDelay(lock);
-    if (GAtomic::AllocDelayHasWrapped(avg_delay, avg_first_delay)) {
-      GAtomic::SetAllocDelay(Rnd64ToDelay(avg_delay, gMut->Random64(lock)));
+    uint64_t rand;
+    if (GAtomic::AllocDelayHasWrapped()) {
+      {
+        MutexAutoLock lock(GMut::sMutex);
+        rand = gMut->Random64(lock);
+      }
+      GAtomic::SetAllocDelay(Rnd64ToDelay<kAvgAllocDelay>(rand));
     }
     tlsIsDisabled.set(false);
   }
@@ -1112,6 +1082,12 @@ static bool phc_init() {
 
   GTls::Init();
   gMut = InfallibleAllocPolicy::new_<GMut>();
+  {
+    MutexAutoLock lock(GMut::sMutex);
+    Delay firstAllocDelay =
+        Rnd64ToDelay<kAvgFirstAllocDelay>(gMut->Random64(lock));
+    GAtomic::Init(firstAllocDelay);
+  }
 
 #ifndef XP_WIN
   // Avoid deadlocks when forking by acquiring our state lock prior to forking
@@ -1208,8 +1184,7 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
   MutexAutoLock lock(GMut::sMutex);
 
   Time now = GAtomic::Now();
-  Delay newAllocDelay =
-      Rnd64ToDelay(gMut->GetAvgAllocDelay(lock), gMut->Random64(lock));
+  Delay newAllocDelay = Rnd64ToDelay<kAvgAllocDelay>(gMut->Random64(lock));
 
   // We start at a random page alloc and wrap around, to ensure pages get even
   // amounts of use.
@@ -1336,9 +1311,8 @@ inline void* MozJemallocPHC::malloc(size_t aReqSize) {
 }
 
 static Delay ReuseDelay(GMutLock aLock) {
-  Delay avg_reuse_delay = gMut->GetAvgPageReuseDelay(aLock);
-  return (avg_reuse_delay / 2) +
-         Rnd64ToDelay(avg_reuse_delay / 2, gMut->Random64(aLock));
+  return (kAvgPageReuseDelay / 2) +
+         Rnd64ToDelay<kAvgPageReuseDelay / 2>(gMut->Random64(aLock));
 }
 
 // This handles both calloc and moz_arena_calloc.
@@ -1824,14 +1798,4 @@ void SetPHCState(PHCState aState) {
 
   gMut->SetState(aState);
 }
-
-void SetPHCProbabilities(int64_t aAvgDelayFirst, int64_t aAvgDelayNormal,
-                         int64_t aAvgDelayPageReuse) {
-  if (!maybe_init()) {
-    return;
-  }
-
-  gMut->SetProbabilities(aAvgDelayFirst, aAvgDelayNormal, aAvgDelayPageReuse);
-}
-
 }  // namespace mozilla::phc
