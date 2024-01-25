@@ -396,7 +396,8 @@ class JS_PUBLIC_API ArrayBufferOrView {
 class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
   static const JSClass* const FixedLengthUnsharedClass;
   static const JSClass* const ResizableUnsharedClass;
-  static const JSClass* const SharedClass;
+  static const JSClass* const FixedLengthSharedClass;
+  static const JSClass* const GrowableSharedClass;
 
  protected:
   explicit ArrayBuffer(JSObject* unwrapped) : ArrayBufferOrView(unwrapped) {}
@@ -406,7 +407,8 @@ class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
     if (unwrapped) {
       const JSClass* clasp = GetClass(unwrapped);
       if (clasp == FixedLengthUnsharedClass ||
-          clasp == ResizableUnsharedClass || clasp == SharedClass) {
+          clasp == ResizableUnsharedClass || clasp == FixedLengthSharedClass ||
+          clasp == GrowableSharedClass) {
         return ArrayBuffer(unwrapped);
       }
     }
