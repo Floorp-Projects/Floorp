@@ -24,7 +24,12 @@ function bigIntAddBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntSubBail(i) {
@@ -37,7 +42,12 @@ function bigIntSubBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntMulBail(i) {
@@ -50,7 +60,12 @@ function bigIntMulBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntIncBail(i) {
@@ -63,7 +78,12 @@ function bigIntIncBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return x;
+  }
 }
 
 function bigIntDecBail(i) {
@@ -76,7 +96,12 @@ function bigIntDecBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return x;
+  }
 }
 
 function bigIntBitNotBail(i) {
@@ -89,7 +114,12 @@ function bigIntBitNotBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntLshBail(i) {
@@ -102,7 +132,12 @@ function bigIntLshBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntRshBail(i) {
@@ -115,7 +150,12 @@ function bigIntRshBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 function bigIntAsUintBail(i) {
@@ -128,7 +168,12 @@ function bigIntAsUintBail(i) {
   // beginning of the function.
   resumeHere();
 
-  if (i >= 99) bailout();
+  if (i >= 99) {
+    bailout();
+    // Flag the computation as having removed uses to check that we properly
+    // report the error while executing the BigInt operation on bailout.
+    return a;
+  }
 }
 
 // Prevent compilation of the top-level
