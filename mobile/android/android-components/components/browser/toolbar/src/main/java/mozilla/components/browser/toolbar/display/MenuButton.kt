@@ -92,6 +92,15 @@ internal class MenuButton(
 
     fun setColorFilter(@ColorInt color: Int) = impl.setColorFilter(color)
 
+    /**
+     * Hides the menu button.
+     *
+     * @param shouldBeHidden A [Boolean] that determines the visibility of the menu button.
+     */
+    fun setShouldBeHidden(shouldBeHidden: Boolean) {
+        impl.isVisible = !shouldBeHidden && shouldBeVisible()
+    }
+
     @VisibleForTesting
     internal fun shouldBeVisible() = impl.menuBuilder != null || impl.menuController != null
 }

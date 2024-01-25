@@ -336,6 +336,20 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Hides the menu button in display mode.
+     */
+    override fun hideMenuButton() {
+        display.hideMenuButton()
+    }
+
+    /**
+     * Shows the menu button in display mode.
+     */
+    override fun showMenuButton() {
+        display.showMenuButton()
+    }
+
+    /**
      * Switches to URL editing mode.
      *
      * @param cursorPlacement Where the cursor should be placed after focusing on the URL input field.

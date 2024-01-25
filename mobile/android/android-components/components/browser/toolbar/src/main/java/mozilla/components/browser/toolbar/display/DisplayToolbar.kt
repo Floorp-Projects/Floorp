@@ -648,6 +648,20 @@ class DisplayToolbar internal constructor(
     internal fun removeNavigationAction(action: Toolbar.Action) {
         views.navigationActions.removeAction(action)
     }
+
+    /**
+     * Hides the menu button in display mode.
+     */
+    internal fun hideMenuButton() {
+        views.menu.setShouldBeHidden(true)
+    }
+
+    /**
+     * Shows the menu button in display mode.
+     */
+    internal fun showMenuButton() {
+        views.menu.setShouldBeHidden(false)
+    }
 }
 
 /**

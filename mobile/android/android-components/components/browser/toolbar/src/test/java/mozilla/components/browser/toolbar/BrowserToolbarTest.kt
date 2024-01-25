@@ -543,6 +543,30 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `WHEN hideMenuButton is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        val display: DisplayToolbar = mock()
+        toolbar.display = display
+
+        toolbar.hideMenuButton()
+
+        verify(display).hideMenuButton()
+    }
+
+    @Test
+    fun `WHEN showMenuButton is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        val display: DisplayToolbar = mock()
+        toolbar.display = display
+
+        toolbar.showMenuButton()
+
+        verify(display).showMenuButton()
+    }
+
+    @Test
     fun `cast to view`() {
         // Given
         val toolbar = BrowserToolbar(testContext)

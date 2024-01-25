@@ -174,6 +174,16 @@ interface Toolbar {
     fun removeEditActionEnd(action: Action)
 
     /**
+     * Hides the menu button in display mode.
+     */
+    fun hideMenuButton()
+
+    /**
+     * Shows the menu button in display mode.
+     */
+    fun showMenuButton()
+
+    /**
      * Casts this toolbar to an Android View object.
      */
     fun asView(): View = this as View

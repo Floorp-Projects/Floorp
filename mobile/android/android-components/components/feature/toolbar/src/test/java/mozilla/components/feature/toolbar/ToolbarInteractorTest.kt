@@ -98,6 +98,14 @@ class ToolbarInteractorTest {
             fail()
         }
 
+        override fun hideMenuButton() {
+            fail()
+        }
+
+        override fun showMenuButton() {
+            fail()
+        }
+
         override fun invalidateActions() {
             fail()
         }
