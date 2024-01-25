@@ -31,7 +31,6 @@
 #include "nsIGlobalObject.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-#include "nsThread.h"
 #include "nsWrapperCacheInlines.h"
 
 namespace mozilla::dom {
@@ -61,8 +60,7 @@ WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate, const char* aName,
 #  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
       mName(aName),
 #  endif
-      mCallingCancelWithinRun(false),
-      mCallingWithoutNesting(false) {
+      mCallingCancelWithinRun(false) {
   LOG(("WorkerRunnable::WorkerRunnable [%p]", this));
   MOZ_ASSERT(aWorkerPrivate);
 }
@@ -222,39 +220,10 @@ NS_INTERFACE_MAP_BEGIN(WorkerRunnable)
   } else
 NS_INTERFACE_MAP_END
 
-nsresult WorkerRunnable::RunDirectly() {
-  mCallingWithoutNesting = true;
-  auto ret = static_cast<nsIRunnable*>(this)->Run();
-  mCallingWithoutNesting = false;
-  return ret;
-}
-
 NS_IMETHODIMP
 WorkerRunnable::Run() {
   LOG(("WorkerRunnable::Run [%p]", this));
   bool targetIsWorkerThread = mTarget == WorkerThread;
-
-  // On a worker thread, WorkerRunnable can be either called directly if
-  // it is a control or debugger runnable or nested via NS_ProcessNextEvent.
-  // In the former case we explicitly set mCallingWithoutNesting.
-  // In the latter case we must be inside a WorkerThreadPrimaryRunnable and
-  // can use the thread's RecursionDepth to detect that.
-  if (targetIsWorkerThread && !mCallingWithoutNesting) {
-    auto* myThread = static_cast<nsThread*>(NS_GetCurrentThread());
-    if (!myThread || myThread->RecursionDepth() < 2) {
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-      MOZ_LOG(
-          sWorkerRunnableLog, LogLevel::Error,
-          ("Runnable '%s' executed after WorkerThreadPrimaryRunnable ended.",
-           this->mName));
-#endif
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "On a worker, a worker runnable should only run on "
-                            "top of WorkerThreadPrimaryRunnable.");
-
-      return NS_OK;
-    }
-  }
 
 #ifdef DEBUG
   if (targetIsWorkerThread) {
