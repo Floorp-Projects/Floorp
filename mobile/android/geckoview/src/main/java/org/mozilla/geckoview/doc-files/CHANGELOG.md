@@ -13,6 +13,16 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v124
+
+- Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverMode`][124.1] to enable DNS-over-HTTPS using different resolver modes ([bug 1591533]({{bugzilla}}1591533)).
+- Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverUri`][124.2] to specify the DNS-over-HTTPS server to be used if DoH is enabled ([bug 1591533]({{bugzilla}}1591533)).
+- Added [`GeckoRuntimeSettings#setLargeKeepaliveFactor`][124.3] to increase the keepalive timeout used for a connection ([bug 1591533]({{bugzilla}}1591533)).
+
+[124.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverMode-int-
+[124.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverUri-java.lang.String-
+[124.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLargeKeepaliveFactor-int-
+
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
 - ⚠️ Deprecated [`GeckoSession.requestAnalysisCreationStatus`][119.2] by 124, please use [`GeckoSession.requestCreateAnalysis`][122.2] instead.
@@ -1504,4 +1514,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2aa9a3cb60f30cdb5f9ec1550486a12a595b544f
+[api-version]: 757616f5eabb19164140a9f303277496fd1a4993

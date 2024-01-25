@@ -8,11 +8,13 @@ import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.BuildConfig
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
@@ -214,6 +216,50 @@ class RuntimeSettingsTest : BaseSessionTest() {
             settings.fontInflationEnabled,
             `is`(false),
         )
+    }
+
+    @Test
+    fun largeKeepaliveFactor() {
+        val defaultLargeKeepaliveFactor = 10
+        val settings = sessionRule.runtime.settings
+
+        val largeKeepaliveFactorPref = "network.http.largeKeepaliveFactor"
+        var prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
+        assertThat(
+            "default LargeKeepaliveFactor should be 10",
+            prefValue,
+            `is`(defaultLargeKeepaliveFactor),
+        )
+
+        for (factor in 1..10) {
+            settings.setLargeKeepaliveFactor(factor)
+            prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
+            assertThat(
+                "setting LargeKeepaliveFactor to an integer value between 1..10 should work",
+                prefValue,
+                `is`(factor),
+            )
+        }
+
+        val sanitizedDefaultLargeKeepaliveFactor = 1
+
+        /**
+         * Setting an invalid factor will cause an exception to be throw in debug build.
+         * otherwise, the factor will be reset to default when an invalid factor is given.
+         */
+        try {
+            settings.setLargeKeepaliveFactor(128)
+            prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
+            assertThat(
+                "set LargeKeepaliveFactor to default when input is invalid",
+                prefValue,
+                `is`(sanitizedDefaultLargeKeepaliveFactor),
+            )
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG_BUILD) {
+                assertTrue("Should have an exception in DEBUG_BUILD", true)
+            }
+        }
     }
 
     @Test
