@@ -29,8 +29,9 @@ add_task(async function test_with_text_zoom() {
   let dpi = window.devicePixelRatio;
 
   await SpecialPowers.pushPrefEnv({ set: [["ui.textScaleFactor", 200]] });
-  ok(
-    window.devicePixelRatio > dpi,
+  Assert.greater(
+    window.devicePixelRatio,
+    dpi,
     "DPI should change as a result of the pref flip"
   );
 

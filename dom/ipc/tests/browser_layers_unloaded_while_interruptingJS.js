@@ -23,8 +23,9 @@ add_task(async function test_check_layers_cleared() {
     let startWaiting = performance.now();
     await BrowserTestUtils.switchTab(gBrowser, initialTab);
     await layersCleared;
-    ok(
-      performance.now() < startWaiting + 2000,
+    Assert.less(
+      performance.now(),
+      startWaiting + 2000,
       "MozLayerTreeCleared should be dispatched while the script is still running"
     );
   });

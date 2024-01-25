@@ -59,8 +59,9 @@ async function crashUtilityProcess(utilityPid) {
 
   info(`Waiting for utility process ${utilityPid} to go away.`);
   let [subject, data] = await utilityProcessGone;
-  ok(
-    parseInt(data, 10) === utilityPid,
+  Assert.strictEqual(
+    parseInt(data, 10),
+    utilityPid,
     `Should match the crashed PID ${utilityPid} with ${data}`
   );
   ok(
@@ -82,7 +83,7 @@ async function crashUtilityProcess(utilityPid) {
       ),
       "Record should be a utility process crash"
     );
-    ok(crash.id === dumpID, "Record should have an ID");
+    Assert.strictEqual(crash.id, dumpID, "Record should have an ID");
   });
 
   let minidumpDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);

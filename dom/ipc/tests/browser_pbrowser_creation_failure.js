@@ -38,8 +38,9 @@ add_task(async function test_subframe_pbrowser_creation_failure() {
       info("Waiting for oop-browser-crashed event.");
       let event = await eventFiredPromise;
       ok(!event.isTopFrame, "should be reporting subframe crash");
-      ok(
-        event.childID == 0,
+      Assert.equal(
+        event.childID,
+        0,
         "childID should be zero, as no process actually crashed"
       );
       is(event.browsingContextId, bcid, "bcid should match");

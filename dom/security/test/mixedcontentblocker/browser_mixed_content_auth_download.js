@@ -147,7 +147,11 @@ add_task(async function test_auth_download() {
         shouldNotifyDownloadUI(),
       ]);
       await download.unblock();
-      ok(download.error == null, "There should be no error after unblocking");
+      Assert.equal(
+        download.error,
+        null,
+        "There should be no error after unblocking"
+      );
       info(
         "Start download to be able to validate the size and the success of the download"
       );

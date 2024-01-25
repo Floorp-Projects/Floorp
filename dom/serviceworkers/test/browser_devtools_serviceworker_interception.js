@@ -85,7 +85,11 @@ async function checkObserver(aInput) {
     ];
     if (aInput.fetch) {
       networkTimings.reduce((aPreviousTiming, aCurrentTiming) => {
-        ok(aPreviousTiming <= aCurrentTiming, "Checking network timings");
+        Assert.lessOrEqual(
+          aPreviousTiming,
+          aCurrentTiming,
+          "Checking network timings"
+        );
         return aCurrentTiming;
       });
     } else {

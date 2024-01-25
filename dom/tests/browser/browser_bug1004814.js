@@ -38,8 +38,9 @@ add_task(async function () {
       });
     });
 
-    ok(
-      duration > 0,
+    Assert.greater(
+      duration,
+      0,
       "ConsoleEvent.timer.duration > 0: " + duration + " ~ 200ms"
     );
   });

@@ -111,12 +111,14 @@ var check_use_counter_worker = async function (
   );
   // There might be other workers created by prior tests get destroyed during
   // this tests.
-  ok(
-    destructions_after > destructions_before,
+  Assert.greater(
+    destructions_after,
+    destructions_before,
     `${worker_type} worker counts are correct`
   );
-  ok(
-    glean_destructions_after > glean_destructions_before,
+  Assert.greater(
+    glean_destructions_after,
+    glean_destructions_before,
     `Glean ${worker_type} worker counts are correct`
   );
 };

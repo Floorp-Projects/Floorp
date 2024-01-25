@@ -60,8 +60,8 @@ async function testSteps() {
     request.result instanceof Ci.nsIQuotaOriginUsageResult,
     "The result is nsIQuotaOriginUsageResult instance"
   );
-  ok(request.result.usage > 0, "Total usage is not empty");
-  ok(request.result.fileUsage > 0, "File usage is not empty");
+  Assert.greater(request.result.usage, 0, "Total usage is not empty");
+  Assert.greater(request.result.fileUsage, 0, "File usage is not empty");
 
   info("Testing clearStoragesForPrincipal");
 

@@ -52,7 +52,11 @@ function* testSteps() {
 
   function verifyResult(result, expectedOrigins) {
     ok(result instanceof Array, "Got an array object");
-    ok(result.length == expectedOrigins.length, "Correct number of elements");
+    Assert.equal(
+      result.length,
+      expectedOrigins.length,
+      "Correct number of elements"
+    );
 
     info("Sorting elements");
 
@@ -74,9 +78,9 @@ function* testSteps() {
     for (let i = 0; i < result.length; i++) {
       let a = result[i];
       let b = expectedOrigins[i];
-      ok(a.origin == b.origin, "Origin equals");
-      ok(a.persisted == b.persisted, "Persisted equals");
-      ok(a.usage == b.usage, "Usage equals");
+      Assert.equal(a.origin, b.origin, "Origin equals");
+      Assert.equal(a.persisted, b.persisted, "Persisted equals");
+      Assert.equal(a.usage, b.usage, "Usage equals");
     }
   }
 

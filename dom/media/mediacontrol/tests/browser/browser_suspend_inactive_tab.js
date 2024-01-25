@@ -119,13 +119,13 @@ function startAudioContext(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
     content.ac = new content.AudioContext();
     await new Promise(r => (content.ac.onstatechange = r));
-    ok(content.ac.state == "running", `Audio context started running`);
+    Assert.equal(content.ac.state, "running", `Audio context started running`);
   });
 }
 
 function suspendAudioContext(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
     await content.ac.suspend();
-    ok(content.ac.state == "suspended", `Audio context is suspended`);
+    Assert.equal(content.ac.state, "suspended", `Audio context is suspended`);
   });
 }

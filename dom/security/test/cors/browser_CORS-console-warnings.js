@@ -82,7 +82,7 @@ add_task(async function () {
   );
 
   // Different OS combinations
-  ok(messages_seen > 0, "Saw " + messages_seen + " messages.");
+  Assert.greater(messages_seen, 0, "Saw " + messages_seen + " messages.");
 
   messages_seen = 0;
   let test_two_uri =
@@ -95,7 +95,7 @@ add_task(async function () {
   );
   await BrowserTestUtils.waitForCondition(() => messages_seen > 0);
 
-  ok(messages_seen > 0, "Saw " + messages_seen + " messages.");
+  Assert.greater(messages_seen, 0, "Saw " + messages_seen + " messages.");
 
   BrowserTestUtils.removeTab(tab);
 });

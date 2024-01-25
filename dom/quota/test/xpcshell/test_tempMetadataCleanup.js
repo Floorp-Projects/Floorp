@@ -28,7 +28,7 @@ function* testSteps() {
   request = initPersistentOrigin(getCurrentPrincipal(), continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
+  Assert.equal(request.resultCode, NS_OK, "Initialization succeeded");
 
   ok(!request.result, "Origin directory wasn't created");
 

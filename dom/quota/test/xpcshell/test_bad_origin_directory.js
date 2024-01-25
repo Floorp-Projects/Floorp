@@ -16,11 +16,12 @@ function* testSteps() {
   let request = persist(invalidPrincipal, continueToNextStepSync);
   yield undefined;
 
-  ok(
-    request.resultCode === NS_ERROR_FAILURE,
+  Assert.strictEqual(
+    request.resultCode,
+    NS_ERROR_FAILURE,
     "Persist() failed because of the invalid origin"
   );
-  ok(request.result === null, "The request result is null");
+  Assert.strictEqual(request.result, null, "The request result is null");
 
   let originDir = getRelativeFile(invalidOrigin.path);
   let exists = originDir.exists();
@@ -29,7 +30,7 @@ function* testSteps() {
   request = persisted(invalidPrincipal, continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode === NS_OK, "Persisted() succeeded");
+  Assert.strictEqual(request.resultCode, NS_OK, "Persisted() succeeded");
   ok(!request.result, "The origin isn't persisted since the operation failed");
 
   finishTest();

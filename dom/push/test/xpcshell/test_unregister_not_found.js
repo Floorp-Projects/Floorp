@@ -33,8 +33,9 @@ add_task(async function test_unregister_not_found() {
       inIsolatedMozBrowser: false,
     }),
   });
-  ok(
-    result === false,
+  Assert.strictEqual(
+    result,
+    false,
     "unregister should resolve with false for nonexistent scope"
   );
 });

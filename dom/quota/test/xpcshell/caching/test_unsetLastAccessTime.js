@@ -39,8 +39,9 @@ async function testSteps() {
 
   info("Verifying last access time");
 
-  ok(
-    BigInt(request.result.lastAccessTime) != INT64_MIN,
+  Assert.notEqual(
+    BigInt(request.result.lastAccessTime),
+    INT64_MIN,
     "Correct last access time"
   );
 }

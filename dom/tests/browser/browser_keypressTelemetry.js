@@ -50,7 +50,7 @@ add_task(async function () {
     600
   );
   let result = getRecordedKeypressCount();
-  ok(result == 1, "One keypress recorded");
+  Assert.equal(result, 1, "One keypress recorded");
 
   gURLBar.focus();
   await SimpleTest.promiseFocus(window);
@@ -65,5 +65,5 @@ add_task(async function () {
     600
   );
   result = getRecordedKeypressCount();
-  ok(result == 2, "Two keypresses recorded");
+  Assert.equal(result, 2, "Two keypresses recorded");
 });

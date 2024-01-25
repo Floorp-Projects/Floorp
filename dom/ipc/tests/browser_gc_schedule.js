@@ -87,13 +87,14 @@ function checkOneAtATime(events) {
   info("Checking order of events");
   for (const e of events) {
     ok(e.state === "begin" || e.state === "end", "event.state is good");
-    ok(e.tab !== undefined, "event.tab exists");
+    Assert.notStrictEqual(e.tab, undefined, "event.tab exists");
 
     if (lastWhen) {
       // We need these in sorted order so that the other checks here make
       // sense.
-      ok(
-        lastWhen <= e.when,
+      Assert.lessOrEqual(
+        lastWhen,
+        e.when,
         `Unsorted events, last: ${lastWhen}, this: ${e.when}`
       );
     }

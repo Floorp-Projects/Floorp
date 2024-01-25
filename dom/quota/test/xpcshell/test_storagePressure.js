@@ -86,8 +86,9 @@ async function testSteps() {
     ok(false, "Should have thrown");
   } catch (e) {
     ok(true, "Should have thrown");
-    ok(
-      e.resultCode === NS_ERROR_FILE_NO_DEVICE_SPACE,
+    Assert.strictEqual(
+      e.resultCode,
+      NS_ERROR_FILE_NO_DEVICE_SPACE,
       "Threw right result code"
     );
   }
@@ -95,7 +96,7 @@ async function testSteps() {
   info("Checking the storage pressure event");
 
   let usage = await promiseStoragePressure;
-  ok(usage == globalLimitKB * 1024, "Got correct usage");
+  Assert.equal(usage, globalLimitKB * 1024, "Got correct usage");
 
   info("Testing storage pressure by reducing the global limit");
 
@@ -124,7 +125,7 @@ async function testSteps() {
   info("Checking the storage pressure event");
 
   usage = await promiseStoragePressure;
-  ok(usage == globalLimitKB * 1024, "Got correct usage");
+  Assert.equal(usage, globalLimitKB * 1024, "Got correct usage");
 
   info("Resetting limits");
 

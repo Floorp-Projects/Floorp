@@ -36,8 +36,9 @@ add_task(async () => {
               scroller.addEventListener("scroll", resolve, { once: true });
             });
 
-            ok(
-              scroller.scrollTop > 0,
+            Assert.greater(
+              scroller.scrollTop,
+              0,
               "scrollIntoView works in a cross origin iframe"
             );
           }

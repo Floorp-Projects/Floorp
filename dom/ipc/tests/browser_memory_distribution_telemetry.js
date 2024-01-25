@@ -65,12 +65,14 @@ add_task(async function test_memory_distribution() {
   for (var key in s) {
     is(key, "0 - 10 tabs");
     let fewTabsSnapshot = s[key];
-    ok(
-      fewTabsSnapshot.sum > 0,
+    Assert.greater(
+      fewTabsSnapshot.sum,
+      0,
       "Zero difference between all the content processes is unlikely, what happened?"
     );
-    ok(
-      fewTabsSnapshot.sum < 80,
+    Assert.less(
+      fewTabsSnapshot.sum,
+      80,
       "20 percentage difference on average is unlikely, what happened?"
     );
     let values = fewTabsSnapshot.values;

@@ -49,8 +49,9 @@ add_task(async function () {
 
   const observedDelay = endTime - startTime;
 
-  ok(
-    observedDelay > specifiedDelay - 100,
+  Assert.greater(
+    observedDelay,
+    specifiedDelay - 100,
     `The observed delay (${observedDelay}ms) should be roughly the same or greater than the delay specified in "security.dialog_enable_delay" (${specifiedDelay}ms)`
   );
 

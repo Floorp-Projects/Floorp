@@ -21,7 +21,7 @@ async function doTest(profile) {
 
   let length = storage.length;
 
-  ok(length === 0, "Correct length");
+  Assert.strictEqual(length, 0, "Correct length");
 
   info("Resetting origin");
 

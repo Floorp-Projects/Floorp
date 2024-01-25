@@ -92,7 +92,11 @@ function promiseNavToolboxStatus(aExpectedStatus) {
     navToolboxStatus = data;
     return data == aExpectedStatus;
   }).then(() =>
-    ok(navToolboxStatus == aExpectedStatus, "nav toolbox is " + aExpectedStatus)
+    Assert.equal(
+      navToolboxStatus,
+      aExpectedStatus,
+      "nav toolbox is " + aExpectedStatus
+    )
   );
 }
 

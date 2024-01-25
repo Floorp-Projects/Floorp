@@ -70,5 +70,5 @@ add_task(async function testSteps() {
   info("Stage 4 - Checking length of the copied value");
 
   value = storage.getItem(data.secondKey);
-  ok(value.length === data.value.length, "Correct string length");
+  Assert.strictEqual(value.length, data.value.length, "Correct string length");
 });

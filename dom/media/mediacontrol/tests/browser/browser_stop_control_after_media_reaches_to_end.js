@@ -86,7 +86,7 @@ function playMediaUntilItReachesToTheEnd(tab) {
     }
 
     info(`adjust the start position to faster reach to the end`);
-    ok(video.duration > 1.0, "video's duration is larger than 1.0s");
+    Assert.greater(video.duration, 1.0, "video's duration is larger than 1.0s");
     video.currentTime = video.duration - 1.0;
 
     info(`play ${video.id} video`);
