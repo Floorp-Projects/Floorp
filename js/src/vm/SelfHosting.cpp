@@ -1046,7 +1046,7 @@ static bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(TypedArrayObject::is(args[0]));
+  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   Rooted<TypedArrayObject*> tarray(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
@@ -1062,7 +1062,7 @@ static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(TypedArrayObject::is(args[0]));
+  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
   args.rval().setNumber(tarr->byteOffset());
@@ -1073,7 +1073,7 @@ static bool intrinsic_TypedArrayElementSize(JSContext* cx, unsigned argc,
                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(TypedArrayObject::is(args[0]));
+  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   unsigned size =
       TypedArrayElemSize(args[0].toObject().as<TypedArrayObject>().type());
@@ -1088,10 +1088,10 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(TypedArrayObject::is(args[0]));
+  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().set(tarr->lengthValue());
+  args.rval().setNumber(tarr->length());
   return true;
 }
 
@@ -1108,7 +1108,7 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
     return false;
   }
 
-  args.rval().set(obj->lengthValue());
+  args.rval().setNumber(obj->length());
   return true;
 }
 
