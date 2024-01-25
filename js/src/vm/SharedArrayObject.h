@@ -106,6 +106,16 @@ class SharedArrayRawBuffer {
   [[nodiscard]] bool addReference();
   void dropReference();
 
+  // Try to grow this buffer to |newByteLength| bytes. Returns false when the
+  // current byte length is larger than |newByteLength|. Otherwise atomically
+  // changes the byte length to |newByteLength| and then returns true.
+  //
+  // This method DOES NOT perform any memory operations to allocate additional
+  // space. The caller is responsible to ensure that the buffer has been
+  // allocated with enough space to hold at least |newByteLength| bytes. IOW
+  // this method merely sets the number of user accessible bytes of this buffer.
+  bool grow(size_t newByteLength);
+
   static int32_t liveBuffers();
 };
 
@@ -232,6 +242,9 @@ class GrowableSharedArrayBufferObject;
  */
 class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool maxByteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool growableGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool growImpl(JSContext* cx, const CallArgs& args);
 
  public:
   // RAWBUF_SLOT holds a pointer (as "private" data) to the
@@ -253,7 +266,13 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
+  static bool maxByteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool growableGetter(JSContext* cx, unsigned argc, Value* vp);
+
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool grow(JSContext* cx, unsigned argc, Value* vp);
 
   static bool isOriginalByteLengthGetter(Native native) {
     return native == byteLengthGetter;
