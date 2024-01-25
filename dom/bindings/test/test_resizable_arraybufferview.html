@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1842773
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for resizable ArrayBufferViews</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1842773">Mozilla Bug 1842773</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+    /* global TestFunctions */
+
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
+
+    function checkThrowsResizable(f) {
+      let ex;
+      try{
+        f();
+        ok(false, "Should have thrown!");
+      } catch (e) {
+        ex = e;
+      }
+      ok(ex.toString().includes("resizable ArrayBuffer or ArrayBufferView"), "Got exception: " + ex);
+    }
+
+    function go() {
+      let test = new TestFunctions();
+
+      let ab = new ArrayBuffer(16, {maxByteLength: 16});
+      checkThrowsResizable(() => test.testNotAllowShared(ab));
+      checkThrowsResizable(() => test.testAllowShared(ab));
+      checkThrowsResizable(() => test.testDictWithAllowShared({arrayBuffer: ab}));
+      checkThrowsResizable(() => test.testUnionOfBuffferSource(ab));
+      checkThrowsResizable(() => { test.arrayBuffer = ab; });
+      checkThrowsResizable(() => { test.allowSharedArrayBuffer = ab; });
+      checkThrowsResizable(() => { test.sequenceOfArrayBuffer = [ab]; });
+      checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBuffer = [ab]; });
+
+      let ta = new Int8Array(ab);
+      checkThrowsResizable(() => test.testNotAllowShared(ta));
+      checkThrowsResizable(() => test.testAllowShared(ta));
+      checkThrowsResizable(() => test.testDictWithAllowShared({arrayBufferView: ta}));
+      checkThrowsResizable(() => test.testUnionOfBuffferSource(ta));
+      checkThrowsResizable(() => { test.arrayBufferView = ta; });
+      checkThrowsResizable(() => { test.allowSharedArrayBufferView = ta; });
+      checkThrowsResizable(() => { test.sequenceOfArrayBufferView = [ta]; });
+      checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBufferView = [ta]; });
+
+      let dv = new DataView(ab);
+      checkThrowsResizable(() => test.testNotAllowShared(dv));
+      checkThrowsResizable(() => test.testAllowShared(dv));
+      checkThrowsResizable(() => test.testDictWithAllowShared({arrayBufferView: dv}));
+      checkThrowsResizable(() => test.testUnionOfBuffferSource(dv));
+      checkThrowsResizable(() => { test.arrayBufferView = dv; });
+      checkThrowsResizable(() => { test.allowSharedArrayBufferView = dv; });
+      checkThrowsResizable(() => { test.sequenceOfArrayBufferView = [dv]; });
+      checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBufferView = [dv]; });
+
+      if (this.SharedArrayBuffer) {
+        let sab = new SharedArrayBuffer(16, {maxByteLength: 16});
+        checkThrowsResizable(() => test.testAllowShared(sab));
+        checkThrowsResizable(() => test.testDictWithAllowShared({allowSharedArrayBuffer: sab}));
+        checkThrowsResizable(() => test.testUnionOfAllowSharedBuffferSource(sab));
+        checkThrowsResizable(() => { test.allowSharedArrayBuffer = sab; });
+        checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBuffer = [sab]; });
+
+        let sta = new Int8Array(sab);
+        checkThrowsResizable(() => test.testAllowShared(sta));
+        checkThrowsResizable(() => test.testDictWithAllowShared({allowSharedArrayBufferView: sta}));
+        checkThrowsResizable(() => test.testUnionOfAllowSharedBuffferSource(sta));
+        checkThrowsResizable(() => { test.allowSharedArrayBufferView = sta; });
+        checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBufferView = [sta]; });
+
+        let sdv = new DataView(sab);
+        checkThrowsResizable(() => test.testAllowShared(sdv));
+        checkThrowsResizable(() => test.testDictWithAllowShared({allowSharedArrayBufferView: sdv}));
+        checkThrowsResizable(() => test.testUnionOfAllowSharedBuffferSource(sdv));
+        checkThrowsResizable(() => { test.allowSharedArrayBufferView = sdv; });
+        checkThrowsResizable(() => { test.sequenceOfAllowSharedArrayBufferView = [sdv]; });
+      }
+
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>
