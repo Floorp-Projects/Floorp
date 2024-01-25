@@ -4846,14 +4846,19 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                        aMovingInto, aMouseEvent,
                                        isPointer ? ePointerLeave : eMouseLeave);
 
-  // Fire mouseout
-  nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
-  DispatchMouseOrPointerEvent(aMouseEvent, isPointer ? ePointerOut : eMouseOut,
-                              lastOverElement, aMovingInto);
+  // Fire mouseout/pointerout only if the last mouseover/pointerover element has
+  // not been removed yet.
+  if (!wrapper->mLastOverElementRemoved) {
+    nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
+    DispatchMouseOrPointerEvent(aMouseEvent,
+                                isPointer ? ePointerOut : eMouseOut,
+                                lastOverElement, aMovingInto);
+  }
   leaveDispatcher.Dispatch();
 
   wrapper->mLastOverFrame = nullptr;
   wrapper->mLastOverElement = nullptr;
+  wrapper->mLastOverElementRemoved = false;
 
   // Turn recursion protection back off
   wrapper->mFirstOutEventElement = nullptr;
@@ -4877,7 +4882,10 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 
   RefPtr<OverOutElementsWrapper> wrapper = GetWrapperByEventID(aMouseEvent);
 
-  if (!wrapper || wrapper->mLastOverElement == aContent) return;
+  if (!wrapper || (!wrapper->mLastOverElementRemoved &&
+                   wrapper->mLastOverElement == aContent)) {
+    return;
+  }
 
   // Before firing mouseover, check for recursion
   if (aContent == wrapper->mFirstOverEventElement) return;
@@ -4897,7 +4905,10 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   }
   // Firing the DOM event in the parent document could cause all kinds
   // of havoc.  Reverify and take care.
-  if (wrapper->mLastOverElement == aContent) return;
+  if (!wrapper->mLastOverElementRemoved &&
+      wrapper->mLastOverElement == aContent) {
+    return;
+  }
 
   // Remember mLastOverElement as the related content for the
   // DispatchMouseOrPointerEvent() call below, since NotifyMouseOut() resets it,
@@ -4919,13 +4930,14 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   // Store the first mouseOver event we fire and don't refire mouseOver
   // to that element while the first mouseOver is still ongoing.
   wrapper->mFirstOverEventElement = aContent;
+  wrapper->mLastOverElement = aContent;
+  wrapper->mLastOverElementRemoved = false;
 
   // Fire mouseover
   wrapper->mLastOverFrame = DispatchMouseOrPointerEvent(
       aMouseEvent, isPointer ? ePointerOver : eMouseOver, aContent,
       lastOverElement);
   enterDispatcher.Dispatch();
-  wrapper->mLastOverElement = aContent;
 
   // Turn recursion protection back off
   wrapper->mFirstOverEventElement = nullptr;
@@ -5969,16 +5981,6 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
   return true;
 }
 
-void EventStateManager::ResetLastOverForContent(
-    const uint32_t& aIdx, const RefPtr<OverOutElementsWrapper>& aElemWrapper,
-    nsIContent* aContent) {
-  if (aElemWrapper && aElemWrapper->mLastOverElement &&
-      nsContentUtils::ContentIsFlattenedTreeDescendantOf(
-          aElemWrapper->mLastOverElement, aContent)) {
-    aElemWrapper->mLastOverElement = nullptr;
-  }
-}
-
 void EventStateManager::RemoveNodeFromChainIfNeeded(ElementState aState,
                                                     nsIContent* aContentRemoved,
                                                     bool aNotify) {
@@ -6087,10 +6089,13 @@ void EventStateManager::ContentRemoved(Document* aDocument,
 
   PointerEventHandler::ReleaseIfCaptureByDescendant(aContent);
 
-  // See bug 292146 for why we want to null this out
-  ResetLastOverForContent(0, mMouseEnterLeaveHelper, aContent);
+  if (mMouseEnterLeaveHelper) {
+    mMouseEnterLeaveHelper->ContentRemoved(*aContent);
+  }
   for (const auto& entry : mPointersEnterLeaveHelper) {
-    ResetLastOverForContent(entry.GetKey(), entry.GetData(), aContent);
+    if (entry.GetData()) {
+      entry.GetData()->ContentRemoved(*aContent);
+    }
   }
 }
 
@@ -6872,6 +6877,35 @@ bool EventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
   Init(index);
   return Abs(mMultiplierY[index]) >=
          MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
+}
+
+void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
+  if (!mLastOverElement) {
+    return;
+  }
+
+  if (!nsContentUtils::ContentIsFlattenedTreeDescendantOf(mLastOverElement,
+                                                          &aContent)) {
+    return;
+  }
+
+  if (mFirstOverEventElement &&
+      (mLastOverElement == mFirstOverEventElement ||
+       nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+           mFirstOverEventElement, &aContent))) {
+    if (mFirstOverEventElement == mFirstOutEventElement) {
+      mFirstOutEventElement = nullptr;
+    }
+    mFirstOverEventElement = nullptr;
+  }
+  if (mFirstOutEventElement &&
+      (mLastOverElement == mFirstOutEventElement ||
+       nsContentUtils::ContentIsFlattenedTreeDescendantOf(mFirstOutEventElement,
+                                                          &aContent))) {
+    mFirstOutEventElement = nullptr;
+  }
+  mLastOverElement = aContent.GetFlattenedTreeParent();
+  mLastOverElementRemoved = true;
 }
 
 }  // namespace mozilla
