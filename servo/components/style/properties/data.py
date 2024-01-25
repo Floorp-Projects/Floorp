@@ -882,6 +882,7 @@ def _remove_common_first_line_and_first_letter_properties(props, engine):
     props.remove("text-justify")
     props.remove("white-space-collapse")
     props.remove("text-wrap-mode")
+    props.remove("text-wrap-style")
     props.remove("word-break")
     props.remove("text-indent")
 
@@ -983,10 +984,11 @@ class PropertyRestrictions:
     def placeholder(data):
         props = PropertyRestrictions.first_line(data)
         props.add("opacity")
-        props.add("text-wrap")
         props.add("text-overflow")
         props.add("text-align")
         props.add("text-justify")
+        for p in PropertyRestrictions.shorthand(data, "text-wrap"):
+            props.add(p)
         for p in PropertyRestrictions.shorthand(data, "white-space"):
             props.add(p)
         return props
@@ -996,7 +998,6 @@ class PropertyRestrictions:
     def marker(data):
         return set(
             [
-                "text-wrap",
                 "color",
                 "text-combine-upright",
                 "text-transform",
@@ -1006,6 +1007,7 @@ class PropertyRestrictions:
                 "line-height",
                 "-moz-osx-font-smoothing",
             ]
+            + PropertyRestrictions.shorthand(data, "text-wrap")
             + PropertyRestrictions.shorthand(data, "white-space")
             + PropertyRestrictions.spec(data, "css-fonts")
             + PropertyRestrictions.spec(data, "css-animations")
@@ -1021,7 +1023,6 @@ class PropertyRestrictions:
                 "opacity",
                 "visibility",
                 "text-shadow",
-                "text-wrap",
                 "text-combine-upright",
                 "ruby-position",
                 # XXX Should these really apply to cue?
@@ -1032,6 +1033,7 @@ class PropertyRestrictions:
                 "background-blend-mode",
             ]
             + PropertyRestrictions.shorthand(data, "text-decoration")
+            + PropertyRestrictions.shorthand(data, "text-wrap")
             + PropertyRestrictions.shorthand(data, "white-space")
             + PropertyRestrictions.shorthand(data, "background")
             + PropertyRestrictions.shorthand(data, "outline")
