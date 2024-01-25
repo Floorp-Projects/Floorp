@@ -39267,7 +39267,6 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-
   webkit_column_rule_color:
     type: counter
     description: >
