@@ -1812,7 +1812,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Set up a device lock pattern, PIN, or password to protect your saved credit cards from being accessed if someone else has your device.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Set up a device lock pattern, PIN, or password to protect your saved cards from being accessed if someone else has your device.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Set up a device lock pattern, PIN, or password to protect your saved payment methods from being accessed if someone else has your device.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Set up now</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1969,12 +1969,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Password options</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">The editable text field for the web address of the login.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">The editable text field for the website address of the password.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">The editable text field for the website address.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">The editable text field for the username of the login.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">The editable text field for the username of the password.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">The editable text field for the username.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">The editable text field for the password of the login.</string>
     <!--  The editable text field for a login's password. -->
