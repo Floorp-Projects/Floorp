@@ -19,9 +19,14 @@
 #ifndef wasm_realm_h
 #define wasm_realm_h
 
+#include "js/TracingAPI.h"
+
 #include "wasm/WasmTypeDecls.h"
 
 namespace js {
+
+class WasmTagObject;
+
 namespace wasm {
 
 // wasm::Realm lives in JS::Realm and contains the wasm-related per-realm state.

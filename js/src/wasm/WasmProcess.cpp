@@ -29,6 +29,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmModuleTypes.h"
 
 using namespace js;
 using namespace wasm;
@@ -397,6 +398,29 @@ void ConfigureHugeMemory() {
 #endif
 }
 
+const TagType* wasm::sWrappedJSValueTagType = nullptr;
+
+static bool InitTagForJSValue() {
+  MutableTagType type = js_new<TagType>();
+  if (!type) {
+    return false;
+  }
+
+  ValTypeVector args;
+  if (!args.append(ValType(RefType::extern_()))) {
+    return false;
+  }
+
+  if (!type->initialize(std::move(args))) {
+    return false;
+  }
+  MOZ_ASSERT(WrappedJSValueTagType_ValueOffset == type->argOffsets()[0]);
+
+  type.forget(&sWrappedJSValueTagType);
+
+  return true;
+}
+
 bool wasm::Init() {
   MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
 
@@ -415,6 +439,11 @@ bool wasm::Init() {
   }
 
   sProcessCodeSegmentMap = map;
+
+  if (!InitTagForJSValue()) {
+    oomUnsafe.crash("js::wasm::Init");
+  }
+
   return true;
 }
 
@@ -427,6 +456,11 @@ void wasm::ShutDown() {
   }
 
   PurgeCanonicalTypes();
+
+  if (sWrappedJSValueTagType) {
+    sWrappedJSValueTagType->Release();
+    sWrappedJSValueTagType = nullptr;
+  }
 
   // After signalling shutdown by clearing sProcessCodeSegmentMap, wait for
   // concurrent wasm::LookupCodeSegment()s to finish.
