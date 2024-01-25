@@ -42,55 +42,52 @@ let $0 = instantiate(`(module
 
   (func $$throw-1-2 (i32.const 1) (i32.const 2) (throw $$e-i32-i32))
   (func (export "test-throw-1-2")
-    (try
-      (do (call $$throw-1-2))
-      (catch $$e-i32-i32
-        (i32.const 2)
-        (if (i32.ne) (then (unreachable)))
-        (i32.const 1)
-        (if (i32.ne) (then (unreachable)))
-      )
+    (block $$h (result i32 i32)
+      (try_table (catch $$e-i32-i32 $$h) (call $$throw-1-2))
+      (return)
     )
+    (if (i32.ne (i32.const 2)) (then (unreachable)))
+    (if (i32.ne (i32.const 1)) (then (unreachable)))
   )
 )`);
 
-// ./test/core/throw.wast:41
+// ./test/core/throw.wast:38
 assert_return(() => invoke($0, `throw-if`, [0]), [value("i32", 0)]);
 
-// ./test/core/throw.wast:42
+// ./test/core/throw.wast:39
 assert_exception(() => invoke($0, `throw-if`, [10]));
 
-// ./test/core/throw.wast:43
+// ./test/core/throw.wast:40
 assert_exception(() => invoke($0, `throw-if`, [-1]));
 
-// ./test/core/throw.wast:45
+// ./test/core/throw.wast:42
 assert_exception(() => invoke($0, `throw-param-f32`, [value("f32", 5)]));
 
-// ./test/core/throw.wast:46
+// ./test/core/throw.wast:43
 assert_exception(() => invoke($0, `throw-param-i64`, [5n]));
 
-// ./test/core/throw.wast:47
+// ./test/core/throw.wast:44
 assert_exception(() => invoke($0, `throw-param-f64`, [value("f64", 5)]));
 
-// ./test/core/throw.wast:49
+// ./test/core/throw.wast:46
 assert_exception(() => invoke($0, `throw-polymorphic`, []));
 
-// ./test/core/throw.wast:50
+// ./test/core/throw.wast:47
 assert_exception(() => invoke($0, `throw-polymorphic-block`, []));
 
-// ./test/core/throw.wast:52
+// ./test/core/throw.wast:49
 assert_return(() => invoke($0, `test-throw-1-2`, []), []);
 
-// ./test/core/throw.wast:54
+// ./test/core/throw.wast:51
 assert_invalid(() => instantiate(`(module (func (throw 0)))`), `unknown tag 0`);
 
-// ./test/core/throw.wast:55
+// ./test/core/throw.wast:52
 assert_invalid(
   () => instantiate(`(module (tag (param i32)) (func (throw 0)))`),
   `type mismatch: instruction requires [i32] but stack has []`,
 );
 
-// ./test/core/throw.wast:57
+// ./test/core/throw.wast:54
 assert_invalid(
   () => instantiate(`(module (tag (param i32)) (func (i64.const 5) (throw 0)))`),
   `type mismatch: instruction requires [i32] but stack has [i64]`,

@@ -1,3 +1,10 @@
+# 2.4.1
+
+## What's Changed
+* Allow some new pedantic clippy lints by @KodrAus in https://github.com/bitflags/bitflags/pull/380
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.4.0...2.4.1
+
 # 2.4.0
 
 ## What's Changed

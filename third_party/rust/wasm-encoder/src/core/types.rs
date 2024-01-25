@@ -102,7 +102,7 @@ impl TryFrom<wasmparser::FuncType> for FuncType {
 }
 
 /// Represents a type of an array in a WebAssembly module.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct ArrayType(pub FieldType);
 
 #[cfg(feature = "wasmparser")]
@@ -178,6 +178,21 @@ impl TryFrom<wasmparser::StorageType> for StorageType {
     }
 }
 
+impl StorageType {
+    /// Is this storage type defaultable?
+    pub fn is_defaultable(&self) -> bool {
+        self.unpack().is_defaultable()
+    }
+
+    /// Unpack this storage type into a value type.
+    pub fn unpack(&self) -> ValType {
+        match self {
+            StorageType::I8 | StorageType::I16 => ValType::I32,
+            StorageType::Val(v) => *v,
+        }
+    }
+}
+
 /// The type of a core WebAssembly value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum ValType {
@@ -213,6 +228,32 @@ impl TryFrom<wasmparser::ValType> for ValType {
             wasmparser::ValType::V128 => ValType::V128,
             wasmparser::ValType::Ref(r) => ValType::Ref(r.try_into()?),
         })
+    }
+}
+
+impl ValType {
+    /// Is this a numeric value type?
+    pub fn is_numeric(&self) -> bool {
+        match self {
+            ValType::I32 | ValType::I64 | ValType::F32 | ValType::F64 => true,
+            ValType::V128 | ValType::Ref(_) => false,
+        }
+    }
+
+    /// Is this a vector type?
+    pub fn is_vector(&self) -> bool {
+        match self {
+            ValType::V128 => true,
+            ValType::I32 | ValType::I64 | ValType::F32 | ValType::F64 | ValType::Ref(_) => false,
+        }
+    }
+
+    /// Is this a reference type?
+    pub fn is_reference(&self) -> bool {
+        match self {
+            ValType::Ref(_) => true,
+            ValType::I32 | ValType::I64 | ValType::F32 | ValType::F64 | ValType::V128 => false,
+        }
     }
 }
 
@@ -255,6 +296,16 @@ impl ValType {
     pub const FUNCREF: ValType = ValType::Ref(RefType::FUNCREF);
     /// Alias for the `externref` type in WebAssembly
     pub const EXTERNREF: ValType = ValType::Ref(RefType::EXTERNREF);
+    /// Alias for the `exnref` type in WebAssembly
+    pub const EXNREF: ValType = ValType::Ref(RefType::EXNREF);
+
+    /// Is this value defaultable?
+    pub fn is_defaultable(&self) -> bool {
+        match self {
+            ValType::Ref(r) => r.nullable,
+            ValType::I32 | ValType::I64 | ValType::F32 | ValType::F64 | ValType::V128 => true,
+        }
+    }
 }
 
 impl Encode for StorageType {
@@ -303,6 +354,12 @@ impl RefType {
     pub const EXTERNREF: RefType = RefType {
         nullable: true,
         heap_type: HeapType::Extern,
+    };
+
+    /// Alias for the `exnref` type in WebAssembly
+    pub const EXNREF: RefType = RefType {
+        nullable: true,
+        heap_type: HeapType::Exn,
     };
 }
 
@@ -393,6 +450,9 @@ pub enum HeapType {
     /// The unboxed `i31` heap type.
     I31,
 
+    /// The abstract` exception` heap type.
+    Exn,
+
     /// A concrete Wasm-defined type at the given index.
     Concrete(u32),
 }
@@ -410,6 +470,7 @@ impl Encode for HeapType {
             HeapType::Struct => sink.push(0x6B),
             HeapType::Array => sink.push(0x6A),
             HeapType::I31 => sink.push(0x6C),
+            HeapType::Exn => sink.push(0x69),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
             HeapType::Concrete(i) => i64::from(*i).encode(sink),
@@ -434,6 +495,7 @@ impl TryFrom<wasmparser::HeapType> for HeapType {
             wasmparser::HeapType::Struct => HeapType::Struct,
             wasmparser::HeapType::Array => HeapType::Array,
             wasmparser::HeapType::I31 => HeapType::I31,
+            wasmparser::HeapType::Exn => HeapType::Exn,
         })
     }
 }

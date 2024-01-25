@@ -38,30 +38,16 @@ excluded_tests = []
 directive = "; test-also=--no-avx; skip-variant-if: --no-avx, !getBuildConfiguration('x86') && !getBuildConfiguration('x64') || getBuildConfiguration('simulator')"
 
 [[repos]]
-name = "threads"
-url = "https://github.com/WebAssembly/threads"
-branch = "main"
-parent = "spec"
-excluded_tests = [
-  "atomic.wast",
-  # testing that multi-value isn't implemented (func.wast:492)
-  "func.wast",
-  # testing that multi-value isn't implemented (type.wast:52)
-  "type.wast"
-]
-# Skip in WPT where we can't guard on features being enabled
-skip_wpt = true
-# Skip in jit-test when it's not enabled
-directive = "; skip-if: !wasmThreadsEnabled()"
-
-[[repos]]
 name = "exception-handling"
 url = "https://github.com/WebAssembly/exception-handling"
 branch = "main"
 parent = "spec"
 # Skip in jit-test when it's not enabled
-directive = "; --wasm-exceptions; skip-if: !wasmExceptionsEnabled()"
-excluded_tests = []
+directive = "; --wasm-exceptions; --wasm-exnref; skip-if: !wasmExceptionsEnabled()"
+excluded_tests = [
+  # harness doesn't support exnref, because JS-API globals can't use it
+  "ref_null.wast.js"
+]
 
 [[repos]]
 name = "memory64"

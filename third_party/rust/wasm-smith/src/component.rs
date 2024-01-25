@@ -4,13 +4,12 @@
 // FIXME(#1000): component support in `wasm-smith` is a work in progress.
 #![allow(unused_variables, dead_code)]
 
-use crate::{arbitrary_loop, Config, DefaultConfig};
+use crate::{arbitrary_loop, Config};
 use arbitrary::{Arbitrary, Result, Unstructured};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::{
     collections::{HashMap, HashSet},
-    marker,
     rc::Rc,
 };
 use wasm_encoder::{ComponentTypeRef, ComponentValType, PrimitiveValType, TypeBounds, ValType};
@@ -26,11 +25,10 @@ mod encode;
 ///
 /// ## Configured Generated Components
 ///
-/// This uses the [`DefaultConfig`][crate::DefaultConfig] configuration. If you
-/// want to customize the shape of generated components, define your own
-/// configuration type, implement the [`Config`][crate::Config] trait for it,
-/// and use [`ConfiguredComponent<YourConfigType>`][crate::ConfiguredComponent]
-/// instead of plain `Component`.
+/// The `Arbitrary` implementation uses the [`Config::default()`][crate::Config]
+/// configuration. If you want to customize the shape of generated components,
+/// create your own [`Config`][crate::Config] instance and pass it to
+/// [`Component::new`][crate::Component::new].
 #[derive(Debug)]
 pub struct Component {
     sections: Vec<Section>,
@@ -47,7 +45,7 @@ pub struct Component {
 /// bytes.
 #[derive(Debug)]
 struct ComponentBuilder {
-    config: Rc<dyn Config>,
+    config: Config,
 
     // The set of core `valtype`s that we are configured to generate.
     core_valtypes: Vec<ValType>,
@@ -310,35 +308,7 @@ impl TypesScope {
 
 impl<'a> Arbitrary<'a> for Component {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        Ok(ConfiguredComponent::<DefaultConfig>::arbitrary(u)?.component)
-    }
-}
-
-/// A pseudo-random generated Wasm component with custom configuration.
-///
-/// If you don't care about custom configuration, use
-/// [`Component`][crate::Component] instead.
-///
-/// For details on configuring, see the [`Config`][crate::Config] trait.
-#[derive(Debug)]
-pub struct ConfiguredComponent<C> {
-    /// The generated component, controlled by the configuration of `C` in the
-    /// `Arbitrary` implementation.
-    pub component: Component,
-    _marker: marker::PhantomData<C>,
-}
-
-impl<'a, C> Arbitrary<'a> for ConfiguredComponent<C>
-where
-    C: Config + Arbitrary<'a>,
-{
-    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        let config = C::arbitrary(u)?;
-        let component = Component::new(config, u)?;
-        Ok(ConfiguredComponent {
-            component,
-            _marker: marker::PhantomData,
-        })
+        Component::new(Config::default(), u)
     }
 }
 
@@ -353,8 +323,8 @@ struct EntityCounts {
 
 impl Component {
     /// Construct a new `Component` using the given configuration.
-    pub fn new(config: impl Config, u: &mut Unstructured) -> Result<Self> {
-        let mut builder = ComponentBuilder::new(Rc::new(config));
+    pub fn new(config: Config, u: &mut Unstructured) -> Result<Self> {
+        let mut builder = ComponentBuilder::new(config);
         builder.build(u)
     }
 
@@ -381,7 +351,7 @@ impl Step {
 }
 
 impl ComponentBuilder {
-    fn new(config: Rc<dyn Config>) -> Self {
+    fn new(config: Config) -> Self {
         ComponentBuilder {
             config,
             core_valtypes: vec![],
@@ -396,7 +366,7 @@ impl ComponentBuilder {
     }
 
     fn build(&mut self, u: &mut Unstructured) -> Result<Component> {
-        self.core_valtypes = crate::core::configured_valtypes(&*self.config);
+        self.core_valtypes = crate::core::configured_valtypes(&self.config);
 
         let mut choices: Vec<fn(&mut ComponentBuilder, &mut Unstructured) -> Result<Step>> = vec![];
 
@@ -417,12 +387,12 @@ impl ComponentBuilder {
                 choices.push(Self::arbitrary_import_section);
                 choices.push(Self::arbitrary_canonical_section);
 
-                if self.total_modules < self.config.max_modules() {
+                if self.total_modules < self.config.max_modules {
                     choices.push(Self::arbitrary_core_module_section);
                 }
 
-                if self.components.len() < self.config.max_nesting_depth()
-                    && self.total_components < self.config.max_components()
+                if self.components.len() < self.config.max_nesting_depth
+                    && self.total_components < self.config.max_components
                 {
                     choices.push(Self::arbitrary_component_section);
                 }
@@ -455,13 +425,13 @@ impl ComponentBuilder {
         // Ensure we've generated all of our minimums.
         self.fill_minimums = true;
         {
-            if self.current_type_scope().types.len() < self.config.min_types() {
+            if self.current_type_scope().types.len() < self.config.min_types {
                 self.arbitrary_type_section(u)?.unwrap_still_building();
             }
-            if self.component().num_imports < self.config.min_imports() {
+            if self.component().num_imports < self.config.min_imports {
                 self.arbitrary_import_section(u)?.unwrap_still_building();
             }
-            if self.component().funcs.len() < self.config.min_funcs() {
+            if self.component().funcs.len() < self.config.min_funcs {
                 self.arbitrary_canonical_section(u)?.unwrap_still_building();
             }
         }
@@ -471,10 +441,6 @@ impl ComponentBuilder {
             .pop()
             .expect("should have a types scope for the component we are finishing");
         Ok(Step::Finished(self.components.pop().unwrap().component))
-    }
-
-    fn config(&self) -> &dyn Config {
-        &*self.config
     }
 
     fn component(&self) -> &ComponentContext {
@@ -545,16 +511,16 @@ impl ComponentBuilder {
 
         let min = if self.fill_minimums {
             self.config
-                .min_types()
+                .min_types
                 .saturating_sub(self.current_type_scope().types.len())
         } else {
             0
         };
 
-        let max = self.config.max_types() - self.current_type_scope().types.len();
+        let max = self.config.max_types - self.current_type_scope().types.len();
 
         arbitrary_loop(u, min, max, |u| {
-            let mut type_fuel = self.config.max_type_size();
+            let mut type_fuel = self.config.max_type_size;
             let ty = self.arbitrary_core_type(u, &mut type_fuel)?;
             self.push_core_type(ty);
             Ok(true)
@@ -576,12 +542,14 @@ impl ComponentBuilder {
         let ty = match u.int_in_range::<u8>(0..=1)? {
             0 => CoreType::Func(crate::core::arbitrary_func_type(
                 u,
+                &self.config,
                 &self.core_valtypes,
-                if self.config.multi_value_enabled() {
+                if self.config.multi_value_enabled {
                     None
                 } else {
                     Some(1)
                 },
+                0,
             )?),
             1 => CoreType::Module(self.arbitrary_module_type(u, type_fuel)?),
             _ => unreachable!(),
@@ -594,16 +562,16 @@ impl ComponentBuilder {
 
         let min = if self.fill_minimums {
             self.config
-                .min_types()
+                .min_types
                 .saturating_sub(self.current_type_scope().types.len())
         } else {
             0
         };
 
-        let max = self.config.max_types() - self.current_type_scope().types.len();
+        let max = self.config.max_types - self.current_type_scope().types.len();
 
         arbitrary_loop(u, min, max, |u| {
-            let mut type_fuel = self.config.max_type_size();
+            let mut type_fuel = self.config.max_type_size;
             let ty = self.arbitrary_type(u, &mut type_fuel)?;
             self.push_type(ty);
             Ok(true)
@@ -622,7 +590,7 @@ impl ComponentBuilder {
         let scope = self.current_type_scope();
 
         if !scope.module_types.is_empty()
-            && (for_type_def || !for_import || self.total_modules < self.config.max_modules())
+            && (for_type_def || !for_import || self.total_modules < self.config.max_modules)
         {
             choices.push(|me, u| {
                 Ok(ComponentTypeRef::Module(
@@ -634,7 +602,7 @@ impl ComponentBuilder {
         // Types cannot be imported currently
         if !for_import
             && !scope.types.is_empty()
-            && (for_type_def || scope.types.len() < self.config.max_types())
+            && (for_type_def || scope.types.len() < self.config.max_types)
         {
             choices.push(|me, u| {
                 Ok(ComponentTypeRef::Type(TypeBounds::Eq(u.int_in_range(
@@ -650,9 +618,7 @@ impl ComponentBuilder {
         // }
 
         if !scope.func_types.is_empty()
-            && (for_type_def
-                || !for_import
-                || self.component().num_funcs() < self.config.max_funcs())
+            && (for_type_def || !for_import || self.component().num_funcs() < self.config.max_funcs)
         {
             choices.push(|me, u| {
                 Ok(ComponentTypeRef::Func(
@@ -662,7 +628,7 @@ impl ComponentBuilder {
         }
 
         if !scope.component_types.is_empty()
-            && (for_type_def || !for_import || self.total_components < self.config.max_components())
+            && (for_type_def || !for_import || self.total_components < self.config.max_components)
         {
             choices.push(|me, u| {
                 Ok(ComponentTypeRef::Component(
@@ -672,7 +638,7 @@ impl ComponentBuilder {
         }
 
         if !scope.instance_types.is_empty()
-            && (for_type_def || !for_import || self.total_instances < self.config.max_instances())
+            && (for_type_def || !for_import || self.total_instances < self.config.max_instances)
         {
             choices.push(|me, u| {
                 Ok(ComponentTypeRef::Instance(
@@ -726,7 +692,7 @@ impl ComponentBuilder {
         // randomly generating them is extremely unlikely.
 
         // `memory`
-        if counts.memories < self.config.max_memories() && u.ratio::<u8>(99, 100)? {
+        if counts.memories < self.config.max_memories && u.ratio::<u8>(99, 100)? {
             defs.push(ModuleTypeDef::Export(
                 "memory".into(),
                 crate::core::EntityType::Memory(self.arbitrary_core_memory_type(u)?),
@@ -737,8 +703,8 @@ impl ComponentBuilder {
         }
 
         // `canonical_abi_realloc`
-        if counts.funcs < self.config.max_funcs()
-            && types.len() < self.config.max_types()
+        if counts.funcs < self.config.max_funcs
+            && types.len() < self.config.max_types
             && u.ratio::<u8>(99, 100)?
         {
             let realloc_ty = Rc::new(crate::core::FuncType {
@@ -747,7 +713,7 @@ impl ComponentBuilder {
             });
             let ty_idx = u32::try_from(types.len()).unwrap();
             types.push(realloc_ty.clone());
-            defs.push(ModuleTypeDef::TypeDef(crate::core::Type::Func(
+            defs.push(ModuleTypeDef::TypeDef(crate::core::CompositeType::Func(
                 realloc_ty.clone(),
             )));
             defs.push(ModuleTypeDef::Export(
@@ -760,8 +726,8 @@ impl ComponentBuilder {
         }
 
         // `canonical_abi_free`
-        if counts.funcs < self.config.max_funcs()
-            && types.len() < self.config.max_types()
+        if counts.funcs < self.config.max_funcs
+            && types.len() < self.config.max_types
             && u.ratio::<u8>(99, 100)?
         {
             let free_ty = Rc::new(crate::core::FuncType {
@@ -770,7 +736,7 @@ impl ComponentBuilder {
             });
             let ty_idx = u32::try_from(types.len()).unwrap();
             types.push(free_ty.clone());
-            defs.push(ModuleTypeDef::TypeDef(crate::core::Type::Func(
+            defs.push(ModuleTypeDef::TypeDef(crate::core::CompositeType::Func(
                 free_ty.clone(),
             )));
             defs.push(ModuleTypeDef::Export(
@@ -797,7 +763,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            let max_choice = if types.len() < self.config.max_types() {
+            let max_choice = if types.len() < self.config.max_types {
                 // Check if the parent scope has core function types to alias
                 if !types.is_empty()
                     || (!self.types.is_empty()
@@ -855,15 +821,17 @@ impl ComponentBuilder {
                 2 => {
                     let ty = crate::core::arbitrary_func_type(
                         u,
+                        &self.config,
                         &self.core_valtypes,
-                        if self.config.multi_value_enabled() {
+                        if self.config.multi_value_enabled {
                             None
                         } else {
                             Some(1)
                         },
+                        0,
                     )?;
                     types.push(ty.clone());
-                    defs.push(ModuleTypeDef::TypeDef(crate::core::Type::Func(ty)));
+                    defs.push(ModuleTypeDef::TypeDef(crate::core::CompositeType::Func(ty)));
                 }
 
                 // Alias
@@ -910,7 +878,7 @@ impl ComponentBuilder {
     ) -> Result<Option<crate::core::EntityType>> {
         choices.clear();
 
-        if counts.globals < self.config.max_globals() {
+        if counts.globals < self.config.max_globals {
             choices.push(|c, u, counts, _types| {
                 counts.globals += 1;
                 Ok(crate::core::EntityType::Global(
@@ -919,7 +887,7 @@ impl ComponentBuilder {
             });
         }
 
-        if counts.tables < self.config.max_tables() {
+        if counts.tables < self.config.max_tables {
             choices.push(|c, u, counts, _types| {
                 counts.tables += 1;
                 Ok(crate::core::EntityType::Table(
@@ -928,7 +896,7 @@ impl ComponentBuilder {
             });
         }
 
-        if counts.memories < self.config.max_memories() {
+        if counts.memories < self.config.max_memories {
             choices.push(|c, u, counts, _types| {
                 counts.memories += 1;
                 Ok(crate::core::EntityType::Memory(
@@ -938,8 +906,8 @@ impl ComponentBuilder {
         }
 
         if types.iter().any(|ty| ty.results.is_empty())
-            && self.config.exceptions_enabled()
-            && counts.tags < self.config.max_tags()
+            && self.config.exceptions_enabled
+            && counts.tags < self.config.max_tags
         {
             choices.push(|c, u, counts, types| {
                 counts.tags += 1;
@@ -957,7 +925,7 @@ impl ComponentBuilder {
             });
         }
 
-        if !types.is_empty() && counts.funcs < self.config.max_funcs() {
+        if !types.is_empty() && counts.funcs < self.config.max_funcs {
             choices.push(|c, u, counts, types| {
                 counts.funcs += 1;
                 let ty_idx = u.int_in_range(0..=u32::try_from(types.len() - 1).unwrap())?;
@@ -987,11 +955,11 @@ impl ComponentBuilder {
     }
 
     fn arbitrary_core_table_type(&self, u: &mut Unstructured) -> Result<crate::core::TableType> {
-        crate::core::arbitrary_table_type(u, self.config())
+        crate::core::arbitrary_table_type(u, &self.config)
     }
 
     fn arbitrary_core_memory_type(&self, u: &mut Unstructured) -> Result<crate::core::MemoryType> {
-        crate::core::arbitrary_memtype(u, self.config())
+        crate::core::arbitrary_memtype(u, &self.config)
     }
 
     fn with_types_scope<T>(&mut self, f: impl FnOnce(&mut Self) -> Result<T>) -> Result<T> {
@@ -1159,7 +1127,7 @@ impl ComponentBuilder {
         });
 
         // Type definition.
-        if self.types.len() < self.config.max_nesting_depth() {
+        if self.types.len() < self.config.max_nesting_depth {
             choices.push(|me, _exports, _export_urls, u, type_fuel| {
                 let ty = me.arbitrary_type(u, type_fuel)?;
                 me.current_type_scope_mut().push(ty.clone());
@@ -1618,14 +1586,14 @@ impl ComponentBuilder {
 
         let min = if self.fill_minimums {
             self.config
-                .min_imports()
+                .min_imports
                 .saturating_sub(self.component().num_imports)
         } else {
             // Allow generating empty sections. We can always fill in the required
             // minimum later.
             0
         };
-        let max = self.config.max_imports() - self.component().num_imports;
+        let max = self.config.max_imports - self.component().num_imports;
 
         crate::arbitrary_loop(u, min, max, |u| {
             match self.arbitrary_type_ref(u, true, false)? {
@@ -1656,14 +1624,14 @@ impl ComponentBuilder {
 
         let min = if self.fill_minimums {
             self.config
-                .min_funcs()
+                .min_funcs
                 .saturating_sub(self.component().funcs.len())
         } else {
             // Allow generating empty sections. We can always fill in the
             // required minimum later.
             0
         };
-        let max = self.config.max_funcs() - self.component().funcs.len();
+        let max = self.config.max_funcs - self.component().funcs.len();
 
         let mut choices: Vec<fn(&mut Unstructured, &mut ComponentBuilder) -> Result<Option<Func>>> =
             Vec::with_capacity(2);
@@ -1722,7 +1690,7 @@ impl ComponentBuilder {
                         // definitions arbitrarily.
                         debug_assert!(!indices.is_empty());
                         *u.choose(indices)?
-                    } else if c.current_type_scope().types.len() < c.config.max_types() {
+                    } else if c.current_type_scope().types.len() < c.config.max_types {
                         // If we haven't already defined this component function
                         // type, and we haven't defined the configured maximum
                         // amount of types yet, then just define this type.
@@ -1758,9 +1726,8 @@ impl ComponentBuilder {
     }
 
     fn arbitrary_core_module_section(&mut self, u: &mut Unstructured) -> Result<Step> {
-        let config: Rc<dyn Config> = Rc::clone(&self.config);
         let module = crate::core::Module::new_internal(
-            config,
+            self.config.clone(),
             u,
             crate::core::DuplicateImportsBehavior::Disallowed,
         )?;
@@ -1937,7 +1904,7 @@ struct ModuleType {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum ModuleTypeDef {
-    TypeDef(crate::core::Type),
+    TypeDef(crate::core::CompositeType),
     Import(crate::core::Import),
     OuterAlias {
         count: u32,

@@ -119,10 +119,10 @@ assert_return(() => invoke($2, `set_get`, [1, value("f32", 7)]), [value("f32", 7
 assert_return(() => invoke($2, `len`, []), [value("i32", 3)]);
 
 // ./test/core/gc/array.wast:103
-assert_trap(() => invoke($2, `get`, [10]), `out of bounds`);
+assert_trap(() => invoke($2, `get`, [10]), `out of bounds array access`);
 
 // ./test/core/gc/array.wast:104
-assert_trap(() => invoke($2, `set_get`, [10, value("f32", 7)]), `out of bounds`);
+assert_trap(() => invoke($2, `set_get`, [10, value("f32", 7)]), `out of bounds array access`);
 
 // ./test/core/gc/array.wast:106
 let $3 = instantiate(`(module
@@ -177,27 +177,34 @@ assert_return(() => invoke($3, `set_get`, [1, value("f32", 7)]), [value("f32", 7
 assert_return(() => invoke($3, `len`, []), [value("i32", 2)]);
 
 // ./test/core/gc/array.wast:148
-assert_trap(() => invoke($3, `get`, [10]), `out of bounds`);
+assert_trap(() => invoke($3, `get`, [10]), `out of bounds array access`);
 
 // ./test/core/gc/array.wast:149
-assert_trap(() => invoke($3, `set_get`, [10, value("f32", 7)]), `out of bounds`);
+assert_trap(() => invoke($3, `set_get`, [10, value("f32", 7)]), `out of bounds array access`);
 
 // ./test/core/gc/array.wast:151
 let $4 = instantiate(`(module
   (type $$vec (array i8))
   (type $$mvec (array (mut i8)))
 
-  (data $$d "\\00\\01\\02\\03\\04")
+  (data $$d "\\00\\01\\02\\ff\\04")
 
   (func $$new (export "new") (result (ref $$vec))
     (array.new_data $$vec $$d (i32.const 1) (i32.const 3))
   )
 
-  (func $$get (param $$i i32) (param $$v (ref $$vec)) (result i32)
+  (func $$get_u (param $$i i32) (param $$v (ref $$vec)) (result i32)
     (array.get_u $$vec (local.get $$v) (local.get $$i))
   )
-  (func (export "get") (param $$i i32) (result i32)
-    (call $$get (local.get $$i) (call $$new))
+  (func (export "get_u") (param $$i i32) (result i32)
+    (call $$get_u (local.get $$i) (call $$new))
+  )
+
+  (func $$get_s (param $$i i32) (param $$v (ref $$vec)) (result i32)
+    (array.get_s $$vec (local.get $$v) (local.get $$i))
+  )
+  (func (export "get_s") (param $$i i32) (result i32)
+    (call $$get_s (local.get $$i) (call $$new))
   )
 
   (func $$set_get (param $$i i32) (param $$v (ref $$mvec)) (param $$y i32) (result i32)
@@ -219,28 +226,34 @@ let $4 = instantiate(`(module
   )
 )`);
 
-// ./test/core/gc/array.wast:187
+// ./test/core/gc/array.wast:194
 assert_return(() => invoke($4, `new`, []), [new RefWithType('arrayref')]);
 
-// ./test/core/gc/array.wast:188
+// ./test/core/gc/array.wast:195
 assert_return(() => invoke($4, `new`, []), [new RefWithType('eqref')]);
 
-// ./test/core/gc/array.wast:189
-assert_return(() => invoke($4, `get`, [0]), [value("i32", 1)]);
+// ./test/core/gc/array.wast:196
+assert_return(() => invoke($4, `get_u`, [2]), [value("i32", 255)]);
 
-// ./test/core/gc/array.wast:190
+// ./test/core/gc/array.wast:197
+assert_return(() => invoke($4, `get_s`, [2]), [value("i32", -1)]);
+
+// ./test/core/gc/array.wast:198
 assert_return(() => invoke($4, `set_get`, [1, 7]), [value("i32", 7)]);
 
-// ./test/core/gc/array.wast:191
+// ./test/core/gc/array.wast:199
 assert_return(() => invoke($4, `len`, []), [value("i32", 3)]);
 
-// ./test/core/gc/array.wast:193
-assert_trap(() => invoke($4, `get`, [10]), `out of bounds`);
+// ./test/core/gc/array.wast:201
+assert_trap(() => invoke($4, `get_u`, [10]), `out of bounds array access`);
 
-// ./test/core/gc/array.wast:194
-assert_trap(() => invoke($4, `set_get`, [10, 7]), `out of bounds`);
+// ./test/core/gc/array.wast:202
+assert_trap(() => invoke($4, `get_s`, [10]), `out of bounds array access`);
 
-// ./test/core/gc/array.wast:196
+// ./test/core/gc/array.wast:203
+assert_trap(() => invoke($4, `set_get`, [10, 7]), `out of bounds array access`);
+
+// ./test/core/gc/array.wast:205
 let $5 = instantiate(`(module
   (type $$bvec (array i8))
   (type $$vec (array (ref $$bvec)))
@@ -290,31 +303,31 @@ let $5 = instantiate(`(module
   )
 )`);
 
-// ./test/core/gc/array.wast:245
+// ./test/core/gc/array.wast:254
 assert_return(() => invoke($5, `new`, []), [new RefWithType('arrayref')]);
 
-// ./test/core/gc/array.wast:246
+// ./test/core/gc/array.wast:255
 assert_return(() => invoke($5, `new`, []), [new RefWithType('eqref')]);
 
-// ./test/core/gc/array.wast:247
+// ./test/core/gc/array.wast:256
 assert_return(() => invoke($5, `get`, [0, 0]), [value("i32", 7)]);
 
-// ./test/core/gc/array.wast:248
+// ./test/core/gc/array.wast:257
 assert_return(() => invoke($5, `get`, [1, 0]), [value("i32", 1)]);
 
-// ./test/core/gc/array.wast:249
+// ./test/core/gc/array.wast:258
 assert_return(() => invoke($5, `set_get`, [0, 1, 1]), [value("i32", 2)]);
 
-// ./test/core/gc/array.wast:250
+// ./test/core/gc/array.wast:259
 assert_return(() => invoke($5, `len`, []), [value("i32", 2)]);
 
-// ./test/core/gc/array.wast:252
-assert_trap(() => invoke($5, `get`, [10, 0]), `out of bounds`);
+// ./test/core/gc/array.wast:261
+assert_trap(() => invoke($5, `get`, [10, 0]), `out of bounds array access`);
 
-// ./test/core/gc/array.wast:253
-assert_trap(() => invoke($5, `set_get`, [10, 0, 0]), `out of bounds`);
+// ./test/core/gc/array.wast:262
+assert_trap(() => invoke($5, `set_get`, [10, 0, 0]), `out of bounds array access`);
 
-// ./test/core/gc/array.wast:255
+// ./test/core/gc/array.wast:264
 assert_invalid(
   () => instantiate(`(module
     (type $$a (array i64))
@@ -325,7 +338,7 @@ assert_invalid(
   `array is immutable`,
 );
 
-// ./test/core/gc/array.wast:265
+// ./test/core/gc/array.wast:274
 assert_invalid(
   () => instantiate(`(module
     (type $$bvec (array i8))
@@ -339,7 +352,7 @@ assert_invalid(
   `constant expression required`,
 );
 
-// ./test/core/gc/array.wast:278
+// ./test/core/gc/array.wast:287
 assert_invalid(
   () => instantiate(`(module
     (type $$bvec (array i8))
@@ -354,7 +367,7 @@ assert_invalid(
   `constant expression required`,
 );
 
-// ./test/core/gc/array.wast:295
+// ./test/core/gc/array.wast:304
 let $6 = instantiate(`(module
   (type $$t (array (mut i32)))
   (func (export "array.get-null")
@@ -365,8 +378,8 @@ let $6 = instantiate(`(module
   )
 )`);
 
-// ./test/core/gc/array.wast:305
-assert_trap(() => invoke($6, `array.get-null`, []), `null array`);
+// ./test/core/gc/array.wast:314
+assert_trap(() => invoke($6, `array.get-null`, []), `null array reference`);
 
-// ./test/core/gc/array.wast:306
-assert_trap(() => invoke($6, `array.set-null`, []), `null array`);
+// ./test/core/gc/array.wast:315
+assert_trap(() => invoke($6, `array.set-null`, []), `null array reference`);

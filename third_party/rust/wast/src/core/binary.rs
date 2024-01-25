@@ -933,6 +933,7 @@ fn find_names<'a>(
                         | Instruction::Block(block)
                         | Instruction::Loop(block)
                         | Instruction::Try(block)
+                        | Instruction::TryTable(TryTable { block, .. })
                         | Instruction::Let(LetType { block, .. }) => {
                             if let Some(name) = get_name(&block.label, &block.label_name) {
                                 label_names.push((label_idx, name));
@@ -969,7 +970,8 @@ impl Names<'_> {
             && self.types.is_empty()
             && self.data.is_empty()
             && self.elems.is_empty()
-        // NB: specifically don't check tags/modules/instances since they're
+            && self.tags.is_empty()
+        // NB: specifically don't check modules/instances since they're
         // not encoded for now.
     }
 }
@@ -1023,6 +1025,10 @@ impl Encode for Names<'_> {
         if self.data.len() > 0 {
             self.data.encode(&mut tmp);
             subsec(9, &mut tmp);
+        }
+        if self.tags.len() > 0 {
+            self.tags.encode(&mut tmp);
+            subsec(11, &mut tmp);
         }
     }
 }
