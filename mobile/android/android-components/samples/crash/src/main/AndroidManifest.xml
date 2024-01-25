@@ -7,6 +7,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name="org.mozilla.samples.crash.CrashApplication"
@@ -33,6 +34,7 @@
         <activity android:name="org.mozilla.samples.crash.CrashListActivity" android:exported="false" />
 
         <service android:name="org.mozilla.samples.crash.CrashService"
+            android:foregroundServiceType="specialUse"
             android:process=":samples.crash.service" />
     </application>
 </manifest>
