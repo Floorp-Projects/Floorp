@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <utility>
+#include "ErrorList.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
@@ -66,6 +67,8 @@ class WorkerRunnable : public nsIRunnable
   // method. Avoids infinite recursion when a subclass calls Run() from inside
   // Cancel(). Only checked and modified on the target thread.
   bool mCallingCancelWithinRun;
+  // Whether we are calling WorkerRunnable::Run directly.
+  bool mCallingWithoutNesting;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -92,6 +95,12 @@ class WorkerRunnable : public nsIRunnable
 
   static WorkerRunnable* FromRunnable(nsIRunnable* aRunnable);
 
+  // Calling Run() directly is not supported. Just call Dispatch() and
+  // WorkerRun() will be called on the correct thread automatically.
+  // Used only for control and debuggee runnables to signal a direct call to
+  // Run from WorkerPrivate::DoRunLoop.
+  nsresult RunDirectly();
+
  protected:
   WorkerRunnable(WorkerPrivate* aWorkerPrivate,
                  const char* aName = "WorkerRunnable",
@@ -104,7 +113,8 @@ class WorkerRunnable : public nsIRunnable
 #  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
         mName(aName),
 #  endif
-        mCallingCancelWithinRun(false) {
+        mCallingCancelWithinRun(false),
+        mCallingWithoutNesting(false) {
   }
 #endif
 
