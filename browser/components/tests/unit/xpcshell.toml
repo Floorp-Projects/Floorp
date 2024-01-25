@@ -1,7 +1,7 @@
 [DEFAULT]
 head = "head.js"
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 support-files = ["distribution.ini"]
 
 ["test_browserGlue_migration_ctrltab_recently_used_order.js"]

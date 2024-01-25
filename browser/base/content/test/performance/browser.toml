@@ -88,7 +88,7 @@ skip-if = [
 ["browser_tabstrip_overflow_underflow.js"]
 skip-if = [
   "os == 'win' && verify && !debug",
-  "os == 'win' && bits == 32",
+  "win11_2009 && bits == 32",
 ]
 
 ["browser_tabswitch.js"]
@@ -97,13 +97,13 @@ skip-if = ["os == 'win'"] #Bug 1455054
 ["browser_toolbariconcolor_restyles.js"]
 
 ["browser_urlbar_keyed_search.js"]
-skip-if = ["os == 'win' && bits == 32"] # # Disabled on Win32 because of intermittent OOM failures (bug 1448241)
+skip-if = ["win11_2009 && bits == 32"] # # Disabled on Win32 because of intermittent OOM failures (bug 1448241)
 
 ["browser_urlbar_search.js"]
 skip-if = [
   "os == 'linux' && (debug || ccov)", # Disabled on Linux debug and ccov due to intermittent timeouts. Bug 1414126.
   "os == 'win' && (debug || ccov)", # Disabled on Windows debug and ccov due to intermittent timeouts. bug 1426611.
-  "os == 'win' && bits == 32",
+  "win11_2009 && bits == 32",
 ]
 
 ["browser_vsync_accessibility.js"]

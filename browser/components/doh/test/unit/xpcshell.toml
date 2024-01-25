@@ -1,5 +1,5 @@
 [DEFAULT]
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 head = "head.js"
 firefox-appdir = "browser"
 support-files = ["../../../../../netwerk/test/unit/http2-ca.pem"]

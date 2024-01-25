@@ -167,7 +167,7 @@ skip-if = [
   "release_or_beta",
   "apple_catalina", # Bug 1713329
   "apple_silicon",  # bug 1707747
-  "os == 'win' && bits == 32 && !debug",  # Bug 1781452
+  "win11_2009 && bits == 32 && !debug",  # Bug 1781452
   "os == 'linux' && !debug",  # Bug 1781452
 ]
 run-sequentially = "very high failure rate in parallel"

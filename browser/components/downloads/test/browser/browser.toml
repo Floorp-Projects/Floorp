@@ -43,8 +43,7 @@ support-files = ["test_spammy_page.html"]
 
 ["browser_downloads_panel_context_menu.js"]
 skip-if = [
-  "os == 'win' && os_version == '10.0' && bits == 64 && !debug", # Bug 1719949
-  "win10_2004 && bits == 32 && debug", # Bug 1727925
+  "win10_2009 && bits == 64 && !debug", # Bug 1719949
 ]
 
 ["browser_downloads_panel_ctrl_click.js"]

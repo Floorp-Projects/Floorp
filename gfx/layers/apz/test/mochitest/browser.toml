@@ -27,7 +27,7 @@ support-files = ["helper_content_response_timeout.html"]
 
 ["browser_test_group_fission.js"]
 skip-if = [
-  "os == 'win' && bits == 32", # intermittent failures on win7/32, still run on win11/32
+  "win11_2009 && bits == 32", # intermittent failures on on win11/32
   "os == 'linux' && bits == 64", # Bug 1773830
 ]
 support-files = [

@@ -8,9 +8,8 @@ support-files = [
 ["browser_bug797677.js"]
 
 ["browser_enable_DRM_prompt.js"]
-skip-if = ["(os == 'win' && processor == 'aarch64')"] # bug 1533164
 
 ["browser_globalplugin_crashinfobar.js"]
-skip-if = ["!crashreporter"]
+run-if = ["crashreporter"]
 
 ["browser_private_browsing_eme_persistent_state.js"]

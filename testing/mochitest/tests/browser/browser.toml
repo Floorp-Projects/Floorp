@@ -16,9 +16,6 @@ skip-if = [
 https_first_disabled = true
 
 ['browser_document_builder_sjs.js']
-skip-if = [
-  "os == 'win' && os_version == '6.1'",  # Skip on Azure - frequent failure
-]
 
 ['browser_fail.js']
 skip-if = [

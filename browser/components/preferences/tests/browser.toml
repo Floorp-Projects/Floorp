@@ -49,7 +49,7 @@ support-files = ["browser_bug1184989_prevent_scrolling_when_preferences_flipped.
 ["browser_cert_export.js"]
 
 ["browser_change_app_handler.js"]
-skip-if = ["os != 'win'"] # Windows-specific handler application selection dialog
+run-if = ["os == 'win'"] # Windows-specific handler application selection dialog
 
 ["browser_checkspelling.js"]
 
@@ -58,7 +58,10 @@ skip-if = ["os != 'win'"] # Windows-specific handler application selection dialo
 ["browser_connection_bug1445991.js"]
 
 ["browser_connection_bug1505330.js"]
-skip-if = ["verify && debug && (os == 'linux' || os == 'mac')"]
+skip-if = [
+  "verify && debug && os == 'linux'",
+  "verify && debug && os == 'mac'",
+]
 
 ["browser_connection_bug388287.js"]
 
@@ -101,7 +104,8 @@ skip-if = [
 ["browser_extension_controlled.js"]
 skip-if = [
   "tsan",
-  "ccov && (os == 'linux' || os == 'win')", # Linux: bug 1613530, Windows: bug 1437051
+  "ccov && os == 'linux'", # Linux: bug 1613530
+  "ccov && os == 'win'", # Windows: bug 1437051
 ]
 
 ["browser_filetype_dialog.js"]
@@ -240,7 +244,6 @@ skip-if = ["tsan"] # Bug 1678829
 ["browser_search_subdialogs_within_preferences_site_data.js"]
 
 ["browser_search_within_preferences_1.js"]
-skip-if = ["os == 'win' && processor == 'aarch64'"] # Bug 1536560
 
 ["browser_search_within_preferences_2.js"]
 

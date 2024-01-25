@@ -128,7 +128,6 @@ skip-if = ["os == 'linux'"] # focusEditableField times out consistently on linux
 
 ["browser_rules_gridline-names-autocomplete.js"]
 skip-if = [
-  "win10_2004", # Bug 1723573
   "os == 'mac' && !debug", # Bug 1675592; high frequency with/out fission
 ]
 

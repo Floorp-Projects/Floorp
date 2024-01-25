@@ -2,9 +2,9 @@
 support-files = ["head.js"]
 
 ["browser_AttributionCode_Mac_telemetry.js"]
-skip-if = ["toolkit != 'cocoa'"] # macOS only telemetry.
+run-if = ["os == 'mac'"] # macOS only telemetry.
 
 ["browser_AttributionCode_telemetry.js"]
 # These tests only cover the attribution cache file - which only exists on
 # Windows.
-skip-if = ["os != 'win'"]
+run-if = ["os == 'win'"]

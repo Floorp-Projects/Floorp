@@ -17,13 +17,11 @@ prefs = [
 
 ["browser_abort_visibility.js"]
 skip-if = [
-  "win10_2004", # Test not relevant on 1903+
   "win11_2009", # Test not relevant on 1903+
 ]
 
 ["browser_fido_appid_extension.js"]
 skip-if = [
-  "win10_2004", # Test not relevant on 1903+
   "win11_2009", # Test not relevant on 1903+
 ]
 
@@ -33,6 +31,5 @@ skip-if = [
 
 ["browser_webauthn_prompts.js"]
 skip-if = [
-  "win10_2004", # Test not relevant on 1903+
   "win11_2009", # Test not relevant on 1903+
 ]

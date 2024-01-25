@@ -32,7 +32,6 @@ support-files = ["file_httpsfirst_speculative_connect.html"]
 support-files = ["file_mixed_content_console.html"]
 
 ["browser_mixed_content_download.js"]
-skip-if = ["win10_2004 && debug"] # Bug 1723573
 support-files = [
   "download_page.html",
   "download_server.sjs",

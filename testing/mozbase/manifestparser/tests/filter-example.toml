@@ -16,5 +16,5 @@ skip-if = [
   "os == 'win'",
 ]
 fail-if = [
-  "toolkit == 'cocoa'",
+  "os == 'mac'",
 ]

@@ -2,7 +2,7 @@
 head = "head_migration.js"
 tags = "condprof"
 firefox-appdir = "browser"
-skip-if = ["toolkit == 'android'"] # bug 1730213
+skip-if = ["os == 'android'"] # bug 1730213
 prefs = ["browser.migrate.showBookmarksToolbarAfterMigration=true"]
 support-files = [
   "Library/**",
@@ -33,7 +33,8 @@ run-if = ["os == 'linux'"]
 
 ["test_Chrome_credit_cards.js"]
 skip-if = [
-  "os != 'win' && os != 'mac'",
+  "os == 'linux'",
+  "os == 'android'",
   "condprof", # bug 1769154 - not realistic for condprof
 ]
 
@@ -46,13 +47,15 @@ skip-if = ["os != 'mac'"] # Relies on ULibDir
 
 ["test_Chrome_passwords.js"]
 skip-if = [
-  "os != 'win' && os != 'mac'",
+  "os == 'linux'",
+  "os == 'android'",
   "condprof", # bug 1769154 - not realistic for condprof
 ]
 
 ["test_Chrome_passwords_emptySource.js"]
 skip-if = [
-  "os != 'win' && os != 'mac'",
+  "os == 'linux'",
+  "os == 'android'",
   "condprof", # bug 1769154 - not realistic for condprof
 ]
 support-files = ["LibraryWithNoData/**"]

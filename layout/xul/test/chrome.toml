@@ -46,10 +46,8 @@ skip-if = ["os == 'linux'"] # No native mousedown event on Linux
 ["test_resizer_incontent.xhtml"]
 
 ["test_splitter.xhtml"]
-skip-if = ["toolkit == 'android'"] # no XUL theme
 
 ["test_splitter_sibling.xhtml"]
-skip-if = ["toolkit == 'android'"] # no XUL theme
 
 ["test_submenuClose.xhtml"]
 
