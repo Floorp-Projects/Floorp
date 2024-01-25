@@ -64,79 +64,17 @@ class OverOutElementsWrapper final : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
 
-  void ContentRemoved(nsIContent& aContent);
-  void WillDispatchOverAndEnterEvent(nsIContent* aOverEventTarget) {
-    mDeepestEnterEventTarget = aOverEventTarget;
-    // Store the first "over" event target we fire and don't refire "over" event
-    // to that element while the first "over" event is still ongoing.
-    mDispatchingOverEventTarget = aOverEventTarget;
-    mDeepestEnterEventTargetIsOverEventTarget = true;
-  }
-  void DidDispatchOverAndEnterEvent() { mDispatchingOverEventTarget = nullptr; }
-  [[nodiscard]] bool IsDispatchingOverEventOn(
-      nsIContent* aOverEventTarget) const {
-    MOZ_ASSERT(aOverEventTarget);
-    return mDeepestEnterEventTargetIsOverEventTarget &&
-           mDeepestEnterEventTarget == aOverEventTarget;
-  }
-  void WillDispatchOutAndOrLeaveEvent() {
-    // Store the first "out" event target or the deepest "leave" event target
-    // which we fire and don't refire "out" event to that element while the
-    // first "out" event is still ongoing.
-    mDispatchingOutOrDeepestLeaveEventTarget = mDeepestEnterEventTarget;
-  }
-  void DidDispatchOutAndOrLeaveEvent() {
-    mLastOverFrame = nullptr;
-    mDeepestEnterEventTarget = mDispatchingOutOrDeepestLeaveEventTarget =
-        nullptr;
-  }
-  [[nodiscard]] bool IsDispatchingOutEventOnLastOverEventTarget() const {
-    return mDispatchingOutOrDeepestLeaveEventTarget &&
-           mDispatchingOutOrDeepestLeaveEventTarget == mDeepestEnterEventTarget;
-  }
-  void OverrideOverEventTarget(nsIContent* aOverEventTarget) {
-    mDeepestEnterEventTarget = aOverEventTarget;
-    mDeepestEnterEventTargetIsOverEventTarget = true;
-  }
-
-  [[nodiscard]] nsIContent* GetDeepestLeaveEventTarget() const {
-    // The last deepest "enter" event targe (it may be same as the last "over"
-    // target) is the deepest "leave" event target.
-    return mDeepestEnterEventTarget;
-  }
-  [[nodiscard]] nsIContent* GetOutEventTarget() const {
-    // The last deepest "enter" event target is same as the "over" event target
-    // unless it's never been removed from the DOM tree.
-    return mDeepestEnterEventTargetIsOverEventTarget
-               ? mDeepestEnterEventTarget.get()
-               : nullptr;
-  }
-
- public:
   WeakFrame mLastOverFrame;
 
- private:
-  // The deepest event target of the last "enter" event.  If
-  // mDeepestEnterEventTargetIsOverEventTarget is true, this is the last "over"
-  // event target too.  If it's set to false, this is an ancestor of the last
-  // "over" event target which has not been removed from the DOM tree.
-  nsCOMPtr<nsIContent> mDeepestEnterEventTarget;
+  nsCOMPtr<nsIContent> mLastOverElement;
 
-  // While we're dispatching "over" and "enter" events, this is set to the
-  // "over" event target.  If it's removed from the DOM tree, this is set to
-  // nullptr.
-  nsCOMPtr<nsIContent> mDispatchingOverEventTarget;
+  // The last element on which we fired a over event, or null if
+  // the last over event we fired has finished processing.
+  nsCOMPtr<nsIContent> mFirstOverEventElement;
 
-  // While we're dispatching "out" and/or "leave" events, this is set to the
-  // "out" event target or the deepest leave event target.  If it's removed from
-  // the DOM tree, this is set to nullptr.
-  nsCOMPtr<nsIContent> mDispatchingOutOrDeepestLeaveEventTarget;
-
-  // Once the last "over" element is removed from the tree, this is set
-  // to false.  Then, mDeepestEnterEventTarget may be an ancestor of the
-  // "over" element which should be the deepest target of next "leave"
-  // element but shouldn't be target of "out" event.
-  bool mDeepestEnterEventTargetIsOverEventTarget = true;
+  // The last element on which we fired a out event, or null if
+  // the last out event we fired has finished processing.
+  nsCOMPtr<nsIContent> mFirstOutEventElement;
 };
 
 class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
@@ -1189,6 +1127,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore, ElementState aState,
                                   bool aAddState);
+  static void ResetLastOverForContent(
+      const uint32_t& aIdx, const RefPtr<OverOutElementsWrapper>& aChunk,
+      nsIContent* aClosure);
 
   /**
    * Update the attribute mLastRefPoint of the mouse event. It should be
