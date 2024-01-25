@@ -430,6 +430,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // immutable global. Otherwise this is always set to zero, and only imported
   // immutable globals are allowed.
   uint32_t maxInitializedGlobalsIndexPlus1_;
+  FeatureUsage featureUsage_;
 
 #ifdef DEBUG
   OpBytes op_;
@@ -545,6 +546,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
         d_(decoder),
         env_(env),
         maxInitializedGlobalsIndexPlus1_(0),
+        featureUsage_(FeatureUsage::None),
         op_(OpBytes(Op::Limit)),
         offsetOfLastReadOp_(0) {}
 #else
@@ -554,8 +556,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
         d_(decoder),
         env_(env),
         maxInitializedGlobalsIndexPlus1_(0),
+        featureUsage_(FeatureUsage::None),
         offsetOfLastReadOp_(0) {}
 #endif
+
+  FeatureUsage featureUsage() const { return featureUsage_; }
 
   // Return the decoding byte offset.
   uint32_t currentOffset() const { return d_.currentOffset(); }
@@ -1598,6 +1603,7 @@ inline bool OpIter<Policy>::readBrTable(Uint32Vector* depths,
 template <typename Policy>
 inline bool OpIter<Policy>::readTry(ResultType* paramType) {
   MOZ_ASSERT(Classify(op_) == OpKind::Try);
+  featureUsage_ |= FeatureUsage::LegacyExceptions;
 
   BlockType type;
   if (!readBlockType(&type)) {

@@ -618,6 +618,9 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
   AutoCreatedBy acb(masm_, "ModuleGenerator::linkCompiledCode");
   JitContext jcx;
 
+  // Combine observed features from the compiled code into the metadata
+  metadata_->featureUsage |= code.featureUsage;
+
   // Before merging in new code, if calls in a prior code range might go out of
   // range, insert far jumps to extend the range.
 

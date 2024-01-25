@@ -362,6 +362,7 @@ struct MetadataCacheablePod {
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   BuiltinModuleIds builtinModules;
+  FeatureUsage featureUsage;
   bool filenameIsURL;
   uint32_t typeDefsOffsetStart;
   uint32_t memoriesOffsetStart;
@@ -370,7 +371,7 @@ struct MetadataCacheablePod {
   uint32_t padding;
 
   WASM_CHECK_CACHEABLE_POD(kind, instanceDataLength, startFuncIndex,
-                           nameCustomSectionIndex, builtinModules,
+                           nameCustomSectionIndex, builtinModules, featureUsage,
                            filenameIsURL, typeDefsOffsetStart,
                            memoriesOffsetStart, tablesOffsetStart,
                            tagsOffsetStart)
@@ -378,6 +379,7 @@ struct MetadataCacheablePod {
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
         instanceDataLength(0),
+        featureUsage(FeatureUsage::None),
         filenameIsURL(false),
         typeDefsOffsetStart(UINT32_MAX),
         memoriesOffsetStart(UINT32_MAX),
