@@ -580,6 +580,21 @@ function assertSame(got, expected) {
     }
 }
 
+// assertEqResults([a,...],[b,...]) asserts that the two results from a wasm
+// call are the same. This will compare deeply inside the result array, and
+// relax a mismatch around single element arrays.
+//
+// This predicate is in this file because it is wasm-specific.
+function assertEqResults(got, expected) {
+    if (!Array.isArray(got)) {
+        got = [got];
+    }
+    if (!Array.isArray(expected)) {
+        expected = [expected];
+    }
+    assertSame(got, expected);
+}
+
 // TailCallIterations is selected to be large enough to trigger
 // "too much recursion", but not to be slow.
 var TailCallIterations = getBuildConfiguration("simulator") ? 1000 : 100000;
