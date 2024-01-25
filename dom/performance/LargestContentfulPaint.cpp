@@ -471,7 +471,7 @@ void LCPHelpers::CreateLCPEntryForImage(
   // We should never get here unless request is valid.
   MOZ_ASSERT(request);
 
-  bool taoPassed = request->IsData() || request->ShouldReportRenderTimeForLCP();
+  bool taoPassed = request->ShouldReportRenderTimeForLCP() || request->IsData();
   // https://wicg.github.io/element-timing/#report-image-element-timing
   // For TAO failed requests, the renderTime is exposed as 0 for
   // security reasons.
