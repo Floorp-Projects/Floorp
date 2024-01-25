@@ -809,7 +809,9 @@ class FixedLengthTypedArrayObjectTemplate
   using TypedArrayTemplate::protoKey;
 
   static inline const JSClass* instanceClass() {
-    return TypedArrayObject::classForType(ArrayTypeID());
+    static_assert(ArrayTypeID() <
+                  std::size(TypedArrayObject::fixedLengthClasses));
+    return &TypedArrayObject::fixedLengthClasses[ArrayTypeID()];
   }
 
   static TypedArrayObject* newBuiltinClassInstance(JSContext* cx,
