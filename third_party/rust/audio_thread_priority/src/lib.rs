@@ -609,6 +609,32 @@ mod tests {
             }
         }
         {
+            // Try larger values to test https://github.com/mozilla/audio_thread_priority/pull/23
+            match promote_current_thread_to_real_time(0, 192000) {
+                Ok(rt_prio_handle) => {
+                    demote_current_thread_from_real_time(rt_prio_handle).unwrap();
+                    assert!(true);
+                }
+                Err(e) => {
+                    eprintln!("{}", e);
+                    assert!(false);
+                }
+            }
+        }
+        {
+            // Try larger values to test https://github.com/mozilla/audio_thread_priority/pull/23
+            match promote_current_thread_to_real_time(8192, 48000) {
+                Ok(rt_prio_handle) => {
+                    demote_current_thread_from_real_time(rt_prio_handle).unwrap();
+                    assert!(true);
+                }
+                Err(e) => {
+                    eprintln!("{}", e);
+                    assert!(false);
+                }
+            }
+        }
+        {
             match promote_current_thread_to_real_time(512, 44100) {
                 Ok(_) => {
                     assert!(true);

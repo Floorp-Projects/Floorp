@@ -27,7 +27,7 @@ once_cell = "1.2.0"
 slab = "0.4"
 
 [dependencies.audio_thread_priority]
-version = "0.30"
+version = "0.31"
 default-features = false
 
 [dependencies.audioipc]

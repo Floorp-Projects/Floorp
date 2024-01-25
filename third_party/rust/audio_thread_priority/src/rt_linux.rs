@@ -271,7 +271,7 @@ pub fn set_real_time_hard_limit_internal(
         // 50ms slice. This "ought to be enough for anybody".
         audio_samplerate_hz / 20
     };
-    let budget_us = (buffer_frames * 1_000_000 / audio_samplerate_hz) as u64;
+    let budget_us = buffer_frames as u64 * 1_000_000 / audio_samplerate_hz as u64;
 
     // It's only necessary to set RLIMIT_RTTIME to something when in the child, skip it if it's a
     // remoting call.
