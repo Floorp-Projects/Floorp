@@ -190,19 +190,13 @@ class SearchConfigTest {
   }
 
   async _getEngines(region, locale) {
-    let engines = [];
     let configs = await engineSelector.fetchEngineConfiguration({
       locale,
       region: region || "default",
       channel: SearchUtils.MODIFIED_APP_CHANNEL,
     });
-    for (let config of configs.engines) {
-      let engine = await Services.search.wrappedJSObject._makeEngineFromConfig(
-        config
-      );
-      engines.push(engine);
-    }
-    return engines;
+
+    return SearchTestUtils.searchConfigToEngines(configs.engines);
   }
 
   /**

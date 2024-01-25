@@ -31,8 +31,12 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   The engine config from Remote Settings.
    */
   constructor(config) {
-    let extensionId = config.identifier;
-    let id = config.identifier;
+    // TODO Bug 1875912 - Remove the webextension.id and webextension.locale when
+    // we're ready to remove old search-config and use search-config-v2 for all
+    // clients. The id in appProvidedSearchEngine should be changed to
+    // engine.identifier.
+    let extensionId = config.webExtension.id;
+    let id = config.webExtension.id + config.webExtension.locale;
 
     super({
       loadPath: "[app]" + extensionId,
@@ -41,7 +45,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
     });
 
     this._extensionID = extensionId;
-    this._locale = "default";
+    this._locale = config.webExtension.locale;
 
     this.#init(config);
   }
@@ -61,7 +65,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
   update({ locale, configuration } = {}) {
     this._urls = [];
     this._iconMapObj = null;
-    this.#init(locale, configuration);
+    this.#init(configuration);
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
