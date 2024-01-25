@@ -11012,6 +11012,21 @@
   value: 8000
   mirror: always
 
+- name: memory.phc.avg_delay.first
+  type: uint32_t
+  value: 65536
+  mirror: always
+
+- name: memory.phc.avg_delay.normal
+  type: uint32_t
+  value: 16384
+  mirror: always
+
+- name: memory.phc.avg_delay.page_reuse
+  type: uint32_t
+  value: 262144
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
 #---------------------------------------------------------------------------
