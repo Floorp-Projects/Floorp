@@ -172,5 +172,5 @@ button > .button-box {
 }
 
 .opt-in-box.opt-in-error {
-  color: var(--in-content-error-text-color);
+  color: var(--text-color-error);
 }

@@ -1480,7 +1480,7 @@ richlistitem .text-link:hover {
 }
 
 #translations-manage-error {
-  color: var(--in-content-error-text-color);
+  color: var(--text-color-error);
   margin: 16px 0;
 }
 
