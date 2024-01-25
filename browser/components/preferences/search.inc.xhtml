@@ -14,7 +14,7 @@
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-engine-default-header" id="search-engine-default-header" /></label>
-      <description class="section-description" data-l10n-id="search-engine-default-desc-2" id="search-engine-default-desc-2" />
+      <description class="description-deemphasized" data-l10n-id="search-engine-default-desc-2" id="search-engine-default-desc-2" />
       <hbox>
         <menulist id="defaultEngine" aria-labelledby="search-engine-default-header" aria-describedby="search-engine-default-desc-2">
           <menupopup/>
@@ -40,7 +40,7 @@
     <groupbox id="searchSuggestionsGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-suggestions-header" /></label>
       <description id="searchSuggestionsDesc"
-                   class="section-description"
+                   class="description-deemphasized"
                    data-l10n-id="search-suggestions-desc" />
 
       <checkbox id="suggestionsInSearchFieldsCheckbox"
@@ -71,7 +71,7 @@
               hidden="true"
               data-subcategory="locationBar">
       <label><html:h2 id="locationBarGroupHeader" data-l10n-id="addressbar-header"/></label>
-      <label id="locationBarSuggestionLabel" class="section-description" data-l10n-id="addressbar-suggest"/>
+      <label id="locationBarSuggestionLabel" class="description-deemphasized" data-l10n-id="addressbar-suggest"/>
       <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
                 preference="browser.urlbar.suggest.history"/>
       <checkbox id="bookmarkSuggestion" data-l10n-id="addressbar-locbar-bookmarks-option"
@@ -164,7 +164,7 @@
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-one-click-header2" /></label>
-      <description class="section-description" data-l10n-id="search-one-click-desc" />
+      <description class="description-deemphasized" data-l10n-id="search-one-click-desc" />
 
       <tree id="engineList" flex="1" rows="11" hidecolumnpicker="true" editable="true"
             seltype="single" allowunderflowscroll="true">
