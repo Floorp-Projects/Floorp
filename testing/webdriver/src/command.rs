@@ -614,8 +614,6 @@ pub enum PrintOrientation {
     Portrait,
 }
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PrintPage {
@@ -733,7 +731,7 @@ pub struct SendKeysParameters {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct SwitchToFrameParameters {
-    pub id: Option<FrameId>,
+    pub id: FrameId,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -1457,23 +1455,36 @@ mod tests {
     }
 
     #[test]
-    fn test_json_switch_to_frame_parameters_with_value() {
+    fn test_json_switch_to_frame_parameters_with_number() {
         assert_de(
             &SwitchToFrameParameters {
-                id: Some(FrameId::Short(3)),
+                id: FrameId::Short(3),
             },
             json!({"id": 3}),
         );
     }
 
     #[test]
-    fn test_json_switch_to_frame_parameters_with_optional_null_field() {
-        assert_de(&SwitchToFrameParameters { id: None }, json!({ "id": null }));
+    fn test_json_switch_to_frame_parameters_with_null() {
+        assert_de(
+            &SwitchToFrameParameters { id: FrameId::Top },
+            json!({"id": null}),
+        );
     }
 
     #[test]
-    fn test_json_switch_to_frame_parameters_without_optional_null_field() {
-        assert_de(&SwitchToFrameParameters { id: None }, json!({}));
+    fn test_json_switch_to_frame_parameters_with_web_element() {
+        assert_de(
+            &SwitchToFrameParameters {
+                id: FrameId::Element(WebElement("foo".to_string())),
+            },
+            json!({"id": {"element-6066-11e4-a52e-4f735466cecf": "foo"}}),
+        );
+    }
+
+    #[test]
+    fn test_json_switch_to_frame_parameters_with_missing_id() {
+        assert!(serde_json::from_value::<SwitchToFrameParameters>(json!({})).is_err())
     }
 
     #[test]
@@ -1488,7 +1499,7 @@ mod tests {
             "foo": "bar",
         });
         let switch_to_frame = SwitchToFrameParameters {
-            id: Some(FrameId::Short(3)),
+            id: FrameId::Short(3),
         };
 
         assert_de(&switch_to_frame, json);

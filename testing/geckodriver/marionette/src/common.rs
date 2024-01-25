@@ -70,7 +70,7 @@ pub struct Date(pub u64);
 pub enum Frame {
     Index(u16),
     Element(String),
-    Parent,
+    Top,
 }
 
 impl Serialize for Frame {
@@ -82,7 +82,7 @@ impl Serialize for Frame {
         match self {
             Frame::Index(nth) => map.serialize_entry("id", nth)?,
             Frame::Element(el) => map.serialize_entry("element", el)?,
-            Frame::Parent => map.serialize_entry("id", &Value::Null)?,
+            Frame::Top => map.serialize_entry("id", &Value::Null)?,
         }
         map.end()
     }
@@ -105,7 +105,7 @@ impl<'de> Deserialize<'de> for Frame {
             (Some(_id), Some(_element)) => Err(de::Error::custom("conflicting frame identifiers")),
             (Some(id), None) => Ok(Frame::Index(id)),
             (None, Some(element)) => Ok(Frame::Element(element)),
-            (None, None) => Ok(Frame::Parent),
+            (None, None) => Ok(Frame::Top),
         }
     }
 }
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_json_frame_parent() {
-        assert_ser_de(&Frame::Parent, json!({ "id": null }));
+        assert_ser_de(&Frame::Top, json!({ "id": null }));
     }
 
     #[test]

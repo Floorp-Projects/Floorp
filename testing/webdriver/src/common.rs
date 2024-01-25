@@ -61,6 +61,7 @@ pub enum FrameId {
         serialize_with = "serialize_webelement_id"
     )]
     Element(WebElement),
+    Top,
 }
 
 // TODO(Henrik): Remove when ToMarionette trait has been fixed (Bug 1481776)
