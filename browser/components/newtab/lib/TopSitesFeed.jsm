@@ -263,9 +263,13 @@ class TopSitesTelemetry {
     if (this.allSponsoredTiles) {
       currentTiles.forEach(item => {
         if (this._buildPropertyKey(item) in this.allSponsoredTiles) {
-          this.allSponsoredTiles[
-            this._buildPropertyKey(item)
-          ].display_position = item.sponsored_position;
+          let tile = this.allSponsoredTiles[this._buildPropertyKey(item)];
+          if (
+            tile.display_fail_reason === undefined ||
+            tile.display_fail_reason === null
+          ) {
+            tile.display_position = item.sponsored_position;
+          }
         }
       });
     }
