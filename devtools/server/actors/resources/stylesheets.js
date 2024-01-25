@@ -86,12 +86,12 @@ class StyleSheetWatcher {
       href: styleSheet.href,
       isNew: isCreatedByDevTools,
       atRules,
-      nodeHref: this._styleSheetsManager._getNodeHref(styleSheet),
+      nodeHref: this._styleSheetsManager.getNodeHref(styleSheet),
       ruleCount,
       sourceMapBaseURL:
-        this._styleSheetsManager._getSourcemapBaseURL(styleSheet),
+        this._styleSheetsManager.getSourcemapBaseURL(styleSheet),
       sourceMapURL: styleSheet.sourceMapURL,
-      styleSheetIndex: this._styleSheetsManager._getStyleSheetIndex(styleSheet),
+      styleSheetIndex: this._styleSheetsManager.getStyleSheetIndex(resourceId),
       system: CssLogic.isAgentStylesheet(styleSheet),
       title: styleSheet.title,
     };
