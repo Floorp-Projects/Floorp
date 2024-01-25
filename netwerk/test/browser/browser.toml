@@ -41,6 +41,9 @@ support-files = [
   "res_img_for_unknown_decoder^headers^",
   "res_object.html",
   "res_sub_document.html",
+  "res_empty.zip",
+  "res_http_index_format",
+  "res_http_index_format^headers^",
   "square.png",
   "103_preload.html",
   "103_preload.html^informationalResponse^",
@@ -152,6 +155,8 @@ skip-if = ["os == 'win'"] # Bug 1775761
 ["browser_fetch_lnk.js"]
 run-if = ["os == 'win'"]
 support-files = ["file_lnk.lnk",]
+
+["browser_http_index_format.js"]
 
 ["browser_nsIFormPOSTActionChannel.js"]
 skip-if = ["true"] # protocol handler and channel does not work in content process

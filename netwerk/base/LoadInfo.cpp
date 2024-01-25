@@ -1568,6 +1568,9 @@ already_AddRefed<nsIPrincipal> CreateTruncatedPrincipal(
     }
     uriString += scheme + separator + hostPort + path;
 
+    nsAutoCString principalSpec;
+    aPrincipal->GetSpec(principalSpec);
+
     nsCOMPtr<nsIURI> truncatedURI;
     nsresult rv = NS_NewURI(getter_AddRefs(truncatedURI), uriString);
     if (NS_FAILED(rv)) {
