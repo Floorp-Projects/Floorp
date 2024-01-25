@@ -96,9 +96,9 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToSetObject:
       return &SetObject::class_;
     case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return &FixedLengthArrayBufferObject::class_;
+      return &ArrayBufferObject::class_;
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return &FixedLengthSharedArrayBufferObject::class_;
+      return &SharedArrayBufferObject::class_;
 
     default:
       MOZ_CRASH("Not a GuardTo instruction");
@@ -227,7 +227,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicRegExpExec:
     case InlinableNative::IntrinsicRegExpExecForTest:
     case InlinableNative::IntrinsicTypedArrayLength:
-    case InlinableNative::IntrinsicTypedArrayLengthZeroOnOutOfBounds:
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementSize:
     case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:

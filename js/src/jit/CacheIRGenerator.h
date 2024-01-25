@@ -631,8 +631,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachIsConstructor();
   AttachDecision tryAttachIsCrossRealmArrayConstructor();
   AttachDecision tryAttachGuardToClass(InlinableNative native);
-  AttachDecision tryAttachGuardToArrayBuffer();
-  AttachDecision tryAttachGuardToSharedArrayBuffer();
   AttachDecision tryAttachHasClass(const JSClass* clasp,
                                    bool isPossiblyWrapped);
   AttachDecision tryAttachRegExpMatcherSearcher(InlinableNative native);
@@ -689,7 +687,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachTypedArrayByteOffset();
   AttachDecision tryAttachTypedArrayElementSize();
   AttachDecision tryAttachTypedArrayLength(bool isPossiblyWrapped);
-  AttachDecision tryAttachTypedArrayLengthZeroOnOutOfBounds();
   AttachDecision tryAttachArrayBufferByteLength(bool isPossiblyWrapped);
   AttachDecision tryAttachIsConstructing();
   AttachDecision tryAttachGetNextMapSetEntryForIterator(bool isMap);

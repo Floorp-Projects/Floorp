@@ -747,8 +747,6 @@ bool shell::enableArrayGrouping = false;
 bool shell::enableNewSetMethods = false;
 // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
 bool shell::enableSymbolsAsWeakMapKeys = false;
-// Pref for resizable ArrayBuffers and growable SharedArrayBuffers.
-bool shell::enableArrayBufferResizable = false;
 #endif
 bool shell::enableArrayBufferTransfer = true;
 bool shell::enableImportAttributes = false;
@@ -4144,8 +4142,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
       .setSymbolsAsWeakMapKeysEnabled(enableSymbolsAsWeakMapKeys)
-      .setArrayBufferResizableEnabled(enableArrayBufferResizable)
-      .setSharedArrayBufferGrowableEnabled(enableArrayBufferResizable)
 #endif
       ;
 }
@@ -11711,9 +11707,6 @@ bool InitOptionParser(OptionParser& op) {
                         "Disable ArrayBuffer.prototype.transfer() methods") ||
       !op.addBoolOption('\0', "enable-symbols-as-weakmap-keys",
                         "Enable Symbols As WeakMap keys") ||
-      !op.addBoolOption(
-          '\0', "enable-arraybuffer-resizable",
-          "Enable resizable ArrayBuffers and growable SharedArrayBuffers") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
@@ -12243,7 +12236,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
   enableSymbolsAsWeakMapKeys =
       op.getBoolOption("enable-symbols-as-weakmap-keys");
-  enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");
 #endif
   enableArrayBufferTransfer = !op.getBoolOption("disable-arraybuffer-transfer");
   enableImportAttributesAssertSyntax =

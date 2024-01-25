@@ -147,9 +147,6 @@ enum StructuredDataType : uint32_t {
 
   SCTAG_ERROR_OBJECT,
 
-  SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT,
-  SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT,
-
   SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
   SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
   SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8,
@@ -459,8 +456,7 @@ struct JSStructuredCloneReader {
   [[nodiscard]] bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
                                        MutableHandleValue vp);
 
-  [[nodiscard]] bool readSharedArrayBuffer(StructuredDataType type,
-                                           MutableHandleValue vp);
+  [[nodiscard]] bool readSharedArrayBuffer(MutableHandleValue vp);
 
   [[nodiscard]] bool readSharedWasmMemory(uint32_t nbytes,
                                           MutableHandleValue vp);
@@ -1357,17 +1353,8 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  mozilla::Maybe<size_t> nelems = tarr->length();
-  if (!nelems) {
-    return reportDataCloneError(JS_SCERR_TYPED_ARRAY_DETACHED);
-  }
-
-  // Auto-length TypedArrays are tagged by storing `-1` for the length. We still
-  // need to query the length to check for detached or out-of-bounds lengths.
-  bool isAutoLength = tarr->is<ResizableTypedArrayObject>() &&
-                      tarr->as<ResizableTypedArrayObject>().isAutoLength();
-  uint64_t length = isAutoLength ? uint64_t(-1) : uint64_t(*nelems);
-  if (!out.write(length)) {
+  uint64_t nelems = tarr->length();
+  if (!out.write(nelems)) {
     return false;
   }
 
@@ -1377,7 +1364,7 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteOffset = tarr->byteOffset().valueOr(0);
+  uint64_t byteOffset = tarr->byteOffset();
   return out.write(byteOffset);
 }
 
@@ -1389,17 +1376,8 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  mozilla::Maybe<size_t> byteLength = view->byteLength();
-  if (!byteLength) {
-    return reportDataCloneError(JS_SCERR_TYPED_ARRAY_DETACHED);
-  }
-
-  // Auto-length DataViews are tagged by storing `-1` for the length. We still
-  // need to query the length to check for detached or out-of-bounds lengths.
-  bool isAutoLength = view->is<ResizableDataViewObject>() &&
-                      view->as<ResizableDataViewObject>().isAutoLength();
-  uint64_t length = isAutoLength ? uint64_t(-1) : uint64_t(*byteLength);
-  if (!out.write(length)) {
+  uint64_t byteLength = view->byteLength();
+  if (!out.write(byteLength)) {
     return false;
   }
 
@@ -1409,7 +1387,7 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteOffset = view->byteOffset().valueOr(0);
+  uint64_t byteOffset = view->byteOffset();
   return out.write(byteOffset);
 }
 
@@ -1418,25 +1396,13 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
                                     obj->maybeUnwrapAs<ArrayBufferObject>());
   JSAutoRealm ar(context(), buffer);
 
-  StructuredDataType type = !buffer->isResizable()
-                                ? SCTAG_ARRAY_BUFFER_OBJECT
-                                : SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT;
-
-  if (!out.writePair(type, 0)) {
+  if (!out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, 0)) {
     return false;
   }
 
   uint64_t byteLength = buffer->byteLength();
   if (!out.write(byteLength)) {
     return false;
-  }
-
-  if (buffer->isResizable()) {
-    uint64_t maxByteLength =
-        buffer->as<ResizableArrayBufferObject>().maxByteLength();
-    if (!out.write(maxByteLength)) {
-      return false;
-    }
   }
 
   return out.writeBytes(buffer->dataPointer(), byteLength);
@@ -1477,13 +1443,10 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   // receiver with the same length, and not with the length read from the
   // rawbuf - that length can be different, and it can change at any time.
 
-  StructuredDataType type = !sharedArrayBuffer->isGrowable()
-                                ? SCTAG_SHARED_ARRAY_BUFFER_OBJECT
-                                : SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT;
-
   intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
-  uint64_t byteLength = sharedArrayBuffer->byteLengthOrMaxByteLength();
-  if (!(out.writePair(type, /* unused data word */ 0) &&
+  uint64_t byteLength = sharedArrayBuffer->byteLength();
+  if (!(out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
+                      static_cast<uint32_t>(sizeof(p))) &&
         out.writeBytes(&byteLength, sizeof(byteLength)) &&
         out.writeBytes(&p, sizeof(p)))) {
     return false;
@@ -2292,17 +2255,11 @@ bool JSStructuredCloneWriter::transferOwnership() {
       }
 
       if (scope == JS::StructuredCloneScope::DifferentProcess ||
-          scope == JS::StructuredCloneScope::DifferentProcessForIndexedDB ||
-          arrayBuffer->isResizable()) {
+          scope == JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
         // Write Transferred ArrayBuffers in DifferentProcess scope at
         // the end of the clone buffer, and store the offset within the
         // buffer to where the ArrayBuffer was written. Note that this
         // will invalidate the current position iterator.
-        //
-        // Resizable ArrayBuffers need to store two extra data, the byte length
-        // and the maximum byte length, but the current transferables format
-        // supports only a single additional datum. Therefore resizable buffers
-        // currently go through this slower code path.
 
         size_t pointOffset = out.offset(point);
         tag = SCTAG_TRANSFER_MAP_STORED_ARRAY_BUFFER;
@@ -2594,19 +2551,10 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
     return false;
   }
 
-  // Auto-length TypedArrays are tagged by using `-1` for their length.
-  bool isAutoLength = nelems == uint64_t(-1);
-
-  // Zero |nelems| if it was only used as a tag.
-  if (isAutoLength) {
-    nelems = 0;
-  }
-
   // Read the ArrayBuffer object and its contents (but no properties)
   RootedValue v(context());
   uint64_t byteOffset;
   if (v1Read) {
-    MOZ_ASSERT(!isAutoLength, "v1Read can't produce auto-length TypedArrays");
     if (!readV1ArrayBuffer(arrayType, nelems, &v)) {
       return false;
     }
@@ -2621,8 +2569,8 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
   }
 
   // Ensure invalid 64-bit values won't be truncated below.
-  if (nelems > ArrayBufferObject::ByteLengthLimit ||
-      byteOffset > ArrayBufferObject::ByteLengthLimit) {
+  if (nelems > ArrayBufferObject::MaxByteLength ||
+      byteOffset > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "invalid typed array length or offset");
@@ -2639,14 +2587,11 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
   RootedObject buffer(context(), &v.toObject());
   RootedObject obj(context(), nullptr);
 
-  // Negative values represent an absent length parameter.
-  int64_t length = isAutoLength ? -1 : int64_t(nelems);
-
   switch (arrayType) {
 #define CREATE_FROM_BUFFER(ExternalType, NativeType, Name)             \
   case Scalar::Name:                                                   \
     obj = JS::TypedArray<Scalar::Name>::fromBuffer(context(), buffer,  \
-                                                   byteOffset, length) \
+                                                   byteOffset, nelems) \
               .asObject();                                             \
     break;
 
@@ -2694,17 +2639,9 @@ bool JSStructuredCloneReader::readDataView(uint64_t byteLength,
     return false;
   }
 
-  // Auto-length DataViews are tagged by using `-1` for their byte length.
-  bool isAutoLength = byteLength == uint64_t(-1);
-
-  // Zero |byteLength| if it was only used as a tag.
-  if (isAutoLength) {
-    byteLength = 0;
-  }
-
   // Ensure invalid 64-bit values won't be truncated below.
-  if (byteLength > ArrayBufferObject::ByteLengthLimit ||
-      byteOffset > ArrayBufferObject::ByteLengthLimit) {
+  if (byteLength > ArrayBufferObject::MaxByteLength ||
+      byteOffset > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "invalid DataView length or offset");
@@ -2712,12 +2649,8 @@ bool JSStructuredCloneReader::readDataView(uint64_t byteLength,
   }
 
   RootedObject buffer(context(), &v.toObject());
-  RootedObject obj(context());
-  if (!isAutoLength) {
-    obj = JS_NewDataView(context(), buffer, byteOffset, byteLength);
-  } else {
-    obj = js::NewDataView(context(), buffer, byteOffset);
-  }
+  RootedObject obj(context(),
+                   JS_NewDataView(context(), buffer, byteOffset, byteLength));
   if (!obj) {
     return false;
   }
@@ -2734,16 +2667,8 @@ bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
   // V2 stores the length in |data|. The current version stores the
   // length separately to allow larger length values.
   uint64_t nbytes = 0;
-  uint64_t maxbytes = 0;
   if (type == SCTAG_ARRAY_BUFFER_OBJECT) {
     if (!in.read(&nbytes)) {
-      return false;
-    }
-  } else if (type == SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT) {
-    if (!in.read(&nbytes)) {
-      return false;
-    }
-    if (!in.read(&maxbytes)) {
       return false;
     }
   } else {
@@ -2753,21 +2678,13 @@ bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
 
   // The maximum ArrayBuffer size depends on the platform, and we cast to size_t
   // below, so we have to check this here.
-  if (nbytes > ArrayBufferObject::ByteLengthLimit ||
-      maxbytes > ArrayBufferObject::ByteLengthLimit) {
+  if (nbytes > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
   }
 
-  JSObject* obj;
-  if (type != SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT) {
-    MOZ_ASSERT(maxbytes == 0);
-    obj = ArrayBufferObject::createZeroed(context(), size_t(nbytes));
-  } else {
-    obj = ResizableArrayBufferObject::createZeroed(context(), size_t(nbytes),
-                                                   size_t(maxbytes));
-  }
+  JSObject* obj = ArrayBufferObject::createZeroed(context(), size_t(nbytes));
   if (!obj) {
     return false;
   }
@@ -2777,11 +2694,7 @@ bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
   return in.readArray(buffer.dataPointer(), nbytes);
 }
 
-bool JSStructuredCloneReader::readSharedArrayBuffer(StructuredDataType type,
-                                                    MutableHandleValue vp) {
-  MOZ_ASSERT(type == SCTAG_SHARED_ARRAY_BUFFER_OBJECT ||
-             type == SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT);
-
+bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
   if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
       !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto error = context()->realm()->creationOptions().getCoopAndCoepEnabled()
@@ -2799,7 +2712,7 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(StructuredDataType type,
 
   // The maximum ArrayBuffer size depends on the platform, and we cast to size_t
   // below, so we have to check this here.
-  if (byteLength > ArrayBufferObject::ByteLengthLimit) {
+  if (byteLength > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
@@ -2810,10 +2723,7 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(StructuredDataType type,
     return in.reportTruncated();
   }
 
-  bool isGrowable = type == SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT;
-
   SharedArrayRawBuffer* rawbuf = reinterpret_cast<SharedArrayRawBuffer*>(p);
-  MOZ_RELEASE_ASSERT(isGrowable == rawbuf->isGrowable());
 
   // There's no guarantee that the receiving agent has enabled shared memory
   // even if the transmitting agent has done so.  Ideally we'd check at the
@@ -2837,12 +2747,8 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(StructuredDataType type,
     return false;
   }
 
-  RootedObject obj(context());
-  if (!isGrowable) {
-    obj = SharedArrayBufferObject::New(context(), rawbuf, byteLength);
-  } else {
-    obj = SharedArrayBufferObject::NewGrowable(context(), rawbuf, byteLength);
-  }
+  RootedObject obj(context(),
+                   SharedArrayBufferObject::New(context(), rawbuf, byteLength));
   if (!obj) {
     rawbuf->dropReference();
     return false;
@@ -2890,12 +2796,10 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
   if (!payload.isObject() ||
-      !payload.toObject().is<SharedArrayBufferObject>() ||
-      payload.toObject().as<SharedArrayBufferObject>().isGrowable()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA,
-                              "shared wasm memory must be backed by a "
-                              "non-growable SharedArrayBuffer");
+      !payload.toObject().is<SharedArrayBufferObject>()) {
+    JS_ReportErrorNumberASCII(
+        context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+        "shared wasm memory must be backed by a SharedArrayBuffer");
     return false;
   }
 
@@ -3145,15 +3049,13 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
 
     case SCTAG_ARRAY_BUFFER_OBJECT_V2:
     case SCTAG_ARRAY_BUFFER_OBJECT:
-    case SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT:
       if (!readArrayBuffer(StructuredDataType(tag), data, vp)) {
         return false;
       }
       break;
 
     case SCTAG_SHARED_ARRAY_BUFFER_OBJECT:
-    case SCTAG_GROWABLE_SHARED_ARRAY_BUFFER_OBJECT:
-      if (!readSharedArrayBuffer(StructuredDataType(tag), vp)) {
+      if (!readSharedArrayBuffer(vp)) {
         return false;
       }
       break;
@@ -3395,7 +3297,7 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
 
-      MOZ_RELEASE_ASSERT(extraData <= ArrayBufferObject::ByteLengthLimit);
+      MOZ_RELEASE_ASSERT(extraData <= ArrayBufferObject::MaxByteLength);
       size_t nbytes = extraData;
 
       MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
@@ -3426,8 +3328,7 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
       if (tag != SCTAG_ARRAY_BUFFER_OBJECT_V2 &&
-          tag != SCTAG_ARRAY_BUFFER_OBJECT &&
-          tag != SCTAG_RESIZABLE_ARRAY_BUFFER_OBJECT) {
+          tag != SCTAG_ARRAY_BUFFER_OBJECT) {
         ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
         return false;
       }

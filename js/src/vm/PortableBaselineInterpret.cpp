@@ -692,18 +692,18 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::FixedLengthArrayBuffer:
-        if (object->getClass() != &FixedLengthArrayBufferObject::class_) {
+      case GuardClassKind::ArrayBuffer:
+        if (object->getClass() != &ArrayBufferObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::FixedLengthSharedArrayBuffer:
-        if (object->getClass() != &FixedLengthSharedArrayBufferObject::class_) {
+      case GuardClassKind::SharedArrayBuffer:
+        if (object->getClass() != &SharedArrayBufferObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::FixedLengthDataView:
-        if (object->getClass() != &FixedLengthDataViewObject::class_) {
+      case GuardClassKind::DataView:
+        if (object->getClass() != &DataViewObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
@@ -1715,7 +1715,6 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(GuardIsNotProxy)
   CACHEOP_CASE_UNIMPL(GuardIsNotArrayBufferMaybeShared)
   CACHEOP_CASE_UNIMPL(GuardIsTypedArray)
-  CACHEOP_CASE_UNIMPL(GuardIsFixedLengthTypedArray)
   CACHEOP_CASE_UNIMPL(GuardHasProxyHandler)
   CACHEOP_CASE_UNIMPL(GuardIsNotDOMProxy)
   CACHEOP_CASE_UNIMPL(GuardObjectIdentity)

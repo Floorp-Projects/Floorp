@@ -392,12 +392,12 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
       return &ArrayObject::class_;
     case GuardClassKind::PlainObject:
       return &PlainObject::class_;
-    case GuardClassKind::FixedLengthArrayBuffer:
-      return &FixedLengthArrayBufferObject::class_;
-    case GuardClassKind::FixedLengthSharedArrayBuffer:
-      return &FixedLengthSharedArrayBufferObject::class_;
-    case GuardClassKind::FixedLengthDataView:
-      return &FixedLengthDataViewObject::class_;
+    case GuardClassKind::ArrayBuffer:
+      return &ArrayBufferObject::class_;
+    case GuardClassKind::SharedArrayBuffer:
+      return &SharedArrayBufferObject::class_;
+    case GuardClassKind::DataView:
+      return &DataViewObject::class_;
     case GuardClassKind::MappedArguments:
       return &MappedArgumentsObject::class_;
     case GuardClassKind::UnmappedArguments:
@@ -801,17 +801,6 @@ bool WarpCacheIRTranspiler::emitGuardIsTypedArray(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
   auto* ins = MGuardIsTypedArray::New(alloc(), obj);
-  add(ins);
-
-  setOperand(objId, ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitGuardIsFixedLengthTypedArray(
-    ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* ins = MGuardIsFixedLengthTypedArray::New(alloc(), obj);
   add(ins);
 
   setOperand(objId, ins);
@@ -4226,8 +4215,7 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
 
 bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
     uint32_t templateObjectOffset, Int32OperandId lengthId) {
-  auto* templateObj = &tenuredObjectStubField(templateObjectOffset)
-                           ->as<FixedLengthTypedArrayObject>();
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
   MDefinition* length = getOperand(lengthId);
 
   // TODO: support pre-tenuring.
@@ -4235,7 +4223,8 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
 
   if (length->isConstant()) {
     int32_t len = length->toConstant()->toInt32();
-    if (len > 0 && uint32_t(len) == templateObj->length()) {
+    if (len > 0 &&
+        uint32_t(len) == templateObj->as<TypedArrayObject>().length()) {
       auto* templateConst = constant(ObjectValue(*templateObj));
       auto* obj = MNewTypedArray::New(alloc(), templateConst, heap);
       add(obj);

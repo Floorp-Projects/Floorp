@@ -2920,11 +2920,6 @@
     object: WordSized
   num_temps: 1
 
-- name: GuardIsFixedLengthTypedArray
-  operands:
-    object: WordSized
-  num_temps: 1
-
 - name: GuardHasProxyHandler
   operands:
     object: WordSized
