@@ -816,10 +816,6 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 
 void HttpChannelChild::SendOnDataFinished(const nsresult& aChannelStatus) {
   LOG(("HttpChannelChild::SendOnDataFinished [this=%p]\n", this));
-  if (MOZ_UNLIKELY(NS_IsMainThread())) {
-    MOZ_ASSERT(false, "SendOnDataFinished should not be called on main thread");
-    return;
-  }
 
   if (mCanceled) return;
 
@@ -898,8 +894,7 @@ void HttpChannelChild::ProcessOnStopRequest(
 
   RefPtr<RecordStopRequestDelta> timing;
   TimeStamp start = TimeStamp::Now();
-  if (StaticPrefs::network_send_OnDataFinished() &&
-      mOMTResult == LABELS_HTTP_CHILD_OMT_STATS::success) {
+  if (StaticPrefs::network_send_OnDataFinished()) {
     timing = new RecordStopRequestDelta;
     mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
         [self = UnsafePtr<HttpChannelChild>(this)]() {
