@@ -347,6 +347,7 @@ def verify_index(config, index):
         Required("loopback-audio"): bool,
         Required("docker-in-docker"): bool,  # (aka 'dind')
         Required("privileged"): bool,
+        Optional("kvm"): bool,
         # Paths to Docker volumes.
         #
         # For in-tree Docker images, volumes can be parsed from Dockerfile.
@@ -489,6 +490,11 @@ def build_docker_worker_payload(config, task, task_def):
             devices = capabilities.setdefault("devices", {})
             devices[capitalized] = True
             task_def["scopes"].append("docker-worker:capability:device:" + capitalized)
+
+    if worker.get("kvm"):
+        devices = capabilities.setdefault("devices", {})
+        devices["kvm"] = True
+        task_def["scopes"].append("docker-worker:capability:device:kvm")
 
     if worker.get("privileged"):
         capabilities["privileged"] = True
