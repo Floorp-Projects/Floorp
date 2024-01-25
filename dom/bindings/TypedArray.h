@@ -690,7 +690,27 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
               // If we're here then TypedArrayObject::ensureHasBuffer must have
               // failed in the call to JS_GetArrayBufferViewBuffer.
               if (JS_IsThrowingOutOfMemory(jsapi.cx())) {
-                MOZ_CRASH("We did run out of memory!");
+                size_t length = JS_GetTypedArrayByteLength(view);
+                if (!JS::GetReservedSlot(view, /* DATA_SLOT */ 3)
+                         .isUndefined() &&
+                    length <= JS_MaxMovableTypedArraySize()) {
+                  MOZ_CRASH(
+                      "We did run out of memory, maybe trying to uninline the "
+                      "buffer");
+                }
+                if (length < INT32_MAX) {
+                  MOZ_CRASH(
+                      "We did run out of memory trying to create a buffer "
+                      "smaller than 2GB - 1");
+                } else if (length < UINT32_MAX) {
+                  MOZ_CRASH(
+                      "We did run out of memory trying to create a between 2GB "
+                      "and 4GB - 1");
+                } else {
+                  MOZ_CRASH(
+                      "We did run out of memory trying to create a buffer "
+                      "bigger than 4GB - 1");
+                }
               } else if (JS_IsExceptionPending(jsapi.cx())) {
                 JS::Rooted<JS::Value> exn(jsapi.cx());
                 if (JS_GetPendingException(jsapi.cx(), &exn) &&
