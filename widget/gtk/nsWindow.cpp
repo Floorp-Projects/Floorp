@@ -5044,6 +5044,8 @@ gboolean nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent) {
 }
 
 void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
+  LOG("OnScrollEvent");
+
   // check to see if we should rollup
   if (CheckForRollup(aEvent->x_root, aEvent->y_root, true, false)) {
     return;
@@ -8403,7 +8405,7 @@ static gboolean property_notify_event_cb(GtkWidget* aWidget,
 
 static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event) {
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
-  if (!window) {
+  if (NS_WARN_IF(!window)) {
     return FALSE;
   }
 
