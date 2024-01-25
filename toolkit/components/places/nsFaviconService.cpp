@@ -646,6 +646,7 @@ nsresult nsFaviconService::GetFaviconLinkForIcon(nsIURI* aFaviconURI,
         "data"_ns,
         "file"_ns,
         "moz-page-thumb"_ns,
+        "page-icon"_ns,
         "resource"_ns,
         // clang-format on
     };
