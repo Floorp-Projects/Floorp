@@ -68,6 +68,10 @@ function assertExposureTelemetry(expectedExtraList) {
 
 function _assertGleanTelemetry(telemetryName, expectedExtraList) {
   const telemetries = Glean.urlbar[telemetryName].testGetValue() ?? [];
+  info(
+    "Asserting Glean telemetry is correct, actual events are: " +
+      JSON.stringify(telemetries)
+  );
   Assert.equal(
     telemetries.length,
     expectedExtraList.length,
