@@ -75,14 +75,14 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * @param aBufferSize size of buffers and the default size
    * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
    * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
-   * @param aUseIPDLThread if true, use the IPDL thread instead of the worker
-   *        pool for translation requests
    */
-  ipc::IPCResult RecvInitTranslator(
-      TextureType aTextureType, gfx::BackendType aBackendType,
-      Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
-      uint64_t aBufferSize, CrossProcessSemaphoreHandle&& aReaderSem,
-      CrossProcessSemaphoreHandle&& aWriterSem, bool aUseIPDLThread);
+  ipc::IPCResult RecvInitTranslator(TextureType aTextureType,
+                                    gfx::BackendType aBackendType,
+                                    Handle&& aReadHandle,
+                                    nsTArray<Handle>&& aBufferHandles,
+                                    uint64_t aBufferSize,
+                                    CrossProcessSemaphoreHandle&& aReaderSem,
+                                    CrossProcessSemaphoreHandle&& aWriterSem);
 
   /**
    * Restart the translation from a Stopped state.
@@ -285,8 +285,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   bool ReadPendingEvent(EventType& aEventType);
 
-  void FinishShutdown();
-
   bool CheckDeactivated();
 
   void Deactivate();
@@ -326,8 +324,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void ClearCachedResources();
 
-  RefPtr<TaskQueue> mTranslationTaskQueue;
-  RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
+  const RefPtr<TaskQueue> mTranslationTaskQueue;
+  const RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> mDevice;
 #endif
@@ -384,6 +382,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   UniquePtr<gfx::DataSourceSurface::ScopedMap> mPreparedMap;
   Atomic<bool> mDeactivated{false};
   Atomic<bool> mBlocked{false};
+  Atomic<bool> mIPDLClosed{false};
   bool mIsInTransaction = false;
   bool mDeviceResetInProgress = false;
 };
