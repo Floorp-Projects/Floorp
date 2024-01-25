@@ -8836,8 +8836,8 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     masm.Push(index);
     masm.Push(obj);
 
-    using Fn = BigInt* (*)(JSContext*, TypedArrayObject*, size_t, const BigInt*,
-                           const BigInt*);
+    using Fn = BigInt* (*)(JSContext*, FixedLengthTypedArrayObject*, size_t,
+                           const BigInt*, const BigInt*);
     callvm->call<Fn, jit::AtomicsCompareExchange64>();
     return true;
   }
@@ -9091,7 +9091,7 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
     masm.Push(index);
     masm.Push(obj);
 
-    using Fn = BigInt* (*)(JSContext*, TypedArrayObject*, size_t);
+    using Fn = BigInt* (*)(JSContext*, FixedLengthTypedArrayObject*, size_t);
     callvm->call<Fn, jit::AtomicsLoad64>();
     return true;
   }
@@ -9172,7 +9172,7 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = void (*)(TypedArrayObject*, size_t, const BigInt*);
+    using Fn = void (*)(FixedLengthTypedArrayObject*, size_t, const BigInt*);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.passABIArg(index);
