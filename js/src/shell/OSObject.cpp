@@ -320,7 +320,7 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  if (len > ArrayBufferObject::MaxByteLength) {
+  if (len > ArrayBufferObject::ByteLengthLimit) {
     JS_ReportErrorUTF8(cx, "file %s is too large for a Uint8Array",
                        pathname.get());
     return nullptr;

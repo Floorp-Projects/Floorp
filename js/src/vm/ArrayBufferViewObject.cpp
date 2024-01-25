@@ -114,12 +114,12 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   MOZ_ASSERT_IF(!buffer, byteOffset == 0);
   MOZ_ASSERT_IF(buffer, !buffer->isDetached());
 
-  MOZ_ASSERT(byteOffset <= ArrayBufferObject::MaxByteLength);
-  MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
-  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(byteOffset <= ArrayBufferObject::ByteLengthLimit);
+  MOZ_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
+  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::ByteLengthLimit);
 
   MOZ_ASSERT_IF(is<TypedArrayObject>(),
-                length <= TypedArrayObject::MaxByteLength / bytesPerElement);
+                length <= TypedArrayObject::ByteLengthLimit / bytesPerElement);
 
   // The isSharedMemory property is invariant.  Self-hosting code that
   // sets BUFFER_SLOT or the private slot (if it does) must maintain it by
@@ -359,11 +359,11 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
   size_t len = obj->is<DataViewObject>()
                    ? obj->as<DataViewObject>().byteLength().valueOr(0)
                    : obj->as<TypedArrayObject>().byteLength().valueOr(0);
-  return len > ArrayBufferObject::MaxByteLengthForSmallBuffer;
+  return len > ArrayBufferObject::ByteLengthLimitForSmallBuffer;
 #else
   // Large ArrayBuffers are not supported on 32-bit.
-  static_assert(ArrayBufferObject::MaxByteLength ==
-                ArrayBufferObject::MaxByteLengthForSmallBuffer);
+  static_assert(ArrayBufferObject::ByteLengthLimit ==
+                ArrayBufferObject::ByteLengthLimitForSmallBuffer);
   return false;
 #endif
 }
