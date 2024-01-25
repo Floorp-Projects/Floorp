@@ -3361,7 +3361,7 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
       {
         MOZ_ASSERT(runnable);
         AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
-        static_cast<nsIRunnable*>(runnable)->Run();
+        runnable->RunDirectly();
       }
       runnable->Release();
 
@@ -3879,7 +3879,9 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
   if (WorkerRan == aRanOrNot) {
     nsIThread* currentThread = NS_GetCurrentThread();
     MOZ_ASSERT(currentThread);
-    MOZ_ASSERT(!NS_HasPendingEvents(currentThread));
+    // On the worker thread WorkerRunnable will refuse to run if not nested
+    // on top of a WorkerThreadPrimaryRunnable.
+    Unused << NS_WARN_IF(NS_HasPendingEvents(currentThread));
   }
 #endif
 
@@ -4009,7 +4011,7 @@ WorkerPrivate::ProcessAllControlRunnablesLocked() {
     {
       MOZ_ASSERT(event);
       AUTO_PROFILE_FOLLOWING_RUNNABLE(event);
-      if (NS_FAILED(static_cast<nsIRunnable*>(event)->Run())) {
+      if (NS_FAILED(event->RunDirectly())) {
         result = ProcessAllControlRunnablesResult::Abort;
       }
     }
