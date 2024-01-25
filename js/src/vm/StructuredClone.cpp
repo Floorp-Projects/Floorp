@@ -1332,8 +1332,8 @@ inline void JSStructuredCloneWriter::checkStack() {
  * swapped; the Int16Array requires that they are.
  */
 bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
-  Rooted<TypedArrayObject*> tarr(context(),
-                                 obj->maybeUnwrapAs<TypedArrayObject>());
+  Rooted<FixedLengthTypedArrayObject*> tarr(
+      context(), obj->maybeUnwrapAs<FixedLengthTypedArrayObject>());
   JSAutoRealm ar(context(), tarr);
 
 #ifdef FUZZING_JS_FUZZILLI
@@ -2122,8 +2122,12 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
 #endif
 
     case ESClass::Other: {
-      if (obj->canUnwrapAs<TypedArrayObject>()) {
+      if (obj->canUnwrapAs<FixedLengthTypedArrayObject>()) {
         return writeTypedArray(obj);
+      }
+      if (obj->canUnwrapAs<ResizableTypedArrayObject>()) {
+        // TODO(anba): support resizable.
+        return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
       }
       if (obj->canUnwrapAs<FixedLengthDataViewObject>()) {
         return writeDataView(obj);

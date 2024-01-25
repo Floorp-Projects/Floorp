@@ -31,7 +31,8 @@
 
 #define CLASP(NAME) (&NAME##Class)
 #define OCLASP(NAME) (&NAME##Object::class_)
-#define TYPED_ARRAY_CLASP(TYPE) (&TypedArrayObject::classes[JS::Scalar::TYPE])
+#define TYPED_ARRAY_CLASP(TYPE) \
+  (&TypedArrayObject::fixedLengthClasses[JS::Scalar::TYPE])
 #define ERROR_CLASP(TYPE) (&ErrorObject::classes[TYPE])
 
 #ifdef JS_HAS_INTL_API

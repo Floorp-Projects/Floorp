@@ -484,7 +484,8 @@ class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
  protected:
   explicit TypedArray_base(JSObject* unwrapped) : ArrayBufferView(unwrapped) {}
 
-  static const JSClass* const classes;
+  static const JSClass* const fixedLengthClasses;
+  static const JSClass* const resizableClasses;
 
  public:
   static TypedArray_base fromObject(JSObject* unwrapped);
@@ -503,14 +504,6 @@ class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
 
 template <JS::Scalar::Type TypedArrayElementType>
 class JS_PUBLIC_API TypedArray : public TypedArray_base {
- protected:
-  explicit TypedArray(JSObject* unwrapped) : TypedArray_base(unwrapped) {}
-
- public:
-  using DataType = detail::ExternalTypeOf_t<TypedArrayElementType>;
-
-  static constexpr JS::Scalar::Type Scalar = TypedArrayElementType;
-
   // This cannot be a static data member because on Windows,
   // __declspec(dllexport) causes the class to be instantiated immediately,
   // leading to errors when later explicit specializations of inline member
@@ -518,9 +511,22 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
   // after instantiation"). And those inlines need to be defined outside of the
   // class due to order dependencies. This is the only way I could get it to
   // work on both Windows and POSIX.
-  static const JSClass* clasp() {
-    return &TypedArray_base::classes[static_cast<int>(TypedArrayElementType)];
+  static const JSClass* fixedLengthClasp() {
+    return &TypedArray_base::fixedLengthClasses[static_cast<int>(
+        TypedArrayElementType)];
   }
+  static const JSClass* resizableClasp() {
+    return &TypedArray_base::resizableClasses[static_cast<int>(
+        TypedArrayElementType)];
+  }
+
+ protected:
+  explicit TypedArray(JSObject* unwrapped) : TypedArray_base(unwrapped) {}
+
+ public:
+  using DataType = detail::ExternalTypeOf_t<TypedArrayElementType>;
+
+  static constexpr JS::Scalar::Type Scalar = TypedArrayElementType;
 
   static TypedArray create(JSContext* cx, size_t nelements);
   static TypedArray fromArray(JSContext* cx, HandleObject other);
@@ -530,8 +536,11 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
   // Return an interface wrapper around `obj`, or around nullptr if `obj` is not
   // an unwrapped typed array of the correct type.
   static TypedArray fromObject(JSObject* unwrapped) {
-    if (unwrapped && GetClass(unwrapped) == clasp()) {
-      return TypedArray(unwrapped);
+    if (unwrapped) {
+      const JSClass* clasp = GetClass(unwrapped);
+      if (clasp == fixedLengthClasp() || clasp == resizableClasp()) {
+        return TypedArray(unwrapped);
+      }
     }
     return TypedArray(nullptr);
   }
@@ -616,8 +625,7 @@ ArrayBufferView ArrayBufferView::fromObject(JSObject* unwrapped) {
                                             size_t* length,                \
                                             bool* isSharedMemory,          \
                                             ExternalType** data) {         \
-    MOZ_ASSERT(JS::GetClass(unwrapped) ==                                  \
-               JS::TypedArray<JS::Scalar::Name>::clasp());                 \
+    MOZ_ASSERT(JS::TypedArray<JS::Scalar::Name>::fromObject(unwrapped));   \
     const JS::Value& lenSlot =                                             \
         JS::GetReservedSlot(unwrapped, detail::TypedArrayLengthSlot);      \
     *length = size_t(lenSlot.toPrivate());                                 \
