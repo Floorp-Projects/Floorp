@@ -10609,6 +10609,12 @@ class MWasmCallCatchable final : public MVariadicControlInstruction<2>,
                                  const MWasmCallTryDesc& tryDesc,
                                  MDefinition* tableIndexOrRef = nullptr);
 
+  static MWasmCallCatchable* NewBuiltinInstanceMethodCall(
+      TempAllocator& alloc, const wasm::CallSiteDesc& desc,
+      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
+      const ABIArg& instanceArg, const Args& args,
+      uint32_t stackArgAreaSizeUnaligned, const MWasmCallTryDesc& tryDesc);
+
   bool possiblyCalls() const override { return true; }
 
   static const size_t FallthroughBranchIndex = 0;
@@ -10662,12 +10668,6 @@ class MWasmReturnCall final : public MVariadicControlInstruction<0>,
                               const wasm::CalleeDesc& callee, const Args& args,
                               uint32_t stackArgAreaSizeUnaligned,
                               MDefinition* tableIndexOrRef = nullptr);
-
-  static MWasmReturnCall* NewBuiltinInstanceMethodCall(
-      TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
-      const ABIArg& instanceArg, const Args& args,
-      uint32_t stackArgAreaSizeUnaligned);
 
   bool possiblyCalls() const override { return true; }
 };
