@@ -229,11 +229,11 @@ void WebGPUChild::RegisterDevice(Device* const aDevice) {
   mDeviceMap.insert({aDevice->mId, aDevice});
 }
 
-void WebGPUChild::UnregisterDevice(RawId aId) {
-  mDeviceMap.erase(aId);
+void WebGPUChild::UnregisterDevice(RawId aDeviceId) {
   if (IsOpen()) {
-    SendDeviceDrop(aId);
+    SendDeviceDrop(aDeviceId);
   }
+  mDeviceMap.erase(aDeviceId);
 }
 
 void WebGPUChild::FreeUnregisteredInParentDevice(RawId aId) {
