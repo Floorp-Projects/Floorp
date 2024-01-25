@@ -72,6 +72,8 @@ uint64_t WasmReservedBytes();
 //       - SharedArrayBufferObject
 //     - ArrayBufferViewObject
 //       - DataViewObject
+//         - FixedLengthDataViewObject
+//         - ResizableDataViewObject
 //       - TypedArrayObject (declared in vm/TypedArrayObject.h)
 //         - TypedArrayObjectTemplate
 //           - Int8ArrayObject

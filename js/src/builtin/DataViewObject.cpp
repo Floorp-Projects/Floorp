@@ -58,7 +58,9 @@ DataViewObject* DataViewObject::create(
     return nullptr;
   }
 
-  DataViewObject* obj = NewObjectWithClassProto<DataViewObject>(cx, proto);
+  MOZ_ASSERT(!arrayBuffer->isResizable());
+
+  auto* obj = NewObjectWithClassProto<FixedLengthDataViewObject>(cx, proto);
   if (!obj || !obj->init(cx, arrayBuffer, byteOffset, byteLength,
                          /* bytesPerElement = */ 1)) {
     return nullptr;
@@ -955,26 +957,48 @@ static const JSClassOps DataViewObjectClassOps = {
     ArrayBufferViewObject::trace,  // trace
 };
 
+static JSObject* CreateDataViewPrototype(JSContext* cx, JSProtoKey key) {
+  return GlobalObject::createBlankPrototype(cx, cx->global(),
+                                            &DataViewObject::protoClass_);
+}
+
 const ClassSpec DataViewObject::classSpec_ = {
     GenericCreateConstructor<DataViewObject::construct, 1,
                              gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype<DataViewObject>,
+    CreateDataViewPrototype,
     nullptr,
     nullptr,
     DataViewObject::methods,
-    DataViewObject::properties};
+    DataViewObject::properties,
+};
 
-const JSClass DataViewObject::class_ = {
+const JSClass FixedLengthDataViewObject::class_ = {
     "DataView",
-    JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(FixedLengthDataViewObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    &DataViewObjectClassOps, &DataViewObject::classSpec_};
+    &DataViewObjectClassOps,
+    &DataViewObject::classSpec_,
+};
 
-const JSClass* const JS::DataView::ClassPtr = &DataViewObject::class_;
+const JSClass ResizableDataViewObject::class_ = {
+    "DataView",
+    JSCLASS_HAS_RESERVED_SLOTS(ResizableDataViewObject::RESERVED_SLOTS) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    &DataViewObjectClassOps,
+    &DataViewObject::classSpec_,
+};
+
+const JSClass* const JS::DataView::FixedLengthClassPtr =
+    &FixedLengthDataViewObject::class_;
+const JSClass* const JS::DataView::ResizableClassPtr =
+    &ResizableDataViewObject::class_;
 
 const JSClass DataViewObject::protoClass_ = {
-    "DataView.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    JS_NULL_CLASS_OPS, &DataViewObject::classSpec_};
+    "DataView.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    JS_NULL_CLASS_OPS,
+    &DataViewObject::classSpec_,
+};
 
 const JSFunctionSpec DataViewObject::methods[] = {
     JS_INLINABLE_FN("getInt8", DataViewObject::fun_getInt8, 1, 0,

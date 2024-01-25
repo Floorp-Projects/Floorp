@@ -516,7 +516,7 @@ enum class GuardClassKind : uint8_t {
   PlainObject,
   FixedLengthArrayBuffer,
   SharedArrayBuffer,
-  DataView,
+  FixedLengthDataView,
   MappedArguments,
   UnmappedArguments,
   WindowProxy,
