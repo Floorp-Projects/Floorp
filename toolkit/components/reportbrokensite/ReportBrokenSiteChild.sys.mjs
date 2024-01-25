@@ -223,7 +223,7 @@ const BrowserInfo = {
       buildId: Services.appinfo.appBuildID,
       defaultUserAgent: userAgent,
       updateChannel: AppConstants.MOZ_UPDATE_CHANNEL,
-      version: Services.appinfo.version,
+      version: AppConstants.MOZ_APP_VERSION_DISPLAY,
     };
   },
 
