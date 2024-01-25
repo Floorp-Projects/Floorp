@@ -599,10 +599,21 @@ class FixedLengthArrayBufferObject : public ArrayBufferObject {
 class ResizableArrayBufferObject : public ArrayBufferObject {
   friend class ArrayBufferObject;
 
+  void setMaxByteLength(size_t length) {
+    MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+    setFixedSlot(MAX_BYTE_LENGTH_SLOT, PrivateValue(length));
+  }
+
  public:
-  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS;
+  static const uint8_t MAX_BYTE_LENGTH_SLOT = ArrayBufferObject::RESERVED_SLOTS;
+
+  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS + 1;
 
   static const JSClass class_;
+
+  size_t maxByteLength() const {
+    return size_t(getFixedSlot(MAX_BYTE_LENGTH_SLOT).toPrivate());
+  }
 };
 
 // Create a buffer for a wasm memory, whose type is determined by
