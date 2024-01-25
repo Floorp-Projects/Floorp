@@ -332,10 +332,6 @@ already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
 
 Maybe<layers::SurfaceDescriptor> CanvasContext::GetFrontBuffer(
     WebGLFramebufferJS*, const bool) {
-  // With canvas element, remote texture push callback pushes remote texture
-  // from RemoteTextureMap to WebRenderImageHost. With offscreen canvas, the
-  // push callback is not used. remote texture is notified from
-  // ShareableCanvasRenderer to WebRenderImageHost.
   if (mPendingSwapChainPresent) {
     auto desc = SwapChainPresent();
     MOZ_ASSERT(!mPendingSwapChainPresent);
