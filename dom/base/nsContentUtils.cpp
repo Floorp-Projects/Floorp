@@ -10537,7 +10537,7 @@ static bool HtmlObjectContentSupportsDocument(const nsCString& aMimeType) {
 
 /* static */
 uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
-    const nsCString& aMIMEType, bool aNoFakePlugin) {
+    const nsCString& aMIMEType) {
   if (aMIMEType.IsEmpty()) {
     return nsIObjectLoadingContent::TYPE_NULL;
   }

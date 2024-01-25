@@ -28,9 +28,8 @@ interface nsIObjectLoadingContent : nsISupports
    */
   const unsigned long TYPE_LOADING     = 0;
   const unsigned long TYPE_FALLBACK    = 2;
-  const unsigned long TYPE_FAKE_PLUGIN = 3;
-  const unsigned long TYPE_DOCUMENT    = 4;
-  const unsigned long TYPE_NULL        = 5;
+  const unsigned long TYPE_DOCUMENT    = 3;
+  const unsigned long TYPE_NULL        = 4;
 
   const unsigned long PLUGIN_ACTIVE               = 0xFF;
 
@@ -54,12 +53,11 @@ interface nsIObjectLoadingContent : nsISupports
   readonly attribute unsigned long displayedType;
 
   /**
-   * Forces a re-evaluation and reload of the tag, optionally invalidating its
-   * click-to-play state.  This can be used when the MIME type that provides a
-   * type has changed, for instance, to force the tag to re-evalulate the
-   * handler to use.
+   * Forces a re-evaluation and reload of the tag.
+   * This can be used when the MIME type that provides a type has changed, for
+   * instance, to force the tag to re-evalulate the handler to use.
    */
-  void reload(in boolean aClearActivation);
+  void reload();
 
   /**
    * Puts the tag in the "waiting on a channel" state and adopts this
@@ -79,11 +77,6 @@ interface nsIObjectLoadingContent : nsISupports
    * an <embed> with no src).
    */
   readonly attribute nsIURI srcURI;
-
-  /**
-   * Disable the use of fake plugins and reload the tag if necessary.
-   */
-  void skipFakePlugins();
 
   /**
    * Switch the tag into the TYPE_DOCUMENT state, and returns the

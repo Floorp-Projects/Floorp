@@ -88,11 +88,9 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   const unsigned long TYPE_FALLBACK    = 2;
   [ChromeOnly]
-  const unsigned long TYPE_FAKE_PLUGIN = 3;
+  const unsigned long TYPE_DOCUMENT    = 3;
   [ChromeOnly]
-  const unsigned long TYPE_DOCUMENT    = 4;
-  [ChromeOnly]
-  const unsigned long TYPE_NULL        = 5;
+  const unsigned long TYPE_NULL        = 4;
 
   /**
    * The actual mime type (the one we got back from the network
@@ -109,13 +107,12 @@ interface mixin MozObjectLoadingContent {
   readonly attribute unsigned long displayedType;
 
   /**
-   * Forces a re-evaluation and reload of the tag, optionally invalidating its
-   * click-to-play state.  This can be used when the MIME type that provides a
-   * type has changed, for instance, to force the tag to re-evalulate the
-   * handler to use.
+   * Forces a re-evaluation and reload of the tag.
+   * This can be used when the MIME type that provides a type has changed, for
+   * instance, to force the tag to re-evalulate the handler to use.
    */
   [ChromeOnly, Throws]
-  undefined reload(boolean aClearActivation);
+  undefined reload();
 
   /**
    * The URL of the data/src loaded in the object. This may be null (i.e.
@@ -123,12 +120,6 @@ interface mixin MozObjectLoadingContent {
    */
   [ChromeOnly]
   readonly attribute URI? srcURI;
-
-  /**
-   * Disable the use of fake plugins and reload the tag if necessary
-   */
-  [ChromeOnly, Throws]
-  undefined skipFakePlugins();
 
   [ChromeOnly, Throws, NeedsCallerType]
   readonly attribute unsigned long runID;

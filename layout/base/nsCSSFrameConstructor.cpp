@@ -3682,10 +3682,6 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
                         ToCreationFunc(NS_NewBlockFrame)),
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
                         NS_NewSubDocumentFrame),
-      // Fake plugin handlers load as documents
-      // XXXmats is TYPE_FAKE_PLUGIN something we need?
-      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FAKE_PLUGIN,
-                        NS_NewSubDocumentFrame)
       // Nothing for TYPE_NULL so we'll construct frames by display there
   };
 
