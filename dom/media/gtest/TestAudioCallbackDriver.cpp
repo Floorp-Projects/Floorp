@@ -137,7 +137,7 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   auto graph = MakeRefPtr<NiceMock<MockGraphInterface>>(aRate);
   EXPECT_CALL(*graph, NotifyInputStopped).Times(0);
 
-  auto* mainThread = AbstractThread::GetCurrent();
+  nsIThread* mainThread = NS_GetCurrentThread();
   Maybe<int64_t> audioStart;
   Maybe<uint32_t> alreadyBuffered;
   int64_t inputFrameCount = 0;
@@ -209,8 +209,10 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
       "processed at least 100ms of audio data from stream callback"_ns,
       [&] { return processedFrameCount >= aRate / 10; });
 
-  // This will block untill all events have been executed.
+  // This will block until all events have been queued.
   MOZ_KnownLive(driver)->Shutdown();
+  // Process processListener events.
+  NS_ProcessPendingEvents(mainThread);
   processedListener.Disconnect();
 
   EXPECT_EQ(inputFrameCount, processedFrameCount);
