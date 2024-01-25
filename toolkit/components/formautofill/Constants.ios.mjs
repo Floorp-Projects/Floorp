@@ -18,7 +18,6 @@ const IOS_DEFAULT_PREFERENCES = {
   "extensions.formautofill.creditCards.supportedCountries": "US,CA,GB,FR,DE",
   "extensions.formautofill.addresses.enabled": false,
   "extensions.formautofill.addresses.capture.enabled": false,
-  "extensions.formautofill.addresses.capture.v2.enabled": false,
   "extensions.formautofill.addresses.supportedCountries": "",
   "extensions.formautofill.creditCards.enabled": true,
   "extensions.formautofill.reauth.enabled": true,

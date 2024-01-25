@@ -3952,9 +3952,11 @@ pref("security.external_protocol_requires_permission", true);
 pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.supported", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
-pref("extensions.formautofill.addresses.capture.enabled", false);
-// This preference should be removed entirely once address capture v2 developing is finished
-pref("extensions.formautofill.addresses.capture.v2.enabled", false);
+#if defined(NIGHTLY_BUILD)
+  pref("extensions.formautofill.addresses.capture.enabled", true);
+#else
+  pref("extensions.formautofill.addresses.capture.enabled", false);
+#endif
 // Defies the required address form fields to trigger the display of the address capture doorhanger
 pref("extensions.formautofill.addresses.capture.requiredFields", "street-address,postal-code,address-level1,address-level2");
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);

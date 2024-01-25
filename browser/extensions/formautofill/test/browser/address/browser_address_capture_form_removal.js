@@ -25,7 +25,7 @@ const ADDRESS_FIELD_VALUES = {
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["extensions.formautofill.addresses.capture.v2.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.addresses.supported", "on"],
       ["extensions.formautofill.heuristics.captureOnFormRemoval", true],
     ],

@@ -259,7 +259,7 @@ add_setup(async function () {
     set: [
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
       [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
-      ["extensions.formautofill.addresses.capture.v2.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
     ],
   });
 
