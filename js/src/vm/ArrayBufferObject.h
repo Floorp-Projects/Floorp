@@ -70,6 +70,8 @@ uint64_t WasmReservedBytes();
 //         - FixedLengthArrayBufferObject
 //         - ResizableArrayBufferObject
 //       - SharedArrayBufferObject
+//         - FixedLengthSharedArrayBufferObject
+//         - GrowableSharedArrayBufferObject
 //     - ArrayBufferViewObject
 //       - DataViewObject
 //         - FixedLengthDataViewObject
