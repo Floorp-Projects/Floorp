@@ -826,6 +826,10 @@ pref("permissions.desktop-notification.notNow.enabled", false);
 
 pref("permissions.fullscreen.allowed", false);
 
+// Force external link opens into the default user context ID instead of guessing
+// the most appropriate one based on the URL (https://bugzilla.mozilla.org/show_bug.cgi?id=1874599#c8)
+pref("browser.link.force_default_user_context_id_for_external_opens", false);
+
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
