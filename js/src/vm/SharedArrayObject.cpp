@@ -428,6 +428,37 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return false;
   }
 
+  mozilla::Maybe<uint64_t> maxByteLength;
+#ifdef NIGHTLY_BUILD
+  // SharedArrayBuffer ( length [ , options ] ), step 3.
+  if (cx->realm()->creationOptions().getSharedArrayBufferGrowableEnabled()) {
+    // Inline call to GetArrayBufferMaxByteLengthOption.
+    if (args.get(1).isObject()) {
+      Rooted<JSObject*> options(cx, &args[1].toObject());
+
+      Rooted<Value> val(cx);
+      if (!GetProperty(cx, options, options, cx->names().maxByteLength, &val)) {
+        return false;
+      }
+      if (!val.isUndefined()) {
+        uint64_t maxByteLengthInt;
+        if (!ToIndex(cx, val, &maxByteLengthInt)) {
+          return false;
+        }
+
+        // AllocateSharedArrayBuffer, step 2.
+        if (byteLength > maxByteLengthInt) {
+          JS_ReportErrorNumberASCII(
+              cx, GetErrorMessage, nullptr,
+              JSMSG_ARRAYBUFFER_LENGTH_LARGER_THAN_MAXIMUM);
+          return false;
+        }
+        maxByteLength = mozilla::Some(maxByteLengthInt);
+      }
+    }
+  }
+#endif
+
   // Step 3 (Inlined 24.2.1.1 AllocateSharedArrayBuffer).
   // 24.2.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
@@ -442,6 +473,15 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SHARED_ARRAY_BAD_LENGTH);
     return false;
+  }
+
+  if (maxByteLength) {
+    auto* bufobj = NewGrowable(cx, byteLength, *maxByteLength, proto);
+    if (!bufobj) {
+      return false;
+    }
+    args.rval().setObject(*bufobj);
+    return true;
   }
 
   // 24.2.1.1, steps 1 and 4-6.
