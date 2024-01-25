@@ -474,7 +474,7 @@ async function doEngagementWithoutAddingResultToView(
 class DelayingTestProvider extends UrlbarTestUtils.TestProvider {
   finishQueryPromise = null;
   async startQuery(context, addCallback) {
-    for (let result of this._results) {
+    for (let result of this.results) {
       addCallback(this, result);
     }
     await this.finishQueryPromise;

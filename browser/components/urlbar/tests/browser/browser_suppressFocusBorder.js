@@ -31,7 +31,7 @@ class AwaitPromiseProvider extends UrlbarTestUtils.TestProvider {
 
   async startQuery(context, add) {
     await this._promise;
-    for (let result of this._results) {
+    for (let result of this.results) {
       add(this, result);
     }
   }

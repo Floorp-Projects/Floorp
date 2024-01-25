@@ -33,7 +33,7 @@ add_task(async function viewUpdateAppendHidden() {
 
   // First search: Trigger the intervention tip and a view full of search
   // suggestions.
-  provider._results = queryStrings.map(
+  provider.results = queryStrings.map(
     suggestion =>
       new UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
@@ -73,7 +73,7 @@ add_task(async function viewUpdateAppendHidden() {
   // Second search: Change the provider's results so that it has enough history
   // to fill up the view.  Search suggestion rows cannot be updated to history
   // results, so the view will append the history results as new rows.
-  provider._results = queryStrings.map(title => {
+  provider.results = queryStrings.map(title => {
     let url = "http://example.com/" + title;
     return new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,

@@ -1511,69 +1511,70 @@ class TestProvider extends UrlbarProvider {
       );
     }
     super();
-    this._results = results;
+    this.results = results;
+    this.priority = priority;
+    this.addTimeout = addTimeout;
+    this.delayResultsPromise = delayResultsPromise;
     this._name = name;
     this._type = type;
-    this._priority = priority;
-    this._addTimeout = addTimeout;
     this._onCancel = onCancel;
     this._onSelection = onSelection;
     this._onEngagement = onEngagement;
-    this._delayResultsPromise = delayResultsPromise;
+
     // As this has been a common source of mistakes, auto-upgrade the provider
     // type to heuristic if any result is heuristic.
-    if (!type && this._results?.some(r => r.heuristic)) {
-      this._type = UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
+    if (!type && this.results?.some(r => r.heuristic)) {
+      this.type = UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
     }
   }
+
   get name() {
     return this._name;
   }
+
   get type() {
     return this._type;
   }
+
   getPriority(context) {
-    return this._priority;
+    return this.priority;
   }
+
   isActive(context) {
     return true;
   }
+
   async startQuery(context, addCallback) {
-    if (!this._results.length && this._addTimeout) {
-      await new Promise(resolve => lazy.setTimeout(resolve, this._addTimeout));
+    if (!this.results.length && this.addTimeout) {
+      await new Promise(resolve => lazy.setTimeout(resolve, this.addTimeout));
     }
-    if (this._delayResultsPromise) {
-      await this._delayResultsPromise;
+    if (this.delayResultsPromise) {
+      await this.delayResultsPromise;
     }
-    for (let result of this._results) {
-      if (!this._addTimeout) {
+    for (let result of this.results) {
+      if (!this.addTimeout) {
         addCallback(this, result);
       } else {
         await new Promise(resolve => {
           lazy.setTimeout(() => {
             addCallback(this, result);
             resolve();
-          }, this._addTimeout);
+          }, this.addTimeout);
         });
       }
     }
   }
+
   cancelQuery(context) {
-    if (this._onCancel) {
-      this._onCancel();
-    }
+    this._onCancel?.();
   }
 
   onSelection(result, element) {
-    if (this._onSelection) {
-      this._onSelection(result, element);
-    }
+    this._onSelection?.(result, element);
   }
 
   onEngagement(state, queryContext, details, controller) {
-    if (this._onEngagement) {
-      this._onEngagement(state, queryContext, details, controller);
-    }
+    this._onEngagement?.(state, queryContext, details, controller);
   }
 }
 
