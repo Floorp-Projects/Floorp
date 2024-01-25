@@ -1683,11 +1683,9 @@ impl ToMarionette<MarionetteKeys> for SendKeysParameters {
 impl ToMarionette<MarionetteFrame> for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteFrame> {
         Ok(match &self.id {
-            Some(x) => match x {
-                FrameId::Short(n) => MarionetteFrame::Index(*n),
-                FrameId::Element(el) => MarionetteFrame::Element(el.0.clone()),
-            },
-            None => MarionetteFrame::Parent,
+            FrameId::Short(n) => MarionetteFrame::Index(*n),
+            FrameId::Element(el) => MarionetteFrame::Element(el.0.clone()),
+            FrameId::Top => MarionetteFrame::Top,
         })
     }
 }
