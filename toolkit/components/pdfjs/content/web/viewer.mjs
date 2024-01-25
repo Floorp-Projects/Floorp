@@ -182,15 +182,13 @@ function parseQueryString(query) {
   }
   return params;
 }
-const InvisibleCharactersRegExp = /[\x00-\x1F]/g;
+const InvisibleCharsRegExp = /[\x00-\x1F]/g;
 function removeNullCharacters(str, replaceInvisible = false) {
-  if (!InvisibleCharactersRegExp.test(str)) {
+  if (!InvisibleCharsRegExp.test(str)) {
     return str;
   }
   if (replaceInvisible) {
-    return str.replaceAll(InvisibleCharactersRegExp, m => {
-      return m === "\x00" ? "" : " ";
-    });
+    return str.replaceAll(InvisibleCharsRegExp, m => m === "\x00" ? "" : " ");
   }
   return str.replaceAll("\x00", "");
 }
@@ -992,9 +990,7 @@ function addLinkAttributes(link, {
   } else {
     link.href = "";
     link.title = `Disabled: ${url}`;
-    link.onclick = () => {
-      return false;
-    };
+    link.onclick = () => false;
   }
   let targetStr = "";
   switch (target) {
@@ -1673,7 +1669,8 @@ class AnnotationEditorParams {
     editorInkColor,
     editorInkThickness,
     editorInkOpacity,
-    editorStampAddImage
+    editorStampAddImage,
+    editorFreeHighlightThickness
   }) {
     const dispatchEvent = (typeStr, value) => {
       this.eventBus.dispatch("switchannotationeditorparams", {
@@ -1700,6 +1697,9 @@ class AnnotationEditorParams {
     editorStampAddImage.addEventListener("click", () => {
       dispatchEvent("CREATE");
     });
+    editorFreeHighlightThickness.addEventListener("input", function () {
+      dispatchEvent("HIGHLIGHT_THICKNESS", this.valueAsNumber);
+    });
     this.eventBus._on("annotationeditorparamschanged", evt => {
       for (const [type, value] of evt.details) {
         switch (type) {
@@ -1717,6 +1717,9 @@ class AnnotationEditorParams {
             break;
           case AnnotationEditorParamsType.INK_OPACITY:
             editorInkOpacity.value = value;
+            break;
+          case AnnotationEditorParamsType.HIGHLIGHT_THICKNESS:
+            editorFreeHighlightThickness.value = value;
             break;
         }
       }
@@ -3040,9 +3043,7 @@ class PDFFindController {
       const extractTextCapability = new PromiseCapability();
       this._extractTextPromises[i] = extractTextCapability.promise;
       promise = promise.then(() => {
-        return this._pdfDocument.getPage(i + 1).then(pdfPage => {
-          return pdfPage.getTextContent(textOptions);
-        }).then(textContent => {
+        return this._pdfDocument.getPage(i + 1).then(pdfPage => pdfPage.getTextContent(textOptions)).then(textContent => {
           const strBuf = [];
           for (const textItem of textContent.items) {
             strBuf.push(textItem.str);
@@ -7634,7 +7635,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.1.30';
+    const viewerVersion = "4.1.86";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -8038,7 +8039,8 @@ class PDFViewer {
       });
       this.viewer.style.setProperty("--scale-factor", viewport.scale);
       if (this.pageColors?.foreground === "CanvasText" || this.pageColors?.background === "Canvas") {
-        this.viewer.style.setProperty("--hcm-highlight-filter", pdfDocument.filterFactory.addHighlightHCMFilter("CanvasText", "Canvas", "HighlightText", "Highlight"));
+        this.viewer.style.setProperty("--hcm-highlight-filter", pdfDocument.filterFactory.addHighlightHCMFilter("highlight", "CanvasText", "Canvas", "HighlightText", "Highlight"));
+        this.viewer.style.setProperty("--hcm-highlight-selected-filter", pdfDocument.filterFactory.addHighlightHCMFilter("highlight_selected", "CanvasText", "Canvas", "HighlightText", "ButtonText"));
       }
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const pageView = new PDFPageView({
@@ -10743,9 +10745,7 @@ const PDFViewerApplication = {
     this.pdfRenderingQueue.renderHighestPriority();
   },
   beforePrint() {
-    this._printAnnotationStoragePromise = this.pdfScriptingManager.dispatchWillPrint().catch(() => {}).then(() => {
-      return this.pdfDocument?.annotationStorage.print;
-    });
+    this._printAnnotationStoragePromise = this.pdfScriptingManager.dispatchWillPrint().catch(() => {}).then(() => this.pdfDocument?.annotationStorage.print);
     if (this.printService) {
       return;
     }
@@ -11724,34 +11724,34 @@ const PDFPrintServiceFactory = {
 
 class BasePreferences {
   #defaults = Object.freeze({
-    "annotationEditorMode": 0,
-    "annotationMode": 2,
-    "cursorToolOnLoad": 0,
-    "defaultZoomDelay": 400,
-    "defaultZoomValue": "",
-    "disablePageLabels": false,
-    "enableHighlightEditor": false,
-    "enablePermissions": false,
-    "enablePrintAutoRotate": true,
-    "enableScripting": true,
-    "externalLinkTarget": 0,
-    "highlightEditorColors": "yellow=#FFFF98,green=#53FFBC,blue=#80EBFF,pink=#FFCBE6,red=#FF4F5F",
-    "historyUpdateUrl": false,
-    "ignoreDestinationZoom": false,
-    "forcePageColors": false,
-    "pageColorsBackground": "Canvas",
-    "pageColorsForeground": "CanvasText",
-    "pdfBugEnabled": false,
-    "sidebarViewOnLoad": -1,
-    "scrollModeOnLoad": -1,
-    "spreadModeOnLoad": -1,
-    "textLayerMode": 1,
-    "viewOnLoad": 0,
-    "disableAutoFetch": false,
-    "disableFontFace": false,
-    "disableRange": false,
-    "disableStream": false,
-    "enableXfa": true
+    annotationEditorMode: 0,
+    annotationMode: 2,
+    cursorToolOnLoad: 0,
+    defaultZoomDelay: 400,
+    defaultZoomValue: "",
+    disablePageLabels: false,
+    enableHighlightEditor: false,
+    enablePermissions: false,
+    enablePrintAutoRotate: true,
+    enableScripting: true,
+    externalLinkTarget: 0,
+    highlightEditorColors: "yellow=#FFFF98,green=#53FFBC,blue=#80EBFF,pink=#FFCBE6,red=#FF4F5F",
+    historyUpdateUrl: false,
+    ignoreDestinationZoom: false,
+    forcePageColors: false,
+    pageColorsBackground: "Canvas",
+    pageColorsForeground: "CanvasText",
+    pdfBugEnabled: false,
+    sidebarViewOnLoad: -1,
+    scrollModeOnLoad: -1,
+    spreadModeOnLoad: -1,
+    textLayerMode: 1,
+    viewOnLoad: 0,
+    disableAutoFetch: false,
+    disableFontFace: false,
+    disableRange: false,
+    disableStream: false,
+    enableXfa: true
   });
   #prefs = Object.create(null);
   #initializedPromise = null;
@@ -11764,13 +11764,13 @@ class BasePreferences {
       prefs
     }) => {
       const BROWSER_PREFS = {
-        "canvasMaxAreaInBytes": -1,
-        "isInAutomation": false,
-        "supportsDocumentFonts": true,
-        "supportsIntegratedFind": false,
-        "supportsMouseWheelZoomCtrlKey": true,
-        "supportsMouseWheelZoomMetaKey": true,
-        "supportsPinchToZoom": true
+        canvasMaxAreaInBytes: -1,
+        isInAutomation: false,
+        supportsDocumentFonts: true,
+        supportsIntegratedFind: false,
+        supportsMouseWheelZoomCtrlKey: true,
+        supportsMouseWheelZoomMetaKey: true,
+        supportsPinchToZoom: true
       };
       const options = Object.create(null);
       for (const [name, defaultVal] of Object.entries(BROWSER_PREFS)) {
@@ -12321,8 +12321,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.1.30';
-const pdfjsBuild = 'a22b5a4f0';
+const pdfjsVersion = "4.1.86";
+const pdfjsBuild = "bf9236009";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
@@ -12447,7 +12447,8 @@ function getViewerConfiguration() {
       editorInkColor: document.getElementById("editorInkColor"),
       editorInkThickness: document.getElementById("editorInkThickness"),
       editorInkOpacity: document.getElementById("editorInkOpacity"),
-      editorStampAddImage: document.getElementById("editorStampAddImage")
+      editorStampAddImage: document.getElementById("editorStampAddImage"),
+      editorFreeHighlightThickness: document.getElementById("editorFreeHighlightThickness")
     },
     printContainer: document.getElementById("printContainer"),
     openFileInput: null,
