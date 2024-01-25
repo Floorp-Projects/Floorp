@@ -3034,6 +3034,22 @@ nsresult nsStandardURL::SetFilePath(const nsACString& input) {
     int32_t dirLen, baseLen, extLen;
     nsresult rv;
 
+    if (IsSpecialProtocol(mSpec)) {
+      // Bug 1873955: Replace all backslashes with slashes when parsing paths
+      // Stop when we reach the query or the hash.
+      auto* start = str.BeginWriting();
+      auto* end = str.EndWriting();
+      while (start != end) {
+        if (*start == '?' || *start == '#') {
+          break;
+        }
+        if (*start == '\\') {
+          *start = '/';
+        }
+        start++;
+      }
+    }
+
     rv = mParser->ParseFilePath(filepath, str.Length(), &dirPos, &dirLen,
                                 &basePos, &baseLen, &extPos, &extLen);
     if (NS_FAILED(rv)) {
