@@ -91,7 +91,6 @@ def env_extras(**kwargs):
 
 def run_info_extras(logger, **kwargs):
     rv = fx_run_info_extras(logger, **kwargs)
-    package = kwargs["package_name"]
     rv.update({"headless": False})
 
     if kwargs["browser_version"] is None:
