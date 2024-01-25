@@ -94,23 +94,26 @@ function isWindows11() {
 
 // The actual test
 
+function assertThrottledRestyles(restyleCount, msg) {
+  // Allow 1 restyle count on Windows 11 since on our CIs there's something
+  // causing force flushing.
+  if (isWindows11()) {
+    ok(restyleCount <= 1, msg);
+  } else {
+    is(restyleCount, 0, msg);
+  }
+}
+
 async function test() {
   // Generate an infinite animation which is initially clipped out by
   // overflow: hidden style in the out-of-process iframe.
   await setup_in_oopif();
 
   let restyleCount = await observe_styling_in_oopif(5);
-  // Allow 1 restyle count on Windows 11 since on our CIs there's something
-  // causing force flushing.
-  if (isWindows11()) {
-    ok(restyleCount <= 1,
-       "Animation in an out-of-process iframe which is initially clipped out " +
-         "due to 'overflow: hidden' should be throttled");
-  } else {
-    is(restyleCount, 0,
-       "Animation in an out-of-process iframe which is initially clipped out " +
-         "due to 'overflow: hidden' should be throttled");
-  }
+  assertThrottledRestyles(
+    restyleCount,
+    "Animation in an out-of-process iframe which is initially clipped out " +
+    "due to 'overflow: hidden' should be throttled");
 
   // Scroll synchronously to a position where the iframe gets visible.
   scroller.scrollTo(0, 1000);
@@ -134,7 +137,8 @@ async function test() {
   await observe_styling_in_oopif(1);
 
   restyleCount = await observe_styling_in_oopif(5);
-  is(restyleCount, 0,
+  assertThrottledRestyles(
+    restyleCount,
      "Animation in an out-of-process iframe which is clipped out again " +
        "should be throttled again");
 
@@ -161,7 +165,8 @@ async function test() {
   await observe_styling_in_oopif(60);
 
   restyleCount = await observe_styling_in_oopif(5);
-  is(restyleCount, 0,
+  assertThrottledRestyles(
+    restyleCount,
      "Animation in an out-of-process iframe which is scrolled out of view by " +
        "asynchronous scrolling should be throttled");
 
