@@ -442,28 +442,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     this.#newReportEndpoint = this.newReportEndpointPref;
   }
 
-  #shuffleArray(arr) {
-    const { length } = arr;
-    const random = crypto.getRandomValues(new Uint8ClampedArray(length));
-    for (let i = length - 1; i > 0; i--) {
-      const j = Math.floor((random[i] / 256) * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-
-  #randomizeDropdownItems(dropdown) {
-    if (!dropdown) {
-      return;
-    }
-
-    // Leave the first option ("choose reason") at the start
-    const items = Array.from(
-      dropdown.querySelectorAll(`menuitem:not(:first-of-type)`)
-    );
-    this.#shuffleArray(items);
-    items[0].parentNode.append(...items);
-  }
-
   #initMainView(state) {
     state.sendButton.addEventListener("command", async ({ target }) => {
       if (state.checkAndShowInputValidity()) {
@@ -494,8 +472,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     reasonDropdown.addEventListener("command", () => {
       state.showOrHideReasonValidationMessage();
     });
-
-    this.#randomizeDropdownItems(reasonDropdown);
 
     const menupopup = reasonDropdown.querySelector("menupopup");
     const onDropDownShowOrHide = ({ type }) => {
