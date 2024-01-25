@@ -2,22 +2,22 @@
   "data": [
     {
       "name": "bergamot-translator",
-      "schema": 1701043206881,
+      "schema": 1705698520049,
       "license": "MPL-2.0",
       "release": "v0.4.5",
       "version": "1.1",
       "revision": "05a87784973b6e1cc591f1f1a9a05c5873d9971e",
       "attachment": {
-        "hash": "3849a908cbd2fb5e4757c2be2bc65b5bd1af1e3098f48ded27a4d0a5efd4ada4",
-        "size": 5189510,
+        "hash": "9bfb4cc9dc176c7cbaa6b2890d9f6868c0ada6f44168a0bb0903dbfb88278d92",
+        "size": 5188872,
         "filename": "bergamot-translator-worker.wasm",
-        "location": "main-workspace/translations-wasm/60c8ba7c-2966-4dd7-9d4b-38d42504c6e9.wasm",
+        "location": "main-workspace/translations-wasm/76ec99f8-04d5-47df-8c52-a3a38d864141.wasm",
         "mimetype": "application/wasm"
       },
       "fx_release": "122.0a1",
-      "filter_expression": "env.channel == 'nightly' || env.channel == 'default'",
+      "filter_expression": "",
       "id": "73c6f691-ba5e-4c98-9622-820a2cde16c0",
-      "last_modified": 1701359282479
+      "last_modified": 1705701099603
     },
     {
       "name": "fasttext-wasm",
@@ -74,5 +74,5 @@
       "last_modified": 1681500422542
     }
   ],
-  "timestamp": 1701359282479
+  "timestamp": 1705701099603
 }
