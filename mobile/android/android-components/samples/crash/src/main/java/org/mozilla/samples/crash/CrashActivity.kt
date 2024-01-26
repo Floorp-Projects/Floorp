@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
+import mozilla.components.support.utils.ext.registerReceiverCompat
 import org.mozilla.samples.crash.databinding.ActivityCrashBinding
 
 class CrashActivity : AppCompatActivity(), View.OnClickListener {
@@ -61,7 +62,12 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-        registerReceiver(receiver, IntentFilter(CrashApplication.NON_FATAL_CRASH_BROADCAST))
+
+        registerReceiverCompat(
+            receiver,
+            IntentFilter(CrashApplication.NON_FATAL_CRASH_BROADCAST),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
 
         crashReporter.recordCrashBreadcrumb(
             Breadcrumb(
