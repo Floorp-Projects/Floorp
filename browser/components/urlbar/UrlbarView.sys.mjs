@@ -2669,24 +2669,25 @@ export class UrlbarView {
             },
           });
           actionNode.appendChild(textModeLabel);
-        }
 
-        let iconModeLabel = this.#createElement("div");
-        iconModeLabel.classList.add("urlbarView-userContext-iconMode");
-        actionNode.appendChild(iconModeLabel);
-        if (identity.icon) {
-          let userContextIcon = this.#createElement("img");
-          userContextIcon.classList.add("urlbarView-userContext-icon");
+          let iconModeLabel = this.#createElement("div");
+          iconModeLabel.classList.add("urlbarView-userContext-iconMode");
+          actionNode.appendChild(iconModeLabel);
+          if (identity.icon) {
+            let userContextIcon = this.#createElement("img");
+            userContextIcon.classList.add("urlbarView-userContext-icon");
 
-          userContextIcon.classList.add("identity-icon-" + identity.icon);
-          userContextIcon.src =
-            "resource://usercontext-content/" + identity.icon + ".svg";
-          this.#setElementL10n(iconModeLabel, {
-            id: "urlbar-result-action-switch-tab",
-          });
-          iconModeLabel.appendChild(userContextIcon);
+            userContextIcon.classList.add("identity-icon-" + identity.icon);
+            userContextIcon.setAttribute("alt", label);
+            userContextIcon.src =
+              "resource://usercontext-content/" + identity.icon + ".svg";
+            this.#setElementL10n(iconModeLabel, {
+              id: "urlbar-result-action-switch-tab",
+            });
+            iconModeLabel.appendChild(userContextIcon);
+          }
+          actionNode.setAttribute("tooltiptext", label);
         }
-        actionNode.setAttribute("tooltiptext", label);
       }
     } else {
       actionNode.classList.remove("urlbarView-userContext");
