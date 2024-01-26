@@ -66,7 +66,7 @@ class NimbusMessagingHomescreenTest {
                         buttonLabel = Res.string(messageButtonLabel),
                         text = Res.string(messageText),
                         title = Res.string(messageTitle),
-                        trigger = listOf("ALWAYS"),
+                        triggerIfAll = listOf("ALWAYS"),
                     ),
                 ),
                 styles = mapOf(

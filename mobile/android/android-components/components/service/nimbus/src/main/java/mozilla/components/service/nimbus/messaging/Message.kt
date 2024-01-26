@@ -7,15 +7,20 @@ package mozilla.components.service.nimbus.messaging
 import androidx.annotation.VisibleForTesting
 
 /**
- * A data class that holds a representation of GleanPlum message from Nimbus.
+ * A data class that holds a representation of a message from Nimbus.
+ *
+ * In order to be eligible to be shown, all `triggerIfAll` expressions
+ * AND none of the `excludeIfAny` expressions must evaluate to `true`.
  *
  * @param id identifies a message as unique.
  * @param data Data information provided from Nimbus.
  * @param action A strings that represents which action should be performed
  * after a message is clicked.
  * @param style Indicates how a message should be styled.
- * @param triggers A list of strings corresponding to targeting expressions. The message
- * will be shown if all expressions `true`.
+ * @param triggerIfAll A list of strings corresponding to JEXL targeting expressions. The message
+ * will be shown if _all_ expressions evaluate to `true`.
+ * @param excludeIfAny A list of strings corresponding to JEXL targeting expressions. The message
+ * will _not_ be shown if _any_ expressions evaluate to `true`.
  * @param metadata Metadata that help to identify if a message should shown.
  */
 data class Message(
@@ -23,7 +28,8 @@ data class Message(
     internal val data: MessageData,
     internal val action: String,
     internal val style: StyleData,
-    internal val triggers: List<String>,
+    internal val triggerIfAll: List<String>,
+    internal val excludeIfAny: List<String> = listOf(),
     internal val metadata: Metadata,
 ) {
     val text: String

@@ -52,7 +52,7 @@ class MessagingReducerTest {
             data = MessageData(surface = surface),
             action = action,
             style = StyleData(),
-            triggers = listOf(),
+            triggerIfAll = listOf(),
             metadata = Message.Metadata(id = id),
         )
 

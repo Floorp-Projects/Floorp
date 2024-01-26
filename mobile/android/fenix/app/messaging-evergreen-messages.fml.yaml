@@ -29,9 +29,10 @@ import:
                 text: default_browser_experiment_card_text
                 surface: homescreen
                 action: "MAKE_DEFAULT_BROWSER"
-                trigger:
-                  - I_AM_NOT_DEFAULT_BROWSER
+                trigger-if-all:
                   - USER_ESTABLISHED_INSTALL
+                exclude-if-any:
+                  - I_AM_DEFAULT_BROWSER
                 style: PERSISTENT
                 button-label: preferences_set_as_default_browser
 
@@ -47,7 +48,8 @@ import:
                 text: nimbus_notification_default_browser_text
                 surface: notification
                 style: NOTIFICATION
-                trigger:
-                  - I_AM_NOT_DEFAULT_BROWSER
+                trigger-if-all:
                   - DAY_3_AFTER_INSTALL
+                exclude-if-any:
+                  - I_AM_DEFAULT_BROWSER
                 action: MAKE_DEFAULT_BROWSER

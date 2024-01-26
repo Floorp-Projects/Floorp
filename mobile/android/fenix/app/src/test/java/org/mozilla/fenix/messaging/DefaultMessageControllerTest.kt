@@ -69,7 +69,8 @@ class DefaultMessageControllerTest {
         data = data,
         style = mockk(relaxed = true),
         action = "action",
-        triggers = emptyList(),
+        triggerIfAll = emptyList(),
+        excludeIfAny = emptyList(),
         metadata = Message.Metadata(
             id = "id",
             displayCount = 0,

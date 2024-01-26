@@ -113,6 +113,7 @@ class AppStoreTest {
                 "action",
                 mockk(),
                 emptyList(),
+                emptyList(),
                 mockk(),
             )
             appStore.dispatch(UpdateMessageToShow(message)).join()

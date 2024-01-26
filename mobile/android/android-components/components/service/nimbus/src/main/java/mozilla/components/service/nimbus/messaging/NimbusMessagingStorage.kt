@@ -91,8 +91,10 @@ class NimbusMessagingStorage(
             "CONTROL_ACTION"
         }
 
-        val trigger = sanitizeTriggers(message.trigger, featureValue.triggers) ?: return null
+        val triggerIfAll = sanitizeTriggers(message.triggerIfAll, featureValue.triggers) ?: return null
+        val excludeIfAny = sanitizeTriggers(message.excludeIfAny, featureValue.triggers) ?: return null
         val style = sanitizeStyle(message.style, featureValue.styles) ?: return null
+
         val storageMetadata = metadataStorage.getMetadata()
 
         return Message(
@@ -100,8 +102,9 @@ class NimbusMessagingStorage(
             data = message,
             action = action,
             style = style,
+            triggerIfAll = triggerIfAll,
+            excludeIfAny = excludeIfAny,
             metadata = storageMetadata[key] ?: addMetadata(key),
-            triggers = trigger,
         )
     }
 
@@ -178,7 +181,14 @@ class NimbusMessagingStorage(
     ): Message? {
         val message = availableMessages
             .filter { !excluded.contains(it.id) }
-            .firstOrNull { isMessageEligible(it, helper) } ?: return null
+            .firstOrNull {
+                try {
+                    isMessageEligible(it, helper)
+                } catch (e: NimbusException) {
+                    reportMalformedMessage(it.id)
+                    false
+                }
+            } ?: return null
 
         // If this is an experimental message, but not a placebo, then just return the message.
         if (!message.data.isControl) {
@@ -319,20 +329,28 @@ class NimbusMessagingStorage(
         message: Message,
         helper: NimbusMessagingHelperInterface,
     ): Boolean {
-        return message.triggers.all { condition ->
-            try {
-                if (malFormedMap.containsKey(condition)) {
-                    return false
-                }
-                helper.evalJexl(condition)
-            } catch (e: NimbusException.EvaluationException) {
-                reportMalformedMessage(message.id)
-                malFormedMap[condition] = message.id
-                logger.info("Unable to evaluate $condition")
-                false
-            }
+        return message.triggerIfAll.all { condition ->
+            evalJexl(message, helper, condition)
+        } && !message.excludeIfAny.any { condition ->
+            evalJexl(message, helper, condition)
         }
     }
+
+    private fun evalJexl(
+        message: Message,
+        helper: NimbusMessagingHelperInterface,
+        condition: String,
+    ): Boolean =
+        try {
+            if (malFormedMap.containsKey(condition)) {
+                throw NimbusException.EvaluationException(condition)
+            }
+            helper.evalJexl(condition)
+        } catch (e: NimbusException) {
+            malFormedMap[condition] = message.id
+            logger.info("Unable to evaluate ${message.id} trigger: $condition")
+            throw NimbusException.EvaluationException(condition)
+        }
 
     @VisibleForTesting
     internal fun getOnControlBehavior(): ControlMessageBehavior = messagingFeature.value().onControl

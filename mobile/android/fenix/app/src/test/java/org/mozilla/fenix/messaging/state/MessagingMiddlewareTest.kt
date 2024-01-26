@@ -355,7 +355,8 @@ private fun createMessage(
     action: String = "action",
     styleData: StyleData = StyleData(),
     triggers: List<String> = listOf("triggers"),
-) = Message(messageId, data, action, styleData, triggers, metadata)
+    except: List<String> = listOf(),
+) = Message(messageId, data, action, styleData, triggers, except, metadata)
 
 private fun createMetadata(
     displayCount: Int = 0,

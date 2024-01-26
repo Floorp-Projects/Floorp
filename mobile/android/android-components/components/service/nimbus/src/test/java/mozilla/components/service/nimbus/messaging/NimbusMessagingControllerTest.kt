@@ -273,7 +273,8 @@ class NimbusMessagingControllerTest {
             data = messageData,
             style = style,
             metadata = Message.Metadata(id, displayCount),
-            triggers = emptyList(),
+            triggerIfAll = emptyList(),
+            excludeIfAny = emptyList(),
             action = action,
         )
 }

@@ -133,13 +133,20 @@ objects:
           The surface identifier for this message.
         type: SurfaceName
         default: homescreen
-      trigger:
+      trigger-if-all:
         type: List<TriggerName>
         description: >
           A list of strings corresponding to
           targeting expressions. The message will be
-          shown if all expressions `true`.
+          shown if all expressions are `true`.
         default: []
+      exclude-if-any:
+        type: List<TriggerName>
+        description: >
+          A list of strings corresponding to
+          targeting expressions. The message will not be
+          shown if any of the expressions are `true`.
+        default: [ ]
   StyleData:
     description: >
       A group of properties (predominantly visual) to
