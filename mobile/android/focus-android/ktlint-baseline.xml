@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<baseline version="1.0">
+    <file name="app/src/androidTest/java/org/mozilla/focus/activity/robots/BrowserRobot.kt">
+        <error line="247" column="1" source="standard:max-line-length" />
+        <error line="247" column="114" source="standard:argument-list-wrapping" />
+        <error line="247" column="138" source="standard:argument-list-wrapping" />
+        <error line="247" column="142" source="standard:argument-list-wrapping" />
+        <error line="526" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/androidTest/java/org/mozilla/focus/activity/robots/SearchRobot.kt">
+        <error line="165" column="1" source="standard:max-line-length" />
+        <error line="165" column="52" source="standard:argument-list-wrapping" />
+        <error line="165" column="76" source="standard:argument-list-wrapping" />
+        <error line="165" column="126" source="standard:argument-list-wrapping" />
+        <error line="165" column="127" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="app/src/androidTest/java/org/mozilla/focus/activity/robots/SettingsPrivacyMenuRobot.kt">
+        <error line="262" column="1" source="standard:max-line-length" />
+        <error line="722" column="1" source="standard:max-line-length" />
+        <error line="722" column="27" source="standard:argument-list-wrapping" />
+        <error line="722" column="45" source="standard:argument-list-wrapping" />
+        <error line="722" column="128" source="standard:argument-list-wrapping" />
+        <error line="722" column="129" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="app/src/androidTest/java/org/mozilla/focus/screenshots/HomeScreenScreenshots.kt">
+        <error line="118" column="1" source="standard:max-line-length" />
+        <error line="118" column="39" source="standard:argument-list-wrapping" />
+        <error line="118" column="63" source="standard:argument-list-wrapping" />
+        <error line="118" column="129" source="standard:argument-list-wrapping" />
+        <error line="118" column="130" source="standard:argument-list-wrapping" />
+        <error line="121" column="1" source="standard:max-line-length" />
+        <error line="121" column="39" source="standard:argument-list-wrapping" />
+        <error line="121" column="121" source="standard:argument-list-wrapping" />
+        <error line="123" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/biometrics/BiometricAuthenticationFragmentTest.kt">
+        <error line="58" column="1" source="standard:max-line-length" />
+        <error line="65" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/browser/integration/BrowserToolbarIntegrationTest.kt">
+        <error line="174" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/cfr/CfrMiddlewareTest.kt">
+        <error line="46" column="1" source="standard:max-line-length" />
+        <error line="74" column="1" source="standard:max-line-length" />
+        <error line="95" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/ext/BrowserToolbarTest.kt">
+        <error line="46" column="1" source="standard:max-line-length" />
+        <error line="46" column="20" source="standard:argument-list-wrapping" />
+        <error line="46" column="126" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/ext/StringTest.kt">
+        <error line="43" column="1" source="standard:max-line-length" />
+        <error line="53" column="1" source="standard:max-line-length" />
+        <error line="58" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/ext/UriTest.kt">
+        <error line="22" column="1" source="standard:max-line-length" />
+        <error line="22" column="29" source="standard:argument-list-wrapping" />
+        <error line="22" column="42" source="standard:argument-list-wrapping" />
+        <error line="22" column="128" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/menu/BrowserMenuControllerTest.kt">
+        <error line="121" column="1" source="standard:max-line-length" />
+        <error line="129" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/onboarding/OnboardingStorageTest.kt">
+        <error line="31" column="1" source="standard:max-line-length" />
+        <error line="42" column="1" source="standard:max-line-length" />
+        <error line="53" column="1" source="standard:max-line-length" />
+        <error line="61" column="1" source="standard:max-line-length" />
+        <error line="67" column="1" source="standard:max-line-length" />
+        <error line="67" column="22" source="standard:argument-list-wrapping" />
+        <error line="67" column="93" source="standard:argument-list-wrapping" />
+        <error line="67" column="115" source="standard:argument-list-wrapping" />
+        <error line="67" column="137" source="standard:argument-list-wrapping" />
+        <error line="67" column="170" source="standard:argument-list-wrapping" />
+        <error line="67" column="173" source="standard:argument-list-wrapping" />
+        <error line="67" column="175" source="standard:argument-list-wrapping" />
+        <error line="67" column="176" source="standard:argument-list-wrapping" />
+        <error line="71" column="1" source="standard:max-line-length" />
+        <error line="77" column="1" source="standard:max-line-length" />
+        <error line="77" column="22" source="standard:argument-list-wrapping" />
+        <error line="77" column="94" source="standard:argument-list-wrapping" />
+        <error line="77" column="116" source="standard:argument-list-wrapping" />
+        <error line="77" column="138" source="standard:argument-list-wrapping" />
+        <error line="77" column="171" source="standard:argument-list-wrapping" />
+        <error line="77" column="174" source="standard:argument-list-wrapping" />
+        <error line="77" column="176" source="standard:argument-list-wrapping" />
+        <error line="77" column="177" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/searchwidget/ExternalIntentNavigationTest.kt">
+        <error line="51" column="1" source="standard:max-line-length" />
+        <error line="62" column="1" source="standard:max-line-length" />
+        <error line="76" column="1" source="standard:max-line-length" />
+        <error line="89" column="1" source="standard:max-line-length" />
+        <error line="114" column="1" source="standard:max-line-length" />
+        <error line="126" column="1" source="standard:max-line-length" />
+        <error line="140" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/searchwidget/SearchWidgetProviderTest.kt">
+        <error line="30" column="1" source="standard:max-line-length" />
+        <error line="37" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/sitepermissions/SitePermissionOptionsStorageTest.kt">
+        <error line="30" column="1" source="standard:max-line-length" />
+        <error line="40" column="1" source="standard:max-line-length" />
+        <error line="50" column="1" source="standard:max-line-length" />
+        <error line="60" column="1" source="standard:max-line-length" />
+        <error line="70" column="1" source="standard:max-line-length" />
+        <error line="78" column="1" source="standard:max-line-length" />
+        <error line="86" column="1" source="standard:max-line-length" />
+        <error line="94" column="1" source="standard:max-line-length" />
+        <error line="102" column="1" source="standard:max-line-length" />
+        <error line="110" column="1" source="standard:max-line-length" />
+        <error line="118" column="1" source="standard:max-line-length" />
+        <error line="126" column="1" source="standard:max-line-length" />
+        <error line="134" column="1" source="standard:max-line-length" />
+        <error line="142" column="1" source="standard:max-line-length" />
+        <error line="150" column="1" source="standard:max-line-length" />
+        <error line="158" column="1" source="standard:max-line-length" />
+        <error line="166" column="1" source="standard:max-line-length" />
+        <error line="174" column="1" source="standard:max-line-length" />
+        <error line="182" column="1" source="standard:max-line-length" />
+        <error line="190" column="1" source="standard:max-line-length" />
+        <error line="198" column="1" source="standard:max-line-length" />
+        <error line="206" column="1" source="standard:max-line-length" />
+        <error line="214" column="1" source="standard:max-line-length" />
+        <error line="225" column="1" source="standard:max-line-length" />
+        <error line="236" column="1" source="standard:max-line-length" />
+        <error line="247" column="1" source="standard:max-line-length" />
+        <error line="258" column="1" source="standard:max-line-length" />
+        <error line="269" column="1" source="standard:max-line-length" />
+        <error line="280" column="1" source="standard:max-line-length" />
+        <error line="288" column="1" source="standard:max-line-length" />
+        <error line="296" column="1" source="standard:max-line-length" />
+        <error line="304" column="1" source="standard:max-line-length" />
+        <error line="312" column="1" source="standard:max-line-length" />
+        <error line="320" column="1" source="standard:max-line-length" />
+        <error line="328" column="1" source="standard:max-line-length" />
+        <error line="336" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/sitepermissions/SitePermissionOptionsStoreTest.kt">
+        <error line="34" column="1" source="standard:max-line-length" />
+        <error line="34" column="134" source="standard:argument-list-wrapping" />
+        <error line="34" column="155" source="standard:argument-list-wrapping" />
+        <error line="43" column="1" source="standard:max-line-length" />
+        <error line="54" column="1" source="standard:max-line-length" />
+        <error line="57" column="1" source="standard:max-line-length" />
+        <error line="57" column="68" source="standard:argument-list-wrapping" />
+        <error line="57" column="100" source="standard:argument-list-wrapping" />
+        <error line="57" column="121" source="standard:argument-list-wrapping" />
+        <error line="62" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/sitepermissions/SitePermissionsFragmentTest.kt">
+        <error line="48" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/telemetry/StartupPathProviderTest.kt">
+        <error line="53" column="1" source="standard:max-line-length" />
+        <error line="58" column="1" source="standard:max-line-length" />
+        <error line="102" column="1" source="standard:max-line-length" />
+        <error line="122" column="1" source="standard:max-line-length" />
+        <error line="136" column="1" source="standard:max-line-length" />
+        <error line="147" column="1" source="standard:max-line-length" />
+        <error line="158" column="1" source="standard:max-line-length" />
+        <error line="170" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/telemetry/StartupStateProviderTest.kt">
+        <error line="108" column="1" source="standard:max-line-length" />
+        <error line="124" column="1" source="standard:max-line-length" />
+        <error line="142" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/telemetry/StartupTypeTelemetryTest.kt">
+        <error line="75" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/org/mozilla/focus/utils/IntentUtilsTest.kt">
+        <error line="13" column="1" source="standard:max-line-length" />
+        <error line="18" column="1" source="standard:max-line-length" />
+    </file>
+</baseline>
