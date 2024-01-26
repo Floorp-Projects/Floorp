@@ -1934,15 +1934,6 @@
   congruent_to: if_operands_equal
   alias_set: none
 
-- name: GuardIsFixedLengthTypedArray
-  operands:
-    object: Object
-  result_type: Object
-  guard: true
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-
 - name: GuardHasProxyHandler
   operands:
     object: Object

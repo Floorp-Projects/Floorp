@@ -8,11 +8,7 @@ support-files = [
   "forOf_iframe.html",
   "!/js/xpconnect/tests/mochitest/file_empty.html",
 ]
-prefs = [
-  "javascript.options.large_arraybuffers=true",
-  "javascript.options.experimental.arraybuffer_resizable=true",
-  "javascript.options.experimental.sharedarraybuffer_growable=true",
-]
+prefs = ["javascript.options.large_arraybuffers=true"]
 
 ["test_ByteString.html"]
 
@@ -199,6 +195,3 @@ skip-if = ["!debug"]
 skip-if = ["!debug"]
 
 ["test_worker_UnwrapArg.html"]
-
-["test_resizable_arraybufferview.html"]
-skip-if = ["!nightly_build"] # Bug 1670026

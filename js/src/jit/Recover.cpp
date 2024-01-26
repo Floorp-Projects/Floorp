@@ -1677,7 +1677,7 @@ RNewTypedArray::RNewTypedArray(CompactBufferReader& reader) {}
 bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
 
-  size_t length = templateObject.as<FixedLengthTypedArrayObject>()->length();
+  size_t length = templateObject.as<TypedArrayObject>()->length();
   MOZ_ASSERT(length <= INT32_MAX,
              "Template objects are only created for int32 lengths");
 

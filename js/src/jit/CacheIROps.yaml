@@ -465,13 +465,6 @@
   args:
     obj: ObjId
 
-- name: GuardIsFixedLengthTypedArray
-  shared: true
-  transpile: true
-  cost_estimate: 1
-  args:
-    obj: ObjId
-
 - name: GuardHasProxyHandler
   shared: false
   transpile: true

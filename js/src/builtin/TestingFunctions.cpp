@@ -2216,8 +2216,8 @@ static bool WasmGcArrayLength(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool LargeArrayBufferSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(ArrayBufferObject::ByteLengthLimit >
-                         ArrayBufferObject::ByteLengthLimitForSmallBuffer);
+  args.rval().setBoolean(ArrayBufferObject::MaxByteLength >
+                         ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return true;
 }
 

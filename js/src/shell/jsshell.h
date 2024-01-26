@@ -130,7 +130,6 @@ extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
-extern bool enableArrayBufferResizable;
 extern bool enableSymbolsAsWeakMapKeys;
 extern bool enableNewSetMethods;
 extern bool enableImportAttributes;
