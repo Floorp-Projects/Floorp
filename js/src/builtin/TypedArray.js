@@ -1214,10 +1214,14 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
 
   // Step 5.
   var firstElement = array[0];
+  assert(
+    typeof firstElement === "number" || typeof firstElement === "bigint",
+    "TypedArray elements are either Numbers or BigInts"
+  );
 
   // Steps 6-7.
-  // Omit the 'if' clause in step 6, since typed arrays can't have undefined
-  // or null elements.
+  // Omit the 'if' clause in step 6, since non-empty typed arrays can't have
+  // undefined or null elements.
 #if JS_HAS_INTL_API
   var R = ToString(
     callContentFunction(
@@ -1240,21 +1244,23 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
   // Steps 8-9.
   for (var k = 1; k < len; k++) {
     // Step 9.a.
-    var S = R + separator;
+    R += separator;
 
     // Step 9.b.
     var nextElement = array[k];
 
-    // Step 9.c *should* be unreachable: typed array elements are numbers.
-    // But bug 1079853 means |nextElement| *could* be |undefined|, if the
-    // previous iteration's step 9.d or step 7 detached |array|'s buffer.
-    // Conveniently, if this happens, evaluating |nextElement.toLocaleString|
-    // throws the required TypeError, and the only observable difference is
-    // the error message. So despite bug 1079853, we can skip step 9.c.
+    // Step 9.c.
+    if (nextElement === undefined) {
+      continue;
+    }
+    assert(
+      typeof nextElement === "number" || typeof nextElement === "bigint",
+      "TypedArray elements are either Numbers or BigInts"
+    );
 
-    // Step 9.d.
+    // Steps 9.d-e.
 #if JS_HAS_INTL_API
-    R = ToString(
+    R += ToString(
       callContentFunction(
         nextElement.toLocaleString,
         nextElement,
@@ -1263,11 +1269,8 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
       )
     );
 #else
-    R = ToString(callContentFunction(nextElement.toLocaleString, nextElement));
+    R += ToString(callContentFunction(nextElement.toLocaleString, nextElement));
 #endif
-
-    // Step 9.e.
-    R = S + R;
   }
 
   // Step 10.
