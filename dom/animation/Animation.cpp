@@ -926,9 +926,9 @@ void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 
 void Animation::Tick(AnimationTimeline::TickState& aTickState) {
   if (Pending()) {
-    // Finish pending if we can, but make sure we've seen one existing tick
-    // at least.
-    if (mSawTickWhilePending) {
+    // Finish pending if we can, but make sure we've seen one existing tick, or
+    // we've requested to get started via SetPendingReadyTime.
+    if (!mPendingReadyTime.IsNull() || mSawTickWhilePending) {
       TryTriggerNow();
     }
     mSawTickWhilePending = true;
@@ -959,6 +959,16 @@ void Animation::Tick(AnimationTimeline::TickState& aTickState) {
 bool Animation::TryTriggerNow() {
   if (!Pending()) {
     return true;
+  }
+  if (!mPendingReadyTime.IsNull()) {
+    auto timelineTime = mTimeline->ToTimelineTime(mPendingReadyTime);
+    MOZ_ASSERT(!timelineTime.IsNull(),
+               "How? This came from the timeline itself");
+    mPendingReadyTime = {};
+    if (!timelineTime.IsNull()) {
+      FinishPendingAt(timelineTime.Value());
+      return true;
+    }
   }
   // If we don't have an active timeline we can't trigger the animation.
   if (NS_WARN_IF(!mTimeline)) {
@@ -1449,7 +1459,7 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   }
 
   mPendingState = PendingState::PlayPending;
-
+  mPendingReadyTime = {};
   mSawTickWhilePending = false;
   if (Document* doc = GetRenderedDocument()) {
     if (HasFiniteTimeline()) {
@@ -1511,6 +1521,7 @@ void Animation::Pause(ErrorResult& aRv) {
   }
 
   mPendingState = PendingState::PausePending;
+  mPendingReadyTime = {};
   mSawTickWhilePending = false;
 
   // See the relevant PlayPending code for comments.
