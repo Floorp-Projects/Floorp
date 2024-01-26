@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
 });
@@ -42,11 +43,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "RecommendationProvider",
   "resource://activity-stream/lib/RecommendationProvider.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesFeed",
-  "resource://activity-stream/lib/PlacesFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

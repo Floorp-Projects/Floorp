@@ -739,7 +739,7 @@ module.exports = {
         "browser/components/newtab/content-src/components/DiscoveryStreamComponents/TopSites/TopSites.jsx ",
         "browser/components/newtab/content-src/components/TopSites/TopSiteForm.jsx ",
         "browser/components/newtab/lib/CFRMessageProvider.sys.mjs ",
-        "browser/components/newtab/lib/PlacesFeed.jsm ",
+        "browser/components/newtab/lib/PlacesFeed.sys.mjs ",
         "browser/components/originattributes/test/browser/browser_broadcastChannel.js",
         "browser/components/originattributes/test/browser/browser_cache.js",
         "browser/components/originattributes/test/browser/browser_favicon_firstParty.js",

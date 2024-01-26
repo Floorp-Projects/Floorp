@@ -14,16 +14,13 @@ ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
+  PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchService: "resource://gre/modules/SearchService.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
-
-const { PlacesFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/PlacesFeed.jsm"
-);
 
 const { PlacesObserver } = PlacesFeed;
 

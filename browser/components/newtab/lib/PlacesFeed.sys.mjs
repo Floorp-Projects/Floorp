@@ -1,18 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const {
-  actionCreators: ac,
-  actionTypes: at,
-  actionUtils: au,
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
 );
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// AboutNewTab, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AboutNewTab } = ChromeUtils.importESModule(
   "resource:///modules/AboutNewTab.sys.mjs"
 );
@@ -133,7 +139,7 @@ class PlacesObserver {
   }
 }
 
-class PlacesFeed {
+export class PlacesFeed {
   constructor() {
     this.placesChangedTimer = null;
     this.customDispatch = this.customDispatch.bind(this);
@@ -562,5 +568,3 @@ class PlacesFeed {
 
 // Exported for testing only
 PlacesFeed.PlacesObserver = PlacesObserver;
-
-const EXPORTED_SYMBOLS = ["PlacesFeed"];
