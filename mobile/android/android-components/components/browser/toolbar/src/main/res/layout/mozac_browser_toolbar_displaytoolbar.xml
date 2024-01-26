@@ -29,12 +29,10 @@
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
         android:importantForAccessibility="no"
         app:layout_constraintEnd_toStartOf="@+id/mozac_browser_toolbar_browser_actions"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_navigation_actions"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginEnd="0dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- URL indicators (lock, tracking protection, ..) -->
 

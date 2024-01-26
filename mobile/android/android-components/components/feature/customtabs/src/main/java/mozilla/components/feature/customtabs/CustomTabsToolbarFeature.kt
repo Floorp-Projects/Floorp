@@ -299,7 +299,7 @@ class CustomTabsToolbarFeature(
     }
 
     companion object {
-        private const val ACTION_BUTTON_DRAWABLE_WIDTH_DP = 48
+        private const val ACTION_BUTTON_DRAWABLE_WIDTH_DP = 24
         private const val ACTION_BUTTON_DRAWABLE_HEIGHT_DP = 24
     }
 }

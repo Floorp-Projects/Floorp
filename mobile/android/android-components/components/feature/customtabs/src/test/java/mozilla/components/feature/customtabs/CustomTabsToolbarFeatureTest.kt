@@ -404,10 +404,9 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `action button is scaled to 48 width and 24 height`() {
+    fun `action button is scaled to 24 width and 24 height`() {
         val captor = argumentCaptor<Toolbar.ActionButton>()
-        val originalWidth = 86
-        val originalHeight = 48
+        val size = 48
         val pendingIntent: PendingIntent = mock()
         val tab = createCustomTab(
             "https://www.mozilla.org",
@@ -415,7 +414,7 @@ class CustomTabsToolbarFeatureTest {
             config = CustomTabConfig(
                 actionButtonConfig = CustomTabActionButtonConfig(
                     description = "Button",
-                    icon = Bitmap.createBitmap(IntArray(originalWidth * originalHeight), originalWidth, originalHeight, Bitmap.Config.ARGB_8888),
+                    icon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888),
                     pendingIntent = pendingIntent,
                 ),
             ),
@@ -439,7 +438,7 @@ class CustomTabsToolbarFeatureTest {
 
         val button = captor.value.createView(FrameLayout(testContext))
         assertEquals(24, (button as ImageButton).drawable.intrinsicHeight)
-        assertEquals(48, button.drawable.intrinsicWidth)
+        assertEquals(24, button.drawable.intrinsicWidth)
     }
 
     @Test
@@ -1070,7 +1069,10 @@ class CustomTabsToolbarFeatureTest {
         assertEquals("", toolbar.title)
 
         store.dispatch(
-            ContentAction.UpdateTitleAction("mozilla", "Firefox - Protect your life online with privacy-first products"),
+            ContentAction.UpdateTitleAction(
+                "mozilla",
+                "Firefox - Protect your life online with privacy-first products",
+            ),
         ).joinBlocking()
 
         assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
@@ -1100,7 +1102,10 @@ class CustomTabsToolbarFeatureTest {
         assertEquals("https://github.com/mozilla-mobile/fenix", toolbar.title)
 
         store.dispatch(
-            ContentAction.UpdateTitleAction("mozilla", "A collection of Android libraries to build browsers or browser-like applications."),
+            ContentAction.UpdateTitleAction(
+                "mozilla",
+                "A collection of Android libraries to build browsers or browser-like applications.",
+            ),
         ).joinBlocking()
 
         assertEquals("A collection of Android libraries to build browsers or browser-like applications.", toolbar.title)
