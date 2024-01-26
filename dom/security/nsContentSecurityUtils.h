@@ -21,6 +21,7 @@ class NS_ConvertUTF8toUTF16;
 
 namespace mozilla::dom {
 class Document;
+class Element;
 }  // namespace mozilla::dom
 
 using FilenameTypeAndDetails = std::pair<nsCString, mozilla::Maybe<nsString>>;
@@ -65,6 +66,13 @@ class nsContentSecurityUtils {
   // 1. CSP frame-ancestors properties
   // 2. x-frame-options
   static bool CheckCSPFrameAncestorAndXFO(nsIChannel* aChannel);
+
+  // Implements https://w3c.github.io/webappsec-csp/#is-element-nonceable.
+  //
+  // Returns an empty nonce for elements without a nonce OR when a potential
+  // dangling markup attack was detected.
+  static nsString GetIsElementNonceableNonce(
+      const mozilla::dom::Element& aElement);
 
   // Helper function to Check if a Download is allowed;
   static long ClassifyDownload(nsIChannel* aChannel,

@@ -187,8 +187,15 @@ enum : uint32_t {
   // it's not going to be considered again.
   ELEMENT_PROCESSED_BY_LCP_FOR_TEXT = ELEMENT_FLAG_BIT(5),
 
+  // If this flag is set on an element, this means the HTML parser encountered
+  // a duplicate attribute error:
+  // https://html.spec.whatwg.org/multipage/parsing.html#parse-error-duplicate-attribute
+  // This flag is used for detecting dangling markup attacks in the CSP
+  // algorithm https://w3c.github.io/webappsec-csp/#is-element-nonceable.
+  ELEMENT_PARSER_HAD_DUPLICATE_ATTR_ERROR = ELEMENT_FLAG_BIT(6),
+
   // Remaining bits are for subclasses
-  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 6
+  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 7
 };
 
 #undef ELEMENT_FLAG_BIT
@@ -1719,6 +1726,10 @@ class Element : public FragmentOrElement {
    * total number of attributes.
    */
   void TryReserveAttributeCount(uint32_t aAttributeCount);
+
+  void SetParserHadDuplicateAttributeError() {
+    SetFlags(ELEMENT_PARSER_HAD_DUPLICATE_ATTR_ERROR);
+  }
 
   /**
    * Set a content attribute via a reflecting nullable string IDL

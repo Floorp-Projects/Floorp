@@ -66,6 +66,7 @@
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsContentPolicyUtils.h"
+#include "nsContentSecurityUtils.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -1115,12 +1116,8 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return false;
   }
 
-  nsAutoString nonce;
-  if (nsString* cspNonce = static_cast<nsString*>(
-          aScriptContent->GetProperty(nsGkAtoms::nonce))) {
-    nonce = *cspNonce;
-  }
-
+  nsString nonce = nsContentSecurityUtils::GetIsElementNonceableNonce(
+      *aScriptContent->AsElement());
   SRIMetadata sriMetadata;
   {
     nsAutoString integrity;
@@ -1326,12 +1323,8 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     return false;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aElement);
-  nsAutoString nonce;
-  if (nsString* cspNonce =
-          static_cast<nsString*>(node->GetProperty(nsGkAtoms::nonce))) {
-    nonce = *cspNonce;
-  }
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  nsString nonce = nsContentSecurityUtils::GetIsElementNonceableNonce(*element);
 
   // Does CSP allow this inline script to run?
   if (!CSPAllowsInlineScript(aElement, nonce, mDocument)) {
@@ -1374,6 +1367,8 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
   ParserMetadata parserMetadata = GetParserMetadata(aElement);
 
+  // NOTE: The `nonce` as specified here is significant, because it's inherited
+  // by other scripts (e.g. modules created via dynamic imports).
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
                         mDocument->NodePrincipal(), corsMode, nonce,

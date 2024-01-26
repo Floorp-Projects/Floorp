@@ -1190,6 +1190,64 @@ bool nsContentSecurityUtils::CheckCSPFrameAncestorAndXFO(nsIChannel* aChannel) {
                                            isFrameOptionsIgnored);
 }
 
+// https://w3c.github.io/webappsec-csp/#is-element-nonceable
+/* static */
+nsString nsContentSecurityUtils::GetIsElementNonceableNonce(
+    const Element& aElement) {
+  // Step 1. If element does not have an attribute named "nonce", return "Not
+  // Nonceable".
+  nsString nonce;
+  if (nsString* cspNonce =
+          static_cast<nsString*>(aElement.GetProperty(nsGkAtoms::nonce))) {
+    nonce = *cspNonce;
+  }
+  if (nonce.IsEmpty()) {
+    return nonce;
+  }
+
+  // Step 2. If element is a script element, then for each attribute of
+  // element’s attribute list:
+  if (nsCOMPtr<nsIScriptElement> script =
+          do_QueryInterface(const_cast<Element*>(&aElement))) {
+    auto containsScriptOrStyle = [](const nsAString& aStr) {
+      return aStr.LowerCaseFindASCII("<script") != kNotFound ||
+             aStr.LowerCaseFindASCII("<style") != kNotFound;
+    };
+
+    nsString value;
+    uint32_t i = 0;
+    while (BorrowedAttrInfo info = aElement.GetAttrInfoAt(i++)) {
+      // Step 2.1. If attribute’s name contains an ASCII case-insensitive match
+      // for "<script" or "<style", return "Not Nonceable".
+      const nsAttrName* name = info.mName;
+      if (nsAtom* prefix = name->GetPrefix()) {
+        if (containsScriptOrStyle(nsDependentAtomString(prefix))) {
+          return EmptyString();
+        }
+      }
+      if (containsScriptOrStyle(nsDependentAtomString(name->LocalName()))) {
+        return EmptyString();
+      }
+
+      // Step 2.2. If attribute’s value contains an ASCII case-insensitive match
+      // for "<script" or "<style", return "Not Nonceable".
+      info.mValue->ToString(value);
+      if (containsScriptOrStyle(value)) {
+        return EmptyString();
+      }
+    }
+  }
+
+  // Step 3. If element had a duplicate-attribute parse error during
+  // tokenization, return "Not Nonceable".
+  if (aElement.HasFlag(ELEMENT_PARSER_HAD_DUPLICATE_ATTR_ERROR)) {
+    return EmptyString();
+  }
+
+  // Step 4. Return "Nonceable".
+  return nonce;
+}
+
 #if defined(DEBUG)
 /* static */
 void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
