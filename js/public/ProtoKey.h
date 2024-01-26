@@ -100,7 +100,7 @@
   REAL(DataView, OCLASP(FixedLengthDataView))                               \
   REAL(Symbol, OCLASP(Symbol))                                              \
   REAL(ShadowRealm, OCLASP(ShadowRealm))                                    \
-  REAL(SharedArrayBuffer, OCLASP(SharedArrayBuffer))                        \
+  REAL(SharedArrayBuffer, OCLASP(FixedLengthSharedArrayBuffer))             \
   REAL_IF_INTL(Intl, CLASP(Intl))                                           \
   REAL_IF_INTL(Collator, OCLASP(Collator))                                  \
   REAL_IF_INTL(DateTimeFormat, OCLASP(DateTimeFormat))                      \

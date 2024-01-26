@@ -1988,8 +1988,8 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::FixedLengthArrayBuffer:
       MOZ_ASSERT(obj->is<FixedLengthArrayBufferObject>());
       break;
-    case GuardClassKind::SharedArrayBuffer:
-      MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
+    case GuardClassKind::FixedLengthSharedArrayBuffer:
+      MOZ_ASSERT(obj->is<FixedLengthSharedArrayBufferObject>());
       break;
     case GuardClassKind::FixedLengthDataView:
       MOZ_ASSERT(obj->is<FixedLengthDataViewObject>());
@@ -6827,6 +6827,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachGuardToArrayBuffer() {
   return tryAttachGuardToClass(InlinableNative::IntrinsicGuardToArrayBuffer);
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachGuardToSharedArrayBuffer() {
+  // TODO: Support resizable SharedArrayBuffers (bug 1842999), for now simply
+  // pass through to tryAttachGuardToClass which guards on
+  // FixedLengthSharedArrayBufferObject.
+  return tryAttachGuardToClass(
+      InlinableNative::IntrinsicGuardToSharedArrayBuffer);
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
     const JSClass* clasp, bool isPossiblyWrapped) {
   // Self-hosted code calls this with an object argument.
@@ -10526,6 +10534,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
       args_[0].toObject().is<ResizableArrayBufferObject>()) {
     return AttachDecision::NoAction;
   }
+  if (args_[0].isObject() &&
+      args_[0].toObject().is<GrowableSharedArrayBufferObject>()) {
+    return AttachDecision::NoAction;
+  }
 
 #ifdef JS_CODEGEN_X86
   // Unfortunately NewTypedArrayFromArrayBufferResult needs more registers than
@@ -10571,8 +10583,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
       if (obj->is<FixedLengthArrayBufferObject>()) {
         writer.guardClass(objId, GuardClassKind::FixedLengthArrayBuffer);
       } else {
-        MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
-        writer.guardClass(objId, GuardClassKind::SharedArrayBuffer);
+        MOZ_ASSERT(obj->is<FixedLengthSharedArrayBufferObject>());
+        writer.guardClass(objId, GuardClassKind::FixedLengthSharedArrayBuffer);
       }
       ValOperandId byteOffsetId;
       if (argc_ > 1) {
@@ -11482,7 +11494,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
 
     // SharedArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return tryAttachGuardToClass(native);
+      return tryAttachGuardToSharedArrayBuffer();
 
     // TypedArray intrinsics.
     case InlinableNative::TypedArrayConstructor:

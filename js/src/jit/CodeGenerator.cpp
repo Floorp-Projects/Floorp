@@ -4537,9 +4537,11 @@ void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
   masm.branchPtr(Assembler::Equal, temp,
                  ImmPtr(&FixedLengthArrayBufferObject::class_), &bail);
   masm.branchPtr(Assembler::Equal, temp,
-                 ImmPtr(&SharedArrayBufferObject::class_), &bail);
+                 ImmPtr(&FixedLengthSharedArrayBufferObject::class_), &bail);
   masm.branchPtr(Assembler::Equal, temp,
                  ImmPtr(&ResizableArrayBufferObject::class_), &bail);
+  masm.branchPtr(Assembler::Equal, temp,
+                 ImmPtr(&GrowableSharedArrayBufferObject::class_), &bail);
   bailoutFrom(&bail, guard->snapshot());
 }
 

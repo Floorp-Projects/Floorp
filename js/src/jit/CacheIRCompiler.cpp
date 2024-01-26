@@ -2178,8 +2178,8 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::FixedLengthArrayBuffer:
       clasp = &FixedLengthArrayBufferObject::class_;
       break;
-    case GuardClassKind::SharedArrayBuffer:
-      clasp = &SharedArrayBufferObject::class_;
+    case GuardClassKind::FixedLengthSharedArrayBuffer:
+      clasp = &FixedLengthSharedArrayBufferObject::class_;
       break;
     case GuardClassKind::FixedLengthDataView:
       clasp = &FixedLengthDataViewObject::class_;
@@ -2525,9 +2525,13 @@ bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
                  ImmPtr(&FixedLengthArrayBufferObject::class_),
                  failure->label());
   masm.branchPtr(Assembler::Equal, scratch,
-                 ImmPtr(&SharedArrayBufferObject::class_), failure->label());
+                 ImmPtr(&FixedLengthSharedArrayBufferObject::class_),
+                 failure->label());
   masm.branchPtr(Assembler::Equal, scratch,
                  ImmPtr(&ResizableArrayBufferObject::class_), failure->label());
+  masm.branchPtr(Assembler::Equal, scratch,
+                 ImmPtr(&GrowableSharedArrayBufferObject::class_),
+                 failure->label());
   return true;
 }
 
