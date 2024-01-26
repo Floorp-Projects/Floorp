@@ -280,8 +280,10 @@ function TypedArrayEvery(callbackfn /*, thisArg*/) {
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(TypedArrayEvery);
 
-// ES2018 draft rev ad2d1c60c5dc42a806696d4b58b4dca42d1f7dd4
-// 22.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] )
+// ES2024 draft rev b643e1d9bdc0e98d238a72f9988c01265306d09f
+// Including the changes from <https://github.com/tc39/ecma262/pull/3116>.
+//
+// 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] )
 function TypedArrayFill(value, start = 0, end = undefined) {
   // This function is not generic.
   if (!IsObject(this) || !IsTypedArray(this)) {
@@ -304,7 +306,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
   // Step 3.
   var len = TypedArrayLength(O);
 
-  // Step 4.
+  // Steps 4-5.
   var kind = GetTypedArrayKind(O);
   if (kind === TYPEDARRAY_KIND_BIGINT64 || kind === TYPEDARRAY_KIND_BIGUINT64) {
     value = ToBigInt(value);
@@ -312,25 +314,25 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     value = ToNumber(value);
   }
 
-  // Step 5.
+  // Step 6.
   var relativeStart = ToInteger(start);
 
-  // Step 6.
+  // Steps 7-9.
   var k =
     relativeStart < 0
       ? std_Math_max(len + relativeStart, 0)
       : std_Math_min(relativeStart, len);
 
-  // Step 7.
+  // Step 10.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
-  // Step 8.
+  // Steps 11-13.
   var final =
     relativeEnd < 0
       ? std_Math_max(len + relativeEnd, 0)
       : std_Math_min(relativeEnd, len);
 
-  // Step 9.
+  // Steps 14-16.
   if (buffer === null) {
     // A typed array previously using inline storage may acquire a
     // buffer, so we must check with the source.
@@ -341,12 +343,17 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
   }
 
-  // Step 10.
+  len = TypedArrayLength(O);
+
+  // Step 17.
+  final = std_Math_min(final, len);
+
+  // Step 18.
   for (; k < final; k++) {
     O[k] = value;
   }
 
-  // Step 11.
+  // Step 19.
   return O;
 }
 
