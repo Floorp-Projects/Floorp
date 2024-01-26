@@ -1372,6 +1372,11 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
   Rooted<DataViewObject*> view(context(), obj->maybeUnwrapAs<DataViewObject>());
   JSAutoRealm ar(context(), view);
 
+  // TODO(anba): Support resizable DataView objects.
+  if (view->is<ResizableDataViewObject>()) {
+    return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
+  }
+
   if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, 0)) {
     return false;
   }

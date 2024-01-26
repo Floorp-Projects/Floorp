@@ -21,11 +21,15 @@ class ArrayBufferObjectMaybeShared;
 // the buffer.  The buffer may be shared memory and the raw pointer
 // should not be exposed without sharedness information accompanying
 // it.
+//
+// DataViewObject is an abstract base class and has exactly two concrete
+// subclasses, FixedLengthDataViewObject and ResizableDataViewObject.
 
 class DataViewObject : public ArrayBufferViewObject {
- private:
+ protected:
   static const ClassSpec classSpec_;
 
+ private:
   template <typename NativeType>
   SharedMem<uint8_t*> getDataPointer(uint64_t offset, bool* isSharedMemory);
 
@@ -52,7 +56,6 @@ class DataViewObject : public ArrayBufferViewObject {
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
  public:
-  static const JSClass class_;
   static const JSClass protoClass_;
 
   size_t byteLength() const {
@@ -160,6 +163,28 @@ class DataViewObject : public ArrayBufferViewObject {
   static const JSPropertySpec properties[];
 };
 
+/**
+ * DataView whose buffer is a fixed-length (Shared)ArrayBuffer object.
+ */
+class FixedLengthDataViewObject : public DataViewObject {
+ public:
+  static const JSClass class_;
+};
+
+/**
+ * DataView whose buffer is a resizable (Shared)ArrayBuffer object.
+ */
+class ResizableDataViewObject : public DataViewObject {
+ public:
+  static const JSClass class_;
+};
+
 }  // namespace js
+
+template <>
+inline bool JSObject::is<js::DataViewObject>() const {
+  return is<js::FixedLengthDataViewObject>() ||
+         is<js::ResizableDataViewObject>();
+}
 
 #endif /* vm_DataViewObject_h */
