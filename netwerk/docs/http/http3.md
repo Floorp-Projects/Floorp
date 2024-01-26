@@ -1,4 +1,4 @@
-# Http3Session and streams
+# Http3Session and Streams
 
 The HTTP/3 and QUIC protocol are implemented in the neqo library. Http3Session, Http3Steam, and Http3WebTransportStream are added to integrate the library into the existing necko code.
 
@@ -23,7 +23,7 @@ graph TD
    B --> G
 ```
 
-## Interactions with sockets and driving neqo
+## Interactions with Sockets and Driving Neqo
 
 As described in [this docs](https://github.com/mozilla/neqo/blob/main/neqo-http3/src/lib.rs), neqo does not create a socket,  it produces, i.e. encodes, data that should be sent as a payload in a UDP packet and consumes data received on the UDP socket. Therefore the necko is responsible for creating a socket and reading and writing data from/into the socket. Necko uses nsUDPSocket and nsSocketTransportService for this.
 The UDP socket is constantly polled for reading. It is not polled for writing, we let QUIC control to not overload the network path and buffers.
@@ -71,7 +71,7 @@ The function is called when necko has performed some action on neqo, e.g. new HT
 - ProcessEvents - look if the state of the connection has changed, i.e. the connection timed out
 
 
-## HTTP and WebTransport Streams reading data
+## HTTP and WebTransport Streams Reading Data
 
 The following diagram shows how data are read from an HTTP stream. The diagram for a WebTransport stream will be added later.
 
@@ -100,7 +100,7 @@ When the pipe cannot accept more data nsHttpTransaction will call nsPipeOutputSt
 
 These streams will be processed in ProcessSlowConsumers which is called by Http3Session::RecvData.
 
-## HTTP and WebTransport Streams writing data
+## HTTP and WebTransport Streams Writing Data
 
 The following diagram shows how data are sent from an HTTP stream. The diagram for a WebTransport stream will be added later.
 
@@ -124,7 +124,7 @@ When a nsHttpTransaction has been newly added to a transaction or when nsHttpTra
 
 The Http3Session::SendData function iterates through mReadyForWrite and calls Http3Stream::ReadSegments for each stream.
 
-## Neqo events
+## Neqo Events
 
 For **HeaderReady** and **DataReadable** the Http3Stream::WriteSegments function of the corresponding stream is called. The code path shown in the flowchart above will call the nssHttpTransaction served by the stream to take headers and data.
 
@@ -143,7 +143,7 @@ For **HeaderReady** and **DataReadable** the Http3Stream::WriteSegments function
 
 **ConnectionConnected**, **GoawayReceived**, **ConnectionClosing** and **ConnectionClosed** expose change in the connection state. Difference between **ConnectionClosing** and **ConnectionClosed** that after **ConnectionClosed** the connection can be immediately closed and after **ConnectionClosing** we will keep the connection object for a short time until **ConnectionClosed** event is received. During this period we will retransmit the closing frame if they are lost.
 
-### WebTransport events
+### WebTransport Events
 
 **Negotiated** - WebTransport is negotiated only after the HTTP/3 settings frame has been received from the server. At that point **Negotiated** event is posted to inform the application.
 

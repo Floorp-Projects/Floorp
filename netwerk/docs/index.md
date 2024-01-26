@@ -4,7 +4,7 @@ The Necko (aka Networking) component is Gecko's implementation of the web's netw
 Most of the component's source lives in `netwerk` directory and this document's source can be found in `netwerk/docs`.
 This page points to helpful resources for developers interested in contributing to Necko.
 
-[Necko's wiki page](https://wiki.mozilla.org/Networking) is dedicated to help users of firefox and bug authors. Readers can find various information related to bug filing, configuration of various networking features in the wiki page.
+Necko's [wiki page](https://wiki.mozilla.org/Networking) is dedicated to help users of firefox and bug authors. Readers can find various information related to bug filing, configuration of various networking features in the wiki page.
 
 
 
@@ -37,7 +37,7 @@ mochitest_with_http3.md
 sec-necko-components.md
 cache2/doc
 http/http3.md
-Necko Bird’s-eye view  <https://docs.google.com/presentation/d/1BRCK4WMYg-dUy07PB5H4jFVTpc4YnkQX8f5Y3KXqCs8>
+Necko Bird’s-eye View  <https://docs.google.com/presentation/d/1BRCK4WMYg-dUy07PB5H4jFVTpc4YnkQX8f5Y3KXqCs8>
 Gecko HTTP Walkthrough <https://docs.google.com/presentation/d/1iuYNLJfz24MN9SS5ljjhG07452-kZKtXmOeGjcc1-lU/>
 ```
 

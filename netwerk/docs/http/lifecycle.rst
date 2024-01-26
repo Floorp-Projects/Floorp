@@ -1,10 +1,10 @@
-The lifecycle of a HTTP request
+The Lifecycle of a HTTP Request
 ===============================
 
 
 HTTP requests in Firefox go through several steps.  Each piece of the request message and response message become available at certain points.  Extracting that information is a challenge, though.
 
-What is available when
+What is Available When
 ----------------------
 
 +-----------------------+---------------------------------------------------+---------------------------------------+------------------------+-------------------------------+
@@ -28,7 +28,7 @@ What is available when
 ||                      ||                                                  ||                                      || nsIPipe_              ||                              |
 +-----------------------+---------------------------------------------------+---------------------------------------+------------------------+-------------------------------+
 
-The request: http-on-modify-request
+The Request: http-on-modify-request
 -----------------------------------
 
 Firefox fires a "http-on-modify-request" observer notification before sending the HTTP request, and this blocks the sending of the request until all observers exit.  This is generally the point at which you can modify the HTTP request headers (hence the name).
@@ -79,7 +79,7 @@ This is also the time to set request headers, if you need to.  The method for th
 
 Most HTTP requests don't have a body, as they are GET requests.  POST requests often have them, though.  As the nsIUploadChannel_ documentation indicates, the body of most HTTP requests is available via a seekable stream (nsISeekableStream_).  So you can simply capture the body stream and its current position, to revisit it later.  network-helper.js_ has code to read the request body.
 
-The response: http-on-examine-response
+The Response: http-on-examine-response
 --------------------------------------
 
 Firefox fires a "http-on-examine-response" observer notification after parsing the HTTP response status and headers, but **before** reading the response body.  Attaching a listener for this phase is also very easy::
@@ -90,7 +90,7 @@ If you use the same observer for "http-on-modify-request" and "http-on-examine-r
 
 The response status is available via the *responseStatus* and *responseStatusText* properties.  The response headers are available via the *visitResponseHeaders* method, and requires the same interface.
 
-The response body: onStopRequest, stream listener tee
+The Response body: onStopRequest, stream listener tee
 -----------------------------------------------------
 
 During the "http-on-examine-response" notification, the response body is *not* available.  You can, however, use a stream listener tee to *copy* the stream so that the original stream data goes on, and you have a separate input stream you can read from with the same data.
@@ -177,19 +177,19 @@ Here's some sample code to illustrate what you need::
 
 test_traceable_channel.js_ does essentially this.
 
-Character encodings and compression
+Character Encodings and Compression
 -----------------------------------
 
-Canceling requests
+Canceling Requests
 ------------------
 
-HTTP activity distributor notes
+HTTP Activity Distributor Notes
 -------------------------------
 
-URIContentLoader notes
+URIContentLoader Notes
 ----------------------
 
-Order of operations
+Order of Operations
 -------------------
 
 1. The HTTP channel is constructed.
@@ -200,7 +200,7 @@ Order of operations
 6. The HTTP channel parses the response status and headers.
 7. The "http-on-examine-response" observer service notification fires.
 
-Useful code samples and references
+Useful Code Samples and References
 ----------------------------------
 
 - nsIHttpProtocolHandler_ defines a lot of observer topics, and has a lot of details.
