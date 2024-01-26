@@ -394,8 +394,8 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
       return &PlainObject::class_;
     case GuardClassKind::FixedLengthArrayBuffer:
       return &FixedLengthArrayBufferObject::class_;
-    case GuardClassKind::SharedArrayBuffer:
-      return &SharedArrayBufferObject::class_;
+    case GuardClassKind::FixedLengthSharedArrayBuffer:
+      return &FixedLengthSharedArrayBufferObject::class_;
     case GuardClassKind::FixedLengthDataView:
       return &FixedLengthDataViewObject::class_;
     case GuardClassKind::MappedArguments:

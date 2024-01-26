@@ -697,8 +697,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::SharedArrayBuffer:
-        if (object->getClass() != &SharedArrayBufferObject::class_) {
+      case GuardClassKind::FixedLengthSharedArrayBuffer:
+        if (object->getClass() != &FixedLengthSharedArrayBufferObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
