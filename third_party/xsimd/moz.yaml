@@ -1,8 +1,8 @@
 schema: 1
 
 bugzilla:
-  product: Toolkit
-  component: "General"
+  product: Core
+  component: Performance
 
 origin:
   name: xsimd
