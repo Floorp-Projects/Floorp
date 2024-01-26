@@ -28,6 +28,8 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/StorageUtils.h"
+#include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/JSONWriter.h"
 #include "nsIURL.h"
 #include "nsEffectiveTLDService.h"
 #include "nsIURIMutator.h"
@@ -46,13 +48,6 @@
 #include "nsSerializationHelper.h"
 
 namespace mozilla {
-
-const char* BasePrincipal::JSONEnumKeyStrings[4] = {
-    "0",
-    "1",
-    "2",
-    "3",
-};
 
 BasePrincipal::BasePrincipal(PrincipalKind aKind,
                              const nsACString& aOriginNoSuffix,
@@ -372,10 +367,6 @@ already_AddRefed<BasePrincipal> BasePrincipal::FromJSON(
   MOZ_RELEASE_ASSERT(false, "Unexpected enum to deserialize as a principal");
 }
 
-nsresult BasePrincipal::PopulateJSONObject(Json::Value& aObject) {
-  return NS_OK;
-}
-
 // Returns a JSON representation of the principal.
 // Calling BasePrincipal::FromJSON will deserialize the JSON into
 // the corresponding principal type.
@@ -383,34 +374,42 @@ nsresult BasePrincipal::ToJSON(nsACString& aJSON) {
   MOZ_ASSERT(aJSON.IsEmpty(), "ToJSON only supports an empty result input");
   aJSON.Truncate();
 
-  Json::Value root = Json::objectValue;
-  nsresult rv = ToJSON(root);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // NOTE: JSONWriter emits raw UTF-8 code units for non-ASCII range.
+  JSONStringRefWriteFunc func(aJSON);
+  JSONWriter writer(func, JSONWriter::CollectionStyle::SingleLineStyle);
 
-  static StaticAutoPtr<Json::StreamWriterBuilder> sJSONBuilderForPrincipals;
-  if (!sJSONBuilderForPrincipals) {
-    sJSONBuilderForPrincipals = new Json::StreamWriterBuilder();
-    (*sJSONBuilderForPrincipals)["indentation"] = "";
-    (*sJSONBuilderForPrincipals)["emitUTF8"] = true;
-    ClearOnShutdown(&sJSONBuilderForPrincipals);
-  }
-  std::string result = Json::writeString(*sJSONBuilderForPrincipals, root);
-  aJSON.Append(result);
-  if (aJSON.Length() == 0) {
-    MOZ_ASSERT(false, "JSON writer failed to output a principal serialization");
-    return NS_ERROR_UNEXPECTED;
-  }
+  nsresult rv = ToJSON(writer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult BasePrincipal::ToJSON(Json::Value& aObject) {
+nsresult BasePrincipal::ToJSON(JSONWriter& aWriter) {
   static_assert(eKindMax < ArrayLength(JSONEnumKeyStrings));
-  nsresult rv = PopulateJSONObject(
-      (aObject[Json::StaticString(JSONEnumKeyStrings[Kind()])] =
-           Json::objectValue));
+
+  aWriter.Start(JSONWriter::CollectionStyle::SingleLineStyle);
+
+  nsresult rv = WriteJSONProperties(aWriter);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  aWriter.End();
+
+  return NS_OK;
+}
+
+nsresult BasePrincipal::WriteJSONProperties(JSONWriter& aWriter) {
+  aWriter.StartObjectProperty(JSONEnumKeyStrings[Kind()],
+                              JSONWriter::CollectionStyle::SingleLineStyle);
+
+  nsresult rv = WriteJSONInnerProperties(aWriter);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aWriter.EndObject();
+
+  return NS_OK;
+}
+
+nsresult BasePrincipal::WriteJSONInnerProperties(JSONWriter& aWriter) {
   return NS_OK;
 }
 
@@ -1618,10 +1617,10 @@ BasePrincipal::Deserializer::Write(nsIObjectOutputStream* aStream) {
 }
 
 /* static */
-void BasePrincipal::SetJSONValue(Json::Value& aObject, const char* aKey,
-                                 const nsCString& aValue) {
-  aObject[Json::StaticString(aKey)] =
-      Json::Value(aValue.BeginReading(), aValue.EndReading());
+void BasePrincipal::WriteJSONProperty(JSONWriter& aWriter,
+                                      const Span<const char>& aKey,
+                                      const nsCString& aValue) {
+  aWriter.StringProperty(aKey, aValue);
 }
 
 }  // namespace mozilla

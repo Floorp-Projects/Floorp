@@ -10,6 +10,7 @@
 #include "nsReadableUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/JSONWriter.h"
 #include "json/json.h"
 
 using namespace mozilla;
@@ -262,22 +263,25 @@ nsresult ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
   return NS_OK;
 }
 
-nsresult ExpandedPrincipal::PopulateJSONObject(Json::Value& aObject) {
-  Json::Value& principalList =
-      aObject[Json::StaticString(JSONEnumKeyString<eSpecs>())] =
-          Json::arrayValue;
+nsresult ExpandedPrincipal::WriteJSONInnerProperties(JSONWriter& aWriter) {
+  aWriter.StartArrayProperty(JSONEnumKeyString<eSpecs>(),
+                             JSONWriter::CollectionStyle::SingleLineStyle);
+
   for (const auto& principal : mPrincipals) {
-    Json::Value object = Json::objectValue;
-    nsresult rv = BasePrincipal::Cast(principal)->ToJSON(object);
+    aWriter.StartObjectElement(JSONWriter::CollectionStyle::SingleLineStyle);
+
+    nsresult rv = BasePrincipal::Cast(principal)->WriteJSONProperties(aWriter);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    principalList.append(std::move(object));
+    aWriter.EndObject();
   }
+
+  aWriter.EndArray();
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
   if (suffix.Length() > 0) {
-    SetJSONValue<eSuffix>(aObject, suffix);
+    WriteJSONProperty<eSuffix>(aWriter, suffix);
   }
 
   return NS_OK;

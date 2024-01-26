@@ -27,8 +27,6 @@
 #include "pratom.h"
 #include "nsIObjectInputStream.h"
 
-#include "json/json.h"
-
 using namespace mozilla;
 
 NS_IMPL_CLASSINFO(NullPrincipal, nullptr, 0, NS_NULLPRINCIPAL_CID)
@@ -236,16 +234,16 @@ NullPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
   return NS_OK;
 }
 
-nsresult NullPrincipal::PopulateJSONObject(Json::Value& aObject) {
+nsresult NullPrincipal::WriteJSONInnerProperties(JSONWriter& aWriter) {
   nsAutoCString principalURI;
   nsresult rv = mURI->GetSpec(principalURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  SetJSONValue<eSpec>(aObject, principalURI);
+  WriteJSONProperty<eSpec>(aWriter, principalURI);
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
   if (suffix.Length() > 0) {
-    SetJSONValue<eSuffix>(aObject, suffix);
+    WriteJSONProperty<eSuffix>(aWriter, suffix);
   }
 
   return NS_OK;

@@ -33,6 +33,8 @@ class Value;
 
 namespace mozilla {
 
+class JSONWriter;
+
 namespace dom {
 enum class ReferrerPolicy : uint8_t;
 }
@@ -189,13 +191,15 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetPrecursorPrincipal(nsIPrincipal** aPrecursor) override;
 
   nsresult ToJSON(nsACString& aJSON);
-  nsresult ToJSON(Json::Value& aObject);
+  nsresult ToJSON(JSONWriter& aWriter);
+  nsresult WriteJSONProperties(JSONWriter& aWriter);
 
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const Json::Value& aJSON);
-  // Method populates a passed Json::Value with serializable fields
-  // which represent all of the fields to deserialize the principal
-  virtual nsresult PopulateJSONObject(Json::Value& aObject);
+
+  // Method to write serializable fields which represent all of the fields to
+  // deserialize the principal.
+  virtual nsresult WriteJSONInnerProperties(JSONWriter& aWriter);
 
   virtual bool AddonHasPermission(const nsAtom* aPerm);
 
@@ -344,20 +348,26 @@ class BasePrincipal : public nsJSPrincipals {
   };
 
  private:
-  static const char* JSONEnumKeyStrings[4];
+  static constexpr Span<const char> JSONEnumKeyStrings[4] = {
+      MakeStringSpan("0"),
+      MakeStringSpan("1"),
+      MakeStringSpan("2"),
+      MakeStringSpan("3"),
+  };
 
-  static void SetJSONValue(Json::Value& aObject, const char* aKey,
-                           const nsCString& aValue);
+  static void WriteJSONProperty(JSONWriter& aWriter,
+                                const Span<const char>& aKey,
+                                const nsCString& aValue);
 
  protected:
   template <size_t EnumValue>
-  static inline constexpr const char* JSONEnumKeyString() {
+  static inline constexpr const Span<const char>& JSONEnumKeyString() {
     static_assert(EnumValue < ArrayLength(JSONEnumKeyStrings));
     return JSONEnumKeyStrings[EnumValue];
   }
   template <size_t EnumValue>
-  static void SetJSONValue(Json::Value& aObject, const nsCString& aValue) {
-    SetJSONValue(aObject, JSONEnumKeyString<EnumValue>(), aValue);
+  static void WriteJSONProperty(JSONWriter& aWriter, const nsCString& aValue) {
+    WriteJSONProperty(aWriter, JSONEnumKeyString<EnumValue>(), aValue);
   }
 
  private:
