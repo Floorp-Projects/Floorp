@@ -22,6 +22,7 @@ include ../../dom/jsurl/crashtests/crashtests.list
 include ../../dom/media/mediasession/test/crashtests/crashtests.list
 include ../../dom/media/mediasource/test/crashtests/crashtests.list
 include ../../dom/media/test/crashtests/crashtests.list
+include ../../dom/media/webcodecs/crashtests/crashtests.list
 include ../../dom/media/webvtt/test/crashtests/crashtests.list
 skip-if(!webrtc) include ../../dom/media/tests/crashtests/crashtests.list
 skip-if(!webrtc) include ../../dom/media/webrtc/tests/crashtests/crashtests.list
