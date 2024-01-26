@@ -8992,6 +8992,16 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# This pref determines which side vertical scrollbars should be on.
+# 0 = end-side in UI direction
+# 1 = end-side in document/content direction
+# 2 = right
+# 3 = left
+- name: layout.scrollbar.side
+  type: int32_t
+  value: 0
+  mirror: always
+
 # This pref is to be set by test code only.
 - name: layout.scrollbars.always-layerize-track
   type: RelaxedAtomicBool
