@@ -89,6 +89,15 @@ support-files = [
   "markB.ttf",
 ]
 
+["test_bug1018265.xhtml"]
+
+["test_bug1041200.xhtml"]
+skip-if = ["os == 'win' && bits == 64"] # Bug 1272321
+support-files = [
+  "bug1041200_frame.html",
+  "bug1041200_window.html",
+]
+
 ["test_bug396367-1.html"]
 
 ["test_bug396367-2.html"]
@@ -110,15 +119,6 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1208197
 ["test_bug708062.html"]
 
 ["test_bug812817.xhtml"]
-
-["test_bug1018265.xhtml"]
-
-["test_bug1041200.xhtml"]
-skip-if = ["os == 'win' && bits == 64"] # Bug 1272321
-support-files = [
-  "bug1041200_frame.html",
-  "bug1041200_window.html",
-]
 
 ["test_chrome_content_integration.xhtml"]
 

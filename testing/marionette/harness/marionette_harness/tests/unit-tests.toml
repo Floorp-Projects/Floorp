@@ -8,55 +8,36 @@
 # to the `MARIONETTE_MANIFESTS` entry in the appropriate `moz.build` file to
 # allow the execution of tests via `mach test` and as part of the test package
 # as well.
-#
-# NOTE: comments pertain the preceding section
 
 [DEFAULT]
-
-["include:../../../../../browser/components/migration/tests/marionette/manifest.toml"]
-# browser tests
-
-["include:../../../../../browser/components/places/tests/marionette/manifest.toml"]
-# browser tests
-
-["include:../../../../../browser/components/search/test/marionette/manifest.toml"]
-# browser tests
-
-["include:../../../../../browser/components/sessionstore/test/marionette/manifest.toml"]
-# browser tests
-
-["include:../../../../../browser/components/tests/marionette/manifest.toml"]
-# browser tests
-
-["include:../../../../../dom/cache/test/marionette/manifest.toml"]
-# DOM tests
-
-["include:../../../../../dom/indexedDB/test/marionette/manifest.toml"]
-# DOM tests
-
-["include:../../../../../dom/quota/test/marionette/manifest.toml"]
-# DOM tests
-
-["include:../../../../../dom/workers/test/marionette/manifest.toml"]
-# DOM tests
-
-["include:../../../../../extensions/pref/autoconfig/test/marionette/manifest.toml"]
-# extensions tests
-
-["include:../../../../../layout/base/tests/marionette/manifest.toml"]
-# layout tests
-
-["include:../../../../../netwerk/test/marionette/manifest.toml"]
-# netwerk tests
-
-["include:../../../../../toolkit/components/cleardata/tests/marionette/manifest.toml"]
-# toolkit tests
-
-["include:../../../../../toolkit/mozapps/update/tests/marionette/marionette.toml"]
-# update tests
-
-["include:../../../../../toolkit/xre/test/marionette/marionette.toml"]
-# toolkit tests
-
-["include:unit/unit-tests.toml"]
 # marionette unit tests
+["include:unit/unit-tests.toml"]
+
+# DOM tests
+["include:../../../../../dom/cache/test/marionette/manifest.toml"]
+["include:../../../../../dom/indexedDB/test/marionette/manifest.toml"]
+["include:../../../../../dom/quota/test/marionette/manifest.toml"]
+["include:../../../../../dom/workers/test/marionette/manifest.toml"]
+
+# browser tests
+["include:../../../../../browser/components/tests/marionette/manifest.toml"]
+["include:../../../../../browser/components/migration/tests/marionette/manifest.toml"]
+["include:../../../../../browser/components/places/tests/marionette/manifest.toml"]
+["include:../../../../../browser/components/search/test/marionette/manifest.toml"]
+["include:../../../../../browser/components/sessionstore/test/marionette/manifest.toml"]
+
+# extensions tests
+["include:../../../../../extensions/pref/autoconfig/test/marionette/manifest.toml"]
+
+# layout tests
+["include:../../../../../layout/base/tests/marionette/manifest.toml"]
+
+# netwerk tests
+["include:../../../../../netwerk/test/marionette/manifest.toml"]
+
+# toolkit tests
+["include:../../../../../toolkit/components/cleardata/tests/marionette/manifest.toml"]
+["include:../../../../../toolkit/xre/test/marionette/marionette.toml"]
+
+# update tests
+["include:../../../../../toolkit/mozapps/update/tests/marionette/marionette.toml"]

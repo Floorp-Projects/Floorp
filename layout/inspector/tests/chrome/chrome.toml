@@ -32,12 +32,12 @@ skip-if = [
 ]
 support-files = ["test_fontVariationsAPI.css"]
 
-["test_getBlockLineCounts.html"]
-
-["test_getSelectorWarnings.html"]
-
 ["test_ua_rule_modification.html"]
 
 ["test_ua_sheet_disable.html"]
 
 ["test_visited_style.html"]
+
+["test_getBlockLineCounts.html"]
+
+["test_getSelectorWarnings.html"]

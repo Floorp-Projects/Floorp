@@ -14,14 +14,16 @@ prefs = [
 
 ["browser_UrlbarInput_formatValue.js"]
 
+["browser_UrlbarInput_formatValue_strikeout.js"]
+support-files = [
+  "mixed_active.html",
+]
+
 ["browser_UrlbarInput_formatValue_detachedTab.js"]
 skip-if = [
   "apple_catalina", # Bug 1756585
   "os == 'win'", # Bug 1756585
 ]
-
-["browser_UrlbarInput_formatValue_strikeout.js"]
-support-files = ["mixed_active.html"]
 
 ["browser_UrlbarInput_hiddenFocus.js"]
 
@@ -294,8 +296,6 @@ fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and
 ["browser_move_tab_to_new_window.js"]
 
 ["browser_new_tab_urlbar_reset.js"]
-
-["browser_observers_for_strip_on_share.js"]
 
 ["browser_oneOffs.js"]
 support-files = [
@@ -685,3 +685,5 @@ skip-if = [
 https_first_disabled = true
 
 ["browser_whereToOpen.js"]
+
+["browser_observers_for_strip_on_share.js"]

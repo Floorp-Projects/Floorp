@@ -100,15 +100,15 @@ support-files = [
 
 ["test_engine_selector.js"]
 
+["test_engine_selector_engine_orders.js"]
+
+["test_engine_selector_defaults.js"]
+
 ["test_engine_selector_application.js"]
 
 ["test_engine_selector_application_distribution.js"]
 
 ["test_engine_selector_application_name.js"]
-
-["test_engine_selector_defaults.js"]
-
-["test_engine_selector_engine_orders.js"]
 
 ["test_engine_selector_environment.js"]
 
@@ -116,10 +116,10 @@ support-files = [
 
 ["test_engine_selector_override.js"]
 
-["test_engine_selector_remote_override.js"]
-
 ["test_engine_selector_remote_settings.js"]
 tags = "remotesettings searchmain"
+
+["test_engine_selector_remote_override.js"]
 
 ["test_engine_selector_variants.js"]
 

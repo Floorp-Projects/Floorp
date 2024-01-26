@@ -1,6 +1,0 @@
-[DEFAULT]
-
-[aaa.js]
-# Every non DEFAULT section must be double quoted
-
-['bbb.js']

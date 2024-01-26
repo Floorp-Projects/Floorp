@@ -22,7 +22,19 @@ support-files = [
 ]
 prefs = ["gfx.font_rendering.fallback.async=false"]
 
+["test_bug1063837.xhtml"]
+
+["test_bug1098074_throw_from_ReceiveMessage.xhtml"]
+
+["test_bug1139964.xhtml"]
+
 ["test_bug120684.xhtml"]
+
+["test_bug1209621.xhtml"]
+
+["test_bug1339722.html"]
+
+["test_bug1346936.html"]
 
 ["test_bug206691.xhtml"]
 
@@ -34,6 +46,8 @@ prefs = ["gfx.font_rendering.fallback.async=false"]
 support-files = ["../file_bug357450.js"]
 
 ["test_bug380418.html"]
+
+["test_bug380418.html^headers^"]
 
 ["test_bug383430.html"]
 
@@ -81,20 +95,6 @@ skip-if = ["verify"]
 ["test_bug914381.html"]
 
 ["test_bug990812.xhtml"]
-
-["test_bug1063837.xhtml"]
-
-["test_bug1098074_throw_from_ReceiveMessage.xhtml"]
-
-["test_bug1139964.xhtml"]
-
-["test_bug1209621.xhtml"]
-
-["test_bug1339722.html"]
-
-["test_bug1346936.html"]
-
-["test_bug380418.html^headers^"]
 
 ["test_chromeOuterWindowID.xhtml"]
 support-files = ["window_chromeOuterWindowID.xhtml"]

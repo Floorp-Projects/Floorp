@@ -25,6 +25,14 @@ support-files = [
   "bug1071816-4_text.html",
 ]
 
+["test_bug1071816-1.html"]
+
+["test_bug1071816-2.html"]
+
+["test_bug1071816-3.html"]
+
+["test_bug1071816-4.html"]
+
 ["test_bug306272.html"]
 
 ["test_bug426271-euc-jp.html"]
@@ -62,11 +70,3 @@ support-files = [
 ["test_bug811363-2-8.html"]
 
 ["test_bug811363-2-9.html"]
-
-["test_bug1071816-1.html"]
-
-["test_bug1071816-2.html"]
-
-["test_bug1071816-3.html"]
-
-["test_bug1071816-4.html"]
