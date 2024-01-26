@@ -28,7 +28,16 @@ function deleteStyle() {
 }
 
 
+let propertyIndex = 0;
+
 function test_getUnanimatedComputedStyle() {
+  const name = `--property-${++propertyIndex}`;
+  CSS.registerProperty({
+    name,
+    syntax: "<length>",
+    initialValue: "2px",
+    inherits: false,
+  });
   [
     {
       property: "opacity",
@@ -36,6 +45,13 @@ function test_getUnanimatedComputedStyle() {
       expectedInitialStyle: "1",
       expectedDuringTransitionStyle: "0",
       isDiscrete: false,
+    },
+    {
+      property: name,
+      keyframes: ["1px", "10px"],
+      expectedInitialStyle: "2px",
+      expectedDuringTransitionStyle: "2px",
+      isDiscrete: true,
     },
     {
       property: "clear",

@@ -3185,9 +3185,11 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
       nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_INVALID_ARG;
   }
-  AnimatedPropertyID property = propertyID == eCSSPropertyExtra_variable
-                                    ? AnimatedPropertyID(NS_Atomize(aProperty))
-                                    : AnimatedPropertyID(propertyID);
+  AnimatedPropertyID property =
+      propertyID == eCSSPropertyExtra_variable
+          ? AnimatedPropertyID(
+                NS_Atomize(Substring(aProperty, 2, aProperty.Length() - 2)))
+          : AnimatedPropertyID(propertyID);
 
   switch (aFlushType) {
     case FLUSH_NONE:
