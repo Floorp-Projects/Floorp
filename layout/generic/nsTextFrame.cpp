@@ -781,7 +781,8 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
              !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
     case '\n':
       return !aStyleText->NewlineIsSignificantStyle() &&
-             aStyleText->mWhiteSpace != mozilla::StyleWhiteSpace::PreSpace;
+             aStyleText->mWhiteSpaceCollapse !=
+                 StyleWhiteSpaceCollapse::PreserveSpaces;
     case '\t':
     case '\r':
     case '\f':
@@ -1171,27 +1172,23 @@ static bool TextContainsLineBreakerWhiteSpace(const void* aText,
 
 static nsTextFrameUtils::CompressionMode GetCSSWhitespaceToCompressionMode(
     nsTextFrame* aFrame, const nsStyleText* aStyleText) {
-  switch (aStyleText->mWhiteSpace) {
-    case StyleWhiteSpace::Normal:
-    case StyleWhiteSpace::Nowrap:
+  switch (aStyleText->mWhiteSpaceCollapse) {
+    case StyleWhiteSpaceCollapse::Collapse:
       return nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE;
-    case StyleWhiteSpace::Pre:
-    case StyleWhiteSpace::PreWrap:
-    case StyleWhiteSpace::BreakSpaces:
+    case StyleWhiteSpaceCollapse::PreserveBreaks:
+      return nsTextFrameUtils::COMPRESS_WHITESPACE;
+    case StyleWhiteSpaceCollapse::Preserve:
+    case StyleWhiteSpaceCollapse::PreserveSpaces:
+    case StyleWhiteSpaceCollapse::BreakSpaces:
       if (!aStyleText->NewlineIsSignificant(aFrame)) {
         // If newline is set to be preserved, but then suppressed,
         // transform newline to space.
         return nsTextFrameUtils::COMPRESS_NONE_TRANSFORM_TO_SPACE;
       }
       return nsTextFrameUtils::COMPRESS_NONE;
-    case StyleWhiteSpace::PreSpace:
-      return nsTextFrameUtils::COMPRESS_NONE_TRANSFORM_TO_SPACE;
-    case StyleWhiteSpace::PreLine:
-      return nsTextFrameUtils::COMPRESS_WHITESPACE;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown white-space value");
-      return nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE;
   }
+  MOZ_ASSERT_UNREACHABLE("Unknown white-space-collapse value");
+  return nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE;
 }
 
 struct FrameTextTraversal {
@@ -9539,7 +9536,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML);
-  bool isBreakSpaces = textStyle->mWhiteSpace == StyleWhiteSpace::BreakSpaces;
+  bool isBreakSpaces =
+      textStyle->mWhiteSpaceCollapse == StyleWhiteSpaceCollapse::BreakSpaces;
   // allow whitespace to overflow the container
   bool whitespaceCanHang = textStyle->WhiteSpaceCanHangOrVisuallyCollapse();
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
@@ -10307,9 +10305,9 @@ bool nsTextFrame::IsEmpty() {
     return true;
   }
 
-  bool isEmpty =
-      IsAllWhitespace(TextFragment(), textStyle->mWhiteSpace !=
-                                          mozilla::StyleWhiteSpace::PreLine);
+  bool isEmpty = IsAllWhitespace(TextFragment(),
+                                 textStyle->mWhiteSpaceCollapse !=
+                                     StyleWhiteSpaceCollapse::PreserveBreaks);
   AddStateBits(isEmpty ? TEXT_IS_ONLY_WHITESPACE : TEXT_ISNOT_ONLY_WHITESPACE);
   return isEmpty;
 }

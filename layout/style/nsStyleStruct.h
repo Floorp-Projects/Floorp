@@ -845,7 +845,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleTextAlign mTextAlign;
   mozilla::StyleTextAlignLast mTextAlignLast;
   mozilla::StyleTextJustify mTextJustify;
-  mozilla::StyleWhiteSpace mWhiteSpace;
+  mozilla::StyleWhiteSpaceCollapse mWhiteSpaceCollapse =
+      mozilla::StyleWhiteSpaceCollapse::Collapse;
+  mozilla::StyleTextWrapMode mTextWrapMode = mozilla::StyleTextWrapMode::Wrap;
   mozilla::StyleLineBreak mLineBreak = mozilla::StyleLineBreak::Auto;
 
  private:
@@ -918,10 +920,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   }
 
   bool WhiteSpaceIsSignificant() const {
-    return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreSpace;
+    return mWhiteSpaceCollapse != mozilla::StyleWhiteSpaceCollapse::Collapse &&
+           mWhiteSpaceCollapse !=
+               mozilla::StyleWhiteSpaceCollapse::PreserveBreaks;
   }
 
   bool WhiteSpaceCanHangOrVisuallyCollapse() const {
@@ -930,35 +931,28 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
     //       WhiteSpaceCanWrapStyle() &&
     //       WhiteSpaceIsSignificant()
     // which simplifies to:
-    return mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap;
+    return mTextWrapMode == mozilla::StyleTextWrapMode::Wrap &&
+           mWhiteSpaceCollapse != mozilla::StyleWhiteSpaceCollapse::BreakSpaces;
   }
 
   bool NewlineIsSignificantStyle() const {
-    return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreLine;
+    return mWhiteSpaceCollapse == mozilla::StyleWhiteSpaceCollapse::Preserve ||
+           mWhiteSpaceCollapse ==
+               mozilla::StyleWhiteSpaceCollapse::PreserveBreaks ||
+           mWhiteSpaceCollapse == mozilla::StyleWhiteSpaceCollapse::BreakSpaces;
   }
 
   bool WhiteSpaceOrNewlineIsSignificant() const {
-    return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreLine ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreSpace;
+    return NewlineIsSignificantStyle() || WhiteSpaceIsSignificant();
   }
 
   bool TabIsSignificant() const {
-    return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces;
+    return mWhiteSpaceCollapse == mozilla::StyleWhiteSpaceCollapse::Preserve ||
+           mWhiteSpaceCollapse == mozilla::StyleWhiteSpaceCollapse::BreakSpaces;
   }
 
   bool WhiteSpaceCanWrapStyle() const {
-    return mWhiteSpace == mozilla::StyleWhiteSpace::Normal ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreLine;
+    return mTextWrapMode == mozilla::StyleTextWrapMode::Wrap;
   }
 
   bool WordCanWrapStyle() const {
