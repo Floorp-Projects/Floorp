@@ -5,7 +5,6 @@
 package mozilla.components.service.nimbus.messaging
 
 import android.content.Intent
-import android.net.Uri
 import androidx.core.net.toUri
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.glean.testing.GleanTestRule
@@ -118,18 +117,16 @@ class NimbusMessagingControllerTest {
         }
 
     @Test
-    fun `GIVEN action is URL WHEN calling processMessageActionToUri THEN record a clicked telemetry event and return an open URI`() {
-        val url = "http://mozilla.org"
-        val message = createMessage("id-1", action = url)
+    fun `GIVEN action is URL WHEN calling processMessageActionToUri THEN record a clicked telemetry event`() {
+        val message = createMessage("id-1")
 
-        `when`(storage.generateUuidAndFormatAction(message.action))
-            .thenReturn(Pair(null, message.action))
+        `when`(storage.generateUuidAndFormatMessage(message))
+            .thenReturn(Pair(null, "://mock-uri"))
 
         // Assert telemetry is initially null
         assertNull(GleanMessaging.messageClicked.testGetValue())
 
-        val encodedUrl = Uri.encode(url)
-        val expectedUri = "$deepLinkScheme://open?url=$encodedUrl".toUri()
+        val expectedUri = "$deepLinkScheme://mock-uri".toUri()
 
         val actualUri = controller.processMessageActionToUri(message)
 
@@ -143,17 +140,16 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `GIVEN a URL with a {uuid} WHEN calling processMessageActionToUri THEN record a clicked telemetry event and return an open URI`() {
+    fun `GIVEN a URL with a {uuid} WHEN calling processMessageActionToUri THEN record a clicked telemetry event`() {
         val url = "http://mozilla.org?uuid={uuid}"
-        val message = createMessage("id-1", action = url)
+        val message = createMessage("id-1", action = "://open", messageData = MessageData(actionParams = mapOf("url" to url)))
         val uuid = UUID.randomUUID().toString()
-        `when`(storage.generateUuidAndFormatAction(any())).thenReturn(Pair(uuid, message.action))
+        `when`(storage.generateUuidAndFormatMessage(message)).thenReturn(Pair(uuid, "://mock-uri"))
 
         // Assert telemetry is initially null
         assertNull(GleanMessaging.messageClicked.testGetValue())
 
-        val encodedUrl = Uri.encode(url)
-        val expectedUri = "$deepLinkScheme://open?url=$encodedUrl".toUri()
+        val expectedUri = "$deepLinkScheme://mock-uri".toUri()
 
         val actualUri = controller.processMessageActionToUri(message)
 
@@ -170,7 +166,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN action is deeplink WHEN calling processMessageActionToUri THEN return a deeplink URI`() {
         val message = createMessage("id-1", action = "://a-deep-link")
-        `when`(storage.generateUuidAndFormatAction(message.action))
+        `when`(storage.generateUuidAndFormatMessage(message))
             .thenReturn(Pair(null, message.action))
 
         // Assert telemetry is initially null
@@ -191,7 +187,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN action unknown format WHEN calling processMessageActionToUri THEN return the action URI`() {
         val message = createMessage("id-1", action = "unknown")
-        `when`(storage.generateUuidAndFormatAction(message.action))
+        `when`(storage.generateUuidAndFormatMessage(message))
             .thenReturn(Pair(null, message.action))
 
         // Assert telemetry is initially null
@@ -224,7 +220,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `WHEN getIntentForMessageAction is called THEN return a generated Intent with the processed Message action`() {
         val message = createMessage("id-1", action = "unknown")
-        `when`(storage.generateUuidAndFormatAction(message.action))
+        `when`(storage.generateUuidAndFormatMessage(message))
             .thenReturn(Pair(null, message.action))
         assertNull(GleanMessaging.messageClicked.testGetValue())
 

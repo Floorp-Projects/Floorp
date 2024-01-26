@@ -5,6 +5,7 @@
 package mozilla.components.service.nimbus.messaging
 
 import android.content.Context
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import kotlinx.coroutines.runBlocking
@@ -219,28 +220,6 @@ class NimbusMessagingStorage(
     }
 
     /**
-     * Returns a pair of uuid and valid action for the provided [action].
-     *
-     * Uses Nimbus' targeting attributes to do basic string interpolation.
-     *
-     * e.g.
-     * `https://example.com/{locale}/whatsnew.html?version={app_version}`
-     *
-     * If the string `{uuid}` is detected in the [action] string, then it is
-     * replaced with a random UUID. This is returned as the first value of the returned
-     * [Pair].
-     *
-     * The fully resolved (with all substitutions) action is returned as the second value
-     * of the [Pair].
-     */
-    fun generateUuidAndFormatAction(action: String): Pair<String?, String> =
-        createMessagingHelper().use { helper ->
-            val uuid = helper.getUuid(action)
-            val url = helper.stringFormat(action, uuid)
-            Pair(uuid, url)
-        }
-
-    /**
      * Record the time and optional [bootIdentifier] of the display of the given message.
      *
      * If the message is part of an experiment, then record an exposure event for that
@@ -273,6 +252,83 @@ class NimbusMessagingStorage(
     }
 
     /**
+     * Returns a pair of uuid and valid action for the provided [message].
+     *
+     * The message's action-params are appended as query parameters to the action URI,
+     * URI encoding the values as it goes.
+     *
+     * Uses Nimbus' targeting attributes to do basic string interpolation.
+     *
+     * e.g.
+     * `https://example.com/{locale}/whats-new.html?version={app_version}`
+     *
+     * If the string `{uuid}` is detected in the [message]'s action, then it is
+     * replaced with a random UUID. This is returned as the first value of the returned
+     * [Pair].
+     *
+     * The fully resolved (with all substitutions) action is returned as the second value
+     * of the [Pair].
+     */
+    internal fun generateUuidAndFormatMessage(message: Message): Pair<String?, String> =
+        createMessagingHelper().use { helper ->
+            generateUuidAndFormatMessage(message, helper)
+        }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun generateUuidAndFormatMessage(
+        message: Message,
+        helper: NimbusMessagingHelperInterface,
+    ): Pair<String?, String> {
+        // The message action is part or all of a valid URL, likely to be a deeplink.
+        // If it's an internal deeplink, we don't yet know the scheme, so
+        // we'll prepend it later: these should just have a :// prefix right now.
+        // e.g. market://details?id=org.mozilla.blah or ://open
+
+        // We need to construct it from the parts coming in from the message:
+        // the message.action, the message.actionParams and the attribute context.
+        //
+        // Any part of the action may have string params taken from the attribute
+        // context, and a special {uuid}.
+        // e.g. market://details?id={app_id} becomes market://details?id=org.mozilla.blah
+        // If there is a {uuid}, we want to create a uuid for later usage, i.e. recording in Glean
+        var uuid: String? = null
+        fun formatWithUuid(string: String): String {
+            if (uuid == null) {
+                uuid = helper.getUuid(string)
+            }
+            return helper.stringFormat(string, uuid)
+        }
+
+        // We also want to do any string substitutions e.g. locale
+        // or UUID for the action.
+        val action = formatWithUuid(message.action)
+
+        // Now we use a string builder to add the actionParams as query params to the URL.
+        val sb = StringBuilder(action)
+
+        // Before the first query parameter is a `?`, and subsequent ones are `&`.
+        // The action may already have a query parameter.
+        var separator = if (action.contains('?')) {
+            '&'
+        } else {
+            '?'
+        }
+
+        for ((queryParamName, queryParamValue) in message.data.actionParams) {
+            val v = formatWithUuid(queryParamValue)
+            sb
+                .append(separator)
+                .append(queryParamName)
+                .append('=')
+                .append(Uri.encode(v))
+
+            separator = '&'
+        }
+
+        return uuid to sb.toString()
+    }
+
+    /**
      * Updated the provided [metadata] in the storage.
      */
     suspend fun updateMetadata(metadata: Message.Metadata) {
@@ -283,20 +339,7 @@ class NimbusMessagingStorage(
     internal fun sanitizeAction(
         unsafeAction: String,
         nimbusActions: Map<String, String>,
-    ): String? =
-        when {
-            unsafeAction.startsWith("http") -> {
-                unsafeAction
-            }
-            else -> {
-                val safeAction = nimbusActions[unsafeAction]
-                if (safeAction.isNullOrBlank() || safeAction.isEmpty()) {
-                    null
-                } else {
-                    safeAction
-                }
-            }
-        }
+    ): String? = nimbusActions[unsafeAction]
 
     @VisibleForTesting
     internal fun sanitizeTriggers(

@@ -6,6 +6,7 @@ package mozilla.components.service.nimbus.messaging
 
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
@@ -14,16 +15,11 @@ import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessagin
  *
  * @param messagingStorage a NimbusMessagingStorage instance
  * @param deepLinkScheme the deepLinkScheme for the app
- * @param httpActionToDeepLinkUriConverter will be used to create a deepLinkUri from the action associated to a message.
- * It can be customized to fit the needs of any app. A default implementation is provided.
  * @param now will be used to get the current time
  */
 open class NimbusMessagingController(
     private val messagingStorage: NimbusMessagingStorage,
     private val deepLinkScheme: String,
-    private val httpActionToDeepLinkUriConverter: (String) -> Uri = { action ->
-        "$deepLinkScheme://open?url=${Uri.encode(action)}".toUri()
-    },
 ) : NimbusMessagingControllerInterface {
     /**
      * Records telemetry and metadata for a newly processed displayed message.
@@ -90,8 +86,9 @@ open class NimbusMessagingController(
      * We call this `process` as it has a side effect of logging a Glean event while it
      * creates a URI string for the message action.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun processMessageActionToUri(message: Message): Uri {
-        val (uuid, action) = messagingStorage.generateUuidAndFormatAction(message.action)
+        val (uuid, action) = messagingStorage.generateUuidAndFormatMessage(message)
         sendClickedMessageTelemetry(message.id, uuid)
 
         return convertActionIntoDeepLinkSchemeUri(action)
@@ -116,9 +113,7 @@ open class NimbusMessagingController(
     }
 
     private fun convertActionIntoDeepLinkSchemeUri(action: String): Uri =
-        if (action.startsWith("http", ignoreCase = true)) {
-            httpActionToDeepLinkUriConverter(action)
-        } else if (action.startsWith("://")) {
+        if (action.startsWith("://")) {
             "$deepLinkScheme$action".toUri()
         } else {
             action.toUri()

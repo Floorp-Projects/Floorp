@@ -55,7 +55,7 @@ class NimbusMessagingHomescreenTest : TestSetup() {
             Messaging(
                 messages = mapOf(
                     "test-message" to MessageData(
-                        action = Res.string("TEST ACTION"),
+                        action = "TEST ACTION",
                         style = "TEST STYLE",
                         buttonLabel = Res.string(messageButtonLabel),
                         text = Res.string(messageText),

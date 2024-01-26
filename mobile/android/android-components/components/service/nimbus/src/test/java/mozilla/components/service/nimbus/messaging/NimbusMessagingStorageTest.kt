@@ -4,6 +4,7 @@
 
 package mozilla.components.service.nimbus.messaging
 
+import android.net.Uri
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.nimbus.messaging.ControlMessageBehavior.SHOW_NEXT_MESSAGE
@@ -38,6 +39,7 @@ import org.mozilla.experiments.nimbus.Res
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.robolectric.RobolectricTestRunner
+import java.util.UUID
 
 private const val MOCK_TIME_MILLIS = 1000L
 
@@ -790,16 +792,92 @@ class NimbusMessagingStorageTest {
         assertFalse(malformedMessageIds.contains("control"))
     }
 
+    @Test
+    fun `GIVEN a message with an action and params THEN do string interpolation`() = runTest {
+        val (feature, _) = createMessagingFeature(
+            actions = mapOf("OPEN_URL" to "://open", "INSTALL_FOCUS" to "market://details?app=org.mozilla.focus"),
+            messages = mapOf(
+                "open-url" to createMessageData(
+                    action = "OPEN_URL",
+                    actionParams = mapOf("url" to "https://mozilla.org"),
+                ),
+
+                // with uuid in the param value
+                "open-url-with-uuid" to createMessageData(
+                    action = "OPEN_URL",
+                    actionParams = mapOf("url" to "https://mozilla.org?uuid={uuid}"),
+                ),
+
+                // with ? in the action
+                "install-focus" to createMessageData(
+                    action = "INSTALL_FOCUS",
+                    actionParams = mapOf("utm" to "my-utm"),
+                ),
+            ),
+        )
+        val storage = NimbusMessagingStorage(
+            testContext,
+            metadataStorage,
+            reportMalformedMessage,
+            nimbus,
+            messagingFeature = feature,
+        )
+
+        val myUuid = UUID.randomUUID().toString()
+        val helper = object : NimbusMessagingHelperInterface {
+            override fun evalJexl(expression: String) = false
+            override fun getUuid(template: String): String? =
+                if (template.contains("{uuid}")) {
+                    myUuid
+                } else {
+                    null
+                }
+
+            override fun stringFormat(template: String, uuid: String?): String =
+                uuid?.let {
+                    template.replace("{uuid}", it)
+                } ?: template
+        }
+
+        run {
+            val message = storage.getMessage("open-url")!!
+            assertEquals(message.action, "://open")
+            val (uuid, url) = storage.generateUuidAndFormatMessage(message, helper)
+            assertEquals(uuid, null)
+            val urlParam = "https://mozilla.org"
+            assertEquals(url, "://open?url=${Uri.encode(urlParam)}")
+        }
+
+        run {
+            val message = storage.getMessage("open-url-with-uuid")!!
+            assertEquals(message.action, "://open")
+            val (uuid, url) = storage.generateUuidAndFormatMessage(message, helper)
+            assertEquals(uuid, myUuid)
+            val urlParam = "https://mozilla.org?uuid=$myUuid"
+            assertEquals(url, "://open?url=${Uri.encode(urlParam)}")
+        }
+
+        run {
+            val message = storage.getMessage("install-focus")!!
+            assertEquals(message.action, "market://details?app=org.mozilla.focus")
+            val (uuid, url) = storage.generateUuidAndFormatMessage(message, helper)
+            assertEquals(uuid, null)
+            assertEquals(url, "market://details?app=org.mozilla.focus&utm=my-utm")
+        }
+    }
+
     private fun createMessageData(
         text: String = "text-1",
         action: String = "action-1",
+        actionParams: Map<String, String> = mapOf(),
         style: String = "style-1",
         triggers: List<String> = listOf("trigger-1"),
         surface: MessageSurfaceId = HOMESCREEN,
         isControl: Boolean = false,
         experiment: String? = null,
     ) = MessageData(
-        action = Res.string(action),
+        action = action,
+        actionParams = actionParams,
         style = style,
         triggerIfAll = triggers,
         surface = surface,
