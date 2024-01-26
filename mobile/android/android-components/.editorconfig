@@ -9,7 +9,9 @@ root = True
 [*.kt]
 indent_size = 4
 indent_style = space
-max_line_length = 120 # Matches maxLineLength in detekt.yml
+
+# Matches maxLineLength in detekt.yml
+max_line_length = 120
 
 ij_kotlin_allow_trailing_comma_on_call_site=true
 ij_kotlin_allow_trailing_comma=true
