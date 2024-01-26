@@ -11,7 +11,7 @@ root_dir=$MOZ_FETCHES_DIR
 build_dir=$GECKO_PATH/build
 data_dir=$GECKO_PATH/build/unix/build-gcc
 
-sixgill_rev=a642a811d6ee
+sixgill_rev=a84b31ab04ee
 sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 
 . $data_dir/build-gcc.sh
