@@ -3695,7 +3695,7 @@ dependencies = [
  "url",
  "uuid",
  "winapi",
- "windows-sys 0.48.999",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
