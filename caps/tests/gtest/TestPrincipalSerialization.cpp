@@ -17,7 +17,7 @@ using mozilla::SystemPrincipal;
 // None of these tests work in debug due to assert guards
 #ifndef MOZ_DEBUG
 
-// calling toJson() twice with the same string arg
+// calling toJSON() twice with the same string arg
 // (ensure that we truncate correctly where needed)
 TEST(PrincipalSerialization, ReusedJSONArgument)
 {
@@ -44,28 +44,6 @@ TEST(PrincipalSerialization, ReusedJSONArgument)
   rv = BasePrincipal::Cast(principal2)->ToJSON(JSON);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_TRUE(JSON.EqualsLiteral("{\"1\":{\"0\":\"https://example.com/\"}}"));
-}
-
-// Assure that calling FromProperties() with an empty array list always returns
-// a nullptr The exception here is SystemPrincipal which doesn't have fields but
-// it also doesn't implement FromProperties These are overly cautious checks
-// that we don't try to create a principal in reality FromProperties is only
-// called with a populated array.
-TEST(PrincipalSerialization, FromPropertiesEmpty)
-{
-  nsTArray<ContentPrincipal::KeyVal> resContent;
-  nsCOMPtr<nsIPrincipal> contentPrincipal =
-      ContentPrincipal::FromProperties(resContent);
-  ASSERT_EQ(nullptr, contentPrincipal);
-
-  nsTArray<ExpandedPrincipal::KeyVal> resExpanded;
-  nsCOMPtr<nsIPrincipal> expandedPrincipal =
-      ExpandedPrincipal::FromProperties(resExpanded);
-  ASSERT_EQ(nullptr, expandedPrincipal);
-
-  nsTArray<NullPrincipal::KeyVal> resNull;
-  nsCOMPtr<nsIPrincipal> nullprincipal = NullPrincipal::FromProperties(resNull);
-  ASSERT_EQ(nullptr, nullprincipal);
 }
 
 // Double check that if we have two valid principals in a serialized JSON that

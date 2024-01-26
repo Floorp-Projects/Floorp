@@ -11,7 +11,10 @@
 #include "mozilla/Base64.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/JSONWriter.h"
-#include "json/json.h"
+
+#include "js/JSON.h"
+#include "ExpandedPrincipalJSONHandler.h"
+#include "SubsumedPrincipalJSONHandler.h"
 
 using namespace mozilla;
 
@@ -287,100 +290,187 @@ nsresult ExpandedPrincipal::WriteJSONInnerProperties(JSONWriter& aWriter) {
   return NS_OK;
 }
 
-already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
-    nsTArray<ExpandedPrincipal::KeyVal>& aFields) {
-  MOZ_ASSERT(aFields.Length() == eMax + 1, "Must have all the keys");
-  nsTArray<nsCOMPtr<nsIPrincipal>> allowList;
-  OriginAttributes attrs;
-  // The odd structure here is to make the code to not compile
-  // if all the switch enum cases haven't been codified
-
-  for (const auto& field : aFields) {
-    switch (field.key) {
-      case ExpandedPrincipal::eSpecs:
-        if (!field.valueWasSerialized) {
-          MOZ_ASSERT(false,
-                     "Expanded principals require specs in serialized JSON");
-          return nullptr;
-        }
-        for (const nsACString& each : field.value.Split(',')) {
-          nsAutoCString result;
-          nsresult rv;
-          rv = Base64Decode(each, result);
-          MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to decode");
-
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          nsCOMPtr<nsIPrincipal> principal = BasePrincipal::FromJSON(result);
-          allowList.AppendElement(principal);
-        }
-        break;
-      case ExpandedPrincipal::eSuffix:
-        if (field.valueWasSerialized) {
-          bool ok = attrs.PopulateFromSuffix(field.value);
-          if (!ok) {
-            return nullptr;
-          }
-        }
-        break;
-    }
+bool ExpandedPrincipalJSONHandler::ProcessSubsumedResult(bool aResult) {
+  if (!aResult) {
+    NS_WARNING("Failed to parse subsumed principal");
+    mState = State::Error;
+    return false;
   }
-
-  if (allowList.Length() == 0) {
-    return nullptr;
-  }
-
-  RefPtr<ExpandedPrincipal> expandedPrincipal =
-      ExpandedPrincipal::Create(allowList, attrs);
-
-  return expandedPrincipal.forget();
+  return true;
 }
 
-/* static */
-already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
-    const Json::Value& aJSON) {
-  MOZ_ASSERT(aJSON.size() <= eMax + 1, "Must have at most, all the properties");
-  const std::string specs = std::to_string(eSpecs);
-  const std::string suffix = std::to_string(eSuffix);
-  MOZ_ASSERT(aJSON.isMember(specs), "The eSpecs member is required");
-  MOZ_ASSERT(aJSON.size() == 1 || aJSON.isMember(suffix),
-             "eSuffix is optional");
-
-  const auto* specsValue =
-      aJSON.find(specs.c_str(), specs.c_str() + specs.length());
-  if (!specsValue) {
-    MOZ_ASSERT(false, "Expanded principals require specs in serialized JSON");
-    return nullptr;
+bool ExpandedPrincipalJSONHandler::startObject() {
+  if (mSubsumedHandler.isSome()) {
+    return ProcessSubsumedResult(mSubsumedHandler->startObject());
   }
 
-  nsTArray<nsCOMPtr<nsIPrincipal>> allowList;
-  for (const auto& principalJSON : *specsValue) {
-    if (nsCOMPtr<nsIPrincipal> principal =
-            BasePrincipal::FromJSON(principalJSON)) {
-      allowList.AppendElement(principal);
+  switch (mState) {
+    case State::Init:
+      mState = State::StartObject;
+      break;
+    case State::StartArray:
+      mState = State::SubsumedPrincipal;
+      [[fallthrough]];
+    case State::SubsumedPrincipal:
+      mSubsumedHandler.emplace();
+
+      return ProcessSubsumedResult(mSubsumedHandler->startObject());
+    default:
+      NS_WARNING("Unexpected object value");
+      mState = State::Error;
+      return false;
+  }
+
+  return true;
+}
+
+bool ExpandedPrincipalJSONHandler::propertyName(const JS::Latin1Char* name,
+                                                size_t length) {
+  if (mSubsumedHandler.isSome()) {
+    return ProcessSubsumedResult(mSubsumedHandler->propertyName(name, length));
+  }
+
+  switch (mState) {
+    case State::StartObject:
+    case State::AfterPropertyValue: {
+      if (length != 1) {
+        NS_WARNING(
+            nsPrintfCString("Unexpected property name length: %zu", length)
+                .get());
+        mState = State::Error;
+        return false;
+      }
+
+      char key = char(name[0]);
+      switch (key) {
+        case ExpandedPrincipal::SpecsKey:
+          mState = State::SpecsKey;
+          break;
+        case ExpandedPrincipal::SuffixKey:
+          mState = State::SuffixKey;
+          break;
+        default:
+          NS_WARNING(
+              nsPrintfCString("Unexpected property name: '%c'", key).get());
+          mState = State::Error;
+          return false;
+      }
+      break;
     }
+    default:
+      NS_WARNING("Unexpected property name");
+      mState = State::Error;
+      return false;
   }
 
-  if (allowList.Length() == 0) {
-    return nullptr;
-  }
+  return true;
+}
 
-  OriginAttributes attrs;
-  if (aJSON.isMember(suffix)) {
-    const auto& value = aJSON[suffix];
-    if (!value.isString()) {
-      return nullptr;
+bool ExpandedPrincipalJSONHandler::endObject() {
+  if (mSubsumedHandler.isSome()) {
+    if (!ProcessSubsumedResult(mSubsumedHandler->endObject())) {
+      return false;
     }
-
-    bool ok = attrs.PopulateFromSuffix(nsDependentCString(value.asCString()));
-    if (!ok) {
-      return nullptr;
+    if (mSubsumedHandler->HasAccepted()) {
+      nsCOMPtr<nsIPrincipal> principal = mSubsumedHandler->mPrincipal.forget();
+      mSubsumedHandler.reset();
+      mAllowList.AppendElement(principal);
     }
+    return true;
   }
 
-  RefPtr<ExpandedPrincipal> expandedPrincipal =
-      ExpandedPrincipal::Create(allowList, attrs);
+  switch (mState) {
+    case State::AfterPropertyValue:
+      mPrincipal = ExpandedPrincipal::Create(mAllowList, mAttrs);
+      MOZ_ASSERT(mPrincipal);
 
-  return expandedPrincipal.forget();
+      mState = State::EndObject;
+      break;
+    default:
+      NS_WARNING("Unexpected end of object");
+      mState = State::Error;
+      return false;
+  }
+
+  return true;
+}
+
+bool ExpandedPrincipalJSONHandler::startArray() {
+  switch (mState) {
+    case State::SpecsKey:
+      mState = State::StartArray;
+      break;
+    default:
+      NS_WARNING("Unexpected array value");
+      mState = State::Error;
+      return false;
+  }
+
+  return true;
+}
+
+bool ExpandedPrincipalJSONHandler::endArray() {
+  switch (mState) {
+    case State::SubsumedPrincipal: {
+      mState = State::AfterPropertyValue;
+      break;
+    }
+    default:
+      NS_WARNING("Unexpected end of array");
+      mState = State::Error;
+      return false;
+  }
+
+  return true;
+}
+
+bool ExpandedPrincipalJSONHandler::stringValue(const JS::Latin1Char* str,
+                                               size_t length) {
+  if (mSubsumedHandler.isSome()) {
+    return ProcessSubsumedResult(mSubsumedHandler->stringValue(str, length));
+  }
+
+  switch (mState) {
+    case State::SpecsKey: {
+      nsDependentCSubstring specs(reinterpret_cast<const char*>(str), length);
+
+      for (const nsACString& each : specs.Split(',')) {
+        nsAutoCString result;
+        nsresult rv = Base64Decode(each, result);
+        MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to decode");
+        if (NS_FAILED(rv)) {
+          mState = State::Error;
+          return false;
+        }
+
+        nsCOMPtr<nsIPrincipal> principal = BasePrincipal::FromJSON(result);
+        if (!principal) {
+          mState = State::Error;
+          return false;
+        }
+        mAllowList.AppendElement(principal);
+      }
+
+      mState = State::AfterPropertyValue;
+      break;
+    }
+    case State::SuffixKey: {
+      nsDependentCSubstring attrs(reinterpret_cast<const char*>(str), length);
+      if (!mAttrs.PopulateFromSuffix(attrs)) {
+        mState = State::Error;
+        return false;
+      }
+
+      mState = State::AfterPropertyValue;
+      break;
+    }
+    default:
+      NS_WARNING("Unexpected string value");
+      mState = State::Error;
+      return false;
+  }
+
+  return true;
 }
 
 NS_IMETHODIMP

@@ -56,10 +56,13 @@ class ContentPrincipal final : public BasePrincipal {
     eSuffix,
     eMax = eSuffix
   };
-  typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
 
-  static already_AddRefed<BasePrincipal> FromProperties(
-      nsTArray<ContentPrincipal::KeyVal>& aFields);
+  static constexpr char URIKey = '0';
+  static_assert(eURI == 0);
+  static constexpr char DomainKey = '1';
+  static_assert(eDomain == 1);
+  static constexpr char SuffixKey = '2';
+  static_assert(eSuffix == 2);
 
   class Deserializer : public BasePrincipal::Deserializer {
    public:

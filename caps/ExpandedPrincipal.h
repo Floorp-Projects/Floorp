@@ -15,10 +15,6 @@
 
 class nsIContentSecurityPolicy;
 
-namespace Json {
-class Value;
-}
-
 namespace mozilla {
 class JSONWriter;
 }  // namespace mozilla
@@ -66,17 +62,11 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
 
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys : uint8_t { eSpecs = 0, eSuffix, eMax = eSuffix };
-  typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
 
-  // This is the legacy serializer for expanded principals. See note for
-  // `IsLegacyFormat` in BasePrincipal.cpp.
-  static already_AddRefed<BasePrincipal> FromProperties(
-      nsTArray<ExpandedPrincipal::KeyVal>& aFields);
-
-  // This is the new serializer for expanded principals. See note for
-  // `IsLegacyFormat` in BasePrincipal.cpp.
-  static already_AddRefed<BasePrincipal> FromProperties(
-      const Json::Value& aJSON);
+  static constexpr char SpecsKey = '0';
+  static_assert(eSpecs == 0);
+  static constexpr char SuffixKey = '1';
+  static_assert(eSuffix == 1);
 
   class Deserializer : public BasePrincipal::Deserializer {
    public:
