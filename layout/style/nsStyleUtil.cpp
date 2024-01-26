@@ -363,7 +363,7 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
   }
 
   bool isStyleElement = false;
-  // query the nonce
+  // Query the nonce.
   nsAutoString nonce;
   if (aElement && aElement->NodeInfo()->NameAtom() == nsGkAtoms::style) {
     isStyleElement = true;

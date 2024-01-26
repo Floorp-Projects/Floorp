@@ -416,6 +416,9 @@ void nsHtml5TreeOperation::SetHTMLElementAttributes(
     Element* aElement, nsAtom* aName, nsHtml5HtmlAttributes* aAttributes) {
   int32_t len = aAttributes->getLength();
   aElement->TryReserveAttributeCount((uint32_t)len);
+  if (aAttributes->getDuplicateAttributeError()) {
+    aElement->SetParserHadDuplicateAttributeError();
+  }
   for (int32_t i = 0; i < len; i++) {
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
     nsAtom* klass = val.MaybeAsAtom();
@@ -541,6 +544,10 @@ nsIContent* nsHtml5TreeOperation::CreateSVGElement(
     return newContent;
   }
 
+  if (aAttributes->getDuplicateAttributeError()) {
+    newContent->SetParserHadDuplicateAttributeError();
+  }
+
   int32_t len = aAttributes->getLength();
   for (int32_t i = 0; i < len; i++) {
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
@@ -587,6 +594,10 @@ nsIContent* nsHtml5TreeOperation::CreateMathMLElement(
 
   if (!aAttributes) {
     return newContent;
+  }
+
+  if (aAttributes->getDuplicateAttributeError()) {
+    newContent->SetParserHadDuplicateAttributeError();
   }
 
   int32_t len = aAttributes->getLength();

@@ -135,6 +135,7 @@ void nsHtml5HtmlAttributes::clear(int32_t aMode) {
   }
   mStorage.TruncateLength(0);
   mMode = aMode;
+  mDuplicateAttributeError = false;
 }
 
 void nsHtml5HtmlAttributes::releaseValue(int32_t aIndex) {

@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
+#include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSPContext.h"
 #include "nsCSPParser.h"
@@ -593,11 +594,12 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
   }
 
   EnsureIPCPoliciesRead();
-  nsAutoString content(u""_ns);
+  nsAutoString content;
 
   // always iterate all policies, otherwise we might not send out all reports
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     // https://w3c.github.io/webappsec-csp/#match-element-to-source-list
+
     // Step 1. If §6.7.3.2 Does a source list allow all inline behavior for
     // type? returns "Allows" given list and type, return "Matches".
     if (mPolicies[i]->allowsAllInlineBehavior(aDirective)) {
@@ -605,10 +607,24 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
     }
 
     // Step 2. If type is "script" or "style", and §6.7.3.1 Is element
-    // nonceable? returns "Nonceable" when executed upon element: [...]
-    // TODO(Bug 1397308) Implement "is element nonceable?" CSP checks
-    if (mPolicies[i]->allows(aDirective, CSP_NONCE, aNonce)) {
-      continue;
+    // nonceable? returns "Nonceable" when executed upon element:
+    if ((aDirective == SCRIPT_SRC_ELEM_DIRECTIVE ||
+         aDirective == STYLE_SRC_ELEM_DIRECTIVE) &&
+        aTriggeringElement && !aNonce.IsEmpty()) {
+#ifdef DEBUG
+      // NOTE: Folllowing Chrome "Is element nonceable?" doesn't apply to
+      // <style>.
+      if (aDirective == SCRIPT_SRC_ELEM_DIRECTIVE) {
+        // Our callers should have checked this.
+        MOZ_ASSERT(nsContentSecurityUtils::GetIsElementNonceableNonce(
+                       *aTriggeringElement) == aNonce);
+      }
+#endif
+
+      // Step 2.1. For each expression of list: [...]
+      if (mPolicies[i]->allows(aDirective, CSP_NONCE, aNonce)) {
+        continue;
+      }
     }
 
     // Check the content length to ensure the content is not allocated more than

@@ -432,6 +432,12 @@ void nsHtml5Tokenizer::errNcrUnassigned() {
 }
 
 void nsHtml5Tokenizer::errDuplicateAttribute() {
+  if (attributes) {
+    // There is an open issue for properly specifying this:
+    // https://github.com/whatwg/html/issues/3257
+    attributes->setDuplicateAttributeError();
+  }
+
   if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errDuplicateAttribute");
   }
