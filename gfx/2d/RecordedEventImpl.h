@@ -61,8 +61,10 @@ class RecordedDrawTargetCreation
 class RecordedDrawTargetDestruction
     : public RecordedEventDerived<RecordedDrawTargetDestruction> {
  public:
-  explicit RecordedDrawTargetDestruction()
-      : RecordedEventDerived(DRAWTARGETDESTRUCTION) {}
+  MOZ_IMPLICIT RecordedDrawTargetDestruction(ReferencePtr aRefPtr)
+      : RecordedEventDerived(DRAWTARGETDESTRUCTION),
+        mRefPtr(aRefPtr),
+        mBackendType(BackendType::NONE) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -74,6 +76,8 @@ class RecordedDrawTargetDestruction
 
   ReferencePtr mRefPtr;
 
+  BackendType mBackendType;
+
  private:
   friend class RecordedEvent;
 
@@ -84,7 +88,7 @@ class RecordedDrawTargetDestruction
 class RecordedSetCurrentDrawTarget
     : public RecordedEventDerived<RecordedSetCurrentDrawTarget> {
  public:
-  explicit RecordedSetCurrentDrawTarget(ReferencePtr aRefPtr)
+  MOZ_IMPLICIT RecordedSetCurrentDrawTarget(ReferencePtr aRefPtr)
       : RecordedEventDerived(SETCURRENTDRAWTARGET), mRefPtr(aRefPtr) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
@@ -942,9 +946,10 @@ class RecordedDrawShadow : public RecordedEventDerived<RecordedDrawShadow> {
 
 class RecordedDrawFilter : public RecordedEventDerived<RecordedDrawFilter> {
  public:
-  RecordedDrawFilter(const Rect& aSourceRect, const Point& aDestPoint,
-                     const DrawOptions& aOptions)
+  RecordedDrawFilter(ReferencePtr aNode, const Rect& aSourceRect,
+                     const Point& aDestPoint, const DrawOptions& aOptions)
       : RecordedEventDerived(DRAWFILTER),
+        mNode(aNode),
         mSourceRect(aSourceRect),
         mDestPoint(aDestPoint),
         mOptions(aOptions) {}
@@ -963,6 +968,7 @@ class RecordedDrawFilter : public RecordedEventDerived<RecordedDrawFilter> {
   template <class S>
   MOZ_IMPLICIT RecordedDrawFilter(S& aStream);
 
+  ReferencePtr mNode;
   Rect mSourceRect;
   Point mDestPoint;
   DrawOptions mOptions;
@@ -1165,8 +1171,8 @@ class RecordedFilterNodeCreation
 class RecordedFilterNodeDestruction
     : public RecordedEventDerived<RecordedFilterNodeDestruction> {
  public:
-  explicit RecordedFilterNodeDestruction()
-      : RecordedEventDerived(FILTERNODEDESTRUCTION) {}
+  MOZ_IMPLICIT RecordedFilterNodeDestruction(ReferencePtr aRefPtr)
+      : RecordedEventDerived(FILTERNODEDESTRUCTION), mRefPtr(aRefPtr) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
 
@@ -1179,31 +1185,10 @@ class RecordedFilterNodeDestruction
  private:
   friend class RecordedEvent;
 
-  template <class S>
-  MOZ_IMPLICIT RecordedFilterNodeDestruction(S& aStream);
-};
-
-class RecordedSetCurrentFilterNode
-    : public RecordedEventDerived<RecordedSetCurrentFilterNode> {
- public:
-  explicit RecordedSetCurrentFilterNode(ReferencePtr aRefPtr)
-      : RecordedEventDerived(SETCURRENTFILTERNODE), mRefPtr(aRefPtr) {}
-
-  bool PlayEvent(Translator* aTranslator) const override;
-
-  template <class S>
-  void Record(S& aStream) const;
-  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
-
-  std::string GetName() const override { return "SetCurrentFilterNode"; }
-
   ReferencePtr mRefPtr;
 
- private:
-  friend class RecordedEvent;
-
   template <class S>
-  MOZ_IMPLICIT RecordedSetCurrentFilterNode(S& aStream);
+  MOZ_IMPLICIT RecordedFilterNodeDestruction(S& aStream);
 };
 
 class RecordedGradientStopsCreation
@@ -1632,17 +1617,20 @@ class RecordedFilterNodeSetAttribute
   };
 
   template <typename T>
-  RecordedFilterNodeSetAttribute(uint32_t aIndex, T aArgument, ArgType aArgType)
+  RecordedFilterNodeSetAttribute(FilterNode* aNode, uint32_t aIndex,
+                                 T aArgument, ArgType aArgType)
       : RecordedEventDerived(FILTERNODESETATTRIBUTE),
+        mNode(aNode),
         mIndex(aIndex),
         mArgType(aArgType) {
     mPayload.resize(sizeof(T));
     memcpy(&mPayload.front(), &aArgument, sizeof(T));
   }
 
-  RecordedFilterNodeSetAttribute(uint32_t aIndex, const Float* aFloat,
-                                 uint32_t aSize)
+  RecordedFilterNodeSetAttribute(FilterNode* aNode, uint32_t aIndex,
+                                 const Float* aFloat, uint32_t aSize)
       : RecordedEventDerived(FILTERNODESETATTRIBUTE),
+        mNode(aNode),
         mIndex(aIndex),
         mArgType(ARGTYPE_FLOAT_ARRAY) {
     mPayload.resize(sizeof(Float) * aSize);
@@ -1659,6 +1647,8 @@ class RecordedFilterNodeSetAttribute
  private:
   friend class RecordedEvent;
 
+  ReferencePtr mNode;
+
   uint32_t mIndex;
   ArgType mArgType;
   std::vector<uint8_t> mPayload;
@@ -1670,14 +1660,18 @@ class RecordedFilterNodeSetAttribute
 class RecordedFilterNodeSetInput
     : public RecordedEventDerived<RecordedFilterNodeSetInput> {
  public:
-  RecordedFilterNodeSetInput(uint32_t aIndex, FilterNode* aInputNode)
+  RecordedFilterNodeSetInput(FilterNode* aNode, uint32_t aIndex,
+                             FilterNode* aInputNode)
       : RecordedEventDerived(FILTERNODESETINPUT),
+        mNode(aNode),
         mIndex(aIndex),
         mInputFilter(aInputNode),
         mInputSurface(nullptr) {}
 
-  RecordedFilterNodeSetInput(uint32_t aIndex, SourceSurface* aInputSurface)
+  RecordedFilterNodeSetInput(FilterNode* aNode, uint32_t aIndex,
+                             SourceSurface* aInputSurface)
       : RecordedEventDerived(FILTERNODESETINPUT),
+        mNode(aNode),
         mIndex(aIndex),
         mInputFilter(nullptr),
         mInputSurface(aInputSurface) {}
@@ -1692,6 +1686,7 @@ class RecordedFilterNodeSetInput
  private:
   friend class RecordedEvent;
 
+  ReferencePtr mNode;
   uint32_t mIndex;
   ReferencePtr mInputFilter;
   ReferencePtr mInputSurface;
@@ -2055,7 +2050,6 @@ inline bool RecordedDrawTargetCreation::PlayEvent(
     newDT->DrawSurface(mExistingData, dataRect, dataRect);
   }
 
-  aTranslator->SetCurrentDrawTarget(mRefPtr);
   return true;
 }
 
@@ -2119,16 +2113,20 @@ inline void RecordedDrawTargetCreation::OutputSimpleEventInfo(
 
 inline bool RecordedDrawTargetDestruction::PlayEvent(
     Translator* aTranslator) const {
-  aTranslator->RemoveDrawTarget();
+  aTranslator->RemoveDrawTarget(mRefPtr);
   return true;
 }
 
 template <class S>
-void RecordedDrawTargetDestruction::Record(S& aStream) const {}
+void RecordedDrawTargetDestruction::Record(S& aStream) const {
+  WriteElement(aStream, mRefPtr);
+}
 
 template <class S>
 RecordedDrawTargetDestruction::RecordedDrawTargetDestruction(S& aStream)
-    : RecordedEventDerived(DRAWTARGETDESTRUCTION) {}
+    : RecordedEventDerived(DRAWTARGETDESTRUCTION) {
+  ReadElement(aStream, mRefPtr);
+}
 
 inline void RecordedDrawTargetDestruction::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
@@ -2173,7 +2171,6 @@ inline bool RecordedCreateSimilarDrawTarget::PlayEvent(
   }
 
   aTranslator->AddDrawTarget(mRefPtr, newDT);
-  aTranslator->SetCurrentDrawTarget(mRefPtr);
   return true;
 }
 
@@ -2264,7 +2261,6 @@ inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
   }
 
   aTranslator->AddDrawTarget(mRefPtr, newDT);
-  aTranslator->SetCurrentDrawTarget(mRefPtr);
   return true;
 }
 
@@ -2284,7 +2280,6 @@ inline bool RecordedCreateClippedDrawTarget::PlayEvent(
   }
 
   aTranslator->AddDrawTarget(mRefPtr, newDT);
-  aTranslator->SetCurrentDrawTarget(mRefPtr);
   return true;
 }
 
@@ -3147,7 +3142,7 @@ inline bool RecordedDrawFilter::PlayEvent(Translator* aTranslator) const {
     return false;
   }
 
-  FilterNode* filter = aTranslator->GetCurrentFilterNode();
+  FilterNode* filter = aTranslator->LookupFilterNode(mNode);
   if (!filter) {
     return false;
   }
@@ -3158,6 +3153,7 @@ inline bool RecordedDrawFilter::PlayEvent(Translator* aTranslator) const {
 
 template <class S>
 void RecordedDrawFilter::Record(S& aStream) const {
+  WriteElement(aStream, mNode);
   WriteElement(aStream, mSourceRect);
   WriteElement(aStream, mDestPoint);
   WriteElement(aStream, mOptions);
@@ -3166,6 +3162,7 @@ void RecordedDrawFilter::Record(S& aStream) const {
 template <class S>
 RecordedDrawFilter::RecordedDrawFilter(S& aStream)
     : RecordedEventDerived(DRAWFILTER) {
+  ReadElement(aStream, mNode);
   ReadElement(aStream, mSourceRect);
   ReadElement(aStream, mDestPoint);
   ReadDrawOptions(aStream, mOptions);
@@ -3173,7 +3170,7 @@ RecordedDrawFilter::RecordedDrawFilter(S& aStream)
 
 inline void RecordedDrawFilter::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "DrawFilter";
+  aStringStream << "DrawFilter (" << mNode << ")";
 }
 
 inline bool RecordedDrawSurfaceWithShadow::PlayEvent(
@@ -3505,7 +3502,6 @@ inline bool RecordedFilterNodeCreation::PlayEvent(
 
   RefPtr<FilterNode> node = drawTarget->CreateFilter(mType);
   aTranslator->AddFilterNode(mRefPtr, node);
-  aTranslator->SetCurrentFilterNode(mRefPtr);
   return true;
 }
 
@@ -3531,41 +3527,24 @@ inline void RecordedFilterNodeCreation::OutputSimpleEventInfo(
 
 inline bool RecordedFilterNodeDestruction::PlayEvent(
     Translator* aTranslator) const {
-  aTranslator->RemoveFilterNode();
+  aTranslator->RemoveFilterNode(mRefPtr);
   return true;
 }
 
 template <class S>
-void RecordedFilterNodeDestruction::Record(S& aStream) const {}
-
-template <class S>
-RecordedFilterNodeDestruction::RecordedFilterNodeDestruction(S& aStream)
-    : RecordedEventDerived(FILTERNODEDESTRUCTION) {}
-
-inline void RecordedFilterNodeDestruction::OutputSimpleEventInfo(
-    std::stringstream& aStringStream) const {
-  aStringStream << "FilterNode Destroyed";
-}
-
-inline bool RecordedSetCurrentFilterNode::PlayEvent(
-    Translator* aTranslator) const {
-  return aTranslator->SetCurrentFilterNode(mRefPtr);
-}
-
-template <class S>
-void RecordedSetCurrentFilterNode::Record(S& aStream) const {
+void RecordedFilterNodeDestruction::Record(S& aStream) const {
   WriteElement(aStream, mRefPtr);
 }
 
 template <class S>
-RecordedSetCurrentFilterNode::RecordedSetCurrentFilterNode(S& aStream)
-    : RecordedEventDerived(SETCURRENTFILTERNODE) {
+RecordedFilterNodeDestruction::RecordedFilterNodeDestruction(S& aStream)
+    : RecordedEventDerived(FILTERNODEDESTRUCTION) {
   ReadElement(aStream, mRefPtr);
 }
 
-inline void RecordedSetCurrentFilterNode::OutputSimpleEventInfo(
+inline void RecordedFilterNodeDestruction::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "[" << mRefPtr << "] SetCurrentFilterNode";
+  aStringStream << "[" << mRefPtr << "] FilterNode Destroyed";
 }
 
 inline RecordedGradientStopsCreation::~RecordedGradientStopsCreation() {
@@ -4123,7 +4102,7 @@ void ReplaySetAttribute(FilterNode* aNode, uint32_t aIndex, T aValue) {
 
 inline bool RecordedFilterNodeSetAttribute::PlayEvent(
     Translator* aTranslator) const {
-  FilterNode* node = aTranslator->GetCurrentFilterNode();
+  FilterNode* node = aTranslator->LookupFilterNode(mNode);
   if (!node) {
     return false;
   }
@@ -4159,6 +4138,7 @@ inline bool RecordedFilterNodeSetAttribute::PlayEvent(
 
 template <class S>
 void RecordedFilterNodeSetAttribute::Record(S& aStream) const {
+  WriteElement(aStream, mNode);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mArgType);
   WriteElement(aStream, uint64_t(mPayload.size()));
@@ -4168,6 +4148,7 @@ void RecordedFilterNodeSetAttribute::Record(S& aStream) const {
 template <class S>
 RecordedFilterNodeSetAttribute::RecordedFilterNodeSetAttribute(S& aStream)
     : RecordedEventDerived(FILTERNODESETATTRIBUTE) {
+  ReadElement(aStream, mNode);
   ReadElement(aStream, mIndex);
   ReadElementConstrained(aStream, mArgType, ArgType::ARGTYPE_UINT32,
                          ArgType::ARGTYPE_FLOAT_ARRAY);
@@ -4183,12 +4164,12 @@ RecordedFilterNodeSetAttribute::RecordedFilterNodeSetAttribute(S& aStream)
 
 inline void RecordedFilterNodeSetAttribute::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "SetAttribute (" << mIndex << ")";
+  aStringStream << "[" << mNode << "] SetAttribute (" << mIndex << ")";
 }
 
 inline bool RecordedFilterNodeSetInput::PlayEvent(
     Translator* aTranslator) const {
-  FilterNode* node = aTranslator->GetCurrentFilterNode();
+  FilterNode* node = aTranslator->LookupFilterNode(mNode);
   if (!node) {
     return false;
   }
@@ -4204,6 +4185,7 @@ inline bool RecordedFilterNodeSetInput::PlayEvent(
 
 template <class S>
 void RecordedFilterNodeSetInput::Record(S& aStream) const {
+  WriteElement(aStream, mNode);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mInputFilter);
   WriteElement(aStream, mInputSurface);
@@ -4212,6 +4194,7 @@ void RecordedFilterNodeSetInput::Record(S& aStream) const {
 template <class S>
 RecordedFilterNodeSetInput::RecordedFilterNodeSetInput(S& aStream)
     : RecordedEventDerived(FILTERNODESETINPUT) {
+  ReadElement(aStream, mNode);
   ReadElement(aStream, mIndex);
   ReadElement(aStream, mInputFilter);
   ReadElement(aStream, mInputSurface);
@@ -4219,7 +4202,7 @@ RecordedFilterNodeSetInput::RecordedFilterNodeSetInput(S& aStream)
 
 inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "SetAttribute (" << mIndex << ", ";
+  aStringStream << "[" << mNode << "] SetAttribute (" << mIndex << ", ";
 
   if (mInputFilter) {
     aStringStream << "Filter: " << mInputFilter;
@@ -4333,7 +4316,6 @@ inline void RecordedDestination::OutputSimpleEventInfo(
   f(SOURCESURFACEDESTRUCTION, RecordedSourceSurfaceDestruction);   \
   f(FILTERNODECREATION, RecordedFilterNodeCreation);               \
   f(FILTERNODEDESTRUCTION, RecordedFilterNodeDestruction);         \
-  f(SETCURRENTFILTERNODE, RecordedSetCurrentFilterNode);           \
   f(GRADIENTSTOPSCREATION, RecordedGradientStopsCreation);         \
   f(GRADIENTSTOPSDESTRUCTION, RecordedGradientStopsDestruction);   \
   f(SNAPSHOT, RecordedSnapshot);                                   \
