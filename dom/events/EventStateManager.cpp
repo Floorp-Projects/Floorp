@@ -6093,7 +6093,18 @@ void EventStateManager::ContentRemoved(Document* aDocument,
   PointerEventHandler::ReleaseIfCaptureByDescendant(aContent);
 
   if (mMouseEnterLeaveHelper) {
+    const bool hadMouseOutTarget =
+        mMouseEnterLeaveHelper->GetOutEventTarget() != nullptr;
     mMouseEnterLeaveHelper->ContentRemoved(*aContent);
+    // If we lose the mouseout target, we need to dispatch mouseover on an
+    // ancestor.  For ensuring the chance to do it before next user input, we
+    // need a synthetic mouse move.
+    if (hadMouseOutTarget && !mMouseEnterLeaveHelper->GetOutEventTarget()) {
+      if (PresShell* presShell =
+              mPresContext ? mPresContext->GetPresShell() : nullptr) {
+        presShell->SynthesizeMouseMove(false);
+      }
+    }
   }
   for (const auto& entry : mPointersEnterLeaveHelper) {
     if (entry.GetData()) {
