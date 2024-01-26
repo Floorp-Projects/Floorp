@@ -1065,7 +1065,7 @@ static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->byteOffset());
+  args.rval().setNumber(tarr->byteOffset().valueOr(0));
   return true;
 }
 
@@ -1091,7 +1091,7 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->length());
+  args.rval().setNumber(tarr->length().valueOr(0));
   return true;
 }
 
@@ -1108,7 +1108,7 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
     return false;
   }
 
-  args.rval().setNumber(obj->length());
+  args.rval().setNumber(obj->length().valueOr(0));
   return true;
 }
 
@@ -1206,6 +1206,18 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
 
   Rooted<TypedArrayObject*> source(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
+
+  auto sourceLength = source->length();
+  if (!sourceLength) {
+    if (source->hasDetachedBuffer()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TYPED_ARRAY_DETACHED);
+    } else {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
+    }
+    return false;
+  }
   MOZ_ASSERT(!source->hasDetachedBuffer());
 
   // As directed by |DangerouslyUnwrapTypedArray|, sigil this pointer and all
@@ -1228,9 +1240,8 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   size_t sourceOffset = size_t(args[2].toNumber());
   size_t count = size_t(args[3].toNumber());
 
-  MOZ_ASSERT(count > 0 && count <= source->length());
-  MOZ_ASSERT(sourceOffset <= source->length() - count);
-  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length());
+  MOZ_ASSERT(count > 0);
+  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length().valueOr(0));
 
   size_t elementSize = TypedArrayElemSize(sourceType);
   MOZ_ASSERT(elementSize ==
@@ -1242,7 +1253,7 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   SharedMem<uint8_t*> unsafeTargetDataCrossCompartment =
       unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
 
-  size_t byteLength = count * elementSize;
+  size_t byteLength = std::min(count, *sourceLength) * elementSize;
 
   // The same-type case requires exact copying preserving the bit-level
   // encoding of the source data, so use memcpy if possible. If source and
@@ -1281,8 +1292,8 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isObject());
 
-  Rooted<TypedArrayObject*> target(cx,
-                                   &args[0].toObject().as<TypedArrayObject>());
+  Rooted<FixedLengthTypedArrayObject*> target(
+      cx, &args[0].toObject().as<FixedLengthTypedArrayObject>());
   MOZ_ASSERT(!target->hasDetachedBuffer());
   MOZ_ASSERT(!target->isSharedMemory());
 

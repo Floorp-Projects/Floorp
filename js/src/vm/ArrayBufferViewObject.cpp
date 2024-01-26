@@ -283,7 +283,7 @@ JS_PUBLIC_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   }
   size_t length = obj->is<DataViewObject>()
                       ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                      : obj->as<TypedArrayObject>().byteLength();
+                      : obj->as<TypedArrayObject>().byteLength().valueOr(0);
   return length;
 }
 
@@ -304,7 +304,7 @@ JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   }
   size_t offset = obj->is<DataViewObject>()
                       ? obj->as<DataViewObject>().byteOffset().valueOr(0)
-                      : obj->as<TypedArrayObject>().byteOffset();
+                      : obj->as<TypedArrayObject>().byteOffset().valueOr(0);
   return offset;
 }
 
@@ -313,7 +313,7 @@ JS_PUBLIC_API mozilla::Span<uint8_t> JS::ArrayBufferView::getData(
   MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
   size_t byteLength = obj->is<DataViewObject>()
                           ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                          : obj->as<TypedArrayObject>().byteLength();
+                          : obj->as<TypedArrayObject>().byteLength().valueOr(0);
   ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
   *isSharedMemory = view.isSharedMemory();
   return {static_cast<uint8_t*>(view.dataPointerEither().unwrap(
@@ -358,7 +358,7 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
   obj = &obj->unwrapAs<ArrayBufferViewObject>();
   size_t len = obj->is<DataViewObject>()
                    ? obj->as<DataViewObject>().byteLength().valueOr(0)
-                   : obj->as<TypedArrayObject>().byteLength();
+                   : obj->as<TypedArrayObject>().byteLength().valueOr(0);
   return len > ArrayBufferObject::MaxByteLengthForSmallBuffer;
 #else
   // Large ArrayBuffers are not supported on 32-bit.
