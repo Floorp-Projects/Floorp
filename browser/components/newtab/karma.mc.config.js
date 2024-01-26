@@ -134,9 +134,9 @@ module.exports = function (config) {
               branches: 78,
             },
             /**
-             * PlacesFeed.jsm is tested via an xpcshell test
+             * PlacesFeed.sys.mjs is tested via an xpcshell test
              */
-            "lib/PlacesFeed.jsm": {
+            "lib/PlacesFeed.sys.mjs": {
               statements: 7,
               lines: 7,
               functions: 8,
