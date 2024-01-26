@@ -1112,13 +1112,6 @@ nsDefaultCommandLineHandler.prototype = {
     var urilist = [];
     var principalList = [];
 
-    if (cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
-      // Since the purpose of this is to record early in startup,
-      // only record on launches, not already-running invocations.
-      Services.telemetry.setEventRecordingEnabled("telemetry", true);
-      Glean.fogValidation.validateEarlyEvent.record();
-    }
-
     if (AppConstants.platform == "win") {
       // Windows itself does disk I/O when the notification service is
       // initialized, so make sure that is lazy.
