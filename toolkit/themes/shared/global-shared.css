@@ -48,6 +48,11 @@
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
 
+  &:-moz-lwtheme {
+    --toolbar-bgcolor: rgba(255,255,255,.4);
+    --toolbar-color: var(--lwt-text-color, inherit);
+  }
+
   /* This color scheme should match --toolbar-color. However, note that
    * individual toolbars might override this (see ToolbarIconColor and the
    * brighttext attribute). */
@@ -58,25 +63,26 @@
   &[lwt-toolbar="dark"] {
     --toolbar-color-scheme: dark;
   }
-}
 
-:root:-moz-lwtheme {
-  --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-color: var(--lwt-text-color, inherit);
-}
-
-@media (prefers-contrast) {
-  :root {
+  @media (prefers-contrast) {
     /* Reduce the opacity of disabled toolbar buttons in order to increase
        contrast with the enabled state. */
     --toolbarbutton-disabled-opacity: 0.3;
 
     --panel-separator-color: currentColor;
     --toolbar-field-focus-border-color: var(--focus-outline-color);
+
+    &:not(:-moz-lwtheme) {
+      --panel-disabled-color: GrayText;
+    }
   }
 
-  :root:not(:-moz-lwtheme) {
-    --panel-disabled-color: GrayText;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+
+  &[dialogroot] {
+    font: menu;
   }
 }
 

@@ -17,12 +17,6 @@
   }
 }
 
-:root {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
-}
-
 /* ::::: Alert icons :::::*/
 
 .message-icon {
