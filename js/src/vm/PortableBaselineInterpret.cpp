@@ -702,8 +702,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::DataView:
-        if (object->getClass() != &DataViewObject::class_) {
+      case GuardClassKind::FixedLengthDataView:
+        if (object->getClass() != &FixedLengthDataViewObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
