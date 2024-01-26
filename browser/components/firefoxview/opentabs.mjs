@@ -220,6 +220,7 @@ class OpenTabsInView extends ViewPage {
               data-l10n-attrs="placeholder"
               @fxview-search-textbox-query=${this.onSearchQuery}
               .size=${this.searchTextboxSize}
+              pageName=${this.recentBrowsing ? "recentbrowsing" : "opentabs"}
             ></fxview-search-textbox>
           </div>`
         )}
@@ -395,6 +396,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     searchQuery: { type: String },
     searchResults: { type: Array },
     showAll: { type: Boolean },
+    cumulativeSearches: { type: Number },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -408,6 +410,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     this.searchQuery = "";
     this.searchResults = null;
     this.showAll = false;
+    this.cumulativeSearches = 0;
   }
 
   static queries = {
@@ -460,6 +463,15 @@ class OpenTabsInViewCard extends ViewPageContent {
       (event.type == "keydown" && event.code == "Space")
     ) {
       event.preventDefault();
+      Services.telemetry.recordEvent(
+        "firefoxview_next",
+        "search_show_all",
+        "showallbutton",
+        null,
+        {
+          section: "opentabs",
+        }
+      );
       this.showAll = true;
     }
   }
@@ -480,6 +492,16 @@ class OpenTabsInViewCard extends ViewPageContent {
         window: this.title || "Window 1 (Current)",
       }
     );
+    if (this.searchQuery) {
+      const searchesHistogram = Services.telemetry.getKeyedHistogramById(
+        "FIREFOX_VIEW_CUMULATIVE_SEARCHES"
+      );
+      searchesHistogram.add(
+        this.recentBrowsing ? "recentbrowsing" : "opentabs",
+        this.cumulativeSearches
+      );
+      this.cumulativeSearches = 0;
+    }
   }
 
   viewVisibleCallback() {
@@ -559,6 +581,9 @@ class OpenTabsInViewCard extends ViewPageContent {
   willUpdate(changedProperties) {
     if (changedProperties.has("searchQuery")) {
       this.showAll = false;
+      this.cumulativeSearches = this.searchQuery
+        ? this.cumulativeSearches + 1
+        : 0;
     }
     if (changedProperties.has("searchQuery") || changedProperties.has("tabs")) {
       this.updateSearchResults();
