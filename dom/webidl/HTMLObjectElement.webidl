@@ -106,22 +106,11 @@ interface mixin MozObjectLoadingContent {
   readonly attribute unsigned long displayedType;
 
   /**
-   * Forces a re-evaluation and reload of the tag.
-   * This can be used when the MIME type that provides a type has changed, for
-   * instance, to force the tag to re-evalulate the handler to use.
-   */
-  [ChromeOnly, Throws]
-  undefined reload();
-
-  /**
    * The URL of the data/src loaded in the object. This may be null (i.e.
    * an <embed> with no src).
    */
   [ChromeOnly]
   readonly attribute URI? srcURI;
-
-  [ChromeOnly, Throws, NeedsCallerType]
-  readonly attribute unsigned long runID;
 };
 
 HTMLObjectElement includes MozFrameLoaderOwner;

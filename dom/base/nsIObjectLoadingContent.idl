@@ -30,15 +30,6 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long TYPE_DOCUMENT    = 3;
   const unsigned long TYPE_NULL        = 4;
 
-  const unsigned long PLUGIN_ACTIVE               = 0xFF;
-
-  // Plugins-specific permission indicating that we want to prompt the user
-  // to decide whether they want to allow a plugin, but to do so in a less
-  // intrusive way than PROMPT_ACTION would entail. At the time of writing,
-  // this means hiding all in-content plugin overlays, but still showing the
-  // plugin badge in the URL bar.
-  const unsigned long PLUGIN_PERMISSION_PROMPT_ACTION_QUIET = 8;
-
   /**
    * The actual mime type (the one we got back from the network
    * request) for the element.
@@ -50,26 +41,6 @@ interface nsIObjectLoadingContent : nsISupports
    * the constants above for the list of possible values.
    */
   readonly attribute unsigned long displayedType;
-
-  /**
-   * Forces a re-evaluation and reload of the tag.
-   * This can be used when the MIME type that provides a type has changed, for
-   * instance, to force the tag to re-evalulate the handler to use.
-   */
-  void reload();
-
-  /**
-   * Puts the tag in the "waiting on a channel" state and adopts this
-   * channel. This does not override the normal logic of examining attributes
-   * and the channel type, so the load may cancel this channel if it decides not
-   * to use one.
-   *
-   * This assumes:
-   *  - This tag has not begun loading yet
-   *  - This channel has not yet hit OnStartRequest
-   *  - The caller will continue to pass channel events to us as a listener
-   */
-  [noscript] void initializeFromChannel(in nsIRequest request);
 
   /**
    * The URL of the data/src loaded in the object. This may be null (i.e.
