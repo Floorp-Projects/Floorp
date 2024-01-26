@@ -4553,6 +4553,17 @@ void CodeGenerator::visitGuardIsTypedArray(LGuardIsTypedArray* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardIsFixedLengthTypedArray(
+    LGuardIsFixedLengthTypedArray* guard) {
+  Register obj = ToRegister(guard->input());
+  Register temp = ToRegister(guard->temp0());
+
+  Label bail;
+  masm.loadObjClassUnsafe(obj, temp);
+  masm.branchIfClassIsNotFixedLengthTypedArray(temp, &bail);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardHasProxyHandler(LGuardHasProxyHandler* guard) {
   Register obj = ToRegister(guard->input());
 
