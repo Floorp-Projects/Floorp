@@ -91,10 +91,6 @@ people:
     bmo_id: 272464
     name: Bas Schouten
     nick: bas.schouten
-  - &bbouvier
-    bmo_id: 468907
-    name: Benjamin Bouvier
-    nick: bbouvier
   - &bc
     bmo_id: 23402
     name: Bob Clary
@@ -115,10 +111,6 @@ people:
     bmo_id: 483302
     name: Bevis Tseng
     nick: bevis
-  - &bhackett1024
-    bmo_id: 346231
-    name: Brian Hackett
-    nick: bhackett1024
   - &bhearsum
     bmo_id: 259016
     name: bhearsum
@@ -184,10 +176,6 @@ people:
     bmo_id: 525693
     name: Nazım Can Altınova
     nick: canova
-  - &caroline
-    bmo_id: 644229
-    name: Caroline Cullen
-    nick: caroline
   - &chunmin
     bmo_id: 521646
     name: C
@@ -263,10 +251,6 @@ people:
     bmo_id: 644159
     name: Dennis Jackson
     nick: djackson
-  - &djvj
-    bmo_id: 436087
-    name: Kannan Vijayan
-    nick: djvj
   - &dlrobertson
     bmo_id: 705145
     name: Dan Robertson
@@ -639,10 +623,6 @@ people:
     bmo_id: 536714
     name: Lee Salzman
     nick: lsalzman
-  - &luke
-    bmo_id: 347312
-    name: Luke Wagner
-    nick: luke
   - &mkato
     bmo_id: 8636
     name: Makoto Kato
@@ -911,10 +891,6 @@ people:
     bmo_id: 456485
     name: Stephen A Pohl
     nick: spohl
-  - &sstangl
-    bmo_id: 383201
-    name: Sean Stangl
-    nick: sstangl
   - &standard8
     bmo_id: 112088
     name: Mark Banner
@@ -1925,9 +1901,15 @@ modules:
       - js/src/jit/**/*
     meta:
       peers_emeritus:
+        - Benjamin Bouvier
+        - Brian Hackett
+        - Caroline Cullen
         - David Anderson
-        - Shu-yu Guo
         - Hannes Verschore
+        - Kannan Vijayan
+        - Luke Wagner
+        - Shu-yu Guo
+        - Sean Stangl
       url: https://spidermonkey.dev/
       components:
         - 'Core::JavaScript Engine: JIT'
@@ -1935,17 +1917,11 @@ modules:
       - *jandem
     peers:
       - *anba
-      - *bbouvier
       - *tcampbell
-      - *caroline
       - *mgaudet
-      - *bhackett1024
       - *iain
       - *nbp
       - *evilpie
-      - *sstangl
-      - *djvj
-      - *luke
     machine_name: core_javascript_jit
 
   - name: 'Core: js-tests'
