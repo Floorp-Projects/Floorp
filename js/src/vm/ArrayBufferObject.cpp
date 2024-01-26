@@ -446,6 +446,8 @@ bool ArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc,
   return CallNonGenericMethod<IsArrayBuffer, byteLengthGetterImpl>(cx, args);
 }
 
+enum class PreserveResizability : bool { No, Yes };
+
 /**
  * ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability )
  *
@@ -453,7 +455,7 @@ bool ArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc,
  */
 static ArrayBufferObject* ArrayBufferCopyAndDetach(
     JSContext* cx, Handle<ArrayBufferObject*> arrayBuffer,
-    Handle<Value> newLength) {
+    Handle<Value> newLength, PreserveResizability preserveResizability) {
   // Steps 1-2. (Not applicable in our implementation.)
 
   // Steps 3-4.
@@ -475,8 +477,13 @@ static ArrayBufferObject* ArrayBufferCopyAndDetach(
     return nullptr;
   }
 
-  // Steps 6-7. (Not applicable in our implementation.)
-  // We don't yet support resizable ArrayBuffers (bug 1670026).
+  // Steps 6-7.
+  mozilla::Maybe<size_t> maxByteLength;
+  if (preserveResizability == PreserveResizability::Yes &&
+      arrayBuffer->isResizable()) {
+    auto* resizableBuffer = &arrayBuffer->as<ResizableArrayBufferObject>();
+    maxByteLength = mozilla::Some(resizableBuffer->maxByteLength());
+  }
 
   // Step 8.
   if (arrayBuffer->hasDefinedDetachKey()) {
@@ -492,6 +499,20 @@ static ArrayBufferObject* ArrayBufferCopyAndDetach(
   if (!CheckArrayBufferTooLarge(cx, newByteLength)) {
     return nullptr;
   }
+
+  if (maxByteLength) {
+    if (size_t(newByteLength) > *maxByteLength) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_ARRAYBUFFER_LENGTH_LARGER_THAN_MAXIMUM);
+      return nullptr;
+    }
+
+    Rooted<ResizableArrayBufferObject*> resizableBuffer(
+        cx, &arrayBuffer->as<ResizableArrayBufferObject>());
+    return ResizableArrayBufferObject::copyAndDetach(cx, size_t(newByteLength),
+                                                     resizableBuffer);
+  }
+
   return ArrayBufferObject::copyAndDetach(cx, size_t(newByteLength),
                                           arrayBuffer);
 }
@@ -600,7 +621,8 @@ bool ArrayBufferObject::transferImpl(JSContext* cx, const CallArgs& args) {
   // Steps 1-2.
   Rooted<ArrayBufferObject*> buffer(
       cx, &args.thisv().toObject().as<ArrayBufferObject>());
-  auto* newBuffer = ArrayBufferCopyAndDetach(cx, buffer, args.get(0));
+  auto* newBuffer = ArrayBufferCopyAndDetach(cx, buffer, args.get(0),
+                                             PreserveResizability::Yes);
   if (!newBuffer) {
     return false;
   }
@@ -631,7 +653,8 @@ bool ArrayBufferObject::transferToFixedLengthImpl(JSContext* cx,
   // Steps 1-2.
   Rooted<ArrayBufferObject*> buffer(
       cx, &args.thisv().toObject().as<ArrayBufferObject>());
-  auto* newBuffer = ArrayBufferCopyAndDetach(cx, buffer, args.get(0));
+  auto* newBuffer = ArrayBufferCopyAndDetach(cx, buffer, args.get(0),
+                                             PreserveResizability::No);
   if (!newBuffer) {
     return false;
   }
@@ -1886,7 +1909,8 @@ ArrayBufferObject::createBufferAndData(
   }
 
   if (data) {
-    buffer->initialize(nbytes, BufferContents::createMallocedArrayBufferContentsArena(data));
+    buffer->initialize(
+        nbytes, BufferContents::createMallocedArrayBufferContentsArena(data));
     AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
   } else {
     data = buffer->inlineDataPointer();
@@ -1918,8 +1942,9 @@ ResizableArrayBufferObject::createBufferAndData(
   }
 
   if (data) {
-    buffer->initialize(byteLength, maxByteLength,
-                       BufferContents::createMallocedArrayBufferContentsArena(data));
+    buffer->initialize(
+        byteLength, maxByteLength,
+        BufferContents::createMallocedArrayBufferContentsArena(data));
     AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
   } else {
     data = buffer->inlineDataPointer();
@@ -1956,6 +1981,49 @@ ResizableArrayBufferObject::createBufferAndData(
   AutoSetNewObjectMetadata metadata(cx);
   auto [buffer, toFill] = createBufferAndData<FillContents::Uninitialized>(
       cx, newByteLength, metadata, nullptr);
+  if (!buffer) {
+    return nullptr;
+  }
+
+  std::uninitialized_copy_n(source->dataPointer(), newByteLength, toFill);
+
+  return buffer;
+}
+
+/* static */ ResizableArrayBufferObject* ResizableArrayBufferObject::copy(
+    JSContext* cx, size_t newByteLength,
+    JS::Handle<ResizableArrayBufferObject*> source) {
+  MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(newByteLength <= source->maxByteLength());
+
+  size_t sourceByteLength = source->byteLength();
+  size_t newMaxByteLength = source->maxByteLength();
+
+  if (newByteLength > sourceByteLength) {
+    // Copy into a larger buffer.
+    AutoSetNewObjectMetadata metadata(cx);
+    auto [buffer, toFill] = createBufferAndData<FillContents::Zero>(
+        cx, newByteLength, newMaxByteLength, metadata, nullptr);
+    if (!buffer) {
+      return nullptr;
+    }
+
+    // The `createBufferAndData()` call first zero-initializes the complete
+    // buffer and then we copy over |sourceByteLength| bytes from |source|. It
+    // seems prudent to only zero-initialize the trailing bytes of |toFill|
+    // to avoid writing twice to `toFill[0..newByteLength]`. We don't yet
+    // implement this optimization, because this method is only called for
+    // small, inline buffers, so any write optimizations probably won't make
+    // much of a difference.
+    std::copy_n(source->dataPointer(), sourceByteLength, toFill);
+
+    return buffer;
+  }
+
+  // Copy into a smaller or same size buffer.
+  AutoSetNewObjectMetadata metadata(cx);
+  auto [buffer, toFill] = createBufferAndData<FillContents::Uninitialized>(
+      cx, newByteLength, newMaxByteLength, metadata, nullptr);
   if (!buffer) {
     return nullptr;
   }
@@ -2079,6 +2147,71 @@ ResizableArrayBufferObject::createBufferAndData(
   if (newByteLength > oldByteLength) {
     size_t count = newByteLength - oldByteLength;
     std::uninitialized_fill_n(newContents.data() + oldByteLength, count, 0);
+  }
+
+  return newBuffer;
+}
+
+/* static */ ResizableArrayBufferObject*
+ResizableArrayBufferObject::copyAndDetach(
+    JSContext* cx, size_t newByteLength,
+    JS::Handle<ResizableArrayBufferObject*> source) {
+  MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(newByteLength <= source->maxByteLength());
+
+  if (source->maxByteLength() > ResizableArrayBufferObject::MaxInlineBytes &&
+      source->isMalloced()) {
+    return copyAndDetachSteal(cx, newByteLength, source);
+  }
+
+  auto* newBuffer = ResizableArrayBufferObject::copy(cx, newByteLength, source);
+  if (!newBuffer) {
+    return nullptr;
+  }
+  ArrayBufferObject::detach(cx, source);
+
+  return newBuffer;
+}
+
+/* static */ ResizableArrayBufferObject*
+ResizableArrayBufferObject::copyAndDetachSteal(
+    JSContext* cx, size_t newByteLength,
+    JS::Handle<ResizableArrayBufferObject*> source) {
+  MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(newByteLength <= source->maxByteLength());
+  MOZ_ASSERT(source->isMalloced());
+
+  size_t sourceByteLength = source->byteLength();
+  size_t maxByteLength = source->maxByteLength();
+  MOZ_ASSERT(maxByteLength > ResizableArrayBufferObject::MaxInlineBytes,
+             "prefer copying small buffers");
+
+  auto* newBuffer = ResizableArrayBufferObject::createEmpty(cx);
+  if (!newBuffer) {
+    return nullptr;
+  }
+
+  // Extract the contents from |source|.
+  BufferContents contents = source->contents();
+  MOZ_ASSERT(contents);
+  MOZ_ASSERT(contents.kind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+             contents.kind() == MALLOCED_UNKNOWN_ARENA);
+
+  // Overwrite |source|'s data pointer *without* releasing the data.
+  source->setDataPointer(BufferContents::createNoData());
+
+  // Detach |source| now that doing so won't release |contents|.
+  RemoveCellMemory(source, maxByteLength, MemoryUse::ArrayBufferContents);
+  ArrayBufferObject::detach(cx, source);
+
+  // Set |newBuffer|'s contents to |source|'s original contents.
+  newBuffer->initialize(newByteLength, maxByteLength, contents);
+  AddCellMemory(newBuffer, maxByteLength, MemoryUse::ArrayBufferContents);
+
+  // Clear the bytes between `data[newByteLength..sourceByteLength]`.
+  if (newByteLength < sourceByteLength) {
+    size_t nbytes = sourceByteLength - newByteLength;
+    memset(newBuffer->dataPointer() + newByteLength, 0, nbytes);
   }
 
   return newBuffer;
