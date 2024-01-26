@@ -73,3 +73,49 @@ add_task(async function test_no_attribution() {
     sandbox.restore();
   }
 });
+
+add_task(async function test_empty_attribution() {
+  const sandbox = sinon.createSandbox();
+  await MacAttribution.setAttributionString("");
+
+  AttributionCode._clearCache();
+
+  const histogram = Services.telemetry.getHistogramById(
+    "BROWSER_ATTRIBUTION_ERRORS"
+  );
+  try {
+    // Clear any existing telemetry
+    histogram.clear();
+
+    await AttributionCode.getAttrDataAsync();
+
+    TelemetryTestUtils.assertHistogram(histogram, INDEX_EMPTY_ERROR, 1);
+  } finally {
+    AttributionCode._clearCache();
+    histogram.clear();
+    sandbox.restore();
+  }
+});
+
+add_task(async function test_null_attribution() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(MacAttribution, "getAttributionString").resolves(null);
+
+  AttributionCode._clearCache();
+
+  const histogram = Services.telemetry.getHistogramById(
+    "BROWSER_ATTRIBUTION_ERRORS"
+  );
+  try {
+    // Clear any existing telemetry
+    histogram.clear();
+
+    await AttributionCode.getAttrDataAsync();
+
+    TelemetryTestUtils.assertHistogram(histogram, INDEX_NULL_ERROR, 1);
+  } finally {
+    AttributionCode._clearCache();
+    histogram.clear();
+    sandbox.restore();
+  }
+});
