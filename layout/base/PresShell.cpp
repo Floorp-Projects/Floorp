@@ -6946,10 +6946,16 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
 
   if (mPresContext) {
     switch (aGUIEvent->mMessage) {
+      case eMouseMove:
+        if (!aGUIEvent->AsMouseEvent()->IsReal()) {
+          break;
+        }
+        [[fallthrough]];
       case eMouseDown:
       case eMouseUp: {
-        // We should flush pending mousemove event before that because the event
-        // may occur without proper boundary event.  E.g., if a mousedown event
+        // We should flush pending mousemove event now because some mouse
+        // boundary events which should've already been dispatched before a user
+        // input may have not been dispatched.  E.g., if a mousedown event
         // listener removed or appended an element under the cursor and mouseup
         // event comes immediately after that, mouseover or mouseout may have
         // not been dispatched on the new element yet.
@@ -6959,6 +6965,8 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
         // eMouseUp.  That could cause unexpected behavior if a `mouseover`
         // event listener assumes it's always disptached before `mousedown`.
         // However, we're not sure whether it could happen with users' input.
+        // FIXME: Perhaps, we need to do this for all events which are directly
+        // caused by user input, e.g., eKeyDown, etc.
         RefPtr<PresShell> rootPresShell =
             mPresContext->IsRoot() ? this : GetRootPresShell();
         if (rootPresShell && rootPresShell->mSynthMouseMoveEvent.IsPending()) {
