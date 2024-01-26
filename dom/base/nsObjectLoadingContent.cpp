@@ -416,11 +416,6 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest* aRequest,
   return NS_ERROR_UNEXPECTED;
 }
 
-void nsObjectLoadingContent::PresetOpenerWindow(
-    const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_FAILURE);
-}
-
 NS_IMETHODIMP
 nsObjectLoadingContent::GetActualType(nsACString& aType) {
   aType = mContentType;
@@ -1820,22 +1815,6 @@ Document* nsObjectLoadingContent::GetContentDocument(
 
   return sub_doc;
 }
-
-bool nsObjectLoadingContent::DoResolve(
-    JSContext* aCx, JS::Handle<JSObject*> aObject, JS::Handle<jsid> aId,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc) {
-  return true;
-}
-
-/* static */
-bool nsObjectLoadingContent::MayResolve(jsid aId) {
-  // We can resolve anything, really.
-  return true;
-}
-
-void nsObjectLoadingContent::GetOwnPropertyNames(
-    JSContext* aCx, JS::MutableHandleVector<jsid> /* unused */,
-    bool /* unused */, ErrorResult& aRv) {}
 
 void nsObjectLoadingContent::MaybeFireErrorEvent() {
   Element* el = AsElement();
