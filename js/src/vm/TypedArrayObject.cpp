@@ -2948,10 +2948,19 @@ JS::ArrayBufferOrView JS::ArrayBufferOrView::unwrap(JSObject* maybeWrapped) {
 
 bool JS::ArrayBufferOrView::isDetached() const {
   MOZ_ASSERT(obj);
-  if (obj->is<ArrayBufferObject>()) {
-    return obj->as<ArrayBufferObject>().isDetached();
+  if (obj->is<ArrayBufferObjectMaybeShared>()) {
+    return obj->as<ArrayBufferObjectMaybeShared>().isDetached();
   } else {
     return obj->as<ArrayBufferViewObject>().hasDetachedBuffer();
+  }
+}
+
+bool JS::ArrayBufferOrView::isResizable() const {
+  MOZ_ASSERT(obj);
+  if (obj->is<ArrayBufferObjectMaybeShared>()) {
+    return obj->as<ArrayBufferObjectMaybeShared>().isResizable();
+  } else {
+    return obj->as<ArrayBufferViewObject>().hasResizableBuffer();
   }
 }
 

@@ -288,6 +288,12 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return rawBufferObject()->dataPointerShared();
   }
 
+  bool isGrowable() const {
+    // NOTE: Growable SharedArrayBuffer aren't yet implemented, so this always
+    // returns false;
+    return false;
+  }
+
   // WebAssembly support:
 
   // Create a SharedArrayBufferObject using the provided buffer and size.
