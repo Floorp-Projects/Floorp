@@ -493,14 +493,10 @@ void AnimationInfo::AddAnimationForProperty(
     animSegment->sampleFn() = segment.mTimingFunction;
   }
 
-  if (aAnimation->Pending()) {
-    const TimeStamp readyTime =
-        aFrame->PresContext()->RefreshDriver()->MostRecentRefresh(
-            /* aEnsureTimerStarted= */ false);
-    MOZ_ASSERT(!readyTime.IsNull());
-    aAnimation->SetPendingReadyTime(readyTime);
-    MaybeStartPendingAnimation(*animation, readyTime);
-  }
+  const TimeStamp readyTime =
+      aFrame->PresContext()->RefreshDriver()->MostRecentRefresh(
+          /* aEnsureTimerStarted= */ false);
+  MaybeStartPendingAnimation(*animation, readyTime);
 }
 
 // Let's use an example to explain this function:
@@ -604,8 +600,8 @@ bool AnimationInfo::AddAnimationsForProperty(
     // Currently this only happens when the timeline is driven by a refresh
     // driver under test control. In this case, the next time the refresh
     // driver is advanced it will trigger any pending animations.
-    if (anim->Pending() && anim->GetTimeline() &&
-        !anim->GetTimeline()->TracksWallclockTime()) {
+    if (anim->Pending() &&
+        (anim->GetTimeline() && !anim->GetTimeline()->TracksWallclockTime())) {
       continue;
     }
 
