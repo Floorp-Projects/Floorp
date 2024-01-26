@@ -13,6 +13,7 @@ const Commands = {
     "devtools/shared/commands/inspected-window/inspected-window-command",
   inspectorCommand: "devtools/shared/commands/inspector/inspector-command",
   networkCommand: "devtools/shared/commands/network/network-command",
+  objectCommand: "devtools/shared/commands/object/object-command",
   resourceCommand: "devtools/shared/commands/resource/resource-command",
   rootResourceCommand:
     "devtools/shared/commands/root-resource/root-resource-command",

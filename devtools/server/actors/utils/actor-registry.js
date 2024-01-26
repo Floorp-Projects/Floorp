@@ -255,6 +255,11 @@ const ActorRegistry = {
       constructor: "TracerActor",
       type: { target: true },
     });
+    this.registerModule("devtools/server/actors/objects-manager", {
+      prefix: "objectsManager",
+      constructor: "ObjectsManagerActor",
+      type: { target: true },
+    });
   },
 
   /**
