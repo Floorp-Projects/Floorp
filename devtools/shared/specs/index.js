@@ -166,11 +166,6 @@ const Types = (exports.__TypesForTests = [
     front: null,
   },
   {
-    types: ["objects-manager"],
-    spec: "devtools/shared/specs/objects-manager",
-    front: "devtools/client/fronts/objects-manager",
-  },
-  {
     types: ["pagestyle"],
     spec: "devtools/shared/specs/page-style",
     front: "devtools/client/fronts/page-style",

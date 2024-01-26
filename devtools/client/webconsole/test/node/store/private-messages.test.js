@@ -18,7 +18,6 @@ const {
   getFirstMessage,
   getLastMessage,
   getPrivatePacket,
-  getWebConsoleUiMock,
   setupActions,
   setupStore,
 } = require("resource://devtools/client/webconsole/test/node/helpers.js");
@@ -203,24 +202,7 @@ describe("private messages", () => {
 
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {
     const releasedActors = [];
-    const { dispatch, getState } = setupStore([], {
-      webConsoleUI: getWebConsoleUiMock({
-        commands: {
-          client: {
-            mainRoot: {
-              supportsReleaseActors: true,
-            },
-          },
-          objectCommand: {
-            releaseObjects: async frontsToRelease => {
-              for (const front of frontsToRelease) {
-                releasedActors.push(front.actorID);
-              }
-            },
-          },
-        },
-      }),
-    });
+    const { dispatch, getState } = setupStore([]);
     const mockFrontRelease = function () {
       releasedActors.push(this.actorID);
     };

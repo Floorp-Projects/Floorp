@@ -815,8 +815,6 @@ class ObjectActor extends Actor {
       this.hooks.customFormatterConfigDbgObj = null;
     }
     this._customFormatterItem = null;
-    this.obj = null;
-    this.thread = null;
   }
 }
 
