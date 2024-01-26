@@ -445,6 +445,32 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     this.#newReportEndpoint = this.newReportEndpointPref;
   }
 
+  #random(seed) {
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+
+  #shuffleArray(array) {
+    const seed = Math.round(new Date().getTime());
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(this.#random(seed) * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  #randomizeDropdownItems(dropdown) {
+    if (!dropdown) {
+      return;
+    }
+
+    // Leave the first option ("choose reason") at the start
+    const items = Array.from(
+      dropdown.querySelectorAll(`menuitem:not(:first-of-type)`)
+    );
+    this.#shuffleArray(items);
+    items[0].parentNode.append(...items);
+  }
+
   #initMainView(state) {
     state.sendButton.addEventListener("command", async ({ target }) => {
       if (state.checkAndShowInputValidity()) {
@@ -493,6 +519,8 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         state.isReasonValid = newValidity;
       }
     });
+
+    this.#randomizeDropdownItems(reasonDropdown);
 
     const menupopup = reasonDropdown.querySelector("menupopup");
     const onDropDownShowOrHide = ({ type }) => {
