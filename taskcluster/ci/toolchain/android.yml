@@ -243,6 +243,7 @@ linux64-android-gradle-dependencies-lite:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
+            - android-gradle-python-envs
 
 android-gradle-python-envs:
     description: "gradle-python-envs plugin toolchain task"

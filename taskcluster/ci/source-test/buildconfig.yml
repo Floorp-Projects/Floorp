@@ -26,6 +26,7 @@ job-defaults:
         toolchain:
             - linux64-jdk-repack
             - android-gradle-dependencies
+            - android-gradle-python-envs
     use-system-python: true
 
 
