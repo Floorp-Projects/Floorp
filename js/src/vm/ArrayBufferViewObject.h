@@ -190,15 +190,12 @@ class ArrayBufferViewObject : public NativeObject {
   static bool ensureNonInline(JSContext* cx,
                               JS::Handle<ArrayBufferViewObject*> view);
 
+ protected:
   size_t byteOffset() const {
     return size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
   }
 
-  Value byteOffsetValue() const {
-    size_t offset = byteOffset();
-    return NumberValue(offset);
-  }
-
+ public:
   static void trace(JSTracer* trc, JSObject* obj);
 };
 
