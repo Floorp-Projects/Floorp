@@ -210,7 +210,7 @@ add_task(async function test_list_ordering() {
         "sort_history",
         "tabs",
         undefined,
-        { sort_type: "site" },
+        { sort_type: "site", search_start: "false" },
       ],
     ];
     // Select sort by site option
@@ -238,7 +238,7 @@ add_task(async function test_list_ordering() {
         "sort_history",
         "tabs",
         undefined,
-        { sort_type: "date" },
+        { sort_type: "date", search_start: "false" },
       ],
     ];
     // Select sort by date option
