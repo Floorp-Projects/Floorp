@@ -12,6 +12,7 @@
       data-category="paneExperimental">
   <html:h1 style="flex: 1;" data-l10n-id="pane-experimental-title"/>
   <label><html:h2 id="pane-experimental-subtitle" data-l10n-id="pane-experimental-subtitle"/></label>
+  <html:p data-l10n-id="pane-experimental-description2" class="description-deemphasized"/>
   <hbox pack="end">
     <button id="experimentalCategory-reset"
             class="accessory-button"
@@ -25,13 +26,13 @@
   <label class="search-header" hidden="true">
     <html:h2 id="pane-experimental-search-results-header" data-l10n-id="pane-experimental-search-results-header"/>
   </label>
-  <html:p data-l10n-id="pane-experimental-description2"/>
+  <html:p data-l10n-id="pane-experimental-description2" class="description-deemphasized"/>
 </groupbox>
 </html:template>
 
 <html:template id="template-featureGate">
     <html:div class="featureGate">
         <checkbox class="featureGateCheckbox"/>
-        <label class="featureGateDescription"/>
+        <description class="text-deemphasized featureGateDescription"/>
     </html:div>
 </html:template>

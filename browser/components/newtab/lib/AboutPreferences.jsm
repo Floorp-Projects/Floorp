@@ -160,6 +160,8 @@ class AboutPreferences {
     document.l10n.setAttributes(homeHeader, "home-prefs-content-header2");
 
     const homeDescription = createAppend("description", contentsGroup);
+    homeDescription.classList.add("description-deemphasized");
+
     document.l10n.setAttributes(
       homeDescription,
       "home-prefs-content-description2"
@@ -228,10 +230,10 @@ class AboutPreferences {
       const detailVbox = createAppend("vbox", sectionVbox);
       detailVbox.classList.add("indent");
       if (descString) {
-        const label = createAppend("label", detailVbox);
-        label.classList.add("indent");
+        const description = createAppend("description", detailVbox);
+        description.classList.add("indent", "text-deemphasized");
         document.l10n.setAttributes(
-          label,
+          description,
           getString(descString),
           descString.values
         );
@@ -240,8 +242,8 @@ class AboutPreferences {
         if (rowsPref && maxRows) {
           const detailHbox = createAppend("hbox", detailVbox);
           detailHbox.setAttribute("align", "center");
-          label.setAttribute("flex", 1);
-          detailHbox.appendChild(label);
+          description.setAttribute("flex", 1);
+          detailHbox.appendChild(description);
 
           // Add box so the search tooltip is positioned correctly
           const tooltipBox = createAppend("hbox", detailHbox);
