@@ -2175,14 +2175,14 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::PlainObject:
       clasp = &PlainObject::class_;
       break;
-    case GuardClassKind::FixedLengthArrayBuffer:
-      clasp = &FixedLengthArrayBufferObject::class_;
+    case GuardClassKind::ArrayBuffer:
+      clasp = &ArrayBufferObject::class_;
       break;
-    case GuardClassKind::FixedLengthSharedArrayBuffer:
-      clasp = &FixedLengthSharedArrayBufferObject::class_;
+    case GuardClassKind::SharedArrayBuffer:
+      clasp = &SharedArrayBufferObject::class_;
       break;
-    case GuardClassKind::FixedLengthDataView:
-      clasp = &FixedLengthDataViewObject::class_;
+    case GuardClassKind::DataView:
+      clasp = &DataViewObject::class_;
       break;
     case GuardClassKind::MappedArguments:
       clasp = &MappedArgumentsObject::class_;
@@ -2521,17 +2521,10 @@ bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
   }
 
   masm.loadObjClassUnsafe(obj, scratch);
-  masm.branchPtr(Assembler::Equal, scratch,
-                 ImmPtr(&FixedLengthArrayBufferObject::class_),
+  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(&ArrayBufferObject::class_),
                  failure->label());
   masm.branchPtr(Assembler::Equal, scratch,
-                 ImmPtr(&FixedLengthSharedArrayBufferObject::class_),
-                 failure->label());
-  masm.branchPtr(Assembler::Equal, scratch,
-                 ImmPtr(&ResizableArrayBufferObject::class_), failure->label());
-  masm.branchPtr(Assembler::Equal, scratch,
-                 ImmPtr(&GrowableSharedArrayBufferObject::class_),
-                 failure->label());
+                 ImmPtr(&SharedArrayBufferObject::class_), failure->label());
   return true;
 }
 
@@ -2548,22 +2541,6 @@ bool CacheIRCompiler::emitGuardIsTypedArray(ObjOperandId objId) {
 
   masm.loadObjClassUnsafe(obj, scratch);
   masm.branchIfClassIsNotTypedArray(scratch, failure->label());
-  return true;
-}
-
-bool CacheIRCompiler::emitGuardIsFixedLengthTypedArray(ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.loadObjClassUnsafe(obj, scratch);
-  masm.branchIfClassIsNotFixedLengthTypedArray(scratch, failure->label());
   return true;
 }
 
@@ -8856,8 +8833,8 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     masm.Push(index);
     masm.Push(obj);
 
-    using Fn = BigInt* (*)(JSContext*, FixedLengthTypedArrayObject*, size_t,
-                           const BigInt*, const BigInt*);
+    using Fn = BigInt* (*)(JSContext*, TypedArrayObject*, size_t, const BigInt*,
+                           const BigInt*);
     callvm->call<Fn, jit::AtomicsCompareExchange64>();
     return true;
   }
@@ -9111,7 +9088,7 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
     masm.Push(index);
     masm.Push(obj);
 
-    using Fn = BigInt* (*)(JSContext*, FixedLengthTypedArrayObject*, size_t);
+    using Fn = BigInt* (*)(JSContext*, TypedArrayObject*, size_t);
     callvm->call<Fn, jit::AtomicsLoad64>();
     return true;
   }
@@ -9192,7 +9169,7 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = void (*)(FixedLengthTypedArrayObject*, size_t, const BigInt*);
+    using Fn = void (*)(TypedArrayObject*, size_t, const BigInt*);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.passABIArg(index);

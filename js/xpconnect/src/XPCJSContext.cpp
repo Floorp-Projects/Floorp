@@ -787,8 +787,6 @@ static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
 static mozilla::Atomic<bool> sSymbolsAsWeakMapKeysEnabled(false);
-static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
-static mozilla::Atomic<bool> sSharedArrayBufferGrowableEnabled(false);
 #endif
 static mozilla::Atomic<bool> sArrayBufferTransferEnabled(false);
 
@@ -820,8 +818,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
       .setSymbolsAsWeakMapKeysEnabled(sSymbolsAsWeakMapKeysEnabled)
-      .setArrayBufferResizableEnabled(sArrayBufferResizableEnabled)
-      .setSharedArrayBufferGrowableEnabled(sSharedArrayBufferGrowableEnabled)
 #endif
       ;
 }
@@ -1029,10 +1025,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
   sSymbolsAsWeakMapKeysEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.symbols_as_weakmap_keys");
-  sArrayBufferResizableEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.arraybuffer_resizable");
-  sSharedArrayBufferGrowableEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.sharedarraybuffer_growable");
 #endif
   sArrayBufferTransferEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "arraybuffer_transfer");

@@ -382,7 +382,7 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
   }
 
   if (!bytecode->append((uint8_t*)code->dataPointerEither().unwrap(),
-                        code->byteLength().valueOr(0))) {
+                        code->byteLength())) {
     ReportOutOfMemory(cx);
     return false;
   }

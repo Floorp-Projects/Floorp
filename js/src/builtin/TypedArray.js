@@ -176,34 +176,6 @@ function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
   // Step 2.
   ValidateTypedArray(newTypedArray);
 
-  // We also need to make sure the length is in-bounds. This is checked by
-  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
-  PossiblyWrappedTypedArrayLength(newTypedArray);
-
-  // Step 3 (not applicable).
-
-  // Step 4.
-  return newTypedArray;
-}
-
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
-function TypedArrayCreateWithResizableBuffer(constructor, buffer, byteOffset) {
-  // Step 1.
-  var newTypedArray = constructContentFunction(
-    constructor,
-    constructor,
-    buffer,
-    byteOffset
-  );
-
-  // Step 2.
-  ValidateTypedArray(newTypedArray);
-
-  // We also need to make sure the length is in-bounds. This is checked by
-  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
-  PossiblyWrappedTypedArrayLength(newTypedArray);
-
   // Step 3 (not applicable).
 
   // Step 4.
@@ -239,22 +211,6 @@ function TypedArraySpeciesCreateWithBuffer(
   return TypedArrayCreateWithBuffer(C, buffer, byteOffset, length);
 }
 
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
-function TypedArraySpeciesCreateWithResizableBuffer(
-  exemplar,
-  buffer,
-  byteOffset
-) {
-  // Step 1 (omitted).
-
-  // Steps 2-3.
-  var C = TypedArraySpeciesConstructor(exemplar);
-
-  // Step 4.
-  return TypedArrayCreateWithResizableBuffer(C, buffer, byteOffset);
-}
-
 // ES6 draft rev30 (2014/12/24) 22.2.3.6 %TypedArray%.prototype.entries()
 function TypedArrayEntries() {
   // Step 1.
@@ -274,10 +230,6 @@ function TypedArrayEntries() {
 
   // Step 2-6.
   EnsureTypedArrayWithArrayBuffer(O);
-
-  // We also need to make sure the length is in-bounds. This is checked by
-  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
-  PossiblyWrappedTypedArrayLength(O);
 
   // Step 7.
   return CreateArrayIterator(O, ITEM_KIND_KEY_AND_VALUE);
@@ -328,10 +280,8 @@ function TypedArrayEvery(callbackfn /*, thisArg*/) {
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(TypedArrayEvery);
 
-// ES2024 draft rev b643e1d9bdc0e98d238a72f9988c01265306d09f
-// Including the changes from <https://github.com/tc39/ecma262/pull/3116>.
-//
-// 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] )
+// ES2018 draft rev ad2d1c60c5dc42a806696d4b58b4dca42d1f7dd4
+// 22.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] )
 function TypedArrayFill(value, start = 0, end = undefined) {
   // This function is not generic.
   if (!IsObject(this) || !IsTypedArray(this)) {
@@ -354,7 +304,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
   // Step 3.
   var len = TypedArrayLength(O);
 
-  // Steps 4-5.
+  // Step 4.
   var kind = GetTypedArrayKind(O);
   if (kind === TYPEDARRAY_KIND_BIGINT64 || kind === TYPEDARRAY_KIND_BIGUINT64) {
     value = ToBigInt(value);
@@ -362,25 +312,25 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     value = ToNumber(value);
   }
 
-  // Step 6.
+  // Step 5.
   var relativeStart = ToInteger(start);
 
-  // Steps 7-9.
+  // Step 6.
   var k =
     relativeStart < 0
       ? std_Math_max(len + relativeStart, 0)
       : std_Math_min(relativeStart, len);
 
-  // Step 10.
+  // Step 7.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
-  // Steps 11-13.
+  // Step 8.
   var final =
     relativeEnd < 0
       ? std_Math_max(len + relativeEnd, 0)
       : std_Math_min(relativeEnd, len);
 
-  // Steps 14-16.
+  // Step 9.
   if (buffer === null) {
     // A typed array previously using inline storage may acquire a
     // buffer, so we must check with the source.
@@ -391,17 +341,12 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
   }
 
-  len = TypedArrayLength(O);
-
-  // Step 17.
-  final = std_Math_min(final, len);
-
-  // Step 18.
+  // Step 10.
   for (; k < final; k++) {
     O[k] = value;
   }
 
-  // Step 19.
+  // Step 11.
   return O;
 }
 
@@ -621,9 +566,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
   // Step 6.
   assert(fromIndex !== undefined || n === 0, "ToInteger(undefined) is zero");
 
-  // Reload O.[[ArrayLength]] in case ToInteger() detached or resized the ArrayBuffer.
-  // This lets us avoid executing the HasProperty operation in step 11.a.
-  len = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
+  // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
+  // This let's us avoid executing the HasProperty operation in step 11.a.
+  len = TypedArrayLength(O);
 
   assert(
     len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
@@ -696,12 +641,15 @@ function TypedArrayJoin(separator) {
     return "";
   }
 
-  var limit = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
-
-  // ToString() might have detached or resized the underlying ArrayBuffer. To avoid
+  // ToString() might have detached the underlying ArrayBuffer. To avoid
   // checking for this condition when looping in step 8.c, do it once here.
-  if (limit === 0) {
-    return callFunction(String_repeat, separator, len - 1);
+  if (TypedArrayLength(O) === 0) {
+    assert(
+      IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+      "TypedArrays with detached buffers have a length of zero"
+    );
+
+    return callFunction(String_repeat, ",", len - 1);
   }
 
   assert(
@@ -718,7 +666,7 @@ function TypedArrayJoin(separator) {
   var R = ToString(element0);
 
   // Steps 7-8.
-  for (var k = 1; k < limit; k++) {
+  for (var k = 1; k < len; k++) {
     // Step 8.b.
     var element = O[k];
 
@@ -727,10 +675,6 @@ function TypedArrayJoin(separator) {
 
     // Steps 8.a and 8.c-d.
     R += sep + ToString(element);
-  }
-
-  if (limit < len) {
-    R += callFunction(String_repeat, separator, len - limit);
   }
 
   // Step 9.
@@ -746,7 +690,6 @@ function TypedArrayKeys() {
 
   // Step 2.
   EnsureTypedArrayWithArrayBuffer(O);
-  PossiblyWrappedTypedArrayLength(O);
 
   // Step 3.
   return CreateArrayIterator(O, ITEM_KIND_KEY);
@@ -791,9 +734,9 @@ function TypedArrayLastIndexOf(searchElement /*, fromIndex*/) {
   // Step 5.
   var n = ArgumentsLength() > 1 ? ToInteger(GetArgument(1)) : len - 1;
 
-  // Reload O.[[ArrayLength]] in case ToInteger() detached or resized the ArrayBuffer.
-  // This lets us avoid executing the HasProperty operation in step 9.a.
-  len = std_Math_min(len, TypedArrayLengthZeroOnOutOfBounds(O));
+  // Reload O.[[ArrayLength]] in case ToInteger() detached the ArrayBuffer.
+  // This let's us avoid executing the HasProperty operation in step 9.a.
+  len = TypedArrayLength(O);
 
   assert(
     len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
@@ -1028,7 +971,7 @@ function TypedArraySlice(start, end) {
     );
   }
 
-  GetAttachedArrayBuffer(O);
+  var buffer = GetAttachedArrayBuffer(O);
 
   // Step 3.
   var len = TypedArrayLength(O);
@@ -1059,16 +1002,22 @@ function TypedArraySlice(start, end) {
 
   // Steps 14-15.
   if (count > 0) {
+    // Steps 14.b.ii, 15.b.
+    if (buffer === null) {
+      // A typed array previously using inline storage may acquire a
+      // buffer, so we must check with the source.
+      buffer = ViewedArrayBufferIfReified(O);
+    }
+
+    if (IsDetachedBuffer(buffer)) {
+      ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    }
+
     // Steps 10-13, 15.
     var sliced = TypedArrayBitwiseSlice(O, A, k, count);
 
     // Step 14.
     if (!sliced) {
-      // Adjust |final| in case |O| has been resized.
-      //
-      // https://tc39.es/proposal-resizablearraybuffer/#sec-%typedarray%.prototype.slice
-      final = std_Math_min(final, TypedArrayLength(O));
-
       // Step 14.a.
       var n = 0;
 
@@ -1214,14 +1163,10 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
 
   // Step 5.
   var firstElement = array[0];
-  assert(
-    typeof firstElement === "number" || typeof firstElement === "bigint",
-    "TypedArray elements are either Numbers or BigInts"
-  );
 
   // Steps 6-7.
-  // Omit the 'if' clause in step 6, since non-empty typed arrays can't have
-  // undefined or null elements.
+  // Omit the 'if' clause in step 6, since typed arrays can't have undefined
+  // or null elements.
 #if JS_HAS_INTL_API
   var R = ToString(
     callContentFunction(
@@ -1244,23 +1189,21 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
   // Steps 8-9.
   for (var k = 1; k < len; k++) {
     // Step 9.a.
-    R += separator;
+    var S = R + separator;
 
     // Step 9.b.
     var nextElement = array[k];
 
-    // Step 9.c.
-    if (nextElement === undefined) {
-      continue;
-    }
-    assert(
-      typeof nextElement === "number" || typeof nextElement === "bigint",
-      "TypedArray elements are either Numbers or BigInts"
-    );
+    // Step 9.c *should* be unreachable: typed array elements are numbers.
+    // But bug 1079853 means |nextElement| *could* be |undefined|, if the
+    // previous iteration's step 9.d or step 7 detached |array|'s buffer.
+    // Conveniently, if this happens, evaluating |nextElement.toLocaleString|
+    // throws the required TypeError, and the only observable difference is
+    // the error message. So despite bug 1079853, we can skip step 9.c.
 
-    // Steps 9.d-e.
+    // Step 9.d.
 #if JS_HAS_INTL_API
-    R += ToString(
+    R = ToString(
       callContentFunction(
         nextElement.toLocaleString,
         nextElement,
@@ -1269,8 +1212,11 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
       )
     );
 #else
-    R += ToString(callContentFunction(nextElement.toLocaleString, nextElement));
+    R = ToString(callContentFunction(nextElement.toLocaleString, nextElement));
 #endif
+
+    // Step 9.e.
+    R = S + R;
   }
 
   // Step 10.
@@ -1302,7 +1248,7 @@ function TypedArraySubarray(begin, end) {
   }
 
   // Step 5.
-  var srcLength = TypedArrayLengthZeroOnOutOfBounds(obj);
+  var srcLength = TypedArrayLength(obj);
 
   // Step 13 (Reordered because otherwise it'd be observable that we reset
   // the byteOffset to zero when the underlying array buffer gets detached).
@@ -1317,20 +1263,6 @@ function TypedArraySubarray(begin, end) {
       ? std_Math_max(srcLength + relativeBegin, 0)
       : std_Math_min(relativeBegin, srcLength);
 
-  // Steps 11-12. (Reordered)
-  var elementSize = TypedArrayElementSize(obj);
-
-  // Step 14. (Reordered)
-  var beginByteOffset = srcByteOffset + beginIndex * elementSize;
-
-  if (end === undefined && TypedArrayIsAutoLength(obj)) {
-    return TypedArraySpeciesCreateWithResizableBuffer(
-      obj,
-      buffer,
-      beginByteOffset
-    );
-  }
-
   // Step 8.
   var relativeEnd = end === undefined ? srcLength : ToInteger(end);
 
@@ -1342,6 +1274,12 @@ function TypedArraySubarray(begin, end) {
 
   // Step 10.
   var newLength = std_Math_max(endIndex - beginIndex, 0);
+
+  // Steps 11-12.
+  var elementSize = TypedArrayElementSize(obj);
+
+  // Step 14.
+  var beginByteOffset = srcByteOffset + beginIndex * elementSize;
 
   // Steps 15-16.
   return TypedArraySpeciesCreateWithBuffer(
@@ -1488,7 +1426,6 @@ function $TypedArrayValues() {
 
   // See the big comment in TypedArrayEntries for what we're doing here.
   EnsureTypedArrayWithArrayBuffer(O);
-  PossiblyWrappedTypedArrayLength(O);
 
   // Step 7.
   return CreateArrayIterator(O, ITEM_KIND_VALUE);
@@ -1885,14 +1822,7 @@ function ArrayBufferSlice(start, end) {
   }
 
   // Steps 20-22.
-  //
-  // Reacquire the length in case the buffer has been resized.
-  var currentLen = ArrayBufferByteLength(O);
-
-  if (first < currentLen) {
-    var count = std_Math_min(newLen, currentLen - first);
-    ArrayBufferCopyData(newBuffer, 0, O, first, count, isWrapped);
-  }
+  ArrayBufferCopyData(newBuffer, 0, O, first, newLen, isWrapped);
 
   // Step 23.
   return newBuffer;
@@ -2095,16 +2025,16 @@ function TypedArrayWith(index, value) {
     value = ToNumber(value);
   }
 
-  // Reload the array length in case the underlying buffer has been detached or resized.
-  var currentLen = TypedArrayLengthZeroOnOutOfBounds(O);
+  // Reload the array length in case the underlying buffer has been detached.
+  len = TypedArrayLength(O);
   assert(
-    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)) || currentLen === 0,
+    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)) || len === 0,
     "length is set to zero when the buffer has been detached"
   );
 
   // Step 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
   // This check is an inlined version of the IsValidIntegerIndex abstract operation.
-  if (actualIndex < 0 || actualIndex >= currentLen) {
+  if (actualIndex < 0 || actualIndex >= len) {
     ThrowRangeError(JSMSG_BAD_INDEX);
   }
 

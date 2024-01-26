@@ -1046,7 +1046,7 @@ static bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
+  MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
   Rooted<TypedArrayObject*> tarray(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
@@ -1062,10 +1062,10 @@ static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
+  MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->byteOffsetMaybeOutOfBounds());
+  args.rval().set(tarr->byteOffsetValue());
   return true;
 }
 
@@ -1073,7 +1073,7 @@ static bool intrinsic_TypedArrayElementSize(JSContext* cx, unsigned argc,
                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
+  MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
   unsigned size =
       TypedArrayElemSize(args[0].toObject().as<TypedArrayObject>().type());
@@ -1088,38 +1088,10 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
+  MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-
-  mozilla::Maybe<size_t> length = tarr->length();
-  if (!length) {
-    // Return zero for detached buffers to match JIT code.
-    if (tarr->hasDetachedBuffer()) {
-      args.rval().setInt32(0);
-      return true;
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
-    return false;
-  }
-
-  args.rval().setNumber(*length);
-  return true;
-}
-
-// Return the value of [[ArrayLength]] internal slot of the TypedArray. If the
-// length is out-of-bounds, always return zero.
-static bool intrinsic_TypedArrayLengthZeroOnOutOfBounds(JSContext* cx,
-                                                        unsigned argc,
-                                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().setNumber(tarr->length().valueOr(0));
+  args.rval().set(tarr->lengthValue());
   return true;
 }
 
@@ -1136,20 +1108,7 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
     return false;
   }
 
-  mozilla::Maybe<size_t> length = obj->length();
-  if (!length) {
-    // Return zero for detached buffers to match JIT code.
-    if (obj->hasDetachedBuffer()) {
-      args.rval().setInt32(0);
-      return true;
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
-    return false;
-  }
-
-  args.rval().setNumber(*length);
+  args.rval().set(obj->lengthValue());
   return true;
 }
 
@@ -1168,19 +1127,6 @@ static bool intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer(JSContext* cx,
 
   bool detached = obj->hasDetachedBuffer();
   args.rval().setBoolean(detached);
-  return true;
-}
-
-static bool intrinsic_TypedArrayIsAutoLength(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
-
-  JSObject* obj = &args[0].toObject();
-  bool isAutoLength = obj->is<ResizableTypedArrayObject>() &&
-                      obj->as<ResizableTypedArrayObject>().isAutoLength();
-  args.rval().setBoolean(isAutoLength);
   return true;
 }
 
@@ -1260,18 +1206,6 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
 
   Rooted<TypedArrayObject*> source(cx,
                                    &args[0].toObject().as<TypedArrayObject>());
-
-  auto sourceLength = source->length();
-  if (!sourceLength) {
-    if (source->hasDetachedBuffer()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_DETACHED);
-    } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_RESIZED_BOUNDS);
-    }
-    return false;
-  }
   MOZ_ASSERT(!source->hasDetachedBuffer());
 
   // As directed by |DangerouslyUnwrapTypedArray|, sigil this pointer and all
@@ -1294,8 +1228,9 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   size_t sourceOffset = size_t(args[2].toNumber());
   size_t count = size_t(args[3].toNumber());
 
-  MOZ_ASSERT(count > 0);
-  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length().valueOr(0));
+  MOZ_ASSERT(count > 0 && count <= source->length());
+  MOZ_ASSERT(sourceOffset <= source->length() - count);
+  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length());
 
   size_t elementSize = TypedArrayElemSize(sourceType);
   MOZ_ASSERT(elementSize ==
@@ -1307,7 +1242,7 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   SharedMem<uint8_t*> unsafeTargetDataCrossCompartment =
       unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
 
-  size_t byteLength = std::min(count, *sourceLength) * elementSize;
+  size_t byteLength = count * elementSize;
 
   // The same-type case requires exact copying preserving the bit-level
   // encoding of the source data, so use memcpy if possible. If source and
@@ -1346,8 +1281,8 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isObject());
 
-  Rooted<FixedLengthTypedArrayObject*> target(
-      cx, &args[0].toObject().as<FixedLengthTypedArrayObject>());
+  Rooted<TypedArrayObject*> target(cx,
+                                   &args[0].toObject().as<TypedArrayObject>());
   MOZ_ASSERT(!target->hasDetachedBuffer());
   MOZ_ASSERT(!target->isSharedMemory());
 
@@ -2202,12 +2137,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     0, IntrinsicTypedArrayElementSize),
     JS_FN("TypedArrayInitFromPackedArray",
           intrinsic_TypedArrayInitFromPackedArray, 2, 0),
-    JS_FN("TypedArrayIsAutoLength", intrinsic_TypedArrayIsAutoLength, 1, 0),
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
-    JS_INLINABLE_FN("TypedArrayLengthZeroOnOutOfBounds",
-                    intrinsic_TypedArrayLengthZeroOnOutOfBounds, 1, 0,
-                    IntrinsicTypedArrayLengthZeroOnOutOfBounds),
     JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
     JS_INLINABLE_FN("UnsafeGetInt32FromReservedSlot",
                     intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0,

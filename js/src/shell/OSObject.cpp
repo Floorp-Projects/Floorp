@@ -320,7 +320,7 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  if (len > ArrayBufferObject::ByteLengthLimit) {
+  if (len > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorUTF8(cx, "file %s is too large for a Uint8Array",
                        pathname.get());
     return nullptr;
@@ -578,7 +578,7 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
     return false;
   }
   void* buf = obj->dataPointerUnshared();
-  size_t length = obj->length().valueOr(0);
+  size_t length = obj->length();
   if (fwrite(buf, obj->bytesPerElement(), length, file) != length ||
       !autoClose.release()) {
     JS_ReportErrorUTF8(cx, "can't write %s", filename.get());

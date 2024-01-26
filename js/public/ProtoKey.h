@@ -31,8 +31,7 @@
 
 #define CLASP(NAME) (&NAME##Class)
 #define OCLASP(NAME) (&NAME##Object::class_)
-#define TYPED_ARRAY_CLASP(TYPE) \
-  (&TypedArrayObject::fixedLengthClasses[JS::Scalar::TYPE])
+#define TYPED_ARRAY_CLASP(TYPE) (&TypedArrayObject::classes[JS::Scalar::TYPE])
 #define ERROR_CLASP(TYPE) (&ErrorObject::classes[TYPE])
 
 #ifdef JS_HAS_INTL_API
@@ -80,7 +79,7 @@
   REAL(CompileError, ERROR_CLASP(JSEXN_WASMCOMPILEERROR))                   \
   REAL(LinkError, ERROR_CLASP(JSEXN_WASMLINKERROR))                         \
   REAL(RuntimeError, ERROR_CLASP(JSEXN_WASMRUNTIMEERROR))                   \
-  REAL(ArrayBuffer, OCLASP(FixedLengthArrayBuffer))                         \
+  REAL(ArrayBuffer, OCLASP(ArrayBuffer))                                    \
   REAL(Int8Array, TYPED_ARRAY_CLASP(Int8))                                  \
   REAL(Uint8Array, TYPED_ARRAY_CLASP(Uint8))                                \
   REAL(Int16Array, TYPED_ARRAY_CLASP(Int16))                                \
@@ -97,10 +96,10 @@
   REAL(WeakMap, OCLASP(WeakMap))                                            \
   REAL(Map, OCLASP(Map))                                                    \
   REAL(Set, OCLASP(Set))                                                    \
-  REAL(DataView, OCLASP(FixedLengthDataView))                               \
+  REAL(DataView, OCLASP(DataView))                                          \
   REAL(Symbol, OCLASP(Symbol))                                              \
   REAL(ShadowRealm, OCLASP(ShadowRealm))                                    \
-  REAL(SharedArrayBuffer, OCLASP(FixedLengthSharedArrayBuffer))             \
+  REAL(SharedArrayBuffer, OCLASP(SharedArrayBuffer))                        \
   REAL_IF_INTL(Intl, CLASP(Intl))                                           \
   REAL_IF_INTL(Collator, OCLASP(Collator))                                  \
   REAL_IF_INTL(DateTimeFormat, OCLASP(DateTimeFormat))                      \
