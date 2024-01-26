@@ -6,7 +6,6 @@ package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
@@ -74,7 +73,6 @@ class CustomTabsToolbarFeature(
     private var initialized: Boolean = false
     private val titleObserver = CustomTabSessionTitleObserver(toolbar)
     private val context get() = toolbar.context
-    internal var readableColor = Color.WHITE
     private var scope: CoroutineScope? = null
 
     /**
@@ -114,29 +112,27 @@ class CustomTabsToolbarFeature(
     internal fun init(config: CustomTabConfig) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
-
-        // If it's available, hold on to the readable colour for other assets.
-        if (updateToolbarBackground && config.toolbarColor != null) {
-            readableColor = getReadableTextColor(config.toolbarColor!!)
-        }
+        val readableColor =
+            config.toolbarColor?.let { getReadableTextColor(it) } ?: toolbar.display.colors.menu
 
         // Change the toolbar colour
         updateToolbarColor(
             config.toolbarColor,
             config.navigationBarColor ?: config.toolbarColor,
+            readableColor,
         )
 
         // Add navigation close action
         if (config.showCloseButton) {
-            addCloseButton(config.closeButtonIcon)
+            addCloseButton(readableColor, config.closeButtonIcon)
         }
 
         // Add action button
-        addActionButton(config.actionButtonConfig)
+        addActionButton(readableColor, config.actionButtonConfig)
 
         // Show share button
         if (config.showShareMenuItem) {
-            addShareButton()
+            addShareButton(readableColor)
         }
 
         // Add menu items
@@ -146,7 +142,11 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun updateToolbarColor(@ColorInt toolbarColor: Int?, @ColorInt navigationBarColor: Int?) {
+    internal fun updateToolbarColor(
+        @ColorInt toolbarColor: Int?,
+        @ColorInt navigationBarColor: Int?,
+        @ColorInt readableColor: Int,
+    ) {
         if (updateToolbarBackground && toolbarColor != null) {
             toolbar.setBackgroundColor(toolbarColor)
 
@@ -171,7 +171,7 @@ class CustomTabsToolbarFeature(
      * When clicked, it calls [closeListener].
      */
     @VisibleForTesting
-    internal fun addCloseButton(bitmap: Bitmap?) {
+    internal fun addCloseButton(@ColorInt readableColor: Int, bitmap: Bitmap?) {
         val drawableIcon = bitmap?.toDrawable(context.resources)
             ?: getDrawable(context, iconsR.drawable.mozac_ic_cross_24)!!.mutate()
 
@@ -195,7 +195,10 @@ class CustomTabsToolbarFeature(
      * When clicked, it activates the corresponding [PendingIntent].
      */
     @VisibleForTesting
-    internal fun addActionButton(buttonConfig: CustomTabActionButtonConfig?) {
+    internal fun addActionButton(
+        @ColorInt readableColor: Int,
+        buttonConfig: CustomTabActionButtonConfig?,
+    ) {
         buttonConfig?.let { config ->
             val drawableIcon = Bitmap.createScaledBitmap(
                 config.icon,
@@ -227,7 +230,7 @@ class CustomTabsToolbarFeature(
      * When clicked, it activates [shareListener] and defaults to the [share] KTX helper.
      */
     @VisibleForTesting
-    internal fun addShareButton() {
+    internal fun addShareButton(@ColorInt readableColor: Int) {
         val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_share_android_24)!!
         drawableIcon.setTint(readableColor)
 

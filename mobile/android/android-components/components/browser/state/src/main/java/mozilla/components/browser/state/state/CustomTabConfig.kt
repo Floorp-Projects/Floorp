@@ -14,7 +14,6 @@ import androidx.browser.customtabs.CustomTabsSessionToken
 /**
  * Holds configuration data for a Custom Tab.
  *
- * @property id a unique ID of this custom tab.
  * @property toolbarColor Background color for the toolbar.
  * @property closeButtonIcon Custom icon of the back button on the toolbar.
  * @property enableUrlbarHiding Enables the toolbar to hide as the user scrolls down on the page.

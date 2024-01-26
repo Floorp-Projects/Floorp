@@ -314,7 +314,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature, never()).addShareButton()
+        verify(feature, never()).addShareButton(anyInt())
         verify(toolbar, never()).addBrowserAction(any())
     }
 
@@ -341,7 +341,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addShareButton()
+        verify(feature).addShareButton(anyInt())
         verify(toolbar).addBrowserAction(any())
     }
 
@@ -400,7 +400,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addActionButton(any())
+        verify(feature).addActionButton(anyInt(), any())
     }
 
     @Test
@@ -433,7 +433,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addActionButton(any())
+        verify(feature).addActionButton(anyInt(), any())
         verify(toolbar).addBrowserAction(captor.capture())
 
         val button = captor.value.createView(FrameLayout(testContext))
@@ -480,7 +480,7 @@ class CustomTabsToolbarFeatureTest {
             ),
         ).joinBlocking()
 
-        verify(feature).addActionButton(any())
+        verify(feature).addActionButton(anyInt(), any())
         verify(toolbar).addBrowserAction(captor.capture())
 
         doNothing().`when`(pendingIntent).send(any(), anyInt(), any())
@@ -905,7 +905,7 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `readableColor - White on Black`() {
+    fun `WHEN config toolbar color is dark THEN readableColor is white`() {
         val tab = createCustomTab(
             "https://www.mozilla.org",
             id = "mozilla",
@@ -936,18 +936,56 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        assertEquals(Color.WHITE, feature.readableColor)
+        verify(feature).updateToolbarColor(tab.config.toolbarColor, tab.config.toolbarColor, Color.WHITE)
+        verify(feature).addCloseButton(Color.WHITE, tab.config.closeButtonIcon)
+        verify(feature).addActionButton(Color.WHITE, tab.config.actionButtonConfig)
         assertEquals(Color.WHITE, toolbar.display.colors.text)
     }
 
     @Test
-    fun `readableColor - Black on White`() {
+    fun `WHEN config toolbar color is not dark THEN readableColor is black`() {
         val tab = createCustomTab(
             "https://www.mozilla.org",
             id = "mozilla",
             config = CustomTabConfig(
                 toolbarColor = Color.WHITE,
             ),
+        )
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(tab),
+            ),
+        )
+        val toolbar = spy(BrowserToolbar(testContext))
+
+        val useCases = CustomTabsUseCases(
+            store = store,
+            loadUrlUseCase = SessionUseCases(store).loadUrl,
+        )
+        val feature = spy(
+            CustomTabsToolbarFeature(
+                store,
+                toolbar,
+                sessionId = "mozilla",
+                useCases = useCases,
+                menuBuilder = BrowserMenuBuilder(listOf(mock(), mock())),
+                menuItemIndex = 4,
+            ) {},
+        )
+
+        feature.start()
+
+        verify(feature).updateToolbarColor(tab.config.toolbarColor, tab.config.toolbarColor, Color.BLACK)
+        verify(feature).addCloseButton(Color.BLACK, tab.config.closeButtonIcon)
+        verify(feature).addActionButton(Color.BLACK, tab.config.actionButtonConfig)
+    }
+
+    @Test
+    fun `WHEN config toolbar has no colour set THEN readableColor uses the toolbar display menu colour`() {
+        val tab = createCustomTab(
+            "https://www.mozilla.org",
+            id = "mozilla",
+            config = CustomTabConfig(),
         )
         val store = BrowserStore(
             BrowserState(
@@ -972,8 +1010,10 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        assertEquals(Color.BLACK, feature.readableColor)
-        assertEquals(Color.BLACK, toolbar.display.colors.text)
+        verify(feature).updateToolbarColor(tab.config.toolbarColor, tab.config.toolbarColor, toolbar.display.colors.menu)
+        verify(feature).addCloseButton(toolbar.display.colors.menu, tab.config.closeButtonIcon)
+        verify(feature).addActionButton(toolbar.display.colors.menu, tab.config.actionButtonConfig)
+        assertEquals(Color.WHITE, toolbar.display.colors.menu)
     }
 
     @Test
