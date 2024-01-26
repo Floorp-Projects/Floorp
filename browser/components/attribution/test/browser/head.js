@@ -12,6 +12,8 @@ const INDEX_READ_ERROR = 0;
 const INDEX_DECODE_ERROR = 1;
 const INDEX_WRITE_ERROR = 2;
 const INDEX_QUARANTINE_ERROR = 3;
+const INDEX_EMPTY_ERROR = 4;
+const INDEX_NULL_ERROR = 5;
 
 add_setup(function () {
   // AttributionCode._clearCache is only possible in a testing environment

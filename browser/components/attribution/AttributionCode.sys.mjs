@@ -192,7 +192,23 @@ export var AttributionCode = {
         `_getMacAttrDataAsync: getAttributionString: "${attrStr}"`
       );
 
-      gCachedAttrData = this.parseAttributionCode(attrStr);
+      if (attrStr === null) {
+        gCachedAttrData = {};
+
+        lazy.log.debug(`_getMacAttrDataAsync: null attribution string`);
+        Services.telemetry
+          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+          .add("null_error");
+      } else if (attrStr == "") {
+        gCachedAttrData = {};
+
+        lazy.log.debug(`_getMacAttrDataAsync: empty attribution string`);
+        Services.telemetry
+          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+          .add("empty_error");
+      } else {
+        gCachedAttrData = this.parseAttributionCode(attrStr);
+      }
     } catch (ex) {
       // Avoid partial attribution data.
       gCachedAttrData = {};
