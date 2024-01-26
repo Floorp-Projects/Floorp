@@ -136,14 +136,15 @@ void Device::ResolveLost(Maybe<dom::GPUDeviceLostReason> aReason,
     // Promise doesn't exist? Maybe out of memory.
     return;
   }
-  if (!lostPromise->PromiseObj()) {
-    // The underlying JS object is gone.
-    return;
-  }
   if (lostPromise->State() != dom::Promise::PromiseState::Pending) {
     // lostPromise was already resolved or rejected.
     return;
   }
+  if (!lostPromise->PromiseObj()) {
+    // The underlying JS object is gone.
+    return;
+  }
+
   RefPtr<DeviceLostInfo> info;
   if (aReason.isSome()) {
     info = MakeRefPtr<DeviceLostInfo>(GetParentObject(), *aReason, aMessage);
