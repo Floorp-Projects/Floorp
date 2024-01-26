@@ -1700,7 +1700,11 @@ class WorkerGetResultRunnable final : public NotificationWorkerRunnable {
         mStrings(std::move(aStrings)) {}
 
   void WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override {
-    RefPtr<Promise> workerPromise = mPromiseProxy->WorkerPromise();
+    RefPtr<Promise> workerPromise = mPromiseProxy->GetWorkerPromise();
+    // Once Worker had already started shutdown, workerPromise would be nullptr
+    if (!workerPromise) {
+      return;
+    }
 
     AutoTArray<RefPtr<Notification>, 5> notifications;
     for (uint32_t i = 0; i < mStrings.Length(); ++i) {
