@@ -10133,6 +10133,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
   return AttachDecision::Attach;
 }
 
+AttachDecision
+InlinableNativeIRGenerator::tryAttachTypedArrayLengthZeroOnOutOfBounds() {
+  // We don't yet inline resizable buffers, so this operation is equivalent to
+  // the inline code path for tryAttachTypedArrayLength().
+  return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false);
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength(
     bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single, possibly wrapped,
@@ -11492,6 +11499,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachTypedArrayElementSize();
     case InlinableNative::IntrinsicTypedArrayLength:
       return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false);
+    case InlinableNative::IntrinsicTypedArrayLengthZeroOnOutOfBounds:
+      return tryAttachTypedArrayLengthZeroOnOutOfBounds();
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
       return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ true);
 
