@@ -522,9 +522,6 @@ inline bool RecordedCanvasDrawTargetCreation::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
   RefPtr<DrawTarget> newDT = aTranslator->CreateDrawTarget(
       mRefPtr, mTextureId, mTextureOwnerId, mSize, mFormat);
-  if (newDT) {
-    aTranslator->SetCurrentDrawTarget(mRefPtr);
-  }
 
   // If we couldn't create a DrawTarget this will probably cause us to crash
   // with nullptr later in the playback, so return false to abort.

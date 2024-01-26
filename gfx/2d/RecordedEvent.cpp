@@ -38,8 +38,6 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "DrawTarget Creation";
     case DRAWTARGETDESTRUCTION:
       return "DrawTarget Destruction";
-    case SETCURRENTDRAWTARGET:
-      return "SetCurrentDrawTarget";
     case FILLRECT:
       return "FillRect";
     case STROKERECT:
@@ -90,8 +88,6 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "FilterNodeCreation";
     case FILTERNODEDESTRUCTION:
       return "FilterNodeDestruction";
-    case SETCURRENTFILTERNODE:
-      return "SetCurrentFilterNode";
     case GRADIENTSTOPSCREATION:
       return "GradientStopsCreation";
     case GRADIENTSTOPSDESTRUCTION:
