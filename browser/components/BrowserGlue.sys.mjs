@@ -8,7 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 try {
-  ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs");
+  ChromeUtils.importESModule("resource://floorp/modules/FloorpStartup.sys.mjs");
 } catch (e) { console.error(e) }
 
 // Ignore unused lazy property for PluginManager.

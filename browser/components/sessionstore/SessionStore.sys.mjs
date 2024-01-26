@@ -5295,7 +5295,7 @@ var SessionStoreInternal = {
       }
 
       let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
-        "resource:///modules/WorkspacesService.sys.mjs"
+        "resource://floorp/modules/WorkspacesService.sys.mjs"
       );
 
       // workspaces Window Id
