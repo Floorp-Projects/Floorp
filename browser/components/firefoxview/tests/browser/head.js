@@ -60,6 +60,7 @@ const URLs = [
   "https://example.net/",
   "https://example.org/",
   "about:robots",
+  "https://www.mozilla.org/",
 ];
 
 const syncedTabsData1 = [

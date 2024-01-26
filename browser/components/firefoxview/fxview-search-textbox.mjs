@@ -28,12 +28,15 @@ const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
  *   The query that is currently in the search box.
  * @property {number} size
  *   The width (number of characters) of the search box.
+ * @property {string} pageName
+ *   The hash for the page name that the search input is located on.
  */
 export default class FxviewSearchTextbox extends MozLitElement {
   static properties = {
     placeholder: { type: String },
     query: { type: String },
     size: { type: Number },
+    pageName: { type: String },
   };
 
   static queries = {
@@ -97,6 +100,16 @@ export default class FxviewSearchTextbox extends MozLitElement {
         composed: true,
         detail: { query: this.query },
       })
+    );
+
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "search_initiated",
+      "search",
+      null,
+      {
+        page: this.pageName,
+      }
     );
   }
 
