@@ -271,9 +271,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
  protected:
   enum class FillContents { Zero, Uninitialized };
 
+  template <class ArrayBufferType, FillContents FillType>
+  static std::tuple<ArrayBufferType*, uint8_t*>
+  createUninitializedBufferAndData(JSContext* cx, size_t nbytes,
+                                   AutoSetNewObjectMetadata&,
+                                   JS::Handle<JSObject*> proto);
+
   template <FillContents FillType>
   static std::tuple<ArrayBufferObject*, uint8_t*> createBufferAndData(
-      JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata&,
+      JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata& metadata,
       JS::Handle<JSObject*> proto = nullptr);
 
  public:
@@ -413,6 +419,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                        ArrayBufferObject* fromBuffer, size_t fromIndex,
                        size_t count);
 
+  template <class ArrayBufferType>
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static uint8_t* stealMallocedContents(JSContext* cx,
@@ -457,11 +464,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return getFixedSlotOffset(FLAGS_SLOT);
   }
 
- private:
+ protected:
   void setFirstView(ArrayBufferViewObject* view);
 
-  uint8_t* inlineDataPointer() const;
-
+ private:
   struct FreeInfo {
     JS::BufferContentsFreeFunc freeFunc;
     void* freeUserData;
@@ -480,7 +486,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     }
     return BufferContents(dataPointer(), bufferKind());
   }
-  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
 
   void releaseData(JS::GCContext* gcx);
 
@@ -579,6 +584,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
  * Fixed-length ArrayBuffers can be used for asm.js and WebAssembly.
  */
 class FixedLengthArrayBufferObject : public ArrayBufferObject {
+  friend class ArrayBufferObject;
+
+  uint8_t* inlineDataPointer() const;
+
+  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
+
  public:
   // Fixed-length ArrayBuffer objects don't have any additional reserved slots.
   static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS;
@@ -605,15 +616,45 @@ class FixedLengthArrayBufferObject : public ArrayBufferObject {
 class ResizableArrayBufferObject : public ArrayBufferObject {
   friend class ArrayBufferObject;
 
+  template <FillContents FillType>
+  static std::tuple<ResizableArrayBufferObject*, uint8_t*> createBufferAndData(
+      JSContext* cx, size_t byteLength, size_t maxByteLength,
+      AutoSetNewObjectMetadata& metadata, Handle<JSObject*> proto);
+
+  static ResizableArrayBufferObject* createEmpty(JSContext* cx);
+
+ public:
+  static ResizableArrayBufferObject* createZeroed(
+      JSContext* cx, size_t byteLength, size_t maxByteLength,
+      Handle<JSObject*> proto = nullptr);
+
+ private:
+  uint8_t* inlineDataPointer() const;
+
+  bool hasInlineData() const { return dataPointer() == inlineDataPointer(); }
+
   void setMaxByteLength(size_t length) {
     MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
     setFixedSlot(MAX_BYTE_LENGTH_SLOT, PrivateValue(length));
+  }
+
+  void initialize(size_t byteLength, size_t maxByteLength,
+                  BufferContents contents) {
+    setByteLength(byteLength);
+    setMaxByteLength(maxByteLength);
+    setFlags(RESIZABLE);
+    setFirstView(nullptr);
+    setDataPointer(contents);
   }
 
  public:
   static const uint8_t MAX_BYTE_LENGTH_SLOT = ArrayBufferObject::RESERVED_SLOTS;
 
   static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS + 1;
+
+  /** The largest number of bytes that can be stored inline. */
+  static constexpr size_t MaxInlineBytes =
+      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
 
   static const JSClass class_;
 
