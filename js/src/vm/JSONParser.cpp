@@ -806,9 +806,14 @@ inline bool JSONFullParseHandlerAnyChar::finishArray(
 }
 
 template <typename CharT>
-void JSONFullParseHandler<CharT>::reportError(const char* msg,
-                                              const char* lineString,
-                                              const char* columnString) {
+void JSONFullParseHandler<CharT>::reportError(const char* msg, uint32_t line,
+                                              uint32_t column) {
+  const size_t MaxWidth = sizeof("4294967295");
+  char columnString[MaxWidth];
+  SprintfLiteral(columnString, "%" PRIu32, column);
+  char lineString[MaxWidth];
+  SprintfLiteral(lineString, "%" PRIu32, line);
+
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
                             msg, lineString, columnString);
 }
@@ -827,13 +832,7 @@ void JSONPerHandlerParser<CharT, HandlerT>::error(const char* msg) {
   uint32_t column = 1, line = 1;
   tokenizer.getTextPosition(&column, &line);
 
-  const size_t MaxWidth = sizeof("4294967295");
-  char columnNumber[MaxWidth];
-  SprintfLiteral(columnNumber, "%" PRIu32, column);
-  char lineNumber[MaxWidth];
-  SprintfLiteral(lineNumber, "%" PRIu32, line);
-
-  handler.reportError(msg, lineNumber, columnNumber);
+  handler.reportError(msg, line, column);
 }
 
 template <typename CharT>
@@ -1088,9 +1087,14 @@ static void ReportJSONSyntaxError(FrontendContext* fc, ErrorMetadata&& metadata,
 }
 
 template <typename CharT>
-void JSONSyntaxParseHandler<CharT>::reportError(const char* msg,
-                                                const char* lineString,
-                                                const char* columnString) {
+void JSONSyntaxParseHandler<CharT>::reportError(const char* msg, uint32_t line,
+                                                uint32_t column) {
+  const size_t MaxWidth = sizeof("4294967295");
+  char columnString[MaxWidth];
+  SprintfLiteral(columnString, "%" PRIu32, column);
+  char lineString[MaxWidth];
+  SprintfLiteral(lineString, "%" PRIu32, line);
+
   ErrorMetadata metadata;
   metadata.isMuted = false;
   metadata.filename = JS::ConstUTF8CharsZ("");
@@ -1145,4 +1149,259 @@ JS_PUBLIC_API bool JS::IsValidJSON(const JS::Latin1Char* chars, uint32_t len) {
 
 JS_PUBLIC_API bool JS::IsValidJSON(const char16_t* chars, uint32_t len) {
   return IsValidJSONImpl(chars, len);
+}
+
+template <typename CharT>
+class MOZ_STACK_CLASS DelegateHandler {
+ private:
+  using CharPtr = mozilla::RangedPtr<const CharT>;
+
+ public:
+  using ContextT = FrontendContext;
+
+  class DummyValue {};
+
+  struct ElementVector {};
+  struct PropertyVector {};
+
+  class StringBuilder {
+   public:
+    StringBuffer buffer;
+
+    explicit StringBuilder(FrontendContext* fc) : buffer(fc) {}
+
+    bool append(char16_t c) { return buffer.append(c); }
+    bool append(const CharT* begin, const CharT* end) {
+      return buffer.append(begin, end);
+    }
+  };
+
+  struct StackEntry {
+    JSONParserState state;
+  };
+
+ public:
+  FrontendContext* fc;
+
+  explicit DelegateHandler(FrontendContext* fc) : fc(fc) {}
+
+  DelegateHandler(DelegateHandler&& other) noexcept
+      : fc(other.fc), handler_(other.handler_) {}
+
+  DelegateHandler(const DelegateHandler& other) = delete;
+  void operator=(const DelegateHandler& other) = delete;
+
+  FrontendContext* context() { return fc; }
+
+  template <JSONStringType ST>
+  inline bool setStringValue(CharPtr start, size_t length) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    if constexpr (ST == JSONStringType::PropertyName) {
+      return handler_->propertyName(start.get(), length);
+    }
+
+    return handler_->stringValue(start.get(), length);
+  }
+
+  template <JSONStringType ST>
+  inline bool setStringValue(StringBuilder& builder) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    if constexpr (ST == JSONStringType::PropertyName) {
+      if (builder.buffer.isUnderlyingBufferLatin1()) {
+        return handler_->propertyName(builder.buffer.rawLatin1Begin(),
+                                      builder.buffer.length());
+      }
+
+      return handler_->propertyName(builder.buffer.rawTwoByteBegin(),
+                                    builder.buffer.length());
+    }
+
+    if (builder.buffer.isUnderlyingBufferLatin1()) {
+      return handler_->stringValue(builder.buffer.rawLatin1Begin(),
+                                   builder.buffer.length());
+    }
+
+    return handler_->stringValue(builder.buffer.rawTwoByteBegin(),
+                                 builder.buffer.length());
+  }
+
+  inline void setNumberValue(double d) {
+    if (hadHandlerError_) {
+      return;
+    }
+
+    if (!handler_->numberValue(d)) {
+      hadHandlerError_ = true;
+    }
+  }
+
+  inline DummyValue numberValue() const { return DummyValue(); }
+
+  inline DummyValue stringValue() const { return DummyValue(); }
+
+  inline DummyValue booleanValue(bool value) {
+    if (hadHandlerError_) {
+      return DummyValue();
+    }
+
+    if (!handler_->booleanValue(value)) {
+      hadHandlerError_ = true;
+    }
+    return DummyValue();
+  }
+  inline DummyValue nullValue() {
+    if (hadHandlerError_) {
+      return DummyValue();
+    }
+
+    if (!handler_->nullValue()) {
+      hadHandlerError_ = true;
+    }
+    return DummyValue();
+  }
+
+  inline bool objectOpen(Vector<StackEntry, 10>& stack,
+                         PropertyVector** properties) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    StackEntry entry{JSONParserState::FinishObjectMember};
+    if (!stack.append(entry)) {
+      return false;
+    }
+
+    return handler_->startObject();
+  }
+  inline bool objectPropertyName(Vector<StackEntry, 10>& stack,
+                                 bool* isProtoInEval) {
+    *isProtoInEval = false;
+    return true;
+  }
+  inline void finishObjectMember(Vector<StackEntry, 10>& stack,
+                                 DummyValue& value,
+                                 PropertyVector** properties) {}
+  inline bool finishObject(Vector<StackEntry, 10>& stack, DummyValue* vp,
+                           PropertyVector* properties) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    stack.popBack();
+
+    return handler_->endObject();
+  }
+
+  inline bool arrayOpen(Vector<StackEntry, 10>& stack,
+                        ElementVector** elements) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    StackEntry entry{JSONParserState::FinishArrayElement};
+    if (!stack.append(entry)) {
+      return false;
+    }
+
+    return handler_->startArray();
+  }
+  inline bool arrayElement(Vector<StackEntry, 10>& stack, DummyValue& value,
+                           ElementVector** elements) {
+    return true;
+  }
+  inline bool finishArray(Vector<StackEntry, 10>& stack, DummyValue* vp,
+                          ElementVector* elements) {
+    if (hadHandlerError_) {
+      return false;
+    }
+
+    stack.popBack();
+
+    return handler_->endArray();
+  }
+
+  inline bool errorReturn() const { return false; }
+
+  inline bool ignoreError() const { return false; }
+
+  inline void freeStackEntry(StackEntry& entry) {}
+
+  void reportError(const char* msg, uint32_t line, uint32_t column) {
+    handler_->error(msg, line, column);
+  }
+
+  void setDelegateHandler(JS::JSONParseHandler* handler) { handler_ = handler; }
+
+ private:
+  JS::JSONParseHandler* handler_ = nullptr;
+  bool hadHandlerError_ = false;
+};
+
+template class DelegateHandler<Latin1Char>;
+template class DelegateHandler<char16_t>;
+
+template <typename CharT>
+class MOZ_STACK_CLASS DelegateParser
+    : JSONPerHandlerParser<CharT, DelegateHandler<CharT>> {
+  using HandlerT = DelegateHandler<CharT>;
+  using Base = JSONPerHandlerParser<CharT, HandlerT>;
+
+ public:
+  DelegateParser(FrontendContext* fc, mozilla::Range<const CharT> data,
+                 JS::JSONParseHandler* handler)
+      : Base(fc, data) {
+    this->handler.setDelegateHandler(handler);
+  }
+
+  DelegateParser(DelegateParser<CharT>&& other) noexcept
+      : Base(std::move(other)) {}
+
+  DelegateParser(const DelegateParser& other) = delete;
+  void operator=(const DelegateParser& other) = delete;
+
+  bool parse() {
+    typename HandlerT::DummyValue unused;
+
+    if (!this->parseImpl(unused,
+                         [&](const typename HandlerT::DummyValue& unused) {})) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+template class DelegateParser<Latin1Char>;
+template class DelegateParser<char16_t>;
+
+template <typename CharT>
+static bool ParseJSONWithHandlerImpl(const CharT* chars, uint32_t len,
+                                     JS::JSONParseHandler* handler) {
+  FrontendContext fc;
+  // NOTE: We don't set stack quota here because JSON parser doesn't use it.
+
+  DelegateParser<CharT> parser(&fc, mozilla::Range(chars, len), handler);
+  if (!parser.parse()) {
+    return false;
+  }
+  MOZ_ASSERT(!fc.hadErrors());
+
+  return true;
+}
+
+JS_PUBLIC_API bool JS::ParseJSONWithHandler(const JS::Latin1Char* chars,
+                                            uint32_t len,
+                                            JS::JSONParseHandler* handler) {
+  return ParseJSONWithHandlerImpl(chars, len, handler);
+}
+
+JS_PUBLIC_API bool JS::ParseJSONWithHandler(const char16_t* chars, uint32_t len,
+                                            JS::JSONParseHandler* handler) {
+  return ParseJSONWithHandlerImpl(chars, len, handler);
 }
