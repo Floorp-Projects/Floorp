@@ -4215,7 +4215,8 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
 
 bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
     uint32_t templateObjectOffset, Int32OperandId lengthId) {
-  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  auto* templateObj = &tenuredObjectStubField(templateObjectOffset)
+                           ->as<FixedLengthTypedArrayObject>();
   MDefinition* length = getOperand(lengthId);
 
   // TODO: support pre-tenuring.
@@ -4223,8 +4224,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
 
   if (length->isConstant()) {
     int32_t len = length->toConstant()->toInt32();
-    if (len > 0 &&
-        uint32_t(len) == templateObj->as<TypedArrayObject>().length()) {
+    if (len > 0 && uint32_t(len) == templateObj->length()) {
       auto* templateConst = constant(ObjectValue(*templateObj));
       auto* obj = MNewTypedArray::New(alloc(), templateConst, heap);
       add(obj);
