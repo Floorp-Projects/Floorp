@@ -24,10 +24,6 @@
 
 class nsScriptSecurityManager;
 
-namespace Json {
-class Value;
-}
-
 namespace mozilla {
 
 class SystemPrincipal final : public BasePrincipal, public nsISerializable {

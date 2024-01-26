@@ -27,9 +27,6 @@ class nsIChannel;
 class nsIReferrerInfo;
 class nsISupports;
 class nsIURI;
-namespace Json {
-class Value;
-}
 
 namespace mozilla {
 
@@ -92,6 +89,15 @@ class BasePrincipal : public nsJSPrincipals {
     eSystemPrincipal,
     eKindMax = eSystemPrincipal
   };
+
+  static constexpr char NullPrincipalKey = '0';
+  static_assert(eNullPrincipal == 0);
+  static constexpr char ContentPrincipalKey = '1';
+  static_assert(eContentPrincipal == 1);
+  static constexpr char ExpandedPrincipalKey = '2';
+  static_assert(eExpandedPrincipal == 2);
+  static constexpr char SystemPrincipalKey = '3';
+  static_assert(eSystemPrincipal == 3);
 
   template <typename T>
   bool Is() const {
@@ -195,7 +201,6 @@ class BasePrincipal : public nsJSPrincipals {
   nsresult WriteJSONProperties(JSONWriter& aWriter);
 
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
-  static already_AddRefed<BasePrincipal> FromJSON(const Json::Value& aJSON);
 
   // Method to write serializable fields which represent all of the fields to
   // deserialize the principal.

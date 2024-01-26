@@ -88,10 +88,11 @@ class NullPrincipal final : public BasePrincipal {
 
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys : uint8_t { eSpec = 0, eSuffix, eMax = eSuffix };
-  typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
 
-  static already_AddRefed<BasePrincipal> FromProperties(
-      nsTArray<NullPrincipal::KeyVal>& aFields);
+  static constexpr char SpecKey = '0';
+  static_assert(eSpec == 0);
+  static constexpr char SuffixKey = '1';
+  static_assert(eSuffix == 1);
 
   class Deserializer : public BasePrincipal::Deserializer {
    public:
