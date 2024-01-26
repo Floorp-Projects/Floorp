@@ -142,27 +142,25 @@ class FilterNodeRecording : public FilterNode {
 
   virtual ~FilterNodeRecording() {
     mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(this, RecordedFilterNodeDestruction());
-    mRecorder->ClearCurrentFilterNode(this);
+    mRecorder->RecordEvent(RecordedFilterNodeDestruction(ReferencePtr(this)));
   }
 
   void SetInput(uint32_t aIndex, SourceSurface* aSurface) override {
     EnsureSurfaceStoredRecording(mRecorder, aSurface, "SetInput");
 
-    mRecorder->RecordEvent(this, RecordedFilterNodeSetInput(aIndex, aSurface));
+    mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
   }
   void SetInput(uint32_t aIndex, FilterNode* aFilter) override {
     MOZ_ASSERT(mRecorder->HasStoredObject(aFilter));
 
-    mRecorder->RecordEvent(this, RecordedFilterNodeSetInput(aIndex, aFilter));
+    mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
   }
 
-#define FORWARD_SET_ATTRIBUTE(type, argtype)                           \
-  void SetAttribute(uint32_t aIndex, type aValue) override {           \
-    mRecorder->RecordEvent(                                            \
-        this, RecordedFilterNodeSetAttribute(                          \
-                  aIndex, aValue,                                      \
-                  RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
+#define FORWARD_SET_ATTRIBUTE(type, argtype)                 \
+  void SetAttribute(uint32_t aIndex, type aValue) override { \
+    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(   \
+        this, aIndex, aValue,                                \
+        RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
   }
 
   FORWARD_SET_ATTRIBUTE(bool, BOOL);
@@ -184,7 +182,7 @@ class FilterNodeRecording : public FilterNode {
   void SetAttribute(uint32_t aIndex, const Float* aFloat,
                     uint32_t aSize) override {
     mRecorder->RecordEvent(
-        this, RecordedFilterNodeSetAttribute(aIndex, aFloat, aSize));
+        RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
   }
 
   FilterBackend GetBackendType() override { return FILTER_BACKEND_RECORDING; }
@@ -202,7 +200,6 @@ DrawTargetRecording::DrawTargetRecording(
   mRecorder->RecordEvent(layers::RecordedCanvasDrawTargetCreation(
       this, aTextureId, aTextureOwnerId, mFinalDT->GetBackendType(), aSize,
       mFinalDT->GetFormat()));
-  mRecorder->SetCurrentDrawTarget(this);
   mFormat = mFinalDT->GetFormat();
   DrawTarget::SetPermitSubpixelAA(IsOpaque(mFormat));
 }
@@ -218,7 +215,6 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
   mRecorder->RecordEvent(
       RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), aHasData, snapshot));
-  mRecorder->SetCurrentDrawTarget(this);
   mFormat = mFinalDT->GetFormat();
   DrawTarget::SetPermitSubpixelAA(IsOpaque(mFormat));
 }
@@ -231,8 +227,8 @@ DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording* aDT,
 }
 
 DrawTargetRecording::~DrawTargetRecording() {
-  mRecorder->RecordEvent(this, RecordedDrawTargetDestruction());
-  mRecorder->ClearCurrentDrawTarget(this);
+  mRecorder->RecordEvent(RecordedDrawTargetDestruction(ReferencePtr(this)));
+  mRecorder->ClearDrawTarget(this);
 }
 
 void DrawTargetRecording::Link(const char* aDestination, const Rect& aRect) {
@@ -518,22 +514,21 @@ void DrawTargetRecording::DrawSurfaceWithShadow(SourceSurface* aSurface,
 void DrawTargetRecording::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
                                      const Point& aDestPoint,
                                      const DrawOptions& aOptions) {
-  if (!aNode || aNode->GetBackendType() != FILTER_BACKEND_RECORDING) {
+  if (!aNode) {
     return;
   }
 
   MOZ_ASSERT(mRecorder->HasStoredObject(aNode));
 
-  mRecorder->RecordEvent(this, static_cast<FilterNodeRecording*>(aNode),
-                         RecordedDrawFilter(aSourceRect, aDestPoint, aOptions));
+  mRecorder->RecordEvent(
+      this, RecordedDrawFilter(aNode, aSourceRect, aDestPoint, aOptions));
 }
 
 already_AddRefed<FilterNode> DrawTargetRecording::CreateFilter(
     FilterType aType) {
-  RefPtr<FilterNodeRecording> retNode = new FilterNodeRecording(mRecorder);
+  RefPtr<FilterNode> retNode = new FilterNodeRecording(mRecorder);
 
   mRecorder->RecordEvent(this, RecordedFilterNodeCreation(retNode, aType));
-  mRecorder->SetCurrentFilterNode(retNode);
 
   return retNode.forget();
 }
@@ -716,14 +711,13 @@ DrawTargetRecording::CreateSimilarDrawTargetWithBacking(
 
 already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat) const {
-  RefPtr<DrawTargetRecording> similarDT;
+  RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat)) {
     similarDT =
         new DrawTargetRecording(this, IntRect(IntPoint(0, 0), aSize), aFormat);
     mRecorder->RecordEvent(
         const_cast<DrawTargetRecording*>(this),
         RecordedCreateSimilarDrawTarget(similarDT.get(), aSize, aFormat));
-    mRecorder->SetCurrentDrawTarget(similarDT);
   } else if (XRE_IsContentProcess()) {
     // Crash any content process that calls this function with arguments that
     // would fail to create a similar draw target. We do this to root out bad
@@ -743,11 +737,10 @@ bool DrawTargetRecording::CanCreateSimilarDrawTarget(
 
 RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
     const Rect& aBounds, SurfaceFormat aFormat) {
-  RefPtr<DrawTargetRecording> similarDT =
-      new DrawTargetRecording(this, mRect, aFormat);
+  RefPtr<DrawTarget> similarDT;
+  similarDT = new DrawTargetRecording(this, mRect, aFormat);
   mRecorder->RecordEvent(
       this, RecordedCreateClippedDrawTarget(similarDT.get(), aBounds, aFormat));
-  mRecorder->SetCurrentDrawTarget(similarDT);
   similarDT->SetTransform(mTransform);
   return similarDT;
 }
@@ -756,7 +749,7 @@ already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTargetForFilter(
     const IntSize& aMaxSize, SurfaceFormat aFormat, FilterNode* aFilter,
     FilterNode* aSource, const Rect& aSourceRect, const Point& aDestPoint) {
-  RefPtr<DrawTargetRecording> similarDT;
+  RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
     similarDT = new DrawTargetRecording(this, IntRect(IntPoint(0, 0), aMaxSize),
                                         aFormat);
@@ -764,7 +757,6 @@ DrawTargetRecording::CreateSimilarDrawTargetForFilter(
         this, RecordedCreateDrawTargetForFilter(similarDT.get(), aMaxSize,
                                                 aFormat, aFilter, aSource,
                                                 aSourceRect, aDestPoint));
-    mRecorder->SetCurrentDrawTarget(similarDT);
   } else if (XRE_IsContentProcess()) {
     // See CreateSimilarDrawTarget
     MOZ_CRASH(
@@ -847,7 +839,6 @@ void DrawTargetRecording::FlushItem(const IntRect& aBounds) {
   mRecorder->RecordEvent(
       RecordedDrawTargetCreation(this, mFinalDT->GetBackendType(), mRect,
                                  mFinalDT->GetFormat(), false, nullptr));
-  mRecorder->SetCurrentDrawTarget(this);
   // Add the current transform to the new recording
   mRecorder->RecordEvent(this,
                          RecordedSetTransform(DrawTarget::GetTransform()));
