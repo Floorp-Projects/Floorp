@@ -42,6 +42,7 @@ DevToolsModules(
     "manifest.js",
     "memory.js",
     "object.js",
+    "objects-manager.js",
     "page-style.js",
     "pause-scoped.js",
     "perf.js",

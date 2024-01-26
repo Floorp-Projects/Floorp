@@ -142,7 +142,21 @@ function getWebConsoleUiMock(hud) {
   return {
     emit: () => {},
     emitForTests: () => {},
-    hud,
+    hud: {
+      // @backward-compat { version 123 } A new Objects Manager front has a new "releaseActors" method.
+      // Once 123 is release, supportsReleaseActors could be removed.
+      commands: {
+        client: {
+          mainRoot: {
+            supportsReleaseActors: true,
+          },
+        },
+        objectCommand: {
+          releaseObjects: async frontsToRelease => {},
+        },
+      },
+      ...hud,
+    },
     clearNetworkRequests: () => {},
     clearMessagesCache: () => {},
     inspectObjectActor: () => {},

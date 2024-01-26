@@ -32,6 +32,7 @@ DevToolsModules(
     "network-parent.js",
     "node.js",
     "object.js",
+    "objects-manager.js",
     "page-style.js",
     "perf.js",
     "preference.js",
