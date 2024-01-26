@@ -2353,8 +2353,8 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
   // Negative numbers or zero will bail out to the slow path, which in turn will
   // raise an invalid argument exception or create a correct object with zero
   // elements.
-  constexpr size_t maxByteLength = TypedArrayObject::MaxByteLength;
-  if (count <= 0 || size_t(count) > maxByteLength / obj->bytesPerElement()) {
+  constexpr size_t byteLengthLimit = TypedArrayObject::ByteLengthLimit;
+  if (count <= 0 || size_t(count) > byteLengthLimit / obj->bytesPerElement()) {
     obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(size_t(0)));
     return;
   }
@@ -2362,7 +2362,7 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
   obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(count));
 
   size_t nbytes = size_t(count) * obj->bytesPerElement();
-  MOZ_ASSERT(nbytes <= maxByteLength);
+  MOZ_ASSERT(nbytes <= byteLengthLimit);
   nbytes = RoundUp(nbytes, sizeof(Value));
 
   MOZ_ASSERT(!obj->isTenured());

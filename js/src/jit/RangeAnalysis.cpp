@@ -1791,13 +1791,13 @@ void MInitializedLength::computeRange(TempAllocator& alloc) {
 }
 
 void MArrayBufferViewLength::computeRange(TempAllocator& alloc) {
-  if constexpr (ArrayBufferObject::MaxByteLength <= INT32_MAX) {
+  if constexpr (ArrayBufferObject::ByteLengthLimit <= INT32_MAX) {
     setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
   }
 }
 
 void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
-  if constexpr (ArrayBufferObject::MaxByteLength <= INT32_MAX) {
+  if constexpr (ArrayBufferObject::ByteLengthLimit <= INT32_MAX) {
     setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
   }
 }
