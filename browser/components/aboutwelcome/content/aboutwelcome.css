@@ -1390,7 +1390,7 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta {
   margin: 0;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.cta-link {
   background: none;
   text-decoration: underline;
   cursor: pointer;
@@ -1398,18 +1398,18 @@ html {
   padding: 0;
   font-weight: normal;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:hover {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.cta-link:hover {
   color: var(--link-color-hover);
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:active {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.cta-link:active {
   color: var(--link-color-active);
 }
 @media (prefers-contrast) {
-  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.cta-link:active {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.cta-link:active {
     text-decoration: none;
   }
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.secondary:hover, .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box.secondary[open] {
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.secondary:hover, .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta-box .additional-cta.secondary[open] {
   background-color: var(--in-content-button-background-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.additional-cta-container {
