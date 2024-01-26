@@ -10073,11 +10073,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayElementSize() {
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  // TODO: Support resizable buffers.
-  if (!args_[0].toObject().is<FixedLengthTypedArrayObject>()) {
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   initializeInputOperand();
 
