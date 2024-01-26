@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-01-24T13:43:48.705480'
+updated_at: '2024-01-24T14:04:49.153380'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1923,18 +1923,6 @@ modules:
       - *nbp
       - *evilpie
     machine_name: core_javascript_jit
-
-  - name: 'Core: js-tests'
-    description: JavaScript test suite
-    includes:
-      - js/src/tests/**/*
-    meta:
-      group: dev-tech-js-engine
-      url: http://www.mozilla.org/js/tests/library.html
-    owners:
-      - *bc
-    peers: []
-    machine_name: core_jstests
 
   - name: 'Core: Layout Engine'
     description: rendering tree construction, layout (reflow), etc.
@@ -4216,5 +4204,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e3967851d98359484df21891d9b476cf4ca7a7a3
-  export: 513adbfffcff17392ef12ba381972483fae114c8
+  config: 01c5dda522e6944fd8302151694447b2421e0f86
+  export: bcaa46c2d8f0b2569d6b4eeb9e22dc0e8888d484
