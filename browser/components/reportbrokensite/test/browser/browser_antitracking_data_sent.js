@@ -49,6 +49,9 @@ add_task(async function testSendButton() {
 });
 
 add_task(async function testSendingMoreInfo() {
+  ensureReportBrokenSitePreffedOn();
+  ensureSendMoreInfoEnabled();
+
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const blockedPromise = waitForContentBlockingEvent(4, win);
   const tab = await openTab(REPORTABLE_PAGE_URL3, win);
