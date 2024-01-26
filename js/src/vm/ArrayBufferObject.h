@@ -122,6 +122,7 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
  public:
   inline size_t byteLength() const;
   inline bool isDetached() const;
+  inline bool isResizable() const;
   inline SharedMem<uint8_t*> dataPointerEither();
 
   inline bool pinLength(bool pin);
@@ -236,6 +237,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     BUFFER_KIND_MASK = BufferKind::KIND_MASK,
 
     DETACHED = 0b1000,
+
+    // Resizable ArrayBuffer.
+    RESIZABLE = 0b1'0000,
 
     // This MALLOCED, MAPPED, or EXTERNAL buffer has been prepared for asm.js
     // and cannot henceforth be transferred/detached.  (WASM, USER_OWNED, and
@@ -484,6 +488,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool isExternal() const { return bufferKind() == EXTERNAL; }
 
   bool isDetached() const { return flags() & DETACHED; }
+  bool isResizable() const { return flags() & RESIZABLE; }
   bool isLengthPinned() const { return flags() & PINNED_LENGTH; }
   bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
