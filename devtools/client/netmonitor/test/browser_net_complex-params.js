@@ -135,8 +135,9 @@ async function testRequestWithFormattedView(
     1,
     "The number of param rows displayed in this tabpanel is incorrect."
   );
-  ok(
-    tabpanel.querySelector(".empty-notice") === null,
+  Assert.strictEqual(
+    tabpanel.querySelector(".empty-notice"),
+    null,
     "The empty notice should not be displayed in this tabpanel."
   );
 
@@ -144,8 +145,9 @@ async function testRequestWithFormattedView(
     tabpanel.querySelector(".treeTable"),
     "The request params box should be displayed."
   );
-  ok(
-    tabpanel.querySelector(".CodeMirror-code") === null,
+  Assert.strictEqual(
+    tabpanel.querySelector(".CodeMirror-code"),
+    null,
     "The request post data editor should not be displayed."
   );
 
@@ -204,8 +206,9 @@ async function testRequestWithFormattedView(
     rawValue,
     "The raw payload data string needs to be correct."
   );
-  ok(
-    tabpanel.querySelector(".empty-notice") === null,
+  Assert.strictEqual(
+    tabpanel.querySelector(".empty-notice"),
+    null,
     "The empty notice should not be displayed in this tabpanel."
   );
 
@@ -264,8 +267,9 @@ async function testRequestWithOnlyRawDataView(
     paramName,
     "The raw payload data string needs to be correct."
   );
-  ok(
-    tabpanel.querySelector(".empty-notice") === null,
+  Assert.strictEqual(
+    tabpanel.querySelector(".empty-notice"),
+    null,
     "The empty notice should not be displayed in this tabpanel."
   );
 }

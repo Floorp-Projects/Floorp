@@ -254,7 +254,11 @@ add_task(async function () {
     // Parsing "0x1" used to be very slow and memory intensive.
     // Check that each test case completes in less than 15000ms.
     const time = performance.now() - start;
-    ok(time < 15000, `item ${item} completed in less than 15000ms ${time}`);
+    Assert.less(
+      time,
+      15000,
+      `item ${item} completed in less than 15000ms ${time}`
+    );
 
     await findVariableViewProperties(ruleArray, parsed);
   }

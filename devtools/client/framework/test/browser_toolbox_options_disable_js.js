@@ -115,8 +115,9 @@ async function testJSDisabled() {
     const output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
 
-    ok(
-      output.textContent !== "JavaScript Disabled",
+    Assert.notStrictEqual(
+      output.textContent,
+      "JavaScript Disabled",
       'output is not "JavaScript Disabled"'
     );
   });
@@ -131,8 +132,9 @@ async function testJSDisabledIframe() {
     const iframeDoc = iframe.contentDocument;
     const output = iframeDoc.getElementById("output");
     iframeDoc.querySelector("#logJSDisabled").click();
-    ok(
-      output.textContent !== "JavaScript Disabled",
+    Assert.notStrictEqual(
+      output.textContent,
+      "JavaScript Disabled",
       'output is not "JavaScript Disabled" in iframe'
     );
   });

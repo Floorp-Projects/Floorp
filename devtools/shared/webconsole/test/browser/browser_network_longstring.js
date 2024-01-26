@@ -97,7 +97,7 @@ function assertRequestHeaders(response) {
   info("checking request headers");
 
   ok(!!response.headers.length, "request headers > 0");
-  ok(response.headersSize > 0, "request headersSize > 0");
+  Assert.greater(response.headersSize, 0, "request headersSize > 0");
 
   checkHeadersOrCookies(response.headers, {
     Referer: /network_requests_iframe\.html/,
@@ -143,7 +143,7 @@ function assertResponseHeaders(response) {
   info("checking response headers");
 
   ok(!!response.headers.length, "response headers > 0");
-  ok(response.headersSize > 0, "response headersSize > 0");
+  Assert.greater(response.headersSize, 0, "response headersSize > 0");
 
   checkHeadersOrCookies(response.headers, {
     "content-type": /^application\/(json|octet-stream)$/,

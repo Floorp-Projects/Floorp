@@ -64,8 +64,9 @@ add_task(async function () {
   }
 
   const testAllocations = response.allocations.filter(isTestAllocation);
-  ok(
-    testAllocations.length >= 3,
+  Assert.greaterOrEqual(
+    testAllocations.length,
+    3,
     "Should find our 3 test allocations (plus some allocations for the error " +
       "objects used to get line numbers)"
   );

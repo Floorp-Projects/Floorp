@@ -19,16 +19,18 @@ add_task(async function () {
     inspector
   );
   info("Checking the clipPath element");
-  ok(
-    clipPathContainer.editor.tag.textContent === "clipPath",
+  Assert.strictEqual(
+    clipPathContainer.editor.tag.textContent,
+    "clipPath",
     "clipPath node name is not lowercased"
   );
 
   const divContainer = await getContainerForSelector("div", inspector);
 
   info("Checking the div element");
-  ok(
-    divContainer.editor.tag.textContent === "div",
+  Assert.strictEqual(
+    divContainer.editor.tag.textContent,
+    "div",
     "div node name is lowercased"
   );
 });

@@ -39,7 +39,11 @@ add_task(async function () {
   // fail depending on how fast or slow the test is (indeed, the test page
   // contains short transitions, and delayed animations). So just make sure we
   // at least have the infinitely running animations.
-  ok(players.length >= 4, "All subtree animations were retrieved");
+  Assert.greaterOrEqual(
+    players.length,
+    4,
+    "All subtree animations were retrieved"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

@@ -197,8 +197,9 @@ const TEST_DATA = [
       const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(container.canExpand, "Can expand container with child nodes.");
-      ok(
-        container.editor.elt.querySelector(".text") == null,
+      Assert.equal(
+        container.editor.elt.querySelector(".text"),
+        null,
         "Single text child editor removed."
       );
     },
@@ -229,8 +230,9 @@ const TEST_DATA = [
       const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(!container.canExpand, "Can't expand empty container.");
-      ok(
-        container.editor.elt.querySelector(".text") == null,
+      Assert.equal(
+        container.editor.elt.querySelector(".text"),
+        null,
         "Single text child editor removed."
       );
     },

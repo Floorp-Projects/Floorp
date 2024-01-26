@@ -111,8 +111,9 @@ add_task(async function () {
     flexboxToggle.classList.contains("active"),
     "Flexbox highlighter toggle is active."
   );
-  ok(
-    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE) != firstFlexboxHighterShown,
+  Assert.notEqual(
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    firstFlexboxHighterShown,
     "Flexbox highlighter for the second flexbox container is shown."
   );
 

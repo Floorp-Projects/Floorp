@@ -79,8 +79,9 @@ add_task(async function () {
   const searchInput = await waitFor(() =>
     document.querySelector(".CodeMirror input[type=search]")
   );
-  ok(
-    searchInput.ownerDocument.activeElement == searchInput,
+  Assert.equal(
+    searchInput.ownerDocument.activeElement,
+    searchInput,
     "search input is focused"
   );
 

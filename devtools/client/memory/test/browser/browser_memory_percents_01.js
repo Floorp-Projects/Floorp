@@ -17,7 +17,7 @@ const TEST_URL =
   "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 function checkCells(cells) {
-  ok(cells.length > 1, "Should have found some");
+  Assert.greater(cells.length, 1, "Should have found some");
   // Ignore the first header cell.
   for (const cell of cells.slice(1)) {
     const percent = cell.querySelector(".heap-tree-percent");

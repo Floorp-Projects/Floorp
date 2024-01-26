@@ -63,5 +63,5 @@ function findNodeValue(dbg, text) {
 
 async function checkObjectNode(dbg, text, value) {
   await toggleNode(dbg, text);
-  ok(findNodeValue(dbg, "a") == value, "object value");
+  Assert.equal(findNodeValue(dbg, "a"), value, "object value");
 }

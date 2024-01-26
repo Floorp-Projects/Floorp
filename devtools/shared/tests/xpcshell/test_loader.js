@@ -27,14 +27,16 @@ function run_test() {
   );
 
   const regularLoader = new DevToolsLoader();
-  ok(
-    DevToolsSpecialGlobal !== regularLoader.loader.sharedGlobal,
+  Assert.notStrictEqual(
+    DevToolsSpecialGlobal,
+    regularLoader.loader.sharedGlobal,
     "The regular loader is not using the special DevTools global"
   );
 
   info("Assert the key difference with the other regular loaders:");
-  ok(
-    DevToolsSpecialGlobal === loader.loader.sharedGlobal,
+  Assert.strictEqual(
+    DevToolsSpecialGlobal,
+    loader.loader.sharedGlobal,
     "The system principal loader is using the special DevTools global"
   );
 
@@ -56,8 +58,9 @@ function run_test() {
   info("Now test the behavior with two concurrent usages");
   const loader2 = useDistinctSystemPrincipalLoader(requester);
   Assert.notEqual(loader, loader2, "We get a new loader instance");
-  ok(
-    DevToolsSpecialGlobal === loader2.loader.sharedGlobal,
+  Assert.strictEqual(
+    DevToolsSpecialGlobal,
+    loader2.loader.sharedGlobal,
     "The new system principal loader is also using the special DevTools global"
   );
 

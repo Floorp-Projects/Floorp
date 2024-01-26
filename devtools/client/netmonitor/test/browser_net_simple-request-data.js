@@ -388,8 +388,9 @@ function test() {
           "number",
           "The attached totalTime is incorrect."
         );
-        ok(
-          requestItem.totalTime >= 0,
+        Assert.greaterOrEqual(
+          requestItem.totalTime,
+          0,
           "The attached totalTime should be positive."
         );
 

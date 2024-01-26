@@ -52,8 +52,8 @@ add_task(async function () {
   const totalBytes = result.bytes;
   const totalCount = result.count;
 
-  ok(totalBytes > 0, "counted up bytes in the census");
-  ok(totalCount > 0, "counted up count in the census");
+  Assert.greater(totalBytes, 0, "counted up bytes in the census");
+  Assert.greater(totalCount, 0, "counted up count in the census");
 
   result = getSnapshotTotals(getState().snapshots[0].census);
   equal(

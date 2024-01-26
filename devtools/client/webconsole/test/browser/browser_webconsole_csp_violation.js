@@ -45,8 +45,9 @@ add_task(async function () {
     let msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
     let locationNode = msg.querySelector(".message-location");
     info(`EXPECT ${VIOLATION_LOCATION_HTML} GOT: ${locationNode.textContent}`);
-    ok(
-      locationNode.textContent == VIOLATION_LOCATION_HTML,
+    Assert.equal(
+      locationNode.textContent,
+      VIOLATION_LOCATION_HTML,
       "Printed the CSP Violation with HTML Context"
     );
     // Triggering the Violation via JS
@@ -58,8 +59,9 @@ add_task(async function () {
     );
     locationNode = msg.node.querySelector(".message-location");
     info(`EXPECT ${VIOLATION_LOCATION_JS} GOT: ${locationNode.textContent}`);
-    ok(
-      locationNode.textContent == VIOLATION_LOCATION_JS,
+    Assert.equal(
+      locationNode.textContent,
+      VIOLATION_LOCATION_JS,
       "Printed the CSP Violation with JS Context"
     );
   }
@@ -83,8 +85,9 @@ add_task(async function () {
     );
     const locationNode = msg.node.querySelector(".message-location");
     console.log(locationNode.textContent);
-    ok(
-      locationNode.textContent == VIOLATION_LOCATION,
+    Assert.equal(
+      locationNode.textContent,
+      VIOLATION_LOCATION,
       "Base-URI validation was Printed with the Responsible JS Line"
     );
   }
@@ -101,8 +104,9 @@ add_task(async function () {
     const msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
     const locationNode = msg.querySelector(".message-location");
     info(`EXPECT ${VIOLATION_LOCATION} GOT: ${locationNode.textContent}`);
-    ok(
-      locationNode.textContent == VIOLATION_LOCATION,
+    Assert.equal(
+      locationNode.textContent,
+      VIOLATION_LOCATION,
       "JS Line which Triggered the CSP-Form Action Violation was Printed"
     );
   }

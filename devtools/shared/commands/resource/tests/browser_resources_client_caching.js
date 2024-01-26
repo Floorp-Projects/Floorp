@@ -351,7 +351,11 @@ function assertResources(resources, expectedResources) {
   for (let i = 0; i < resources.length; i++) {
     const resource = resources[i];
     const expectedResource = expectedResources[i];
-    ok(resource === expectedResource, `The ${i}th resource is correct`);
+    Assert.strictEqual(
+      resource,
+      expectedResource,
+      `The ${i}th resource is correct`
+    );
   }
 }
 

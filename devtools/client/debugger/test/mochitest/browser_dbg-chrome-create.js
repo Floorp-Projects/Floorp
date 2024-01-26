@@ -37,7 +37,11 @@ add_task(async function () {
   );
 
   ok(process, "The remote debugger process was created");
-  ok(process.exitCode == null, "The remote debugger process is running");
+  Assert.equal(
+    process.exitCode,
+    null,
+    "The remote debugger process is running"
+  );
   is(
     typeof process.pid,
     "number",

@@ -81,8 +81,9 @@ add_task(async function () {
     pageY: 0,
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
-  ok(
-    first().getBoundingClientRect().top >= boundaries.top,
+  Assert.greaterOrEqual(
+    first().getBoundingClientRect().top,
+    boundaries.top,
     "First filter should not move outside filter list"
   );
 
@@ -94,8 +95,9 @@ add_task(async function () {
     pageY: 0,
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
-  ok(
-    last().getBoundingClientRect().bottom <= boundaries.bottom,
+  Assert.lessOrEqual(
+    last().getBoundingClientRect().bottom,
+    boundaries.bottom,
     "Last filter should not move outside filter list"
   );
 

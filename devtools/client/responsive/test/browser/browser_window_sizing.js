@@ -44,12 +44,14 @@ async function checkWindowOuterSize(ui, zoom_level) {
       // to floating point rounding errors that occur when scaling from inner size CSS
       // integer values to outer size CSS integer values. See Part 1 of Bug 1107456.
       // Some of the drift is also due to full zoom scaling effects; see Bug 1577775.
-      ok(
-        Math.abs(content.outerWidth - width) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(content.outerWidth - width),
+        2,
         `window.outerWidth zoom ${zoom} should be ${width} and we got ${content.outerWidth}.`
       );
-      ok(
-        Math.abs(content.outerHeight - height) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(content.outerHeight - height),
+        2,
         `window.outerHeight zoom ${zoom} should be ${height} and we got ${content.outerHeight}.`
       );
     }
@@ -63,23 +65,27 @@ async function checkWindowScreenSize(ui, zoom_level) {
     async function ({ width, height, zoom }) {
       const { screen } = content;
 
-      ok(
-        Math.abs(screen.availWidth - width) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(screen.availWidth - width),
+        2,
         `screen.availWidth zoom ${zoom} should be ${width} and we got ${screen.availWidth}.`
       );
 
-      ok(
-        Math.abs(screen.availHeight - height) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(screen.availHeight - height),
+        2,
         `screen.availHeight zoom ${zoom} should be ${height} and we got ${screen.availHeight}.`
       );
 
-      ok(
-        Math.abs(screen.width - width) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(screen.width - width),
+        2,
         `screen.width zoom " ${zoom} should be ${width} and we got ${screen.width}.`
       );
 
-      ok(
-        Math.abs(screen.height - height) <= 2,
+      Assert.lessOrEqual(
+        Math.abs(screen.height - height),
+        2,
         `screen.height zoom " ${zoom} should be ${height} and we got ${screen.height}.`
       );
     }

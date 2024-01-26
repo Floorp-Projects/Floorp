@@ -783,8 +783,16 @@ function verifyRequestItemTarget(
       .getAttribute("title");
     info("Displayed time: " + value);
     info("Tooltip time: " + tooltip);
-    ok(~~value.match(/[0-9]+/) >= 0, "The displayed time is correct.");
-    ok(~~tooltip.match(/[0-9]+/) >= 0, "The tooltip time is correct.");
+    Assert.greaterOrEqual(
+      ~~value.match(/[0-9]+/),
+      0,
+      "The displayed time is correct."
+    );
+    Assert.greaterOrEqual(
+      ~~tooltip.match(/[0-9]+/),
+      0,
+      "The tooltip time is correct."
+    );
   }
 
   if (visibleIndex !== -1) {
@@ -1220,8 +1228,9 @@ function validateRequests(requests, monitor, options = {}) {
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
-      ok(
-        stackLen > 0,
+      Assert.greater(
+        stackLen,
+        0,
         `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
       );
 

@@ -217,7 +217,7 @@ async function testSmallMap(oi) {
   await onMapOiMutation;
 
   oiNodes = oi.querySelectorAll(".node");
-  ok(oiNodes.length > 10, "The document node was expanded");
+  Assert.greater(oiNodes.length, 10, "The document node was expanded");
 }
 
 async function testMap(oi) {

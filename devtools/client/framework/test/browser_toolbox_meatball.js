@@ -26,8 +26,9 @@ add_task(async function () {
   const menuDockToBottom = toolbox.doc.getElementById(
     "toolbox-meatball-menu-dock-bottom"
   );
-  ok(
-    menuDockToBottom.getAttribute("aria-checked") === "true",
+  Assert.strictEqual(
+    menuDockToBottom.getAttribute("aria-checked"),
+    "true",
     "menuDockToBottom has checked"
   );
 

@@ -64,8 +64,9 @@ add_task(async function () {
   EventUtils.synthesizeKey("KEY_Tab", {}, win);
   await tagFocused;
 
-  ok(
-    inspector.markup.doc.activeElement === tagSpan,
+  Assert.strictEqual(
+    inspector.markup.doc.activeElement,
+    tagSpan,
     "Focus has gone back to first element"
   );
 });

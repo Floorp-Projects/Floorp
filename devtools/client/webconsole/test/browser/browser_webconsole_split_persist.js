@@ -63,8 +63,9 @@ add_task(async function () {
   );
 
   toolbox.webconsolePanel.style.height = "1px";
-  ok(
-    toolbox.webconsolePanel.clientHeight > 1,
+  Assert.greater(
+    toolbox.webconsolePanel.clientHeight,
+    1,
     "The actual height of the console is bound with a min height"
   );
 

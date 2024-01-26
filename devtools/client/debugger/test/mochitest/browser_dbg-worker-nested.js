@@ -11,5 +11,5 @@ add_task(async function () {
 
   await waitForThreadCount(dbg, 2);
   const workers = dbg.selectors.getThreads();
-  ok(workers.length == 2, "Got two workers");
+  Assert.equal(workers.length, 2, "Got two workers");
 });

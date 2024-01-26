@@ -20,7 +20,11 @@ add_task(async function () {
 async function manyInstancesOfCustomHighlighters({ inspectorFront }) {
   const h1 = await inspectorFront.getHighlighterByType("BoxModelHighlighter");
   const h2 = await inspectorFront.getHighlighterByType("BoxModelHighlighter");
-  ok(h1 !== h2, "getHighlighterByType returns new instances every time (1)");
+  Assert.notStrictEqual(
+    h1,
+    h2,
+    "getHighlighterByType returns new instances every time (1)"
+  );
 
   const h3 = await inspectorFront.getHighlighterByType(
     "CssTransformHighlighter"
@@ -28,7 +32,11 @@ async function manyInstancesOfCustomHighlighters({ inspectorFront }) {
   const h4 = await inspectorFront.getHighlighterByType(
     "CssTransformHighlighter"
   );
-  ok(h3 !== h4, "getHighlighterByType returns new instances every time (2)");
+  Assert.notStrictEqual(
+    h3,
+    h4,
+    "getHighlighterByType returns new instances every time (2)"
+  );
   ok(
     h3 !== h1 && h3 !== h2,
     "getHighlighterByType returns new instances every time (3)"

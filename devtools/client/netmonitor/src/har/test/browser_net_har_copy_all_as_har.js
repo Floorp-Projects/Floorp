@@ -85,7 +85,11 @@ async function testManyReloads({ tab, monitor, toolbox }) {
   });
   // In most cases, we will have two requests, but sometimes,
   // the first one might be missing as we couldn't fetch any lazy data for it.
-  ok(har.log.entries.length >= 1, "There must be at least one request");
+  Assert.greaterOrEqual(
+    har.log.entries.length,
+    1,
+    "There must be at least one request"
+  );
   info(
     "Assert the first navigation request which has been cancelled by the second reload"
   );
@@ -167,7 +171,7 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
 
 function assertNavigationRequestEntry(entry) {
   info("Assert that the entry relates to the navigation request");
-  ok(entry.time > 0, "Check the total time");
+  Assert.greater(entry.time, 0, "Check the total time");
   is(entry.request.method, "GET", "Check the method");
   is(entry.request.url, SIMPLE_URL, "Check the URL");
   is(

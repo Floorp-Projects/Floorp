@@ -51,8 +51,9 @@ add_task(async function () {
   /* eslint-enable no-undef */
 
   const allocations = tracker.countAllocations();
-  ok(
-    allocations >= 1001,
+  Assert.greaterOrEqual(
+    allocations,
+    1001,
     `At least 1001 objects are reported as created (${allocations})`
   );
 
@@ -66,8 +67,9 @@ add_task(async function () {
     1001,
     "We got exactly the expected number of objects recorded with an allocation site"
   );
-  ok(
-    afterCreation.objectsWithStack > before.objectsWithStack,
+  Assert.greater(
+    afterCreation.objectsWithStack,
+    before.objectsWithStack,
     "We got some random number of objects without an allocation site"
   );
 
@@ -89,8 +91,9 @@ add_task(async function () {
     1001,
     "All the expected objects were reported freed in the count with allocation sites"
   );
-  ok(
-    afterGC.objectsWithoutStack < afterCreation.objectsWithoutStack,
+  Assert.less(
+    afterGC.objectsWithoutStack,
+    afterCreation.objectsWithoutStack,
     "And we released some random number of objects without an allocation site"
   );
 
@@ -170,8 +173,9 @@ add_task(async function () {
     1,
     "We get only one leaked objects, the foo object of the sandbox."
   );
-  ok(
-    record.objectsWithoutStack > 10,
+  Assert.greater(
+    record.objectsWithoutStack,
+    10,
     "We get an handful of objects without stacks. Most likely created by Memory API itself."
   );
 
@@ -190,8 +194,9 @@ add_task(async function () {
   // `count` is computed out of `takeCensus`, while `objectsWithoutStack` uses `drainAllocationsLog`
   // While the first go through the current GC graph, the second is a record of allocations over time,
   // this probably explain why there is some subtle difference
-  ok(
-    record.leaks[0].count <= record.objectsWithoutStack,
+  Assert.lessOrEqual(
+    record.leaks[0].count,
+    record.objectsWithoutStack,
     "For now, the leak report intermittently assume there is less leaked objects than the summary"
   );
   is(record.leaks[1].src, "sandbox.js", "Second item if about our 'foo' leak");

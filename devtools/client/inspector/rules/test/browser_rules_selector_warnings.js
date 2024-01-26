@@ -101,15 +101,17 @@ async function assertSelectorWarnings({
   );
 
   if (expectedWarnings.length === 0) {
-    ok(
-      selectorWarningsContainerEl === null,
+    Assert.strictEqual(
+      selectorWarningsContainerEl,
+      null,
       `"${selectorText}" does not have warnings`
     );
     return;
   }
 
-  ok(
-    selectorWarningsContainerEl !== null,
+  Assert.notStrictEqual(
+    selectorWarningsContainerEl,
+    null,
     `"${selectorText}" does have warnings`
   );
 

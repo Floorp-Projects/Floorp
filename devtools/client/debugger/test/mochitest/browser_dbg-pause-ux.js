@@ -44,7 +44,7 @@ add_task(async function () {
   );
 
   const matchScrollTop = getScrollTop(dbg);
-  ok(pauseScrollTop != matchScrollTop, "did not jump to debug line");
+  Assert.notEqual(pauseScrollTop, matchScrollTop, "did not jump to debug line");
 });
 
 function getScrollTop(dbg) {

@@ -11,7 +11,7 @@ add_task(async function () {
   await addJsonViewTab(TEST_JSON_URL);
 
   const count = await getElementCount(".textPanelBox");
-  ok(count == 1, "The raw data panel must be shown");
+  Assert.equal(count, 1, "The raw data panel must be shown");
 
   const text = await getElementText(".textPanelBox .jsonParseError");
   ok(text, "There must be an error description");

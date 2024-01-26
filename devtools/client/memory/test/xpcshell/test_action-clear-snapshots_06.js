@@ -56,7 +56,11 @@ add_task(async function () {
   await deleteEvents;
   ok(true, "received delete snapshots events");
 
-  ok(getState().snapshots.length === 0, "Snapshots array should be empty");
+  Assert.strictEqual(
+    getState().snapshots.length,
+    0,
+    "Snapshots array should be empty"
+  );
   ok(!getState().diffing, "We should no longer be diffing");
 
   heapWorker.destroy();

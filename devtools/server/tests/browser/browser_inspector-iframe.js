@@ -41,8 +41,9 @@ add_task(async function testIframe() {
     "The child is the #document element"
   );
   if (isEveryFrameTargetEnabled()) {
-    ok(
-      documentNodeFront.walkerFront !== walker,
+    Assert.notStrictEqual(
+      documentNodeFront.walkerFront,
+      walker,
       "The child walker is different from the top level document one when EFT is enabled"
     );
   }

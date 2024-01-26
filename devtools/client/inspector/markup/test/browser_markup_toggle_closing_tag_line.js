@@ -38,8 +38,9 @@ add_task(async function () {
   const iframe = await getNodeFront("iframe", inspector);
   const { nodes } = await inspector.walker.children(iframe);
   const documentFront = nodes[0];
-  ok(
-    documentFront.displayName === "#document",
+  Assert.strictEqual(
+    documentFront.displayName,
+    "#document",
     "First child of IFRAME is #document"
   );
 

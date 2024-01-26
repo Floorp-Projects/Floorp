@@ -46,7 +46,11 @@ function checkCookieData(rowId) {
   const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
   const time = Math.floor(new Date(getCellValue(rowId, "creationTime")) / 1000);
   const expectedExpiry = time + ONE_DAY_IN_SECONDS;
-  ok(actualExpiry - expectedExpiry <= 2, "expiry is in expected range");
+  Assert.lessOrEqual(
+    actualExpiry - expectedExpiry,
+    2,
+    "expiry is in expected range"
+  );
   is(getCellValue(rowId, "size"), "43", "size is correct");
   is(getCellValue(rowId, "isHttpOnly"), "false", "httpOnly is not set");
   is(getCellValue(rowId, "isSecure"), "false", "secure is not set");

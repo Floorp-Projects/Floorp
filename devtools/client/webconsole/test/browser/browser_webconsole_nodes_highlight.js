@@ -36,7 +36,7 @@ add_task(async function () {
 
   const msg = await waitFor(() => findConsoleAPIMessage(hud, "<h1>"));
   const node = msg.querySelector(".objectBox-node");
-  ok(node !== null, "Node was logged as expected");
+  Assert.notStrictEqual(node, null, "Node was logged as expected");
   const view = node.ownerDocument.defaultView;
   const nonHighlightEl = toolbox.doc.getElementById(
     "toolbox-meatball-menu-button"

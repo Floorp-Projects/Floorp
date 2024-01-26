@@ -106,8 +106,9 @@ add_task(async function () {
     shapeToggle.classList.contains("active"),
     "shapes highlighter toggle is active."
   );
-  ok(
-    highlighters.shapesHighlighterShown != firstShapesHighlighterShown,
+  Assert.notEqual(
+    highlighters.shapesHighlighterShown,
+    firstShapesHighlighterShown,
     "shapes highlighter for the second shapes container is shown."
   );
 

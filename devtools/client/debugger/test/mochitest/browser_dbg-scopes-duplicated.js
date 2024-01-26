@@ -153,10 +153,14 @@ add_task(async function () {
   let nodes = getAllLabels(dbg);
   const originalNodesCount = nodes.length;
   const targetNodeIndex = nodes.indexOf("target");
-  ok(targetNodeIndex > -1, "Found the target node");
+  Assert.greater(targetNodeIndex, -1, "Found the target node");
   await toggleScopeNode(dbg, targetNodeIndex);
   nodes = getAllLabels(dbg);
-  ok(nodes.length > originalNodesCount, "the target node was expanded");
+  Assert.greater(
+    nodes.length,
+    originalNodesCount,
+    "the target node was expanded"
+  );
   ok(nodes.includes("classList"), "classList is displayed");
 
   await resume(dbg);

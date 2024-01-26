@@ -42,8 +42,9 @@ function createMockDevTools() {
  * arguments provided to the last call, if appropriate.
  */
 function checkCalls(mock, method, length, lastArgs) {
-  ok(
-    mock.callLog[method].length === length,
+  Assert.strictEqual(
+    mock.callLog[method].length,
+    length,
     "Devtools.on was called the expected number of times"
   );
 
@@ -54,8 +55,9 @@ function checkCalls(mock, method, length, lastArgs) {
 
   for (let i = 0; i < lastArgs.length; i++) {
     const expectedArg = lastArgs[i];
-    ok(
-      mock.callLog[method][length - 1][i] === expectedArg,
+    Assert.strictEqual(
+      mock.callLog[method][length - 1][i],
+      expectedArg,
       `Devtools.${method} was called with the expected argument (index ${i})`
     );
   }

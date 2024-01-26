@@ -23,15 +23,16 @@ add_task(async function () {
     animationInspector,
     animationInspector.state.timeScale.getDuration() * 0.5
   );
-  ok(
-    initialCurrentTime >
-      animationInspector.state.animations[0].state.currentTime,
+  Assert.greater(
+    initialCurrentTime,
+    animationInspector.state.animations[0].state.currentTime,
     "currentTime should be decreased"
   );
 
   info("Check whether the progress bar was moved to left");
-  ok(
-    initialProgressBarX > getProgressBarX(panel),
+  Assert.greater(
+    initialProgressBarX,
+    getProgressBarX(panel),
     "Progress bar should be moved to left"
   );
 });

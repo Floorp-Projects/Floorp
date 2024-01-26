@@ -43,8 +43,9 @@ add_task(async function () {
     tabpanel.querySelector(".treeTable"),
     "The request params doesn't have the intended visibility."
   );
-  ok(
-    tabpanel.querySelector(".editor-mount") === null,
+  Assert.strictEqual(
+    tabpanel.querySelector(".editor-mount"),
+    null,
     "The request post data doesn't have the indented visibility."
   );
 

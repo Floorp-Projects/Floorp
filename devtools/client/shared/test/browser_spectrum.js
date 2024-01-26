@@ -107,7 +107,11 @@ async function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   is(container.childElementCount, 0, "Root node is empty");
 
   const s = await createSpectrum(container, cssColors.white);
-  ok(container.childElementCount > 0, "Spectrum has appended elements");
+  Assert.greater(
+    container.childElementCount,
+    0,
+    "Spectrum has appended elements"
+  );
 
   s.destroy();
   is(container.childElementCount, 0, "Destroying spectrum removed all nodes");
@@ -278,16 +282,26 @@ async function testSettingColorShoudUpdateTheUI(container) {
 
   setSpectrumProps(s, { rgb: [50, 240, 234, 0.2] });
 
-  ok(s.alphaSlider.value != alphaSliderOriginalVal, "Alpha helper has moved");
-  ok(
-    s.dragHelper.style.top !== dragHelperOriginalPos[0],
+  Assert.notEqual(
+    s.alphaSlider.value,
+    alphaSliderOriginalVal,
+    "Alpha helper has moved"
+  );
+  Assert.notStrictEqual(
+    s.dragHelper.style.top,
+    dragHelperOriginalPos[0],
     "Drag helper has moved"
   );
-  ok(
-    s.dragHelper.style.left !== dragHelperOriginalPos[1],
+  Assert.notStrictEqual(
+    s.dragHelper.style.left,
+    dragHelperOriginalPos[1],
     "Drag helper has moved"
   );
-  ok(s.hueSlider.value !== hueSliderOriginalVal, "Hue helper has moved");
+  Assert.notStrictEqual(
+    s.hueSlider.value,
+    hueSliderOriginalVal,
+    "Hue helper has moved"
+  );
   testAriaAttributesOnSpectrumElements(
     s,
     "Closest to: aqua",
@@ -299,8 +313,9 @@ async function testSettingColorShoudUpdateTheUI(container) {
 
   setSpectrumProps(s, { rgb: ZERO_ALPHA_COLOR });
   is(s.alphaSlider.value, "0", "Alpha range UI has been updated again");
-  ok(
-    hueSliderOriginalVal !== s.hueSlider.value,
+  Assert.notStrictEqual(
+    hueSliderOriginalVal,
+    s.hueSlider.value,
     "Hue slider should have move again"
   );
   testAriaAttributesOnSpectrumElements(s, "aqua", "rgba(0, 255, 255, 0)", 0);
@@ -409,8 +424,9 @@ async function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
 ) {
   let s = await createSpectrum(container, cssColors.white);
 
-  ok(
-    s.contrastLabel.childNodes.length !== 3,
+  Assert.notStrictEqual(
+    s.contrastLabel.childNodes.length,
+    3,
     "Large text indicator is initially hidden."
   );
 

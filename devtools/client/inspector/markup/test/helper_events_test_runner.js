@@ -175,8 +175,9 @@ async function checkEventsForNode(test, inspector) {
     const shouldBeDisabled =
       expected[i].attributes?.includes("React") ||
       expected[i].attributes?.includes("jQuery");
-    ok(
-      disabled === shouldBeDisabled,
+    Assert.strictEqual(
+      disabled,
+      shouldBeDisabled,
       `The checkbox is ${shouldBeDisabled ? "disabled" : "enabled"}\n`
     );
 

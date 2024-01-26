@@ -36,7 +36,11 @@ add_task(async function () {
   await waitForPaused(dbg);
   findElement(dbg, "frame", 1).focus();
   await clickElement(dbg, "frame", 1);
-  ok(cm.getScrollInfo().top != 0, "frame scrolled down to correct location");
+  Assert.notEqual(
+    cm.getScrollInfo().top,
+    0,
+    "frame scrolled down to correct location"
+  );
 
   info("Navigating while paused, goes to the correct location");
   await selectSource(dbg, "long.js");

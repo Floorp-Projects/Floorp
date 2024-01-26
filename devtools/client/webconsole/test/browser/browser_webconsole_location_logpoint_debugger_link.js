@@ -180,8 +180,9 @@ function getLineEl(dbg, line) {
 function assertEditorLogpoint(dbg, line, { hasLog = false } = {}) {
   const hasLogClass = getLineEl(dbg, line).classList.contains("has-log");
 
-  ok(
-    hasLogClass === hasLog,
+  Assert.strictEqual(
+    hasLogClass,
+    hasLog,
     `Breakpoint log ${hasLog ? "exists" : "does not exist"} on line ${line}`
   );
 }

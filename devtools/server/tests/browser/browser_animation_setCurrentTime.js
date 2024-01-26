@@ -27,7 +27,7 @@ async function testSetCurrentTimes(walker, animations) {
   );
   const players = await animations.getAnimationPlayersForNode(nodeMulti);
 
-  ok(players.length > 1, "Node has more than 1 animation player");
+  Assert.greater(players.length, 1, "Node has more than 1 animation player");
 
   info("Try to set multiple current times at once");
   // Assume that all animations were created at same time.

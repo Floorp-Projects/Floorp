@@ -38,8 +38,9 @@ add_task(async function () {
   );
 
   iframe.style.height = "10000px"; // Set height to something unreasonably large.
-  ok(
-    iframe.clientHeight < panelHeight,
+  Assert.less(
+    iframe.clientHeight,
+    panelHeight,
     `The iframe fits within the available space (${iframe.clientHeight} < ${panelHeight})`
   );
 
@@ -54,8 +55,9 @@ add_task(async function () {
 
   const oldWidth = iframe.style.width;
   iframe.style.width = "10000px"; // Set width to something unreasonably large.
-  ok(
-    iframe.clientWidth < panelWidth,
+  Assert.less(
+    iframe.clientWidth,
+    panelWidth,
     `The iframe fits within the available space (${iframe.clientWidth} < ${panelWidth})`
   );
   iframe.style.width = oldWidth;

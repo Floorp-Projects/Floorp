@@ -66,8 +66,9 @@ add_task(async function () {
   );
   const ruleviewContainer =
     view.styleDocument.getElementById("ruleview-container");
-  ok(
-    ruleviewContainer.scrollHeight === ruleviewContainer.clientHeight,
+  Assert.strictEqual(
+    ruleviewContainer.scrollHeight,
+    ruleviewContainer.clientHeight,
     "The ruleview container does not have a scrollbar"
   );
 });

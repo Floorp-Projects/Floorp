@@ -60,8 +60,9 @@ add_task(async function () {
   info(
     "Checking the first command, which is the last to resolve since it paused"
   );
-  ok(
-    firstCallEvaluationResult === unresolvedSymbol,
+  Assert.strictEqual(
+    firstCallEvaluationResult,
+    unresolvedSymbol,
     "firstCall was not evaluated yet"
   );
 
@@ -69,8 +70,9 @@ add_task(async function () {
   dbg.actions.resume();
 
   await onFirstCallMessageReceived;
-  ok(
-    firstCallEvaluationResult !== unresolvedSymbol,
+  Assert.notStrictEqual(
+    firstCallEvaluationResult,
+    unresolvedSymbol,
     "firstCall() returned correct value"
   );
 });

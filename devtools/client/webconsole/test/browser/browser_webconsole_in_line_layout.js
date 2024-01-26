@@ -66,8 +66,9 @@ add_task(async function () {
     }
   });
   await onLastMessage;
-  ok(
-    outputNode.scrollHeight > outputNode.clientHeight,
+  Assert.greater(
+    outputNode.scrollHeight,
+    outputNode.clientHeight,
     "Output node overflows"
   );
   testLayout(appNode);
@@ -91,7 +92,11 @@ add_task(async function () {
     document.querySelector(".webconsole-filteringbar-wrapper.narrow")
   );
 
-  ok(filterBarNode.clientHeight > filterBarHeight, "The filter bar is taller");
+  Assert.greater(
+    filterBarNode.clientHeight,
+    filterBarHeight,
+    "The filter bar is taller"
+  );
   testLayout(appNode);
 
   info("Expand the window so filter buttons aren't on their own line anymore");
@@ -120,16 +125,18 @@ function testLayout(node) {
     node.scrollHeight,
     "there's no scrollbar on the wrapper"
   );
-  ok(
-    node.offsetHeight <= node.ownerDocument.body.offsetHeight,
+  Assert.lessOrEqual(
+    node.offsetHeight,
+    node.ownerDocument.body.offsetHeight,
     "console is not taller than document body"
   );
   const childSumHeight = [...node.childNodes].reduce(
     (height, n) => height + n.offsetHeight,
     0
   );
-  ok(
-    node.offsetHeight >= childSumHeight,
+  Assert.greaterOrEqual(
+    node.offsetHeight,
+    childSumHeight,
     "the sum of the height of wrapper child nodes is not taller than wrapper's one"
   );
 }

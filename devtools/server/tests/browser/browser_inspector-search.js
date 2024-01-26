@@ -44,11 +44,19 @@ add_task(async function () {
 
       info("Testing basic index APIs exist.");
       const index = new WalkerIndex(walkerActor);
-      ok(index.data.size > 0, "public index is filled after getting");
+      Assert.greater(
+        index.data.size,
+        0,
+        "public index is filled after getting"
+      );
 
       index.clearIndex();
       ok(!index._data, "private index is empty after clearing");
-      ok(index.data.size > 0, "public index is filled after getting");
+      Assert.greater(
+        index.data.size,
+        0,
+        "public index is filled after getting"
+      );
 
       index.destroy();
 

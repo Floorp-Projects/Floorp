@@ -39,8 +39,9 @@ add_task(async function () {
 
 const testMaxWidth = async function (editor) {
   is(editor.input.value, START_TEXT, "Span text content should be used");
-  ok(
-    editor.input.offsetWidth < MAX_WIDTH,
+  Assert.less(
+    editor.input.offsetWidth,
+    MAX_WIDTH,
     "Input width should be strictly smaller than MAX_WIDTH"
   );
   is(getLines(editor.input), 1, "Input should display 1 line of text");
@@ -89,12 +90,14 @@ const testMaxWidth = async function (editor) {
     checkScrollbars(editor.input);
   }
 
-  ok(
-    editor.input.offsetWidth < MAX_WIDTH,
+  Assert.less(
+    editor.input.offsetWidth,
+    MAX_WIDTH,
     "Input width should again be strictly smaller than MAX_WIDTH"
   );
-  ok(
-    editor.input.offsetWidth > 0,
+  Assert.greater(
+    editor.input.offsetWidth,
+    0,
     "Even with no content, the input has a non-zero width"
   );
   is(getLines(editor.input), 1, "Input should display 1 line of text");

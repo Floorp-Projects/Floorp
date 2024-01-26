@@ -51,8 +51,9 @@ async function testExplicitNamedAreas(inspector, view) {
     "Check that the expected grid line column names are shown in the editor popup."
   );
   for (const lineName of gridColLines) {
-    ok(
-      editor.gridLineNames.cols.indexOf(lineName) > -1,
+    Assert.greater(
+      editor.gridLineNames.cols.indexOf(lineName),
+      -1,
       `${lineName} is a suggested implicit grid line`
     );
   }
@@ -87,8 +88,9 @@ async function testImplicitNamedAreasWithExplicitGridLineNames(
     "Check that the expected grid line row names are shown in the editor popup."
   );
   for (const lineName of gridRowLines) {
-    ok(
-      editor.gridLineNames.rows.indexOf(lineName) > -1,
+    Assert.greater(
+      editor.gridLineNames.rows.indexOf(lineName),
+      -1,
       `${lineName} is a suggested explicit grid line`
     );
   }

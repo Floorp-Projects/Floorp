@@ -166,7 +166,7 @@ const TESTS = {
     const pbar = emitter.once("bar");
 
     const check3 = pfoo.then(arg => {
-      ok(arg === undefined, "no arg for foo event");
+      Assert.strictEqual(arg, undefined, "no arg for foo event");
       return "rval from c3";
     });
 

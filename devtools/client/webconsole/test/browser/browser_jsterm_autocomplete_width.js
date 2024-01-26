@@ -36,8 +36,9 @@ add_task(async function () {
   );
 
   const originalWidth = popup._tooltip.container.clientWidth;
-  ok(
-    originalWidth >= getLongestLabelWidth(jsterm),
+  Assert.greaterOrEqual(
+    originalWidth,
+    getLongestLabelWidth(jsterm),
     `popup (${originalWidth}px) is at least wider than the width of the longest list item (${getLongestLabelWidth(
       jsterm
     )}px)`
@@ -53,12 +54,14 @@ add_task(async function () {
     "popup has expected items"
   );
   const newPopupWidth = popup._tooltip.container.clientWidth;
-  ok(
-    newPopupWidth >= originalWidth,
+  Assert.greaterOrEqual(
+    newPopupWidth,
+    originalWidth,
     `The popup width was updated (${originalWidth}px -> ${newPopupWidth}px)`
   );
-  ok(
-    newPopupWidth >= getLongestLabelWidth(jsterm),
+  Assert.greaterOrEqual(
+    newPopupWidth,
+    getLongestLabelWidth(jsterm),
     `popup (${newPopupWidth}px) is at least wider than the width of the longest list item (${getLongestLabelWidth(
       jsterm
     )}px)`

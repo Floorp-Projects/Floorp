@@ -71,8 +71,9 @@ add_task(async function () {
           "number",
           "individual.nodeId should be a number"
         );
-        ok(
-          individual.retainedSize <= lastRetainedSize,
+        Assert.lessOrEqual(
+          individual.retainedSize,
+          lastRetainedSize,
           "individual.retainedSize <= lastRetainedSize"
         );
         lastRetainedSize = individual.retainedSize;

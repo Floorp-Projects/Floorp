@@ -44,8 +44,9 @@ add_task(async function () {
   const noOfVisibleRowsAfterExpand = document.querySelectorAll(
     "#headers-panel .url-preview tr.treeRow"
   ).length;
-  ok(
-    noOfVisibleRowsAfterExpand > 1,
+  Assert.greater(
+    noOfVisibleRowsAfterExpand,
+    1,
     "The url preview should still be expanded."
   );
 
@@ -64,8 +65,9 @@ add_task(async function () {
   const noOfVisibleRowsAfterCollapse = document.querySelectorAll(
     "#headers-panel .url-preview tr.treeRow"
   ).length;
-  ok(
-    noOfVisibleRowsAfterCollapse == 1,
+  Assert.equal(
+    noOfVisibleRowsAfterCollapse,
+    1,
     "The url preview should still be collapsed."
   );
 

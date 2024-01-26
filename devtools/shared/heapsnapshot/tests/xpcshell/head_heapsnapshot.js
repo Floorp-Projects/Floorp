@@ -505,7 +505,11 @@ function assertDeduplicatedPaths({
 
   const expectedNodeSet = new Set(expectedNodes);
   const nodeSet = new Set(nodes);
-  ok(nodeSet.size === nodes.length, "each returned node should be unique");
+  Assert.strictEqual(
+    nodeSet.size,
+    nodes.length,
+    "each returned node should be unique"
+  );
 
   for (const node of nodes) {
     ok(expectedNodeSet.has(node), `the ${node} node was expected`);

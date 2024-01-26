@@ -102,8 +102,9 @@ async function testRevealInInspector(hud, element, tag, accesskey) {
   const revealInInspectorMenuItem = menuPopup.querySelector(
     revealInInspectorMenuItemId
   );
-  ok(
-    revealInInspectorMenuItem !== null,
+  Assert.notStrictEqual(
+    revealInInspectorMenuItem,
+    null,
     "There is the `Reveal in Inspector` menu item"
   );
 

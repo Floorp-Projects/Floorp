@@ -204,16 +204,18 @@ async function testRtlArrow(doc) {
 
   // The arrow should be offset from the right edge, but still closer to the
   // right edge than the left edge.
-  ok(
-    arrowRect.right < panelRect.right,
+  Assert.less(
+    arrowRect.right,
+    panelRect.right,
     "Right edge of the arrow " +
       `(${arrowRect.right}) is less than the right edge of the panel ` +
       `(${panelRect.right})`
   );
   const rightMargin = panelRect.right - arrowRect.right;
   const leftMargin = arrowRect.left - panelRect.right;
-  ok(
-    rightMargin > leftMargin,
+  Assert.greater(
+    rightMargin,
+    leftMargin,
     "Arrow should be closer to the right side of " +
       ` the panel (margin: ${rightMargin}) than the left side ` +
       ` (margin: ${leftMargin})`

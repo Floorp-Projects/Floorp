@@ -60,8 +60,9 @@ add_task(async function () {
   const cloned = getSelectedRequest(store.getState());
 
   // Compares if the requests have the same cause type (XHR)
-  ok(
-    original.cause.type === cloned.cause.type,
+  Assert.strictEqual(
+    original.cause.type,
+    cloned.cause.type,
     "Both requests retain the same cause type"
   );
 
@@ -125,8 +126,9 @@ add_task(async function () {
     EventUtils.sendMouseEvent({ type: "mousedown" }, newRequest);
     const request = getSelectedRequest(store.getState());
 
-    ok(
-      original.cause.type === request.cause.type,
+    Assert.strictEqual(
+      original.cause.type,
+      request.cause.type,
       "Both requests retain the same cause type"
     );
 

@@ -20,7 +20,7 @@ add_task(async function () {
 
   await waitForDone(worker);
 
-  ok(assertionCount > 0);
+  Assert.greater(assertionCount, 0);
   worker.terminate();
 });
 

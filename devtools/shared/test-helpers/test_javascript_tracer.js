@@ -60,8 +60,9 @@ add_task(async function pause() {
   }
   jsTracer.stop();
   const duration = Cu.now() - start;
-  ok(
-    duration > 10 * 100,
+  Assert.greater(
+    duration,
+    10 * 100,
     "The execution of the for loop was slow down by at least the pause duration in each loop"
   );
   ok(

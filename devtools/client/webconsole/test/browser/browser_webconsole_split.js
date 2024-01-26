@@ -159,12 +159,14 @@ add_task(async function () {
       currentUIState.splitterVisibility,
       "Splitter is visible when console is split"
     );
-    ok(
-      currentUIState.deckHeight > 0,
+    Assert.greater(
+      currentUIState.deckHeight,
+      0,
       "Deck has a height > 0 when console is split"
     );
-    ok(
-      currentUIState.webconsoleHeight > 0,
+    Assert.greater(
+      currentUIState.webconsoleHeight,
+      0,
       "Web console has a height > 0 when console is split"
     );
     ok(
@@ -240,12 +242,14 @@ add_task(async function () {
       currentUIState.splitterVisibility,
       "Splitter is visible when console is split"
     );
-    ok(
-      currentUIState.deckHeight > 0,
+    Assert.greater(
+      currentUIState.deckHeight,
+      0,
       "Deck has a height > 0 when console is split"
     );
-    ok(
-      currentUIState.webconsoleHeight > 0,
+    Assert.greater(
+      currentUIState.webconsoleHeight,
+      0,
       "Web console has a height > 0 when console is split"
     );
     ok(
@@ -293,12 +297,14 @@ add_task(async function () {
       currentUIState.splitterVisibility,
       "Splitter is visible when console is split"
     );
-    ok(
-      currentUIState.deckHeight > 0,
+    Assert.greater(
+      currentUIState.deckHeight,
+      0,
       "Deck has a height > 0 when console is split"
     );
-    ok(
-      currentUIState.webconsoleHeight > 0,
+    Assert.greater(
+      currentUIState.webconsoleHeight,
+      0,
       "Web console has a height > 0 when console is split"
     );
     is(

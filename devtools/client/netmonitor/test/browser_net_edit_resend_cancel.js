@@ -54,13 +54,15 @@ add_task(async function () {
   document.querySelector("#custom-request-close-button").click();
   const finalRequestState = getSelectedRequest(store.getState());
 
-  ok(
-    firstRequestState.id === finalRequestState.id,
+  Assert.strictEqual(
+    firstRequestState.id,
+    finalRequestState.id,
     "Original request is selected after cancel button is clicked"
   );
 
-  ok(
-    document.querySelector(".headers-overview") !== null,
+  Assert.notStrictEqual(
+    document.querySelector(".headers-overview"),
+    null,
     "Request is selected and headers panel is visible"
   );
 

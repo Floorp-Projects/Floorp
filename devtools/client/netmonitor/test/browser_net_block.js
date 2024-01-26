@@ -145,7 +145,7 @@ add_task(async function () {
 
   ok(!normalRequestState.blockedReason, "Normal request is not blocked");
   ok(!normalRequestSize.includes("Blocked"), "Normal request has a size");
-  ok(normalHeadersSectionSize == 2, "Both header sections are showing");
+  Assert.equal(normalHeadersSectionSize, 2, "Both header sections are showing");
   ok(
     normalFirstHeaderSectionTitle.includes("Response"),
     "The response header section is visible for normal requests"
@@ -156,7 +156,11 @@ add_task(async function () {
     blockedRequestSize.includes("Blocked"),
     "Blocked request shows reason as size"
   );
-  ok(blockedHeadersSectionSize == 1, "Only one header section is showing");
+  Assert.equal(
+    blockedHeadersSectionSize,
+    1,
+    "Only one header section is showing"
+  );
   ok(
     blockedFirstHeaderSectionTitle.includes("Request"),
     "The response header section is not visible for blocked requests"

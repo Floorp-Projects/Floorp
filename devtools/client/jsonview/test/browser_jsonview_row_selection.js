@@ -35,7 +35,11 @@ add_task(async function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
-    ok(scroller.clientHeight < scroller.scrollHeight, "There is a scrollbar.");
+    Assert.less(
+      scroller.clientHeight,
+      scroller.scrollHeight,
+      "There is a scrollbar."
+    );
     is(scroller.scrollTop, 0, "Initially scrolled to the top.");
   });
 
@@ -61,7 +65,7 @@ add_task(async function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
-    ok(scroller.scrollTop > 0, "Not scrolled to the top.");
+    Assert.greater(scroller.scrollTop, 0, "Not scrolled to the top.");
     // Synthesize up arrow key to select first row.
     content.document.querySelector(".treeTable").focus();
   });
@@ -138,8 +142,9 @@ add_task(async function () {
       ".jsonPanelBox .panelContent"
     );
     const row = content.document.querySelector(".treeRow:nth-child(2)");
-    ok(
-      scroller.clientHeight < row.clientHeight,
+    Assert.less(
+      scroller.clientHeight,
+      row.clientHeight,
       "The row is taller than the scroller."
     );
     is(scroller.scrollTop, 0, "Initially scrolled to the top.");
@@ -197,13 +202,14 @@ add_task(async function () {
       const scrollPos = (scroller.scrollTop = Math.ceil(
         (scroller.scrollTop + row.offsetTop) / 2
       ));
-      ok(
-        scroller.scrollTop > row.offsetTop,
+      Assert.greater(
+        scroller.scrollTop,
+        row.offsetTop,
         "The top of the row is not visible."
       );
-      ok(
-        scroller.scrollTop + scroller.offsetHeight <
-          row.offsetTop + row.offsetHeight,
+      Assert.less(
+        scroller.scrollTop + scroller.offsetHeight,
+        row.offsetTop + row.offsetHeight,
         "The bottom of the row is not visible."
       );
 

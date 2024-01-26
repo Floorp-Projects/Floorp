@@ -47,8 +47,9 @@ add_task(async function () {
 
   // Let's wait until the object is fully expanded.
   await waitFor(() => sidebarContents.querySelectorAll(".node").length > 1);
-  ok(
-    sidebarContents.scrollHeight > sidebarContents.clientHeight,
+  Assert.greater(
+    sidebarContents.scrollHeight,
+    sidebarContents.clientHeight,
     "Sidebar overflows"
   );
 });

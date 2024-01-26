@@ -45,8 +45,9 @@ add_task(async function () {
   await waitForServiceWorkerRunning(SW_URL, document);
 
   swPane = getDebugTargetPane("Service Workers", document);
-  ok(
-    swPane.querySelectorAll(".qa-debug-target-item").length === 1,
+  Assert.strictEqual(
+    swPane.querySelectorAll(".qa-debug-target-item").length,
+    1,
     "Service worker list has one element"
   );
   ok(

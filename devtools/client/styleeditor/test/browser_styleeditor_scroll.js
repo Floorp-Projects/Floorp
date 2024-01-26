@@ -48,8 +48,8 @@ add_task(async function () {
   const { from, to } = longEditor.sourceEditor.getViewport();
   info(`Lines ${from}-${to} are visible (expected ${LINE_TO_SELECT}).`);
 
-  ok(from <= LINE_TO_SELECT, "The editor scrolled too much.");
-  ok(to >= LINE_TO_SELECT, "The editor scrolled too little.");
+  Assert.lessOrEqual(from, LINE_TO_SELECT, "The editor scrolled too much.");
+  Assert.greaterOrEqual(to, LINE_TO_SELECT, "The editor scrolled too little.");
 
   const initialScrollTop = longEditor.sourceEditor.getScrollInfo().top;
   info(`Storing scrollTop = ${initialScrollTop} for later comparison.`);

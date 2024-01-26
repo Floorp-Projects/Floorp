@@ -19,14 +19,26 @@ add_task(async function () {
 
     setData(format, data) {
       this.setDataTrigger = true;
-      ok(format === "text/plain", 'setData passed valid "text/plain" format');
-      ok(data === this.BLOCKING_URL, "Data matches the expected URL");
+      Assert.strictEqual(
+        format,
+        "text/plain",
+        'setData passed valid "text/plain" format'
+      );
+      Assert.strictEqual(
+        data,
+        this.BLOCKING_URL,
+        "Data matches the expected URL"
+      );
       this.data = data;
     }
 
     getData(format) {
       this.getDataTrigger = true;
-      ok(format === "text/plain", 'getData passed valid "text/plain" format');
+      Assert.strictEqual(
+        format,
+        "text/plain",
+        'getData passed valid "text/plain" format'
+      );
       return this.data;
     }
 
@@ -96,8 +108,9 @@ add_task(async function () {
       })
     );
 
-    ok(
-      dataTransfer.wasSetDataTriggered() === true,
+    Assert.strictEqual(
+      dataTransfer.wasSetDataTriggered(),
+      true,
       'setData() was called during the "dragstart" event'
     );
 
@@ -110,8 +123,9 @@ add_task(async function () {
       })
     );
 
-    ok(
-      dataTransfer.wasGetDataTriggered() === true,
+    Assert.strictEqual(
+      dataTransfer.wasGetDataTriggered(),
+      true,
       'getData() was called during the "drop" event'
     );
 

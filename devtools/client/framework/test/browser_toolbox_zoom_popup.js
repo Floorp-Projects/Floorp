@@ -78,8 +78,16 @@ add_task(async function () {
           // vertical: IntID::ContextMenuOffsetVertical of macOS uses -6.
           const xDelta = Math.abs(menuBounds.left - buttonBounds.left);
           const yDelta = Math.abs(menuBounds.top - buttonBounds.bottom);
-          ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ". #" + menu.id);
-          ok(yDelta < 6, "yDelta is lower than 6: " + yDelta + ". #" + menu.id);
+          Assert.less(
+            xDelta,
+            2,
+            "xDelta is lower than 2: " + xDelta + ". #" + menu.id
+          );
+          Assert.less(
+            yDelta,
+            6,
+            "yDelta is lower than 6: " + yDelta + ". #" + menu.id
+          );
         }
         break;
 
@@ -90,8 +98,9 @@ add_task(async function () {
           const buttonCenter = buttonBounds.left + buttonBounds.width / 2;
           const arrowCenter = arrowBounds.left + arrowBounds.width / 2;
           const delta = Math.abs(arrowCenter - buttonCenter);
-          ok(
-            Math.round(delta) <= 1,
+          Assert.lessOrEqual(
+            Math.round(delta),
+            1,
             "Center of arrow is within 1px of button center" +
               ` (delta: ${delta})`
           );

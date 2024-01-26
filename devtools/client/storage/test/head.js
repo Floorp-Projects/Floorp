@@ -1008,9 +1008,17 @@ function sidebarToggleVisible() {
  */
 function sidebarParseTreeVisible(state) {
   if (state) {
-    ok(gUI.view._currHierarchy.size > 2, "Parse tree should be visible.");
+    Assert.greater(
+      gUI.view._currHierarchy.size,
+      2,
+      "Parse tree should be visible."
+    );
   } else {
-    ok(gUI.view._currHierarchy.size <= 2, "Parse tree should not be visible.");
+    Assert.lessOrEqual(
+      gUI.view._currHierarchy.size,
+      2,
+      "Parse tree should not be visible."
+    );
   }
 }
 

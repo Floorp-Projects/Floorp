@@ -59,13 +59,15 @@ add_task(async function () {
       );
 
       if (headerDocURL === null) {
-        ok(
-          learnMoreEl.length === 0,
+        Assert.strictEqual(
+          learnMoreEl.length,
+          0,
           'undocumented header does not include a "Learn More" button'
         );
       } else {
-        ok(
-          learnMoreEl[0].getAttribute("title") === headerDocURL,
+        Assert.strictEqual(
+          learnMoreEl[0].getAttribute("title"),
+          headerDocURL,
           'documented header includes a "Learn More" button with a link to MDN'
         );
       }

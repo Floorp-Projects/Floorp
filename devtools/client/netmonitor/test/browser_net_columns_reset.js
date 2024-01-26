@@ -34,8 +34,9 @@ add_task(async function () {
 
   await selectContextMenuItem(monitor, "request-list-header-reset-columns");
 
-  ok(
-    JSON.stringify(prefBefore) === JSON.stringify(Prefs.visibleColumns),
+  Assert.strictEqual(
+    JSON.stringify(prefBefore),
+    JSON.stringify(Prefs.visibleColumns),
     "Reset columns item should reset columns pref"
   );
 

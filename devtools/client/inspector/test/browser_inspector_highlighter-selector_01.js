@@ -70,7 +70,7 @@ add_task(async function () {
     const nb = await highlighterTestFront.getSelectorHighlighterBoxNb(
       highlighter.actorID
     );
-    ok(nb !== null, "The number of highlighters was retrieved");
+    Assert.notStrictEqual(nb, null, "The number of highlighters was retrieved");
 
     is(nb, containerCount, "The correct number of highlighers were created");
     await highlighter.hide();

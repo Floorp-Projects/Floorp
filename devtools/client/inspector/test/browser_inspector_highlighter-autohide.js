@@ -50,8 +50,9 @@ add_task(async function () {
   await onHighlighterHidden;
 
   ok(true, "Highlighter was shown and hidden");
-  ok(
-    delay >= inspector.HIGHLIGHTER_AUTOHIDE_TIMER,
+  Assert.greaterOrEqual(
+    delay,
+    inspector.HIGHLIGHTER_AUTOHIDE_TIMER,
     `Highlighter was hidden after expected delay (${delay}ms)`
   );
 

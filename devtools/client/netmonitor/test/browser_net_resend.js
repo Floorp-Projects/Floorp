@@ -48,9 +48,9 @@ async function testResendRequest() {
     document.querySelectorAll(".request-list-item")[0]
   );
 
-  ok(
-    firstResend.originalResource.resourceId !==
-      firstResend.newResource.resourceId,
+  Assert.notStrictEqual(
+    firstResend.originalResource.resourceId,
+    firstResend.newResource.resourceId,
     "The resent request is different resource from the first request"
   );
 
@@ -85,9 +85,9 @@ async function testResendRequest() {
     document.querySelectorAll(".request-list-item")[1]
   );
 
-  ok(
-    secondResend.originalResource.resourceId !==
-      secondResend.newResource.resourceId,
+  Assert.notStrictEqual(
+    secondResend.originalResource.resourceId,
+    secondResend.newResource.resourceId,
     "The resent request is different resource from the second request"
   );
 

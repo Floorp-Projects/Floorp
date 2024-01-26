@@ -218,7 +218,11 @@ add_task(async function () {
   const contentTypeParam = headerParam(
     `Content-Type: multipart/form-data; boundary=${boundary}`
   );
-  ok(contentTypePos !== -1, "content type header present in curl output");
+  Assert.notStrictEqual(
+    contentTypePos,
+    -1,
+    "content type header present in curl output"
+  );
   equal(
     cmd.substr(contentTypePos, contentTypeParam.length),
     contentTypeParam,
@@ -230,7 +234,11 @@ add_task(async function () {
   const dataBinaryParam = `--data-binary ${isWin() ? "" : "$"}${escapeNewline(
     quote(request.postDataText)
   )}`;
-  ok(dataBinaryPos !== -1, "--data-binary param present in curl output");
+  Assert.notStrictEqual(
+    dataBinaryPos,
+    -1,
+    "--data-binary param present in curl output"
+  );
   equal(
     cmd.substr(dataBinaryPos, dataBinaryParam.length),
     dataBinaryParam,

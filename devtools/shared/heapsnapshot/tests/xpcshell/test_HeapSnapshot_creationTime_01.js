@@ -28,6 +28,6 @@ function run_test() {
   const snapshot = ChromeUtils.readHeapSnapshot(path);
   info("snapshot.creationTime = " + snapshot.creationTime);
 
-  ok(snapshot.creationTime >= start);
-  ok(snapshot.creationTime <= end);
+  Assert.greaterOrEqual(snapshot.creationTime, start);
+  Assert.lessOrEqual(snapshot.creationTime, end);
 }

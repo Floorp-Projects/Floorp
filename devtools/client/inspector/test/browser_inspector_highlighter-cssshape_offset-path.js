@@ -66,7 +66,7 @@ add_task(async function () {
   // SVG stroke seems to impact boundingClientRect differently depending on platform/hardware.
   // Let's assert that the delta is okay, and use it for the different assertions.
   const delta = wrapperX + wrapperWidth * 0.2 - rect.x;
-  ok(Math.abs(delta) <= 1, `delta is <=1 (${Math.abs(delta)})`);
+  Assert.lessOrEqual(Math.abs(delta), 1, `delta is <=1 (${Math.abs(delta)})`);
 
   // Coming from inset(10% 20%)
   let inlineOffset = 0.2 * wrapperWidth - delta;
@@ -161,27 +161,30 @@ add_task(async function () {
   inlineOffset = 0.2 * viewportClientRect.width - delta;
   blockOffset = 0.1 * viewportClientRect.height - delta;
 
-  ok(
-    Math.abs(absRect.x - (viewportClientRect.x + inlineOffset)) < 1,
+  Assert.less(
+    Math.abs(absRect.x - (viewportClientRect.x + inlineOffset)),
+    1,
     `Rect approximately has expected x (got ${absRect.x}, expected ${
       viewportClientRect.x + inlineOffset
     })`
   );
-  ok(
-    Math.abs(absRect.y - (viewportClientRect.y + blockOffset)) < 1,
+  Assert.less(
+    Math.abs(absRect.y - (viewportClientRect.y + blockOffset)),
+    1,
     `Rect approximately has expected y (got ${absRect.y}, expected ${
       viewportClientRect.y + blockOffset
     })`
   );
-  ok(
-    Math.abs(absRect.width - (viewportClientRect.width - inlineOffset * 2)) < 1,
+  Assert.less(
+    Math.abs(absRect.width - (viewportClientRect.width - inlineOffset * 2)),
+    1,
     `Rect approximately has expected width (got ${absRect.width}, expected ${
       viewportClientRect.width - inlineOffset * 2
     })`
   );
-  ok(
-    Math.abs(absRect.height - (viewportClientRect.height - blockOffset * 2)) <
-      1,
+  Assert.less(
+    Math.abs(absRect.height - (viewportClientRect.height - blockOffset * 2)),
+    1,
     `Rect approximately has expected height (got ${absRect.height}, expected ${
       viewportClientRect.height - blockOffset * 2
     })`

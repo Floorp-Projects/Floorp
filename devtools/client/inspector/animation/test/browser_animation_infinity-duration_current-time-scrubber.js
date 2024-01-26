@@ -32,8 +32,9 @@ add_task(async function () {
   const barBounds = barEl.getBoundingClientRect();
   const barX = barBounds.x + barBounds.width / 2 - controllerBounds.x;
   const expectedBarX = controllerBounds.width * 0.5;
-  ok(
-    Math.abs(barX - expectedBarX) < 1,
+  Assert.less(
+    Math.abs(barX - expectedBarX),
+    1,
     "Progress bar should indicate at progress of 0.5"
   );
 });

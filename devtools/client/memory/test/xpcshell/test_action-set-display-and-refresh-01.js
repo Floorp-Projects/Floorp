@@ -54,7 +54,11 @@ add_task(async function () {
   );
 
   // Test invalid displays
-  ok(getState().errors.length === 0, "No error actions in the queue.");
+  Assert.strictEqual(
+    getState().errors.length,
+    0,
+    "No error actions in the queue."
+  );
   dispatch(setCensusDisplayAndRefresh(heapWorker, {}));
   await waitUntilState(store, () => getState().errors.length === 1);
   ok(true, "Emits an error action when passing in an invalid display object");

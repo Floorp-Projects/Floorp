@@ -89,8 +89,9 @@ add_task(async function () {
     const stackLen = stacktrace ? stacktrace.length : 0;
 
     ok(stacktrace, `Request #${index} has a stacktrace`);
-    ok(
-      stackLen >= request.stackFunctions.length,
+    Assert.greaterOrEqual(
+      stackLen,
+      request.stackFunctions.length,
       `Request #${index} has a stacktrace with enough (${stackLen}) items`
     );
 

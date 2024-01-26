@@ -72,7 +72,7 @@ function checkEventTelemetry(expectedData) {
     const [timestamp, category, method, object, value, extra] = events[i];
 
     // ignore timestamp
-    ok(timestamp > 0, "timestamp is greater than 0");
+    Assert.greater(timestamp, 0, "timestamp is greater than 0");
     is(category, expected.category, "'category' is correct");
     is(method, expected.method, "'method' is correct");
     is(object, expected.object, "'object' is correct");

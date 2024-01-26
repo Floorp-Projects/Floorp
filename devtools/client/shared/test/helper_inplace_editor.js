@@ -130,15 +130,27 @@ async function testCompletion(
       "autocomplete-swatch autocomplete-colorswatch"
     );
     if (colorSwatch) {
-      ok(swatchSpan.length === 1, "Displayed the expected color swatch");
+      Assert.strictEqual(
+        swatchSpan.length,
+        1,
+        "Displayed the expected color swatch"
+      );
       const color = new colorUtils.CssColor(
         swatchSpan[0].style.backgroundColor
       );
       const swatchColor = color.rgba;
       const postColor = new colorUtils.CssColor(postLabel).rgba;
-      ok(swatchColor == postColor, "Color swatch matches postLabel value");
+      Assert.equal(
+        swatchColor,
+        postColor,
+        "Color swatch matches postLabel value"
+      );
     } else {
-      ok(swatchSpan.length === 0, "As expected no swatches were available");
+      Assert.strictEqual(
+        swatchSpan.length,
+        0,
+        "As expected no swatches were available"
+      );
     }
   }
 

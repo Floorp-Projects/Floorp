@@ -233,8 +233,9 @@ add_task(async function () {
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
-      ok(
-        stackLen > 0,
+      Assert.greater(
+        stackLen,
+        0,
         `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
       );
 

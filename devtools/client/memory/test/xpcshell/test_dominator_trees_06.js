@@ -69,7 +69,11 @@ add_task(async function () {
       "only send partial dominator trees across initially and load the rest " +
       "on demand"
   );
-  ok(oldNode !== oldRoot, "But the node should not be the root");
+  Assert.notStrictEqual(
+    oldNode,
+    oldRoot,
+    "But the node should not be the root"
+  );
 
   const lazyChildren = new DominatorTreeLazyChildren(oldNode.nodeId, 0);
   dispatch(
@@ -99,7 +103,11 @@ add_task(async function () {
   );
 
   const newRoot = getState().snapshots[0].dominatorTree.root;
-  ok(oldRoot !== newRoot, "When we insert new nodes, we get a new tree");
+  Assert.notStrictEqual(
+    oldRoot,
+    newRoot,
+    "When we insert new nodes, we get a new tree"
+  );
   equal(
     oldRoot.children.length,
     newRoot.children.length,
@@ -141,8 +149,9 @@ add_task(async function () {
 
   const newNode = findNewNode(newRoot);
   ok(newNode, "Should find the node in the new tree again");
-  ok(
-    newNode !== oldNode,
+  Assert.notStrictEqual(
+    newNode,
+    oldNode,
     "We did not mutate the old node in place, instead created a new node"
   );
   ok(newNode.children, "And the new node should have the children attached");

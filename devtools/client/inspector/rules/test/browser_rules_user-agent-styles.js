@@ -119,7 +119,7 @@ async function userAgentStylesVisible(inspector, view) {
     userRules = view._elementStyle.rules.filter(rule => rule.editor.isEditable);
     uaRules = view._elementStyle.rules.filter(rule => !rule.editor.isEditable);
     is(userRules.length, data.numUserRules, "Correct number of user rules");
-    ok(uaRules.length > data.numUARules, "Has UA rules");
+    Assert.greater(uaRules.length, data.numUARules, "Has UA rules");
   }
 
   ok(
