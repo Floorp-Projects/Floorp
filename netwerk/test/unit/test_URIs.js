@@ -966,17 +966,3 @@ add_task(async function round_trip_invalid_ace_label() {
     uri = Services.io.newURI("http://a.b.c.XN--pokxncvks");
   }, /NS_ERROR_MALFORMED_URI/);
 });
-
-add_task(async function test_bug1875119() {
-  let uri1 = Services.io.newURI("file:///path");
-  let uri2 = Services.io.newURI("resource://test/bla");
-  // type of uri2 is still SubstitutingURL which overrides the implementation of EnsureFile,
-  // but it's scheme is now file.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1876483 to disallow this
-  uri2 = uri2.mutate().setSpec("file:///path2").finalize();
-  Assert.throws(
-    () => uri1.equals(uri2),
-    /NS_NOINTERFACE/,
-    "uri2 is in an invalid state and should throw"
-  );
-});

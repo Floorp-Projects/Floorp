@@ -72,9 +72,7 @@ nsresult SubstitutingURL::EnsureFile() {
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsISubstitutingProtocolHandler> substHandler =
       do_QueryInterface(handler);
-  if (!substHandler) {
-    return NS_ERROR_NO_INTERFACE;
-  }
+  MOZ_ASSERT(substHandler);
 
   nsAutoCString spec;
   rv = substHandler->ResolveURI(this, spec);
