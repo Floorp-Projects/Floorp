@@ -302,8 +302,7 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   template <JSONStringType ST>
   inline bool setStringValue(StringBuilder& builder);
 
-  void reportError(const char* msg, const char* lineString,
-                   const char* columnString);
+  void reportError(const char* msg, uint32_t line, uint32_t column);
 };
 
 template <typename CharT>
@@ -396,8 +395,7 @@ class MOZ_STACK_CLASS JSONSyntaxParseHandler {
 
   inline void freeStackEntry(StackEntry& entry) {}
 
-  void reportError(const char* msg, const char* lineString,
-                   const char* columnString);
+  void reportError(const char* msg, uint32_t line, uint32_t column);
 };
 
 template <typename CharT, typename HandlerT>
