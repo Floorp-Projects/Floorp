@@ -15,15 +15,13 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
-#include "nsPresContextInlines.h"
+#include "nsRefreshDriver.h"
 #include "nsStyleTransformMatrix.h"
 #include "PuppetWidget.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 using TransformReferenceBox = nsStyleTransformMatrix::TransformReferenceBox;
 
@@ -84,33 +82,28 @@ void AnimationInfo::ClearAnimationsForNextTransaction() {
   mPendingAnimations->Clear();
 }
 
-bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {
-  bool updated = false;
-  for (size_t animIdx = 0, animEnd = mAnimations.Length(); animIdx < animEnd;
-       animIdx++) {
-    Animation& anim = mAnimations[animIdx];
-
-    // If the animation is doing an async update of its playback rate, then we
-    // want to match whatever its current time would be at *aReadyTime*.
-    if (!std::isnan(anim.previousPlaybackRate()) && anim.startTime().isSome() &&
-        !anim.originTime().IsNull() && !anim.isNotPlaying()) {
-      TimeDuration readyTime = aReadyTime - anim.originTime();
-      anim.holdTime() = dom::Animation::CurrentTimeFromTimelineTime(
-          readyTime, anim.startTime().ref(), anim.previousPlaybackRate());
-      // Make start time null so that we know to update it below.
-      anim.startTime() = Nothing();
-    }
-
-    // If the animation is play-pending, resolve the start time.
-    if (anim.startTime().isNothing() && !anim.originTime().IsNull() &&
-        !anim.isNotPlaying()) {
-      TimeDuration readyTime = aReadyTime - anim.originTime();
-      anim.startTime() = Some(dom::Animation::StartTimeFromTimelineTime(
-          readyTime, anim.holdTime(), anim.playbackRate()));
-      updated = true;
-    }
+void AnimationInfo::MaybeStartPendingAnimation(Animation& aAnimation,
+                                               const TimeStamp& aReadyTime) {
+  // If the animation is doing an async update of its playback rate, then we
+  // want to match whatever its current time would be at *aReadyTime*.
+  if (!std::isnan(aAnimation.previousPlaybackRate()) &&
+      aAnimation.startTime().isSome() && !aAnimation.originTime().IsNull() &&
+      !aAnimation.isNotPlaying()) {
+    TimeDuration readyTime = aReadyTime - aAnimation.originTime();
+    aAnimation.holdTime() = dom::Animation::CurrentTimeFromTimelineTime(
+        readyTime, aAnimation.startTime().ref(),
+        aAnimation.previousPlaybackRate());
+    // Make start time null so that we know to update it below.
+    aAnimation.startTime() = Nothing();
   }
-  return updated;
+
+  // If the aAnimationation is play-pending, resolve the start time.
+  if (aAnimation.startTime().isNothing() && !aAnimation.originTime().IsNull() &&
+      !aAnimation.isNotPlaying()) {
+    const TimeDuration readyTime = aReadyTime - aAnimation.originTime();
+    aAnimation.startTime() = Some(dom::Animation::StartTimeFromTimelineTime(
+        readyTime, aAnimation.holdTime(), aAnimation.playbackRate()));
+  }
 }
 
 bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
@@ -126,8 +119,8 @@ bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
 bool AnimationInfo::HasTransformAnimation() const {
   const nsCSSPropertyIDSet& transformSet =
       LayerAnimationInfo::GetCSSPropertiesFor(DisplayItemType::TYPE_TRANSFORM);
-  for (uint32_t i = 0; i < mAnimations.Length(); i++) {
-    if (transformSet.HasProperty(mAnimations[i].property())) {
+  for (const auto& animation : mAnimations) {
+    if (transformSet.HasProperty(animation.property())) {
       return true;
     }
   }
@@ -405,9 +398,9 @@ void AnimationInfo::AddAnimationForProperty(
              " timeline capable of converting TimeStamps (so we can calculate"
              " one later");
 
-  layers::Animation* animation = (aSendFlag == Send::NextTransaction)
-                                     ? AddAnimationForNextTransaction()
-                                     : AddAnimation();
+  Animation* animation = (aSendFlag == Send::NextTransaction)
+                             ? AddAnimationForNextTransaction()
+                             : AddAnimation();
 
   const TimingParams& timing = aAnimation->GetEffect()->NormalizedTiming();
 
@@ -424,8 +417,7 @@ void AnimationInfo::AddAnimationForProperty(
   // since after generating the new transition other requestAnimationFrame
   // callbacks may run that introduce further lag between the main thread and
   // the compositor.
-  dom::CSSTransition* cssTransition = aAnimation->AsCSSTransition();
-  if (cssTransition) {
+  if (dom::CSSTransition* cssTransition = aAnimation->AsCSSTransition()) {
     cssTransition->UpdateStartValueFromReplacedTransition();
   }
 
@@ -486,9 +478,7 @@ void AnimationInfo::AddAnimationForProperty(
     animation->baseStyle() = null_t();
   }
 
-  for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
-    const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];
-
+  for (const AnimationPropertySegment& segment : aProperty.mSegments) {
     AnimationSegment* animSegment = animation->segments().AppendElement();
     SetAnimatable(aProperty.mProperty.mID, segment.mFromValue, aFrame, refBox,
                   animSegment->startState());
@@ -502,6 +492,11 @@ void AnimationInfo::AddAnimationForProperty(
     animSegment->endComposite() = static_cast<uint8_t>(segment.mToComposite);
     animSegment->sampleFn() = segment.mTimingFunction;
   }
+
+  const TimeStamp readyTime =
+      aFrame->PresContext()->RefreshDriver()->MostRecentRefresh(
+          /* aEnsureTimerStarted= */ false);
+  MaybeStartPendingAnimation(*animation, readyTime);
 }
 
 // Let's use an example to explain this function:
@@ -574,10 +569,9 @@ bool AnimationInfo::AddAnimationsForProperty(
       continue;
     }
 
-    dom::KeyframeEffect* keyframeEffect =
-        anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
-    MOZ_ASSERT(keyframeEffect,
+    MOZ_ASSERT(anim->GetEffect() && anim->GetEffect()->AsKeyframeEffect(),
                "A playing animation should have a keyframe effect");
+    dom::KeyframeEffect* keyframeEffect = anim->GetEffect()->AsKeyframeEffect();
     const AnimationProperty* property =
         keyframeEffect->GetEffectiveAnimationOfProperty(
             AnimatedPropertyID(aProperty), *aEffects);
@@ -595,9 +589,10 @@ bool AnimationInfo::AddAnimationsForProperty(
         "GetEffectiveAnimationOfProperty already tested the property "
         "is not overridden by !important rules");
 
-    // Don't add animations that are pending if their timeline does not
-    // track wallclock time. This is because any pending animations on layers
-    // will have their start time updated with the current wallclock time.
+    // Don't add animations that are pending if their timeline does not track
+    // wallclock time. This is because any pending animations on layers will
+    // have their start time updated with the current wallclock time.
+    //
     // If we can't convert that wallclock time back to an equivalent timeline
     // time, we won't be able to update the content animation and it will end
     // up being out of sync with the layer animation.
@@ -999,5 +994,4 @@ void AnimationInfo::AddAnimationsForDisplayItem(
   }
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
