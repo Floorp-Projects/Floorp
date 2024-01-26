@@ -33,7 +33,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">Читання й зміна налаштувань браузера</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Стерти нещодавню історію перегляду, куки та повʼязані дані</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Стерти нещодавню історію перегляду, файли cookie та повʼязані дані</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Отримання даних з буфера обміну</string>
     <!-- Description for clipboard_write permission. -->
@@ -75,7 +75,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Автор</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Автори</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Автори</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Востаннє оновлено</string>
     <!-- The developer website (Homepage) of the add-on. -->

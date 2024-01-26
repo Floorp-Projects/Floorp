@@ -260,8 +260,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Sganio</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Peiriant chwilio</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Gosodiadau peiriannau chwilio</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -315,14 +313,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Cydweddu eich tabiau rhwng dyfeisiau, rheoli llwythi, cael awgrymiadau ar wneud y gorau o ddiogelwch preifatrwydd %s, a mwy.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Cydweddu eich tabiau rhwng dyfeisiau, rheoli llwythi, cael awgrymiadau ar wneud y gorau o ddiogelwch preifatrwydd %s, a mwy.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Parhau</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Parhau</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Nid nawr</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Nid nawr</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
@@ -440,21 +438,11 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modd HTTPS-yn-Unig</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Cyfyngu Baneri Cwcis</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Rhwystrydd Baneri Cwcis</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Rhwystro Baner Cwci wrth bori’n breifat</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Lleihau baneri cwcis</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Diffodd</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Ymlaen</string>
 
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">Mae %1$s yn ceisio gwrthod ceisiadau cwci ar faneri cwci yn awtomatig.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Diffodd ar gyfer y wefan hon</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -473,36 +461,16 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Nid yw’r wefan yn cael ei chefnogi ar hyn o bryd</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Troi Llai o Faneri Cwcis ymlaen ar %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Trowch y Rhwystrydd Baner Cwci ymlaen ar gyfer %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Diffoddwch y Rhwystrydd Baner Cwcis ar gyfer %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Nid yw %1$s yn gallu gwrthod ceisiadau cwcis ar y wefan hon yn awtomatig. Gallwch anfon cais i gefnogi’r wefan hon yn y dyfodol.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Diffoddwch a bydd %1$s yn clirio cwcis ac yn ail-lwytho’r wefan hon. Gall hyn eich allgofnodi neu wagio cartiau siopa.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">Mae %1$s yn ceisio gwrthod yn awtomatig pob cais cwci ar wefannau sy’n cael eu cefnogi.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Trowch ymlaen a bydd %1$s yn ceisio gwrthod pob baner cwci ar y wefan hon yn awtomatig.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Caniatáu i %1$s wrthod baneri cwci?</string>
-
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">Gall %1$s wrthod llawer o geisiadau baner cwci yn awtomatig.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Nid Nawr</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Fe welwch lai o geisiadau cwcis</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Caniatáu</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">Mae %1$s newydd wrthod cwcis i chi</string>
@@ -1288,8 +1256,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Cau</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Methu argraffu</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">Methu argraffu’r dudalen hon</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Argraffu</string>
@@ -1695,7 +1661,7 @@
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Cadw mewngofnodion a chyfrineiriau</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Arbed cyfrineiriau</string>
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Cadw cyfrineiriau</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Gofyn i gadw</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1718,11 +1684,11 @@
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Cydweddu mewngofnodion</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Cysoni cyfrineiriau</string>
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Cydweddu cyfrineiriau</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Cydweddu mewngofnodion ar draws dyfeisiau</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Cysoni cyfrineiriau ar draws dyfeisiau</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Cydweddu cyfrineiriau ar draws dyfeisiau</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Mewngofnodion wedi’u cadw</string>
     <!-- Preference to access list of saved passwords -->
@@ -1730,22 +1696,22 @@
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Bydd y mewngofnodi rydych yn eu cadw neu’n cydweddu i %s i’w gweld yma.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Bydd y cyfrineiriau rydych yn eu cadw neu eu cysoni i %s yn cael eu rhestru yma. Mae\'r holl gyfrineiriau rydych chi\'n eu cadw wedi\'u hamgryptio.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Bydd y cyfrineiriau rydych yn eu cadw neu eu cydweddu i %s yn cael eu rhestru yma. Mae\'r holl gyfrineiriau rydych chi\'n eu cadw wedi\'u hamgryptio.
 </string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Dysgu rhagor am Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Dysgwch fwy am gysoni</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Dysgwch fwy am gydweddu</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eithriadau</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Bydd mewngofnodion a chyfrineiriau sydd heb eu cadw i’w gweld yma.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Ni fydd %s yn cadw cyfrineiriau ar gyfer gwefannau a restrir yma.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Fydd %s ddim yn cadw cyfrineiriau ar gyfer gwefannau sy\'n cael eu rhestru yma.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Ni fydd mewngofnodion a chyfrineiriau’n cael eu cadw ar gyfer y gwefannau hyn.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Ni fydd %s yn cadw cyfrineiriau ar gyfer y gwefannau hyn.</string>
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Fydd %s ddim yn cadw cyfrineiriau ar gyfer y gwefannau hyn.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Dileu pob eithriad</string>
     <!-- Hint for search box in logins list -->
@@ -1782,15 +1748,15 @@
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Datgloi i weld eich mewngofnodi wedi’u cadw</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Datgloi i weld eich cyfrineiriau arbed</string>
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Datgloi i weld eich cyfrineiriau wedi\'u cadw</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Diogelu mewngofnodion a chyfrineiriau</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Diogelwch eich cyfrineiriau arbed</string>
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Diogelwch eich cyfrineiriau wedi\'u cadw</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Creu patrwm cloi dyfais, PIN, neu gyfrinair i ddiogelu eich mewngofnodion a’ch cyfrineiriau sydd wedi’u cadw rhag i rhywun arall sydd â mynediad i’ch dyfais.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Sefydlwch batrwm clo dyfais, PIN, neu gyfrinair i amddiffyn eich cyfrineiriau sydd wedi\'u cadw rhag cael mynediad iddynt os oes gan rywun arall eich dyfais.</string>
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Gosodwch batrwm clo dyfais, PIN, neu gyfrinair i ddiogelu eich cyfrineiriau sydd wedi\'u cadw rhag i rywun arall sydd â\'ch dyfais gael mynediad iddyn nhw.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Yn hwyrach</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1810,7 +1776,7 @@
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Trefnu dewislen mewngofnodi</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Dewislen cyfrineiriau didoli</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Didoli dewislen cyfrineiriau</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1894,7 +1860,7 @@
     <string name="credit_cards_number_validation_error_message">Rhowch rif cerdyn credyd dilys</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Rhowch rif cerdyn dilys</string>
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Rhoi rif cerdyn dilys</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Llanwch y maes yma.</string>
     <!-- Error message for card name on card validation -->
@@ -1904,11 +1870,11 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Diogelwch eich cerdyn credyd</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Sicrhewch eich dulliau talu sydd wedi\'u cadw</string>
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Diogelu eich dulliau talu sydd wedi\'u cadw</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Gosodwch batrwm cloi dyfais, PIN, neu gyfrinair i ddiogelu eich mewngofnodion a’ch cyfrineiriau sydd wedi’u cadw rhag i rhywun arall sydd â mynediad i’ch dyfais.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Sefydlwch batrwm clo dyfais, PIN, neu gyfrinair i amddiffyn eich cardiau sydd wedi\'u cadw rhag cael mynediad iddynt os oes gan rywun arall eich dyfais.</string>
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Gosodwch batrwm clo dyfais, PIN neu gyfrinair i ddiogelu eich cyfrineiriau sydd wedi\'u cadw rhag i rywun arall sydd â\'ch dyfais gael mynediad iddyn nhw.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Gosod nawr</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2067,19 +2033,19 @@
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Dewisiadau mewngofnodi</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opsiynau cyfrinair</string>
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Dewisiadau cyfrineiriau</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Maes testun golygadwy cyfeiriad gwe’r mewngofnodi.</string>
     <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Y maes testun y gellir ei olygu ar gyfer cyfeiriad gwefan y cyfrinair.</string>
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Maes testun golygadwy ar gyfer cyfeiriad gwefan y cyfrinair.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Maes testun golygadwy enw defnyddiwr y mewngofnodi.</string>
     <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Y maes testun y gellir ei olygu ar gyfer enw defnyddiwr y cyfrinair.</string>
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Maes testun golygadwy ar gyfer enw defnyddiwr y cyfrinair.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Maes testun golygadwy cyfrinair y mewngofnodi.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Y maes testun y gellir ei olygu ar gyfer y cyfrinair.</string>
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Maes testun golygadwy y cyfrinair.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Cadw newidiadau i’r mewngofnodi.</string>
     <!--  The button description to save changes to an edited password. -->
@@ -2095,15 +2061,15 @@
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Mae angen cyfrinair</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Rhowch gyfrinair</string>
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Rhoi cyfrinair</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Mae angen enw defnyddiwr</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Rhowch enw defnyddiwr</string>
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Rhoi enw defnyddiwr</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Mae angen enw gwesteiwr</string>
     <!--  The error message in add login view when hostname field is blank. -->
-    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Rhowch gyfeiriad gwe</string>
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Rhoi cyfeiriad gwe</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Chwilio llais</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2273,8 +2239,6 @@
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[Daw’r <b>Uchafbwyntiau</b> o adolygiadau %s o fewn yr 80 diwrnod diwethaf y credwn eu bod yn ddibynadwy.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Dysgwch ragor am %s.</string>
-    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">sut mae %s gan Mozilla yn pennu ansawdd adolygiadau</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">sut mae %s yn pennu ansawdd adolygu</string>
     <!-- Text for title of settings section. -->
@@ -2480,9 +2444,9 @@
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Peidio â chyfieithu\'r wefan hon</string>
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Yn diystyru pob gosodiad arall</string>
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Gwrthwneud pob gosodiad arall</string>
     <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_description">Yn diystyru cynigion i gyfieithu</string>
+    <string name="translation_option_bottom_sheet_switch_description">Gwrthwneud cynigion i gyfieithu</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Gosodiadau cyfieithu</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

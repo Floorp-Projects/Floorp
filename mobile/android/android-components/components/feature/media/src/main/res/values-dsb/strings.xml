@@ -21,7 +21,7 @@
     <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
     <string name="mozac_feature_media_sharing_camera_reminder_text">Glědajśo: %1$s wašu kameru južo wužywa. Pótusniśo, aby rejtarik wócynił.</string>
     <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
-    <string name="mozac_feature_media_sharing_microphone_reminder_text">Glědajśo: %1$s waš mikrofon južo wužywa. Pótusniśo, aby rejtarik wócynił.</string>
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">Glědajśo: %1$s waš mikrofon južo wužywa. Pótusniśo, aby rejtarik wócynił</string>
     <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
     <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">Glědajśo: %1$s waš mikrofon a wašu kameru južo wužywa. Pótusniśo, aby rejtarik wócynił</string>
 
