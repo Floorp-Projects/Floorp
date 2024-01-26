@@ -13,8 +13,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-object-element
-[NeedResolve,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLObjectElement : HTMLElement {
   [HTMLConstructor] constructor();
 
