@@ -239,8 +239,6 @@ void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
 
 nsObjectLoadingContent::nsObjectLoadingContent()
     : mType(eType_Loading),
-      mRunID(0),
-      mHasRunID(false),
       mChannelLoaded(false),
       mNetworkCreated(true),
       mContentBlockingEnabled(false),
@@ -1030,33 +1028,6 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   return retval;
 }
 
-// Used by PluginDocument to kick off our initial load from the already-opened
-// channel.
-NS_IMETHODIMP
-nsObjectLoadingContent::InitializeFromChannel(nsIRequest* aChannel) {
-  LOG(("OBJLC [%p] InitializeFromChannel: %p", this, aChannel));
-  if (mType != eType_Loading || mChannel) {
-    // We could technically call UnloadObject() here, if consumers have a valid
-    // reason for wanting to call this on an already-loaded tag.
-    MOZ_ASSERT_UNREACHABLE("Should not have begun loading at this point");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Because we didn't open this channel from an initial LoadObject, we'll
-  // update our parameters now, so the OnStartRequest->LoadObject doesn't
-  // believe our src/type suddenly changed.
-  UpdateObjectParameters();
-  // But we always want to load from a channel, in this case.
-  mType = eType_Loading;
-  mChannel = do_QueryInterface(aChannel);
-  NS_ASSERTION(mChannel, "passed a request that is not a channel");
-
-  // OnStartRequest will now see we have a channel in the loading state, and
-  // call into LoadObject. There's a possibility LoadObject will decide not to
-  // load anything from a channel - it will call CloseChannel() in that case.
-  return NS_OK;
-}
-
 // Only OnStartRequest should be passing the channel parameter
 nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad) {
   return LoadObject(aNotify, aForceLoad, nullptr);
@@ -1735,9 +1706,6 @@ void nsObjectLoadingContent::ConfigureFallback() {
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::Reload() { return LoadObject(true, true); }
-
-NS_IMETHODIMP
 nsObjectLoadingContent::UpgradeLoadToDocument(
     nsIChannel* aRequest, BrowsingContext** aBrowsingContext) {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::UpgradeLoadToDocument", NETWORK);
@@ -1778,17 +1746,6 @@ nsObjectLoadingContent::UpgradeLoadToDocument(
 
   bc.forget(aBrowsingContext);
   return NS_OK;
-}
-
-uint32_t nsObjectLoadingContent::GetRunID(SystemCallerGuarantee,
-                                          ErrorResult& aRv) {
-  if (!mHasRunID) {
-    // The plugin instance must not have a run ID, so we must
-    // be running the plugin in-process.
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return 0;
-  }
-  return mRunID;
 }
 
 bool nsObjectLoadingContent::ShouldBlockContent() {
