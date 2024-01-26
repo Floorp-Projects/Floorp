@@ -318,19 +318,8 @@ nsPoint ViewportFrame::AdjustReflowInputForScrollbars(
 
 nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
     ReflowInput* aReflowInput) const {
-#ifdef DEBUG
-  nsPoint offset =
-#endif
-      AdjustReflowInputForScrollbars(aReflowInput);
-
-  NS_ASSERTION(GetAbsoluteContainingBlock()->GetChildList().IsEmpty() ||
-                   (offset.x == 0 && offset.y == 0),
-               "We don't handle correct positioning of fixed frames with "
-               "scrollbars in odd positions");
-
-  nsRect rect(0, 0, aReflowInput->ComputedWidth(),
-              aReflowInput->ComputedHeight());
-
+  const nsPoint origin = AdjustReflowInputForScrollbars(aReflowInput);
+  nsRect rect(origin, aReflowInput->ComputedPhysicalSize());
   rect.SizeTo(AdjustViewportSizeForFixedPosition(rect));
 
   return rect;

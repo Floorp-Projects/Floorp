@@ -96,9 +96,9 @@ class ViewportFrame : public nsContainerFrame {
   /**
    * Calculate how much room is available for fixed frames. That means
    * determining if the viewport is scrollable and whether the vertical and/or
-   * horizontal scrollbars are visible.  Adjust the computed width/height and
-   * available width for aReflowInput accordingly.
-   * @return the current scroll position, or 0,0 if not scrollable
+   * horizontal scrollbars are visible. Adjust the computed isize/bsize and
+   * available isize for aReflowInput accordingly.
+   * @return the current scroll position, or (0,0) if not scrollable.
    */
   nsPoint AdjustReflowInputForScrollbars(ReflowInput* aReflowInput) const;
 
