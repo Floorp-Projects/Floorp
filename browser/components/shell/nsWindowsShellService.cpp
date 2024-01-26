@@ -17,6 +17,7 @@
 #include "nsIOutputStream.h"
 #include "nsIPrefService.h"
 #include "nsIStringBundle.h"
+#include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsShellService.h"
@@ -1459,9 +1460,31 @@ nsWindowsShellService::UnpinShortcutFromTaskbar(
   return ManageShortcutTaskbarPins(runInTestMode, pinType, aShortcutPath);
 }
 
+// Ensure that the supplied name doesn't have invalid characters.
+static void ValidateFilename(nsAString& aFilename) {
+  nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
+  if (NS_WARN_IF(!mimeService)) {
+    aFilename.Truncate();
+    return;
+  }
+
+  uint32_t flags = nsIMIMEService::VALIDATE_SANITIZE_ONLY;
+
+  nsAutoString outFilename;
+  mimeService->ValidateFileNameForSaving(aFilename, EmptyCString(), flags,
+                                         outFilename);
+  aFilename = outFilename;
+}
+
 NS_IMETHODIMP
 nsWindowsShellService::GetTaskbarTabShortcutPath(const nsAString& aShortcutName,
                                                  nsAString& aRetPath) {
+  nsAutoString sanitizedShortcutName(aShortcutName);
+  ValidateFilename(sanitizedShortcutName);
+  if (sanitizedShortcutName != aShortcutName) {
+    return NS_ERROR_FILE_INVALID_PATH;
+  }
+
   // The taskbar tab shortcut will always be in
   // %APPDATA%\Microsoft\Windows\Start Menu\Programs
   RefPtr<IKnownFolderManager> fManager;
