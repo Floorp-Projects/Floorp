@@ -3266,15 +3266,15 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     return as<JSFunction>().getAllocKind();
   }
 
-  /*
-   * Typed arrays in the nursery may have a lazily allocated buffer, make
-   * sure there is room for the array's fixed data when moving the array.
-   */
-  if (is<TypedArrayObject>() && !as<TypedArrayObject>().hasBuffer()) {
+  // Fixed length typed arrays in the nursery may have a lazily allocated
+  // buffer, make sure there is room for the array's fixed data when moving the
+  // array.
+  if (is<FixedLengthTypedArrayObject>() &&
+      !as<FixedLengthTypedArrayObject>().hasBuffer()) {
     gc::AllocKind allocKind;
-    if (as<TypedArrayObject>().hasInlineElements()) {
-      size_t nbytes = as<TypedArrayObject>().byteLength();
-      allocKind = TypedArrayObject::AllocKindForLazyBuffer(nbytes);
+    if (as<FixedLengthTypedArrayObject>().hasInlineElements()) {
+      size_t nbytes = as<FixedLengthTypedArrayObject>().byteLength();
+      allocKind = FixedLengthTypedArrayObject::AllocKindForLazyBuffer(nbytes);
     } else {
       allocKind = GetGCObjectKind(getClass());
     }

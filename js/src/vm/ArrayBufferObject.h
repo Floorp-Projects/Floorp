@@ -75,13 +75,21 @@ uint64_t WasmReservedBytes();
 //         - FixedLengthDataViewObject
 //         - ResizableDataViewObject
 //       - TypedArrayObject (declared in vm/TypedArrayObject.h)
-//         - TypedArrayObjectTemplate
-//           - Int8ArrayObject
-//           - Uint8ArrayObject
-//           - ...
+//         - FixedLengthTypedArrayObject
+//           - FixedLengthTypedArrayObjectTemplate<NativeType>, also inheriting
+//             from TypedArrayObjectTemplate<NativeType>
+//             - FixedLengthTypedArrayObjectTemplate<int8_t>
+//             - FixedLengthTypedArrayObjectTemplate<uint8_t>
+//             - ...
+//         - ResizableTypedArrayObject
+//           - ResizableTypedArrayObjectTemplate<NativeType>, also inheriting
+//             from TypedArrayObjectTemplate<NativeType>
+//             - ResizableTypedArrayObjectTemplate<int8_t>
+//             - ResizableTypedArrayObjectTemplate<uint8_t>
+//             - ...
 //
-// Note that |TypedArrayObjectTemplate| is just an implementation
-// detail that makes implementing its various subclasses easier.
+// Note that |{FixedLength,Resizable}TypedArrayObjectTemplate| is just an
+// implementation detail that makes implementing its various subclasses easier.
 //
 // FixedLengthArrayBufferObject and ResizableArrayBufferObject are also
 // implementation specific types to differentiate between fixed-length and
