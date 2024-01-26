@@ -66,3 +66,31 @@ add_task(async function testReasonDropdown() {
     }
   );
 });
+
+async function getListItems() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const rbs = new ReportBrokenSiteHelper(AppMenu(win));
+  const items = Array.from(rbs.reasonInput.querySelectorAll("menuitem")).map(
+    i => i.id.replace("report-broken-site-popup-reason-", "")
+  );
+  Assert.equal(items[0], "choose", "First option is always 'choose'");
+  await BrowserTestUtils.closeWindow(win);
+  return items;
+}
+
+add_task(async function testReasonDropdownRandomized() {
+  ensureReportBrokenSitePreffedOn();
+  ensureReasonOptional();
+
+  let isRandomized = false;
+  const list1 = await getListItems();
+  for (let attempt = 0; attempt < 100; ++attempt) {
+    // try up to 100 times
+    const list = await getListItems();
+    if (!areObjectsEqual(list, list1)) {
+      isRandomized = true;
+      break;
+    }
+  }
+  Assert.ok(isRandomized, "Downdown options are randomized");
+});
