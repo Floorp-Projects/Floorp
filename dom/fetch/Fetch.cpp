@@ -279,7 +279,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(!mIsShutdown);
 
-    return mPromiseProxy->WorkerPromise();
+    return mPromiseProxy->GetWorkerPromise();
   }
 
   FetchObserver* GetFetchObserver(WorkerPrivate* aWorkerPrivate) const {
@@ -806,7 +806,10 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
     }
 
     RefPtr<Promise> promise = mResolver->WorkerPromise(aWorkerPrivate);
-    MOZ_ASSERT(promise);
+    // Once Worker had already started shutdown, workerPromise would be nullptr
+    if (!promise) {
+      return true;
+    }
     RefPtr<FetchObserver> fetchObserver =
         mResolver->GetFetchObserver(aWorkerPrivate);
 
