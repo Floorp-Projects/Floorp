@@ -57,17 +57,22 @@ static size_t SharedArrayMappedSize(bool isWasm, size_t length) {
   return NonWasmSharedArrayAllocSize(length);
 }
 
-SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
+SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(bool isGrowable,
+                                                     size_t length,
+                                                     size_t maxLength) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_RELEASE_ASSERT(maxLength <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT_IF(!isGrowable, length == maxLength);
+  MOZ_ASSERT_IF(isGrowable, length <= maxLength);
 
-  size_t allocSize = NonWasmSharedArrayAllocSize(length);
+  size_t allocSize = NonWasmSharedArrayAllocSize(maxLength);
   uint8_t* p = js_pod_calloc<uint8_t>(allocSize);
   if (!p) {
     return nullptr;
   }
 
   uint8_t* buffer = p + sizeof(SharedArrayRawBuffer);
-  return new (p) SharedArrayRawBuffer(/* isWasm = */ false, buffer, length);
+  return new (p) SharedArrayRawBuffer(isGrowable, buffer, length);
 }
 
 WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
@@ -333,16 +338,17 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-SharedArrayBufferObject* SharedArrayBufferObject::New(JSContext* cx,
-                                                      size_t length,
-                                                      HandleObject proto) {
-  SharedArrayRawBuffer* buffer = SharedArrayRawBuffer::Allocate(length);
+FixedLengthSharedArrayBufferObject* SharedArrayBufferObject::New(
+    JSContext* cx, size_t length, HandleObject proto) {
+  bool isGrowable = false;
+  size_t maxLength = length;
+  auto* buffer = SharedArrayRawBuffer::Allocate(isGrowable, length, maxLength);
   if (!buffer) {
     js::ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  SharedArrayBufferObject* obj = New(cx, buffer, length, proto);
+  auto* obj = New(cx, buffer, length, proto);
   if (!obj) {
     buffer->dropReference();
     return nullptr;
@@ -351,19 +357,61 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(JSContext* cx,
   return obj;
 }
 
-SharedArrayBufferObject* SharedArrayBufferObject::New(
+FixedLengthSharedArrayBufferObject* SharedArrayBufferObject::New(
+    JSContext* cx, SharedArrayRawBuffer* buffer, size_t length,
+    HandleObject proto) {
+  return NewWith<FixedLengthSharedArrayBufferObject>(cx, buffer, length, proto);
+}
+
+GrowableSharedArrayBufferObject* SharedArrayBufferObject::NewGrowable(
+    JSContext* cx, size_t length, size_t maxLength, HandleObject proto) {
+  bool isGrowable = true;
+  auto* buffer = SharedArrayRawBuffer::Allocate(isGrowable, length, maxLength);
+  if (!buffer) {
+    js::ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  auto* obj = NewGrowable(cx, buffer, maxLength, proto);
+  if (!obj) {
+    buffer->dropReference();
+    return nullptr;
+  }
+
+  return obj;
+}
+
+GrowableSharedArrayBufferObject* SharedArrayBufferObject::NewGrowable(
+    JSContext* cx, SharedArrayRawBuffer* buffer, size_t maxLength,
+    HandleObject proto) {
+  return NewWith<GrowableSharedArrayBufferObject>(cx, buffer, maxLength, proto);
+}
+
+template <class SharedArrayBufferType>
+SharedArrayBufferType* SharedArrayBufferObject::NewWith(
     JSContext* cx, SharedArrayRawBuffer* buffer, size_t length,
     HandleObject proto) {
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
+  static_assert(
+      std::is_same_v<SharedArrayBufferType,
+                     FixedLengthSharedArrayBufferObject> ||
+      std::is_same_v<SharedArrayBufferType, GrowableSharedArrayBufferObject>);
+
+  if constexpr (std::is_same_v<SharedArrayBufferType,
+                               FixedLengthSharedArrayBufferObject>) {
+    MOZ_ASSERT(!buffer->isGrowable());
+  } else {
+    MOZ_ASSERT(buffer->isGrowable());
+  }
+
   AutoSetNewObjectMetadata metadata(cx);
-  auto* obj =
-      NewObjectWithClassProto<FixedLengthSharedArrayBufferObject>(cx, proto);
+  auto* obj = NewObjectWithClassProto<SharedArrayBufferType>(cx, proto);
   if (!obj) {
     return nullptr;
   }
 
-  MOZ_ASSERT(obj->getClass() == &FixedLengthSharedArrayBufferObject::class_);
+  MOZ_ASSERT(obj->getClass() == &SharedArrayBufferType::class_);
 
   cx->runtime()->incSABCount();
 
