@@ -196,6 +196,7 @@ linux2204-wayland-tests:
     - mochitest-a11y
     - mochitest-browser-a11y
     - mochitest-browser-chrome
+    - mochitest-browser-chrome-failures
     - mochitest-browser-media
     - mochitest-chrome
     - mochitest-chrome-gpu

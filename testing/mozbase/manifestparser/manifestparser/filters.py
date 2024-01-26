@@ -438,7 +438,7 @@ class failures(InstanceFilter):
 
     def __init__(self, keyword):
         InstanceFilter.__init__(self, keyword)
-        self.keyword = keyword
+        self.keyword = keyword.strip('"')
 
     def __call__(self, tests, values):
         for test in tests:

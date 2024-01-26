@@ -69,6 +69,7 @@ var TabDestroyObserver = {
 
 function testInit() {
   gConfig = readConfig();
+
   if (gConfig.testRoot == "browser") {
     // Make sure to launch the test harness for the first opened window only
     var prefs = Services.prefs;
