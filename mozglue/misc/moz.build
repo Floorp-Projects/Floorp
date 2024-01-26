@@ -110,13 +110,13 @@ if CONFIG["OS_ARCH"] == "WINNT":
             "PreXULSkeletonUI.cpp",
         ]
 
-elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
-    SOURCES += [
-        "TimeStamp_posix.cpp",
-    ]
 elif CONFIG["OS_ARCH"] == "Darwin":
     SOURCES += [
         "TimeStamp_darwin.cpp",
+    ]
+elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
+    SOURCES += [
+        "TimeStamp_posix.cpp",
     ]
 elif CONFIG["COMPILE_ENVIRONMENT"]:
     error("No TimeStamp implementation on this platform.  Build will not succeed")

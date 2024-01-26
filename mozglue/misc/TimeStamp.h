@@ -474,8 +474,9 @@ class TimeStamp {
   }
 #endif
 
-#ifdef XP_MACOSX
-  uint64_t RawMachAbsoluteTimeValue() { return static_cast<uint64_t>(mValue); }
+#ifdef XP_DARWIN
+  // Returns the number of nanoseconds since the mach_absolute_time origin.
+  MFBT_API uint64_t RawMachAbsoluteTimeNanoseconds() const;
 #endif
 
 #ifdef XP_WIN
