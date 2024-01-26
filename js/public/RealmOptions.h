@@ -246,6 +246,20 @@ class JS_PUBLIC_API RealmCreationOptions {
     symbolsAsWeakMapKeys_ = flag;
     return *this;
   }
+
+  bool getArrayBufferResizableEnabled() const { return arrayBufferResizable_; }
+  RealmCreationOptions& setArrayBufferResizableEnabled(bool flag) {
+    arrayBufferResizable_ = flag;
+    return *this;
+  }
+
+  bool getSharedArrayBufferGrowableEnabled() const {
+    return sharedArrayBufferGrowable_;
+  }
+  RealmCreationOptions& setSharedArrayBufferGrowableEnabled(bool flag) {
+    sharedArrayBufferGrowable_ = flag;
+    return *this;
+  }
 #endif
 
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
@@ -319,6 +333,10 @@ class JS_PUBLIC_API RealmCreationOptions {
   // Pref for new Set.prototype methods.
   bool newSetMethods_ = false;
   bool symbolsAsWeakMapKeys_ = false;
+  // Pref for resizable ArrayBuffers.
+  bool arrayBufferResizable_ = false;
+  // Pref for growable SharedArrayBuffers.
+  bool sharedArrayBufferGrowable_ = false;
 #endif
 
   // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
