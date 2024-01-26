@@ -21,9 +21,6 @@
 
 class nsIDocShell;
 class nsIURI;
-namespace Json {
-class Value;
-}
 
 #define NS_NULLPRINCIPAL_CID                         \
   {                                                  \
@@ -35,6 +32,8 @@ class Value;
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
 namespace mozilla {
+
+class JSONWriter;
 
 class NullPrincipal final : public BasePrincipal {
  public:
@@ -85,7 +84,7 @@ class NullPrincipal final : public BasePrincipal {
     return NS_OK;
   }
 
-  virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
+  virtual nsresult WriteJSONInnerProperties(JSONWriter& aWriter) override;
 
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys : uint8_t { eSpec = 0, eSuffix, eMax = eSuffix };

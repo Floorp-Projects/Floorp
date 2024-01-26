@@ -15,11 +15,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
-namespace Json {
-class Value;
-}
-
 namespace mozilla {
+
+class JSONWriter;
 
 class ContentPrincipal final : public BasePrincipal {
  public:
@@ -49,7 +47,8 @@ class ContentPrincipal final : public BasePrincipal {
 
   RefPtr<extensions::WebExtensionPolicyCore> AddonPolicyCore();
 
-  virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
+  virtual nsresult WriteJSONInnerProperties(JSONWriter& aWriter) override;
+
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys : uint8_t {
     eURI = 0,
