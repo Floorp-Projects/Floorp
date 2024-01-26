@@ -2914,7 +2914,7 @@
 
 - name: dom.forms.always_allow_pointer_events.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for key events and focus events on disabled elements enabled?
