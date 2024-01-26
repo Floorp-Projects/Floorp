@@ -4,14 +4,14 @@
 
 package mozilla.components.service.nimbus
 
-import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
+import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
 import org.mozilla.experiments.nimbus.internal.NimbusException
 
 /**
  * Extension method that returns true when the condition is evaluated to true, and false otherwise
  * @param condition The condition given as String.
  */
-fun GleanPlumbMessageHelper.evalJexlSafe(
+fun NimbusMessagingHelperInterface.evalJexlSafe(
     condition: String,
 ) = try {
     evalJexl(condition)

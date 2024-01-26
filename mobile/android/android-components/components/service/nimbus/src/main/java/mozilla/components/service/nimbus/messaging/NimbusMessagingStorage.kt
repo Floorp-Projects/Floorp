@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.GleanPlumbInterface
-import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
+import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
@@ -53,7 +53,7 @@ class NimbusMessagingStorage(
     private val customAttributes: JSONObject
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
-    val helper: GleanPlumbMessageHelper
+    val helper: NimbusMessagingHelperInterface
         get() = gleanPlumb.createMessageHelper(customAttributes)
 
     /**
@@ -127,7 +127,7 @@ class NimbusMessagingStorage(
         surface: MessageSurfaceId,
         availableMessages: List<Message>,
         excluded: Set<String>,
-        helper: GleanPlumbMessageHelper,
+        helper: NimbusMessagingHelperInterface,
         jexlCache: MutableMap<String, Boolean>,
     ): Message? {
         val message = availableMessages
@@ -259,7 +259,7 @@ class NimbusMessagingStorage(
     @VisibleForTesting
     fun isMessageEligible(
         message: Message,
-        helper: GleanPlumbMessageHelper,
+        helper: NimbusMessagingHelperInterface,
         jexlCache: MutableMap<String, Boolean> = mutableMapOf(),
     ): Boolean {
         return message.triggers.all { condition ->
