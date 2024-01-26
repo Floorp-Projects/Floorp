@@ -10101,12 +10101,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
 
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
-
   // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!tarr->is<FixedLengthTypedArrayObject>()) {
+  if (!args_[0].toObject().is<FixedLengthTypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
+
+  auto* tarr = &args_[0].toObject().as<FixedLengthTypedArrayObject>();
 
   // Initialize the input operand.
   initializeInputOperand();

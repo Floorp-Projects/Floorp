@@ -747,7 +747,7 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
   if (obj->template is<TypedArrayObject>()) {
     if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
       uint64_t idx = index.value();
-      if (idx < obj->template as<TypedArrayObject>().length()) {
+      if (idx < obj->template as<TypedArrayObject>().length().valueOr(0)) {
         propp->setTypedArrayElement(idx);
       } else {
         propp->setTypedArrayOutOfRange();

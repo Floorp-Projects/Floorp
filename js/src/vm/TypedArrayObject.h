@@ -69,13 +69,22 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool ensureHasBuffer(JSContext* cx,
                               Handle<TypedArrayObject*> typedArray);
 
-  size_t byteOffset() const { return ArrayBufferViewObject::byteOffset(); }
+ protected:
+  size_t rawByteLength() const { return rawLength() * bytesPerElement(); }
 
-  size_t byteLength() const { return length() * bytesPerElement(); }
-
-  size_t length() const {
+  size_t rawLength() const {
     return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
   }
+
+ public:
+  mozilla::Maybe<size_t> byteOffset() const;
+
+  mozilla::Maybe<size_t> byteLength() const {
+    return length().map(
+        [this](size_t value) { return value * bytesPerElement(); });
+  }
+
+  mozilla::Maybe<size_t> length() const;
 
   template <AllowGC allowGC>
   bool getElement(JSContext* cx, size_t index,
@@ -132,6 +141,12 @@ class FixedLengthTypedArrayObject : public TypedArrayObject {
 
   static inline gc::AllocKind AllocKindForLazyBuffer(size_t nbytes);
 
+  size_t byteOffset() const { return ArrayBufferViewObject::byteOffset(); }
+
+  size_t byteLength() const { return rawByteLength(); }
+
+  size_t length() const { return rawLength(); }
+
   bool hasInlineElements() const;
   void setInlineElements();
   uint8_t* elementsRaw() const {
@@ -154,6 +169,13 @@ class FixedLengthTypedArrayObject : public TypedArrayObject {
 
 class ResizableTypedArrayObject : public TypedArrayObject {
  public:
+  static const uint8_t AUTO_LENGTH_SLOT = TypedArrayObject::RESERVED_SLOTS;
+
+  static const uint8_t RESERVED_SLOTS = TypedArrayObject::RESERVED_SLOTS + 1;
+
+  bool isAutoLength() const {
+    return getFixedSlot(AUTO_LENGTH_SLOT).toBoolean();
+  }
 };
 
 extern TypedArrayObject* NewTypedArrayWithTemplateAndLength(

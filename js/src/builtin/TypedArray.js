@@ -971,7 +971,7 @@ function TypedArraySlice(start, end) {
     );
   }
 
-  var buffer = GetAttachedArrayBuffer(O);
+  GetAttachedArrayBuffer(O);
 
   // Step 3.
   var len = TypedArrayLength(O);
@@ -1002,22 +1002,16 @@ function TypedArraySlice(start, end) {
 
   // Steps 14-15.
   if (count > 0) {
-    // Steps 14.b.ii, 15.b.
-    if (buffer === null) {
-      // A typed array previously using inline storage may acquire a
-      // buffer, so we must check with the source.
-      buffer = ViewedArrayBufferIfReified(O);
-    }
-
-    if (IsDetachedBuffer(buffer)) {
-      ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-    }
-
     // Steps 10-13, 15.
     var sliced = TypedArrayBitwiseSlice(O, A, k, count);
 
     // Step 14.
     if (!sliced) {
+      // Adjust |final| in case |O| has been resized.
+      //
+      // https://tc39.es/proposal-resizablearraybuffer/#sec-%typedarray%.prototype.slice
+      final = std_Math_min(final, TypedArrayLength(O));
+
       // Step 14.a.
       var n = 0;
 
