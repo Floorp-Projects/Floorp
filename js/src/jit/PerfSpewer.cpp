@@ -123,9 +123,16 @@ AutoLockPerfSpewer::~AutoLockPerfSpewer() { PerfMutex.unlock(); }
 
 #ifdef JS_ION_PERF
 static uint64_t GetMonotonicTimestamp() {
-  struct timespec ts = {};
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return ts.tv_sec * 1000000000 + ts.tv_nsec;
+  using mozilla::TimeStamp;
+#  ifdef XP_LINUX
+  return TimeStamp::Now().RawClockMonotonicNanosecondsSinceBoot();
+#  elif XP_WIN
+  return TimeStamp::Now().RawQueryPerformanceCounterValue().value();
+#  elif XP_MACOSX
+  return TimeStamp::Now().RawMachAbsoluteTimeNanoseconds();
+#  else
+  MOZ_CRASH("no timestamp");
+#  endif
 }
 
 // values are from /usr/include/elf.h
