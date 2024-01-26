@@ -828,6 +828,9 @@ bool RecyclingPlanarYCbCrImage::CopyData(const Data& aData) {
   CopyPlane(mData.mCrChannel, aData.mCrChannel, cbcrSize, aData.mCbCrStride,
             aData.mCrSkip);
   if (aData.mAlpha) {
+    MOZ_ASSERT(mData.mAlpha);
+    mData.mAlpha->mChannel =
+        mData.mCrChannel + mData.mCbCrStride * cbcrSize.height;
     CopyPlane(mData.mAlpha->mChannel, aData.mAlpha->mChannel, ySize,
               aData.mYStride, aData.mYSkip);
   }
