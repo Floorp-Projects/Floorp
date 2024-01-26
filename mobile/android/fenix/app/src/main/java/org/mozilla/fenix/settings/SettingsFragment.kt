@@ -308,17 +308,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_sync_debug) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSyncDebugFragment()
             }
-            resources.getString(R.string.pref_key_help) -> {
-                (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                        requireContext(),
-                        SupportUtils.SumoTopic.HELP,
-                    ),
-                    newTab = true,
-                    from = BrowserDirection.FromSettings,
-                )
-                null
-            }
             resources.getString(R.string.pref_key_rate) -> {
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
@@ -364,23 +353,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
             resources.getString(R.string.pref_key_customize) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToCustomizationFragment()
-            }
-            resources.getString(R.string.pref_key_privacy_link) -> {
-                val intent = SupportUtils.createCustomTabIntent(
-                    requireContext(),
-                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-                )
-                startActivity(intent)
-                null
-            }
-            resources.getString(R.string.pref_key_your_rights) -> {
-                val context = requireContext()
-                val intent = SupportUtils.createCustomTabIntent(
-                    context,
-                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS),
-                )
-                startActivity(intent)
-                null
             }
             resources.getString(R.string.pref_key_debug_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSecretSettingsFragment()
