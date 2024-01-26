@@ -653,6 +653,10 @@ class ResizableArrayBufferObject : public ArrayBufferObject {
   // Resize this buffer.
   void resize(size_t newByteLength);
 
+  static ResizableArrayBufferObject* copy(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ResizableArrayBufferObject*> source);
+
  public:
   static const uint8_t MAX_BYTE_LENGTH_SLOT = ArrayBufferObject::RESERVED_SLOTS;
 
@@ -667,6 +671,15 @@ class ResizableArrayBufferObject : public ArrayBufferObject {
   size_t maxByteLength() const {
     return size_t(getFixedSlot(MAX_BYTE_LENGTH_SLOT).toPrivate());
   }
+
+  static ResizableArrayBufferObject* copyAndDetach(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ResizableArrayBufferObject*> source);
+
+ private:
+  static ResizableArrayBufferObject* copyAndDetachSteal(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ResizableArrayBufferObject*> source);
 };
 
 // Create a buffer for a wasm memory, whose type is determined by
