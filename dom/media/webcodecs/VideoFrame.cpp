@@ -930,8 +930,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
           return Err(nsCString("data is too small"));
         }
 
-        return CreateImageFromBuffer(format, colorSpace, codedSize,
-                                     Span(aData.Elements(), aData.Length()));
+        return CreateImageFromBuffer(format, colorSpace, codedSize, aData);
       }));
 
   MOZ_ASSERT(data);
