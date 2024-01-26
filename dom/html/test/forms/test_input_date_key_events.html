@@ -73,16 +73,16 @@ var testData = [
     expectedVal: "2016-12-01"
   },
   {
-    // Type 275769 in the year field will set it to the maximum year, which is
-    // 275760.
+    // Type 275769 in the year field will set it to 0069, because the
+    // 5th digit will erase the previous 4 digits.
     keys: ["0101275769"],
     initialVal: "",
-    expectedVal: "275760-01-01"
+    expectedVal: "0069-01-01"
   },
   {
-    // Type 000000 in the year field will set it to the minimum year, which is
+    // Type 0000 in the year field will set it to the minimum year, which is
     // 0001.
-    keys: ["0101000000"],
+    keys: ["01010000"],
     initialVal: "",
     expectedVal: "0001-01-01"
   },
