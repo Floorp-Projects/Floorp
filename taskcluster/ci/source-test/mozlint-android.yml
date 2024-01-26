@@ -81,6 +81,7 @@ lints:
         toolchain:
             # Aliases aren't allowed for toolchains installed by fetch.
             - linux64-android-gradle-dependencies
+            - android-gradle-python-envs
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node

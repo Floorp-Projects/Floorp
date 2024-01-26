@@ -22,6 +22,7 @@ job-defaults:
         toolchain:
             - android-sdk-linux
             - android-gradle-dependencies
+            - android-gradle-python-envs
             - linux64-jdk-repack
         build-fat-aar:
             - target.maven.tar.xz
