@@ -3,11 +3,11 @@ support-files = ["head.js"]
 
 ["test_0_bug510634.xhtml"]
 
-["test_bug1163447_selectItems_through_shortcut.xhtml"]
-
 ["test_bug549192.xhtml"]
 
 ["test_bug549491.xhtml"]
+
+["test_bug1163447_selectItems_through_shortcut.xhtml"]
 
 ["test_selectItems_on_nested_tree.xhtml"]
 

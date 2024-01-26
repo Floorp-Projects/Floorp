@@ -329,9 +329,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_net_new_request_panel.js"]
 
-["browser_net_offline_mode.js"]
-skip-if = ["!fission"]
-
 ["browser_net_new_request_panel_clear_button.js"]
 
 ["browser_net_new_request_panel_content-length.js"]
@@ -345,6 +342,9 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 
 ["browser_net_new_request_panel_sync_url_params.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+
+["browser_net_offline_mode.js"]
+skip-if = ["!fission"]
 
 ["browser_net_open_in_debugger.js"]
 

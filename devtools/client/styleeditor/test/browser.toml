@@ -90,6 +90,13 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_styleeditor_bom.js"]
 
+["browser_styleeditor_bug_740541_iframes.js"]
+
+["browser_styleeditor_bug_851132_middle_click.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+
+["browser_styleeditor_bug_870339.js"]
+
 ["browser_styleeditor_bug_1247083_inline_stylesheet_numbering.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
@@ -98,13 +105,6 @@ skip-if = [
   "!debug && os == 'win'",
   "os == 'linux' && os_version == '18.04'", #bug 1424914
 ]
-
-["browser_styleeditor_bug_740541_iframes.js"]
-
-["browser_styleeditor_bug_851132_middle_click.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-
-["browser_styleeditor_bug_870339.js"]
 
 ["browser_styleeditor_copyurl.js"]
 

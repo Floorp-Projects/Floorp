@@ -320,7 +320,7 @@ skip-if = ["!sessionHistoryInParent"]
 
 ["browser_async_window_flushing.js"]
 https_first_disabled = true
-skip-if = true # Bug 1775616
+skip-if = ["true"] # Bug 1775616
 
 ["browser_attributes.js"]
 

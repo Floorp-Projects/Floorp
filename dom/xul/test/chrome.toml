@@ -6,13 +6,6 @@ support-files = [
 
 ["test_accesskey.xhtml"]
 
-["test_bug1070049_throw_from_script.xhtml"]
-
-["test_bug1290965.xhtml"]
-
-["test_bug1686822.xhtml"]
-support-files = ["window_bug1686822.xhtml"]
-
 ["test_bug199692.xhtml"]
 
 ["test_bug311681.xhtml"]
@@ -34,6 +27,13 @@ support-files = ["window_bug1686822.xhtml"]
 ["test_bug749367.xhtml"]
 
 ["test_bug775972.xhtml"]
+
+["test_bug1070049_throw_from_script.xhtml"]
+
+["test_bug1290965.xhtml"]
+
+["test_bug1686822.xhtml"]
+support-files = ["window_bug1686822.xhtml"]
 
 ["test_html_template.xhtml"]
 

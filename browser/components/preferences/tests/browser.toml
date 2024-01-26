@@ -26,6 +26,12 @@ skip-if = [
   "!debug && os == 'win'", # Bug 1518370
 ]
 
+["browser_bug410900.js"]
+
+["browser_bug731866.js"]
+
+["browser_bug795764_cachedisabled.js"]
+
 ["browser_bug1018066_resetScrollPosition.js"]
 
 ["browser_bug1020245_openPreferences_to_paneContent.js"]
@@ -40,12 +46,6 @@ support-files = ["browser_bug1184989_prevent_scrolling_when_preferences_flipped.
 
 ["browser_bug1579418.js"]
 
-["browser_bug410900.js"]
-
-["browser_bug731866.js"]
-
-["browser_bug795764_cachedisabled.js"]
-
 ["browser_cert_export.js"]
 
 ["browser_change_app_handler.js"]
@@ -55,6 +55,8 @@ run-if = ["os == 'win'"] # Windows-specific handler application selection dialog
 
 ["browser_connection.js"]
 
+["browser_connection_bug388287.js"]
+
 ["browser_connection_bug1445991.js"]
 
 ["browser_connection_bug1505330.js"]
@@ -62,8 +64,6 @@ skip-if = [
   "verify && debug && os == 'linux'",
   "verify && debug && os == 'mac'",
 ]
-
-["browser_connection_bug388287.js"]
 
 ["browser_connection_valid_hostname.js"]
 

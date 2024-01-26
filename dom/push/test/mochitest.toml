@@ -41,11 +41,11 @@ skip-if = [
   "os == 'mac'", #Bug 1274773
 ]
 
-["test_permissions.html"]
-skip-if = ["os == 'android'"]
-
 ["test_permission_granted.html"]
 scheme = "https"
+
+["test_permissions.html"]
+skip-if = ["os == 'android'"]
 
 ["test_register.html"]
 skip-if = [

@@ -13,11 +13,9 @@ support-files = [
 ["browser_bannerClicking_events.js"]
 support-files = ["file_banner.html"]
 
-["browser_bannerClicking_stopExecuteAfterSeveralAttempt.js"]
+["browser_bannerClicking_globalRules.js"]
 
 ["browser_bannerClicking_globalRules_telemetry.js"]
-
-["browser_bannerClicking_globalRules.js"]
 
 ["browser_bannerClicking_runContext.js"]
 support-files = ["file_banner.html"]
@@ -28,6 +26,8 @@ support-files = [
   "slowSubresource.sjs",
 ]
 
+["browser_bannerClicking_stopExecuteAfterSeveralAttempt.js"]
+
 ["browser_bannerClicking_telemetry_querySelector.js"]
 support-files = [
   "file_banner.html",
@@ -36,13 +36,13 @@ support-files = [
 ["browser_bannerClicking_visibilityOverride.js"]
 support-files = ["file_banner_invisible.html"]
 
+["browser_cookiebanner_telemetry.js"]
+support-files = ["file_iframe_banner.html"]
+
 ["browser_cookiebanner_webconsole.js"]
 support-files = [
   "file_banner.html",
 ]
-
-["browser_cookiebanner_telemetry.js"]
-support-files = ["file_iframe_banner.html"]
 
 ["browser_cookiebannerservice.js"]
 
