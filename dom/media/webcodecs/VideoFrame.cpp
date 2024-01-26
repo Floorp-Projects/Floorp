@@ -1024,7 +1024,8 @@ InitializeFrameWithResourceAndSize(
   Maybe<uint64_t> duration = OptionalToMaybe(aInit.mDuration);
 
   VideoColorSpaceInit colorSpace{};
-  if (IsYUVFormat(SurfaceFormatToVideoPixelFormat(surface->GetFormat()).ref())) {
+  if (IsYUVFormat(
+          SurfaceFormatToVideoPixelFormat(surface->GetFormat()).ref())) {
     colorSpace = FallbackColorSpaceForVideoContent();
   } else {
     colorSpace = FallbackColorSpaceForWebContent();
@@ -1742,9 +1743,7 @@ void VideoFrame::Close() {
   mColorSpace = VideoColorSpaceInit();
 }
 
-bool VideoFrame::IsClosed() const {
-  return !mResource;
-}
+bool VideoFrame::IsClosed() const { return !mResource; }
 
 already_AddRefed<layers::Image> VideoFrame::GetImage() const {
   if (!mResource) {
