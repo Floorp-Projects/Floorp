@@ -82,7 +82,7 @@ There are also [web-platform-tests](https://firefox-source-docs.mozilla.org/web-
   Note that it's not usually a good idea to enabling logging when running all tests in a folder on try, since the raw log file can be really huge. The log file might be not available if the size exceeds the limit on try.
   In the case that your code change is too generic or you are not sure which tests to run, you can use [Auto Selector](https://firefox-source-docs.mozilla.org/tools/try/selectors/auto.html) to let it select tests for you.
 
-## Debugging intermittent test failures
+## Debugging Intermittent Test Failures
 
 There are a lot of intermittent failures on try (usually not able to reproduce locally). Debugging these failures can be really annoying and time consuming. Here are some general guidelines to help you debug intermittent failures more efficiently.
 
@@ -100,7 +100,7 @@ There are a lot of intermittent failures on try (usually not able to reproduce l
   ```
 - In the case that we really need to debug an intermittent test failure, see this [document](https://firefox-source-docs.mozilla.org/devtools/tests/debugging-intermittents.html) first for some general tips. Unfortunately, there is no easy way to debug this. One can try to isolate the failed test first and enable `HTTP logging` on try to collect the log for further analysis.
 
-## Writing Necko XPCShell tests
+## Writing Necko XPCShell Tests
 
 The most typical form of necko xpcsehll-test is creating an HTTP server and test your code by letting the server return some specific responses (e.g., `103 Early Hint`). We will only introduce how to write this kind of test in this document.
 

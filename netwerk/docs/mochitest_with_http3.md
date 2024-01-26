@@ -1,4 +1,4 @@
-# Introduction to Mochitest framework with HTTP/2 and HTTP/3 support
+# Introduction to Mochitest framework with HTTP/2 and HTTP/3 Support
 
 The Mochitest framework currently utilizes [httpd.js](https://searchfox.org/mozilla-central/source/netwerk/test/httpserver/httpd.js) as its primary HTTP server, which only provides support for HTTP/1.1. To boost our testing capacity for HTTP/2 and HTTP/3 within necko, we improved the Mochitest framework to enable Firefox to connect to the test server using HTTP/2 or HTTP/3 while running Mochitest files.
 
@@ -58,7 +58,7 @@ For HTTP/3 testing, switch the option to `--use-http3-server`. Like this:
 ./mach mochitest --use-http3-server PATH_TO_TEST_FILE
 ```
 
-### Reasons for skipped tests
+### Reasons for Skipped Tests
 
 We have several tests that are currently failing with HTTP/2 and HTTP/3 servers and they are skipped for now. There are a few reasons contributing to these failures:
 

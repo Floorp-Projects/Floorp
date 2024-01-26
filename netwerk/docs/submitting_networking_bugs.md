@@ -1,8 +1,8 @@
-# Submitting actionable networking bugs
+# Submitting Actionable Networking Bugs
 
 So you've found a networking issue with Firefox and decided to file a bug. First of all **Thanks!**. 🎉🎉🎉
 
-## Networking bugs lifecycle
+## Networking Bugs Lifecycle
 
 After a bug is filed, it gets triaged by one of the Necko team members.
 The engineer will consider the *steps to reproduce* then will do one of the following:
@@ -25,7 +25,7 @@ possible in the bug report.
 </div>
 
 
-## Make sure it's a Firefox bug
+## Make Sure it's a Firefox Bug
 
 Sometimes a website may be misbehaving and you'll initially think it's caused by a bug in Firefox. However, extensions and other customizations could also cause an issue. Here are a few things to check before submitting the bug:
 - [Troubleshoot extensions, themes and hardware acceleration issues to solve common Firefox problems](https://support.mozilla.org/en-US/kb/troubleshoot-extensions-themes-to-fix-problems#w_start-firefox-in-troubleshoot-mode)
@@ -35,7 +35,7 @@ Sometimes a website may be misbehaving and you'll initially think it's caused by
     - Make sure to include the contents of `about:support` in your bug report.
 - Check if the bug also happens in other browsers
 
-## Make sure the bug has clear steps to reproduce
+## Make Sure the Bug has Clear Steps to Reproduce
 
 This is one of the most important requirements of getting the bug fixed. Clear steps to reproduce will help the engineer figure out what the problem is.
 If the bug can only be reproduced on a website that requires authentication you may provide a test account to the engineer via private email.
@@ -57,7 +57,7 @@ It's still important to report these bugs but they should include additional inf
   3. Go to `http://localhost:8888/test` and click the button
 ```
 
-## Additional questions
+## Additional Questions
 
 - Are you using a proxy? What kind?
 -  Are you using DNS-over-HTTPS?
@@ -73,7 +73,7 @@ First you need to [install the tool](https://mozilla.github.io/mozregression/ins
 
 At the end you will be presented with a regression range that includes the commits that introduced the bug.
 
-## Performance issues
+## Performance Issues
 
 If you're seeing a performance issue (site is very slow to load, etc) you should consider submitting a performance profile.
 
@@ -87,7 +87,7 @@ If something you're doing is causing a crash, having the link to the stack trace
 - Go to `about:crashes`
 - Paste the **Report ID** of the crash in the bug.
 
-## HTTP logs
+## HTTP Logs
 
 See the [HTTP Logging](https://firefox-source-docs.mozilla.org/networking/http/logging.html) page for steps to capture HTTP logs.
 
@@ -95,7 +95,7 @@ If the logs are large you can create a zip archive and attach them to the bug. I
 
 Logs may include personal information such as cookies. Try using a fresh Firefox profile to capture the logs. If that is not possible, you can also put them in a password protected archive, or send them directly via email to the developer working on the bug.
 
-## Wireshark dump
+## Wireshark Dump
 
 In some cases it is necessary to see exactly what bytes Firefox is sending and receiving over the network. When that happens, the developer working on the bug might ask you for a wireshark capture.
 
@@ -103,7 +103,7 @@ In some cases it is necessary to see exactly what bytes Firefox is sending and r
 
 If the website you're loading to reproduce the bug is over HTTPS, then it might be necessary to [decrypt the capture file](https://wiki.wireshark.org/TLS#Using_the_.28Pre.29-Master-Secret) when recording it.
 
-## Web console and browser console errors
+## Web Console and Browser Console Errors
 
 Sometimes a website breaks because its assumptions about executing JavaScript in Firefox are wrong. When that happens the JavaScript engine might throw exceptions which could break the website you're viewing.
 
