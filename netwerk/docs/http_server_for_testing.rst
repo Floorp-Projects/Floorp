@@ -1,10 +1,10 @@
-HTTP server for unit tests
+HTTP Server for Unit Tests
 ==========================
 
 This page describes the JavaScript implementation of an
 HTTP server located in ``netwerk/test/httpserver/``.
 
-Server functionality
+Server Functionality
 ~~~~~~~~~~~~~~~~~~~~
 
 Here are some of the things you can do with the server:
@@ -23,7 +23,7 @@ Here are some of the things you can do with the server:
 This functionality should be more than enough for you to use it with any
 test which requires HTTP-provided behavior.
 
-Where you can use it
+Where You Can Use It
 ~~~~~~~~~~~~~~~~~~~~
 
 The server is written primarily for use from ``xpcshell``-based
@@ -33,7 +33,7 @@ Mochitest framework also uses it to serve its tests, and
 can optionally use it when their behavior is dependent upon specific
 HTTP header values.
 
-Ways you might use it
+Ways You Might Use It
 ~~~~~~~~~~~~~~~~~~~~~
 
 -  application update testing
@@ -52,7 +52,7 @@ Ways you might use it
    many purposes like : file/data storage, social sharing and so on
 -  download testing
 
-Using the server
+Using the Server
 ~~~~~~~~~~~~~~~~
 
 The best and first place you should look for documentation is
@@ -63,7 +63,7 @@ less-comprehensive server
 `README <https://searchfox.org/mozilla-central/source/netwerk/test/httpserver/README>`__,
 although the IDL should usually be sufficient.
 
-Running the server
+Running the Server
 ^^^^^^^^^^^^^^^^^^
 
 From test suites, the server should be importable as a testing-only JS
@@ -104,7 +104,7 @@ However, this should only be used as the last possible option.
    you'll make people running tests grumbly because you've broken the
    tests.
 
-Debugging errors
+Debugging Errors
 ^^^^^^^^^^^^^^^^
 
 The server's default error pages don't give much information, partly
@@ -120,7 +120,7 @@ determine why problems exist from that output. ``DEBUG`` is ``false`` by
 default because the information printed with it set to ``true``
 unnecessarily obscures tinderbox output.
 
-Header modification for files
+Header Modification for Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The server supports modifying the headers of the files (not request
@@ -138,7 +138,7 @@ standard HTTP format. Any line ending style is accepted, and the file
 may optionally end with a single newline character, to play nice with
 Unix text tools like ``diff`` and ``hg``.
 
-Hidden files
+Hidden Files
 ^^^^^^^^^^^^
 
 Any file which ends with a single ``^`` is inaccessible when querying
@@ -153,7 +153,7 @@ modification for files into the file system without making those files
 accessible to clients; it remains to be seen whether and how hidden-file
 capabilities will otherwise be used.
 
-SJS: server-side scripts
+SJS: Server-Side Scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Support for server-side scripts is provided through the SJS mechanism.
@@ -189,7 +189,7 @@ Please refer to the `IDL
 documentation <https://searchfox.org/mozilla-central/source/netwerk/test/httpserver/nsIHttpServer.idl>`
 for more details.
 
-Storing information across requests
+Storing Information Across Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 HTTP is basically a stateless protocol, and the httpd.js server API is
@@ -350,7 +350,7 @@ object values when called within the sandbox. However, such functions
 can accept and call callback functions, so we simply use a callback
 function here to return the object value associated with the key.
 
-Advanced dynamic response creation
+Advanced Dynamic Response Creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The default behavior of request handlers is to fully construct the
@@ -396,7 +396,7 @@ Full documentation for ``processAsync()`` and its interactions with
 other methods may, as always, be found in
 ``netwerk/test/httpserver/nsIHttpServer.idl``.
 
-Manual, arbitrary response creation
+Manual, Arbitrary Response Creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The standard mode of response creation is fully synchronous and is
@@ -449,7 +449,7 @@ Full documentation for ``seizePower()`` and its interactions with other
 methods may, as always, be found in
 ``netwerk/test/httpserver/nsIHttpServer.idl``.
 
-Example uses of the server
+Example Uses of the Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Shorter examples (for tests which only do one test):
@@ -469,7 +469,7 @@ Longer tests (where you'd need to do multiple async server requests):
 Examples of modifying HTTP headers in files may be found at
 ``netwerk/test/httpserver/test/data/cern_meta/``.
 
-Future directions
+Future Directions
 ~~~~~~~~~~~~~~~~~
 
 The server, while very functional, is not yet complete. There are a

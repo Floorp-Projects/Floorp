@@ -86,7 +86,7 @@ is an NS record for its parent domain, in which case we add that to the
 blocklist. This feature is controlled by the
 _network.trr.temp\_blocklist_ pref.
 
-## TRR confirmation
+## TRR Confirmation
 
 TRR requests normally have a 1.5 second timeout. If for some reason we
 do not get a response in that time we fall back to Do53. To avoid this
@@ -125,7 +125,7 @@ _HandleConfirmationEvent_ method in _TRRService.cpp_
 If strict fallback mode is enabled, Confirmation will set a flag to
 refresh our connection to the provider.
 
-## Excluded domains
+## Excluded Domains
 
 Some domains will never be resolved via TRR. This includes:
 
@@ -146,7 +146,7 @@ Detection is performed in DoHHeuristics.jsm followed by a call to
 _TRRService::SetDetectedURI_. This causes Firefox to use the
 network specific TRR provider until a network change occurs.
 
-## User choice
+## User Choice
 
 The TRR feature is designed to prioritize user choice before user agent
 decisions. That means the user may explicitly disable TRR by setting

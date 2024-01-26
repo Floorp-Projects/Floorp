@@ -1,4 +1,4 @@
-# Connectivity checking
+# Connectivity Checking
 We use a mechanism similar to captive portal checking to verify if the browser has internet connectivity. The [NetworkConnectivityService](https://searchfox.org/mozilla-central/source/netwerk/base/NetworkConnectivityService.h) will periodically connect to the same URL we use for captive portal detection, but will restrict its preferences to either IPv4 or IPv6. Based on which responses succeed, we can infer if Firefox has IPv4 and/or IPv6 connectivity. We also perform DNS queries to check if the system has a IPv4/IPv6 capable DNS resolver.
 
 ## Preferences

@@ -1,6 +1,6 @@
-# Captive portal detection
+# Captive Portal Detection
 
-## What are captive portals?
+## What are Captive Portals?
 A captive portal is what we call a network that requires your action before it allows you to connect to the Internet. This action could be to log in using a username and password, or just to accept the network's terms and conditions.
 
 There are many different ways in which captive portal network might attempt to direct you to the captive portal page.
