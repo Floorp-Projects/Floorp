@@ -8,7 +8,6 @@
 
 #include <unordered_map>
 
-#include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -41,7 +40,7 @@ class PresentationData;
 //   needs to be dropped when the last reference to it dies on the child
 //   process.
 
-class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
+class WebGPUParent final : public PWebGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent, override)
 
  public:
@@ -170,8 +169,6 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
  private:
   static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
                           uint8_t* aUserData);
-  static void DeviceLostCallback(uint8_t* aUserData, uint8_t aReason,
-                                 const char* aMessage);
   void DeallocBufferShmem(RawId aBufferId);
 
   void RemoveExternalTexture(RawId aTextureId);
@@ -218,16 +215,6 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
 
   // Shared handle of wgpu device's fence.
   RefPtr<gfx::FileHandleWrapper> mFenceHandle;
-
-  // Store DeviceLostRequest structs for each device as unique_ptrs mapped
-  // to their device ids. We keep these unique_ptrs alive as long as the
-  // device is alive.
-  struct DeviceLostRequest {
-    WeakPtr<WebGPUParent> mParent;
-    RawId mDeviceId;
-  };
-  std::unordered_map<RawId, std::unique_ptr<DeviceLostRequest>>
-      mDeviceLostRequests;
 };
 
 }  // namespace webgpu
