@@ -175,6 +175,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool maxByteLengthGetterImpl(JSContext* cx, const CallArgs& args);
   static bool resizableGetterImpl(JSContext* cx, const CallArgs& args);
   static bool detachedGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool resizeImpl(JSContext* cx, const CallArgs& args);
   static bool transferImpl(JSContext* cx, const CallArgs& args);
   static bool transferToFixedLengthImpl(JSContext* cx, const CallArgs& args);
 
@@ -371,6 +372,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool detachedGetter(JSContext* cx, unsigned argc, Value* vp);
 
   static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool resize(JSContext* cx, unsigned argc, Value* vp);
 
   static bool transfer(JSContext* cx, unsigned argc, Value* vp);
 
@@ -646,6 +649,9 @@ class ResizableArrayBufferObject : public ArrayBufferObject {
     setFirstView(nullptr);
     setDataPointer(contents);
   }
+
+  // Resize this buffer.
+  void resize(size_t newByteLength);
 
  public:
   static const uint8_t MAX_BYTE_LENGTH_SLOT = ArrayBufferObject::RESERVED_SLOTS;
