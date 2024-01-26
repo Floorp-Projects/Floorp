@@ -361,10 +361,15 @@ static const JSPropertySpec arraybuffer_proto_properties[] = {
     JS_PS_END,
 };
 
+static JSObject* CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key) {
+  return GlobalObject::createBlankPrototype(cx, cx->global(),
+                                            &ArrayBufferObject::protoClass_);
+}
+
 static const ClassSpec ArrayBufferObjectClassSpec = {
     GenericCreateConstructor<ArrayBufferObject::class_constructor, 1,
                              gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype<ArrayBufferObject>,
+    CreateArrayBufferPrototype,
     arraybuffer_functions,
     arraybuffer_properties,
     arraybuffer_proto_functions,
@@ -375,7 +380,14 @@ static const ClassExtension ArrayBufferObjectClassExtension = {
     ArrayBufferObject::objectMoved,  // objectMovedOp
 };
 
-const JSClass ArrayBufferObject::class_ = {
+const JSClass ArrayBufferObject::protoClass_ = {
+    "ArrayBuffer.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &ArrayBufferObjectClassSpec,
+};
+
+const JSClass FixedLengthArrayBufferObject::class_ = {
     "ArrayBuffer",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
@@ -386,11 +398,15 @@ const JSClass ArrayBufferObject::class_ = {
     &ArrayBufferObjectClassExtension,
 };
 
-const JSClass ArrayBufferObject::protoClass_ = {
-    "ArrayBuffer.prototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
-    JS_NULL_CLASS_OPS,
+const JSClass ResizableArrayBufferObject::class_ = {
+    "ArrayBuffer",
+    JSCLASS_DELAY_METADATA_BUILDER |
+        JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &ArrayBufferObjectClassOps,
     &ArrayBufferObjectClassSpec,
+    &ArrayBufferObjectClassExtension,
 };
 
 static bool IsArrayBuffer(HandleValue v) {
@@ -1116,8 +1132,9 @@ bool ArrayBufferObject::prepareForAsmJS() {
       return true;
 
     case INLINE_DATA:
-      static_assert(wasm::PageSize > MaxInlineBytes,
-                    "inline data must be too small to be a page size multiple");
+      static_assert(
+          wasm::PageSize > FixedLengthArrayBufferObject::MaxInlineBytes,
+          "inline data must be too small to be a page size multiple");
       MOZ_ASSERT_UNREACHABLE(
           "inline-data buffers should be implicitly excluded by size checks");
       return false;
@@ -1151,7 +1168,9 @@ ArrayBufferObject::BufferContents ArrayBufferObject::createMappedContents(
 }
 
 uint8_t* ArrayBufferObject::inlineDataPointer() const {
-  return static_cast<uint8_t*>(fixedData(JSCLASS_RESERVED_SLOTS(&class_)));
+  // TODO(anba): Move method into FixedLengthArrayBuffer
+  return static_cast<uint8_t*>(
+      fixedData(JSCLASS_RESERVED_SLOTS(&FixedLengthArrayBufferObject::class_)));
 }
 
 uint8_t* ArrayBufferObject::dataPointer() const {
@@ -1462,9 +1481,8 @@ static inline js::gc::AllocKind GetArrayBufferGCObjectKind(size_t numSlots) {
   return js::gc::AllocKind::ARRAYBUFFER16;
 }
 
-static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
-                                               HandleObject proto_,
-                                               gc::AllocKind allocKind) {
+static FixedLengthArrayBufferObject* NewArrayBufferObject(
+    JSContext* cx, HandleObject proto_, gc::AllocKind allocKind) {
   MOZ_ASSERT(allocKind == gc::AllocKind::ARRAYBUFFER4 ||
              allocKind == gc::AllocKind::ARRAYBUFFER8 ||
              allocKind == gc::AllocKind::ARRAYBUFFER12 ||
@@ -1478,12 +1496,12 @@ static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
     }
   }
 
-  const JSClass* clasp = &ArrayBufferObject::class_;
+  const JSClass* clasp = &FixedLengthArrayBufferObject::class_;
 
   // Array buffers can store data inline so we only use fixed slots to cover the
   // reserved slots, ignoring the AllocKind.
   MOZ_ASSERT(ClassCanHaveFixedData(clasp));
-  constexpr size_t nfixed = ArrayBufferObject::RESERVED_SLOTS;
+  constexpr size_t nfixed = FixedLengthArrayBufferObject::RESERVED_SLOTS;
   static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
 
   Rooted<SharedShape*> shape(
@@ -1499,7 +1517,8 @@ static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
   MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
   constexpr gc::Heap heap = gc::Heap::Tenured;
 
-  return NativeObject::create<ArrayBufferObject>(cx, allocKind, heap, shape);
+  return NativeObject::create<FixedLengthArrayBufferObject>(cx, allocKind, heap,
+                                                            shape);
 }
 
 // Creates a new ArrayBufferObject with %ArrayBuffer.prototype% as proto and no
@@ -1587,7 +1606,7 @@ ArrayBufferObject::createBufferAndData(
   // exceed the maximum number of fixed slots!
   size_t nslots = ArrayBufferObject::RESERVED_SLOTS;
   ArrayBufferContents data;
-  if (nbytes <= MaxInlineBytes) {
+  if (nbytes <= FixedLengthArrayBufferObject::MaxInlineBytes) {
     int newSlots = HowMany(nbytes, sizeof(Value));
     MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
 
@@ -1674,7 +1693,7 @@ ArrayBufferObject::createBufferAndData(
   MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
              "caller must validate the byte count it passes");
 
-  if (newByteLength > ArrayBufferObject::MaxInlineBytes &&
+  if (newByteLength > FixedLengthArrayBufferObject::MaxInlineBytes &&
       source->isMalloced()) {
     if (newByteLength == source->byteLength()) {
       return copyAndDetachSteal(cx, source);
@@ -1700,7 +1719,7 @@ ArrayBufferObject::createBufferAndData(
   MOZ_ASSERT(source->isMalloced());
 
   size_t byteLength = source->byteLength();
-  MOZ_ASSERT(byteLength > ArrayBufferObject::MaxInlineBytes,
+  MOZ_ASSERT(byteLength > FixedLengthArrayBufferObject::MaxInlineBytes,
              "prefer copying small buffers");
 
   auto* newBuffer = ArrayBufferObject::createEmpty(cx);
@@ -1733,7 +1752,7 @@ ArrayBufferObject::createBufferAndData(
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
   MOZ_ASSERT(source->bufferKind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
-  MOZ_ASSERT(newByteLength > ArrayBufferObject::MaxInlineBytes,
+  MOZ_ASSERT(newByteLength > FixedLengthArrayBufferObject::MaxInlineBytes,
              "prefer copying small buffers");
   MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
              "caller must validate the byte count it passes");
@@ -2542,8 +2561,10 @@ JS_PUBLIC_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
   *isSharedMemory = false;
 }
 
-const JSClass* const JS::ArrayBuffer::UnsharedClass =
-    &ArrayBufferObject::class_;
+const JSClass* const JS::ArrayBuffer::FixedLengthUnsharedClass =
+    &FixedLengthArrayBufferObject::class_;
+const JSClass* const JS::ArrayBuffer::ResizableUnsharedClass =
+    &ResizableArrayBufferObject::class_;
 const JSClass* const JS::ArrayBuffer::SharedClass =
     &SharedArrayBufferObject::class_;
 

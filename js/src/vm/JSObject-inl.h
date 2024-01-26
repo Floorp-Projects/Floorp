@@ -148,11 +148,12 @@ namespace js {
 #ifdef DEBUG
 inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   // Normally, the number of fixed slots given an object is the maximum
-  // permitted for its size class. For array buffers and non-shared typed
-  // arrays we only use enough to cover the class reserved slots, so that
-  // the remaining space in the object's allocation is available for the
-  // buffer's data.
-  return !clasp->isNativeObject() || clasp == &js::ArrayBufferObject::class_ ||
+  // permitted for its size class. For array buffers and typed arrays we only
+  // use enough to cover the class reserved slots, so that the remaining space
+  // in the object's allocation is available for the buffer's data.
+  return !clasp->isNativeObject() ||
+         clasp == &js::FixedLengthArrayBufferObject::class_ ||
+         clasp == &js::ResizableArrayBufferObject::class_ ||
          js::IsTypedArrayClass(clasp);
 }
 #endif
