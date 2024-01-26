@@ -172,6 +172,8 @@ class ResizableArrayBufferObject;
  */
 class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool maxByteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool resizableGetterImpl(JSContext* cx, const CallArgs& args);
   static bool detachedGetterImpl(JSContext* cx, const CallArgs& args);
   static bool transferImpl(JSContext* cx, const CallArgs& args);
   static bool transferToFixedLengthImpl(JSContext* cx, const CallArgs& args);
@@ -355,6 +357,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static const JSClass protoClass_;
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool maxByteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool resizableGetter(JSContext* cx, unsigned argc, Value* vp);
 
   static bool detachedGetter(JSContext* cx, unsigned argc, Value* vp);
 

@@ -348,6 +348,7 @@
   MACRO_(many, "many")                                                         \
   MACRO_(MapConstructorInit, "MapConstructorInit")                             \
   MACRO_(Map_Iterator_, "Map Iterator")                                        \
+  MACRO_(maxByteLength, "maxByteLength")                                       \
   MACRO_(maxColumn, "maxColumn")                                               \
   MACRO_(maximum, "maximum")                                                   \
   MACRO_(maximumFractionDigits, "maximumFractionDigits")                       \
@@ -474,6 +475,8 @@
   MACRO_(relatedYear, "relatedYear")                                           \
   MACRO_(relativeTo, "relativeTo")                                             \
   MACRO_(RequireObjectCoercible, "RequireObjectCoercible")                     \
+  MACRO_(resize, "resize")                                                     \
+  MACRO_(resizable, "resizable")                                               \
   MACRO_(resolve, "resolve")                                                   \
   MACRO_(result, "result")                                                     \
   MACRO_(results, "results")                                                   \
