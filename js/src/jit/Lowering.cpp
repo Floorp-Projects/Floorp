@@ -5168,6 +5168,17 @@ void LIRGenerator::visitGuardIsTypedArray(MGuardIsTypedArray* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardIsFixedLengthTypedArray(
+    MGuardIsFixedLengthTypedArray* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardIsFixedLengthTypedArray(useRegister(ins->object()), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardHasProxyHandler(MGuardHasProxyHandler* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
