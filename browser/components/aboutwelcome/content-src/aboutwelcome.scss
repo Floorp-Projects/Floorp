@@ -610,19 +610,19 @@ html {
 
               .additional-cta {
                 margin: 0;
-              }
 
-              &.cta-link {
-                @include text-link-styles;
+                &.cta-link {
+                  @include text-link-styles;
 
-                padding: 0;
-                font-weight: normal;
-              }
+                  padding: 0;
+                  font-weight: normal;
+                }
 
-              &.secondary {
-                &:hover,
-                &[open] {
-                  background-color: var(--in-content-button-background-hover);
+                &.secondary {
+                  &:hover,
+                  &[open] {
+                    background-color: var(--in-content-button-background-hover);
+                  }
                 }
               }
             }
