@@ -514,7 +514,7 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
 enum class GuardClassKind : uint8_t {
   Array,
   PlainObject,
-  ArrayBuffer,
+  FixedLengthArrayBuffer,
   SharedArrayBuffer,
   DataView,
   MappedArguments,
