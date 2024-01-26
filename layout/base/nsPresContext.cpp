@@ -438,7 +438,7 @@ void nsPresContext::GetUserPreferences() {
   mSendAfterPaintToContent = Preferences::GetBool(
       "dom.send_after_paint_to_content", mSendAfterPaintToContent);
 
-  mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
+  mPrefScrollbarSide = StaticPrefs::layout_scrollbar_side();
 
   Document()->SetMayNeedFontPrefsUpdate();
 
