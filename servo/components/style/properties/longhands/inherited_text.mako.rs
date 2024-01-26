@@ -160,16 +160,6 @@ ${helpers.single_keyword(
     affects="layout",
 )}
 
-${helpers.single_keyword(
-    name="text-wrap-mode",
-    values="wrap nowrap",
-    engines="gecko",
-    gecko_enum_prefix="StyleTextWrapMode",
-    animation_value_type="discrete",
-    spec="https://drafts.csswg.org/css-text-4/#propdef-text-wrap-mode",
-    affects="layout",
-)}
-
 ${helpers.predefined_type(
     "text-shadow",
     "SimpleShadow",
@@ -402,13 +392,23 @@ ${helpers.single_keyword(
 )}
 
 ${helpers.single_keyword(
-    "text-wrap",
+    "text-wrap-mode",
+    "wrap nowrap",
+    engines="gecko",
+    gecko_enum_prefix="StyleTextWrapMode",
+    animation_value_type="discrete",
+    spec="https://drafts.csswg.org/css-text-4/#propdef-text-wrap-mode",
+    affects="layout",
+)}
+
+${helpers.single_keyword(
+    "text-wrap-style",
     "auto stable balance",
     engines="gecko",
     gecko_pref="layout.css.text-wrap-balance.enabled",
     has_effect_on_gecko_scrollbars=False,
-    gecko_enum_prefix="StyleTextWrap",
+    gecko_enum_prefix="StyleTextWrapStyle",
     animation_value_type="discrete",
-    spec="https://drafts.csswg.org/css-text-4/#text-wrap",
+    spec="https://drafts.csswg.org/css-text-4/#text-wrap-style",
     affects="layout",
 )}

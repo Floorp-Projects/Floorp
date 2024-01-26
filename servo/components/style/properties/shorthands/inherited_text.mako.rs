@@ -47,6 +47,65 @@
 </%helpers:shorthand>
 
 <%helpers:shorthand
+    name="text-wrap"
+    engines="gecko"
+    sub_properties="text-wrap-mode text-wrap-style"
+    spec="https://www.w3.org/TR/css-text-4/#text-wrap"
+>
+    use crate::properties::longhands::{text_wrap_mode, text_wrap_style};
+
+    pub fn parse_value<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Longhands, ParseError<'i>> {
+        let mut mode = None;
+        let mut style = None;
+
+        loop {
+            if mode.is_none() {
+                if let Ok(value) = input.try_parse(|input| text_wrap_mode::parse(context, input)) {
+                    mode = Some(value);
+                    continue
+                }
+            }
+            if style.is_none() {
+                if let Ok(value) = input.try_parse(|input| text_wrap_style::parse(context, input)) {
+                    style = Some(value);
+                    continue
+                }
+            }
+            break
+        }
+        if mode.is_some() || style.is_some() {
+            Ok(expanded! {
+                text_wrap_mode: unwrap_or_initial!(text_wrap_mode, mode),
+                text_wrap_style: unwrap_or_initial!(text_wrap_style, style),
+            })
+        } else {
+            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        }
+    }
+
+    impl<'a> ToCss for LonghandsToSerialize<'a>  {
+        fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            use text_wrap_mode::computed_value::T as Mode;
+            use text_wrap_style::computed_value::T as Style;
+
+            if matches!(self.text_wrap_style, None | Some(&Style::Auto)) {
+                return self.text_wrap_mode.to_css(dest);
+            }
+
+            if *self.text_wrap_mode != Mode::Wrap {
+                self.text_wrap_mode.to_css(dest)?;
+                dest.write_char(' ')?;
+            }
+
+            self.text_wrap_style.to_css(dest)
+        }
+    }
+</%helpers:shorthand>
+
+<%helpers:shorthand
     name="white-space"
     engines="gecko"
     sub_properties="text-wrap-mode white-space-collapse"
