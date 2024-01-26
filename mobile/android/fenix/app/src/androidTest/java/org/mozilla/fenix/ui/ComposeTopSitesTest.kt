@@ -20,8 +20,10 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.homeScreenWithComposeTopSites
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -259,9 +261,11 @@ class ComposeTopSitesTest {
             verifyExistingTopSitesList()
             verifyExistingTopSiteItem(defaultWebPage.title)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
-        }.deleteTopSiteFromHistory {
+        }.removeTopSite {
             verifySnackBarText(getStringResource(R.string.snackbar_top_site_removed))
             waitUntilSnackbarGone()
+        }
+        homeScreen {
         }.openThreeDotMenu {
         }.openHistory {
             verifyEmptyHistoryView()
