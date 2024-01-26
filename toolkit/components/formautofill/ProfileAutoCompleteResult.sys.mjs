@@ -277,19 +277,10 @@ export class AddressResult extends ProfileAutoCompleteResult {
   }
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
-    const manageLabel = lazy.FormAutofillUtils.stringBundle.GetStringFromName(
-      "autocompleteManageAddresses"
-    );
-
     if (this._isInputAutofilled) {
       return [
         { primary: "", secondary: "" }, // Clear button
-        // Footer
-        {
-          primary: "",
-          secondary: "",
-          manageLabel,
-        },
+        { primary: "", secondary: "" }, // Footer
       ];
     }
 
@@ -315,10 +306,6 @@ export class AddressResult extends ProfileAutoCompleteResult {
           ),
         };
       });
-
-    const focusedCategory =
-      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
-
     // Add an empty result entry for footer. Its content will come from
     // the footer binding, so don't assign any value to it.
     // The additional properties: categories and focusedCategory are required of
@@ -326,11 +313,12 @@ export class AddressResult extends ProfileAutoCompleteResult {
     labels.push({
       primary: "",
       secondary: "",
-      manageLabel,
       categories: lazy.FormAutofillUtils.getCategoriesFromFieldNames(
         this._allFieldNames
       ),
-      focusedCategory,
+      focusedCategory: lazy.FormAutofillUtils.getCategoryFromFieldName(
+        this._focusedFieldName
+      ),
     });
 
     return labels;
@@ -397,19 +385,10 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
       ];
     }
 
-    const manageLabel = lazy.FormAutofillUtils.stringBundle.GetStringFromName(
-      "autocompleteManageCreditCards"
-    );
-
     if (this._isInputAutofilled) {
       return [
         { primary: "", secondary: "" }, // Clear button
-        // Footer
-        {
-          primary: "",
-          secondary: "",
-          manageLabel,
-        },
+        { primary: "", secondary: "" }, // Footer
       ];
     }
 
@@ -452,17 +431,8 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
           image,
         };
       });
-
-    const focusedCategory =
-      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
-
     // Add an empty result entry for footer.
-    labels.push({
-      primary: "",
-      secondary: "",
-      manageLabel,
-      focusedCategory,
-    });
+    labels.push({ primary: "", secondary: "" });
 
     return labels;
   }
