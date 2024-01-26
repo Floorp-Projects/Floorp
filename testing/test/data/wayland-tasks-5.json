@@ -1,0 +1,141 @@
+[
+  {
+    "duration": 2360544,
+    "errors": null,
+    "extra": {
+      "arch": "64",
+      "bits": "64",
+      "build_types": [],
+      "debug": false,
+      "display": "wayland",
+      "opt": true,
+      "os": "linux",
+      "os_version": "22.04",
+      "runtimes": ["swgl"]
+    },
+    "failure_types": {
+      "browser/components/places/tests/browser/browser.toml": [
+        [
+          "browser/components/places/tests/browser/browser_bookmark_popup.js",
+          "generic"
+        ]
+      ]
+    },
+    "id": "Bgc6We1sSjakIo3V9crldw",
+    "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 1521792,
+        "group": "browser/components/places/tests/browser/browser.toml",
+        "ok": false
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2
+  },
+  {
+    "duration": 2113082,
+    "errors": null,
+    "extra": {
+      "arch": "64",
+      "bits": "64",
+      "build_types": [],
+      "debug": false,
+      "display": "wayland",
+      "opt": true,
+      "os": "linux",
+      "os_version": "22.04",
+      "runtimes": ["swgl"]
+    },
+    "failure_types": {
+      "browser/components/places/tests/browser/browser.toml": [
+        [
+          "browser/components/places/tests/browser/browser_bookmark_popup.js",
+          "generic"
+        ]
+      ]
+    },
+    "id": "EH0WPmGtQsGzu5K7OxFOyg",
+    "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 1407021,
+        "group": "browser/components/places/tests/browser/browser.toml",
+        "ok": false
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2
+  },
+  {
+    "duration": 1952717,
+    "errors": null,
+    "extra": {
+      "arch": "64",
+      "bits": "64",
+      "build_types": [],
+      "debug": false,
+      "display": "wayland",
+      "opt": true,
+      "os": "linux",
+      "os_version": "22.04",
+      "runtimes": ["swgl"]
+    },
+    "failure_types": {
+      "browser/components/places/tests/browser/browser.toml": [
+        [
+          "browser/components/places/tests/browser/browser_bookmarkProperties_addKeywordForThisSearch.js",
+          "generic"
+        ],
+        [
+          "browser/components/places/tests/browser/browser_bookmark_popup.js",
+          "generic"
+        ]
+      ]
+    },
+    "id": "bxDhZzsxQw65gn-veX1PHg",
+    "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 1320318,
+        "group": "browser/components/places/tests/browser/browser.toml",
+        "ok": false
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 2
+  }
+]

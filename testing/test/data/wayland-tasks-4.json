@@ -20,7 +20,7 @@
       {
         "group": "toolkit/components/pdfjs/test/browser.toml",
         "ok": false,
-        "duration": 3904699
+        "duration": 390469
       }
     ],
     "errors": null,
@@ -52,7 +52,7 @@
       {
         "group": "toolkit/components/pdfjs/test/browser.toml",
         "ok": false,
-        "duration": 3904699
+        "duration": 390469
       }
     ],
     "errors": null,
@@ -84,7 +84,7 @@
       {
         "group": "toolkit/components/pdfjs/test/browser.toml",
         "ok": false,
-        "duration": 3904699
+        "duration": 390469
       }
     ],
     "errors": null,

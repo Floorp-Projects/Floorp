@@ -84,6 +84,11 @@ def test_get_failures_4():
     get_failures("wayland-tasks-4.json", "wayland-failures-4.json")
 
 
+def test_get_failures_5():
+    """Test get_failures 5"""
+    get_failures("wayland-tasks-5.json", "wayland-failures-5.json")
+
+
 def test_get_bug_by_id():
     """Test get_bug_by_id"""
 

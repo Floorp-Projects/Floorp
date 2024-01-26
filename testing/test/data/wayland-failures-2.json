@@ -1,39 +1,46 @@
 {
   "browser/components/sessionstore/test/browser.toml": {
-    "path": {
-      "browser/components/sessionstore/test/browser_closed_tabs_windows.js": {
-        "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
-          "classification": "disable_recommended",
-          "failed_runs": 3,
-          "runs": {
-            "X7r1q2xWSu-2bRAofEfeBw": false,
-            "Y7r1q2xWSu-2bRAofEfeBw": false,
-            "Z7r1q2xWSu-2bRAofEfeBw": false
-          },
-          "total_runs": 3
-        }
-      },
-      "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js": {
-        "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
-          "classification": "intermittent",
-          "failed_runs": 1,
-          "runs": {
-            "X7r1q2xWSu-2bRAofEfeBw": true,
-            "Y7r1q2xWSu-2bRAofEfeBw": false,
-            "Z7r1q2xWSu-2bRAofEfeBw": true
-          },
-          "total_runs": 3
-        }
-      }
-    },
-    "sum_by_label": {
+    "label": {
       "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
-        "disable_manifest": 0,
-        "disable_recommended": 1,
-        "intermittent": 1,
-        "secondary": 0,
-        "success": 0,
-        "unknown": 0
+        "durations": {
+          "X7r1q2xWSu-2bRAofEfeBw": 1778154,
+          "Y7r1q2xWSu-2bRAofEfeBw": 1778154,
+          "Z7r1q2xWSu-2bRAofEfeBw": 1778154
+        },
+        "median_duration": 1778154,
+        "opt": false,
+        "path": {
+          "browser/components/sessionstore/test/browser_closed_tabs_windows.js": {
+            "classification": "disable_recommended",
+            "failed_runs": 3,
+            "runs": {
+              "X7r1q2xWSu-2bRAofEfeBw": false,
+              "Y7r1q2xWSu-2bRAofEfeBw": false,
+              "Z7r1q2xWSu-2bRAofEfeBw": false
+            },
+            "total_runs": 3
+          },
+          "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js": {
+            "classification": "secondary",
+            "failed_runs": 3,
+            "runs": {
+              "X7r1q2xWSu-2bRAofEfeBw": false,
+              "Y7r1q2xWSu-2bRAofEfeBw": false,
+              "Z7r1q2xWSu-2bRAofEfeBw": false
+            },
+            "total_runs": 3
+          }
+        },
+        "sum_by_label": {
+          "disable_manifest": 0,
+          "disable_recommended": 1,
+          "disable_too_long": 0,
+          "intermittent": 0,
+          "secondary": 1,
+          "success": 0,
+          "unknown": 0
+        },
+        "total_duration": 5334462
       }
     }
   }
