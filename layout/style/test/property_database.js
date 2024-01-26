@@ -8255,6 +8255,29 @@ var gCSSProperties = {
       "uppercase full-width lowercase",
     ],
   },
+  "text-wrap": {
+    domProp: "textWrap",
+    inherited: true,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: ["text-wrap-mode"],
+    applies_to_placeholder: true,
+    applies_to_cue: true,
+    applies_to_marker: true,
+    initial_values: ["wrap"],
+    other_values: ["nowrap"],
+    invalid_values: [],
+  },
+  "text-wrap-mode": {
+    domProp: "textWrapMode",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
+    applies_to_placeholder: true,
+    applies_to_marker: true,
+    initial_values: ["wrap"],
+    other_values: ["nowrap"],
+    invalid_values: ["none", "normal", "on", "off", "wrap nowrap"],
+  },
   top: {
     domProp: "top",
     inherited: false,
@@ -8542,7 +8565,8 @@ var gCSSProperties = {
   "white-space": {
     domProp: "whiteSpace",
     inherited: true,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: ["white-space-collapse", "text-wrap-mode"],
     applies_to_placeholder: true,
     applies_to_cue: true,
     applies_to_marker: true,
@@ -8556,6 +8580,22 @@ var gCSSProperties = {
       "break-spaces",
     ],
     invalid_values: [],
+  },
+  "white-space-collapse": {
+    domProp: "whiteSpaceCollapse",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_placeholder: true,
+    applies_to_cue: true,
+    applies_to_marker: true,
+    initial_values: ["collapse"],
+    other_values: [
+      "preserve",
+      "preserve-breaks",
+      "preserve-spaces",
+      "break-spaces",
+    ],
+    invalid_values: ["normal", "auto"],
   },
   width: {
     domProp: "width",
@@ -13898,8 +13938,8 @@ gCSSProperties["scrollbar-gutter"] = {
 };
 
 if (IsCSSPropertyPrefEnabled("layout.css.text-wrap-balance.enabled")) {
-  gCSSProperties["text-wrap"] = {
-    domProp: "textWrap",
+  gCSSProperties["text-wrap-style"] = {
+    domProp: "textWrapStyle",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     applies_to_placeholder: true,
@@ -13909,6 +13949,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-wrap-balance.enabled")) {
     other_values: ["stable", "balance"],
     invalid_values: ["wrap", "nowrap", "normal"],
   };
+  gCSSProperties["text-wrap"].subproperties.push("text-wrap-style");
+  gCSSProperties["text-wrap"].other_values.push("stable");
+  gCSSProperties["text-wrap"].other_values.push("balance");
+  gCSSProperties["text-wrap"].other_values.push("wrap stable");
+  gCSSProperties["text-wrap"].other_values.push("nowrap balance");
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.transforms")) {
