@@ -17,8 +17,8 @@ import org.mozilla.experiments.nimbus.internal.NimbusException
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
 /**
- * This ID must match the name given in the `nimbus.fml.yaml` file, which
- * itself generates the classname for [org.mozilla.fenix.nimbus.Messaging].
+ * This ID must match the name given in the `messaging.fml.yaml` file, which
+ * itself generates the classname for [mozilla.components.service.nimbus.messaging.FxNimbusMessaging].
  *
  * If that ever changes, it should also change here.
  *
