@@ -49,8 +49,10 @@ object TestHelper {
 
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
+        Log.i(TAG, "scrollToElementByText: Waiting for app view")
         appView.waitForExists(waitingTime)
         appView.scrollTextIntoView(text)
+        Log.i(TAG, "scrollToElementByText: Scrolled to element with text: $text")
         return appView
     }
 
