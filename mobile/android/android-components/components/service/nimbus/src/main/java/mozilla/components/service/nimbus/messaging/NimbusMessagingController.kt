@@ -59,7 +59,8 @@ open class NimbusMessagingController(
      * Records a messageDismissed event, and records that the message
      * has been dismissed.
      */
-    suspend fun onMessageDismissed(messageMetadata: Message.Metadata) {
+    suspend fun onMessageDismissed(message: Message) {
+        val messageMetadata = message.metadata
         sendDismissedMessageTelemetry(messageMetadata.id)
         val updatedMetadata = messageMetadata.copy(dismissed = true)
         messagingStorage.updateMetadata(updatedMetadata)
@@ -71,7 +72,8 @@ open class NimbusMessagingController(
      * This records that the message has been clicked on, but does not record a
      * glean event. That should be done via [processMessageActionToUri].
      */
-    suspend fun onMessageClicked(messageMetadata: Message.Metadata) {
+    suspend fun onMessageClicked(message: Message) {
+        val messageMetadata = message.metadata
         val updatedMetadata = messageMetadata.copy(pressed = true)
         messagingStorage.updateMetadata(updatedMetadata)
     }

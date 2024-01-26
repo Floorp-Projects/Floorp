@@ -93,7 +93,7 @@ class MessagingMiddleware(
         context.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
         coroutineScope.launch {
-            controller.onMessageDismissed(message.metadata)
+            controller.onMessageDismissed(message)
         }
     }
 
@@ -103,7 +103,7 @@ class MessagingMiddleware(
     ) {
         // Update Nimbus storage.
         coroutineScope.launch {
-            controller.onMessageClicked(message.metadata)
+            controller.onMessageClicked(message)
         }
         // Update app state.
         val newMessages = removeMessage(context, message)

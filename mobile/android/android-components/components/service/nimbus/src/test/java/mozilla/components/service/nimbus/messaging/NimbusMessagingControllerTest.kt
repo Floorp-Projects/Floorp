@@ -148,7 +148,7 @@ class NimbusMessagingControllerTest {
             val message = createMessage("id-1")
             assertNull(GleanMessaging.messageDismissed.testGetValue())
 
-            controller.onMessageDismissed(message.metadata)
+            controller.onMessageDismissed(message)
 
             assertNotNull(GleanMessaging.messageDismissed.testGetValue())
             val event = GleanMessaging.messageDismissed.testGetValue()!!
@@ -256,7 +256,7 @@ class NimbusMessagingControllerTest {
             val message = createMessage("id-1")
             assertFalse(message.metadata.pressed)
 
-            controller.onMessageClicked(message.metadata)
+            controller.onMessageClicked(message)
 
             val updatedMetadata = message.metadata.copy(pressed = true)
             verify(storage).updateMetadata(updatedMetadata)

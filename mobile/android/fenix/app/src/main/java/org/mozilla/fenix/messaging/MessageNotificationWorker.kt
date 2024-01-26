@@ -52,9 +52,8 @@ class MessageNotificationWorker(
                 ?: return Result.success()
 
         val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
-        val messageMetadata = nextMessage.metadata
         //  Device has NOT been power cycled.
-        if (messageMetadata.latestBootIdentifier == currentBootUniqueIdentifier) {
+        if (nextMessage.hasShownThisCycle(currentBootUniqueIdentifier)) {
             return Result.success()
         }
 
@@ -91,8 +90,8 @@ class MessageNotificationWorker(
         return createBaseNotification(
             context,
             ensureMarketingChannelExists(context),
-            message.data.title,
-            message.data.text,
+            message.title,
+            message.text,
             onClickPendingIntent,
             onDismissPendingIntent,
         )
@@ -189,7 +188,7 @@ class NotificationDismissedService : LifecycleService() {
 
                 if (message != null) {
                     // Update message as 'dismissed'.
-                    nimbusMessagingController.onMessageDismissed(message.metadata)
+                    nimbusMessagingController.onMessageDismissed(message)
                 }
             }
         }
@@ -220,7 +219,7 @@ class NotificationClickedReceiverActivity : ComponentActivity() {
 
             if (message != null) {
                 // Update message as 'clicked'.
-                nimbusMessagingController.onMessageClicked(message.metadata)
+                nimbusMessagingController.onMessageClicked(message)
 
                 // Create the intent.
                 val intent = nimbusMessagingController.getIntentForMessage(message)

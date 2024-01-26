@@ -1229,8 +1229,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         val fenixNimbusMessagingController = FenixNimbusMessagingController(messagingStorage)
         val researchSurfaceDialogFragment = ResearchSurfaceDialogFragment.newInstance(
-            keyMessageText = nextMessage.data.text,
-            keyAcceptButtonText = nextMessage.data.buttonLabel,
+            keyMessageText = nextMessage.text,
+            keyAcceptButtonText = nextMessage.buttonLabel,
             keyDismissButtonText = null,
         )
 

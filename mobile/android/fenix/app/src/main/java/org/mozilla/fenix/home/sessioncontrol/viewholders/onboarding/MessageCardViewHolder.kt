@@ -77,9 +77,9 @@ class MessageCardViewHolder(
         )
 
         MessageCard(
-            messageText = message.data.text,
-            titleText = message.data.title,
-            buttonText = message.data.buttonLabel,
+            messageText = message.text,
+            titleText = message.title,
+            buttonText = message.buttonLabel,
             messageColors = messageCardColors,
             onClick = { interactor.onMessageClicked(message) },
             onCloseButtonClick = { interactor.onMessageClosedClicked(message) },

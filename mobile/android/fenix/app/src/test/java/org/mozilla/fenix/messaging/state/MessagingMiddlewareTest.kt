@@ -221,7 +221,7 @@ class MessagingMiddlewareTest {
         store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN))
         store.waitUntilIdle()
 
-        assertEquals(1, store.state.messaging.messages.first().metadata.displayCount)
+        assertEquals(1, store.state.messaging.messages.first().displayCount)
     }
 
     @Test
@@ -286,7 +286,7 @@ class MessagingMiddlewareTest {
         store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
-        assertEquals(messageDisplayed.metadata.displayCount, store.state.messaging.messages[0].metadata.displayCount)
+        assertEquals(messageDisplayed.displayCount, store.state.messaging.messages[0].displayCount)
     }
 
     @Test

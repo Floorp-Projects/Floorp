@@ -4,6 +4,8 @@
 
 package mozilla.components.service.nimbus.messaging
 
+import androidx.annotation.VisibleForTesting
+
 /**
  * A data class that holds a representation of GleanPlum message from Nimbus.
  *
@@ -18,14 +20,20 @@ package mozilla.components.service.nimbus.messaging
  */
 data class Message(
     val id: String,
-    val data: MessageData,
-    val action: String,
-    val style: StyleData,
-    val triggers: List<String>,
-    val metadata: Metadata,
+    internal val data: MessageData,
+    internal val action: String,
+    internal val style: StyleData,
+    internal val triggers: List<String>,
+    internal val metadata: Metadata,
 ) {
-    val maxDisplayCount: Int
-        get() = style.maxDisplayCount
+    val text: String
+        get() = data.text
+
+    val title: String?
+        get() = data.title
+
+    val buttonLabel: String?
+        get() = data.buttonLabel
 
     val priority: Int
         get() = style.priority
@@ -34,7 +42,17 @@ data class Message(
         get() = data.surface
 
     val isExpired: Boolean
-        get() = metadata.displayCount >= maxDisplayCount
+        get() = metadata.displayCount >= style.maxDisplayCount
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val displayCount: Int
+        get() = metadata.displayCount
+
+    /**
+     * Returns true if the passed boot id, taken from [BootUtils] matches the one associated
+     * with this message when it was last displayed.
+     */
+    fun hasShownThisCycle(bootId: String) = bootId == metadata.latestBootIdentifier
 
     /**
      * A data class that holds metadata that help to identify if a message should shown.
