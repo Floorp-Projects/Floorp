@@ -365,12 +365,14 @@ bool HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
 void HTMLTextAreaElement::MapAttributesIntoRule(
     MappedDeclarationsBuilder& aBuilder) {
   // wrap=off
-  if (!aBuilder.PropertyIsSet(eCSSProperty_white_space)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::wrap);
-    if (value && value->Type() == nsAttrValue::eString &&
-        value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-      aBuilder.SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
-    }
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::wrap);
+  if (value && value->Type() == nsAttrValue::eString &&
+      value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
+    // Equivalent to expanding `white-space; pre`
+    aBuilder.SetKeywordValue(eCSSProperty_white_space_collapse,
+                             StyleWhiteSpaceCollapse::Preserve);
+    aBuilder.SetKeywordValue(eCSSProperty_text_wrap_mode,
+                             StyleTextWrapMode::Nowrap);
   }
 
   nsGenericHTMLFormControlElementWithState::MapDivAlignAttributeInto(aBuilder);

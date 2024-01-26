@@ -880,8 +880,8 @@ def _remove_common_first_line_and_first_letter_properties(props, engine):
     props.remove("overflow-wrap")
     props.remove("text-align")
     props.remove("text-justify")
-    props.remove("white-space")
-    props.remove("text-wrap")
+    props.remove("white-space-collapse")
+    props.remove("text-wrap-mode")
     props.remove("word-break")
     props.remove("text-indent")
 
@@ -983,11 +983,12 @@ class PropertyRestrictions:
     def placeholder(data):
         props = PropertyRestrictions.first_line(data)
         props.add("opacity")
-        props.add("white-space")
         props.add("text-wrap")
         props.add("text-overflow")
         props.add("text-align")
         props.add("text-justify")
+        for p in PropertyRestrictions.shorthand(data, "white-space"):
+            props.add(p)
         return props
 
     # https://drafts.csswg.org/css-pseudo/#marker-pseudo
@@ -995,7 +996,6 @@ class PropertyRestrictions:
     def marker(data):
         return set(
             [
-                "white-space",
                 "text-wrap",
                 "color",
                 "text-combine-upright",
@@ -1006,6 +1006,7 @@ class PropertyRestrictions:
                 "line-height",
                 "-moz-osx-font-smoothing",
             ]
+            + PropertyRestrictions.shorthand(data, "white-space")
             + PropertyRestrictions.spec(data, "css-fonts")
             + PropertyRestrictions.spec(data, "css-animations")
             + PropertyRestrictions.spec(data, "css-transitions")
@@ -1020,7 +1021,6 @@ class PropertyRestrictions:
                 "opacity",
                 "visibility",
                 "text-shadow",
-                "white-space",
                 "text-wrap",
                 "text-combine-upright",
                 "ruby-position",
@@ -1032,6 +1032,7 @@ class PropertyRestrictions:
                 "background-blend-mode",
             ]
             + PropertyRestrictions.shorthand(data, "text-decoration")
+            + PropertyRestrictions.shorthand(data, "white-space")
             + PropertyRestrictions.shorthand(data, "background")
             + PropertyRestrictions.shorthand(data, "outline")
             + PropertyRestrictions.shorthand(data, "font")
