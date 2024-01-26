@@ -8,13 +8,13 @@ skip-if = ["os == 'linux'"] # Linux build has not implemented sendNativeKeyEvent
 
 ["browser_test_InputContextURI.js"]
 
-["browser_test_clipboard_contextmenu.js"]
-
 ["browser_test_clipboardcache.js"]
 skip-if = [
   "os == 'win' && bits == 32 && !debug", # Bug 1759422
   "os == 'linux'", # Bug 1792749
 ]
+
+["browser_test_clipboard_contextmenu.js"]
 
 ["browser_test_fullscreen_size.js"]
 

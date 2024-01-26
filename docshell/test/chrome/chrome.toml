@@ -48,15 +48,6 @@ support-files = [
 
 ["test_allowContentRetargeting.html"]
 
-["test_bug89419.xhtml"]
-
-["test_bug92598.xhtml"]
-support-files = [
-  "92598_nostore.html",
-  "92598_nostore.html^headers^",
-  "bug92598_window.xhtml",
-]
-
 ["test_bug112564.xhtml"]
 support-files = [
   "bug112564_window.xhtml",
@@ -126,7 +117,16 @@ support-files = [
 
 ["test_bug846906.xhtml"]
 
+["test_bug89419.xhtml"]
+
 ["test_bug909218.html"]
+
+["test_bug92598.xhtml"]
+support-files = [
+  "92598_nostore.html",
+  "92598_nostore.html^headers^",
+  "bug92598_window.xhtml",
+]
 
 ["test_docRedirect.xhtml"]
 

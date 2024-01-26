@@ -1,4 +1,0 @@
-[DEFAULT]
-
-["aaa.js"]
-run-if = "os == 'linux'"
