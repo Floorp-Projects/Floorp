@@ -1,4 +1,4 @@
-WebTransport (WIP)
+WebTransport
 ============
 
 Components:

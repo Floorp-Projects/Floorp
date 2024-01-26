@@ -1,4 +1,4 @@
-# URL Parsers
+# URL parsers
 
 ```{warning}
 In order to ensure thread safety it is important that all of the objects and interfaces of URI objects are immutable.
@@ -36,7 +36,7 @@ While we could simply pass strings around and leave it to the final consumer to 
 - [nsISensitiveInfoHiddenURI](https://searchfox.org/mozilla-central/source/netwerk/base/nsISensitiveInfoHiddenURI.idl)
     - Objects that implement this interface will have a `getSensitiveInfoHiddenSpec()` method that returns the spec of the URI with sensitive info (such as the password) replaced by the `*` symbol.
 
-### Diagram of Interfaces
+### Diagram of interfaces
 ```{mermaid}
 classDiagram
 nsISupports <-- nsIURI
@@ -58,7 +58,7 @@ To change a URI the consumer must call `nsIURI.mutate()` which returns a `nsIMut
     - This interface contains a series of setters that can be used to mutate and/or construct a `nsIURI`
 
 
-### Additional Interfaces
+### Additional interfaces
 
 - [nsISerializable](https://searchfox.org/mozilla-central/source/xpcom/ds/nsISerializable.idl)
     - Allows us to serialize and deserialize URL objects into strings for persistent storage (such as session restore).
@@ -89,7 +89,7 @@ To change a URI the consumer must call `nsIURI.mutate()` which returns a `nsIMut
 - [nsJARURI](https://searchfox.org/mozilla-central/source/modules/libjar/nsJARURI.h)
     - Used to represent resources inside of JAR files.
 
-### Diagram of Implementations
+### Diagram of implementations
 
 ```{mermaid}
 classDiagram
@@ -111,7 +111,7 @@ nsINestedURI o-- nsJARURI
 nsIJARURI o-- nsJARURI
 ```
 
-## Class and Interface Diagram
+## Class and interface diagram
 
 ```{mermaid}
 classDiagram
