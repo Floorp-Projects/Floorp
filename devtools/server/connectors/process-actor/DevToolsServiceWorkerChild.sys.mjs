@@ -375,7 +375,7 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       return false;
     }
 
-    const workerHost = dbg.principal.host;
+    const workerHost = dbg.principal.hostPort;
     return workerHost == sessionData["browser-element-host"][0];
   }
 
