@@ -126,11 +126,12 @@ class InlineTranslator : public Translator {
     mNativeFontResources.InsertOrUpdate(aKey, RefPtr{aScaledFontResouce});
   }
 
-  void RemoveDrawTarget() override {
-    if (mCurrentDT) {
-      mDrawTargets.Remove(mCurrentDT);
+  void RemoveDrawTarget(ReferencePtr aRefPtr) override {
+    ReferencePtr currentDT = mCurrentDT;
+    if (currentDT == aRefPtr) {
       mCurrentDT = nullptr;
     }
+    mDrawTargets.Remove(aRefPtr);
   }
 
   bool SetCurrentDrawTarget(ReferencePtr aRefPtr) override {
@@ -144,16 +145,8 @@ class InlineTranslator : public Translator {
     mSourceSurfaces.Remove(aRefPtr);
   }
 
-  void RemoveFilterNode() final {
-    if (mCurrentFilter) {
-      mFilterNodes.Remove(mCurrentFilter);
-      mCurrentFilter = nullptr;
-    }
-  }
-
-  bool SetCurrentFilterNode(ReferencePtr aRefPtr) override {
-    mCurrentFilter = mFilterNodes.GetWeak(aRefPtr);
-    return !!mCurrentFilter;
+  void RemoveFilterNode(ReferencePtr aRefPtr) final {
+    mFilterNodes.Remove(aRefPtr);
   }
 
   void RemoveGradientStops(ReferencePtr aRefPtr) final {

@@ -104,7 +104,7 @@ class Translator {
   }
   void DrawDependentSurface(uint64_t aKey, const Rect& aRect);
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget* aDT) = 0;
-  virtual void RemoveDrawTarget() = 0;
+  virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual bool SetCurrentDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual void AddPath(ReferencePtr aRefPtr, Path* aPath) = 0;
   virtual void RemovePath(ReferencePtr aRefPtr) = 0;
@@ -112,8 +112,7 @@ class Translator {
   virtual void RemoveSourceSurface(ReferencePtr aRefPtr) = 0;
   virtual void AddFilterNode(mozilla::gfx::ReferencePtr aRefPtr,
                              FilterNode* aSurface) = 0;
-  virtual void RemoveFilterNode() = 0;
-  virtual bool SetCurrentFilterNode(ReferencePtr aRefPtr) = 0;
+  virtual void RemoveFilterNode(mozilla::gfx::ReferencePtr aRefPtr) = 0;
 
   /**
    * Get GradientStops compatible with the translation DrawTarget type.
@@ -152,12 +151,9 @@ class Translator {
 
   DrawTarget* GetCurrentDrawTarget() const { return mCurrentDT; }
 
-  FilterNode* GetCurrentFilterNode() const { return mCurrentFilter; }
-
   nsRefPtrHashtable<nsUint64HashKey, RecordedDependentSurface>*
       mDependentSurfaces = nullptr;
   DrawTarget* mCurrentDT = nullptr;
-  FilterNode* mCurrentFilter = nullptr;
 };
 
 struct ColorPatternStorage {
@@ -408,7 +404,6 @@ class RecordedEvent {
     MASKSURFACE,
     FILTERNODECREATION,
     FILTERNODEDESTRUCTION,
-    SETCURRENTFILTERNODE,
     DRAWFILTER,
     FILTERNODESETATTRIBUTE,
     FILTERNODESETINPUT,
