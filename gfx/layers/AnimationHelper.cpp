@@ -18,19 +18,15 @@
 #include "mozilla/dom/KeyframeEffect.h"       // for dom::KeyFrameEffectReadOnly
 #include "mozilla/dom/Nullable.h"             // for dom::Nullable
 #include "mozilla/layers/APZSampler.h"        // for APZSampler
-#include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/LayerAnimationInfo.h"  // for GetCSSPropertiesFor()
 #include "mozilla/Maybe.h"               // for Maybe<>
 #include "mozilla/MotionPathUtils.h"     // for ResolveMotionPath()
-#include "mozilla/ServoBindings.h"  // for Servo_ComposeAnimationSegment, etc
 #include "mozilla/StyleAnimationValue.h"  // for StyleAnimationValue, etc
 #include "nsCSSPropertyID.h"              // for eCSSProperty_offset_path, etc
-#include "nsDeviceContext.h"              // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"                // for nsDisplayTransform, etc
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
     const Maybe<APZSampler::ScrollOffsetAndRange> aScrollMeta,
@@ -843,5 +839,4 @@ bool AnimationHelper::ShouldBeJank(const LayoutDeviceRect& aPrerenderedRect,
                                prerenderedQuad.mPoints[3].y, clipRect);
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers

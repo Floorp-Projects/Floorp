@@ -75,8 +75,6 @@ class AnimationInfo final {
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
   void ClearAnimationsForNextTransaction();
-  bool StartPendingAnimations(const TimeStamp& aReadyTime);
-
   uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
   // Note: We don't set mAnimations on the compositor thread, so this will
   // always return an empty array on the compositor thread.
@@ -138,7 +136,8 @@ class AnimationInfo final {
       const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,
       Send aSendFlag);
 
- protected:
+  void MaybeStartPendingAnimation(Animation&, const TimeStamp& aReadyTime);
+
   // mAnimations (and mPendingAnimations) are only set on the main thread.
   //
   // Once the animations are received on the compositor thread/process we
