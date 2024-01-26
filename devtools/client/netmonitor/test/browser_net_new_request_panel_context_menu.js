@@ -121,8 +121,9 @@ add_task(async function () {
   const headersValues = document.querySelectorAll(
     "#http-custom-headers .tabpanel-summary-container.http-custom-input"
   );
-  ok(
-    headersValues.length >= 6,
+  Assert.greaterOrEqual(
+    headersValues.length,
+    6,
     "The headers length in the form should match the request we clicked"
   );
 

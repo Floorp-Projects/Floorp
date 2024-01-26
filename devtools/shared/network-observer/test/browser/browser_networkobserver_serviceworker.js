@@ -42,8 +42,9 @@ add_task(async function testServiceWorkerSuccessRequests() {
       EXPECTED_REQUESTS.includes(channel.URI.spec),
       `The request for ${channel.URI.spec} is an expected service worker request`
     );
-    ok(
-      channel.loadInfo.browsingContextID !== 0,
+    Assert.notStrictEqual(
+      channel.loadInfo.browsingContextID,
+      0,
       `The request for ${channel.URI.spec} has a Browsing Context ID of ${channel.loadInfo.browsingContextID}`
     );
     // The main service worker script request is not from the service worker
@@ -99,8 +100,9 @@ add_task(async function testServiceWorkerFailedRequests() {
       EXPECTED_REQUESTS.includes(channel.URI.spec),
       `The request for ${channel.URI.spec} is an expected request`
     );
-    ok(
-      channel.loadInfo.browsingContextID !== 0,
+    Assert.notStrictEqual(
+      channel.loadInfo.browsingContextID,
+      0,
       `The request for ${channel.URI.spec} has a Browsing Context ID of ${channel.loadInfo.browsingContextID}`
     );
     ok(

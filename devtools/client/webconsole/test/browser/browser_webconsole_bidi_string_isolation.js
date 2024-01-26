@@ -78,14 +78,20 @@ function checkRects(node, parentRect = getBoundingClientRect(node)) {
   let prevRect;
   for (const child of node.childNodes) {
     const rect = getBoundingClientRect(child);
-    ok(rect.x >= parentRect.x, "Rect should start inside parent");
-    ok(
-      rect.x + rect.width <= parentRect.x + parentRect.width,
+    Assert.greaterOrEqual(
+      rect.x,
+      parentRect.x,
+      "Rect should start inside parent"
+    );
+    Assert.lessOrEqual(
+      rect.x + rect.width,
+      parentRect.x + parentRect.width,
       "Rect should end inside parent"
     );
     if (prevRect) {
-      ok(
-        rect.x >= prevRect.x + prevRect.width,
+      Assert.greaterOrEqual(
+        rect.x,
+        prevRect.x + prevRect.width,
         "Rect should start after previous one"
       );
     }

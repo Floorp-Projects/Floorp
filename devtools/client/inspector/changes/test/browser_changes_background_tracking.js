@@ -42,5 +42,5 @@ add_task(async function () {
   const sym = Symbol();
   const onTimeout = wait(500).then(() => sym);
   const raceResult = await Promise.any([onResetChanges, onTimeout]);
-  ok(raceResult === sym, "RESET_CHANGES has not been dispatched");
+  Assert.strictEqual(raceResult, sym, "RESET_CHANGES has not been dispatched");
 });

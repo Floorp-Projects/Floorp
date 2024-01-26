@@ -44,7 +44,7 @@ async function enableFirstBreakpoint(dbg) {
   await addBreakpoint(dbg, "long.js", 32);
   const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
 
-  ok(bpMarkers.length === 2, "2 column breakpoints");
+  Assert.strictEqual(bpMarkers.length, 2, "2 column breakpoints");
   assertClass(bpMarkers[0], "active");
   assertClass(bpMarkers[1], "active", false);
 }

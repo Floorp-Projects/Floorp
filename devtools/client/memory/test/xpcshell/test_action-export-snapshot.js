@@ -38,7 +38,7 @@ add_task(async function () {
 
   const stat = await IOUtils.stat(destPath);
   info(stat.size);
-  ok(stat.size > 0, "destination file is more than 0 bytes");
+  Assert.greater(stat.size, 0, "destination file is more than 0 bytes");
 
   heapWorker.destroy();
   await front.detach();

@@ -15,7 +15,7 @@ add_task(async function () {
 
   await waitForThreadCount(dbg, 2);
   const workers = dbg.selectors.getThreads();
-  ok(workers.length == 2, "Got two workers");
+  Assert.equal(workers.length, 2, "Got two workers");
   const thread1 = workers[0].actor;
   const thread2 = workers[1].actor;
 
@@ -43,7 +43,7 @@ add_task(async function () {
   await addExpression(dbg, "count");
   is(getWatchExpressionLabel(dbg, 1), "count");
   const v = getWatchExpressionValue(dbg, 1);
-  ok(v == `${+v}`, "Value of count should be a number");
+  Assert.equal(v, `${+v}`, "Value of count should be a number");
 
   info("StepOver in the first worker");
   await stepOver(dbg);

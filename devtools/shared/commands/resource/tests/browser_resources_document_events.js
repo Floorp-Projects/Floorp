@@ -652,17 +652,20 @@ function assertEvents({
   );
 
   if (willNavigateEvent && !ignoreWillNavigateTimestamp) {
-    ok(
-      willNavigateEvent.time <= loadingEvent.time,
+    Assert.lessOrEqual(
+      willNavigateEvent.time,
+      loadingEvent.time,
       `Timestamp for dom-loading event is greater than will-navigate event (${willNavigateEvent.time} <= ${loadingEvent.time})`
     );
   }
-  ok(
-    loadingEvent.time <= interactiveEvent.time,
+  Assert.lessOrEqual(
+    loadingEvent.time,
+    interactiveEvent.time,
     `Timestamp for interactive event is greater than loading event (${loadingEvent.time} <= ${interactiveEvent.time})`
   );
-  ok(
-    interactiveEvent.time <= completeEvent.time,
+  Assert.lessOrEqual(
+    interactiveEvent.time,
+    completeEvent.time,
     `Timestamp for complete event is greater than interactive event (${interactiveEvent.time} <= ${completeEvent.time}).`
   );
 

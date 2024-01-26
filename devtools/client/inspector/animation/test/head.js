@@ -1023,8 +1023,9 @@ function checkAdjustingTheTime(animation1, animation2) {
     animation2.currentTime / animation2.playbackRate -
     animation1.currentTime / animation1.playbackRate;
   const createdTimeDiff = animation1.createdTime - animation2.createdTime;
-  ok(
-    Math.abs(adjustedCurrentTimeDiff - createdTimeDiff) < 0.1,
+  Assert.less(
+    Math.abs(adjustedCurrentTimeDiff - createdTimeDiff),
+    0.1,
     "Adjusted time is correct"
   );
 }

@@ -26,8 +26,9 @@ add_task(async function () {
     states.SAVING,
     "utils.createSnapshot() creates snapshot in saving state"
   );
-  ok(
-    s1.id !== s2.id,
+  Assert.notStrictEqual(
+    s1.id,
+    s2.id,
     "utils.createSnapshot() creates snapshot with unique ids"
   );
 

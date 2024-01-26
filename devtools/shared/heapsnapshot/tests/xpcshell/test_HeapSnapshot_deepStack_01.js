@@ -76,8 +76,9 @@ function run_test() {
     foundStacks = true;
     const depth = stackDepth(k);
     dumpn("Stack depth is " + depth);
-    ok(
-      depth <= MAX_STACK_DEPTH,
+    Assert.lessOrEqual(
+      depth,
+      MAX_STACK_DEPTH,
       "Every stack should have depth less than or equal to the maximum stack depth"
     );
   });

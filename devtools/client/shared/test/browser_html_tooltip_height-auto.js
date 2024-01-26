@@ -87,8 +87,9 @@ async function runTests(doc) {
     "width: auto; height: 3000px; background: tomato;";
   await showTooltip(tooltip, doc.getElementById("box1"));
 
-  ok(
-    tooltip.panel.scrollHeight > tooltip.panel.clientHeight,
+  Assert.greater(
+    tooltip.panel.scrollHeight,
+    tooltip.panel.clientHeight,
     "Tooltip overflows"
   );
 

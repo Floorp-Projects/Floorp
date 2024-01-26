@@ -53,10 +53,14 @@ add_task(async function () {
 
   // Finally, some sanity checks
   ok(selReq.url.endsWith("test-image.png"), "Correct request selected");
-  ok(origReq.url === selReq.url, "Orig and Sel url match");
+  Assert.strictEqual(origReq.url, selReq.url, "Orig and Sel url match");
 
-  ok(selReq.cause.type === "img", "Correct type of selected");
-  ok(origReq.cause.type === selReq.cause.type, "Orig and Sel type match");
+  Assert.strictEqual(selReq.cause.type, "img", "Correct type of selected");
+  Assert.strictEqual(
+    origReq.cause.type,
+    selReq.cause.type,
+    "Orig and Sel type match"
+  );
 
   const cspOBJ = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     return JSON.parse(content.document.cspJSON);
@@ -130,10 +134,14 @@ add_task(async function () {
 
     // Finally, some sanity checks
     ok(selReq.url.endsWith("test-image.png"), "Correct request selected");
-    ok(origReq.url === selReq.url, "Orig and Sel url match");
+    Assert.strictEqual(origReq.url, selReq.url, "Orig and Sel url match");
 
-    ok(selReq.cause.type === "img", "Correct type of selected");
-    ok(origReq.cause.type === selReq.cause.type, "Orig and Sel type match");
+    Assert.strictEqual(selReq.cause.type, "img", "Correct type of selected");
+    Assert.strictEqual(
+      origReq.cause.type,
+      selReq.cause.type,
+      "Orig and Sel type match"
+    );
 
     const cspOBJ = await SpecialPowers.spawn(
       tab.linkedBrowser,

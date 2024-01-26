@@ -43,12 +43,14 @@ function checkRuleViewRuleMarkupOrder(view, selectorText, index = 0) {
   const parentNode = selectorContainer.parentNode;
   const childNodes = [...parentNode.childNodes];
 
-  ok(
-    childNodes.indexOf(selectorContainer) < childNodes.indexOf(highlighterIcon),
+  Assert.less(
+    childNodes.indexOf(selectorContainer),
+    childNodes.indexOf(highlighterIcon),
     "Selector text is rendered before the highlighter icon"
   );
-  ok(
-    childNodes.indexOf(highlighterIcon) < childNodes.indexOf(ruleOpenBrace),
+  Assert.less(
+    childNodes.indexOf(highlighterIcon),
+    childNodes.indexOf(ruleOpenBrace),
     "Highlighter icon is rendered before the opening brace"
   );
 }

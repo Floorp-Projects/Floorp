@@ -102,8 +102,9 @@ add_task(async function () {
     info("Waiting for mutation to occur");
     await onMutation;
 
-    ok(
-      (await getInnerHTML()) === clipboard.getText(),
+    Assert.strictEqual(
+      await getInnerHTML(),
+      clipboard.getText(),
       "Clipboard content was pasted into the node's inner HTML."
     );
     ok(
@@ -111,8 +112,9 @@ add_task(async function () {
       "The original node has been preserved."
     );
     await undoChange(inspector);
-    ok(
-      (await getInnerHTML()) === origInnerHTML,
+    Assert.strictEqual(
+      await getInnerHTML(),
+      origInnerHTML,
       "Previous innerHTML has been restored after undo"
     );
   }
@@ -147,8 +149,9 @@ add_task(async function () {
       adjacentNodeSelector,
       "innerHTML"
     );
-    ok(
-      html.trim() === '1<span class="ref">234</span><span>5</span>',
+    Assert.strictEqual(
+      html.trim(),
+      '1<span class="ref">234</span><span>5</span>',
       "The Paste as Last Child / as First Child / Before / After worked as " +
         "expected"
     );
@@ -158,8 +161,9 @@ add_task(async function () {
       adjacentNodeSelector,
       "innerHTML"
     );
-    ok(
-      html.trim() === '1<span class="ref">234</span>',
+    Assert.strictEqual(
+      html.trim(),
+      '1<span class="ref">234</span>',
       "Undo works for paste adjacent HTML"
     );
   }

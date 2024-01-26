@@ -112,8 +112,9 @@ add_task(async function () {
     gridToggle.classList.contains("active"),
     "Grid highlighter toggle is active."
   );
-  ok(
-    highlighters.gridHighlighters.keys().next().value != firstGridHighterShown,
+  Assert.notEqual(
+    highlighters.gridHighlighters.keys().next().value,
+    firstGridHighterShown,
     "Grid highlighter for the second grid container is shown."
   );
 

@@ -53,8 +53,9 @@ async function testParentProcess() {
   await targetCommand.startListening();
 
   const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
-  ok(
-    targets.length > 1,
+  Assert.greater(
+    targets.length,
+    1,
     "We get many targets when debugging the parent process"
   );
   const targetFront = targets[0];

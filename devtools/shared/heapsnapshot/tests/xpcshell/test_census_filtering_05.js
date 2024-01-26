@@ -68,7 +68,11 @@ function run_test() {
     if (node.children) {
       let lastSelfBytes = Infinity;
       for (const child of node.children) {
-        ok(child.bytes <= lastSelfBytes, `${child.bytes} <= ${lastSelfBytes}`);
+        Assert.lessOrEqual(
+          child.bytes,
+          lastSelfBytes,
+          `${child.bytes} <= ${lastSelfBytes}`
+        );
         lastSelfBytes = child.bytes;
         assertSortedBySelf(child);
       }

@@ -48,8 +48,9 @@ add_task(async function () {
       .map(x => "hoot"),
     status: "ok",
   });
-  ok(
-    json.length > EXPAND_THRESHOLD,
+  Assert.greater(
+    json.length,
+    EXPAND_THRESHOLD,
     "The generated JSON must be larger than 100kB"
   );
   await addJsonViewTab("data:application/json," + json);

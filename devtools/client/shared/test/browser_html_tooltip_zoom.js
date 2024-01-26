@@ -60,8 +60,8 @@ add_task(async function () {
   const xDelta = Math.abs(menuRect.left - anchorRect.left);
   const yDelta = Math.abs(menuRect.top - anchorRect.bottom);
 
-  ok(xDelta < 1, "xDelta: " + xDelta + ".");
-  ok(yDelta < 1, "yDelta: " + yDelta + ".");
+  Assert.less(xDelta, 1, "xDelta: " + xDelta + ".");
+  Assert.less(yDelta, 1, "yDelta: " + yDelta + ".");
 
   info("Hide the tooltip and check the expected events are fired.");
 

@@ -52,8 +52,9 @@ add_task(async function () {
     null,
     "With Fission or server side target switching, example.com target front is destroyed"
   );
-  ok(
-    comTabTarget != newTarget,
+  Assert.notEqual(
+    comTabTarget,
+    newTarget,
     "With Fission or server side target switching, a new target was created for example.org"
   );
 

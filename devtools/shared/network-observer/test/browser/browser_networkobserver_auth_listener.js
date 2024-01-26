@@ -91,8 +91,9 @@ add_task(async function testAuthRequestWithoutListener() {
 
   info("Wait for the auth prompt to be displayed");
   await onAuthPrompt;
-  ok(
-    getTabAuthPrompts(tab).length == 1,
+  Assert.equal(
+    getTabAuthPrompts(tab).length,
+    1,
     "The auth prompt was not blocked by the network observer"
   );
 
@@ -140,8 +141,9 @@ add_task(async function testAuthRequestWithForwardingListener() {
   // forwards the auth notification immediately.
   info("Wait for the auth prompt to be displayed");
   await onAuthPrompt;
-  ok(
-    getTabAuthPrompts(tab).length == 1,
+  Assert.equal(
+    getTabAuthPrompts(tab).length,
+    1,
     "The auth prompt was not blocked by the network observer"
   );
 

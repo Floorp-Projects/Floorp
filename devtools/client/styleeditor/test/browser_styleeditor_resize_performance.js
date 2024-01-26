@@ -43,8 +43,9 @@ add_task(async function () {
   await resizeWindow(400, ui, win);
   const eventsCount = await onMediaListChanged;
 
-  ok(
-    eventsCount < MAX_EVENTS,
+  Assert.less(
+    eventsCount,
+    MAX_EVENTS,
     `Too many events fired (expected less than ${MAX_EVENTS}, got ${eventsCount})`
   );
 

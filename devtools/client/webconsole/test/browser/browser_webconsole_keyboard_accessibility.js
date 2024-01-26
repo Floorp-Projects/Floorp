@@ -69,8 +69,9 @@ add_task(async function () {
   info("Check Page down keyboard shortcut");
   currentPosition = outputScroller.scrollTop;
   EventUtils.synthesizeKey("KEY_PageDown");
-  ok(
-    outputScroller.scrollTop > currentPosition,
+  Assert.greater(
+    outputScroller.scrollTop,
+    currentPosition,
     "scroll position now at bottom"
   );
 

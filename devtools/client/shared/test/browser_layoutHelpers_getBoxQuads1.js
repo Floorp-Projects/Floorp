@@ -42,7 +42,11 @@ add_task(async function () {
       getAdjustedQuads,
     } = require("resource://devtools/shared/layout/utils.js");
 
-    ok(typeof getAdjustedQuads === "function", "getAdjustedQuads is defined");
+    Assert.strictEqual(
+      typeof getAdjustedQuads,
+      "function",
+      "getAdjustedQuads is defined"
+    );
 
     returnsTheRightDataStructure();
     isEmptyForMissingNode();
@@ -295,12 +299,14 @@ add_task(async function () {
       await sendCommand("zoom-enlarge");
       const [zoomedInQuad] = getAdjustedQuads(doc.defaultView, node);
 
-      ok(
-        zoomedInQuad.bounds.width > defaultQuad.bounds.width,
+      Assert.greater(
+        zoomedInQuad.bounds.width,
+        defaultQuad.bounds.width,
         "The zoomed in quad is bigger than the default one"
       );
-      ok(
-        zoomedInQuad.bounds.height > defaultQuad.bounds.height,
+      Assert.greater(
+        zoomedInQuad.bounds.height,
+        defaultQuad.bounds.height,
         "The zoomed in quad is bigger than the default one"
       );
 
@@ -310,12 +316,14 @@ add_task(async function () {
 
       const [zoomedOutQuad] = getAdjustedQuads(doc.defaultView, node);
 
-      ok(
-        zoomedOutQuad.bounds.width < defaultQuad.bounds.width,
+      Assert.less(
+        zoomedOutQuad.bounds.width,
+        defaultQuad.bounds.width,
         "The zoomed out quad is smaller than the default one"
       );
-      ok(
-        zoomedOutQuad.bounds.height < defaultQuad.bounds.height,
+      Assert.less(
+        zoomedOutQuad.bounds.height,
+        defaultQuad.bounds.height,
         "The zoomed out quad is smaller than the default one"
       );
 
@@ -331,7 +339,7 @@ add_task(async function () {
       const node = doc.querySelector("#inline");
       const quads = getAdjustedQuads(doc.defaultView, node, "content");
       // At least 3 because of the 2 <br />, maybe more depending on the window size.
-      ok(quads.length >= 3, "Multiple quads were returned");
+      Assert.greaterOrEqual(quads.length, 3, "Multiple quads were returned");
 
       is(
         quads.length,

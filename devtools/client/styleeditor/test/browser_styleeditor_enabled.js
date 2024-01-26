@@ -66,8 +66,8 @@ add_task(async function testLongNameStylesheet() {
   let stylesheetToggle = editor.summary.querySelector(".stylesheet-toggle");
   is(editor.friendlyName, "simple.css");
   ok(stylesheetToggle, "stylesheet toggle button exists");
-  ok(stylesheetToggle.getBoundingClientRect().width > 0);
-  ok(stylesheetToggle.getBoundingClientRect().height > 0);
+  Assert.greater(stylesheetToggle.getBoundingClientRect().width, 0);
+  Assert.greater(stylesheetToggle.getBoundingClientRect().height, 0);
 
   const expectedWidth = stylesheetToggle.getBoundingClientRect().width;
   const expectedHeight = stylesheetToggle.getBoundingClientRect().height;

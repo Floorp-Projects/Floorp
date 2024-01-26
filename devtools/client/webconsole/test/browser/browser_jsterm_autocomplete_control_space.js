@@ -30,7 +30,7 @@ add_task(async function () {
 
   const { itemCount } = popup;
   ok(popup.isOpen, "popup is open");
-  ok(itemCount > 0, "popup has items");
+  Assert.greater(itemCount, 0, "popup has items");
 
   info("Check that Ctrl+Space when the popup is opened has no effect");
   EventUtils.synthesizeKey(" ", { ctrlKey: true });

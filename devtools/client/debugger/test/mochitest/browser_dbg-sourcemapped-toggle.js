@@ -23,7 +23,7 @@ add_task(async function () {
   invokeInTab("webpack3Babel6EsmodulesCjs");
   await waitForPaused(dbg);
 
-  ok(getOriginalScope(dbg) != null, "Scopes are now mapped");
+  Assert.notEqual(getOriginalScope(dbg), null, "Scopes are now mapped");
 
   ok(!findFooterNotificationMessage(dbg), "No footer notification message");
   await assertPreviewTextValue(dbg, 20, 20, {

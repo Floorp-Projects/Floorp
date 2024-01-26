@@ -50,8 +50,8 @@ add_task(async function () {
   dumpn("End   = " + end);
   dumpn("Time  = " + time);
 
-  ok(time >= start, "creation time occurred after start");
-  ok(time <= end, "creation time occurred before end");
+  Assert.greaterOrEqual(time, start, "creation time occurred after start");
+  Assert.lessOrEqual(time, end, "creation time occurred before end");
 
   client.destroy();
 });

@@ -35,8 +35,9 @@ add_task(async function () {
     inspector
   );
   info("Checking the clipPath element");
-  ok(
-    clipPathContainer.editor.tag.textContent === "svg:clipPath",
+  Assert.strictEqual(
+    clipPathContainer.editor.tag.textContent,
+    "svg:clipPath",
     "svg:clipPath node is correctly displayed"
   );
 
@@ -45,8 +46,9 @@ add_task(async function () {
     inspector
   );
   info("Checking the circle element");
-  ok(
-    circlePathContainer.editor.tag.textContent === "svg:circle",
+  Assert.strictEqual(
+    circlePathContainer.editor.tag.textContent,
+    "svg:circle",
     "svg:circle node is correctly displayed"
   );
 });

@@ -41,9 +41,9 @@ add_task(async function () {
   info("Checking timeline tick item elements after enlarge sidebar width");
   await setSidebarWidth("100%", inspector);
   await assertTickLabels(timeScale, listContainerEl);
-  ok(
-    timelineTickItemLength <
-      listContainerEl.querySelectorAll(".tick-label").length,
+  Assert.less(
+    timelineTickItemLength,
+    listContainerEl.querySelectorAll(".tick-label").length,
     "The timeline tick item elements should increase"
   );
 });

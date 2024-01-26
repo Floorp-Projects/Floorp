@@ -18,8 +18,9 @@ add_task(async function loadNewChild() {
   // Make sure that refetching the root document of the walker returns the same
   // actor as the getWalker returned.
   const root = await walker.document();
-  ok(
-    root === walker.rootNode,
+  Assert.strictEqual(
+    root,
+    walker.rootNode,
     "Re-fetching the document node should match the root document node."
   );
   checkActorIDs.push(root.actorID);
@@ -41,7 +42,7 @@ add_task(async function testInnerHTML() {
       return content.document.documentElement.innerHTML;
     }
   );
-  ok(innerHTML === actualInnerHTML, "innerHTML should match");
+  Assert.strictEqual(innerHTML, actualInnerHTML, "innerHTML should match");
 });
 
 add_task(async function testOuterHTML() {
@@ -59,7 +60,7 @@ add_task(async function testOuterHTML() {
       return content.document.documentElement.outerHTML;
     }
   );
-  ok(outerHTML === actualOuterHTML, "outerHTML should match");
+  Assert.strictEqual(outerHTML, actualOuterHTML, "outerHTML should match");
 });
 
 add_task(async function testSetOuterHTMLNode() {

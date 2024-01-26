@@ -76,7 +76,11 @@ add_task(async function () {
 
   let node = objectInspector.querySelector(".objectBox-node");
   let openInInspectorIcon = node.querySelector(".open-inspector");
-  ok(openInInspectorIcon !== null, "The is an open in inspector icon");
+  Assert.notStrictEqual(
+    openInInspectorIcon,
+    null,
+    "The is an open in inspector icon"
+  );
 
   info(
     "Clicking on the inspector icon and waiting for the inspector to be selected"
@@ -117,7 +121,11 @@ add_task(async function () {
   );
   node = messageNode.querySelectorAll(".objectBox-node")[2];
   openInInspectorIcon = node.querySelector(".open-inspector");
-  ok(openInInspectorIcon !== null, "The is an open in inspector icon");
+  Assert.notStrictEqual(
+    openInInspectorIcon,
+    null,
+    "The is an open in inspector icon"
+  );
 
   info(
     "Clicking on the inspector icon and waiting for the inspector to be selected"

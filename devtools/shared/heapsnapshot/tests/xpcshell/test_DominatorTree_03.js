@@ -12,9 +12,10 @@ function run_test() {
     dominatorTree.root,
     "root should be an integer"
   );
-  ok(dominatorTree.root >= 0, "root should be positive");
-  ok(
-    dominatorTree.root <= Math.pow(2, 48),
+  Assert.greaterOrEqual(dominatorTree.root, 0, "root should be positive");
+  Assert.lessOrEqual(
+    dominatorTree.root,
+    Math.pow(2, 48),
     "root should be less than or equal to 2^48"
   );
   do_test_finished();

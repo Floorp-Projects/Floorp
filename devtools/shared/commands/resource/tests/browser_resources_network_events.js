@@ -231,8 +231,9 @@ async function assertNetworkResourcesOnPage(
       // will be notified to onUpdated and so if we assert it later
       // we will not highlight attributes that aren't set yet from onAvailable.
       const idx = expectedAvailable.findIndex(e => e.url === resource.url);
-      ok(
-        idx != -1,
+      Assert.notEqual(
+        idx,
+        -1,
         "Found a matching available notification for: " + resource.url
       );
       // Remove the match from the list in case there is many requests with the same url
@@ -244,8 +245,9 @@ async function assertNetworkResourcesOnPage(
   const onUpdated = updates => {
     for (const { resource } of updates) {
       const idx = expectedUpdated.findIndex(e => e.url === resource.url);
-      ok(
-        idx != -1,
+      Assert.notEqual(
+        idx,
+        -1,
         "Found a matching updated notification for: " + resource.url
       );
       // Remove the match from the list in case there is many requests with the same url

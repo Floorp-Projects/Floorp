@@ -184,9 +184,9 @@ function assertContainerQueryData(view, expectedRules) {
         expectedRule.ancestorRulesData.join("\n"),
         `Expected ancestor rules data displayed for ${selector}`
       );
-      ok(
-        ancestorDataEl.querySelector(".container-query .open-inspector") !==
-          null,
+      Assert.notStrictEqual(
+        ancestorDataEl.querySelector(".container-query .open-inspector"),
+        null,
         "An icon is displayed to select the container in the markup view"
       );
     }

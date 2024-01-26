@@ -48,16 +48,18 @@ function run_test() {
     const result = colorUtils.classifyColor(test.input);
     equal(result, test.output, "test classifyColor(" + test.input + ")");
 
-    ok(
-      InspectorUtils.colorToRGBA(test.input) !== null,
+    Assert.notStrictEqual(
+      InspectorUtils.colorToRGBA(test.input),
+      null,
       "'" + test.input + "' is a color"
     );
 
     // check some obvious errors.
     const invalidColors = ["mumble" + test.input, test.input + "trailingstuff"];
     for (const invalidColor of invalidColors) {
-      ok(
-        InspectorUtils.colorToRGBA(invalidColor) == null,
+      Assert.equal(
+        InspectorUtils.colorToRGBA(invalidColor),
+        null,
         `'${invalidColor}' is not a color`
       );
     }

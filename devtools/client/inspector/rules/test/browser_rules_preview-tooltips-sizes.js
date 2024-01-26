@@ -75,12 +75,14 @@ add_task(async function () {
   info(
     `Image preview dimensions: ${tooltipRect.width} x ${tooltipRect.height}`
   );
-  ok(
-    tooltipRect.height > originalHeight,
+  Assert.greater(
+    tooltipRect.height,
+    originalHeight,
     "Tooltip is taller for image preview"
   );
-  ok(
-    tooltipRect.width < originalWidth,
+  Assert.less(
+    tooltipRect.width,
+    originalWidth,
     "Tooltip is narrower for image preview"
   );
   await assertTooltipHiddenOnMouseOut(previewTooltip, colorVariableElement);

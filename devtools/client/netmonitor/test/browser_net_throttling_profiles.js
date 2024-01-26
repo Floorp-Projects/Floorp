@@ -60,8 +60,9 @@ add_task(async function () {
 
     const requestItem = getSortedRequests(store.getState()).at(-1);
     if (requestItem.eventTimings) {
-      ok(
-        requestItem.eventTimings.timings.receive > 1000,
+      Assert.greater(
+        requestItem.eventTimings.timings.receive,
+        1000,
         `Request was properly throttled for profile ${profile.id}`
       );
     }

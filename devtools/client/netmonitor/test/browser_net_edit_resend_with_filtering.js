@@ -57,8 +57,9 @@ add_task(async function () {
   document.querySelectorAll(".request-list-item")[1].click();
   const cloneRequest = getSelectedRequest(store.getState());
 
-  ok(
-    cloneRequest.id.replace(/-clone$/, "") == firstRequest.id,
+  Assert.equal(
+    cloneRequest.id.replace(/-clone$/, ""),
+    firstRequest.id,
     "The second XHR request is a clone of the first"
   );
 
@@ -73,8 +74,9 @@ add_task(async function () {
   document.querySelectorAll(".request-list-item")[0].click();
   const resendRequest = getSelectedRequest(store.getState());
 
-  ok(
-    resendRequest.id !== firstRequest.id,
+  Assert.notStrictEqual(
+    resendRequest.id,
+    firstRequest.id,
     "The second XHR request was made and is unique"
   );
 
@@ -143,8 +145,9 @@ add_task(async function () {
     EventUtils.sendMouseEvent({ type: "mousedown" }, newRequest);
     const resendRequest = getSelectedRequest(store.getState());
 
-    ok(
-      resendRequest.id !== firstRequest.id,
+    Assert.notStrictEqual(
+      resendRequest.id,
+      firstRequest.id,
       "The second XHR request was made and is unique"
     );
 

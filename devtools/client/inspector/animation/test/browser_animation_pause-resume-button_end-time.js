@@ -60,8 +60,9 @@ function assertPlayState(animations, expectedState) {
 
 function assertCurrentTimeLessThanDuration(animations) {
   animations.forEach((animation, index) => {
-    ok(
-      animation.state.currentTime < animation.state.duration,
+    Assert.less(
+      animation.state.currentTime,
+      animation.state.duration,
       `The current time of animation[${index}] should be less than its duration`
     );
   });
@@ -70,8 +71,9 @@ function assertCurrentTimeLessThanDuration(animations) {
 function assertScrubberPosition(panel) {
   const scrubberEl = panel.querySelector(".current-time-scrubber");
   const marginInlineStart = parseFloat(scrubberEl.style.marginInlineStart);
-  ok(
-    marginInlineStart >= 0,
+  Assert.greaterOrEqual(
+    marginInlineStart,
+    0,
     "The translateX of scrubber position should be zero or more"
   );
 }

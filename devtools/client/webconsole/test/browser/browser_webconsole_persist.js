@@ -286,8 +286,9 @@ add_task(async function consoleClearPersist() {
   await onConsoleClearPrevented;
   ok(true, "console.clear was handled by the client");
 
-  ok(
-    findAllMessages(hud).length === INITIAL_LOGS_NUMBER + 2,
+  Assert.strictEqual(
+    findAllMessages(hud).length,
+    INITIAL_LOGS_NUMBER + 2,
     "All initial messages are still displayed, with the 2 new ones"
   );
 
@@ -313,9 +314,14 @@ function assertLastMessageIsNavigationMessage(hud, timeBeforeNavigation, url) {
   );
   // It is surprising, but the navigation may be timestamped at the same exact time
   // as timeBeforeNavigation time record.
-  ok(
-    lastMessage.timeStamp >= timeBeforeNavigation,
+  Assert.greaterOrEqual(
+    lastMessage.timeStamp,
+    timeBeforeNavigation,
     "The navigation message has a timestamp newer (or equal) than the time before the navigation..."
   );
-  ok(lastMessage.timeStamp < Date.now(), "...and older than current time");
+  Assert.less(
+    lastMessage.timeStamp,
+    Date.now(),
+    "...and older than current time"
+  );
 }

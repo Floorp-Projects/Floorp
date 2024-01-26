@@ -60,7 +60,11 @@ add_task(async function () {
       i++,
       `index ${name} is correct and sorted into the correct position`
     );
-    ok(typeof row.name === "number", "array index is displayed as a number");
+    Assert.strictEqual(
+      typeof row.name,
+      "number",
+      "array index is displayed as a number"
+    );
     is(TEST_ARRAY[name], row.value, `value for array[${name}] is ${row.value}`);
   }
 });

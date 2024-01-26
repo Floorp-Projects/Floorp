@@ -50,7 +50,7 @@ add_task(async function () {
     onAvailable,
     onDestroyed,
   });
-  ok(created.length > 1, "We get many content process targets");
+  Assert.greater(created.length, 1, "We get many content process targets");
 
   targetCommand.stopListening();
 

@@ -23,8 +23,8 @@ add_task(async function test() {
 
   // We step past the 'let x' at the start of the function because it is not
   // a breakpoint position.
-  ok(findNodeValue(dbg, "x") == "undefined", "x undefined");
-  ok(findNodeValue(dbg, "y") == "(uninitialized)", "y uninitialized");
+  Assert.equal(findNodeValue(dbg, "x"), "undefined", "x undefined");
+  Assert.equal(findNodeValue(dbg, "y"), "(uninitialized)", "y uninitialized");
 
   await stepOver(dbg);
 
@@ -34,7 +34,7 @@ add_task(async function test() {
     9
   );
 
-  ok(findNodeValue(dbg, "y") == "3", "y initialized");
+  Assert.equal(findNodeValue(dbg, "y"), "3", "y initialized");
 });
 
 function findNodeValue(dbg, text) {

@@ -92,8 +92,9 @@ const runAutocompletionTest = async function (editor) {
       // want to ensure the popup tries to match the position of the query in the editor
       // input.
       const offset = getPopupOffset(editor);
-      ok(
-        offset > previousOffset,
+      Assert.greater(
+        offset,
+        previousOffset,
         "New popup offset is greater than the previous one"
       );
       previousOffset = offset;

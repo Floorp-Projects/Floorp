@@ -32,7 +32,7 @@ add_task(async function () {
   await onPopUpOpen;
   const scrollableEl = ui.window.document.querySelector(".CodeMirror-scroll");
 
-  ok(scrollableEl.scrollTop > 0, "The input overflows");
+  Assert.greater(scrollableEl.scrollTop, 0, "The input overflows");
   const scrollTop = scrollableEl.scrollTop;
 
   info("Hit Enter to accept the autocompletion");

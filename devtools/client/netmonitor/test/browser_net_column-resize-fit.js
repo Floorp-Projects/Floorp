@@ -72,8 +72,9 @@ add_task(async function () {
 function checkColumnsData(columnsData, column, expectedWidth) {
   const width = getWidthFromPref(columnsData, column);
   const widthsDiff = Math.abs(width - expectedWidth);
-  ok(
-    widthsDiff < 2,
+  Assert.less(
+    widthsDiff,
+    2,
     `Column ${column} has expected size. Got ${width}, Expected ${expectedWidth}`
   );
 }

@@ -37,8 +37,9 @@ add_task(async function () {
   const delta =
     mutableMessagesById.get(resultId).timeStamp -
     mutableMessagesById.get(commandId).timeStamp;
-  ok(
-    delta >= 500,
+  Assert.greaterOrEqual(
+    delta,
+    500,
     `The result has a timestamp at least 500ms (${delta}ms) older than the command`
   );
 

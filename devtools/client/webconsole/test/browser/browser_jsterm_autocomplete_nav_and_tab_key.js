@@ -67,15 +67,17 @@ add_task(async function () {
   let currentSelectionIndex = popup.selectedIndex;
 
   EventUtils.synthesizeKey("KEY_PageUp");
-  ok(
-    popup.selectedIndex < currentSelectionIndex,
+  Assert.less(
+    popup.selectedIndex,
+    currentSelectionIndex,
     "Index is less after Page UP"
   );
 
   currentSelectionIndex = popup.selectedIndex;
   EventUtils.synthesizeKey("KEY_PageDown");
-  ok(
-    popup.selectedIndex > currentSelectionIndex,
+  Assert.greater(
+    popup.selectedIndex,
+    currentSelectionIndex,
     "Index is greater after PGDN"
   );
 

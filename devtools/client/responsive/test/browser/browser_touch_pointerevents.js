@@ -31,7 +31,11 @@ async function testPointerEvents(ui) {
       div.style["background-color"] = "green"; //rgb(0,128,0)
     });
     div.addEventListener("pointerdown", e => {
-      ok(e.pointerType === "touch", "Got pointer event from a touch event.");
+      Assert.strictEqual(
+        e.pointerType,
+        "touch",
+        "Got pointer event from a touch event."
+      );
     });
 
     info("Check that the pointerdown event is from a touch event.");

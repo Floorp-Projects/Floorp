@@ -518,7 +518,11 @@ async function testNestedResourceUpdateFeature() {
     resourceId: resource.resourceId,
     updateType: "matches-change",
   });
-  ok(resource === targetUpdate.resource, "Update object has the same resource");
+  Assert.strictEqual(
+    resource,
+    targetUpdate.resource,
+    "Update object has the same resource"
+  );
 
   is(
     JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),

@@ -59,13 +59,15 @@ async function runTests(doc) {
     const arrowCentre = (arrowBounds.left + arrowBounds.right) / 2;
 
     if (hangDirection === "left") {
-      ok(
-        arrowCentre > panelBoundsCentre,
+      Assert.greater(
+        arrowCentre,
+        panelBoundsCentre,
         `tooltip hangs to the left for ${anchor.id}`
       );
     } else {
-      ok(
-        arrowCentre < panelBoundsCentre,
+      Assert.less(
+        arrowCentre,
+        panelBoundsCentre,
         `tooltip hangs to the right for ${anchor.id}`
       );
     }

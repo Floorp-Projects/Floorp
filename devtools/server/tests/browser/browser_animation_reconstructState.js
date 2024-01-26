@@ -30,8 +30,9 @@ async function playerHasCompleteStateAtAllTimes(walker, animations) {
   for (let i = 0; i < 10; i++) {
     await player.refreshState();
     keys.forEach(key => {
-      ok(
-        typeof player.state[key] !== "undefined",
+      Assert.notStrictEqual(
+        typeof player.state[key],
+        "undefined",
         "The state retrieved has key " + key
       );
     });

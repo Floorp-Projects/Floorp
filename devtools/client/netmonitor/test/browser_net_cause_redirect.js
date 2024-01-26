@@ -58,7 +58,11 @@ add_task(async function () {
     const stackLen = stacktrace ? stacktrace.length : 0;
 
     ok(stacktrace, `Request #${i} has a stacktrace`);
-    ok(stackLen > 0, `Request #${i} has a stacktrace with ${stackLen} items`);
+    Assert.greater(
+      stackLen,
+      0,
+      `Request #${i} has a stacktrace with ${stackLen} items`
+    );
   });
 
   // Send a request to reset the HSTS policy to state before the test

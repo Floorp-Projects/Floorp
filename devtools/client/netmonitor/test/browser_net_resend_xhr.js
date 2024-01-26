@@ -51,7 +51,11 @@ add_task(async function () {
   const selectedRequest = getSelectedRequest(store.getState());
 
   // Compares if the requests are the same.
-  ok(originalRequest.url === selectedRequest.url, "Both requests are the same");
+  Assert.strictEqual(
+    originalRequest.url,
+    selectedRequest.url,
+    "Both requests are the same"
+  );
 
   await teardown(monitor);
 });

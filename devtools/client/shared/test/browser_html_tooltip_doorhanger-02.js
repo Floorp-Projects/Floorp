@@ -63,8 +63,9 @@ async function runTests(doc) {
     const params =
       `anchor: ${describeBounds(anchorBounds)}, ` +
       `arrow: ${describeBounds(arrowBounds)}`;
-    ok(
-      delta <= 1,
+    Assert.lessOrEqual(
+      delta,
+      1,
       `Arrow center is roughly aligned with anchor center (${params})`
     );
 

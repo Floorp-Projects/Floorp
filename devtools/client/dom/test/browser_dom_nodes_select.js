@@ -22,7 +22,7 @@ add_task(async function () {
   const inspector = toolbox.getPanel("inspector");
 
   const openInInspectorIcon = node.querySelector(".open-inspector");
-  ok(node !== null, "Node was logged as expected");
+  Assert.notStrictEqual(node, null, "Node was logged as expected");
 
   info(
     "Clicking on the inspector icon and waiting for the " +

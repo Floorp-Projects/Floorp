@@ -41,7 +41,7 @@ add_task(async function () {
 
   info("Enable the breakpoint for the second debugger statement on line 12");
   let bpElements = await waitForAllElements(dbg, "columnBreakpoints");
-  ok(bpElements.length === 2, "2 column breakpoints");
+  Assert.strictEqual(bpElements.length, 2, "2 column breakpoints");
   assertClass(bpElements[0], "active");
   assertClass(bpElements[1], "active", false);
 

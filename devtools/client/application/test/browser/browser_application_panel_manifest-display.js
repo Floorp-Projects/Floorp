@@ -25,8 +25,9 @@ add_task(async function () {
   checkManifestMember(doc, "name", "Foo");
   checkManifestMember(doc, "background_color", "#ff0000");
 
-  ok(
-    doc.querySelector(".js-manifest-issues") === null,
+  Assert.strictEqual(
+    doc.querySelector(".js-manifest-issues"),
+    null,
     "No validation issues are being displayed"
   );
 
@@ -56,12 +57,16 @@ add_task(async function () {
   checkManifestMember(doc, "background_color", "");
 
   const issuesEl = doc.querySelector(".js-manifest-issues");
-  ok(issuesEl !== null, "Validation issues are displayed");
+  Assert.notStrictEqual(issuesEl, null, "Validation issues are displayed");
 
   const warningEl = [...issuesEl.querySelectorAll(".js-manifest-issue")].find(
     x => x.textContent.includes("background_color")
   );
-  ok(warningEl !== null, "A warning about background_color is displayed");
+  Assert.notStrictEqual(
+    warningEl,
+    null,
+    "A warning about background_color is displayed"
+  );
 
   // close the tab
   info("Closing the tab.");
@@ -83,12 +88,16 @@ add_task(async function () {
   ok(true, "Manifest is being displayed");
 
   const issuesEl = doc.querySelector(".js-manifest-issues");
-  ok(issuesEl !== null, "Validation issues are displayed");
+  Assert.notStrictEqual(issuesEl, null, "Validation issues are displayed");
 
   const errorEl = [...issuesEl.querySelectorAll(".js-manifest-issue")].find(x =>
     x.textContent.includes("JSON")
   );
-  ok(errorEl !== null, "An error about JSON parsing is displayed");
+  Assert.notStrictEqual(
+    errorEl,
+    null,
+    "An error about JSON parsing is displayed"
+  );
 
   // close the tab
   info("Closing the tab.");
@@ -111,9 +120,13 @@ add_task(async function () {
 
   // assert manifest icon is being displayed
   const iconEl = findMemberByLabel(doc, "128x128image/svg");
-  ok(iconEl !== null, "Icon label is being displayed with size and image type");
+  Assert.notStrictEqual(
+    iconEl,
+    null,
+    "Icon label is being displayed with size and image type"
+  );
   const imgEl = iconEl.querySelector(".js-manifest-item-content img");
-  ok(imgEl !== null, "An image is displayed for the icon");
+  Assert.notStrictEqual(imgEl, null, "An image is displayed for the icon");
   is(
     imgEl.src,
     URL_ROOT + "resources/manifest/icon.svg",

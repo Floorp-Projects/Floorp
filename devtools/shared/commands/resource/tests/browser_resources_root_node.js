@@ -103,8 +103,9 @@ add_task(async function testRootNodeFrontIsCorrect() {
   browser.reload();
 
   const root2 = await rootNodePromise;
-  ok(
-    root1 !== root2,
+  Assert.notStrictEqual(
+    root1,
+    root2,
     "onAvailable has been called with a different node front after reload"
   );
 

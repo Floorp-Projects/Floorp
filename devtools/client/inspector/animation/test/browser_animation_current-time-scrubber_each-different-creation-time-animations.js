@@ -25,9 +25,9 @@ add_task(async function () {
 
   info("Check existed animations have different currentTime");
   const animations = animationInspector.state.animations;
-  ok(
-    animations[0].state.currentTime + WAIT_TIME >
-      animations[1].state.currentTime,
+  Assert.greater(
+    animations[0].state.currentTime + WAIT_TIME,
+    animations[1].state.currentTime,
     `The currentTime of added animation shold be ${WAIT_TIME}ms less than ` +
       "at least that currentTime of first animation"
   );

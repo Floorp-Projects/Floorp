@@ -93,7 +93,7 @@ add_task(async function () {
   const highlighter = toolbox.getHighlighter();
 
   const elementNode = oi3.querySelector(".objectBox-node");
-  ok(elementNode !== null, "Node was logged as expected");
+  Assert.notStrictEqual(elementNode, null, "Node was logged as expected");
   const view = node.ownerDocument.defaultView;
 
   info("Highlight the node by moving the cursor on it");
@@ -107,7 +107,11 @@ add_task(async function () {
   EventUtils.synthesizeMouseAtCenter(oi1, { type: "mousemove" }, view);
 
   const openInInspectorIcon = elementNode.querySelector(".open-inspector");
-  ok(openInInspectorIcon !== null, "There is an open in inspector icon");
+  Assert.notStrictEqual(
+    openInInspectorIcon,
+    null,
+    "There is an open in inspector icon"
+  );
 
   info(
     "Clicking on the inspector icon and waiting for the inspector to be selected"

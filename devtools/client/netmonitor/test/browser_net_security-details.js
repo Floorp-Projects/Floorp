@@ -58,8 +58,16 @@ add_task(async function () {
     "Label has the expected value."
   );
   // These two values can change. So only check they're not empty.
-  ok(textboxes[2].textContent !== "", "Label value is not empty.");
-  ok(textboxes[3].textContent !== "", "Label value is not empty.");
+  Assert.notStrictEqual(
+    textboxes[2].textContent,
+    "",
+    "Label value is not empty."
+  );
+  Assert.notStrictEqual(
+    textboxes[3].textContent,
+    "",
+    "Label value is not empty."
+  );
   is(textboxes[4].textContent, '"Disabled"', "Label has the expected value.");
   is(textboxes[5].textContent, '"Disabled"', "Label has the expected value.");
 

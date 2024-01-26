@@ -82,7 +82,7 @@ add_task(async function click_dropmarker() {
   await popupShownPromise;
 
   info("Ensure the panel is open and the profiler still inactive.");
-  ok(dropmarker.getAttribute("open") == "true", "panel should be open");
+  Assert.equal(dropmarker.getAttribute("open"), "true", "panel should be open");
   ok(!isActive(), "profiler should still be inactive");
   await getElementByLabel(document, "Start Recording");
 

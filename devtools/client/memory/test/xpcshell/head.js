@@ -143,7 +143,7 @@ async function createTempFile() {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   const destPath = file.path;
   const stat = await IOUtils.stat(destPath);
-  ok(stat.size === 0, "new file is 0 bytes at start");
+  Assert.strictEqual(stat.size, 0, "new file is 0 bytes at start");
   return destPath;
 }
 

@@ -115,8 +115,9 @@ add_task(async function testRemoteRuntime() {
 
 function assertWarningMessage(doc, expectedMessage) {
   const hasMessage = !!doc.querySelector(".qa-service-workers-warning");
-  ok(
-    hasMessage === expectedMessage,
+  Assert.strictEqual(
+    hasMessage,
+    expectedMessage,
     expectedMessage
       ? "Warning message is displayed"
       : "Warning message is not displayed"

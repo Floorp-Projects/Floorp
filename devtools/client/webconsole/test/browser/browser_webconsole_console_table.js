@@ -486,12 +486,14 @@ async function testItem(testCase, tableNode) {
       "Node must be connected to test overflow. It is likely scrolled out of view."
     );
     const tableWrapperNode = tableNode.closest(".consoletable-wrapper");
-    ok(
-      tableWrapperNode.scrollHeight > tableWrapperNode.clientHeight,
+    Assert.greater(
+      tableWrapperNode.scrollHeight,
+      tableWrapperNode.clientHeight,
       testCase.info + " table overflows"
     );
-    ok(
-      getComputedStyle(tableWrapperNode).overflowY !== "hidden",
+    Assert.notStrictEqual(
+      getComputedStyle(tableWrapperNode).overflowY,
+      "hidden",
       "table can be scrolled"
     );
   }

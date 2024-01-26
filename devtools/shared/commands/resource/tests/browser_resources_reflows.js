@@ -106,6 +106,10 @@ function checkReflowResource(resource) {
       "reflow start property is a number"
     );
     is(Number.isFinite(reflow.end), true, "reflow end property is a number");
-    ok(reflow.end >= reflow.start, "end is greater than start");
+    Assert.greaterOrEqual(
+      reflow.end,
+      reflow.start,
+      "end is greater than start"
+    );
   }
 }

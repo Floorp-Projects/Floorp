@@ -86,12 +86,14 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
 
   let i = 0;
   for (const keyframeRule of rules.keyframeRules) {
-    ok(
-      keyframeRule.keyframes.name == expected.keyframesRules[i],
+    Assert.equal(
+      keyframeRule.keyframes.name,
+      expected.keyframesRules[i],
       keyframeRule.keyframes.name + " has the correct keyframes name"
     );
-    ok(
-      keyframeRule.domRule.keyText == expected.keyframeRules[i],
+    Assert.equal(
+      keyframeRule.domRule.keyText,
+      expected.keyframeRules[i],
       keyframeRule.domRule.keyText + " selector heading is correct"
     );
     i++;

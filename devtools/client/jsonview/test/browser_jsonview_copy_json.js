@@ -13,7 +13,7 @@ add_task(async function () {
   const countBefore = await getElementCount(
     ".jsonPanelBox .treeTable .treeRow"
   );
-  ok(countBefore == 1, "There must be one row");
+  Assert.equal(countBefore, 1, "There must be one row");
 
   const text = await getElementText(".jsonPanelBox .treeTable .treeRow");
   is(text, 'name"value"', "There must be proper JSON displayed");

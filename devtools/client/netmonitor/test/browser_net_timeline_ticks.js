@@ -59,8 +59,9 @@ add_task(async function () {
     !$("#requests-list-waterfall-label"),
     "The timeline label should be hidden after the first request."
   );
-  ok(
-    $all(".requests-list-timings-division").length >= 3,
+  Assert.greaterOrEqual(
+    $all(".requests-list-timings-division").length,
+    3,
     "There should be at least 3 tick labels in the network requests header."
   );
 

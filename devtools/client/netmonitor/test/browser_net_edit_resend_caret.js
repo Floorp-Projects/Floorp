@@ -74,9 +74,9 @@ add_task(async function () {
   methodField.select();
   EventUtils.synthesizeKey("VK_DELETE", {});
 
-  ok(
-    getSelectedRequest(store.getState()).requestHeaders.headers[0] !==
-      hostHeader,
+  Assert.notStrictEqual(
+    getSelectedRequest(store.getState()).requestHeaders.headers[0],
+    hostHeader,
     "Value of Host header was edited and should change"
   );
 
@@ -86,15 +86,17 @@ add_task(async function () {
     "Position of caret should not change"
   );
 
-  ok(
-    getSelectedRequest(store.getState()).method === "",
+  Assert.strictEqual(
+    getSelectedRequest(store.getState()).method,
+    "",
     "Value of method header was deleted and should be empty"
   );
 
   headersTextarea.focus();
 
-  ok(
-    getSelectedRequest(store.getState()).method === originalMethodValue,
+  Assert.strictEqual(
+    getSelectedRequest(store.getState()).method,
+    originalMethodValue,
     "Value of method header should reset to its original value"
   );
 

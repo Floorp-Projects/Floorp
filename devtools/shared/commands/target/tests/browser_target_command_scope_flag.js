@@ -43,7 +43,7 @@ add_task(async function () {
     onAvailable,
     onDestroyed,
   });
-  ok(targets.size > 1, "We get many targets");
+  Assert.greater(targets.size, 1, "We get many targets");
 
   info("Open a tab in a new content process");
   await BrowserTestUtils.openNewForegroundTab({

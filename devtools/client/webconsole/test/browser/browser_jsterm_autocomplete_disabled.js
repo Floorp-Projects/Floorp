@@ -38,7 +38,7 @@ async function performTests_false() {
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("in");
   await onUpdated;
-  ok(popup.getItems().length == 2, "'win' gave a list of suggestions");
+  Assert.equal(popup.getItems().length, 2, "'win' gave a list of suggestions");
 
   info("Check that the completion text is updated when it was displayed");
   await setInputValue(hud, "");
