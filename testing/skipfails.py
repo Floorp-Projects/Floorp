@@ -13,8 +13,10 @@ import re
 import sys
 import tempfile
 import urllib.parse
+from copy import deepcopy
 from enum import Enum
 from pathlib import Path
+from statistics import median
 from xmlrpc.client import Fault
 
 from yaml import load
@@ -32,7 +34,8 @@ from manifestparser.toml import add_skip_if, alphabetize_toml_str, sort_paths
 from mozci.task import TestTask
 from mozci.util.taskcluster import get_task
 
-BUGZILLA_AUTHENTICATION_HELP = "Must create a Bugzilla API key per https://github.com/mozilla/mozci-tools/blob/main/citools/test_triage_bug_filer.py"
+from taskcluster.exceptions import TaskclusterRestFailure
+
 TASK_LOG = "live_backing.log"
 TASK_ARTIFACT = "public/logs/" + TASK_LOG
 ATTACHMENT_DESCRIPTION = "Compressed " + TASK_ARTIFACT + " for task "
@@ -42,10 +45,35 @@ ATTACHMENT_REGEX = (
     + "([A-Za-z0-9_-]+)\n.*"
 )
 
+BUGZILLA_AUTHENTICATION_HELP = "Must create a Bugzilla API key per https://github.com/mozilla/mozci-tools/blob/main/citools/test_triage_bug_filer.py"
+
+MS_PER_MINUTE = 60 * 1000  # ms per minute
+DEBUG_THRESHOLD = 40 * MS_PER_MINUTE  # 40 minutes in ms
+OPT_THRESHOLD = 20 * MS_PER_MINUTE  # 20 minutes in ms
+
+CC = "classification"
+DEF = "DEFAULT"
+DURATIONS = "durations"
+FAILED_RUNS = "failed_runs"
+FAILURE_RATIO = 0.4  # more than this fraction of failures will disable
+LL = "label"
+MEDIAN_DURATION = "median_duration"
+MINIMUM_RUNS = 3  # mininum number of runs to consider success/failure
+OPT = "opt"
+PP = "path"
+RUNS = "runs"
+SUM_BY_LABEL = "sum_by_label"
+TOTAL_DURATION = "total_duration"
+TOTAL_RUNS = "total_runs"
+
 
 class MockResult(object):
     def __init__(self, result):
         self.result = result
+
+    @property
+    def duration(self):
+        return self.result["duration"]
 
     @property
     def group(self):
@@ -53,8 +81,7 @@ class MockResult(object):
 
     @property
     def ok(self):
-        _ok = self.result["ok"]
-        return _ok
+        return self.result["ok"]
 
 
 class MockTask(object):
@@ -75,6 +102,10 @@ class MockTask(object):
             return {}
 
     @property
+    def duration(self):
+        return self.task["duration"]
+
+    @property
     def id(self):
         return self.task["id"]
 
@@ -84,7 +115,10 @@ class MockTask(object):
 
     @property
     def results(self):
-        return self.task["results"]
+        if "results" in self.task:
+            return self.task["results"]
+        else:
+            return []
 
 
 class Classification(object):
@@ -92,6 +126,7 @@ class Classification(object):
 
     DISABLE_MANIFEST = "disable_manifest"  # crash found
     DISABLE_RECOMMENDED = "disable_recommended"  # disable first failing path
+    DISABLE_TOO_LONG = "disable_too_long"  # runtime threshold exceeded
     INTERMITTENT = "intermittent"
     SECONDARY = "secondary"  # secondary failing path
     SUCCESS = "success"  # path always succeeds
@@ -142,11 +177,10 @@ class Skipfails(object):
         self.turbo = turbo
         if bugzilla is not None:
             self.bugzilla = bugzilla
+        elif "BUGZILLA" in os.environ:
+            self.bugzilla = os.environ["BUGZILLA"]
         else:
-            if "BUGZILLA" in os.environ:
-                self.bugzilla = os.environ["BUGZILLA"]
-            else:
-                self.bugzilla = Skipfails.BUGZILLA_SERVER_DEFAULT
+            self.bugzilla = Skipfails.BUGZILLA_SERVER_DEFAULT
         self.component = "skip-fails"
         self._bzapi = None
         self._attach_rx = None
@@ -159,6 +193,7 @@ class Skipfails(object):
         self.jobs_url = "https://treeherder.mozilla.org/api/jobs/"
         self.push_ids = {}
         self.job_ids = {}
+        self.extras = {}
 
     def _initialize_bzapi(self):
         """Lazily initializes the Bugzilla API"""
@@ -247,35 +282,33 @@ class Skipfails(object):
             if not manifest.endswith(".toml"):
                 self.warning(f"cannot process skip-fails on INI manifests: {manifest}")
             else:
-                for path in failures[manifest]["path"]:
-                    for label in failures[manifest]["path"][path]:
-                        classification = failures[manifest]["path"][path][label][
-                            "classification"
-                        ]
+                for label in failures[manifest][LL]:
+                    for path in failures[manifest][LL][label][PP]:
+                        classification = failures[manifest][LL][label][PP][path][CC]
                         if classification.startswith("disable_") or (
                             self.turbo and classification == Classification.SECONDARY
                         ):
-                            for task_id in failures[manifest]["path"][path][label][
-                                "runs"
-                            ].keys():
-                                self.skip_failure(
-                                    manifest,
-                                    path,
-                                    label,
-                                    classification,
-                                    task_id,
-                                    try_url,
-                                    revision,
-                                    repo,
-                                    meta_bug_id,
-                                )
-                                num_failures += 1
-                                if max_failures >= 0 and num_failures >= max_failures:
-                                    self.warning(
-                                        f"max_failures={max_failures} threshold reached. stopping."
-                                    )
-                                    return True
+                            for task_id in failures[manifest][LL][label][PP][path][
+                                RUNS
+                            ]:
                                 break  # just use the first task_id
+                            self.skip_failure(
+                                manifest,
+                                path,
+                                label,
+                                classification,
+                                task_id,
+                                try_url,
+                                revision,
+                                repo,
+                                meta_bug_id,
+                            )
+                            num_failures += 1
+                            if max_failures >= 0 and num_failures >= max_failures:
+                                self.warning(
+                                    f"max_failures={max_failures} threshold reached. stopping."
+                                )
+                                return True
         return True
 
     def get_revision(self, url):
@@ -309,184 +342,142 @@ class Skipfails(object):
             * True (passed)
            classification: Classification
             * unknown (default) < 3 runs
-            * intermittent (not enough failures) >3 runs < 0.4 failure rate
-            * disable_recommended (enough repeated failures) >3 runs >= 0.4
+            * intermittent (not enough failures)
+            * disable_recommended (enough repeated failures) >3 runs >= 4
             * disable_manifest (disable DEFAULT if no other failures)
             * secondary (not first failure in group)
             * success
         """
 
-        failures = {}
+        ff = {}
         manifest_paths = {}
-        for task in tasks:
+        manifest_ = {
+            LL: {},
+        }
+        label_ = {
+            DURATIONS: {},
+            MEDIAN_DURATION: 0,
+            OPT: None,
+            PP: {},
+            SUM_BY_LABEL: {
+                Classification.DISABLE_MANIFEST: 0,
+                Classification.DISABLE_RECOMMENDED: 0,
+                Classification.DISABLE_TOO_LONG: 0,
+                Classification.INTERMITTENT: 0,
+                Classification.SECONDARY: 0,
+                Classification.SUCCESS: 0,
+                Classification.UNKNOWN: 0,
+            },
+            TOTAL_DURATION: 0,
+        }
+        path_ = {
+            CC: Classification.UNKNOWN,
+            FAILED_RUNS: 0,
+            RUNS: {},
+            TOTAL_RUNS: 0,
+        }
+
+        for task in tasks:  # add implicit failures
             try:
                 if len(task.results) == 0:
                     continue  # ignore aborted tasks
-                for manifest in task.failure_types:
-                    if manifest not in failures:
-                        failures[manifest] = {"sum_by_label": {}, "path": {}}
-                    if manifest not in manifest_paths:
-                        manifest_paths[manifest] = []
-                    for path_type in task.failure_types[manifest]:
+                for mm in task.failure_types:
+                    if mm not in manifest_paths:
+                        manifest_paths[mm] = []
+                    if mm not in ff:
+                        ff[mm] = deepcopy(manifest_)
+                    ll = task.label
+                    if ll not in ff[mm][LL]:
+                        ff[mm][LL][ll] = deepcopy(label_)
+                    for path_type in task.failure_types[mm]:
                         path, _type = path_type
-                        if path == manifest:
-                            path = "DEFAULT"
-                        if path not in failures[manifest]["path"]:
-                            failures[manifest]["path"][path] = {}
-                        if path not in manifest_paths[manifest]:
-                            manifest_paths[manifest].append(path)
-                        if task.label not in failures[manifest]["sum_by_label"]:
-                            failures[manifest]["sum_by_label"][task.label] = {
-                                Classification.UNKNOWN: 0,
-                                Classification.SECONDARY: 0,
-                                Classification.INTERMITTENT: 0,
-                                Classification.DISABLE_RECOMMENDED: 0,
-                                Classification.DISABLE_MANIFEST: 0,
-                                Classification.SUCCESS: 0,
-                            }
-                        if task.label not in failures[manifest]["path"][path]:
-                            failures[manifest]["path"][path][task.label] = {
-                                "total_runs": 0,
-                                "failed_runs": 0,
-                                "classification": Classification.UNKNOWN,
-                                "runs": {task.id: False},
-                            }
-                        else:
-                            failures[manifest]["path"][path][task.label]["runs"][
-                                task.id
-                            ] = False
+                        if path == mm:
+                            path = DEF  # refers to the manifest itself
+                        if path not in manifest_paths[mm]:
+                            manifest_paths[mm].append(path)
+                        if path not in ff[mm][LL][ll][PP]:
+                            ff[mm][LL][ll][PP][path] = deepcopy(path_)
+                        if task.id not in ff[mm][LL][ll][PP][path][RUNS]:
+                            ff[mm][LL][ll][PP][path][RUNS][task.id] = False
+                            ff[mm][LL][ll][PP][path][TOTAL_RUNS] += 1
+                            ff[mm][LL][ll][PP][path][FAILED_RUNS] += 1
             except AttributeError as ae:
-                self.warning(f"unknown attribute in task: {ae}")
+                self.warning(f"unknown attribute in task (#1): {ae}")
 
-        # calculate success/failure for each known path
-        for manifest in manifest_paths:
-            manifest_paths[manifest] = sort_paths(manifest_paths[manifest])
-        for task in tasks:
+        for task in tasks:  # add results
             try:
                 if len(task.results) == 0:
                     continue  # ignore aborted tasks
                 for result in task.results:
-                    manifest = result.group
-                    if manifest not in failures:
-                        self.warning(
-                            f"result for {manifest} not in any failures, ignored"
-                        )
+                    mm = result.group
+                    if mm not in ff:
+                        ff[mm] = deepcopy(manifest_)
+                    ll = task.label
+                    if ll not in ff[mm][LL]:
+                        ff[mm][LL][ll] = deepcopy(label_)
+                    if task.id not in ff[mm][LL][ll][DURATIONS]:
+                        # duration may be None !!!
+                        ff[mm][LL][ll][DURATIONS][task.id] = result.duration or 0
+                        if ff[mm][LL][ll][OPT] is None:
+                            ff[mm][LL][ll][OPT] = self.get_opt_for_task(task.id)
+                    if mm not in manifest_paths:
                         continue
-                    for path in manifest_paths[manifest]:
-                        if task.label not in failures[manifest]["sum_by_label"]:
-                            failures[manifest]["sum_by_label"][task.label] = {
-                                Classification.UNKNOWN: 0,
-                                Classification.SECONDARY: 0,
-                                Classification.INTERMITTENT: 0,
-                                Classification.DISABLE_RECOMMENDED: 0,
-                                Classification.DISABLE_MANIFEST: 0,
-                                Classification.SUCCESS: 0,
-                            }
-                        if task.label not in failures[manifest]["path"][path]:
-                            failures[manifest]["path"][path][task.label] = {
-                                "total_runs": 0,
-                                "failed_runs": 0,
-                                "classification": Classification.UNKNOWN,
-                                "runs": {},
-                            }
-                        if (
-                            task.id
-                            not in failures[manifest]["path"][path][task.label]["runs"]
-                        ):
-                            ok = True
-                            failures[manifest]["path"][path][task.label]["runs"][
-                                task.id
-                            ] = ok
-                        else:
-                            ok = (
-                                result.ok
-                                or failures[manifest]["path"][path][task.label]["runs"][
-                                    task.id
-                                ]
-                            )
-                        failures[manifest]["path"][path][task.label]["total_runs"] += 1
-                        if not ok:
-                            failures[manifest]["path"][path][task.label][
-                                "failed_runs"
-                            ] += 1
+                    for path in manifest_paths[mm]:  # all known paths
+                        if path not in ff[mm][LL][ll][PP]:
+                            ff[mm][LL][ll][PP][path] = deepcopy(path_)
+                        if task.id not in ff[mm][LL][ll][PP][path][RUNS]:
+                            ff[mm][LL][ll][PP][path][RUNS][task.id] = result.ok
+                            ff[mm][LL][ll][PP][path][TOTAL_RUNS] += 1
+                            if not result.ok:
+                                ff[mm][LL][ll][PP][path][FAILED_RUNS] += 1
             except AttributeError as ae:
-                self.warning(f"unknown attribute in task: {ae}")
+                self.warning(f"unknown attribute in task (#3): {ae}")
 
-        # classify failures and roll up summary statistics
-        for manifest in failures:
-            for path in failures[manifest]["path"]:
-                for label in failures[manifest]["path"][path]:
-                    failed_runs = failures[manifest]["path"][path][label]["failed_runs"]
-                    total_runs = failures[manifest]["path"][path][label]["total_runs"]
-                    classification = failures[manifest]["path"][path][label][
-                        "classification"
-                    ]
-                    if total_runs >= 3:
-                        if failed_runs / total_runs < 0.4:
-                            if failed_runs == 0:
-                                classification = Classification.SUCCESS
+        for mm in ff:  # determine classifications
+            for label in ff[mm][LL]:
+                opt = ff[mm][LL][label][OPT]
+                durations = []  # summarize durations
+                for task_id in ff[mm][LL][label][DURATIONS]:
+                    duration = ff[mm][LL][label][DURATIONS][task_id]
+                    durations.append(duration)
+                if len(durations) > 0:
+                    total_duration = sum(durations)
+                    median_duration = median(durations)
+                    ff[mm][LL][label][TOTAL_DURATION] = total_duration
+                    ff[mm][LL][label][MEDIAN_DURATION] = median_duration
+                    if (opt and median_duration > OPT_THRESHOLD) or (
+                        (not opt) and median_duration > DEBUG_THRESHOLD
+                    ):
+                        if DEF not in ff[mm][LL][label][PP]:
+                            ff[mm][LL][label][PP][DEF] = deepcopy(path_)
+                        if task_id not in ff[mm][LL][label][PP][DEF][RUNS]:
+                            ff[mm][LL][label][PP][DEF][RUNS][task_id] = False
+                            ff[mm][LL][label][PP][DEF][TOTAL_RUNS] += 1
+                            ff[mm][LL][label][PP][DEF][FAILED_RUNS] += 1
+                        ff[mm][LL][label][PP][DEF][CC] = Classification.DISABLE_TOO_LONG
+                primary = True  # we have not seen the first failure
+                for path in sort_paths(ff[mm][LL][label][PP]):
+                    classification = ff[mm][LL][label][PP][path][CC]
+                    if classification == Classification.UNKNOWN:
+                        failed_runs = ff[mm][LL][label][PP][path][FAILED_RUNS]
+                        total_runs = ff[mm][LL][label][PP][path][TOTAL_RUNS]
+                        if total_runs >= MINIMUM_RUNS:
+                            if failed_runs / total_runs < FAILURE_RATIO:
+                                if failed_runs == 0:
+                                    classification = Classification.SUCCESS
+                                else:
+                                    classification = Classification.INTERMITTENT
+                            elif primary:
+                                if path == DEF:
+                                    classification = Classification.DISABLE_MANIFEST
+                                else:
+                                    classification = Classification.DISABLE_RECOMMENDED
+                                primary = False
                             else:
-                                classification = Classification.INTERMITTENT
-                        else:
-                            classification = Classification.SECONDARY
-                        failures[manifest]["path"][path][label][
-                            "classification"
-                        ] = classification
-                    failures[manifest]["sum_by_label"][label][classification] += 1
-
-        # Identify the first failure (for each test, in a manifest, by label)
-        for manifest in failures:
-            alpha_paths = sort_paths(failures[manifest]["path"].keys())
-            for path in alpha_paths:
-                for label in failures[manifest]["path"][path]:
-                    primary = (
-                        failures[manifest]["sum_by_label"][label][
-                            Classification.DISABLE_RECOMMENDED
-                        ]
-                        == 0
-                    )
-                    if path == "DEFAULT":
-                        classification = failures[manifest]["path"][path][label][
-                            "classification"
-                        ]
-                        if (
-                            classification == Classification.SECONDARY
-                            and failures[manifest]["sum_by_label"][label][
-                                classification
-                            ]
-                            == 1
-                        ):
-                            # ONLY failure in the manifest for this label => DISABLE
-                            failures[manifest]["path"][path][label][
-                                "classification"
-                            ] = Classification.DISABLE_MANIFEST
-                            failures[manifest]["sum_by_label"][label][
-                                classification
-                            ] -= 1
-                            failures[manifest]["sum_by_label"][label][
-                                Classification.DISABLE_MANIFEST
-                            ] += 1
-
-                    else:
-                        if (
-                            primary
-                            and failures[manifest]["path"][path][label][
-                                "classification"
-                            ]
-                            == Classification.SECONDARY
-                        ):
-                            # FIRST failure in the manifest for this label => DISABLE
-                            failures[manifest]["path"][path][label][
-                                "classification"
-                            ] = Classification.DISABLE_RECOMMENDED
-                            failures[manifest]["sum_by_label"][label][
-                                Classification.SECONDARY
-                            ] -= 1
-                            failures[manifest]["sum_by_label"][label][
-                                Classification.DISABLE_RECOMMENDED
-                            ] += 1
-
-        return failures
+                                classification = Classification.SECONDARY
+                            ff[mm][LL][label][PP][path][CC] = classification
+                    ff[mm][LL][label][SUM_BY_LABEL][classification] += 1
+        return ff
 
     def _get_os_version(self, os, platform):
         """Return the os_version given the label platform string"""
@@ -577,7 +568,10 @@ class Skipfails(object):
         """Skip a failure"""
 
         self.vinfo(f"===== Skip failure in manifest: {manifest} =====")
-        skip_if = self.task_to_skip_if(task_id)
+        if task_id is None:
+            skip_if = "true"
+        else:
+            skip_if = self.task_to_skip_if(task_id)
         if skip_if is None:
             self.warning(
                 f"Unable to calculate skip-if condition from manifest={manifest} from failure label={label}"
@@ -585,8 +579,11 @@ class Skipfails(object):
             return
         bug_reference = ""
         if classification == Classification.DISABLE_MANIFEST:
-            filename = "DEFAULT"
+            filename = DEF
             comment = "Disabled entire manifest due to crash result"
+        elif classification == Classification.DISABLE_TOO_LONG:
+            filename = DEF
+            comment = "Disabled entire manifest due to excessive run time"
         else:
             filename = self.get_filename_in_manifest(manifest, path)
             comment = f'Disabled test due to failures: "{filename}"'
@@ -597,20 +594,24 @@ class Skipfails(object):
         comment += f"\nrevision = {revision}"
         comment += f"\nrepo = {repo}"
         comment += f"\nlabel = {label}"
-        comment += f"\ntask_id = {task_id}"
-        push_id = self.get_push_id(revision, repo)
-        if push_id is not None:
-            comment += f"\npush_id = {push_id}"
-            job_id = self.get_job_id(push_id, task_id)
-            if job_id is not None:
-                comment += f"\njob_id = {job_id}"
-                suggestions_url, line_number, line, log_url = self.get_bug_suggestions(
-                    repo, job_id, path
-                )
-                if log_url is not None:
-                    comment += f"\n\nBug suggestions: {suggestions_url}"
-                    comment += f"\nSpecifically see at line {line_number} in the attached log: {log_url}"
-                    comment += f'\n\n  "{line}"\n'
+        if task_id is not None:
+            comment += f"\ntask_id = {task_id}"
+            push_id = self.get_push_id(revision, repo)
+            if push_id is not None:
+                comment += f"\npush_id = {push_id}"
+                job_id = self.get_job_id(push_id, task_id)
+                if job_id is not None:
+                    comment += f"\njob_id = {job_id}"
+                    (
+                        suggestions_url,
+                        line_number,
+                        line,
+                        log_url,
+                    ) = self.get_bug_suggestions(repo, job_id, path)
+                    if log_url is not None:
+                        comment += f"\n\nBug suggestions: {suggestions_url}"
+                        comment += f"\nSpecifically see at line {line_number} in the attached log: {log_url}"
+                        comment += f'\n\n  "{line}"\n'
         platform, testname = self.label_to_platform_testname(label)
         if platform is not None:
             comment += "\n\nCommand line to reproduce:\n\n"
@@ -622,7 +623,7 @@ class Skipfails(object):
             description = (
                 f"This bug covers excluded failing tests in the MANIFEST {manifest}"
             )
-            description += "\n(generated by mach manifest skip-fails)"
+            description += "\n(generated by `mach manifest skip-fails`)"
             product, component = self.get_file_info(path)
             if self.dry_run:
                 self.warning(
@@ -664,14 +665,14 @@ class Skipfails(object):
             self.warning(f"Dry-run NOT adding comment to Bug {bugid}: {comment}")
             self.info(f'Dry-run NOT editing ["{filename}"] manifest: "{manifest}"')
             self.info(f'would add skip-if condition: "{skip_if}" # {bug_reference}')
-            if task_id not in attachments:
+            if task_id is not None and task_id not in attachments:
                 self.info("would add compressed log for this task")
             return
         self.add_bug_comment(bugid, comment, meta_bug_id)
         self.info(f"Added comment to Bug {bugid}: {comment}")
         if meta_bug_id is not None:
             self.info(f"  Bug {bugid} blocks meta Bug: {meta_bug_id}")
-        if task_id not in attachments:
+        if task_id is not None and task_id not in attachments:
             self.add_attachment_log_for_task(bugid, task_id)
             self.info("Added compressed log for this task")
         mp = ManifestParser(use_toml=True, document=True)
@@ -704,83 +705,112 @@ class Skipfails(object):
                 self.variants[k] = mozinfo
         return self.variants
 
-    def get_task(self, task_id):
+    def get_task_details(self, task_id):
         """Download details for task task_id"""
 
         if task_id in self.tasks:  # if cached
             task = self.tasks[task_id]
         else:
-            task = get_task(task_id)
+            try:
+                task = get_task(task_id)
+            except TaskclusterRestFailure:
+                self.warning(f"Task {task_id} no longer exists.")
+                return None
             self.tasks[task_id] = task
         return task
+
+    def get_extra(self, task_id):
+        """Calculate extra for task task_id"""
+
+        if task_id in self.extras:  # if cached
+            extra = self.extras[task_id]
+        else:
+            self.get_variants()
+            task = self.get_task_details(task_id) or {}
+            os = None
+            os_version = None
+            arch = None
+            bits = None
+            display = None
+            runtimes = []
+            build_types = []
+            test_setting = task.get("extra", {}).get("test-setting", {})
+            platform = test_setting.get("platform", {})
+            platform_os = platform.get("os", {})
+            opt = False
+            debug = False
+            if "name" in platform_os:
+                os = platform_os["name"]
+                if os == "windows":
+                    os = "win"
+                if os == "macosx":
+                    os = "mac"
+            if "version" in platform_os:
+                os_version = platform_os["version"]
+                if len(os_version) == 4:
+                    os_version = os_version[0:2] + "." + os_version[2:4]
+            if "arch" in platform:
+                arch = platform["arch"]
+                if arch == "x86" or arch.find("32") >= 0:
+                    bits = "32"
+                if arch == "64" or arch.find("64") >= 0:
+                    bits = "64"
+            if "display" in platform:
+                display = platform["display"]
+            if "runtime" in test_setting:
+                for k in test_setting["runtime"]:
+                    if k in self.variants:
+                        runtimes.append(self.variants[k])  # adds mozinfo
+            if "build" in test_setting:
+                tbuild = test_setting["build"]
+                for k in tbuild:
+                    if k == "type":
+                        if tbuild[k] == "opt":
+                            opt = True
+                        elif tbuild[k] == "debug":
+                            debug = True
+                        build_types.append(tbuild[k])
+                    else:
+                        build_types.append(k)
+            unknown = None
+            extra = {
+                "os": os or unknown,
+                "os_version": os_version or unknown,
+                "arch": arch or unknown,
+                "bits": bits or unknown,
+                "display": display or unknown,
+                "runtimes": runtimes,
+                "opt": opt,
+                "debug": debug,
+                "build_types": build_types,
+            }
+        self.extras[task_id] = extra
+        return extra
+
+    def get_opt_for_task(self, task_id):
+        extra = self.get_extra(task_id)
+        return extra["opt"]
 
     def task_to_skip_if(self, task_id):
         """Calculate the skip-if condition for failing task task_id"""
 
-        self.get_variants()
-        task = self.get_task(task_id)
-        os = None
-        os_version = None
-        bits = None
-        display = None
-        runtimes = []
-        build_types = []
-        test_setting = task.get("extra", {}).get("test-setting", {})
-        platform = test_setting.get("platform", {})
-        platform_os = platform.get("os", {})
-        if "name" in platform_os:
-            os = platform_os["name"]
-            if os == "windows":
-                os = "win"
-            if os == "macosx":
-                os = "mac"
-        if "version" in platform_os:
-            os_version = platform_os["version"]
-            if len(os_version) == 4:
-                os_version = os_version[0:2] + "." + os_version[2:4]
-        if "arch" in platform:
-            arch = platform["arch"]
-            if arch == "x86" or arch.find("32") >= 0:
-                bits = "32"
-        if "display" in platform:
-            display = platform["display"]
-        if "runtime" in test_setting:
-            for k in test_setting["runtime"]:
-                if k in self.variants:
-                    runtimes.append(self.variants[k])  # adds mozinfo
-        if "build" in test_setting:
-            tbuild = test_setting["build"]
-            opt = False
-            debug = False
-            for k in tbuild:
-                if k == "type":
-                    if tbuild[k] == "opt":
-                        opt = True
-                    elif tbuild[k] == "debug":
-                        debug = True
-                else:
-                    build_types.append(k)
-            if len(build_types) == 0:
-                if opt:
-                    build_types.append("!debug")
-                if debug:
-                    build_types.append("debug")
+        extra = self.get_extra(task_id)
         skip_if = None
-        if os is not None:
-            skip_if = "os == '" + os + "'"
-            if os_version is not None:
+        if extra["os"] is not None:
+            skip_if = "os == '" + extra["os"] + "'"
+            if extra["os_version"] is not None:
                 skip_if += " && "
-                skip_if += "os_version == '" + os_version + "'"
-            if bits is not None:
+                skip_if += "os_version == '" + extra["os_version"] + "'"
+            if extra["bits"] is not None:
                 skip_if += " && "
-                skip_if += "bits == '" + bits + "'"
-            if display is not None:
+                skip_if += "bits == '" + extra["bits"] + "'"
+            if extra["display"] is not None:
                 skip_if += " && "
-                skip_if += "display == '" + display + "'"
-            for runtime in runtimes:
+                skip_if += "display == '" + extra["display"] + "'"
+            for runtime in extra["runtimes"]:
                 skip_if += " && "
                 skip_if += runtime
-            for build_type in build_types:
+            for build_type in extra["build_types"]:
                 skip_if += " && "
                 skip_if += build_type
         return skip_if
@@ -791,7 +821,7 @@ class Skipfails(object):
         Provide defaults (in case command_context is not defined
         or there isn't file info available).
         """
-        if path != "DEFAULT" and self.command_context is not None:
+        if path != DEF and self.command_context is not None:
             reader = self.command_context.mozbuild_reader(config_mode="empty")
             info = reader.files_info([path])
             cp = info[path]["BUG_COMPONENT"]
@@ -803,7 +833,7 @@ class Skipfails(object):
         """return relative filename for path in manifest"""
 
         filename = os.path.basename(path)
-        if filename == "DEFAULT":
+        if filename == DEF:
             return filename
         manifest_dir = os.path.dirname(manifest)
         i = 0
@@ -922,6 +952,7 @@ class Skipfails(object):
             jtask["duration"] = task.duration
             jtask["result"] = task.result
             jtask["state"] = task.state
+            jtask["extra"] = self.get_extra(task.id)
             jtags = {}
             for k, v in task.tags.items():
                 if k == "createdForUser":

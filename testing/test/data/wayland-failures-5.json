@@ -1,0 +1,55 @@
+{
+  "browser/components/places/tests/browser/browser.toml": {
+    "label": {
+      "test-linux2204-64-wayland/opt-mochitest-browser-chrome-swr-3": {
+        "durations": {
+          "Bgc6We1sSjakIo3V9crldw": 1521792,
+          "EH0WPmGtQsGzu5K7OxFOyg": 1407021,
+          "bxDhZzsxQw65gn-veX1PHg": 1320318
+        },
+        "median_duration": 1407021,
+        "opt": true,
+        "path": {
+          "DEFAULT": {
+            "classification": "disable_too_long",
+            "failed_runs": 1,
+            "runs": {
+              "bxDhZzsxQw65gn-veX1PHg": false
+            },
+            "total_runs": 1
+          },
+          "browser/components/places/tests/browser/browser_bookmarkProperties_addKeywordForThisSearch.js": {
+            "classification": "disable_recommended",
+            "failed_runs": 3,
+            "runs": {
+              "Bgc6We1sSjakIo3V9crldw": false,
+              "EH0WPmGtQsGzu5K7OxFOyg": false,
+              "bxDhZzsxQw65gn-veX1PHg": false
+            },
+            "total_runs": 3
+          },
+          "browser/components/places/tests/browser/browser_bookmark_popup.js": {
+            "classification": "secondary",
+            "failed_runs": 3,
+            "runs": {
+              "Bgc6We1sSjakIo3V9crldw": false,
+              "EH0WPmGtQsGzu5K7OxFOyg": false,
+              "bxDhZzsxQw65gn-veX1PHg": false
+            },
+            "total_runs": 3
+          }
+        },
+        "sum_by_label": {
+          "disable_manifest": 0,
+          "disable_recommended": 1,
+          "disable_too_long": 1,
+          "intermittent": 0,
+          "secondary": 1,
+          "success": 0,
+          "unknown": 0
+        },
+        "total_duration": 4249131
+      }
+    }
+  }
+}

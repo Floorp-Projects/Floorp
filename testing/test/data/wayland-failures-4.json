@@ -1,27 +1,36 @@
 {
   "toolkit/components/pdfjs/test/browser.toml": {
-    "path": {
-      "DEFAULT": {
-        "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1": {
-          "classification": "disable_manifest",
-          "failed_runs": 3,
-          "runs": {
-            "EDql3NKPR3W6OEU3mLeKbg": false,
-            "FDql3NKPR3W6OEU3mLeKbg": false,
-            "bxMVPbPMTru_bfAivc1sPA": false
-          },
-          "total_runs": 3
-        }
-      }
-    },
-    "sum_by_label": {
+    "label": {
       "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1": {
-        "disable_manifest": 1,
-        "disable_recommended": 0,
-        "intermittent": 0,
-        "secondary": 0,
-        "success": 0,
-        "unknown": 0
+        "durations": {
+          "EDql3NKPR3W6OEU3mLeKbg": 390469,
+          "FDql3NKPR3W6OEU3mLeKbg": 390469,
+          "bxMVPbPMTru_bfAivc1sPA": 390469
+        },
+        "median_duration": 390469,
+        "opt": false,
+        "path": {
+          "DEFAULT": {
+            "classification": "disable_manifest",
+            "failed_runs": 3,
+            "runs": {
+              "EDql3NKPR3W6OEU3mLeKbg": false,
+              "FDql3NKPR3W6OEU3mLeKbg": false,
+              "bxMVPbPMTru_bfAivc1sPA": false
+            },
+            "total_runs": 3
+          }
+        },
+        "sum_by_label": {
+          "disable_manifest": 1,
+          "disable_recommended": 0,
+          "disable_too_long": 0,
+          "intermittent": 0,
+          "secondary": 0,
+          "success": 0,
+          "unknown": 0
+        },
+        "total_duration": 1171407
       }
     }
   }
