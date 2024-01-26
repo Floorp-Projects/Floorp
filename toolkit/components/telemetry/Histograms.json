@@ -12856,10 +12856,17 @@
     "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["read_error", "decode_error", "write_error", "quarantine_error"],
-    "description": "Count for the number of errors encountered trying to determine attribution data: on Windows, from the installers (stub and full); on macOS, from the quarantine database.",
+    "labels": [
+      "read_error",
+      "decode_error",
+      "write_error",
+      "quarantine_error",
+      "empty_error",
+      "null_error"
+    ],
+    "description": "Count for the number of errors encountered trying to determine attribution data: on Windows, from the installers (stub and full); on macOS, from an extended attributed on the .app bundle.",
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1621402, 1525076],
+    "bug_numbers": [1621402, 1525076, 1874944],
     "alert_emails": ["aoprea@mozilla.com"],
     "operating_systems": ["mac", "windows"]
   },
