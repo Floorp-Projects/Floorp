@@ -719,6 +719,9 @@ void ArrayBufferObject::detach(JSContext* cx,
 
   buffer->setByteLength(0);
   buffer->setIsDetached();
+  if (buffer->isResizable()) {
+    buffer->as<ResizableArrayBufferObject>().setMaxByteLength(0);
+  }
 }
 
 /* clang-format off */
