@@ -19,6 +19,9 @@ const EXAMPLE_URL =
 const EXAMPLE_REMOTE_URL =
   "https://example.org/browser/devtools/client/debugger/test/mochitest/examples/";
 
+const EXAMPLE_URL_WITH_PORT =
+  "http://mochi.test:8888/browser/devtools/client/debugger/test/mochitest/examples/";
+
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",

@@ -7,7 +7,9 @@
 
 "use strict";
 
-const SW_URL = EXAMPLE_URL + "service-worker.sjs";
+// Use an URL with a specific port to check that Bug 1876533 is fixed
+// We're using URL without port in other tests, like browser_dbg-windowless-service-workers-reload.js
+const SW_URL = EXAMPLE_URL_WITH_PORT + "service-worker.sjs";
 
 add_task(async function () {
   info("Subtest #1");
@@ -15,7 +17,9 @@ add_task(async function () {
   await pushPref("devtools.debugger.threads-visible", true);
   await pushPref("dom.serviceWorkers.testing.enabled", true);
 
-  const dbg = await initDebugger("doc-service-workers.html");
+  const dbg = await initDebuggerWithAbsoluteURL(
+    EXAMPLE_URL_WITH_PORT + "doc-service-workers.html"
+  );
 
   invokeInTab("registerWorker");
   await waitForSource(dbg, "service-worker.sjs");
@@ -38,7 +42,7 @@ add_task(async function () {
   info("Subtest #2");
 
   const toolbox = await openNewTabAndToolbox(
-    `${EXAMPLE_URL}doc-service-workers.html`,
+    `${EXAMPLE_URL_WITH_PORT}doc-service-workers.html`,
     "jsdebugger"
   );
   const dbg = createDebuggerContext(toolbox);
@@ -73,7 +77,7 @@ add_task(async function () {
   info("Subtest #3");
 
   const toolbox = await openNewTabAndToolbox(
-    `${EXAMPLE_URL}doc-service-workers.html`,
+    `${EXAMPLE_URL_WITH_PORT}doc-service-workers.html`,
     "jsdebugger"
   );
   const dbg = createDebuggerContext(toolbox);
@@ -84,10 +88,14 @@ add_task(async function () {
 
   const firstTab = gBrowser.selectedTab;
 
-  await addTab(`${EXAMPLE_URL}service-worker.sjs?setStatus=newServiceWorker`);
+  await addTab(
+    `${EXAMPLE_URL_WITH_PORT}service-worker.sjs?setStatus=newServiceWorker`
+  );
   await removeTab(gBrowser.selectedTab);
 
-  const secondTab = await addTab(`${EXAMPLE_URL}doc-service-workers.html`);
+  const secondTab = await addTab(
+    `${EXAMPLE_URL_WITH_PORT}doc-service-workers.html`
+  );
 
   await gBrowser.selectTabAtIndex(gBrowser.tabs.indexOf(firstTab));
   await checkAdditionalThreadCount(dbg, 2);
@@ -111,7 +119,7 @@ add_task(async function () {
   await removeTab(secondTab);
 
   // Reset the SJS in case we will be repeating the test.
-  await addTab(`${EXAMPLE_URL}service-worker.sjs?setStatus=`);
+  await addTab(`${EXAMPLE_URL_WITH_PORT}service-worker.sjs?setStatus=`);
   await removeTab(gBrowser.selectedTab);
 });
 
@@ -124,7 +132,7 @@ add_task(async function () {
   }
 
   const toolbox = await openNewTabAndToolbox(
-    `${EXAMPLE_URL}doc-service-workers.html`,
+    `${EXAMPLE_URL_WITH_PORT}doc-service-workers.html`,
     "jsdebugger"
   );
   const dbg = createDebuggerContext(toolbox);
