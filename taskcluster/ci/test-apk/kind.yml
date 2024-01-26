@@ -24,6 +24,7 @@ job-defaults:
             - android-sdk-linux
             - android-gradle-dependencies
             - android-gradle-python-envs
+            - linux64-jdk
         build-fat-aar:
             - target.maven.tar.xz
     optimization:
@@ -37,8 +38,6 @@ job-defaults:
     worker:
         docker-image: {in-tree: android-components}
         max-run-time: 7200
-        env:
-            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
 
 jobs:
     focus-debug:

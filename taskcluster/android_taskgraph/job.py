@@ -77,8 +77,19 @@ def configure_gradlew(config, job, taskdesc):
     worker = taskdesc["worker"] = job["worker"]
 
     fetches_dir = "/builds/worker/fetches"
+    topsrc_dir = "/builds/worker/checkouts/gecko"
     worker.setdefault("env", {}).update(
-        {"ANDROID_SDK_ROOT": path.join(fetches_dir, "android-sdk-linux")}
+        {
+            "ANDROID_SDK_ROOT": path.join(fetches_dir, "android-sdk-linux"),
+            # TODO: switch to offline builds
+            "GRADLE_USER_HOME": path.join(
+                topsrc_dir, "mobile/android/gradle/dotgradle-online"
+            ),
+            "MOZCONFIG": path.join(
+                topsrc_dir,
+                "mobile/android/config/mozconfigs/android-arm/nightly-android-lints",
+            ),
+        }
     )
 
     run["command"] = _extract_gradlew_command(run, fetches_dir)
@@ -88,7 +99,8 @@ def configure_gradlew(config, job, taskdesc):
 
 
 def _extract_gradlew_command(run, fetches_dir):
-    pre_gradle_commands = run.pop("pre-gradlew", [])
+    pre_gradle_commands = [["./mach", "configure"]]
+    pre_gradle_commands += run.pop("pre-gradlew", [])
     pre_gradle_commands += [
         _generate_dummy_secret_command(secret)
         for secret in run.pop("dummy-secrets", [])
@@ -96,7 +108,6 @@ def _extract_gradlew_command(run, fetches_dir):
     pre_gradle_commands += [
         _generate_secret_command(secret) for secret in run.get("secrets", [])
     ]
-
     maven_dependencies_dir = path.join(fetches_dir, "android-gradle-dependencies")
     gradle_repos_args = [
         "-P{repo_name}Repo=file://{dir}/{repo_name}".format(
