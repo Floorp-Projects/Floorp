@@ -1,4 +1,4 @@
-# Neqo triage guideline
+# Neqo Triage Guideline
 
 [Neqo](https://github.com/mozilla/neqo/issues) has p1, p2, and p3 labels that correspond to the following Bugzilla labels:
 - p1 - the issue should be fixed as soon as possible because it is a defect or a fix has been planned for a project.
