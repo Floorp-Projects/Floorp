@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const buffer = new ArrayBuffer(26838)
+    const array = new Uint8ClampedArray(buffer)
+    const frame = new VideoFrame(array, {
+      'format': 'I420A',
+      'codedWidth': 192,
+      'codedHeight': 2,
+      'timestamp': 14.19024535832334,
+    })
+    await frame.copyTo(buffer, {})
+  })
+</script>
