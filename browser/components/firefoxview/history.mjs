@@ -55,6 +55,7 @@ class HistoryInView extends ViewPage {
     this.sortOption = "date";
     this.profileAge = 8;
     this.fullyUpdated = false;
+    this.cumulativeSearches = 0;
   }
 
   start() {
@@ -253,6 +254,14 @@ class HistoryInView extends ViewPage {
       {}
     );
 
+    if (this.searchQuery) {
+      const searchesHistogram = Services.telemetry.getKeyedHistogramById(
+        "FIREFOX_VIEW_CUMULATIVE_SEARCHES"
+      );
+      searchesHistogram.add("history", this.cumulativeSearches);
+      this.cumulativeSearches = 0;
+    }
+
     let currentWindow = this.getWindow();
     if (currentWindow.openTrustedLinkIn) {
       let where = lazy.BrowserUtils.whereToOpenLink(
@@ -286,6 +295,7 @@ class HistoryInView extends ViewPage {
       null,
       {
         sort_type: this.sortOption,
+        search_start: this.searchQuery ? "true" : "false",
       }
     );
     await this.updateHistoryData();
@@ -552,6 +562,7 @@ class HistoryInView extends ViewPage {
                 data-l10n-id="firefoxview-search-text-box-history"
                 data-l10n-attrs="placeholder"
                 .size=${this.searchTextboxSize}
+                pageName=${this.recentBrowsing ? "recentbrowsing" : "history"}
                 @fxview-search-textbox-query=${this.onSearchQuery}
               ></fxview-search-textbox>
             </div>`
@@ -640,6 +651,11 @@ class HistoryInView extends ViewPage {
       // onChangeSortOption() will update history data once it has been fetched
       // from the API.
       this.createHistoryMaps();
+    }
+    if (changedProperties.has("searchQuery")) {
+      this.cumulativeSearches = this.searchQuery
+        ? this.cumulativeSearches + 1
+        : 0;
     }
   }
 }

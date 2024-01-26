@@ -3960,6 +3960,7 @@ firefoxview_next:
       Recorded when the sort option is changed for History in Firefox View
     extra_keys:
       sort_type: The type of sort the user has switched to
+      search_start: Boolean for if the sort by click occured during search activity.
     notification_emails:
       - firefoxview@mozilla.com
     products:
@@ -4012,6 +4013,38 @@ firefoxview_next:
       - main
     bug_numbers:
       - 1852989
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  search_initiated:
+    objects: ["search"]
+    description: >
+      Recorded when search is initiated and from what page.
+    extra_keys:
+      page: The short page name used as the location hash when selecting the Firefox View tab.
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1869765
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  search_show_all:
+    objects: ["showallbutton"]
+    description: >
+      Recorded when the show all button is clicked to show more search results.
+    extra_keys:
+      section: Section within which show all is clicked.
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1869765
     expiry_version: "never"
     release_channel_collection: opt-out
 

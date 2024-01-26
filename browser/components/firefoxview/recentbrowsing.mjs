@@ -54,6 +54,7 @@ class RecentBrowsingInView extends ViewPage {
               data-l10n-id="firefoxview-search-text-box-recentbrowsing"
               data-l10n-attrs="placeholder"
               .size=${this.searchTextboxSize}
+              pageName="recentbrowsing"
             ></fxview-search-textbox>
           </div>`
         )}
