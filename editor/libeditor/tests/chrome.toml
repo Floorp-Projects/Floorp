@@ -1,8 +1,6 @@
 [DEFAULT]
 skip-if = ["os == 'android'"]
 
-["test_bug1397412.xhtml"]
-
 ["test_bug489202.xhtml"]
 
 ["test_bug599983.xhtml"]
@@ -12,6 +10,8 @@ skip-if = ["os == 'android'"]
 ["test_bug616590.xhtml"]
 
 ["test_bug780908.xhtml"]
+
+["test_bug1397412.xhtml"]
 
 ["test_can_undo_after_setting_value.xhtml"]
 

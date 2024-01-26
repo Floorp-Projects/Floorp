@@ -9,13 +9,6 @@ support-files = [
 https_first_disabled = true
 support-files = ["open-self-from-frame.html"]
 
-["browser_bug1045809.js"]
-tags = "mcb"
-support-files = [
-  "file_bug1045809_1.html",
-  "file_bug1045809_2.html",
-]
-
 ["browser_bug822367.js"]
 tags = "mcb"
 support-files = [
@@ -48,6 +41,13 @@ support-files = [
   "file_bug906190_redirected.html",
   "file_bug906190.js",
   "file_bug906190.sjs",
+]
+
+["browser_bug1045809.js"]
+tags = "mcb"
+support-files = [
+  "file_bug1045809_1.html",
+  "file_bug1045809_2.html",
 ]
 
 ["browser_check_identity_state.js"]

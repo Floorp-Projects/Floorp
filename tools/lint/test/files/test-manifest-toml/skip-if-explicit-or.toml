@@ -1,0 +1,7 @@
+[DEFAULT]
+
+["aaa.js"]
+skip-if = ["asan || verify"] # should be two lines
+
+["bbb.js"]
+skip-if = ["(asan || verify) && os == 'linux'"] # OK

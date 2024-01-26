@@ -8,7 +8,8 @@ https_first_disabled = true
 # Bug 1714237 Disabled on tsan due to timeouts interacting with the UI
 # Bug 1714210 Disabled on headless which doesnt support image data on the clipboard
 skip-if = [
-  "headless || tsan",
+  "headless",
+  "tsan",
   "os == 'win'", # Bug 1714295
   "os == 'linux' && bits == 64", # Bug 1714295
 ]

@@ -3,7 +3,6 @@ support-files = [ "hyperlink.js",
   "!/accessible/tests/mochitest/*.js",
   "!/accessible/tests/mochitest/letters.gif"]
 
-['test_general.html']
+["test_general.html"]
 
-['test_general.xhtml']
-
+["test_general.xhtml"]

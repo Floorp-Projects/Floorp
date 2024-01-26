@@ -3,7 +3,6 @@ support-files = [
   "!/accessible/tests/mochitest/*.js",
   "!/accessible/tests/mochitest/moz.png"]
 
-['test_general.html']
+["test_general.html"]
 
-['test_selection.html']
-
+["test_selection.html"]

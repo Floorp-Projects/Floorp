@@ -6,6 +6,8 @@ skip-if = ["socketprocess_networking"]
 
 ["browser_dirtyEnable.js"]
 
+["browser_doh_region.js"]
+
 ["browser_doorhangerUserReject.js"]
 
 ["browser_platformDetection.js"]
@@ -29,5 +31,3 @@ skip-if = ["win11_2009 && bits == 32"] # Bug 1713464
 ["browser_trrSelection_disable.js"]
 
 ["browser_userInterference.js"]
-
-["browser_doh_region.js"]

@@ -42,9 +42,9 @@ skip-if = ["os == 'linux'"]  # Bug 1821461
 
 ["browser_translations_lang_tags.js"]
 
-["browser_translations_remote_settings.js"]
-
 ["browser_translations_pdf_is_disabled.js"]
+
+["browser_translations_remote_settings.js"]
 
 ["browser_translations_shadow_dom.js"]
 

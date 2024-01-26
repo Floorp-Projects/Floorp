@@ -8,9 +8,10 @@ import re
 
 from .ini import combine_fields
 
-__all__ = ["read_toml", "alphabetize_toml_str", "add_skip_if"]
+__all__ = ["read_toml", "alphabetize_toml_str", "add_skip_if", "sort_paths"]
 
 FILENAME_REGEX = r"^([A-Za-z0-9_./-]*)([Bb][Uu][Gg])([-_]*)([0-9]+)([A-Za-z0-9_./-]*)$"
+DEFAULT_SECTION = "DEFAULT"
 
 
 def sort_paths_keyfn(k):
@@ -18,7 +19,7 @@ def sort_paths_keyfn(k):
     if sort_paths_keyfn.rx is None:
         sort_paths_keyfn.rx = re.compile(FILENAME_REGEX)
     name = str(k)
-    if name == "DEFAULT":
+    if name == DEFAULT_SECTION:
         return ""
     m = sort_paths_keyfn.rx.findall(name)
     if len(m) == 1 and len(m[0]) == 5:
@@ -75,7 +76,7 @@ def parse_tomlkit_str(contents):
 def read_toml(
     fp,
     defaults=None,
-    default="DEFAULT",
+    default=DEFAULT_SECTION,
     _comments=None,
     _separators=None,
     strict=True,
@@ -176,26 +177,43 @@ def alphabetize_toml_str(manifest):
     """
 
     from tomlkit import document, dumps, table
-    from tomlkit.items import KeyType, SingleKey
+    from tomlkit.items import Table
 
     preamble = ""
+    new_manifest = document()
+    first_section = False
+    sections = {}
+
     for k, v in manifest.body:
         if k is None:
             preamble += v.as_string()
+            continue
+        if not isinstance(v, Table):
+            raise Exception(f"MP TOML illegal keyval in preamble: {k} = {v}")
+        section = None
+        if not first_section:
+            if k == DEFAULT_SECTION:
+                new_manifest.add(k, v)
+            else:
+                new_manifest.add(DEFAULT_SECTION, table())
+            first_section = True
         else:
-            break
-    new_manifest = document()
-    if "DEFAULT" in manifest:
-        new_manifest.add("DEFAULT", manifest["DEFAULT"])
-    else:
-        new_manifest.add("DEFAULT", table())
-    sections = sort_paths([k for k in manifest.keys() if k != "DEFAULT"])
-    for k in sections:
-        if k.find('"') >= 0:
-            section = k
-        else:
-            section = SingleKey(k, KeyType.Basic)
-        new_manifest.add(section, manifest[k])
+            values = v.items()
+            if len(values) == 1:
+                for kk, vv in values:
+                    if isinstance(vv, Table):  # unquoted, dotted key
+                        section = f"{k}.{kk}"
+                        sections[section] = vv
+        if section is None:
+            section = str(k).strip("'\"")
+            sections[section] = v
+
+    if not first_section:
+        new_manifest.add(DEFAULT_SECTION, table())
+
+    for section in sort_paths([k for k in sections.keys() if k != DEFAULT_SECTION]):
+        new_manifest.add(section, sections[section])
+
     manifest_str = dumps(new_manifest)
     # tomlkit fixups
     manifest_str = preamble + manifest_str.replace('"",]', "]")

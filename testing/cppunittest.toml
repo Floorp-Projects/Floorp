@@ -108,7 +108,10 @@ run-if = ["os == 'win'"]
 run-if = ["os == 'win'"]
 
 ["TestPoisonArea"]
-skip-if = ["asan || tsan"]  # Not built on sanitizer builds
+skip-if = [
+  "asan", # Not built on sanitizer builds
+  "tsan",
+]
 
 ["TestPrintf"]
 

@@ -211,7 +211,10 @@ When generating the list of results, the following values are available.
 Automated testing
 -----------------
 
-Every new checker must have tests associated.
+Every new checker must have associated tests. If your linter is ``mylinter`` then the
+test file should be named ``tools/lint/test/test_mylinter.py`` and any example files
+named like ``tools/lint/test/files/mylinter/my-example-file``. Be sure that your test
+has been added as a section ``["test_mylinter.py"]`` in the manifest ``tools/lint/test/python.toml``.
 
 They should be pretty easy to write as most of the work is managed by the Mozlint
 framework. The key declaration is the ``LINTER`` variable which must match
