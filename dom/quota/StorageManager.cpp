@@ -426,20 +426,15 @@ void RequestResolver::ResolveOrReject() {
     promise = mPromise;
   } else {
     MOZ_ASSERT(mProxy);
-
-    // The worker ref might have been notified already before we are run.
-    MutexAutoLock lock(mProxy->Lock());
-    if (!mProxy->CleanedUp()) {
-      promise = mProxy->WorkerPromise();
-
-      // Only clean up for worker case.
-      autoCleanup.emplace(mProxy);
+    promise = mProxy->GetWorkerPromise();
+    if (!promise) {
+      return;
     }
+    // Only clean up for worker case.
+    autoCleanup.emplace(mProxy);
   }
 
-  if (!promise) {
-    return;
-  }
+  MOZ_ASSERT(promise);
 
   if (mType == Type::Estimate) {
     if (NS_SUCCEEDED(mResultCode)) {

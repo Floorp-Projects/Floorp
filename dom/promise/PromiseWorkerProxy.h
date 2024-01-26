@@ -98,14 +98,14 @@ class WorkerPrivate;
 //          // Usually do nothing, but you may want to log the fact.
 //        }
 //
-//   3. In the WorkerRunnable's WorkerRun() use WorkerPromise() to access the
+//   3. In the WorkerRunnable's WorkerRun() use GetWorkerPromise() to access the
 //      Promise and resolve/reject it. Then call CleanUp().
 //
 //        bool
 //        WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
 //        {
 //          aWorkerPrivate->AssertIsOnWorkerThread();
-//          RefPtr<Promise> promise = mProxy->WorkerPromise();
+//          RefPtr<Promise> promise = mProxy->GetWorkerPromise();
 //          promise->MaybeResolve(mResult);
 //          mProxy->CleanUp();
 //        }
@@ -149,13 +149,13 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   WorkerPrivate* GetWorkerPrivate() const MOZ_NO_THREAD_SAFETY_ANALYSIS;
 
   // This should only be used within WorkerRunnable::WorkerRun() running on the
-  // worker thread! Do not call this after calling CleanUp().
-  Promise* WorkerPromise() const;
+  // worker thread! If this method is called after CleanUp(), return nullptr.
+  Promise* GetWorkerPromise() const;
 
   // Worker thread only. Calling this invalidates several assumptions, so be
   // sure this is the last thing you do.
   // 1. WorkerPrivate() will no longer return a valid worker.
-  // 2. WorkerPromise() will crash!
+  // 2. GetWorkerPromise() will return null!
   void CleanUp();
 
   Mutex& Lock() MOZ_RETURN_CAPABILITY(mCleanUpLock) { return mCleanUpLock; }

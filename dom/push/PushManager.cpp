@@ -113,13 +113,11 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
         mAppServerKey(std::move(aAppServerKey)) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
-    {
-      MutexAutoLock lock(mProxy->Lock());
-      if (mProxy->CleanedUp()) {
-        return true;
-      }
+    RefPtr<Promise> promise = mProxy->GetWorkerPromise();
+    // Once Worker had already started shutdown, workerPromise would be nullptr
+    if (!promise) {
+      return true;
     }
-    RefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       if (mEndpoint.IsEmpty()) {
         promise->MaybeResolve(JS::NullHandleValue);
@@ -308,8 +306,10 @@ class PermissionResultRunnable final : public WorkerRunnable {
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-
-    RefPtr<Promise> promise = mProxy->WorkerPromise();
+    RefPtr<Promise> promise = mProxy->GetWorkerPromise();
+    if (!promise) {
+      return true;
+    }
     if (NS_SUCCEEDED(mStatus)) {
       promise->MaybeResolve(mState);
     } else {
