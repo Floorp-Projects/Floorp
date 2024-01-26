@@ -10,6 +10,8 @@ import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.getPreferenceKey
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.requirePreference
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsFragment
 import kotlin.system.exitProcess
@@ -26,6 +28,12 @@ class SecretSettingsFragment :
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.secret_settings)
+
+        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_remote_server_prod).apply {
+            isVisible = true
+            isChecked = context.settings.useProductionRemoteSettingsServer
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {

@@ -88,7 +88,8 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     val newBooleanValue = newValue as? Boolean ?: return false
-                    val ingestionScheduler = requireContext().components.fxSuggest.ingestionScheduler
+                    val ingestionScheduler =
+                        requireContext().components.fxSuggest.ingestionScheduler
                     if (newBooleanValue) {
                         ingestionScheduler.startPeriodicIngestion()
                     } else {
@@ -128,6 +129,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
 
         requirePreference<Preference>(R.string.pref_key_custom_sponsored_stories_parameters).apply {
             isVisible = Config.channel.isNightlyOrDebug
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_remote_server_prod).apply {
+            isVisible = true
+            isChecked = context.settings().useProductionRemoteSettingsServer
+            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
 

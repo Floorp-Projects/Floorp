@@ -34,6 +34,8 @@
     <string name="preferences_debug_settings">Secret Settings</string>
     <!-- Label for the secret settings preference -->
     <string name="preferences_debug_info" translatable="false">Secret Debug Info</string>
+    <!-- Label for using remote settings server url -->
+    <string name="preferences_debug_settings_remote_settings_server" translatable="false">Use Remote Settings Production server \n(Staging will be used when disabled) \n(requires restart)</string>
     <!-- Label for allowing third party root certificates from the Android OS CA store preference -->
     <string name="preferences_debug_settings_allow_third_party_root_certs">Use third party CA certificates</string>
     <!-- Label for a longer description of allowing third party root certificates from the Android OS CA store preference -->

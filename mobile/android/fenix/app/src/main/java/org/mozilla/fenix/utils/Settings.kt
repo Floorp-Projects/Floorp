@@ -767,6 +767,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true,
     )
 
+    val useProductionRemoteSettingsServer by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_remote_server_prod),
+        default = true,
+    )
+
     val enabledTotalCookieProtection: Boolean
         get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
 

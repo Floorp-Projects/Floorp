@@ -329,6 +329,11 @@ class Core(
                         rootStorageDirectory = context.filesDir,
                         readJson = readJson,
                         collectionName = COLLECTION_NAME,
+                        serverUrl = if (context.settings().useProductionRemoteSettingsServer) {
+                            REMOTE_PROD_ENDPOINT_URL
+                        } else {
+                            REMOTE_STAGE_ENDPOINT_URL
+                        },
                     ).updateProviderList()
                 }
                 // Install the "ads" WebExtension to get the links in an partner page.
@@ -623,5 +628,7 @@ class Core(
 
         // collection name to fetch from server for SERP telemetry
         const val COLLECTION_NAME = "search-telemetry-v2"
+        internal const val REMOTE_PROD_ENDPOINT_URL = "https://firefox.settings.services.mozilla.com"
+        internal const val REMOTE_STAGE_ENDPOINT_URL = "https://firefox.settings.services.allizom.org"
     }
 }

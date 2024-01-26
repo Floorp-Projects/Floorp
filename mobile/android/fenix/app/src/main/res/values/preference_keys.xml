@@ -145,6 +145,9 @@
     <!-- Privacy Pop Window -->
     <string name="pref_key_privacy_pop_window" translatable="false">pref_key_privacy_pop_window</string>
 
+    <!-- Remote Server Settings -->
+    <string name="pref_key_remote_server_prod" translatable="false">pref_key_remote_server_prod</string>
+
     <!-- Theme Settings -->
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>
     <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>

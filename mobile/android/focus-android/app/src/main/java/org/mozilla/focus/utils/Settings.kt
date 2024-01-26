@@ -412,6 +412,14 @@ class Settings(
                 .commit()
         }
 
+    var useProductionRemoteSettingsServer: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_remote_server_prod), true)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_key_remote_server_prod), value)
+                .commit()
+        }
+
     fun addSearchWidgetInstalled(count: Int) {
         val key = getPreferenceKey(R.string.pref_key_search_widget_installed)
         val newValue = preferences.getInt(key, 0) + count

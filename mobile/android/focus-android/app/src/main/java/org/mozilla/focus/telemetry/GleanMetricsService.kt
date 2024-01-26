@@ -60,6 +60,11 @@ class GleanMetricsService(context: Context) : MetricsService {
     companion object {
         // collection name to fetch from server for SERP telemetry
         const val COLLECTION_NAME = "search-telemetry-v2"
+
+        // urls for prod and stage remote settings server
+        internal const val REMOTE_PROD_ENDPOINT_URL = "https://firefox.settings.services.mozilla.com"
+        internal const val REMOTE_STAGE_ENDPOINT_URL = "https://firefox.settings.services.allizom.org"
+
         private val isEnabledByDefault: Boolean
             get() = !AppConstants.isKlarBuild
 
@@ -122,6 +127,11 @@ class GleanMetricsService(context: Context) : MetricsService {
                         rootStorageDirectory = context.filesDir,
                         readJson = readJson,
                         collectionName = COLLECTION_NAME,
+                        serverUrl = if (context.settings.useProductionRemoteSettingsServer) {
+                            REMOTE_PROD_ENDPOINT_URL
+                        } else {
+                            REMOTE_STAGE_ENDPOINT_URL
+                        },
                     ).updateProviderList()
                 }
                 installSearchTelemetryExtensions(components, providerList)

@@ -16,7 +16,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 
-internal const val REMOTE_ENDPOINT_URL = "https://firefox.settings.services.mozilla.com"
+internal const val REMOTE_PROD_ENDPOINT_URL = "https://firefox.settings.services.mozilla.com"
 internal const val REMOTE_ENDPOINT_BUCKET_NAME = "main"
 
 /**
@@ -26,7 +26,7 @@ class SerpTelemetryRepository(
     rootStorageDirectory: File,
     private val readJson: () -> JSONObject,
     collectionName: String,
-    serverUrl: String = REMOTE_ENDPOINT_URL,
+    serverUrl: String = REMOTE_PROD_ENDPOINT_URL,
     bucketName: String = REMOTE_ENDPOINT_BUCKET_NAME,
 ) {
     val logger = Logger("SerpTelemetryRepository")

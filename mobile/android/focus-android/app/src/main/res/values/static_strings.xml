@@ -20,4 +20,7 @@
 
     <!-- Application Services abbreviation used in AboutFragment -->
     <string name="services_abbreviation" translatable="false">AS</string>
+
+    <!-- Label for using remote settings server url -->
+    <string name="preferences_debug_settings_remote_settings_server" translatable="false">Use Remote Settings Production server \n(Staging will be used when disabled) \n(requires restart)</string>
 </resources>
