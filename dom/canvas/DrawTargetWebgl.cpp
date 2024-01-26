@@ -3213,18 +3213,15 @@ already_AddRefed<TextureHandle> SharedContextWebgl::DrawStrokeMask(
   mWebgl->FramebufferAttach(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                             LOCAL_GL_TEXTURE_2D, attachInfo);
   mWebgl->Viewport(texBounds.x, texBounds.y, texBounds.width, texBounds.height);
+  EnableScissor(texBounds);
   if (!backing->IsInitialized()) {
     backing->MarkInitialized();
-    // If the backing texture is uninitialized, then clear the entire backing
-    // texture to initialize it.
-    DisableScissor();
+    // WebGL implicitly clears the backing texture the first time it is used.
   } else {
-    // Clear only the sub-texture.
-    EnableScissor(texBounds);
+    // Ensure the mask background is clear.
+    mWebgl->ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
   }
-  // Ensure the mask background is clear.
-  mWebgl->ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
 
   // Reset any blending when drawing the mask.
   SetBlendState(CompositionOp::OP_OVER);
