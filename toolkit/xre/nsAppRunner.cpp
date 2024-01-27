@@ -4795,6 +4795,14 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       Output(true, "X11 only build is missig X11 display!\n");
     }
 #  endif
+#  if defined(MOZ_WAYLAND)
+    // We want to use proxy for main connection only so
+    // restore original Wayland display for next potential Wayland connections
+    // from gfx probe code and so on.
+    if (gWaylandProxy) {
+      gWaylandProxy->RestoreWaylandDisplay();
+    }
+#  endif
   }
 #endif
 #if defined(MOZ_HAS_REMOTE)
