@@ -291,6 +291,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void Deactivate();
 
+  bool TryDrawTargetWebglFallback(int64_t aTextureId,
+                                  gfx::DrawTargetWebgl* aWebgl);
   void ForceDrawTargetWebglFallback();
 
   void BlockCanvas();

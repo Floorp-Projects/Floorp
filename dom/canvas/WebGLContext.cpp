@@ -1078,19 +1078,23 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
   }
 }
 
-void WebGLContext::CopyToSwapChain(
+bool WebGLContext::CopyToSwapChain(
     WebGLFramebuffer* const srcFb, const layers::TextureType consumerType,
     const webgl::SwapChainOptions& options,
     layers::RemoteTextureOwnerClient* ownerClient) {
   const FuncScope funcScope(*this, "<CopyToSwapChain>");
-  if (IsContextLost()) return;
+  if (IsContextLost()) {
+    return false;
+  }
 
   OnEndOfFrame();
 
-  if (!srcFb) return;
+  if (!srcFb) {
+    return false;
+  }
   const auto* info = srcFb->GetCompletenessInfo();
   if (!info) {
-    return;
+    return false;
   }
   gfx::IntSize size(info->width, info->height);
 
@@ -1104,8 +1108,8 @@ void WebGLContext::CopyToSwapChain(
   // read back the WebGL framebuffer into and push it as a remote texture.
   if (useAsync && srcFb->mSwapChain.mFactory->GetConsumerType() ==
                       layers::TextureType::Unknown) {
-    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options, ownerClient);
-    return;
+    return PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options,
+                             ownerClient);
   }
 
   {
@@ -1115,7 +1119,7 @@ void WebGLContext::CopyToSwapChain(
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
       LoseContext();
-      return;
+      return false;
     }
 
     const ScopedFBRebinder saveFB(this);
@@ -1127,9 +1131,11 @@ void WebGLContext::CopyToSwapChain(
   }
 
   if (useAsync) {
-    PushRemoteTexture(srcFb, srcFb->mSwapChain, srcFb->mSwapChain.FrontBuffer(),
-                      options, ownerClient);
+    return PushRemoteTexture(srcFb, srcFb->mSwapChain,
+                             srcFb->mSwapChain.FrontBuffer(), options,
+                             ownerClient);
   }
+  return true;
 }
 
 bool WebGLContext::PushRemoteTexture(

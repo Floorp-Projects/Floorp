@@ -1008,18 +1008,25 @@ bool DrawTargetWebgl::HasDataSnapshot() const {
   return (mSkiaValid && !mSkiaLayer) || (mSnapshot && mSnapshot->HasReadData());
 }
 
-void DrawTargetWebgl::PrepareData() {
+bool DrawTargetWebgl::PrepareSkia() {
   if (!mSkiaValid) {
     ReadIntoSkia();
   } else if (mSkiaLayer) {
     FlattenSkia();
   }
+  return mSkiaValid;
 }
+
+bool DrawTargetWebgl::EnsureDataSnapshot() {
+  return HasDataSnapshot() || PrepareSkia();
+}
+
+void DrawTargetWebgl::PrepareShmem() { PrepareSkia(); }
 
 // Borrow a snapshot that may be used by another thread for composition. Only
 // Skia snapshots are safe to pass around.
 already_AddRefed<SourceSurface> DrawTargetWebgl::GetDataSnapshot() {
-  PrepareData();
+  PrepareSkia();
   return mSkia->Snapshot(mFormat);
 }
 
@@ -2168,9 +2175,12 @@ bool SharedContextWebgl::DrawRectAccel(
 
   // Check if the drawing options and the pattern support acceleration. Also
   // ensure the framebuffer is prepared for drawing. If not, fall back to using
-  // the Skia target.
-  if (!SupportsDrawOptions(aOptions) || !SupportsPattern(aPattern) ||
-      aStrokeOptions || !mCurrentTarget->MarkChanged()) {
+  // the Skia target. When we need to forcefully update a texture, we must be
+  // careful to override any pattern limits, as the caller ensures the pattern
+  // is otherwise a supported type.
+  if (!SupportsDrawOptions(aOptions) ||
+      (!aForceUpdate && !SupportsPattern(aPattern)) || aStrokeOptions ||
+      !mCurrentTarget->MarkChanged()) {
     // If only accelerated drawing was requested, bail out without software
     // drawing fallback.
     if (!aAccelOnly) {
@@ -4693,11 +4703,11 @@ void DrawTargetWebgl::EndFrame() {
   mSharedContext->ClearCachesIfNecessary();
 }
 
-void DrawTargetWebgl::CopyToSwapChain(
+bool DrawTargetWebgl::CopyToSwapChain(
     layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
     layers::RemoteTextureOwnerClient* aOwnerClient) {
   if (!mWebglValid && !FlushFromSkia()) {
-    return;
+    return false;
   }
 
   // Copy and swizzle the WebGL framebuffer to the swap chain front buffer.
@@ -4712,8 +4722,8 @@ void DrawTargetWebgl::CopyToSwapChain(
   const RefPtr<layers::ImageBridgeChild> imageBridge =
       layers::ImageBridgeChild::GetSingleton();
   auto texType = layers::TexTypeForWebgl(imageBridge);
-  mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options,
-                                          aOwnerClient);
+  return mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options,
+                                                 aOwnerClient);
 }
 
 already_AddRefed<DrawTarget> DrawTargetWebgl::CreateSimilarDrawTarget(
