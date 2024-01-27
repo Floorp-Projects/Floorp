@@ -1172,7 +1172,8 @@ bool JSContext::getPendingExceptionStack(MutableHandleValue rval) {
   RootedValue exception(this, unwrappedException());
   JS::ExceptionStatus prevStatus = status;
   clearPendingException();
-  if (!compartment()->wrap(this, &stack)) {
+  if (!compartment()->wrap(this, &exception) ||
+      !compartment()->wrap(this, &stack)) {
     return false;
   }
   this->check(stack);
