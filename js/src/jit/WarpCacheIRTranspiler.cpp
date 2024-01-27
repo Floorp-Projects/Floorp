@@ -1363,6 +1363,15 @@ bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitDoubleToUint8Clamped(NumberOperandId inputId,
+                                                     Int32OperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+  auto* ins = MClampToUint8::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
                                                       Int32OperandId resultId) {
   MDefinition* input = getOperand(valId);

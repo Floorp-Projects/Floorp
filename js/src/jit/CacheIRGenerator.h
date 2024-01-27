@@ -87,7 +87,8 @@ class MOZ_RAII IRGenerator {
 
   void emitIdGuard(ValOperandId valId, const Value& idVal, jsid id);
 
-  OperandId emitNumericGuard(ValOperandId valId, Scalar::Type type);
+  OperandId emitNumericGuard(ValOperandId valId, const Value& v,
+                             Scalar::Type type);
 
   StringOperandId emitToStringGuard(ValOperandId id, const Value& v);
 
@@ -590,8 +591,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
     return generator_.emitToStringGuard(id, v);
   }
 
-  auto emitNumericGuard(ValOperandId valId, Scalar::Type type) {
-    return generator_.emitNumericGuard(valId, type);
+  auto emitNumericGuard(ValOperandId valId, const Value& v, Scalar::Type type) {
+    return generator_.emitNumericGuard(valId, v, type);
   }
 
   auto guardToIntPtrIndex(const Value& index, ValOperandId indexId,
