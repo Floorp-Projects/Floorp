@@ -3786,6 +3786,11 @@
   value: true
   mirror: always
 
+- name: dom.send_after_paint_to_content
+  type: bool
+  value: false
+  mirror: always
+
 - name: dom.separate_event_queue_for_post_message.enabled
   type: bool
   value: true

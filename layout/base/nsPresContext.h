@@ -1350,7 +1350,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mHasEverBuiltInvisibleText : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
-  unsigned mSendAfterPaintToContent : 1;
   unsigned mDrawImageBackground : 1;
   unsigned mDrawColorBackground : 1;
   unsigned mNeverAnimate : 1;
