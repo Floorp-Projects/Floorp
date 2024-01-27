@@ -95,6 +95,10 @@ class UnableToSetCookieException(BidiException):
     error_code = "unable to set cookie"
 
 
+class UnderspecifiedStoragePartitionException(BidiException):
+    error_code = "underspecified storage partition"
+
+
 class UnknownCommandException(BidiException):
     error_code = "unknown command"
 
