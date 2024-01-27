@@ -813,22 +813,6 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsIDirIndex* aIndex) {
   return SendToListener(aRequest, pushBuffer);
 }
 
-NS_IMETHODIMP
-nsIndexedToHTML::OnInformationAvailable(nsIRequest* aRequest,
-                                        const nsAString& aInfo) {
-  nsAutoCString pushBuffer;
-  nsAutoCString escapedUtf8;
-  nsAppendEscapedHTML(NS_ConvertUTF16toUTF8(aInfo), escapedUtf8);
-  pushBuffer.AppendLiteral("<tr>\n <td>");
-  // escaped is provided in Unicode, so write hex NCRs as necessary
-  // to prevent the HTML parser from applying a character set.
-  AppendNonAsciiToNCR(NS_ConvertUTF8toUTF16(escapedUtf8), pushBuffer);
-  pushBuffer.AppendLiteral(
-      "</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n");
-
-  return SendToListener(aRequest, pushBuffer);
-}
-
 void nsIndexedToHTML::FormatSizeString(int64_t inSize,
                                        nsCString& outSizeString) {
   outSizeString.Truncate();

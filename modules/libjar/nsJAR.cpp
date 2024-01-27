@@ -287,23 +287,14 @@ nsJAR::FindEntries(const nsACString& aPattern,
 }
 
 NS_IMETHODIMP
-nsJAR::GetInputStream(const nsACString& aFilename, nsIInputStream** result) {
-  return GetInputStreamWithSpec(""_ns, aFilename, result);
-}
-
-NS_IMETHODIMP
-nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
-                              const nsACString& aEntryName,
-                              nsIInputStream** result) {
+nsJAR::GetInputStream(const nsACString& aEntryName, nsIInputStream** result) {
   NS_ENSURE_ARG_POINTER(result);
   RecursiveMutexAutoLock lock(mLock);
   if (!mZip) {
     return NS_ERROR_FAILURE;
   }
 
-  LOG(("GetInputStreamWithSpec[%p] %s %s", this,
-       PromiseFlatCString(aJarDirSpec).get(),
-       PromiseFlatCString(aEntryName).get()));
+  LOG(("GetInputStream[%p] %s", this, PromiseFlatCString(aEntryName).get()));
   // Watch out for the jar:foo.zip!/ (aDir is empty) top-level special case!
   nsZipItem* item = nullptr;
   const nsCString& entry = PromiseFlatCString(aEntryName);
@@ -318,7 +309,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
 
   nsresult rv = NS_OK;
   if (!item || item->IsDirectory()) {
-    rv = jis->InitDirectory(this, aJarDirSpec, entry.get());
+    rv = jis->InitDirectory(this, entry.get());
   } else {
     RefPtr<nsZipHandle> fd = mZip->GetFD();
     rv = jis->InitFile(fd, mZip->GetData(item), item);

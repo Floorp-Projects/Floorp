@@ -36,8 +36,7 @@ class nsJARInputStream final : public nsIInputStream {
   // takes ownership of |fd|, even on failure
   nsresult InitFile(nsZipHandle* aFd, const uint8_t* aData, nsZipItem* item);
 
-  nsresult InitDirectory(nsJAR* aJar, const nsACString& aJarDirSpec,
-                         const char* aDir);
+  nsresult InitDirectory(nsJAR* aJar, const char* aDir);
 
  private:
   ~nsJARInputStream() { Close(); }

@@ -71,26 +71,13 @@ class nsJARInputThunk : public nsIInputStream {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
-  nsJARInputThunk(nsIZipReader* zipReader, nsIURI* fullJarURI,
-                  const nsACString& jarEntry, bool usingJarCache)
+  nsJARInputThunk(nsIZipReader* zipReader, const nsACString& jarEntry,
+                  bool usingJarCache)
       : mUsingJarCache(usingJarCache),
         mJarReader(zipReader),
         mJarEntry(jarEntry),
         mContentLength(-1) {
     MOZ_DIAGNOSTIC_ASSERT(zipReader, "zipReader must not be null");
-    if (ENTRY_IS_DIRECTORY(mJarEntry) && fullJarURI) {
-      nsCOMPtr<nsIURI> urlWithoutQueryRef;
-      nsresult rv = NS_MutateURI(fullJarURI)
-                        .SetQuery(""_ns)
-                        .SetRef(""_ns)
-                        .Finalize(urlWithoutQueryRef);
-      if (NS_SUCCEEDED(rv) && urlWithoutQueryRef) {
-        rv = urlWithoutQueryRef->GetAsciiSpec(mJarDirSpec);
-        MOZ_ASSERT(NS_SUCCEEDED(rv), "Finding a jar dir spec shouldn't fail.");
-      } else {
-        MOZ_CRASH("Shouldn't fail to strip query and ref off jar URI.");
-      }
-    }
   }
 
   int64_t GetContentLength() { return mContentLength; }
@@ -102,7 +89,6 @@ class nsJARInputThunk : public nsIInputStream {
 
   bool mUsingJarCache;
   nsCOMPtr<nsIZipReader> mJarReader;
-  nsCString mJarDirSpec;
   nsCOMPtr<nsIInputStream> mJarStream;
   nsCString mJarEntry;
   int64_t mContentLength;
@@ -114,18 +100,8 @@ nsresult nsJARInputThunk::Init() {
   if (!mJarReader) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv;
-  if (ENTRY_IS_DIRECTORY(mJarEntry)) {
-    // A directory stream also needs the Spec of the FullJarURI
-    // because is included in the stream data itself.
-
-    NS_ENSURE_STATE(!mJarDirSpec.IsEmpty());
-
-    rv = mJarReader->GetInputStreamWithSpec(mJarDirSpec, mJarEntry,
-                                            getter_AddRefs(mJarStream));
-  } else {
-    rv = mJarReader->GetInputStream(mJarEntry, getter_AddRefs(mJarStream));
-  }
+  nsresult rv =
+      mJarReader->GetInputStream(mJarEntry, getter_AddRefs(mJarStream));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -290,7 +266,7 @@ nsresult nsJARChannel::CreateJarInput(nsIZipReaderCache* jarCache,
   if (NS_FAILED(rv)) return rv;
 
   RefPtr<nsJARInputThunk> input =
-      new nsJARInputThunk(reader, mJarURI, mJarEntry, jarCache != nullptr);
+      new nsJARInputThunk(reader, mJarEntry, jarCache != nullptr);
   rv = input->Init();
   if (NS_FAILED(rv)) {
     return rv;
@@ -354,7 +330,7 @@ nsresult nsJARChannel::LookupFile() {
 
 nsresult CreateLocalJarInput(nsIZipReaderCache* aJarCache, nsIFile* aFile,
                              const nsACString& aInnerJarEntry,
-                             nsIJARURI* aJarURI, const nsACString& aJarEntry,
+                             const nsACString& aJarEntry,
                              nsJARInputThunk** aResultInput) {
   LOG(("nsJARChannel::CreateLocalJarInput [aJarCache=%p, %s, %s]\n", aJarCache,
        PromiseFlatCString(aInnerJarEntry).get(),
@@ -377,7 +353,7 @@ nsresult CreateLocalJarInput(nsIZipReaderCache* aJarCache, nsIFile* aFile,
   }
 
   RefPtr<nsJARInputThunk> input =
-      new nsJARInputThunk(reader, aJarURI, aJarEntry, aJarCache != nullptr);
+      new nsJARInputThunk(reader, aJarEntry, aJarCache != nullptr);
   rv = input->Init();
   if (NS_FAILED(rv)) {
     return rv;
@@ -425,19 +401,16 @@ nsresult nsJARChannel::OpenLocalFile() {
     return rv;
   }
 
-  nsCOMPtr<nsIJARURI> localJARURI = mJarURI;
-
   nsAutoCString jarEntry(mJarEntry);
   nsAutoCString innerJarEntry(mInnerJarEntry);
 
   RefPtr<nsJARChannel> self = this;
   return mWorker->Dispatch(NS_NewRunnableFunction(
-      "nsJARChannel::OpenLocalFile", [self, jarCache, clonedFile, localJARURI,
-                                      jarEntry, innerJarEntry]() mutable {
+      "nsJARChannel::OpenLocalFile",
+      [self, jarCache, clonedFile, jarEntry, innerJarEntry]() mutable {
         RefPtr<nsJARInputThunk> input;
-        nsresult rv =
-            CreateLocalJarInput(jarCache, clonedFile, innerJarEntry,
-                                localJARURI, jarEntry, getter_AddRefs(input));
+        nsresult rv = CreateLocalJarInput(jarCache, clonedFile, innerJarEntry,
+                                          jarEntry, getter_AddRefs(input));
 
         nsCOMPtr<nsIRunnable> target;
         if (NS_SUCCEEDED(rv)) {

@@ -18,7 +18,6 @@
 #include "mozilla/Logging.h"
 #include "prtime.h"
 #include "nsIFile.h"
-#include "nsURLHelper.h"
 #include "nsNativeCharsetUtils.h"
 
 // NOTE: This runs on the _file transport_ thread.
@@ -94,13 +93,6 @@ nsresult nsDirectoryIndexStream::Init(nsIFile* aDir) {
   }
 
   mArray.Sort(compare);
-
-  mBuf.AppendLiteral("300: ");
-  nsAutoCString url;
-  rv = net_GetURLSpecFromFile(aDir, url);
-  if (NS_FAILED(rv)) return rv;
-  mBuf.Append(url);
-  mBuf.Append('\n');
 
   mBuf.AppendLiteral("200: filename content-length last-modified file-type\n");
 

@@ -22,16 +22,6 @@ interface nsIDirIndexListener : nsISupports {
      */
     void onIndexAvailable(in nsIRequest aRequest,
                           in nsIDirIndex aIndex);
-
-    /**
-     * Called for each information line
-     *
-     * @param request - the request
-     * @param info - new info to add
-     */
-    void onInformationAvailable(in nsIRequest aRequest,
-                                in AString aInfo);
-
 };
 
 /**
