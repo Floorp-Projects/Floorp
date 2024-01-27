@@ -50,15 +50,13 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-static const char kSystemFont_system[] = "-apple-system";
-
 // cache Cocoa's "shared font manager" for performance
 static NSFontManager* sFontManager;
 
 static void GetStringForNSString(const NSString* aSrc, nsAString& aDest) {
-  aDest.SetLength([aSrc length]);
+  aDest.SetLength(aSrc.length);
   [aSrc getCharacters:reinterpret_cast<unichar*>(aDest.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
+                range:NSMakeRange(0, aSrc.length)];
 }
 
 static NSString* GetNSStringForString(const nsAString& aSrc) {
@@ -109,7 +107,7 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
 
     auto addToFamily = [&](NSFont* aNSFont) MOZ_REQUIRES(mLock) {
-      NSString* psNameNS = [[aNSFont fontDescriptor] postscriptName];
+      NSString* psNameNS = aNSFont.fontDescriptor.postscriptName;
       nsAutoString nameUTF16;
       nsAutoCString psName;
       nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
@@ -120,7 +118,7 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
 
       // Set the appropriate style, assuming it may not have a variation range.
       fe->mStyleRange = SlantStyleRange(
-          ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait)
+          (aNSFont.fontDescriptor.symbolicTraits & NSFontItalicTrait)
               ? FontSlantStyle::ITALIC
               : FontSlantStyle::NORMAL);
 
@@ -490,48 +488,39 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
 
   // code moved here from widget/cocoa/nsLookAndFeel.mm
   NSFont* font = nullptr;
-  char* systemFontName = nullptr;
   switch (aSystemFontID) {
     case LookAndFeel::FontID::MessageBox:
     case LookAndFeel::FontID::StatusBar:
     case LookAndFeel::FontID::MozList:
     case LookAndFeel::FontID::MozField:
     case LookAndFeel::FontID::MozButton:
-      font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-      systemFontName = (char*)kSystemFont_system;
+      font = [NSFont systemFontOfSize:NSFont.smallSystemFontSize];
       break;
 
     case LookAndFeel::FontID::SmallCaption:
-      font = [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
-      systemFontName = (char*)kSystemFont_system;
+      font = [NSFont boldSystemFontOfSize:NSFont.smallSystemFontSize];
       break;
 
     case LookAndFeel::FontID::Icon:  // used in urlbar; tried labelFont, but too
                                      // small
       font = [NSFont controlContentFontOfSize:0.0];
-      systemFontName = (char*)kSystemFont_system;
       break;
 
     case LookAndFeel::FontID::MozPullDownMenu:
       font = [NSFont menuBarFontOfSize:0.0];
-      systemFontName = (char*)kSystemFont_system;
       break;
 
     case LookAndFeel::FontID::Caption:
     case LookAndFeel::FontID::Menu:
     default:
       font = [NSFont systemFontOfSize:0.0];
-      systemFontName = (char*)kSystemFont_system;
       break;
   }
   NS_ASSERTION(font, "system font not set");
-  NS_ASSERTION(systemFontName, "system font name not set");
 
-  if (systemFontName) {
-    aSystemFontName.AssignASCII(systemFontName);
-  }
+  aSystemFontName.AssignASCII("-apple-system");
 
-  NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
+  NSFontSymbolicTraits traits = font.fontDescriptor.symbolicTraits;
   aFontStyle.style = (traits & NSFontItalicTrait) ? FontSlantStyle::ITALIC
                                                   : FontSlantStyle::NORMAL;
   aFontStyle.weight =
@@ -540,6 +529,6 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
                        : (traits & NSFontCondensedTrait)
                            ? FontStretch::CONDENSED
                            : FontStretch::NORMAL;
-  aFontStyle.size = [font pointSize];
+  aFontStyle.size = font.pointSize;
   aFontStyle.systemFont = true;
 }
