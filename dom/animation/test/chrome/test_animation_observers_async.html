@@ -178,7 +178,7 @@ function runTest() {
            "getAnimations().length after transition end");
 
         // Wait for the change MutationRecord for seeking the Animation to be
-        // delivered, followed by the removal MutationRecord.
+        // delivered, followed by the the removal MutationRecord.
         return waitForFrame();
       }).then(() => {
         assert_records([{ added: [], changed: animations, removed: [] },
@@ -553,7 +553,7 @@ promise_test(t => {
       p => ({ added: [], changed: [p], removed: [] })
     );
 
-    return Promise.all(animations.map(animation => animation.finished));
+    return await_event(div, "animationend");
   }).then(() => {
     // After the changed notifications, which will be dispatched in the order that
     // the animations were seeked, we should get removal MutationRecords in order

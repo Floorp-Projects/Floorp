@@ -114,9 +114,6 @@ class Animation : public DOMEventTargetHelper,
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   Nullable<double> GetStartTimeAsDouble() const;
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
-  void SetPendingReadyTime(const TimeStamp& aReadyTime) {
-    mPendingReadyTime = aReadyTime;
-  }
   virtual void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
 
   // This is deliberately _not_ called GetCurrentTime since that would clash
@@ -576,9 +573,6 @@ class Animation : public DOMEventTargetHelper,
 
   // Whether the Animation is System, ResistFingerprinting, or neither
   RTPCallerType mRTPCallerType;
-
-  // The time at which our animation should be ready.
-  TimeStamp mPendingReadyTime;
 
  private:
   // The id for this animation on the compositor.
