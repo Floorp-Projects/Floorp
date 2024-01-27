@@ -101,6 +101,12 @@ class PaletteCache;
 }  // namespace gfx
 }  // namespace mozilla
 
+// supported values for cached integer pref types
+enum nsPresContext_CachedIntPrefType {
+  kPresContext_ScrollbarSide = 1,
+  kPresContext_BidiDirection
+};
+
 // IDs for the default variable and fixed fonts (not to be changed, see
 // nsFont.h) To be used for Get/SetDefaultFont(). The other IDs in nsFont.h are
 // also supported.
@@ -372,6 +378,23 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    * If passed null, it stops emulating.
    */
   void EmulateMedium(nsAtom* aMediaType);
+
+  /** Get a cached integer pref, by its type */
+  // *  - initially created for bugs 30910, 61883, 74186, 84398
+  int32_t GetCachedIntPref(nsPresContext_CachedIntPrefType aPrefType) const {
+    // If called with a constant parameter, the compiler should optimize
+    // this switch statement away.
+    switch (aPrefType) {
+      case kPresContext_ScrollbarSide:
+        return mPrefScrollbarSide;
+      case kPresContext_BidiDirection:
+        return mPrefBidiDirection;
+      default:
+        NS_ERROR("invalid arg passed to GetCachedIntPref");
+    }
+
+    return false;
+  }
 
   const mozilla::PreferenceSheet::Prefs& PrefSheetPrefs() const {
     return mozilla::PreferenceSheet::PrefsFor(*mDocument);
@@ -1327,6 +1350,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mHasEverBuiltInvisibleText : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
+  unsigned mSendAfterPaintToContent : 1;
   unsigned mDrawImageBackground : 1;
   unsigned mDrawColorBackground : 1;
   unsigned mNeverAnimate : 1;
@@ -1334,6 +1358,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mCanPaginatedScroll : 1;
   unsigned mDoScaledTwips : 1;
   unsigned mIsRootPaginatedDocument : 1;
+  unsigned mPrefBidiDirection : 1;
+  unsigned mPrefScrollbarSide : 2;
   unsigned mPendingThemeChanged : 1;
   // widget::ThemeChangeKind
   unsigned mPendingThemeChangeKind : kThemeChangeKindBits;
