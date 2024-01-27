@@ -1748,6 +1748,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(LoadWrapperTarget)
   CACHEOP_CASE_UNIMPL(LoadValueTag)
   CACHEOP_CASE_UNIMPL(TruncateDoubleToUInt32)
+  CACHEOP_CASE_UNIMPL(DoubleToUint8Clamped)
   CACHEOP_CASE_UNIMPL(MegamorphicLoadSlotResult)
   CACHEOP_CASE_UNIMPL(MegamorphicLoadSlotByValueResult)
   CACHEOP_CASE_UNIMPL(MegamorphicStoreSlot)

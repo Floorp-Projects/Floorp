@@ -841,6 +841,14 @@
     input: NumberId
     result: Int32Id
 
+- name: DoubleToUint8Clamped
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    input: NumberId
+    result: Int32Id
+
 - name: MegamorphicLoadSlotResult
   shared: true
   transpile: true

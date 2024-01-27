@@ -3672,6 +3672,19 @@ bool CacheIRCompiler::emitTruncateDoubleToUInt32(NumberOperandId inputId,
   return true;
 }
 
+bool CacheIRCompiler::emitDoubleToUint8Clamped(NumberOperandId inputId,
+                                               Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register res = allocator.defineRegister(masm, resultId);
+
+  AutoScratchFloatRegister floatReg(this);
+
+  allocator.ensureDoubleRegister(masm, inputId, floatReg);
+
+  masm.clampDoubleToUint8(floatReg, res);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

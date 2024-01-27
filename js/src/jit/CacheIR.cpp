@@ -4296,25 +4296,82 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   return AttachDecision::Attach;
 }
 
-OperandId IRGenerator::emitNumericGuard(ValOperandId valId, Scalar::Type type) {
+static bool ValueCanConvertToNumeric(Scalar::Type type, const Value& val) {
+  if (Scalar::isBigIntType(type)) {
+    return val.isBigInt();
+  }
+  return val.isNumber() || val.isNullOrUndefined() || val.isBoolean() ||
+         val.isString();
+}
+
+OperandId IRGenerator::emitNumericGuard(ValOperandId valId, const Value& v,
+                                        Scalar::Type type) {
+  MOZ_ASSERT(ValueCanConvertToNumeric(type, v));
   switch (type) {
     case Scalar::Int8:
     case Scalar::Uint8:
     case Scalar::Int16:
     case Scalar::Uint16:
     case Scalar::Int32:
-    case Scalar::Uint32:
-      return writer.guardToInt32ModUint32(valId);
+    case Scalar::Uint32: {
+      if (v.isNumber()) {
+        return writer.guardToInt32ModUint32(valId);
+      }
+      if (v.isNullOrUndefined()) {
+        writer.guardIsNullOrUndefined(valId);
+        return writer.loadInt32Constant(0);
+      }
+      if (v.isBoolean()) {
+        return writer.guardBooleanToInt32(valId);
+      }
+      MOZ_ASSERT(v.isString());
+      StringOperandId strId = writer.guardToString(valId);
+      NumberOperandId numId = writer.guardStringToNumber(strId);
+      return writer.truncateDoubleToUInt32(numId);
+    }
 
     case Scalar::Float32:
-    case Scalar::Float64:
-      return writer.guardIsNumber(valId);
+    case Scalar::Float64: {
+      if (v.isNumber()) {
+        return writer.guardIsNumber(valId);
+      }
+      if (v.isNull()) {
+        writer.guardIsNull(valId);
+        return writer.loadDoubleConstant(0.0);
+      }
+      if (v.isUndefined()) {
+        writer.guardIsUndefined(valId);
+        return writer.loadDoubleConstant(JS::GenericNaN());
+      }
+      if (v.isBoolean()) {
+        BooleanOperandId boolId = writer.guardToBoolean(valId);
+        return writer.booleanToNumber(boolId);
+      }
+      MOZ_ASSERT(v.isString());
+      StringOperandId strId = writer.guardToString(valId);
+      return writer.guardStringToNumber(strId);
+    }
 
-    case Scalar::Uint8Clamped:
-      return writer.guardToUint8Clamped(valId);
+    case Scalar::Uint8Clamped: {
+      if (v.isNumber()) {
+        return writer.guardToUint8Clamped(valId);
+      }
+      if (v.isNullOrUndefined()) {
+        writer.guardIsNullOrUndefined(valId);
+        return writer.loadInt32Constant(0);
+      }
+      if (v.isBoolean()) {
+        return writer.guardBooleanToInt32(valId);
+      }
+      MOZ_ASSERT(v.isString());
+      StringOperandId strId = writer.guardToString(valId);
+      NumberOperandId numId = writer.guardStringToNumber(strId);
+      return writer.doubleToUint8Clamped(numId);
+    }
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
+      MOZ_ASSERT(v.isBigInt());
       return writer.guardToBigInt(valId);
 
     case Scalar::MaxTypedArrayViewType:
@@ -4323,13 +4380,6 @@ OperandId IRGenerator::emitNumericGuard(ValOperandId valId, Scalar::Type type) {
       break;
   }
   MOZ_CRASH("Unsupported TypedArray type");
-}
-
-static bool ValueIsNumeric(Scalar::Type type, const Value& val) {
-  if (Scalar::isBigIntType(type)) {
-    return val.isBigInt();
-  }
-  return val.isNumber();
 }
 
 void SetPropIRGenerator::trackAttached(const char* name) {
@@ -4812,7 +4862,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
   Scalar::Type elementType = tarr->type();
 
   // Don't attach if the input type doesn't match the guard added below.
-  if (!ValueIsNumeric(elementType, rhsVal_)) {
+  if (!ValueCanConvertToNumeric(elementType, rhsVal_)) {
     return AttachDecision::NoAction;
   }
 
@@ -4835,7 +4885,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
 
   writer.guardShapeForClass(objId, tarr->shape());
 
-  OperandId rhsValId = emitNumericGuard(rhsId, elementType);
+  OperandId rhsValId = emitNumericGuard(rhsId, rhsVal_, elementType);
 
   ValOperandId keyId = setElemKeyValueId();
   IntPtrOperandId indexId = guardToIntPtrIndex(idVal_, keyId, handleOOB);
@@ -6414,7 +6464,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
   if (!ValueIsInt64Index(args_[0], &offsetInt64)) {
     return AttachDecision::NoAction;
   }
-  if (!ValueIsNumeric(type, args_[1])) {
+  if (!ValueCanConvertToNumeric(type, args_[1])) {
     return AttachDecision::NoAction;
   }
   if (argc_ > 2 && !args_[2].isBoolean()) {
@@ -6451,7 +6501,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
   // Convert value to number or BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-  OperandId numericValueId = emitNumericGuard(valueId, type);
+  OperandId numericValueId = emitNumericGuard(valueId, args_[1], type);
 
   BooleanOperandId boolLittleEndianId;
   if (argc_ > 2) {
@@ -8826,10 +8876,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsCompareExchange() {
   }
 
   Scalar::Type elementType = typedArray->type();
-  if (!ValueIsNumeric(elementType, args_[2])) {
+  if (!ValueCanConvertToNumeric(elementType, args_[2])) {
     return AttachDecision::NoAction;
   }
-  if (!ValueIsNumeric(elementType, args_[3])) {
+  if (!ValueCanConvertToNumeric(elementType, args_[3])) {
     return AttachDecision::NoAction;
   }
 
@@ -8852,12 +8902,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsCompareExchange() {
   // Convert expected value to int32/BigInt.
   ValOperandId expectedId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  OperandId numericExpectedId = emitNumericGuard(expectedId, elementType);
+  OperandId numericExpectedId =
+      emitNumericGuard(expectedId, args_[2], elementType);
 
   // Convert replacement value to int32/BigInt.
   ValOperandId replacementId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg3, argc_);
-  OperandId numericReplacementId = emitNumericGuard(replacementId, elementType);
+  OperandId numericReplacementId =
+      emitNumericGuard(replacementId, args_[3], elementType);
 
   writer.atomicsCompareExchangeResult(objId, intPtrIndexId, numericExpectedId,
                                       numericReplacementId, typedArray->type());
@@ -8889,7 +8941,7 @@ bool InlinableNativeIRGenerator::canAttachAtomicsReadWriteModify() {
   if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return false;
   }
-  if (!ValueIsNumeric(typedArray->type(), args_[2])) {
+  if (!ValueCanConvertToNumeric(typedArray->type(), args_[2])) {
     return false;
   }
   return true;
@@ -8920,7 +8972,8 @@ InlinableNativeIRGenerator::emitAtomicsReadWriteModifyOperands() {
   // Convert value to int32/BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  OperandId numericValueId = emitNumericGuard(valueId, typedArray->type());
+  OperandId numericValueId =
+      emitNumericGuard(valueId, args_[2], typedArray->type());
 
   return {objId, intPtrIndexId, numericValueId};
 }
@@ -9117,7 +9170,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore() {
   }
 
   Scalar::Type elementType = typedArray->type();
-  if (!ValueIsNumeric(elementType, args_[2])) {
+  if (!ValueCanConvertToNumeric(elementType, args_[2])) {
     return AttachDecision::NoAction;
   }
 
@@ -9150,7 +9203,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore() {
   if (guardIsInt32) {
     numericValueId = writer.guardToInt32(valueId);
   } else {
-    numericValueId = emitNumericGuard(valueId, elementType);
+    numericValueId = emitNumericGuard(valueId, args_[2], elementType);
   }
 
   writer.atomicsStoreResult(objId, intPtrIndexId, numericValueId,
