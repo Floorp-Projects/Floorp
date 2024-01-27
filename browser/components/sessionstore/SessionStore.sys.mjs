@@ -5304,7 +5304,6 @@ var SessionStoreInternal = {
       } else {
         aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
       }
-      aWindow.gWorkspaces.init();
 
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
