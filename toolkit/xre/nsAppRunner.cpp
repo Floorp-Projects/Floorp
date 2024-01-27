@@ -4724,25 +4724,27 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     const char* display_name = nullptr;
     bool saveDisplayArg = false;
 
+    // display_name is owned by gdk.
+    display_name = gdk_get_display_arg_name();
     bool waylandEnabled = IsWaylandEnabled();
 #  ifdef MOZ_WAYLAND
-    auto* proxyEnv = getenv("MOZ_DISABLE_WAYLAND_PROXY");
-    bool disableWaylandProxy = proxyEnv && *proxyEnv;
-    if (!disableWaylandProxy && XRE_IsParentProcess() && waylandEnabled) {
+    if (!display_name) {
+      auto* proxyEnv = getenv("MOZ_DISABLE_WAYLAND_PROXY");
+      bool disableWaylandProxy = proxyEnv && *proxyEnv;
+      if (!disableWaylandProxy && XRE_IsParentProcess() && waylandEnabled) {
 #    ifdef MOZ_LOGGING
-      if (MOZ_LOG_TEST(gWidgetWaylandLog, mozilla::LogLevel::Debug)) {
-        WaylandProxy::SetVerbose(true);
-      }
+        if (MOZ_LOG_TEST(gWidgetWaylandLog, mozilla::LogLevel::Debug)) {
+          WaylandProxy::SetVerbose(true);
+        }
 #    endif
-      gWaylandProxy = WaylandProxy::Create();
-      if (gWaylandProxy) {
-        gWaylandProxy->RunThread();
+        gWaylandProxy = WaylandProxy::Create();
+        if (gWaylandProxy) {
+          gWaylandProxy->RunThread();
+        }
       }
     }
 #  endif
 
-    // display_name is owned by gdk.
-    display_name = gdk_get_display_arg_name();
     // if --display argument is given make sure it's
     // also passed to ContentChild::Init() by MOZ_GDK_DISPLAY.
     if (display_name) {
