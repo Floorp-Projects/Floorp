@@ -3317,6 +3317,46 @@ GeckoDriver.prototype.setUserVerified = function (cmd) {
 
 GeckoDriver.prototype.setPermission = async function (cmd) {
   const { descriptor, state, oneRealm = false } = cmd.parameters;
+  const browsingContext = lazy.assert.open(this.getBrowsingContext());
+
+  // XXX: WPT should not have these but currently they do and we pass testing pref to
+  // pass them, see bug 1875837.
+  if (
+    ["clipboard-read", "clipboard-write"].includes(descriptor.name) &&
+    state === "granted"
+  ) {
+    if (
+      Services.prefs.getBoolPref("dom.events.testing.asyncClipboard", false)
+    ) {
+      // Okay, do nothing. The clipboard module will work without permission.
+      return;
+    }
+    throw new lazy.error.UnsupportedOperationError(
+      "setPermission: expected dom.events.testing.asyncClipboard to be set"
+    );
+  }
+
+  // XXX: We currently depend on camera/microphone tests throwing UnsupportedOperationError,
+  // the fix is ongoing in bug 1609427.
+  if (["camera", "microphone"].includes(descriptor.name)) {
+    throw new lazy.error.UnsupportedOperationError(
+      "setPermission: camera and microphone permissions are currently unsupported"
+    );
+  }
+
+  // This abuses permissions.query() to do the IDL conversion in step 1 in the spec:
+  // https://w3c.github.io/permissions/#webdriver-command-set-permission
+  // If this does not throw then the descriptor is valid.
+  //
+  // TODO: Currently we consume the original JS object later on, but we should
+  // consume the IDL-converted dictionary instead.
+  // For WPT purpose the current state is fine, but for general webdriver extension
+  // this is not ideal as the script might get access to fields that are not in IDL.
+  try {
+    await this.curBrowser.window.navigator.permissions.query(descriptor);
+  } catch (err) {
+    throw new lazy.error.InvalidArgumentError(`setPermission: ${err.message}`);
+  }
 
   lazy.assert.boolean(oneRealm);
   lazy.assert.that(
@@ -3324,13 +3364,7 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
     `state is ${state}, expected "granted", "denied", or "prompt"`
   )(state);
 
-  lazy.permissions.set(
-    descriptor,
-    state,
-    oneRealm,
-    this.getBrowsingContext(),
-    this.getBrowsingContext({ top: true })
-  );
+  lazy.permissions.set(descriptor, state, oneRealm, browsingContext);
 };
 
 /**
