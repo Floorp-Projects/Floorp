@@ -259,8 +259,6 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">سايىلەش</string>
 
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">ئىزدەش ماتورى</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">ئىزدەش ماتورى تەڭشىكى</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -311,14 +309,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">ئۇقتۇرۇشلار %s بىلەن تېخىمۇ كۆپ ئىشلارنى قىلىشىڭىزغا ياردەم بېرىدۇ</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">ئۇقتۇرۇشلار %s بىلەن تېخىمۇ كۆپ ئىشلارنى قىلىشىڭىزغا ياردەم بېرىدۇ</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">بەتكۈچلىرىڭىزنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ، چۈشۈرۈشنى باشقۇرىدۇ، %s نىڭ شەخسىيەت قوغدىشى ۋە باشقا تېخىمۇ كۆپ ئىشلىتىش ھەققىدىكى تەكلىپلەرگە ئېرىشتۈرىدۇ.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">بەتكۈچلىرىڭىزنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ، چۈشۈرۈشنى باشقۇرىدۇ، %s نىڭ شەخسىيەت قوغدىشى ۋە باشقا تېخىمۇ كۆپ ئىشلىتىش ھەققىدىكى تەكلىپلەرگە ئېرىشتۈرىدۇ.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">داۋاملاشتۇر</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">داۋاملاشتۇر</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">ھازىر ئەمەس</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
@@ -435,20 +433,10 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ساپ HTTPS ھالىتى</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">cookie لوزۇنكىسىنى ئازايتىش</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">cookie لوزۇنكىسى توسقۇچ</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">شەخسىي تور زىيارەتتىكى cookie لوزۇنكىسىنى توسقۇچ</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">cookie لوزۇنكىسىدىن ساقلان</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">تاقاق</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">ئوچۇق</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ئۆزلۈكىدىن cookie لوزۇنكىسىنىڭ cookie ئىلتىماسىنى رەت قىلىشنى سىنايدۇ.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">بۇ تور بېكەتكە تاقاق</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -467,33 +455,15 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">بېكەت ھازىر قوللىمايدۇ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s غا cookie لوزۇنكىسى ئازايتىشنى ئاچامدۇ؟</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">%1$s غا cookie لوزۇنكىسى توسقۇچنى ئاچامدۇ؟</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s غا cookie لوزۇنكىسى ئازايتىشنى تاقامدۇ؟</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">%1$s غا cookie لوزۇنكىسى توسقۇچنى تاقامدۇ؟</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s بۇ تور بېكەتنىڭ ساقلانما ئىلتىماسىنى ئۆزلۈكىدىن رەت قىلالمايدۇ. كەلگۈسىدە بۇ تور بېكەتنى قوللاش ئىلتىماسىنى ئەۋەتسىڭىز بولىدۇ.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s بۇ تور بېكەتنىڭ ساقلانمىسىنى تازىلاپ بەتنى يېڭىلايدۇ. بارلىق ساقلانمىلار تازىلانسا سىز تىزىمدىن چىقىپ كېتىشىڭىز ياكى مال ھارۋىسى بوشىتىلىشى مۇمكىن.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">تاقالسا ۋە %1$s ساقلانمىنى تازىلاپ بۇ تور بېكەتنى قايتا يۈكلەيدۇ. سىز تىزىمدىن چىقىپ كېتىشىڭىز ياكى مال ھارۋىسى بوشىتىلىشى مۇمكىن.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s قوللايدىغان تور بېكەتلەرنىڭ بارلىق ساقلانما تەلەپلىرىنى ئاپتوماتىك رەت قىلىشنى سىنايدۇ.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">ئېچىلسا، %1$s بۇ تور بېكەتتىكى بارلىق ساقلانما لوزۇنكىسىنى ئۆزلۈكىدىن رەت قىلىشنى سىنايدۇ.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s نىڭ cookie لوزۇنكىسىنى رەت قىلىشىغا يول قويامدۇ؟</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s نۇرغۇن cookie لوزۇنكا تەلىپىنى ئاپتوماتىك رەت قىلالايدۇ.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">سىز كۆرىدىغان cookie ئىلتىماسلىرى ئازىيىدۇ</string>
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">يول قوي</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s سىز ئۈچۈن ساقلانمىنى رەت قىلدى</string>
@@ -1280,8 +1250,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">بولدىلا</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">باسالمىدى</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">بۇ بەتنى باسالمايدۇ</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">باس</string>
@@ -1771,10 +1739,16 @@
 
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">ساقلانغان كىرىشلىرىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">ساقلانغان پارولىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">كىرىش ۋە ئىمنى قوغدايدۇ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">ساقلانغان ئىملىرىڭىز شىفىرلىنىدۇ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان تىزىمغا كىرىش ئۇچۇرى ۋە ئىمنى زىيارەت قىلالمايدۇ.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان ئىملىرىڭىزنى زىيارەت قىلالمايدۇ.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">كېيىنچە</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1794,6 +1768,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">كىرىش تىزىملىكىنى تەرتىپلەيدۇ</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">ئىم تىزىملىكىنى تەرتىپلە</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">ئاپتوماتىك تولدۇر</string>
@@ -1801,26 +1778,41 @@
     <string name="preferences_addresses">ئادرېس</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">ئىناۋەتلىك كارتا</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">چىقىم قىلىش ئۇسۇلى</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">كارتا ساقلاش ۋە ئاپتوماتىك تولدۇرۇش</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">چىقىم قىلىش ئۇسۇلىنى ساقلاپ ۋە تولدۇرىدۇ</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">سانلىق مەلۇمات شىفىرلانغان</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">سىز ساقلىغان بارلىق چىقىم قىلىش ئۇسۇللىرىنى %s شىفىرلايدۇ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">كارتىنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">كارتا قەدەمداشلا</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">ئىناۋەتلىك كارتا قوش</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">كارتا قوش</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">ساقلانغان كارتا باشقۇرۇش</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">كارتا باشقۇرۇش</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">ئادرېس قوش</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ئادرېس باشقۇرۇش</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">ئادرېسلارنى ساقلاش ۋە ئاپتوماتىك تولدۇرۇش</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">ئادرېس ساقلاپ تولدۇرىدۇ</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">سان، ئېلخەت ۋە توشۇش ئادرېسى قاتارلىق ئۇچۇرلارنى ئۆز ئىچىگە ئالىدۇ</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">تېلېفون نومۇرى ۋە ئېلخەت ئادرېسىنى ئۆز ئىچىگە ئالىدۇ</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">كارتا قوش</string>
@@ -1842,6 +1834,8 @@
     <string name="credit_cards_delete_card_button">كارتىنى ئۆچۈر</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">بۇ ئىناۋەتلىك كارتىنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">كارتىنى ئۆچۈرەمدۇ؟</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ئۆچۈر</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1854,15 +1848,23 @@
     <string name="credit_cards_saved_cards">ساقلانغان كارتا</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">ئىناۋەتلىك كارتا نومۇرىنى كىرگۈزۈڭ</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">ئىناۋەتلىك كارتا نومۇرى كىرگۈزۈلىدۇ</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">بۇ بۆلەكنى تولدۇرۇڭ</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">ئات قوش</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ساقلانغان كارتىلىرىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">ئىناۋەتلىك كارتىڭىزنى شىفىرلايدۇ</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">ساقلانغان چىقىم قىلىش ئۇسۇللىرىڭىز شىفىرلىنىدۇ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان ئىناۋەتلىك كارتىڭىزنى زىيارەت قىلالمايدۇ.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان كارتىلىرىڭىزنى زىيارەت قىلالمايدۇ.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ھازىر تەڭشە</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1871,6 +1873,8 @@
     <string name="credit_cards_biometric_prompt_message_pin">ئۈسكۈنىڭىزنىڭ قۇلۇپىنى ئېچىڭ</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ساقلانغان ئىناۋەتلىك كارتا ئۇچۇرلىرىنى ئىشلىتىش ئۈچۈن قۇلۇپ ئېچىڭ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">ساقلانغان چىقىم قىلىش ئۇسۇلىنى ئىشلىتىش ئۈچۈن قۇلۇپ ئېچىڭ</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">ئادرېس قوش</string>
     <!-- Title of the "Edit address" screen -->
@@ -1907,6 +1911,8 @@
     <string name="addressess_delete_address_button">ئادرېس ئۆچۈر</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">بۇ ئادرېسنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">بۇ ئادرېسنى ئۆچۈرەمدۇ؟</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ئۆچۈر</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2005,31 +2011,53 @@
     <string name="login_menu_edit_button">تەھرىر</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">بۇ كىرىشنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">بۇ ئىمنى راستىنلا ئۆچۈرەمسىز؟</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ئۆچۈر</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ۋاز كەچ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">كىرىش تاللانمىلىرى</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">ئىم تاللانمىسى</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">كىرىشنىڭ تور ئادرېسىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">ئىمنىڭ تور بېكەت ئادرېسىدىكى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">كىرىشنىڭ ئىشلەتكۈچى ئىسمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
 
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">ئىمنىڭ ئىشلەتكۈچى ئىسمىدىكى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">كىرىشنىڭ ئىمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">ئىمنىڭ تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">كىرىش ئۆزگەرتىشلىرىنى ساقلايدۇ.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">ئۆزگەرتىشلەرنى ساقلايدۇ.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">تەھرىر</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">ئىم تەھرىر</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">يېڭى كىرىش قوش</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">ئىم قوش</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">ئىم زۆرۈر</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">ئىم كىرگۈزۈلىدۇ</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">ئىشلەتكۈچى ئىسمى زۆرۈر</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">ئىشلەتكۈچى ئاتى كىرگۈزۈلىدۇ</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">مۇلازىم ئىسمى زۆرۈر</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">تور ئادرېسى كىرگۈزۈلىدۇ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ئاۋازلىق ئىزدەش</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2193,8 +2221,6 @@
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>يارقىن نۇقتىلار</b> بىز ئىشەنچلىك دەپ قارىغان يېقىنقى 80 كۈن ئىچىدىكى %s باھادىن كەلگەن.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s ھەققىدىكى تەپسىلاتلار.</string>
-    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">Mozilla قانداق قىلىپ %s نىڭ تەكشۈرۈش سۈپىتىنى بەلگىلەيدۇ</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">%s تەكشۈرۈش سۈپىتىنى قانداق بەلگىلەيدۇ</string>
     <!-- Text for title of settings section. -->
@@ -2407,6 +2433,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s نى ھەرگىز تەرجىمە قىلمىسۇن</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">بۇ تور بەتنى تەرجىمە قىلمىسۇن</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">باشقا بارلىق تەڭشەكلەرنى قاپلايدۇ</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">تەرجىمە تەكلىپىنى قاپلايدۇ</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">تەرجىمە تەڭشەكلىرى</string>
 

@@ -92,6 +92,13 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">ᱟᱹᱴ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱮᱵᱷᱟᱨ ᱢᱮ ᱺ %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱰᱟᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱵᱷᱮᱡᱟᱭ ᱟᱢ‌ ᱥᱮ?</string>
     <string name="mozac_feature_prompt_repost_message">ᱥᱟᱦᱴᱟ ᱨᱤᱯᱷᱨᱮᱥ ᱞᱮᱠᱷᱟᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤ ᱠᱚ ᱰᱩᱯᱞᱤᱠᱮᱴ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ, ᱡᱮᱢᱚᱱ ᱯᱩᱭᱥᱟᱹ ᱵᱷᱮᱡᱟ ᱠᱚ ᱟᱨ ᱵᱟᱝ ᱠᱚᱢᱮᱴ ᱠᱚ ᱵᱟᱨ ᱡᱮᱠᱷᱟ ᱵᱷᱮᱡᱟ ᱠᱚ ᱾</string>
@@ -129,12 +136,16 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">ᱠᱷᱟᱛᱟ ᱪᱤᱛᱟᱹᱨ</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">ᱢᱤᱫᱴᱟᱝ ᱵᱚᱞᱚ ᱮᱢᱚᱜᱤᱡ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">ᱢᱤᱫᱴᱟᱝ ᱠᱷᱟᱛᱟ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">%1$s ᱠᱷᱟᱛᱟ ᱵᱷᱵᱷᱟᱨ ᱟᱛᱮᱫ ᱥᱩᱦᱤ ᱮᱢ ᱢᱮ</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">%1$s ᱫᱚ ᱢᱤᱫᱴᱟᱝ ᱵᱚᱞᱚ ᱮᱢᱤᱡ ᱞᱮᱠᱷᱟ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[%1$s ᱨᱮ %2$s ᱠᱷᱟᱛᱟ ᱛᱮ ᱵᱚᱞᱚ ᱠᱟᱛᱮ ᱚᱱᱟ ᱠᱚᱣᱟᱜ <a href="%3$s">ᱯᱨᱟᱭᱵᱷᱮᱥᱤ ᱱᱤᱛᱤ</a> ᱟᱨ <a href="%4$s">ᱠᱟᱹᱢᱤ ᱨᱮᱭᱟᱜ ᱥᱚᱨᱛᱚ</a> ᱨᱮᱭᱟᱜ ᱚᱫᱷᱤᱱ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">ᱞᱮᱛᱟᱲ</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 </resources>

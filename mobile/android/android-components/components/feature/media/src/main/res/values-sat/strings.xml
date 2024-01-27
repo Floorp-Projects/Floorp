@@ -10,6 +10,22 @@
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">ᱠᱮᱢᱨᱟ ᱟᱨ ᱢᱟᱭᱠᱨᱚᱯᱷᱚᱱ ᱚᱱ ᱢᱮᱱᱟᱜ-ᱟ</string>
 
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">ᱟᱢᱟᱜ ᱠᱟᱢᱨᱟ ᱵᱮᱵᱷᱟᱨᱮᱫ ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">ᱟᱢᱟᱜ ᱢᱟᱭᱤᱠ ᱵᱮᱵᱷᱟᱨᱮᱫ ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">ᱟᱢᱟᱜ ᱢᱟᱭᱤᱠ ᱟᱨ ᱠᱮᱢᱨᱟ ᱵᱮᱵᱷᱟᱨᱮᱫ ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">ᱩᱭᱦᱟ.ᱨ ᱚᱪᱚ : %1$s ᱱᱤᱛᱦᱚᱸ ᱟᱢᱟᱜ ᱠᱮᱢᱨᱟ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟᱭ ᱾ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱴᱮᱵᱽ ᱨᱮ ᱚᱛᱟᱭ ᱢᱮ ᱾</string>
+
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">ᱩᱭᱦᱟ.ᱨ ᱚᱪᱚ : %1$s ᱱᱤᱛᱦᱚᱸ ᱟᱢᱟᱜ ᱢᱟᱭᱤᱠ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟᱭ ᱾ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱴᱮᱵᱽ ᱨᱮ ᱚᱛᱟᱭ ᱢᱮ ᱾</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">ᱩᱭᱦᱟ.ᱨ ᱚᱪᱚ : %1$s ᱱᱤᱛᱦᱚᱸ ᱟᱢᱟᱜ ᱢᱟᱭᱤᱠ ᱟᱨ ᱠᱮᱢᱨᱟ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟᱭ ᱾ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱴᱮᱵᱽ ᱨᱮ ᱚᱛᱟᱭ ᱢᱮ ᱾</string>
+
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">ᱮᱱᱮᱡ ᱢᱮ</string>
 
