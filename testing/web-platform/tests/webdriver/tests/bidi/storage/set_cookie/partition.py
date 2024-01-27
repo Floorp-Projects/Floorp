@@ -5,13 +5,13 @@ from .. import assert_cookie_is_set, create_cookie
 pytestmark = pytest.mark.asyncio
 
 
-async def test_partition_context(bidi_session, top_context, test_page, origin, domain_value):
+async def test_partition_context(bidi_session, set_cookie, top_context, test_page, origin, domain_value):
     await bidi_session.browsing_context.navigate(context=top_context["context"], url=test_page, wait="complete")
 
     source_origin = origin()
     partition = BrowsingContextPartitionDescriptor(top_context["context"])
 
-    set_cookie_result = await bidi_session.storage.set_cookie(
+    set_cookie_result = await set_cookie(
         cookie=create_cookie(domain=domain_value()),
         partition=partition)
 
@@ -24,7 +24,7 @@ async def test_partition_context(bidi_session, top_context, test_page, origin, d
     await assert_cookie_is_set(bidi_session, domain=domain_value(), partition=partition)
 
 
-async def test_partition_context_frame(bidi_session, top_context, test_page, origin, domain_value,
+async def test_partition_context_frame(bidi_session, set_cookie, top_context, test_page, origin, domain_value,
                                        inline, test_page_cross_origin_frame):
     frame_url = inline("<div>bar</div>", domain="alt")
     frame_source_origin = origin(domain="alt")
@@ -42,7 +42,7 @@ async def test_partition_context_frame(bidi_session, top_context, test_page, ori
 
     partition = BrowsingContextPartitionDescriptor(frame_context_id)
 
-    set_cookie_result = await bidi_session.storage.set_cookie(
+    set_cookie_result = await set_cookie(
         cookie=create_cookie(domain=domain_value()),
         partition=partition)
 
@@ -55,11 +55,11 @@ async def test_partition_context_frame(bidi_session, top_context, test_page, ori
     await assert_cookie_is_set(bidi_session, domain=domain_value(), partition=partition)
 
 
-async def test_partition_storage_key_source_origin(bidi_session, test_page, origin, domain_value):
+async def test_partition_storage_key_source_origin(bidi_session, set_cookie, test_page, origin, domain_value):
     source_origin = origin()
     partition = StorageKeyPartitionDescriptor(source_origin=source_origin)
 
-    set_cookie_result = await bidi_session.storage.set_cookie(
+    set_cookie_result = await set_cookie(
         cookie=create_cookie(domain=domain_value()),
         partition=partition)
 
