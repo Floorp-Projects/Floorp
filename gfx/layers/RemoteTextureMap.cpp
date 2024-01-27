@@ -808,6 +808,7 @@ void RemoteTextureMap::NotifyContextLost(
     const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid) {
   MonitorAutoLock lock(mMonitor);
 
+  bool changed = false;
   for (const auto& id : aOwnerIds) {
     const auto key = std::pair(aForPid, id);
     auto it = mTextureOwners.find(key);
@@ -816,16 +817,22 @@ void RemoteTextureMap::NotifyContextLost(
       continue;
     }
     auto& owner = it->second;
-    owner->mIsContextLost = true;
+    if (!owner->mIsContextLost) {
+      owner->mIsContextLost = true;
+      changed = true;
+    }
   }
 
-  mMonitor.Notify();
+  if (changed) {
+    mMonitor.Notify();
+  }
 }
 
 void RemoteTextureMap::NotifyContextRestored(
     const RemoteTextureOwnerIdSet& aOwnerIds, const base::ProcessId aForPid) {
   MonitorAutoLock lock(mMonitor);
 
+  bool changed = false;
   for (const auto& id : aOwnerIds) {
     const auto key = std::pair(aForPid, id);
     auto it = mTextureOwners.find(key);
@@ -834,10 +841,15 @@ void RemoteTextureMap::NotifyContextRestored(
       continue;
     }
     auto& owner = it->second;
-    owner->mIsContextLost = false;
+    if (owner->mIsContextLost) {
+      owner->mIsContextLost = false;
+      changed = true;
+    }
   }
 
-  mMonitor.Notify();
+  if (changed) {
+    mMonitor.Notify();
+  }
 }
 
 /* static */
@@ -965,6 +977,10 @@ bool RemoteTextureMap::GetRemoteTexture(
       const TimeDuration timeout = TimeDuration::FromMilliseconds(10000);
       while (!owner || (!owner->mLatestTextureHost &&
                         owner->mWaitingTextureDataHolders.empty())) {
+        if (owner && owner->mIsContextLost) {
+          // If the context was lost, no further updates are expected.
+          return false;
+        }
         CVStatus status = mMonitor.Wait(timeout);
         if (status == CVStatus::Timeout) {
           return false;

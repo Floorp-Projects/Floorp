@@ -457,7 +457,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   }
 
   bool HasDataSnapshot() const;
-  void PrepareData();
+  bool EnsureDataSnapshot();
+  void PrepareShmem();
   already_AddRefed<SourceSurface> GetDataSnapshot();
   already_AddRefed<SourceSurface> Snapshot() override;
   already_AddRefed<SourceSurface> GetOptimizedSnapshot(DrawTarget* aTarget);
@@ -571,7 +572,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void SetTransform(const Matrix& aTransform) override;
   void* GetNativeSurface(NativeSurfaceType aType) override;
 
-  void CopyToSwapChain(
+  bool CopyToSwapChain(
       layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
       layers::RemoteTextureOwnerClient* aOwnerClient = nullptr);
 
@@ -630,6 +631,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   bool ReadIntoSkia();
   void FlattenSkia();
+  bool PrepareSkia();
   bool FlushFromSkia();
 
   void MarkSkiaChanged(bool aOverwrite = false);
