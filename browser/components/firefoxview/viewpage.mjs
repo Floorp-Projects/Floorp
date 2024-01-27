@@ -70,9 +70,10 @@ export class ViewPageContent extends MozLitElement {
     return window.browsingContext.embedderWindowGlobal.browsingContext.window;
   }
 
-  get isSelectedBrowserTab() {
-    const { gBrowser } = this.getWindow();
-    return gBrowser.selectedBrowser.browsingContext == window.browsingContext;
+  getBrowserTab() {
+    return this.getWindow().gBrowser.getTabForBrowser(
+      window.browsingContext.embedderElement
+    );
   }
 
   copyLink(e) {
