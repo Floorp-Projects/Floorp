@@ -245,19 +245,7 @@ nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest) {
     if (lineLen >= 4) {
       const char* buf = line;
 
-      if (buf[0] == '1') {
-        if (buf[1] == '0') {
-          if (buf[2] == '0' && buf[3] == ':') {
-            // 100. Human-readable comment line. Ignore
-          } else if (buf[2] == '1' && buf[3] == ':') {
-            // 101. Human-readable information line.
-            char* value = ((char*)buf) + 4;
-            nsUnescape(value);
-            mListener->OnInformationAvailable(aRequest,
-                                              NS_ConvertUTF8toUTF16(value));
-          }
-        }
-      } else if (buf[0] == '2') {
+      if (buf[0] == '2') {
         if (buf[1] == '0') {
           if (buf[2] == '0' && buf[3] == ':') {
             // 200. Define field names
