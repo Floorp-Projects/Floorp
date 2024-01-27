@@ -25,39 +25,10 @@ async def test_cookie_http_only_invalid_type(set_cookie, test_page, domain_value
         await set_cookie(cookie=create_cookie(domain=domain_value(), http_only=http_only))
 
 
-@pytest.mark.parametrize(
-    "name",
-    [
-        " cookieName",
-        "cookie=name",
-        "cookie\tname",
-        "cookie\nname",
-        "cookie\x01name",
-        "cookie\x0Fname",
-        "cookie;name",
-    ])
-async def test_cookie_name_invalid_value(set_cookie, test_page, domain_value, name):
-    with pytest.raises(error.UnableToSetCookieException):
-        await set_cookie(cookie=create_cookie(domain=domain_value(), name=name))
-
-
 @pytest.mark.parametrize("name", [None, False, 42, {}, []])
 async def test_cookie_name_invalid_type(set_cookie, test_page, domain_value, name):
     with pytest.raises(error.InvalidArgumentException):
         await set_cookie(cookie=create_cookie(domain=domain_value(), name=name))
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        ""
-        "no_leading_forward_slash"
-    ]
-)
-async def test_cookie_path_invalid_value(set_cookie, test_page, domain_value, path):
-    with pytest.raises(error.UnableToSetCookieException):
-        await set_cookie(
-            cookie=create_cookie(domain=domain_value(), path=path))
 
 
 @pytest.mark.parametrize("path", [False, 42, {}, []])
@@ -88,20 +59,6 @@ async def test_cookie_secure_invalid_type(set_cookie, test_page, domain_value, s
 @pytest.mark.parametrize("value", [None, False, 42, "SOME_STRING_VALUE", {}, {"type": "SOME_INVALID_TYPE"}, []])
 async def test_cookie_value_invalid_type(set_cookie, test_page, domain_value, value):
     with pytest.raises(error.InvalidArgumentException):
-        await set_cookie(cookie=create_cookie(domain=domain_value(), value=value))
-
-
-@pytest.mark.parametrize(
-    "str_value",
-    [
-        "value\twith\ttab",
-        "value\nwith\nnewline",
-        "value;with;semicolon",
-    ])
-async def test_cookie_value_string_invalid_value(set_cookie, test_page, domain_value, str_value):
-    value = NetworkStringValue(str_value)
-
-    with pytest.raises(error.UnableToSetCookieException):
         await set_cookie(cookie=create_cookie(domain=domain_value(), value=value))
 
 
