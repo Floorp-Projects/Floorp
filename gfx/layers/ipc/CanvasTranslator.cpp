@@ -420,6 +420,28 @@ inline gfx::DrawTargetWebgl* CanvasTranslator::TextureInfo::GetDrawTargetWebgl(
   return nullptr;
 }
 
+bool CanvasTranslator::TryDrawTargetWebglFallback(
+    int64_t aTextureId, gfx::DrawTargetWebgl* aWebgl) {
+  NotifyRequiresRefresh(aTextureId);
+
+  // An existing data snapshot is required for fallback, as we have to avoid
+  // trying to touch the WebGL context, which is assumed to be invalid and not
+  // suitable for readback.
+  if (!aWebgl->HasDataSnapshot()) {
+    return false;
+  }
+
+  const auto& info = mTextureInfo[aTextureId];
+  if (RefPtr<gfx::DrawTarget> dt = CreateFallbackDrawTarget(
+          info.mRefPtr, aTextureId, info.mRemoteTextureOwnerId,
+          aWebgl->GetSize(), aWebgl->GetFormat())) {
+    aWebgl->CopyToFallback(dt);
+    AddDrawTarget(info.mRefPtr, dt);
+    return true;
+  }
+  return false;
+}
+
 void CanvasTranslator::ForceDrawTargetWebglFallback() {
   // This looks for any DrawTargetWebgls that have a cached data snapshot that
   // can be used to recover a fallback TextureData in the event of a context
@@ -428,21 +450,13 @@ void CanvasTranslator::ForceDrawTargetWebglFallback() {
   for (const auto& entry : mTextureInfo) {
     const auto& info = entry.second;
     if (gfx::DrawTargetWebgl* webgl = info.GetDrawTargetWebgl()) {
-      NotifyRequiresRefresh(entry.first);
-      if (webgl->HasDataSnapshot()) {
-        if (RefPtr<gfx::DrawTarget> dt = CreateFallbackDrawTarget(
-                info.mRefPtr, entry.first, info.mRemoteTextureOwnerId,
-                webgl->GetSize(), webgl->GetFormat())) {
-          webgl->CopyToFallback(dt);
-          AddDrawTarget(info.mRefPtr, dt);
-          continue;
+      if (!TryDrawTargetWebglFallback(entry.first, webgl)) {
+        // No fallback could be created, so we need to notify the compositor the
+        // texture won't be pushed.
+        if (mRemoteTextureOwner &&
+            mRemoteTextureOwner->IsRegistered(info.mRemoteTextureOwnerId)) {
+          lost.insert(info.mRemoteTextureOwnerId);
         }
-      }
-      // No fallback could be created, so we need to notify the compositor the
-      // texture won't be pushed.
-      if (mRemoteTextureOwner &&
-          mRemoteTextureOwner->IsRegistered(info.mRemoteTextureOwnerId)) {
-        lost.insert(info.mRemoteTextureOwnerId);
       }
     }
   }
@@ -818,7 +832,7 @@ void CanvasTranslator::PrepareShmem(int64_t aTextureId) {
       }
     } else {
       // Otherwise, just ensure the software framebuffer is up to date.
-      webgl->PrepareData();
+      webgl->PrepareShmem();
     }
   }
 }
@@ -832,9 +846,7 @@ void CanvasTranslator::ClearCachedResources() {
     mSharedContext->OnMemoryPressure();
     for (auto const& entry : mTextureInfo) {
       if (gfx::DrawTargetWebgl* webgl = entry.second.GetDrawTargetWebgl()) {
-        if (!webgl->HasDataSnapshot()) {
-          webgl->PrepareData();
-        }
+        webgl->EnsureDataSnapshot();
       }
     }
   }
@@ -1024,15 +1036,22 @@ bool CanvasTranslator::PresentTexture(int64_t aTextureId, RemoteTextureId aId) {
   RemoteTextureOwnerId ownerId = info.mRemoteTextureOwnerId;
   if (gfx::DrawTargetWebgl* webgl = info.GetDrawTargetWebgl()) {
     EnsureRemoteTextureOwner(ownerId);
-    // Check for context loss to avoid CopyToSwapChain becoming a no-op.
-    if (webgl->IsValid()) {
-      webgl->CopyToSwapChain(aId, ownerId, mRemoteTextureOwner);
-      if (webgl->IsValid()) {
-        return true;
+    if (webgl->CopyToSwapChain(aId, ownerId, mRemoteTextureOwner)) {
+      return true;
+    }
+    if (mSharedContext && mSharedContext->IsContextLost()) {
+      // If the context was lost, try to create a fallback to push instead.
+      EnsureSharedContextWebgl();
+    } else {
+      // CopyToSwapChain failed for an unknown reason other than context loss.
+      // Try to read into fallback data if possible to recover, otherwise force
+      // the loss of the individual texture.
+      webgl->EnsureDataSnapshot();
+      if (!TryDrawTargetWebglFallback(aTextureId, webgl)) {
+        RemoteTextureOwnerIdSet lost = {info.mRemoteTextureOwnerId};
+        mRemoteTextureOwner->NotifyContextLost(&lost);
       }
     }
-    // If the context was lost, try to create a fallback to push instead.
-    EnsureSharedContextWebgl();
   }
   if (TextureData* data = info.mTextureData.get()) {
     PushRemoteTexture(aTextureId, data, aId, ownerId);

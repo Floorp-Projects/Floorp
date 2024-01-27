@@ -499,7 +499,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // may differ subject to available format conversion options. Since this
   // operation uses an explicit copy, it inherently preserves the framebuffer
   // without need to set the preserveDrawingBuffer option.
-  void CopyToSwapChain(
+  bool CopyToSwapChain(
       WebGLFramebuffer*, layers::TextureType,
       const webgl::SwapChainOptions& options = webgl::SwapChainOptions(),
       layers::RemoteTextureOwnerClient* ownerClient = nullptr);
