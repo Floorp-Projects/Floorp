@@ -5,13 +5,52 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
 });
 
 /** @namespace */
 export const permissions = {};
+
+const specialPermissionNameMap = {
+  geolocation: "geo",
+  notifications: "desktop-notification",
+};
+
+function mapToInternalPermissionParameters(browsingContext, descriptor) {
+  const currentURI = browsingContext.currentWindowGlobal.documentURI;
+
+  const { name } = descriptor;
+
+  // storage-access is quite special...
+  if (name === "storage-access") {
+    const thirdPartyPrincipalSite = Services.eTLD.getSite(currentURI);
+
+    const topLevelURI = browsingContext.top.currentWindowGlobal.documentURI;
+    const topLevelPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(topLevelURI, {});
+
+    return {
+      name: "3rdPartyFrameStorage^" + thirdPartyPrincipalSite,
+      principal: topLevelPrincipal,
+    };
+  }
+
+  const currentPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(currentURI, {});
+
+  if (name === "midi" && descriptor.sysex) {
+    return {
+      name: "midi-sysex",
+      principal: currentPrincipal,
+    };
+  }
+
+  return {
+    name: specialPermissionNameMap[name] ?? name,
+    principal: currentPrincipal,
+  };
+}
 
 /**
  * Set a permission's state.
@@ -23,107 +62,48 @@ export const permissions = {};
  *     State of the permission. It can be `granted`, `denied` or `prompt`.
  * @param {boolean} oneRealm
  *     Currently ignored
- * @param {browsingContext=} thirdPartyBrowsingContext
- *     3rd party browsing context object
- * @param {browsingContext=} topLevelBrowsingContext
- *     Top level browsing context object
+ * @param {browsingContext=} browsingContext
+ *     Current browsing context object
  * @throws {UnsupportedOperationError}
  *     If `marionette.setpermission.enabled` is not set or
  *     an unsupported permission is used.
  */
-permissions.set = function (
-  descriptor,
-  state,
-  oneRealm,
-  thirdPartyBrowsingContext,
-  topLevelBrowsingContext
-) {
+permissions.set = function (descriptor, state, oneRealm, browsingContext) {
   if (!lazy.MarionettePrefs.setPermissionEnabled) {
     throw new lazy.error.UnsupportedOperationError(
       "'Set Permission' is not available"
     );
   }
 
-  // This is not a real implementation of the permissions API.
-  // Instead the purpose of this implementation is to have web-platform-tests
-  // that use `set_permission()` not fail.
-  // Each test needs the corresponding testing pref to make it actually work.
-  const { name } = descriptor;
-
-  if (state === "prompt" && name !== "storage-access") {
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' doesn't support prompt"
-    );
-  }
-  if (["clipboard-write", "clipboard-read"].includes(name)) {
-    if (
-      Services.prefs.getBoolPref("dom.events.testing.asyncClipboard", false)
-    ) {
-      return;
-    }
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' expected dom.events.testing.asyncClipboard to be set"
-    );
-  } else if (name === "notifications") {
-    if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
-      return;
-    }
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' expected notification.prompt.testing to be set"
-    );
-  } else if (name === "storage-access") {
-    // Check if browsing context has a window global object
-    lazy.assert.open(thirdPartyBrowsingContext);
-    lazy.assert.open(topLevelBrowsingContext);
-
-    const thirdPartyURI =
-      thirdPartyBrowsingContext.currentWindowGlobal.documentURI;
-    const topLevelURI = topLevelBrowsingContext.currentWindowGlobal.documentURI;
-
-    const thirdPartyPrincipalSite = Services.eTLD.getSite(thirdPartyURI);
-
-    const topLevelPrincipal =
-      Services.scriptSecurityManager.createContentPrincipal(topLevelURI, {});
-
-    switch (state) {
-      case "granted": {
-        Services.perms.addFromPrincipal(
-          topLevelPrincipal,
-          "3rdPartyFrameStorage^" + thirdPartyPrincipalSite,
-          Services.perms.ALLOW_ACTION
-        );
-        return;
-      }
-      case "denied": {
-        Services.perms.addFromPrincipal(
-          topLevelPrincipal,
-          "3rdPartyFrameStorage^" + thirdPartyPrincipalSite,
-          Services.perms.DENY_ACTION
-        );
-        return;
-      }
-      case "prompt": {
-        Services.perms.removeFromPrincipal(
-          topLevelPrincipal,
-          "3rdPartyFrameStorage^" + thirdPartyPrincipalSite
-        );
-        return;
-      }
-      default:
-        throw new lazy.error.UnsupportedOperationError(
-          `'Set Permission' did not work for storage-access'`
-        );
-    }
-  } else if (name === "screen-wake-lock") {
-    if (Services.prefs.getBoolPref("dom.screenwakelock.testing", false)) {
-      return;
-    }
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' expected dom.screenwakelock.testing to be set"
-    );
-  }
-
-  throw new lazy.error.UnsupportedOperationError(
-    `'Set Permission' doesn't support '${name}'`
+  const { name, principal } = mapToInternalPermissionParameters(
+    browsingContext,
+    descriptor
   );
+
+  switch (state) {
+    case "granted": {
+      Services.perms.addFromPrincipal(
+        principal,
+        name,
+        Services.perms.ALLOW_ACTION
+      );
+      return;
+    }
+    case "denied": {
+      Services.perms.addFromPrincipal(
+        principal,
+        name,
+        Services.perms.DENY_ACTION
+      );
+      return;
+    }
+    case "prompt": {
+      Services.perms.removeFromPrincipal(principal, name);
+      return;
+    }
+    default:
+      throw new lazy.error.UnsupportedOperationError(
+        "Unrecognized permission keyword for 'Set Permission' operation"
+      );
+  }
 };
