@@ -6025,7 +6025,7 @@ bool nsHTMLScrollFrame::IsScrollbarOnRight() const {
   if (!mIsRoot) {
     return IsPhysicalLTR();
   }
-  switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
+  switch (StaticPrefs::layout_scrollbar_side()) {
     default:
     case 0:  // UI directionality
       return StaticPrefs::bidi_direction() == IBMBIDI_TEXTDIRECTION_LTR;
