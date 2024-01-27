@@ -5,9 +5,6 @@ const tabURL1 = "data:,Tab1";
 const tabURL2 = "data:,Tab2";
 const tabURL3 = "data:,Tab3";
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
 const TestTabs = {};
 
 function getTopLevelViewElements(document) {
@@ -41,8 +38,6 @@ async function getElements(document) {
     await TestUtils.waitForCondition(() => recentlyClosedView.fullyUpdated);
   }
   let recentlyClosedList = recentlyClosedView.tabList;
-  await openTabsView.openTabsTarget.readyWindowsPromise;
-  await openTabsView.updateComplete;
   let openTabsList =
     openTabsView.shadowRoot.querySelector("view-opentabs-card")?.tabList;
 
@@ -89,17 +84,6 @@ async function setupOpenAndClosedTabs() {
   await SessionStoreTestUtils.closeTab(TestTabs.tab3);
 }
 
-function assertSpiesCalled(spiesMap, expectCalled) {
-  let message = expectCalled ? "to be called" : "to not be called";
-  for (let [elem, renderSpy] of spiesMap.entries()) {
-    is(
-      expectCalled,
-      renderSpy.called,
-      `Expected the render method spy on element ${elem.localName} ${message}`
-    );
-  }
-}
-
 async function checkFxRenderCalls(browser, elements, selectedView) {
   const sandbox = sinon.createSandbox();
   const topLevelViews = getTopLevelViewElements(browser.contentDocument);
@@ -135,20 +119,7 @@ async function checkFxRenderCalls(browser, elements, selectedView) {
   }
 
   info("test switches to tab2");
-  let tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabRecencyChange"
-  );
   await BrowserTestUtils.switchTab(gBrowser, TestTabs.tab2);
-  await tabChangeRaised;
-  info(
-    "TabRecencyChange event was raised, check no render() methods were called"
-  );
-  assertSpiesCalled(viewSpies, false);
-  assertSpiesCalled(elementSpies, false);
-  for (let renderSpy of [...viewSpies.values(), ...elementSpies.values()]) {
-    renderSpy.resetHistory();
-  }
 
   // check all the top-level views are paused
   ok(
@@ -161,14 +132,21 @@ async function checkFxRenderCalls(browser, elements, selectedView) {
   );
   ok(topLevelViews.openTabsView.paused, "The open tabs view is paused");
 
+  function assertSpiesCalled(spiesMap, expectCalled) {
+    let message = expectCalled ? "to be called" : "to not be called";
+    for (let [elem, renderSpy] of spiesMap.entries()) {
+      is(
+        expectCalled,
+        renderSpy.called,
+        `Expected the render method spy on element ${elem.localName} ${message}`
+      );
+    }
+  }
+
   await nextFrame();
   info("test removes tab1");
-  tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabRecencyChange"
-  );
   await BrowserTestUtils.removeTab(TestTabs.tab1);
-  await tabChangeRaised;
+  await nextFrame();
 
   assertSpiesCalled(viewSpies, false);
   assertSpiesCalled(elementSpies, false);
