@@ -20,6 +20,10 @@ const fxaDevicesWithCommands = [
   },
 ];
 
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
+
 function getCards(openTabs) {
   return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
 }
@@ -27,6 +31,64 @@ function getCards(openTabs) {
 async function getRowsForCard(card) {
   await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
   return card.tabList.rowEls;
+}
+
+async function add_new_tab(URL) {
+  let tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabChange"
+  );
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  // wait so we can reliably compare the tab URL
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await tabChangeRaised;
+  return tab;
+}
+
+function getVisibleTabURLs(win = window) {
+  return win.gBrowser.visibleTabs.map(tab => tab.linkedBrowser.currentURI.spec);
+}
+
+function getTabRowURLs(rows) {
+  return Array.from(rows).map(row => row.url);
+}
+
+async function waitUntilRowsMatch(openTabs, cardIndex, expectedURLs) {
+  let card;
+
+  info(
+    "moreMenuSetup: openTabs has openTabsTarget?:" + !!openTabs?.openTabsTarget
+  );
+  //await openTabs.openTabsTarget.readyWindowsPromise;
+  info(
+    `waitUntilRowsMatch, wait for there to be at least ${cardIndex + 1} cards`
+  );
+  await BrowserTestUtils.waitForCondition(() => {
+    if (!openTabs.initialWindowsReady) {
+      info("openTabs.initialWindowsReady isn't true");
+      return false;
+    }
+    try {
+      card = getCards(openTabs)[cardIndex];
+    } catch (ex) {
+      info("Calling getCards produced exception: " + ex.message);
+    }
+    return !!card;
+  }, "Waiting for openTabs to be ready and to get the cards");
+
+  const expectedURLsAsString = JSON.stringify(expectedURLs);
+  info(`Waiting for row URLs to match ${expectedURLs.join(", ")}`);
+  await BrowserTestUtils.waitForMutationCondition(
+    card.shadowRoot,
+    { characterData: true, childList: true, subtree: true },
+    async () => {
+      let rows = await getRowsForCard(card);
+      return (
+        rows.length == expectedURLs.length &&
+        JSON.stringify(getTabRowURLs(rows)) == expectedURLsAsString
+      );
+    }
+  );
 }
 
 async function getContextMenuPanelListForCard(card) {
@@ -56,25 +118,26 @@ async function openContextMenuForItem(tabItem, card) {
   return panelList;
 }
 
-async function moreMenuSetup(document) {
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL2);
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL3);
+async function moreMenuSetup() {
+  await add_new_tab(TEST_URL2);
+  await add_new_tab(TEST_URL3);
 
   // once we've opened a few tabs, navigate to the open tabs section in firefox view
   await clickFirefoxViewButton(window);
-  navigateToCategory(document, "opentabs");
+  const document = window.FirefoxViewHandler.tab.linkedBrowser.contentDocument;
+
+  await navigateToCategoryAndWait(document, "opentabs");
 
   let openTabs = document.querySelector("view-opentabs[name=opentabs]");
+  await openTabs.openTabsTarget.readyWindowsPromise;
 
-  let cards;
-  await TestUtils.waitForCondition(() => {
-    cards = getCards(openTabs);
-    return cards.length == 1;
-  });
+  info("waiting for openTabs' first card rows");
+  await waitUntilRowsMatch(openTabs, 0, getVisibleTabURLs());
+
+  let cards = getCards(openTabs);
   is(cards.length, 1, "There is one open window.");
 
   let rows = await getRowsForCard(cards[0]);
-  is(rows.length, 3, "There are three tabs in the open tabs list.");
 
   let firstTab = rows[0];
 
@@ -90,7 +153,6 @@ async function moreMenuSetup(document) {
 
 add_task(async function test_more_menus() {
   await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
     let shown, menuHidden;
 
@@ -101,11 +163,22 @@ add_task(async function test_more_menus() {
       "Selected tab is about:blank"
     );
 
+    info(`Loading ${TEST_URL1} into the selected about:blank tab`);
+    let tabLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
     win.gURLBar.focus();
     win.gURLBar.value = TEST_URL1;
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await tabLoaded;
 
-    let [cards, rows] = await moreMenuSetup(document);
+    info("Waiting for moreMenuSetup to resolve");
+    let [cards, rows] = await moreMenuSetup();
+    Assert.deepEqual(
+      getVisibleTabURLs(),
+      [TEST_URL1, TEST_URL2, TEST_URL3],
+      "Prepared 3 open tabs"
+    );
+
     let firstTab = rows[0];
     // Open the panel list (more menu) from the first list item
     let panelList = await openContextMenuForItem(firstTab, cards[0]);
@@ -136,29 +209,32 @@ add_task(async function test_more_menus() {
     ];
 
     // close a tab via the menu
+    let tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
     menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
     panelItemButton.click();
+    info("Waiting for result of closing a tab via the menu");
+    await tabChangeRaised;
     await cards[0].getUpdateComplete();
     await menuHidden;
     await telemetryEvent(contextMenuEvent);
 
-    let visibleTabs = gBrowser.visibleTabs;
-    is(visibleTabs.length, 2, "Expected to now have 2 open tabs");
+    Assert.deepEqual(
+      getVisibleTabURLs(),
+      [TEST_URL2, TEST_URL3],
+      "Got the expected 2 open tabs"
+    );
+
+    let openTabs = cards[0].ownerDocument.querySelector(
+      "view-opentabs[name=opentabs]"
+    );
+    await waitUntilRowsMatch(openTabs, 0, [TEST_URL2, TEST_URL3]);
 
     // Move Tab submenu item
     firstTab = rows[0];
     is(firstTab.url, TEST_URL2, `First tab list item is ${TEST_URL2}`);
-
-    is(
-      visibleTabs[0].linkedBrowser.currentURI.spec,
-      TEST_URL2,
-      `First tab in tab strip is ${TEST_URL2}`
-    );
-    is(
-      visibleTabs[visibleTabs.length - 1].linkedBrowser.currentURI.spec,
-      TEST_URL3,
-      `Last tab in tab strip is ${TEST_URL3}`
-    );
 
     panelList = await openContextMenuForItem(firstTab, cards[0]);
     let moveTabsPanelItem = panelList.querySelector(
@@ -191,35 +267,27 @@ add_task(async function test_more_menus() {
     // click on the first option, which should be "Move to the end" since
     // this is the first tab
     menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
     EventUtils.synthesizeKey("KEY_Enter", {});
+    info("Waiting for result of moving a tab via the menu");
     await telemetryEvent(contextMenuEvent);
     await menuHidden;
+    await tabChangeRaised;
 
-    visibleTabs = gBrowser.visibleTabs;
-    is(
-      visibleTabs[0].linkedBrowser.currentURI.spec,
-      TEST_URL3,
-      `First tab in tab strip is now ${TEST_URL3}`
-    );
-    is(
-      visibleTabs[visibleTabs.length - 1].linkedBrowser.currentURI.spec,
-      TEST_URL2,
-      `Last tab in tab strip is now ${TEST_URL2}`
+    Assert.deepEqual(
+      getVisibleTabURLs(),
+      [TEST_URL3, TEST_URL2],
+      "The last tab became the first tab"
     );
 
     // this entire "move tabs" submenu test can be reordered above
     // closing a tab since it very clearly reveals the issues
     // outlined in bug 1852622 when there are 3 or more tabs open
     // and one is moved via the more menus.
-    await BrowserTestUtils.waitForMutationCondition(
-      cards[0].shadowRoot,
-      { characterData: true, childList: true, subtree: true },
-      async () => {
-        rows = await getRowsForCard(cards[0]);
-        firstTab = rows[0];
-        return firstTab.url == TEST_URL3;
-      }
-    );
+    await waitUntilRowsMatch(openTabs, 0, [TEST_URL3, TEST_URL2]);
 
     // Copy Link menu item (copyLink function that's called is a member of Viewpage.mjs)
     panelList = await openContextMenuForItem(firstTab, cards[0]);
@@ -284,7 +352,12 @@ add_task(async function test_send_device_submenu() {
     .callsFake(() => fxaDevicesWithCommands);
 
   await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
+    // TEST_URL2 is our only tab, left over from previous test
+    Assert.deepEqual(
+      getVisibleTabURLs(),
+      [TEST_URL2],
+      `We initially have a single ${TEST_URL2} tab`
+    );
     let shown;
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);

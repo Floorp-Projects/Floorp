@@ -32,6 +32,8 @@ skip-if = ["true"] # Bug 1869605 and # Bug 1870296
 ["browser_notification_dot.js"]
 skip-if = ["true"] # Bug 1851453
 
+["browser_opentabs_changes.js"]
+
 ["browser_reload_firefoxview.js"]
 
 ["browser_tab_close_last_tab.js"]

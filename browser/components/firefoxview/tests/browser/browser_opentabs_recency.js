@@ -13,6 +13,9 @@ const tabURL4 = "data:,Tab4";
 
 let gInitialTab;
 let gInitialTabURL;
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
 
 add_setup(function () {
   gInitialTab = gBrowser.selectedTab;
@@ -163,8 +166,14 @@ add_task(async function test_single_window_tabs() {
       browser.contentDocument,
       "visibilitychange"
     );
+
+    let tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabRecencyChange"
+    );
     await BrowserTestUtils.switchTab(gBrowser, gBrowser.visibleTabs[0]);
     await promiseHidden;
+    await tabChangeRaised;
   });
 
   // and check the results in the open tabs section of Recent Browsing
@@ -178,6 +187,7 @@ add_task(async function test_single_window_tabs() {
 add_task(async function test_multiple_window_tabs() {
   const fxViewURL = getFirefoxViewURL();
   const win1 = window;
+  let tabChangeRaised;
   await prepareOpenTabs([tabURL1, tabURL2]);
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
   await prepareOpenTabs([tabURL3, tabURL4], win2);
@@ -196,6 +206,10 @@ add_task(async function test_multiple_window_tabs() {
     );
 
     info("Switching to first tab (tab3) in win2");
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabRecencyChange"
+    );
     let promiseHidden = BrowserTestUtils.waitForEvent(
       browser.contentDocument,
       "visibilitychange"
@@ -209,6 +223,7 @@ add_task(async function test_multiple_window_tabs() {
       tabURL3,
       `The selected tab in window 2 is ${tabURL3}`
     );
+    await tabChangeRaised;
     await promiseHidden;
   });
 
@@ -220,7 +235,12 @@ add_task(async function test_multiple_window_tabs() {
   });
 
   info("Focusing win1, where tab2 should be selected");
+  tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
   await SimpleTest.promiseFocus(win1);
+  await tabChangeRaised;
   Assert.equal(
     tabUrl(win1.gBrowser.selectedTab),
     tabURL2,
@@ -239,12 +259,17 @@ add_task(async function test_multiple_window_tabs() {
       browser.contentDocument,
       "visibilitychange"
     );
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabRecencyChange"
+    );
     info("Switching to first visible tab (tab1) in win1");
     await BrowserTestUtils.switchTab(
       win1.gBrowser,
       win1.gBrowser.visibleTabs[0]
     );
     await promiseHidden;
+    await tabChangeRaised;
   });
 
   // check result in the fxview in the 1st window
@@ -262,27 +287,41 @@ add_task(async function test_windows_activation() {
   const win1 = window;
   await prepareOpenTabs([tabURL1], win1);
   let fxViewTab;
+  let tabChangeRaised;
   info("switch to firefox-view and leave it selected");
   await openFirefoxViewTab(win1).then(tab => (fxViewTab = tab));
 
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
   await prepareOpenTabs([tabURL2], win2);
+
   const win3 = await BrowserTestUtils.openNewBrowserWindow();
   await prepareOpenTabs([tabURL3], win3);
+  await tabChangeRaised;
 
+  tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
   await SimpleTest.promiseFocus(win1);
+  await tabChangeRaised;
 
   const browser = fxViewTab.linkedBrowser;
   await checkTabList(browser, [tabURL3, tabURL2, tabURL1]);
 
   info("switch to win2 and confirm its selected tab becomes most recent");
+  tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
   await SimpleTest.promiseFocus(win2);
+  await tabChangeRaised;
   await checkTabList(browser, [tabURL2, tabURL3, tabURL1]);
   await cleanup(win2, win3);
 });
 
 add_task(async function test_minimize_restore_windows() {
   const win1 = window;
+  let tabChangeRaised;
   await prepareOpenTabs([tabURL1, tabURL2]);
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
   await prepareOpenTabs([tabURL3, tabURL4], win2);
@@ -298,19 +337,29 @@ add_task(async function test_minimize_restore_windows() {
       browser.contentDocument,
       "visibilitychange"
     );
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabRecencyChange"
+    );
     info("Switching to the first tab (tab3) in 2nd window");
     await BrowserTestUtils.switchTab(
       win2.gBrowser,
       win2.gBrowser.visibleTabs[0]
     );
     await promiseHidden;
+    await tabChangeRaised;
   });
 
   // then minimize the window, focusing the 1st window
   info("Minimizing win2, leaving tab 3 selected");
+  tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
   await minimizeWindow(win2);
   info("Focusing win1, where tab2 is selected - making it most recent");
   await SimpleTest.promiseFocus(win1);
+  await tabChangeRaised;
 
   Assert.equal(
     tabUrl(win1.gBrowser.selectedTab),
@@ -325,8 +374,13 @@ add_task(async function test_minimize_restore_windows() {
     info(
       "Restoring win2 and focusing it - which should make its selected tab most recent"
     );
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabRecencyChange"
+    );
     await restoreWindow(win2);
     await SimpleTest.promiseFocus(win2);
+    await tabChangeRaised;
 
     info(
       "Checking tab order in fxview in win1, to confirm tab3 is most recent"
