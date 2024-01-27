@@ -38,6 +38,15 @@ function callForEveryWindow(callback) {
 
 export const EveryWindow = {
   /**
+   * The current list of all browser windows whose delayedStartupPromise has resolved
+   */
+  get readyWindows() {
+    return Array.from(Services.wm.getEnumerator("navigator:browser")).filter(
+      win => win.gBrowserInit?.delayedStartupFinished
+    );
+  },
+
+  /**
    * Registers init and uninit functions to be called on every window.
    *
    * @param {string} id A unique identifier for the consumer, to be
