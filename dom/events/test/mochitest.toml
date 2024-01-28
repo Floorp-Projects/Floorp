@@ -7,6 +7,8 @@ tags = "condprof"
 prefs = [
   "browser.migration.version=9999999",
   "gfx.font_loader.delay=0",
+  "ui.dragThresholdX=4", # Bug 1873142
+  "ui.dragThresholdY=4", # Bug 1873142
 ]
 support-files = [
   "bug226361_iframe.xhtml",
@@ -373,7 +375,6 @@ skip-if = [
 ["test_disabled_events.html"]
 
 ["test_dnd_with_modifiers.html"]
-skip-if = ["os == 'android'"] # Dnd isn't supported
 
 ["test_dom_activate_event.html"]
 
@@ -389,20 +390,17 @@ skip-if = ["os == 'android'"] #CRASH_DUMP, RANDOM
 skip-if = ["os == 'android'"] # wheel scroll isn't supported
 
 ["test_drag_coords.html"]
-skip-if = ["os == 'android'"] # not supported
+skip-if = ["os == 'android'"] # Need calculate screen coordinates.
 
 ["test_drag_image_file.html"]
 skip-if = [
-  "os == 'android'",
   "xorigin", # Bug 1802904
 ]
 support-files = ["green.png"]
 
 ["test_draggableprop.html"]
-skip-if = ["os == 'android'"] #CRASH_DUMP, RANDOM
 
 ["test_dragstart.html"]
-skip-if = ["os == 'android'"] # not supported
 
 ["test_error_events.html"]
 skip-if = ["os == 'android'"] #TIMED_OUT
