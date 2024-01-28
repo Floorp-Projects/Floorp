@@ -219,7 +219,7 @@ function init_all() {
   register_module("paneContainers", gContainersPane);
 
   var { FloorpAppConstants } = ChromeUtils.importESModule(
-    "resource:///modules/FloorpAppConstants.sys.mjs"
+    "resource://floorp/modules/FloorpAppConstants.sys.mjs"
   );
 
   register_module("paneDesign", gDesign);
