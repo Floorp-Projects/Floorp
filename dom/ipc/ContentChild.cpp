@@ -3152,13 +3152,53 @@ mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
   return IPC_OK();
 }
 
+static already_AddRefed<DataTransfer> ConvertToDataTransfer(
+    nsTArray<IPCTransferableData>&& aTransferables, EventMessage aMessage) {
+  // Check if we are receiving any file objects. If we are we will want
+  // to hide any of the other objects coming in from content.
+  bool hasFiles = false;
+  for (uint32_t i = 0; i < aTransferables.Length() && !hasFiles; ++i) {
+    auto& items = aTransferables[i].items();
+    for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
+      if (items[j].data().type() ==
+          IPCTransferableDataType::TIPCTransferableDataBlob) {
+        hasFiles = true;
+      }
+    }
+  }
+  // Add the entries from the IPC to the new DataTransfer
+  RefPtr<DataTransfer> dataTransfer =
+      new DataTransfer(nullptr, aMessage, false, -1);
+  for (uint32_t i = 0; i < aTransferables.Length(); ++i) {
+    auto& items = aTransferables[i].items();
+    for (uint32_t j = 0; j < items.Length(); ++j) {
+      const IPCTransferableDataItem& item = items[j];
+      RefPtr<nsVariantCC> variant = new nsVariantCC();
+      nsresult rv =
+          nsContentUtils::IPCTransferableDataItemToVariant(item, variant);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      // We should hide this data from content if we have a file, and we
+      // aren't a file.
+      bool hidden =
+          hasFiles && item.data().type() !=
+                          IPCTransferableDataType::TIPCTransferableDataBlob;
+      dataTransfer->SetDataWithPrincipalFromOtherProcess(
+          NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
+          nsContentUtils::GetSystemPrincipal(), hidden);
+    }
+  }
+  return dataTransfer.forget();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
     const MaybeDiscarded<WindowContext>& aSourceWindowContext,
     const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
     nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction) {
-  nsCOMPtr<nsIDragService> dragService =
-      do_GetService("@mozilla.org/widget/dragservice;1");
-  if (dragService) {
+  if (nsCOMPtr<nsIDragService> dragService =
+          do_GetService("@mozilla.org/widget/dragservice;1")) {
     dragService->StartDragSession();
     nsCOMPtr<nsIDragSession> session;
     dragService->GetCurrentSession(getter_AddRefs(session));
@@ -3167,43 +3207,25 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
       session->SetSourceTopWindowContext(
           aSourceTopWindowContext.GetMaybeDiscarded());
       session->SetDragAction(aAction);
-      // Check if we are receiving any file objects. If we are we will want
-      // to hide any of the other objects coming in from content.
-      bool hasFiles = false;
-      for (uint32_t i = 0; i < aTransferables.Length() && !hasFiles; ++i) {
-        auto& items = aTransferables[i].items();
-        for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
-          if (items[j].data().type() ==
-              IPCTransferableDataType::TIPCTransferableDataBlob) {
-            hasFiles = true;
-          }
-        }
-      }
 
-      // Add the entries from the IPC to the new DataTransfer
+      RefPtr<DataTransfer> dataTransfer =
+          ConvertToDataTransfer(std::move(aTransferables), eDragStart);
+      session->SetDataTransfer(dataTransfer);
+    }
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvUpdateDragSession(
+    nsTArray<IPCTransferableData>&& aTransferables,
+    EventMessage aEventMessage) {
+  if (nsCOMPtr<nsIDragService> dragService =
+          do_GetService("@mozilla.org/widget/dragservice;1")) {
+    nsCOMPtr<nsIDragSession> session;
+    dragService->GetCurrentSession(getter_AddRefs(session));
+    if (session) {
       nsCOMPtr<DataTransfer> dataTransfer =
-          new DataTransfer(nullptr, eDragStart, false, -1);
-      for (uint32_t i = 0; i < aTransferables.Length(); ++i) {
-        auto& items = aTransferables[i].items();
-        for (uint32_t j = 0; j < items.Length(); ++j) {
-          const IPCTransferableDataItem& item = items[j];
-          RefPtr<nsVariantCC> variant = new nsVariantCC();
-          nsresult rv =
-              nsContentUtils::IPCTransferableDataItemToVariant(item, variant);
-          if (NS_FAILED(rv)) {
-            continue;
-          }
-
-          // We should hide this data from content if we have a file, and we
-          // aren't a file.
-          bool hidden =
-              hasFiles && item.data().type() !=
-                              IPCTransferableDataType::TIPCTransferableDataBlob;
-          dataTransfer->SetDataWithPrincipalFromOtherProcess(
-              NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
-              nsContentUtils::GetSystemPrincipal(), hidden);
-        }
-      }
+          ConvertToDataTransfer(std::move(aTransferables), aEventMessage);
       session->SetDataTransfer(dataTransfer);
     }
   }
