@@ -926,9 +926,9 @@ void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 
 void Animation::Tick(AnimationTimeline::TickState& aTickState) {
   if (Pending()) {
-    // Finish pending if we can, but make sure we've seen one existing tick
-    // at least.
-    if (mSawTickWhilePending) {
+    // Finish pending if we can, but make sure we've seen one existing tick, or
+    // we've requested to get started via SetPendingReadyTime.
+    if (!mPendingReadyTime.IsNull() || mSawTickWhilePending) {
       TryTriggerNow();
     }
     mSawTickWhilePending = true;
@@ -964,7 +964,10 @@ bool Animation::TryTriggerNow() {
   if (NS_WARN_IF(!mTimeline)) {
     return false;
   }
-  auto currentTime = mTimeline->GetCurrentTimeAsDuration();
+  auto currentTime = mPendingReadyTime.IsNull()
+                         ? mTimeline->GetCurrentTimeAsDuration()
+                         : mTimeline->ToTimelineTime(mPendingReadyTime);
+  mPendingReadyTime = {};
   if (NS_WARN_IF(currentTime.IsNull())) {
     return false;
   }
@@ -1449,7 +1452,7 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   }
 
   mPendingState = PendingState::PlayPending;
-
+  mPendingReadyTime = {};
   mSawTickWhilePending = false;
   if (Document* doc = GetRenderedDocument()) {
     if (HasFiniteTimeline()) {
@@ -1511,6 +1514,7 @@ void Animation::Pause(ErrorResult& aRv) {
   }
 
   mPendingState = PendingState::PausePending;
+  mPendingReadyTime = {};
   mSawTickWhilePending = false;
 
   // See the relevant PlayPending code for comments.
