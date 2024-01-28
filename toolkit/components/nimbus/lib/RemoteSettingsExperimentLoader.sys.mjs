@@ -234,6 +234,8 @@ export class _RemoteSettingsExperimentLoader {
     Services.obs.notifyObservers(null, "nimbus:enrollments-updated");
 
     this._updating = false;
+
+    this.recordIsReady();
   }
 
   async optInToExperiment({
@@ -370,6 +372,14 @@ export class _RemoteSettingsExperimentLoader {
       this.intervalInSeconds
     );
     lazy.log.debug("Registered update timer");
+  }
+
+  recordIsReady() {
+    const eventCount =
+      lazy.NimbusFeatures.nimbusIsReady.getVariable("eventCount") ?? 1;
+    for (let i = 0; i < eventCount; i++) {
+      Glean.nimbusEvents.isReady.record();
+    }
   }
 }
 
