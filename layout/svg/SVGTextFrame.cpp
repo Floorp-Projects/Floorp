@@ -718,16 +718,16 @@ gfxMatrix TextRenderedRun::GetTransformFromUserSpaceForPainting(
   // Rotation due to rotate="" or a <textPath>.
   m.PreRotate(mRotate);
 
-  m.PreScale(mLengthAdjustScaleFactor, 1.0);
-
-  // Translation to get the text frame in the right place.
+  // Scale for textLength="" and translate to get the text frame
+  // to the right place.
   nsPoint t;
-
   if (IsVertical()) {
+    m.PreScale(1.0, mLengthAdjustScaleFactor);
     t = nsPoint(-mBaseline, IsRightToLeft()
                                 ? -mFrame->GetRect().height + aVisIEndEdge
                                 : -aVisIStartEdge);
   } else {
+    m.PreScale(mLengthAdjustScaleFactor, 1.0);
     t = nsPoint(IsRightToLeft() ? -mFrame->GetRect().width + aVisIEndEdge
                                 : -aVisIStartEdge,
                 -mBaseline);
@@ -756,15 +756,16 @@ gfxMatrix TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
   // Rotation due to rotate="" or a <textPath>.
   m.PreRotate(mRotate);
 
-  // Scale due to textLength="".
-  m.PreScale(mLengthAdjustScaleFactor, 1.0);
+  // Scale for textLength="" and translate to get the text frame
+  // to the right place.
 
-  // Translation to get the text frame in the right place.
   nsPoint t;
   if (IsVertical()) {
+    m.PreScale(1.0, mLengthAdjustScaleFactor);
     t = nsPoint(-mBaseline,
                 IsRightToLeft() ? -mFrame->GetRect().height + start + end : 0);
   } else {
+    m.PreScale(mLengthAdjustScaleFactor, 1.0);
     t = nsPoint(IsRightToLeft() ? -mFrame->GetRect().width + start + end : 0,
                 -mBaseline);
   }
@@ -868,6 +869,12 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
       gfxRect(fillInAppUnits.x, fillInAppUnits.y, fillInAppUnits.width,
               fillInAppUnits.height),
       aContext);
+
+  if (vertical) {
+    fill.Scale(1.0, mLengthAdjustScaleFactor);
+  } else {
+    fill.Scale(mLengthAdjustScaleFactor, 1.0);
+  }
 
   // Scale the rectangle up due to any mFontSizeScaleFactor.
   fill.Scale(1.0 / mFontSizeScaleFactor);
