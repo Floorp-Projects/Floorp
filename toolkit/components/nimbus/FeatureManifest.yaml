@@ -2074,3 +2074,15 @@ mailto:
         application and another prompt to set the current site as default
         webmail site in Firefox.
       fallbackPref: browser.mailto.dualPrompt.os
+
+nimbusIsReady:
+  description: A feature that provides the number of Nimbus is_ready events to send
+      when Nimbus is ready.
+  owner: chumphreys@mozilla.com
+  hasExposure: false
+  applications:
+    - firefox-desktop
+  variables:
+    eventCount:
+      description: The number of events that should be sent.
+      type: int
