@@ -582,7 +582,7 @@ void EarlyHintPreloader::InvokeStreamListenerFunctions() {
   nsTArray<StreamListenerFunction> streamListenerFunctions =
       std::move(mStreamListenerFunctions);
 
-  ForwardStreamListenerFunctions(streamListenerFunctions, mParent);
+  ForwardStreamListenerFunctions(std::move(streamListenerFunctions), mParent);
 
   // We don't expect to get new stream listener functions added
   // via re-entrancy. If this ever happens, we should understand
@@ -696,8 +696,8 @@ EarlyHintPreloader::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mStreamListenerFunctions.AppendElement(
-      AsVariant(OnDataAvailableParams{aRequest, data, aOffset, aCount}));
+  mStreamListenerFunctions.AppendElement(AsVariant(
+      OnDataAvailableParams{aRequest, std::move(data), aOffset, aCount}));
 
   return NS_OK;
 }
