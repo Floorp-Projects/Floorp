@@ -9,12 +9,11 @@
 #include "nsIDOMEventListener.h"
 
 #include "GeckoProfiler.h"
-#include "jsapi.h"  // JS::RootedValueArray
 #include "jsfriendapi.h"
 #include "js/ArrayBuffer.h"  // JS::Is{,Detached}ArrayBufferObject
 #include "js/GCPolicyAPI.h"
 #include "js/JSON.h"
-#include "js/RootingAPI.h"  // JS::{Handle,Heap},PersistentRooted
+#include "js/RootingAPI.h"  // JS::{Handle,Heap,PersistentRooted}
 #include "js/TracingAPI.h"
 #include "js/Value.h"  // JS::{Undefined,}Value
 #include "mozilla/ArrayUtils.h"
@@ -193,6 +192,18 @@ class Proxy final : public nsIDOMEventListener {
     return target.forget();
   }
 
+#ifdef DEBUG
+  void DebugStoreWorkerRef(RefPtr<StrongWorkerRef>& aWorkerRef) {
+    MOZ_ASSERT(!NS_IsMainThread());
+    mXHR->mTSWorkerRef = new ThreadSafeWorkerRef(aWorkerRef);
+  }
+
+  void DebugForgetWorkerRef() {
+    MOZ_ASSERT(!NS_IsMainThread());
+    mXHR->mTSWorkerRef = nullptr;
+  }
+#endif
+
  private:
   ~Proxy() {
     MOZ_ASSERT(!mXHR);
@@ -206,8 +217,8 @@ class WorkerThreadProxySyncRunnable : public WorkerMainThreadRunnable {
   RefPtr<Proxy> mProxy;
 
  private:
-  // mErrorCode is set on the main thread by MainThreadRun and it's used to at
-  // the end of the Dispatch() to return the error code.
+  // mErrorCode is set on the main thread by MainThreadRun and it's used at the
+  // end of the Dispatch() to return the error code.
   nsresult mErrorCode;
 
  public:
@@ -1486,6 +1497,10 @@ void XMLHttpRequestWorker::MaybePin(ErrorResult& aRv) {
   }
 
   mPinnedSelfRef = this;
+
+#ifdef DEBUG
+  mProxy->DebugStoreWorkerRef(mWorkerRef);
+#endif
 }
 
 void XMLHttpRequestWorker::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv) {
@@ -1609,6 +1624,14 @@ void XMLHttpRequestWorker::Unpin() {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   MOZ_ASSERT(mWorkerRef, "Mismatched calls to Unpin!");
+
+#ifdef DEBUG
+  if (mProxy) {
+    // The proxy will be gone if WorkerIsGoingAway
+    mProxy->DebugForgetWorkerRef();
+  }
+#endif
+
   mWorkerRef = nullptr;
 
   mPinnedSelfRef = nullptr;
@@ -1841,7 +1864,7 @@ void XMLHttpRequestWorker::SetTimeout(uint32_t aTimeout, ErrorResult& aRv) {
   mTimeout = aTimeout;
 
   if (!mProxy) {
-    // Open may not have been called yet, in which case we'll handle the
+    // Open might not have been called yet, in which case we'll handle the
     // timeout in OpenRunnable.
     return;
   }
@@ -1863,7 +1886,7 @@ void XMLHttpRequestWorker::SetWithCredentials(bool aWithCredentials,
   mWithCredentials = aWithCredentials;
 
   if (!mProxy) {
-    // Open may not have been called yet, in which case we'll handle the
+    // Open might not have been called yet, in which case we'll handle the
     // credentials in OpenRunnable.
     return;
   }
@@ -1885,7 +1908,7 @@ void XMLHttpRequestWorker::SetMozBackgroundRequest(bool aBackgroundRequest,
   mBackgroundRequest = aBackgroundRequest;
 
   if (!mProxy) {
-    // Open may not have been called yet, in which case we'll handle the
+    // Open might not have been called yet, in which case we'll handle the
     // background request in OpenRunnable.
     return;
   }

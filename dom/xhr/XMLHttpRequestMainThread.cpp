@@ -24,6 +24,7 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/FormData.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -184,6 +185,57 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 //
 /////////////////////////////////////////////
 
+#ifdef DEBUG
+
+// In debug mode, annotate WorkerRefs with the name of the function being
+// invoked for increased scrutability.  Save the previous value on the stack.
+namespace {
+struct DebugWorkerRefs {
+  RefPtr<ThreadSafeWorkerRef>& mTSWorkerRef;
+  nsCString mPrev;
+
+  DebugWorkerRefs(RefPtr<ThreadSafeWorkerRef>& aTSWorkerRef,
+                  const std::string& aStatus)
+      : mTSWorkerRef(aTSWorkerRef) {
+    if (!mTSWorkerRef) {
+      MOZ_LOG(gXMLHttpRequestLog, LogLevel::Info,
+              ("No WorkerRef during: %s", aStatus.c_str()));
+      return;
+    }
+
+    MOZ_ASSERT(mTSWorkerRef->Private());
+
+    nsCString status(aStatus.c_str());
+    mPrev = GET_WORKERREF_DEBUG_STATUS(mTSWorkerRef->Ref());
+    SET_WORKERREF_DEBUG_STATUS(mTSWorkerRef->Ref(), status);
+  }
+
+  ~DebugWorkerRefs() {
+    if (!mTSWorkerRef) {
+      return;
+    }
+
+    MOZ_ASSERT(mTSWorkerRef->Private());
+
+    SET_WORKERREF_DEBUG_STATUS(mTSWorkerRef->Ref(), mPrev);
+  }
+};
+}  // namespace
+
+#  define STREAM_STRING(stuff)                                    \
+    (((const std::ostringstream&)(std::ostringstream() << stuff)) \
+         .str())  // NOLINT
+#  define DEBUG_WORKERREFS \
+    DebugWorkerRefs MOZ_UNIQUE_VAR(debugWR__)(mTSWorkerRef, __func__)
+#  define DEBUG_WORKERREFS1(x)                 \
+    DebugWorkerRefs MOZ_UNIQUE_VAR(debugWR__)( \
+        mTSWorkerRef, STREAM_STRING(__func__ << ": " << x))  // NOLINT
+
+#else
+#  define DEBUG_WORKERREFS void()
+#  define DEBUG_WORKERREFS1(x) void()
+#endif  // DEBUG
+
 bool XMLHttpRequestMainThread::sDontWarnAboutSyncXHR = false;
 
 XMLHttpRequestMainThread::XMLHttpRequestMainThread(
@@ -227,10 +279,12 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread(
       mEventDispatchingSuspended(false),
       mEofDecoded(false),
       mDelayedDoneNotifier(nullptr) {
+  DEBUG_WORKERREFS;
   mozilla::HoldJSObjects(this);
 }
 
 XMLHttpRequestMainThread::~XMLHttpRequestMainThread() {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(
       !mDelayedDoneNotifier,
       "How can we have mDelayedDoneNotifier, which owns us, in destructor?");
@@ -259,6 +313,7 @@ void XMLHttpRequestMainThread::Construct(
     nsILoadGroup* aLoadGroup /* = nullptr */,
     PerformanceStorage* aPerformanceStorage /* = nullptr */,
     nsICSPEventListener* aCSPEventListener /* = nullptr */) {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(aPrincipal);
   mPrincipal = aPrincipal;
   mBaseURI = aBaseURI;
@@ -270,6 +325,7 @@ void XMLHttpRequestMainThread::Construct(
 }
 
 void XMLHttpRequestMainThread::InitParameters(bool aAnon, bool aSystem) {
+  DEBUG_WORKERREFS;
   if (!aAnon && !aSystem) {
     return;
   }
@@ -461,6 +517,7 @@ Document* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
  * from HTTP headers.
  */
 nsresult XMLHttpRequestMainThread::DetectCharset() {
+  DEBUG_WORKERREFS;
   mDecoder = nullptr;
 
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
@@ -938,6 +995,7 @@ void XMLHttpRequestMainThread::GetStatusText(nsACString& aStatusText,
 }
 
 void XMLHttpRequestMainThread::TerminateOngoingFetch(nsresult detail) {
+  DEBUG_WORKERREFS;
   if ((mState == XMLHttpRequest_Binding::OPENED && mFlagSend) ||
       mState == XMLHttpRequest_Binding::HEADERS_RECEIVED ||
       mState == XMLHttpRequest_Binding::LOADING) {
@@ -949,6 +1007,7 @@ void XMLHttpRequestMainThread::TerminateOngoingFetch(nsresult detail) {
 }
 
 void XMLHttpRequestMainThread::CloseRequest(nsresult detail) {
+  DEBUG_WORKERREFS;
   mWaitingForOnStopRequest = false;
   mErrorLoad = ErrorType::eTerminated;
   mErrorLoadDetail = detail;
@@ -961,6 +1020,7 @@ void XMLHttpRequestMainThread::CloseRequest(nsresult detail) {
 
 void XMLHttpRequestMainThread::CloseRequestWithError(
     const ProgressEventType aType) {
+  DEBUG_WORKERREFS;
   MOZ_LOG(
       gXMLHttpRequestLog, LogLevel::Debug,
       ("%p CloseRequestWithError(%hhu)", this, static_cast<uint8_t>(aType)));
@@ -1326,6 +1386,7 @@ nsresult XMLHttpRequestMainThread::FireReadystatechangeEvent() {
 void XMLHttpRequestMainThread::DispatchProgressEvent(
     DOMEventTargetHelper* aTarget, const ProgressEventType aType,
     int64_t aLoaded, int64_t aTotal) {
+  DEBUG_WORKERREFS;
   NS_ASSERTION(aTarget, "null target");
 
   if (NS_FAILED(CheckCurrentGlobalCorrectness()) ||
@@ -1378,6 +1439,7 @@ void XMLHttpRequestMainThread::DispatchProgressEvent(
 
 void XMLHttpRequestMainThread::DispatchOrStoreEvent(
     DOMEventTargetHelper* aTarget, Event* aEvent) {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aEvent);
 
@@ -1459,6 +1521,7 @@ void XMLHttpRequestMainThread::Open(const nsACString& aMethod,
                                     const nsAString& aUsername,
                                     const nsAString& aPassword,
                                     ErrorResult& aRv) {
+  DEBUG_WORKERREFS1(aMethod << " " << aUrl);
   NOT_CALLABLE_IN_SYNC_SEND_RV
 
   // Gecko-specific
@@ -1817,6 +1880,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
                                           nsIInputStream* inStr,
                                           uint64_t sourceOffset,
                                           uint32_t count) {
+  DEBUG_WORKERREFS;
   NS_ENSURE_ARG_POINTER(inStr);
 
   mProgressSinceLastProgressEvent = true;
@@ -1885,6 +1949,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
+  DEBUG_WORKERREFS;
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
   nsresult rv = NS_OK;
@@ -2159,6 +2224,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
+  DEBUG_WORKERREFS;
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStopRequest", NETWORK);
 
   if (request != mChannel) {
@@ -2386,6 +2452,7 @@ void XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument() {
     mDecoder = mResponseXML->GetDocumentCharacterSet()->NewDecoder();
   }
 }
+
 void XMLHttpRequestMainThread::DisconnectDoneNotifier() {
   if (mDelayedDoneNotifier) {
     // Disconnect may release the last reference to 'this'.
@@ -2396,6 +2463,7 @@ void XMLHttpRequestMainThread::DisconnectDoneNotifier() {
 }
 
 void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
+  DEBUG_WORKERREFS;
   DisconnectDoneNotifier();
 
   if (!mForWorker && !aWasSync && mChannel) {
@@ -2422,6 +2490,7 @@ void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
 }
 
 void XMLHttpRequestMainThread::ChangeStateToDoneInternal() {
+  DEBUG_WORKERREFS;
   DisconnectDoneNotifier();
   StopProgressEventTimer();
 
@@ -2481,6 +2550,7 @@ void XMLHttpRequestMainThread::ChangeStateToDoneInternal() {
 }
 
 nsresult XMLHttpRequestMainThread::CreateChannel() {
+  DEBUG_WORKERREFS;
   // When we are called from JS we can find the load group for the page,
   // and add ourselves to it. This way any pending requests
   // will be automatically aborted if the user leaves the page.
@@ -2606,6 +2676,7 @@ void XMLHttpRequestMainThread::MaybeLowerChannelPriority() {
 nsresult XMLHttpRequestMainThread::InitiateFetch(
     already_AddRefed<nsIInputStream> aUploadStream, int64_t aUploadLength,
     nsACString& aUploadContentType) {
+  DEBUG_WORKERREFS;
   nsresult rv;
   nsCOMPtr<nsIInputStream> uploadStream = std::move(aUploadStream);
 
@@ -2902,6 +2973,7 @@ void XMLHttpRequestMainThread::EnsureChannelContentType() {
 }
 
 void XMLHttpRequestMainThread::ResumeTimeout() {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mFlagSynchronous);
 
@@ -2916,6 +2988,7 @@ void XMLHttpRequestMainThread::Send(
         DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
         aData,
     ErrorResult& aRv) {
+  DEBUG_WORKERREFS1(mRequestURL);
   NOT_CALLABLE_IN_SYNC_SEND_RV
 
   if (!CanSend(aRv)) {
@@ -3018,6 +3091,7 @@ bool XMLHttpRequestMainThread::CanSend(ErrorResult& aRv) {
 void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
                                             bool aBodyIsDocumentOrString,
                                             ErrorResult& aRv) {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(NS_IsMainThread());
 
   // We expect that CanSend has been called before we get here!
@@ -3297,6 +3371,7 @@ nsIEventTarget* XMLHttpRequestMainThread::GetTimerEventTarget() {
 
 nsresult XMLHttpRequestMainThread::DispatchToMainThread(
     already_AddRefed<nsIRunnable> aRunnable) {
+  DEBUG_WORKERREFS;
   if (nsIGlobalObject* global = GetOwnerGlobal()) {
     return global->Dispatch(std::move(aRunnable));
   }
@@ -3304,6 +3379,7 @@ nsresult XMLHttpRequestMainThread::DispatchToMainThread(
 }
 
 void XMLHttpRequestMainThread::StartTimeoutTimer() {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(
       mRequestSentTime,
       "StartTimeoutTimer mustn't be called before the request was sent!");
@@ -3441,6 +3517,7 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* callback) {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(aNewChannel, "Redirect without a channel?");
 
   // Prepare to receive callback
@@ -3472,6 +3549,7 @@ XMLHttpRequestMainThread::AsyncOnChannelRedirect(
 
 nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result,
                                                             bool aStripAuth) {
+  DEBUG_WORKERREFS;
   NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
   NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
 
@@ -3514,6 +3592,7 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result,
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnProgress(nsIRequest* aRequest, int64_t aProgress,
                                      int64_t aProgressMax) {
+  DEBUG_WORKERREFS;
   // When uploading, OnProgress reports also headers in aProgress and
   // aProgressMax. So, try to remove the headers, if possible.
   bool lengthComputable = (aProgressMax != -1);
@@ -3546,6 +3625,7 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest* aRequest, int64_t aProgress,
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStatus(nsIRequest* aRequest, nsresult aStatus,
                                    const char16_t* aStatusArg) {
+  DEBUG_WORKERREFS;
   if (mProgressEventSink) {
     mProgressEventSink->OnStatus(aRequest, aStatus, aStatusArg);
   }
@@ -3640,6 +3720,7 @@ bool XMLHttpRequestMainThread::MozAnon() const { return mIsAnon; }
 bool XMLHttpRequestMainThread::MozSystem() const { return IsSystemXHR(); }
 
 void XMLHttpRequestMainThread::HandleTimeoutCallback() {
+  DEBUG_WORKERREFS;
   if (mState == XMLHttpRequest_Binding::DONE) {
     MOZ_ASSERT_UNREACHABLE(
         "XMLHttpRequestMainThread::HandleTimeoutCallback "
@@ -3653,6 +3734,7 @@ void XMLHttpRequestMainThread::HandleTimeoutCallback() {
 }
 
 void XMLHttpRequestMainThread::CancelTimeoutTimer() {
+  DEBUG_WORKERREFS;
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
     mTimeoutTimer = nullptr;
@@ -3661,6 +3743,7 @@ void XMLHttpRequestMainThread::CancelTimeoutTimer() {
 
 NS_IMETHODIMP
 XMLHttpRequestMainThread::Notify(nsITimer* aTimer) {
+  DEBUG_WORKERREFS;
   if (mProgressNotifier == aTimer) {
     HandleProgressTimerCallback();
     return NS_OK;
@@ -3683,6 +3766,7 @@ XMLHttpRequestMainThread::Notify(nsITimer* aTimer) {
 }
 
 void XMLHttpRequestMainThread::HandleProgressTimerCallback() {
+  DEBUG_WORKERREFS;
   // Don't fire the progress event if mLoadTotal is 0, see XHR spec step 6.1
   if (!mLoadTotal && mLoadTransferred) {
     return;
@@ -3829,6 +3913,7 @@ XMLHttpRequestMainThread::nsHeaderVisitor::nsHeaderVisitor(
 XMLHttpRequestMainThread::nsHeaderVisitor::~nsHeaderVisitor() = default;
 
 void XMLHttpRequestMainThread::MaybeCreateBlobStorage() {
+  DEBUG_WORKERREFS;
   MOZ_ASSERT(mResponseType == XMLHttpRequestResponseType::Blob);
 
   if (mBlobStorage) {
@@ -3850,6 +3935,7 @@ void XMLHttpRequestMainThread::MaybeCreateBlobStorage() {
 
 void XMLHttpRequestMainThread::BlobStoreCompleted(
     MutableBlobStorage* aBlobStorage, BlobImpl* aBlobImpl, nsresult aRv) {
+  DEBUG_WORKERREFS;
   // Ok, the state is changed...
   if (mBlobStorage != aBlobStorage || NS_FAILED(aRv)) {
     return;

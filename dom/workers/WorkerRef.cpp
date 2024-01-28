@@ -47,7 +47,11 @@ class ReleaseRefControlRunnable final : public WorkerControlRunnable {
 
 WorkerRef::WorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName,
                      bool aIsPreventingShutdown)
-    : mWorkerPrivate(aWorkerPrivate),
+    :
+#ifdef DEBUG
+      mDebugMutex("WorkerRef"),
+#endif
+      mWorkerPrivate(aWorkerPrivate),
       mName(aName),
       mIsPreventingShutdown(aIsPreventingShutdown),
       mHolding(false) {
