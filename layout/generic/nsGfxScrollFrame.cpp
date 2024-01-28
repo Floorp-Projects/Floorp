@@ -50,6 +50,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ScrollingMetrics.h"
+#include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPtr.h"
@@ -6028,8 +6029,7 @@ bool nsHTMLScrollFrame::IsScrollbarOnRight() const {
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0:  // UI directionality
-      return presContext->GetCachedIntPref(kPresContext_BidiDirection) ==
-             IBMBIDI_TEXTDIRECTION_LTR;
+      return StaticPrefs::bidi_direction() == IBMBIDI_TEXTDIRECTION_LTR;
     case 1:  // Document / content directionality
       return IsPhysicalLTR();
     case 2:  // Always right
