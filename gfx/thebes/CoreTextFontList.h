@@ -54,7 +54,7 @@ class CTFontEntry final : public gfxFontEntry {
   // returns it; if not, the instance returned will be owned solely by the
   // caller.)
   // Note that in the case of a broken font, this could return null.
-  CGFontRef CreateOrCopyFontRef();
+  CGFontRef CreateOrCopyFontRef() MOZ_REQUIRES_SHARED(mLock);
 
   // override gfxFontEntry table access function to bypass table cache,
   // use CGFontRef API to get direct access to system font data
@@ -84,18 +84,19 @@ class CTFontEntry final : public gfxFontEntry {
 
   static void DestroyBlobFunc(void* aUserData);
 
-  CGFontRef mFontRef;  // owning reference, released on destruction
+  CGFontRef mFontRef MOZ_GUARDED_BY(mLock);  // owning reference
 
-  double mSizeHint;
+  const double mSizeHint;
 
-  bool mFontRefInitialized;
-  bool mRequiresAAT;
-  bool mIsCFF;
-  bool mIsCFFInitialized;
-  bool mHasVariations;
-  bool mHasVariationsInitialized;
-  bool mHasAATSmallCaps;
-  bool mHasAATSmallCapsInitialized;
+  bool mFontRefInitialized MOZ_GUARDED_BY(mLock);
+
+  mozilla::Atomic<bool> mRequiresAAT;
+  mozilla::Atomic<bool> mIsCFF;
+  mozilla::Atomic<bool> mIsCFFInitialized;
+  mozilla::Atomic<bool> mHasVariations;
+  mozilla::Atomic<bool> mHasVariationsInitialized;
+  mozilla::Atomic<bool> mHasAATSmallCaps;
+  mozilla::Atomic<bool> mHasAATSmallCapsInitialized;
 
   // To work around Core Text's mishandling of the default value for 'opsz',
   // we need to record whether the font has an a optical size axis, what its
@@ -104,10 +105,10 @@ class CTFontEntry final : public gfxFontEntry {
   // These fields are used by gfxMacFont, but stored in the font entry so
   // that only a single font instance needs to inspect the available
   // variations.
-  gfxFontVariationAxis mOpszAxis;
-  float mAdjustedDefaultOpsz;
+  gfxFontVariationAxis mOpszAxis MOZ_GUARDED_BY(mLock);
+  float mAdjustedDefaultOpsz MOZ_GUARDED_BY(mLock);
 
-  nsTHashtable<nsUint32HashKey> mAvailableTables;
+  nsTHashtable<nsUint32HashKey> mAvailableTables MOZ_GUARDED_BY(mLock);
 
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontMac> mUnscaledFont;
 };
