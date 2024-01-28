@@ -6018,15 +6018,13 @@ nsSize nsHTMLScrollFrame::GetSnapportSize() const {
 }
 
 bool nsHTMLScrollFrame::IsScrollbarOnRight() const {
-  nsPresContext* presContext = PresContext();
-
   // The position of the scrollbar in top-level windows depends on the pref
   // layout.scrollbar.side. For non-top-level elements, it depends only on the
   // directionaliy of the element (equivalent to a value of "1" for the pref).
   if (!mIsRoot) {
     return IsPhysicalLTR();
   }
-  switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
+  switch (StaticPrefs::layout_scrollbar_side()) {
     default:
     case 0:  // UI directionality
       return StaticPrefs::bidi_direction() == IBMBIDI_TEXTDIRECTION_LTR;

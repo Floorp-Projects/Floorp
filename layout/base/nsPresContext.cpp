@@ -274,7 +274,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mCanPaginatedScroll(false),
       mDoScaledTwips(true),
       mIsRootPaginatedDocument(false),
-      mPrefScrollbarSide(0),
       mPendingThemeChanged(false),
       mPendingThemeChangeKind(0),
       mPendingUIResolutionChanged(false),
@@ -431,8 +430,6 @@ void nsPresContext::GetUserPreferences() {
   }
 
   PreferenceSheet::EnsureInitialized();
-
-  mPrefScrollbarSide = StaticPrefs::layout_scrollbar_side();
 
   Document()->SetMayNeedFontPrefsUpdate();
 
