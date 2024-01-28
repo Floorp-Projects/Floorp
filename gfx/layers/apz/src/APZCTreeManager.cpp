@@ -3346,17 +3346,17 @@ CSSToCSSMatrix4x4 APZCTreeManager::GetOopifToRootContentTransform(
       ViewAs<AsyncTransformComponentMatrix>(
           rootContentApzc->GetPaintedResolutionTransform());
 
-  CSSToParentLayerScale thisZoom = aApzc->GetZoom();
-  result.PreScale(thisZoom.scale, thisZoom.scale, 1.0);
   CSSToParentLayerScale rootZoom = rootContentApzc->GetZoom();
-  if (rootZoom != CSSToParentLayerScale(0)) {
-    result.PostScale(1.0 / rootZoom.scale, 1.0 / rootZoom.scale, 1.0);
+
+  if (rootZoom == CSSToParentLayerScale(0)) {
+    rootZoom = CSSToParentLayerScale(1.0f);
   }
 
   CSSPoint rootScrollPosition = rootContentApzc->GetLayoutScrollOffset();
-  return ViewAs<CSSToCSSMatrix4x4>(result,
-                                   PixelCastJustification::UntypedPrePostScale)
-      .PostTranslate(rootScrollPosition.x, rootScrollPosition.y, 0);
+
+  return result.PreScale(aApzc->GetZoom())
+      .PostScale(rootZoom.Inverse())
+      .PostTranslate(rootScrollPosition);
 }
 
 CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
