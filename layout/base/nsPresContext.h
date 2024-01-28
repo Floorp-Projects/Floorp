@@ -102,10 +102,7 @@ class PaletteCache;
 }  // namespace mozilla
 
 // supported values for cached integer pref types
-enum nsPresContext_CachedIntPrefType {
-  kPresContext_ScrollbarSide = 1,
-  kPresContext_BidiDirection
-};
+enum nsPresContext_CachedIntPrefType { kPresContext_ScrollbarSide = 1 };
 
 // IDs for the default variable and fixed fonts (not to be changed, see
 // nsFont.h) To be used for Get/SetDefaultFont(). The other IDs in nsFont.h are
@@ -387,8 +384,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     switch (aPrefType) {
       case kPresContext_ScrollbarSide:
         return mPrefScrollbarSide;
-      case kPresContext_BidiDirection:
-        return mPrefBidiDirection;
       default:
         NS_ERROR("invalid arg passed to GetCachedIntPref");
     }
@@ -1357,7 +1352,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mCanPaginatedScroll : 1;
   unsigned mDoScaledTwips : 1;
   unsigned mIsRootPaginatedDocument : 1;
-  unsigned mPrefBidiDirection : 1;
   unsigned mPrefScrollbarSide : 2;
   unsigned mPendingThemeChanged : 1;
   // widget::ThemeChangeKind
