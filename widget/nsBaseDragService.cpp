@@ -703,7 +703,9 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
   }
   event.mModifiers = aKeyModifiers;
 
-  if (widget) {
+  // Most drag events aren't able to converted to MouseEvent except to
+  // eDragStart and eDragEnd.
+  if (widget && event.CanConvertToInputData()) {
     // Send the drag event to APZ, which needs to know about them to be
     // able to accurately detect the end of a drag gesture.
     widget->DispatchEventToAPZOnly(&event);
