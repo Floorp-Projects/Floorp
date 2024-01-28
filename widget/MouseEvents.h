@@ -431,6 +431,10 @@ class WidgetDragEvent : public WidgetMouseEvent {
     mInHTMLEditorEventListener = false;
   }
 
+  bool CanConvertToInputData() const {
+    return mMessage == eDragStart || mMessage == eDragEnd;
+  }
+
   /**
    * Should be called before dispatching the DOM tree if this event is
    * synthesized for tests because drop effect is initialized before
