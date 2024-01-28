@@ -14,13 +14,14 @@
 #include <type_traits>
 #include <unistd.h>
 
-#include "AndroidGraphics.h"
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
 #include "AndroidCompositorWidget.h"
 #include "AndroidContentController.h"
+#include "AndroidDragEvent.h"
 #include "AndroidUiThread.h"
 #include "AndroidView.h"
+#include "AndroidWidgetUtils.h"
 #include "gfxContext.h"
 #include "GeckoEditableSupport.h"
 #include "GeckoViewOutputStream.h"
@@ -822,6 +823,19 @@ class NPZCSupport final
       mObserver = nullptr;
     }
     mListeningToVsync = aNeedVsync;
+  }
+
+  void HandleDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
+                       jni::Object::Param aDropData) {
+    // APZ handles some drag event type on APZ thread, but it cannot handle all
+    // types.
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (auto window = mWindow.Access()) {
+      if (nsWindow* gkWindow = window->GetNsWindow()) {
+        gkWindow->OnDragEvent(aAction, aTime, aX, aY, aDropData);
+      }
+    }
   }
 
   void ConsumeMotionEventsFromResampler() {
@@ -2582,6 +2596,139 @@ void GeckoViewSupport::OnUpdateSessionStore(
   window->OnUpdateSessionStore(aBundle);
 }
 
+static EventMessage convertDragEventActionToGeckoEvent(int32_t aAction) {
+  switch (aAction) {
+    case java::sdk::DragEvent::ACTION_DRAG_ENTERED:
+      return eDragEnter;
+    case java::sdk::DragEvent::ACTION_DRAG_EXITED:
+      return eDragExit;
+    case java::sdk::DragEvent::ACTION_DRAG_LOCATION:
+      return eDragOver;
+    case java::sdk::DragEvent::ACTION_DROP:
+      return eDrop;
+  }
+  return eVoidEvent;
+}
+
+void nsWindow::OnDragEvent(int32_t aAction, int64_t aTime, float aX, float aY,
+                           jni::Object::Param aDropData) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  if (!dragService) {
+    return;
+  }
+
+  LayoutDeviceIntPoint point =
+      LayoutDeviceIntPoint(int32_t(floorf(aX)), int32_t(floorf(aY)));
+
+  if (aAction == java::sdk::DragEvent::ACTION_DRAG_STARTED) {
+    dragService->SetDragEndPoint(point);
+    return;
+  }
+
+  if (aAction == java::sdk::DragEvent::ACTION_DRAG_ENDED) {
+    dragService->EndDragSession(false, 0);
+    return;
+  }
+
+  EventMessage message = convertDragEventActionToGeckoEvent(aAction);
+
+  if (message == eDragEnter) {
+    dragService->StartDragSession();
+  }
+
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
+    switch (message) {
+      case eDragOver:
+        dragService->SetDragEndPoint(point);
+        dragService->FireDragEventAtSource(eDrag, 0);
+        break;
+      case eDrop: {
+        bool canDrop = false;
+        dragSession->GetCanDrop(&canDrop);
+        if (!canDrop) {
+          nsCOMPtr<nsINode> sourceNode;
+          dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+          if (!sourceNode) {
+            dragService->EndDragSession(false, 0);
+          }
+          return;
+        }
+        auto dropData =
+            mozilla::java::GeckoDragAndDrop::DropData::Ref::From(aDropData);
+        nsDragService::SetDropData(dropData);
+        dragService->SetDragEndPoint(point);
+        break;
+      }
+      default:
+        break;
+    }
+
+    dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
+  }
+
+  WidgetDragEvent geckoEvent(true, message, this);
+  geckoEvent.mRefPoint = point;
+  geckoEvent.mTimeStamp = nsWindow::GetEventTimeStamp(aTime);
+  geckoEvent.mModifiers = 0;  // DragEvent has no modifiers
+  DispatchInputEvent(&geckoEvent);
+
+  if (!dragSession) {
+    return;
+  }
+
+  switch (message) {
+    case eDragExit: {
+      nsCOMPtr<nsINode> sourceNode;
+      dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+      if (!sourceNode) {
+        // We're leaving a window while doing a drag that was
+        // initiated in a different app. End the drag session,
+        // since we're done with it for now (until the user
+        // drags back into mozilla).
+        dragService->EndDragSession(false, 0);
+      }
+      break;
+    }
+    case eDrop:
+      dragService->EndDragSession(true, 0);
+      break;
+    default:
+      break;
+  }
+}
+
+void nsWindow::StartDragAndDrop(java::sdk::Bitmap::LocalRef aBitmap) {
+  if (mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
+          mLayerViewSupport.Access()}) {
+    const auto& compositor = lvs->GetJavaCompositor();
+
+    DispatchToUiThread(
+        "nsWindow::StartDragAndDrop",
+        [compositor = GeckoSession::Compositor::GlobalRef(compositor),
+         bitmap = java::sdk::Bitmap::GlobalRef(aBitmap)] {
+          compositor->StartDragAndDrop(bitmap);
+        });
+  }
+}
+
+void nsWindow::UpdateDragImage(java::sdk::Bitmap::LocalRef aBitmap) {
+  if (mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
+          mLayerViewSupport.Access()}) {
+    const auto& compositor = lvs->GetJavaCompositor();
+
+    DispatchToUiThread(
+        "nsWindow::UpdateDragImage",
+        [compositor = GeckoSession::Compositor::GlobalRef(compositor),
+         bitmap = java::sdk::Bitmap::GlobalRef(aBitmap)] {
+          compositor->UpdateDragImage(bitmap);
+        });
+  }
+}
+
 void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
   ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width,
        aSize.height);
@@ -3083,29 +3230,7 @@ static already_AddRefed<DataSourceSurface> GetCursorImage(
     return nullptr;
   }
 
-  RefPtr<DataSourceSurface> srcDataSurface = surface->GetDataSurface();
-  if (NS_WARN_IF(!srcDataSurface)) {
-    return nullptr;
-  }
-
-  DataSourceSurface::ScopedMap sourceMap(srcDataSurface,
-                                         DataSourceSurface::READ);
-
-  destDataSurface = gfx::Factory::CreateDataSourceSurfaceWithStride(
-      srcDataSurface->GetSize(), SurfaceFormat::R8G8B8A8,
-      sourceMap.GetStride());
-  if (NS_WARN_IF(!destDataSurface)) {
-    return nullptr;
-  }
-
-  DataSourceSurface::ScopedMap destMap(destDataSurface,
-                                       DataSourceSurface::READ_WRITE);
-
-  SwizzleData(sourceMap.GetData(), sourceMap.GetStride(), surface->GetFormat(),
-              destMap.GetData(), destMap.GetStride(), SurfaceFormat::R8G8B8A8,
-              destDataSurface->GetSize());
-
-  return destDataSurface.forget();
+  return AndroidWidgetUtils::GetDataSourceSurfaceForAndroidBitmap(surface);
 }
 
 static int32_t GetCursorType(nsCursor aCursor) {

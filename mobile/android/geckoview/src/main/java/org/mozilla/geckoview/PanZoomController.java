@@ -9,9 +9,11 @@ import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
+import android.view.DragEvent;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import androidx.annotation.AnyThread;
@@ -22,6 +24,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoDragAndDrop;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -297,6 +300,10 @@ public class PanZoomController {
     @WrapForJNI(calledFrom = "ui")
     private native @InputResult int handleMouseEvent(
         int action, long time, int metaState, float x, float y, int buttons);
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    private native void handleDragEvent(
+        int action, long time, float x, float y, GeckoDragAndDrop.DropData data);
 
     @WrapForJNI(stubName = "SetIsLongpressEnabled") // Called from test thread.
     private native void nativeSetIsLongpressEnabled(boolean isLongpressEnabled);
@@ -595,6 +602,32 @@ public class PanZoomController {
         || (action == MotionEvent.ACTION_HOVER_EXIT)) {
       handleMouseEvent(event);
     }
+  }
+
+  /**
+   * Process a drag event.
+   *
+   * @param event DragEvent to process.
+   * @return true if this event is accepted.
+   */
+  public boolean onDragEvent(@NonNull final DragEvent event) {
+    ThreadUtils.assertOnUiThread();
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+      return false;
+    }
+
+    if (!GeckoDragAndDrop.onDragEvent(event)) {
+      return false;
+    }
+
+    mNative.handleDragEvent(
+        event.getAction(),
+        SystemClock.uptimeMillis(),
+        GeckoDragAndDrop.getLocationX(),
+        GeckoDragAndDrop.getLocationY(),
+        GeckoDragAndDrop.createDropData(event));
+    return true;
   }
 
   private void enableEventQueue() {

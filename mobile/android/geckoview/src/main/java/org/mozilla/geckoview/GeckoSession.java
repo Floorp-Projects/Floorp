@@ -71,6 +71,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoDragAndDrop;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.MagnifiableSurfaceView;
@@ -412,6 +413,16 @@ public class GeckoSession {
     public void setPointerIcon(
         final int defaultCursor, final Bitmap customCursor, final float x, final float y) {
       GeckoSession.this.setPointerIcon(defaultCursor, customCursor, x, y);
+    }
+
+    @WrapForJNI(calledFrom = "ui")
+    private void startDragAndDrop(final Bitmap bitmap) {
+      GeckoSession.this.startDragAndDrop(bitmap);
+    }
+
+    @WrapForJNI(calledFrom = "ui")
+    private void updateDragImage(final Bitmap bitmap) {
+      GeckoSession.this.updateDragImage(bitmap);
     }
 
     @Override
@@ -7887,6 +7898,34 @@ public class GeckoSession {
     if (delegate != null) {
       delegate.onPointerIconChange(this, icon);
     }
+  }
+
+  /* package */ void startDragAndDrop(final Bitmap bitmap) {
+    ThreadUtils.assertOnUiThread();
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+      return;
+    }
+    final View view = getTextInput().getView();
+    if (view == null) {
+      return;
+    }
+
+    GeckoDragAndDrop.startDragAndDrop(view, bitmap);
+  }
+
+  /* package */ void updateDragImage(final Bitmap bitmap) {
+    ThreadUtils.assertOnUiThread();
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+      return;
+    }
+    final View view = getTextInput().getView();
+    if (view == null) {
+      return;
+    }
+
+    GeckoDragAndDrop.updateDragImage(view, bitmap);
   }
 
   /** GeckoSession applications implement this interface to handle media events. */

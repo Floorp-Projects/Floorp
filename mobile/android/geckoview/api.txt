@@ -24,6 +24,7 @@ import android.print.PrintDocumentAdapter;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.ActionMode;
+import android.view.DragEvent;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -2089,6 +2090,7 @@ package org.mozilla.geckoview {
   @UiThread public class PanZoomController {
     ctor protected PanZoomController(GeckoSession);
     method public float getScrollFactor();
+    method public boolean onDragEvent(@NonNull DragEvent);
     method public void onMotionEvent(@NonNull MotionEvent);
     method public void onMouseEvent(@NonNull MotionEvent);
     method public void onTouchEvent(@NonNull MotionEvent);

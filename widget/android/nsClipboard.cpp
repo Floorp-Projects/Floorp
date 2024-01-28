@@ -36,22 +36,15 @@ nsClipboard::~nsClipboard() {
       java::GeckoAppShell::GetApplicationContext());
 }
 
-NS_IMETHODIMP
-nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
-                                    int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
-  if (!jni::IsAvailable()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+// static
+nsresult nsClipboard::GetTextFromTransferable(nsITransferable* aTransferable,
+                                              nsString& aText,
+                                              nsString& aHTML) {
   nsTArray<nsCString> flavors;
-  aTransferable->FlavorsTransferableCanImport(flavors);
-
-  nsAutoString html;
-  nsAutoString text;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   for (auto& flavorStr : flavors) {
     if (flavorStr.EqualsLiteral(kTextMime)) {
@@ -63,7 +56,7 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
       }
       nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(item);
       if (supportsString) {
-        supportsString->GetData(text);
+        supportsString->GetData(aText);
       }
     } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
       nsCOMPtr<nsISupports> item;
@@ -74,9 +67,29 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
       }
       nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(item);
       if (supportsString) {
-        supportsString->GetData(html);
+        supportsString->GetData(aHTML);
       }
     }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
+                                    int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (!jni::IsAvailable()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsString text;
+  nsString html;
+  nsresult rv = GetTextFromTransferable(aTransferable, text, html);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   if (!html.IsEmpty() &&

@@ -1,0 +1,3 @@
+# We only use constants from DragEvent
+[android.view.DragEvent = skip:true]
+<field> = skip:false

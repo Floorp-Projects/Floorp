@@ -2075,14 +2075,23 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /**
-   * Synthesize a mouse move event at the specified location using the main session. The session
-   * must have been created with a display.
+   * Synthesize a mouse event at the specified location using the main session. The session must
+   * have been created with a display.
    *
    * @param session Target session
+   * @param downTime A time when any buttons are down
+   * @param action An action such as MotionEvent.ACTION_DOWN
    * @param x X coordinate
    * @param y Y coordinate
+   * @param buttonState A button stats such as MotionEvent.BUTTON_PRIMARY
    */
-  public void synthesizeMouseMove(final @NonNull GeckoSession session, final int x, final int y) {
+  public void synthesizeMouse(
+      final @NonNull GeckoSession session,
+      final long downTime,
+      final int action,
+      final int x,
+      final int y,
+      final int buttonState) {
     final MotionEvent.PointerProperties pointerProperty = new MotionEvent.PointerProperties();
     pointerProperty.id = 0;
     pointerProperty.toolType = MotionEvent.TOOL_TYPE_MOUSE;
@@ -2096,17 +2105,16 @@ public class GeckoSessionTestRule implements TestRule {
     final MotionEvent.PointerCoords[] pointerCoords =
         new MotionEvent.PointerCoords[] {pointerCoord};
 
-    final long moveTime = SystemClock.uptimeMillis();
     final MotionEvent moveEvent =
         MotionEvent.obtain(
-            moveTime,
+            downTime,
             SystemClock.uptimeMillis(),
-            MotionEvent.ACTION_HOVER_MOVE,
+            action,
             1,
             pointerProperties,
             pointerCoords,
             0,
-            0,
+            buttonState,
             1.0f,
             1.0f,
             0,
@@ -2114,6 +2122,19 @@ public class GeckoSessionTestRule implements TestRule {
             InputDevice.SOURCE_MOUSE,
             0);
     session.getPanZoomController().onTouchEvent(moveEvent);
+  }
+
+  /**
+   * Synthesize a mouse move event at the specified location using the main session. The session
+   * must have been created with a display.
+   *
+   * @param session Target session
+   * @param x X coordinate
+   * @param y Y coordinate
+   */
+  public void synthesizeMouseMove(final @NonNull GeckoSession session, final int x, final int y) {
+    final long moveTime = SystemClock.uptimeMillis();
+    synthesizeMouse(session, moveTime, MotionEvent.ACTION_HOVER_MOVE, x, y, 0);
   }
 
   /**

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script>
+      document.addEventListener("DOMContentLoaded", () =>
+        document
+          .querySelector("#drop")
+          .addEventListener("dragover", e => e.preventDefault())
+      );
+    </script>
+  </head>
+  <body>
+    <img
+      id="drag"
+      draggable="true"
+      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2PwmvDoPwAFoAK895OuoAAAAABJRU5ErkJggg=="
+      width="200"
+      height="100"
+    />
+    <br />
+    <div id="drop" style="border: 1px solid red; width: 200px; height: 100px">
+      drop
+    </div>
+  </body>
+</html>

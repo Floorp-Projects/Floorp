@@ -6,6 +6,8 @@ package org.mozilla.geckoview.test
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
@@ -1464,10 +1466,27 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDisplay(width = 100, height = 100)
     @Test
+    fun synthesizeMouse() {
+        mainSession.loadTestPath(MOUSE_TO_RELOAD_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val time = SystemClock.uptimeMillis()
+        mainSession.evaluateJS("document.body.addEventListener('mousedown', () => { window.location.reload() })")
+        mainSession.synthesizeMouse(time, MotionEvent.ACTION_DOWN, 50, 50, MotionEvent.BUTTON_PRIMARY)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("document.body.addEventListener('mouseup', () => { window.location.reload() })")
+        mainSession.synthesizeMouse(time, MotionEvent.ACTION_UP, 50, 50, 0)
+        mainSession.waitForPageStop()
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
     fun synthesizeMouseMove() {
         mainSession.loadTestPath(MOUSE_TO_RELOAD_HTML_PATH)
         mainSession.waitForPageStop()
 
+        mainSession.evaluateJS("document.body.addEventListener('mousemove', () => { window.location.reload() })")
         mainSession.synthesizeMouseMove(50, 50)
         mainSession.waitForPageStop()
     }
