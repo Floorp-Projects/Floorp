@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">ลบออกจากคำสั่งลัด</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">มีอะไรใหม่</string>
     <string name="menu_settings">การตั้งค่า</string>
     <string name="menu_about">เกี่ยวกับ</string>
     <string name="menu_help">ช่วยเหลือ</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">แบ่งปันผ่าน</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">ล้างประวัติการท่องเว็บ?</string>
+    <string name="notification_erase_text_android_14">แตะหรือล้างการแจ้งเตือนนี้เพื่อลบประวัติการท่องเว็บของคุณอย่างปลอดภัย</string>
+
     <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

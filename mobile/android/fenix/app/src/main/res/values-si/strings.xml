@@ -255,8 +255,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">පරිලෝකනය</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">සෙවුම් යන්ත්‍රය</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">සෙවුම් යන්ත්‍රයේ සැකසුම්</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -311,23 +309,23 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">%s සමඟ බොහෝ දෑ කිරීමට දැනුම්දීම් උපකාරී වේ</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">%s සමඟ බොහෝ දෑ කිරීමට දැනුම්දීම් උපකාරී වේ</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">උපාංග අතර පටිති සමමුහූර්තය, බාගැනීම් කළමනාකරණය, %s පෞද්ගලිකත්‍ව රැකවරණයෙන් උපරිම ප්‍රයෝජන ගැනීමට ඉඟි, සහ තවත් බොහෝ දෑ.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">උපාංග අතර පටිති සමමුහූර්තය, බාගැනීම් කළමනාකරණය, %s පෞද්ගලිකත්‍ව රැකවරණයෙන් උපරිම ප්‍රයෝජන ගැනීමට ඉඟි, සහ තවත් බොහෝ දෑ.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">ඉදිරියට</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">ඉදිරියට</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">දැන් නොවේ</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">දැන් නොවේ</string>
 
-    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ඔබට ආරක්‍ෂාව සලසන්නෙමු</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">සමාගම් රහසින් අන්තර්ජාලය පුරා ඔබව ලුහුබැඳීම නැවැත්වීමට අපගේ ලාභ නොලබන පිටුබලයක් සහිත අතිරික්සුව සැමවිට උදව් කරයි.\n\nඅපගේ රහස්‍යතා දැන්වීමෙන් තව දැන ගන්න.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">සමාගම් රහසින් අන්තර්ජාලය පුරා ඔබව ලුහුබැඳීම නැවැත්වීමට අපගේ ලාභ නොලබන පිටුබලයක් සහිත අතිරික්සුව සැමවිට උදව් කරයි.\n\nඅපගේ රහස්‍යතා දැන්වීමෙන් තව දැන ගන්න.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">පෞද්ගලිකත්‍ව දැන්වීම</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">පෞද්ගලිකත්‍ව දැන්වීම</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">පෙරනිමි අතිරික්සුව කරන්න</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -425,18 +423,8 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-පමණි ප්‍රකාරය</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">දත්තකඩ පතාක අවකරණය</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">දත්තකඩ පතාක අවහිරය</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">දත්තකඩ පතාක අවම කරන්න</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">අක්‍රිය</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">සක්‍රිය</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ස්වයංක්‍රීයව දත්තකඩ පතාකවල දත්තකඩ ඉල්ලීම් ප්‍රතික්‍ෂේප කිරීමට උත්සාහ කරයි.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">මෙම අඩවියට අක්‍රියයි</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -453,28 +441,8 @@
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">සහාය ඉල්ලීම යැවිණි</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">අඩවියට සහාය නොදක්වයි</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s සඳහා දත්තකඩ පතාක අවකරණය සක්‍රිය කරන්නද?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s සඳහා දත්තකඩ පතාක අවකරණය අක්‍රිය කරන්නද?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s මඟින්  මෙම අඩවියේ දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලීමට නොහැක. ඉදිරියේ දී මෙම අඩවිය සඳහා සහාය දැක්වීමට ඉල්ලීමක් යැවීමට හැකිය.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
-
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s සහාය දක්වන අඩවිවල තිබෙන සියළුම දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට උත්සාහ කරයි.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">දත්තකඩ පතාක ප්‍රතික්‍ෂේපයට %1$s වෙත ඉඩ දෙන්නද?</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s මඟින් බොහෝ දත්තකඩ පතාක ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලිය හැකිය.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">දැන් නොවේ</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">ඔබ දත්තකඩ ඉල්ලීම් අඩුවෙන් දකිනු ඇත</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">ඉඩ දෙන්න</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
@@ -686,6 +654,8 @@
     <string name="preferences_sync_bookmarks">පොත්යොමු</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">පිවිසුම්</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">මුරපද</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">පටිති අරින්න</string>
     <!-- Preference for signing out -->
@@ -710,6 +680,8 @@
     <string name="default_device_name_2">%2$s %3$s හි %1$s</string>
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">ණය පත්</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">ගෙවීමේ ක්‍රම</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ලිපින</string>
 
@@ -1244,8 +1216,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">ඉවතලන්න</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">මුද්‍රණයට නොහැකිය</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">මෙම පිටුව මුද්‍රණයට නොහැකිය</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">මුද්‍රණය</string>
@@ -1289,6 +1259,9 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">පෞද්. පටිති වසන්න</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">පෞද්. පටිති වසන්නද?</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">අළෙවිකරණය</string>
@@ -1641,8 +1614,12 @@
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">පිවිසුම් සහ මුරපද</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">මුරපද</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">පිවිසුම් සහ මුරපද සුරකින්න</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">මුරපද සුරකින්න</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">සුරැකීමට අසන්න</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1658,12 +1635,19 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">පිවිසුම යොදන්න</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">මුරපදය එක් කරන්න</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">පිවිසුම් සමමුහූර්තය</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">මුරපද සමමුහූර්තය</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">උපාංගවල පිවිසුම් සමමුහූර්තය</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">සුරැකි පිවිසුම්</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">සුරැකි මුරපද</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">ඔබ සුරකින හෝ %s වෙත සමමුහූර්ත කරන පිවිසුම් මෙහි පෙන්වයි.</string>
     <!-- Preference to access list of saved logins -->
@@ -1678,6 +1662,8 @@
     <string name="preferences_passwords_exceptions_remove_all">සියළු හැරදැමීම් මකන්න</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">පිවිසුම් සොයන්න</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">මුරපද සොයන්න</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">අඩවිය</string>
     <!-- The header for the username for a login -->
@@ -1735,6 +1721,8 @@
     <string name="preferences_addresses">ලිපින</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">ණය පත්</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">ගෙවීමේ ක්‍රම</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">පත් සුරැකීම හා ස්වයං පිරවීම</string>
     <!-- Preference summary for saving and autofilling credit card data -->
@@ -2275,6 +2263,10 @@
     <string name="download_languages_available_languages_preference">තිබෙන භාෂා</string>
     <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
     <string name="download_languages_default_system_language_require_preference">වුවමනාය</string>
+    <!-- A text for download language preference item.
+    The first parameter is the language name, for example, "Spanish".
+    The second parameter is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, "(required)". -->
+    <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">භාෂා බාගන්න</string>
     <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
@@ -2286,6 +2278,14 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">තෝරාගත්</string>
 
+    <!-- Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_file_dialog_title">%1$s (%2$s) මකන්නද?</string>
+    <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
+    The dialog will be presented when the user requests deletion of all languages file.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_all_languages_file_dialog_title">සියලුම භාෂා (%1$s) මකන්නද?</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">මකන්න</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
@@ -2293,9 +2293,20 @@
 
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">බාගන්න</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">බාගෙන පරිවර්තනය කරන්න</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">අවලංගු</string>
 
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">නිදොස්කරණ මෙවලම්</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">ආපසු යාත්‍රණය</string>
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title">පටිති මෙවලම්</string>
+    <!-- The title of the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_title">පටිති ගණන</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal">සක්‍රිය</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
