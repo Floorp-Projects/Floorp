@@ -17,6 +17,9 @@ class nsClipboard final : public nsBaseClipboard {
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  static nsresult GetTextFromTransferable(nsITransferable* aTransferable,
+                                          nsString& aText, nsString& aHTML);
+
  protected:
   // Implement the native clipboard behavior.
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,

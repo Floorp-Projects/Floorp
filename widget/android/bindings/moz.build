@@ -12,6 +12,7 @@ with Files("**"):
 generated = [
     "AccessibilityEvent",
     "AndroidBuild",
+    "AndroidDragEvent",
     "AndroidGraphics",
     "AndroidInputType",
     "AndroidProcess",

@@ -18,10 +18,13 @@ exclude: true
 - Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverMode`][124.1] to enable DNS-over-HTTPS using different resolver modes ([bug 1591533]({{bugzilla}}1591533)).
 - Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverUri`][124.2] to specify the DNS-over-HTTPS server to be used if DoH is enabled ([bug 1591533]({{bugzilla}}1591533)).
 - Added [`GeckoRuntimeSettings#setLargeKeepaliveFactor`][124.3] to increase the keepalive timeout used for a connection ([bug 1591533]({{bugzilla}}1591533)).
+- Added [`PanZoomController.onDragEvent`][124.4] to support drag and drop.
+  ([bug 1586471]({{bugzilla}}1586471))
 
 [124.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverMode-int-
 [124.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverUri-java.lang.String-
 [124.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLargeKeepaliveFactor-int-
+[124.4]: {{javadoc_uri}}/PanZoomController.html#onDragEvent(android.view.DragEvent)
 
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
@@ -1514,4 +1517,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 757616f5eabb19164140a9f303277496fd1a4993
+[api-version]: 6ba1de66c7ab46b0ac52910c9fb76f94c2bcc5b9
