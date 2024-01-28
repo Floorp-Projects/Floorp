@@ -30,6 +30,7 @@ class nsDragService final : public nsBaseDragService {
                                                uint32_t aKeyModifiers) override;
   NS_IMETHOD
   UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
+  virtual bool MustUpdateDataTransfer(mozilla::EventMessage aMessage) override;
 
   void SetData(nsITransferable* aTransferable);
 

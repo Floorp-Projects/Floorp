@@ -415,6 +415,10 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
       nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction);
 
+  mozilla::ipc::IPCResult RecvUpdateDragSession(
+      nsTArray<IPCTransferableData>&& aTransferables,
+      EventMessage aEventMessage);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvEndDragSession(
       const bool& aDoneDrag, const bool& aUserCancelled,

@@ -195,6 +195,11 @@ interface nsIDragService : nsISupports
   [notxpcom, nostdcall] boolean removeAllChildProcesses();
 
   /**
+   * Retrun true if nsIDragSession's data is updated.
+   */
+  [notxpcom, nostdcall] boolean mustUpdateDataTransfer(in EventMessage aMessage);
+
+  /**
    * Called when HTMLEditor maybe deleted the source node from the document.
    *
    * @param aEditingHost    The editing host when the editor deletes selection.
