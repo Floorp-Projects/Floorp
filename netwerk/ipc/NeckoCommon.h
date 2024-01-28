@@ -135,8 +135,8 @@ using StreamListenerFunction =
     mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
                      OnStopRequestParams, OnAfterLastPartParams>;
 
-nsresult ForwardStreamListenerFunctions(
-    nsTArray<StreamListenerFunction>& aCalls, nsIStreamListener* aParent);
+nsresult ForwardStreamListenerFunctions(nsTArray<StreamListenerFunction> aCalls,
+                                        nsIStreamListener* aParent);
 
 }  // namespace net
 }  // namespace mozilla
