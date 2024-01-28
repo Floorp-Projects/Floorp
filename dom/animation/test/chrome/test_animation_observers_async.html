@@ -178,7 +178,7 @@ function runTest() {
            "getAnimations().length after transition end");
 
         // Wait for the change MutationRecord for seeking the Animation to be
-        // delivered, followed by the the removal MutationRecord.
+        // delivered, followed by the removal MutationRecord.
         return waitForFrame();
       }).then(() => {
         assert_records([{ added: [], changed: animations, removed: [] },
@@ -448,7 +448,7 @@ function runTest() {
   });
 }
 
-promise_test(t => {
+promise_test(async t => {
   setupAsynchronousObserver(t, { observe: div, subtree: true });
   t.add_cleanup(() => {
     div.style = "";
@@ -519,65 +519,67 @@ promise_test(t => {
   // mutation records when we flush styles. We may introduce that in the
   // future but for now all we are interested in testing here is that the
   // right records are generated, but we allow them to occur in any order.
-  return waitForFrame().then(() => {
-    assert_records_any_order(
-      [{ added: divAfterAnimations, changed: [], removed: [] },
-       { added: childAAnimations, changed: [], removed: [] },
-       { added: childBAnimations, changed: [], removed: [] },
-       { added: childBPseudoAnimations, changed: [], removed: [] },
-       { added: divAnimations, changed: [], removed: [] },
-       { added: divBeforeAnimations, changed: [], removed: [] }],
-      "records after simultaneous animation start");
+  await waitForFrame();
 
-    // The one case where we *do* currently perform document-level (or actually
-    // timeline-level) batching is when animations are updated from a refresh
-    // driver tick. In particular, this means that when animations finish
-    // naturally the removed records should be dispatched according to the
-    // position of the elements in the tree.
+  assert_records_any_order(
+    [{ added: divAfterAnimations, changed: [], removed: [] },
+     { added: childAAnimations, changed: [], removed: [] },
+     { added: childBAnimations, changed: [], removed: [] },
+     { added: childBPseudoAnimations, changed: [], removed: [] },
+     { added: divAnimations, changed: [], removed: [] },
+     { added: divBeforeAnimations, changed: [], removed: [] }],
+    "records after simultaneous animation start");
 
-    // First, flatten the set of animations. we put the animations targeting to
-    // pseudo elements last. (Actually, we don't care the order in the list.)
-    var animations = [ ...divAnimations,
-                       ...childAAnimations,
-                       ...childBAnimations,
-                       ...divBeforeAnimations,
-                       ...divAfterAnimations,
-                       ...childBPseudoAnimations ];
+  // The one case where we *do* currently perform document-level (or actually
+  // timeline-level) batching is when animations are updated from a refresh
+  // driver tick. In particular, this means that when animations finish
+  // naturally the removed records should be dispatched according to the
+  // position of the elements in the tree.
 
-    // Fast-forward to *just* before the end of the animation.
-    animations.forEach(animation => animation.currentTime = 99999);
+  // First, flatten the set of animations. we put the animations targeting to
+  // pseudo elements last. (Actually, we don't care the order in the list.)
+  var animations = [ ...divAnimations,
+                     ...childAAnimations,
+                     ...childBAnimations,
+                     ...divBeforeAnimations,
+                     ...divAfterAnimations,
+                     ...childBPseudoAnimations ];
 
-    // Prepare the set of expected change MutationRecords, one for each
-    // animation that was seeked.
-    seekRecords = animations.map(
-      p => ({ added: [], changed: [p], removed: [] })
-    );
+  await Promise.all(animations.map(animation => animation.ready));
 
-    return await_event(div, "animationend");
-  }).then(() => {
-    // After the changed notifications, which will be dispatched in the order that
-    // the animations were seeked, we should get removal MutationRecords in order
-    // (div, div::before, div::after), childA, (childB, childB::before).
-    // Note: The animations targeting to the pseudo element are appended after
-    //       the animations of its parent element.
-    divAnimations = [ ...divAnimations,
-                      ...divBeforeAnimations,
-                      ...divAfterAnimations ];
-    childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
-    assert_records(seekRecords.concat(
-                     { added: [], changed: [], removed: divAnimations },
-                     { added: [], changed: [], removed: childAAnimations },
-                     { added: [], changed: [], removed: childBAnimations }),
-                   "records after finishing");
+  // Fast-forward to *just* before the end of the animation.
+  animations.forEach(animation => animation.currentTime = 99999);
 
-    // Clean up
-    div.classList.remove("before");
-    div.classList.remove("after");
-    div.style = "";
-    childA.remove();
-    childB.remove();
-    extraStyle.remove();
-  });
+  // Prepare the set of expected change MutationRecords, one for each
+  // animation that was seeked.
+  seekRecords = animations.map(
+    p => ({ added: [], changed: [p], removed: [] })
+  );
+
+  await Promise.all(animations.map(animation => animation.finished));
+
+  // After the changed notifications, which will be dispatched in the order that
+  // the animations were seeked, we should get removal MutationRecords in order
+  // (div, div::before, div::after), childA, (childB, childB::before).
+  // Note: The animations targeting to the pseudo element are appended after
+  //       the animations of its parent element.
+  divAnimations = [ ...divAnimations,
+                    ...divBeforeAnimations,
+                    ...divAfterAnimations ];
+  childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
+  assert_records(seekRecords.concat(
+                   { added: [], changed: [], removed: divAnimations },
+                   { added: [], changed: [], removed: childAAnimations },
+                   { added: [], changed: [], removed: childBAnimations }),
+                 "records after finishing");
+
+  // Clean up
+  div.classList.remove("before");
+  div.classList.remove("after");
+  div.style = "";
+  childA.remove();
+  childB.remove();
+  extraStyle.remove();
 }, "tree_ordering: subtree");
 
 // Test that animations removed by auto-removal trigger an event
