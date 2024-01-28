@@ -42,6 +42,7 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
@@ -454,6 +455,11 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                           nsresult aResult) override;
 
   void LocalFileToBlobCompleted(BlobImpl* aBlobImpl);
+
+#ifdef DEBUG
+  // For logging when there's trouble
+  RefPtr<ThreadSafeWorkerRef> mTSWorkerRef = nullptr;
+#endif
 
  protected:
   nsresult DetectCharset();

@@ -5885,6 +5885,12 @@ void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
     if (workerRef->IsPreventingShutdown()) {
       aString.Append("|");
       aString.Append(workerRef->Name());
+      const nsCString status = GET_WORKERREF_DEBUG_STATUS(workerRef);
+      if (!status.IsEmpty()) {
+        aString.Append("[");
+        aString.Append(status);
+        aString.Append("]");
+      }
     }
   }
 }
