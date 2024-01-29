@@ -1,4 +1,4 @@
-import { ModalOverlayWrapper } from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
+import { ModalOverlayWrapper } from "newtab/content-src/asrouter/components/ModalOverlay/ModalOverlay";
 import { mount } from "enzyme";
 import React from "react";
 

@@ -1,4 +1,4 @@
-import { MessageLoaderUtils } from "asroutermodules/ASRouter.jsm";
+import { MessageLoaderUtils } from "modules/ASRouter.jsm";
 const { STARTPAGE_VERSION } = MessageLoaderUtils;
 
 const FAKE_OPTIONS = {
