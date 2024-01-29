@@ -80,6 +80,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
+  size_t byteOffset() const { return ArrayBufferViewObject::byteOffset(); }
+
   size_t byteLength() const { return length() * bytesPerElement(); }
 
   size_t length() const {
