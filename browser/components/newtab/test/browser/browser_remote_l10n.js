@@ -4,7 +4,7 @@
 "use strict";
 
 const { RemoteL10n } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/RemoteL10n.sys.mjs"
+  "resource:///modules/asrouter/RemoteL10n.sys.mjs"
 );
 
 const ID = "remote_l10n_test_string";
