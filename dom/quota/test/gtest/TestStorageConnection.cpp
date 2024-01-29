@@ -8,7 +8,6 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -22,8 +21,9 @@
 
 namespace mozilla {
 
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSContext, NSSInitContext,
-                                          NSS_ShutdownContext);
+struct NSSInitContextDeleter {
+  void operator()(NSSInitContext* p) { NSS_ShutdownContext(p); }
+};
 
 namespace dom::quota::test {
 
@@ -165,11 +165,11 @@ class TestStorageConnection : public QuotaManagerDependencyFixture {
   static void SetUpTestCase() {
     // Do this only once, do not tear it down per test case.
     if (!sNssContext) {
-      sNssContext =
+      sNssContext.reset(
           NSS_InitContext("", "", "", "", nullptr,
                           NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
                               NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                              NSS_INIT_OPTIMIZESPACE | NSS_INIT_NOROOTINIT);
+                              NSS_INIT_OPTIMIZESPACE | NSS_INIT_NOROOTINIT));
     }
 
     ASSERT_NO_FATAL_FAILURE(InitializeFixture());
@@ -186,7 +186,11 @@ class TestStorageConnection : public QuotaManagerDependencyFixture {
   }
 
  private:
-  inline static ScopedNSSContext sNssContext = ScopedNSSContext{};
+  struct NSSInitContextDeleter {
+    void operator()(NSSInitContext* p) { NSS_ShutdownContext(p); }
+  };
+  inline static std::unique_ptr<NSSInitContext, NSSInitContextDeleter>
+      sNssContext;
 };
 
 TEST_F(TestStorageConnection, BaseVFS) {
