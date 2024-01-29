@@ -51,3 +51,7 @@ testInNewGlobal("([])[Symbol.iterator]().__proto__.__proto__['return'] = () => 1
 testInNewGlobal("Object.prototype['return'] = () => 10;", `assertEq(intact("ObjectPrototypeHasNoReturnProperty"), false)`)
 testInNewGlobal(`assertEq(intact("ArrayIteratorPrototypeHasIteratorProto"), true); Object.setPrototypeOf(( ([])[Symbol.iterator]().__proto__ ), {a:10})`, `assertEq(intact("ArrayIteratorPrototypeHasIteratorProto"), false);`);
 testInNewGlobal(`assertEq(intact("IteratorPrototypeHasObjectProto"), true); Object.setPrototypeOf( ( ([])[Symbol.iterator]().__proto__.__proto__ ), {a:10})`, `assertEq(intact("IteratorPrototypeHasObjectProto"), false);`);
+
+testInNewGlobal(`assertEq(intact("hasSeenObjectEmulateUndefinedFuse"), true); createIsHTMLDDA()`, `assertEq(intact("hasSeenObjectEmulateUndefinedFuse"), false);`);
+// Runtime wide fuse.
+assertEq(intact("hasSeenObjectEmulateUndefinedFuse"), false);

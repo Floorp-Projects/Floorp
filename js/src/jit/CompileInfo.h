@@ -82,7 +82,9 @@ class CompileInfo {
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         anyFormalIsForwarded_(script->anyFormalIsForwarded()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
-        inlineScriptTree_(inlineScriptTree) {
+        inlineScriptTree_(inlineScriptTree),
+        hasSeenObjectEmulateUndefinedFuseIntact_(
+            runtime->hasSeenObjectEmulateUndefinedFuseIntact()) {
     MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOp::LoopHead);
 
     // The function here can flow in from anywhere so look up the canonical
@@ -148,7 +150,8 @@ class CompileInfo {
         anyFormalIsForwarded_(false),
         inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false),
-        funNeedsSomeEnvironmentObject_(false) {
+        funNeedsSomeEnvironmentObject_(false),
+        hasSeenObjectEmulateUndefinedFuseIntact_(false) {
     nimplicit_ = 0;
     nargs_ = 0;
     nlocals_ = nlocals;
@@ -341,6 +344,10 @@ class CompileInfo {
 
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
 
+  bool hasSeenObjectEmulateUndefinedFuseIntact() const {
+    return hasSeenObjectEmulateUndefinedFuseIntact_;
+  }
+
  private:
   unsigned nimplicit_;
   unsigned nargs_;
@@ -374,6 +381,8 @@ class CompileInfo {
   // that the environment chain is not easy to reconstruct.
   bool needsBodyEnvironmentObject_;
   bool funNeedsSomeEnvironmentObject_;
+
+  bool hasSeenObjectEmulateUndefinedFuseIntact_;
 };
 
 }  // namespace jit

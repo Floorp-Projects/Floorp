@@ -250,7 +250,8 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
   void finalize(JS::GCContext* gcx) {}
 
-  BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto);
+  BaseShape(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
+            TaggedProto proto);
 
   /* Not defined: BaseShapes must not be stack allocated. */
   ~BaseShape() = delete;

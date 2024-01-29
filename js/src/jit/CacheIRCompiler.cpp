@@ -7464,6 +7464,7 @@ bool CacheIRCompiler::emitCompareNullUndefinedResult(JSOp op, bool isUndefined,
   AutoOutputRegister output(*this);
   ValueOperand input = allocator.useValueRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
 
   if (IsStrictEqualityOp(op)) {
     if (isUndefined) {
@@ -7500,7 +7501,7 @@ bool CacheIRCompiler::emitCompareNullUndefinedResult(JSOp op, bool isUndefined,
       ScratchTagScopeRelease _(&tag);
 
       masm.unboxObject(input, scratch);
-      masm.branchIfObjectEmulatesUndefined(scratch, scratch, failure->label(),
+      masm.branchIfObjectEmulatesUndefined(scratch, scratch2, failure->label(),
                                            &nullOrLikeUndefined);
       masm.jump(&notNullOrLikeUndefined);
     }

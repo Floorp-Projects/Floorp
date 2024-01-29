@@ -86,6 +86,9 @@ class CompileRuntime {
   const void* addressOfStringToAtomCache();
   const void* addressOfLastBufferedWholeCell();
 
+  bool hasSeenObjectEmulateUndefinedFuseIntact();
+  const void* addressOfHasSeenObjectEmulateUndefinedFuse();
+
 #ifdef DEBUG
   const void* addressOfIonBailAfterCounter();
 #endif
