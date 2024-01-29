@@ -1985,8 +1985,8 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::PlainObject:
       MOZ_ASSERT(obj->is<PlainObject>());
       break;
-    case GuardClassKind::ArrayBuffer:
-      MOZ_ASSERT(obj->is<ArrayBufferObject>());
+    case GuardClassKind::FixedLengthArrayBuffer:
+      MOZ_ASSERT(obj->is<FixedLengthArrayBufferObject>());
       break;
     case GuardClassKind::SharedArrayBuffer:
       MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
@@ -2226,6 +2226,11 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
     return AttachDecision::NoAction;
   }
   auto* buf = &obj->as<ArrayBufferObjectMaybeShared>();
+
+  // TODO: Support resizable buffers. (bug 1842999)
+  if (buf->isResizable()) {
+    return AttachDecision::NoAction;
+  }
 
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
@@ -6855,6 +6860,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachGuardToClass(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachGuardToArrayBuffer() {
+  // TODO: Support resizable ArrayBuffers (bug 1842999), for now simply
+  // pass through to tryAttachGuardToClass which guards on
+  // FixedLengthArrayBufferObject.
+  return tryAttachGuardToClass(InlinableNative::IntrinsicGuardToArrayBuffer);
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
     const JSClass* clasp, bool isPossiblyWrapped) {
   // Self-hosted code calls this with an object argument.
@@ -10160,6 +10172,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength(
 
   auto* buffer = &args_[0].toObject().as<ArrayBufferObject>();
 
+  // TODO: Support resizable buffers. (bug 1842999)
+  if (buffer->isResizable()) {
+    return AttachDecision::NoAction;
+  }
+
   // Initialize the input operand.
   initializeInputOperand();
 
@@ -10521,6 +10538,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
   if (args_[0].isObject() && args_[0].toObject().is<ProxyObject>()) {
     return AttachDecision::NoAction;
   }
+  if (args_[0].isObject() &&
+      args_[0].toObject().is<ResizableArrayBufferObject>()) {
+    return AttachDecision::NoAction;
+  }
 
 #ifdef JS_CODEGEN_X86
   // Unfortunately NewTypedArrayFromArrayBufferResult needs more registers than
@@ -10563,8 +10584,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
 
     if (obj->is<ArrayBufferObjectMaybeShared>()) {
       // From ArrayBuffer.
-      if (obj->is<ArrayBufferObject>()) {
-        writer.guardClass(objId, GuardClassKind::ArrayBuffer);
+      if (obj->is<FixedLengthArrayBufferObject>()) {
+        writer.guardClass(objId, GuardClassKind::FixedLengthArrayBuffer);
       } else {
         MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
         writer.guardClass(objId, GuardClassKind::SharedArrayBuffer);
@@ -11469,7 +11490,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
 
     // ArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return tryAttachGuardToClass(native);
+      return tryAttachGuardToArrayBuffer();
     case InlinableNative::IntrinsicArrayBufferByteLength:
       return tryAttachArrayBufferByteLength(/* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:

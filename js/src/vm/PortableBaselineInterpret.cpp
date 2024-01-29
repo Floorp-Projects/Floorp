@@ -692,8 +692,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
-      case GuardClassKind::ArrayBuffer:
-        if (object->getClass() != &ArrayBufferObject::class_) {
+      case GuardClassKind::FixedLengthArrayBuffer:
+        if (object->getClass() != &FixedLengthArrayBufferObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
