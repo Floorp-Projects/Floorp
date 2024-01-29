@@ -80,19 +80,24 @@ already_AddRefed<Performance> Performance::CreateForWorker(
 already_AddRefed<Performance> Performance::Get(JSContext* aCx,
                                                nsIGlobalObject* aGlobal) {
   RefPtr<Performance> performance;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
-  if (window) {
-    performance = window->GetPerformance();
-  } else {
-    const WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    if (!workerPrivate) {
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+    if (!window) {
       return nullptr;
     }
 
-    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
-    MOZ_ASSERT(scope);
-    performance = scope->GetPerformance();
+    performance = window->GetPerformance();
+    return performance.forget();
   }
+
+  const WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return nullptr;
+  }
+
+  WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+  MOZ_ASSERT(scope);
+  performance = scope->GetPerformance();
 
   return performance.forget();
 }
