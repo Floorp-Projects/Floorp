@@ -1470,22 +1470,46 @@ impl Animate for ComputedRotate {
                     return Ok(Rotate::Rotate3D(x, y, z, fa.animate(&ta, procedure)?));
                 }
 
-                // If the normalized vectors are not equal and both rotation angles are non-zero
-                // the transform functions get converted into 4x4 matrices first and interpolated
-                // as defined in section Interpolation of Matrices afterwards. However, per the
-                // spec issue [1], we prefer to converting the rotate3D into quaternion vectors
-                // directly, and then apply Slerp algorithm.
-                //
-                // Both ways should be identical, and converting rotate3D into quaternion vectors
-                // directly can avoid redundant math operations, e.g. the generation of the
-                // equivalent matrix3D and the unnecessary decomposition parts of translation,
-                // scale, skew, and persepctive in the matrix3D.
-                //
-                // [1] https://github.com/w3c/csswg-drafts/issues/9278
-                let fq = Quaternion::from_direction_and_angle(&fv, fa.radians64());
-                let tq = Quaternion::from_direction_and_angle(&tv, ta.radians64());
+                // Slerp algorithm doesn't work well for Procedure::Add, which makes both
+                // |this_weight| and |other_weight| be 1.0, and this may make the cosine value of
+                // the angle be out of the range (i.e. the 4th component of the quaternion vector).
+                // (See Quaternion::animate() for more details about the Slerp formula.)
+                // Therefore, if the cosine value is out of range, we get an NaN after applying
+                // acos() on it, and so the result is invalid.
+                // Note: This is specialized for `rotate` property. The addition of `transform`
+                // property has been handled in `ComputedTransform::animate()` by merging two list
+                // directly.
+                let rq = if procedure == Procedure::Add {
+                    // In Transform::animate(), it converts two rotations into transform matrices,
+                    // and do matrix multiplication. This match the spec definition for the
+                    // addition.
+                    // https://drafts.csswg.org/css-transforms-2/#combining-transform-lists
+                    let f = ComputedTransformOperation::Rotate3D(fx, fy, fz, fa);
+                    let t = ComputedTransformOperation::Rotate3D(tx, ty, tz, ta);
+                    let v =
+                        Transform(vec![f].into()).animate(&Transform(vec![t].into()), procedure)?;
+                    let (m, _) = v.to_transform_3d_matrix(None)?;
+                    // Decompose the matrix and retrive the quaternion vector.
+                    decompose_3d_matrix(Matrix3D::from(m))?.quaternion
+                } else {
+                    // If the normalized vectors are not equal and both rotation angles are
+                    // non-zero the transform functions get converted into 4x4 matrices first and
+                    // interpolated as defined in section Interpolation of Matrices afterwards.
+                    // However, per the spec issue [1], we prefer to converting the rotate3D into
+                    // quaternion vectors directly, and then apply Slerp algorithm.
+                    //
+                    // Both ways should be identical, and converting rotate3D into quaternion
+                    // vectors directly can avoid redundant math operations, e.g. the generation of
+                    // the equivalent matrix3D and the unnecessary decomposition parts of
+                    // translation, scale, skew, and persepctive in the matrix3D.
+                    //
+                    // [1] https://github.com/w3c/csswg-drafts/issues/9278
+                    let fq = Quaternion::from_direction_and_angle(&fv, fa.radians64());
+                    let tq = Quaternion::from_direction_and_angle(&tv, ta.radians64());
+                    Quaternion::animate(&fq, &tq, procedure)?
+                };
 
-                let rq = Quaternion::animate(&fq, &tq, procedure)?;
+                debug_assert!(rq.3 <= 1.0 && rq.3 >= -1.0, "Invalid cosine value");
                 let (x, y, z, angle) = transform::get_normalized_vector_and_angle(
                     rq.0 as f32,
                     rq.1 as f32,

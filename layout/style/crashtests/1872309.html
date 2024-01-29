@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  let a = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")
+  document.documentElement.appendChild(a)
+  for (let i = 0; i < 10; i++) {
+    a.animate(
+      {"rotate": ["-45155266.58grad", "1739581432.45grad 41467 1000 -25020", "none"]},
+      {"composite": "add", "delay": 10, "iterationStart": 0.25}
+    )
+  }
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove('reftest-wait');
+  });
+})
+</script>
+</html>
