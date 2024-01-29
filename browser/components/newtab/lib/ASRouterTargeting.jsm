@@ -39,7 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
+  ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {

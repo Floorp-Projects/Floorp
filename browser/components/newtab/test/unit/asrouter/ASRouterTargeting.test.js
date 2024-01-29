@@ -5,7 +5,7 @@ import {
   QueryCache,
 } from "lib/ASRouterTargeting.jsm";
 import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
-import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
+import { ASRouterPreferences } from "asroutermodules/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
 // Note that tests for the ASRouterTargeting environment can be found in

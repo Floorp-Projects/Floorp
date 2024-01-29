@@ -11,6 +11,7 @@ with Files("**"):
 
 EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterDefaultConfig.jsm",
+    "modules/ASRouterPreferences.jsm",
     "modules/ASRouterTriggerListeners.jsm",
 ]
 

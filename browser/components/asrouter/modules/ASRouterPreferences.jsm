@@ -51,6 +51,7 @@ class _ASRouterPreferences {
 
     ChromeUtils.defineLazyGetter(this, "console", () => {
       let { ConsoleAPI } = ChromeUtils.importESModule(
+        /* eslint-disable mozilla/use-console-createInstance */
         "resource://gre/modules/Console.sys.mjs"
       );
       let consoleOptions = {

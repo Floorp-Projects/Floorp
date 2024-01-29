@@ -2,7 +2,7 @@ import {
   _ASRouterPreferences,
   ASRouterPreferences as ASRouterPreferencesSingleton,
   TEST_PROVIDERS,
-} from "lib/ASRouterPreferences.jsm";
+} from "asroutermodules/ASRouterPreferences.jsm";
 const FAKE_PROVIDERS = [{ id: "foo" }, { id: "bar" }];
 
 const PROVIDER_PREF_BRANCH =
