@@ -103,12 +103,6 @@ module.exports = function (config) {
               functions: 9,
               branches: 0,
             },
-            "lib/ASRouterParentProcessMessageHandler.jsm": {
-              statements: 98,
-              lines: 98,
-              functions: 100,
-              branches: 88,
-            },
             "content-src/lib/init-store.js": {
               statements: 98,
               lines: 98,
