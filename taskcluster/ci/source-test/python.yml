@@ -452,19 +452,19 @@ fxms-schemas:
         using: run-task
         cwd: '{checkout}'
         command: >
-            cd browser/components/newtab/content-src/asrouter/schemas &&
+            cd browser/components/asrouter/content-src/schemas &&
             env LD_LIBRARY_PATH=${MOZ_FETCHES_DIR}/firefox \
                 ${MOZ_FETCHES_DIR}/bin/xpcshell \
                     -g ${MOZ_FETCHES_DIR}/firefox \
                     -a ${MOZ_FETCHES_DIR}/firefox/browser \
                     extract-test-corpus.js
-            ../../../../../../mach python -- make-schemas.py --check
+            ../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
+            - 'browser/components/asrouter/content-src/schemas/extract-test-corpus.js'
+            - 'browser/components/asrouter/content-src/schemas/make-schemas.py'
+            - 'browser/components/asrouter/content-src/**/*.schema.json'
             - 'browser/components/asrouter/modules/CFRMessageProvider.sys.mjs'
-            - 'browser/components/newtab/content-src/asrouter/schemas/extract-test-corpus.js'
-            - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'
-            - 'browser/components/newtab/content-src/**/*.schema.json'
             - 'browser/components/asrouter/modules/OnboardingMessageProvider.jsm'
             - 'browser/components/asrouter/modules/PanelTestProvider.sys.mjs'
 
