@@ -14,7 +14,7 @@
           let failed = JSON.parse(frame.contentDocument.title);
           ok(failed instanceof Array, "Frame's title is expected to be a JSON representation of the array of failed conditions.");
           is(failed.length, 0, "No scripts should run in sandboxed iframe document created by XSLT.");
-          for (desc of failed) {
+          for (let desc of failed) {
             info(desc);
           }
           resolve();

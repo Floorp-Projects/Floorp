@@ -514,7 +514,6 @@ module.exports = {
         "dom/websocket/tests/**",
         "dom/workers/test/**",
         "dom/worklet/tests/**",
-        "dom/xslt/tests/**",
       ],
       rules: {
         "no-undef": "off",
