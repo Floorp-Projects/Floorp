@@ -1313,3 +1313,31 @@ add_task(async function testClearingOptionsTelemetry() {
     `Expected ${telemetryObject} to be the same as ${expectedObject}`
   );
 });
+
+add_task(async function testCheckboxStatesAfterMigration() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.clearOnShutdown.history", false],
+      ["privacy.clearOnShutdown.formdata", true],
+      ["privacy.clearOnShutdown.cookies", true],
+      ["privacy.clearOnShutdown.offlineApps", false],
+      ["privacy.clearOnShutdown.sessions", false],
+      ["privacy.clearOnShutdown.siteSettings", false],
+      ["privacy.clearOnShutdown.cache", true],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
+      ["privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs", false],
+    ],
+  });
+
+  let dh = new DialogHelper();
+  dh.setMode("clearOnShutdown");
+  dh.onload = function () {
+    this.validateCheckbox("cookiesAndStorage", true);
+    this.validateCheckbox("historyFormDataAndDownloads", false);
+    this.validateCheckbox("cache", true);
+    this.validateCheckbox("siteSettings", false);
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
