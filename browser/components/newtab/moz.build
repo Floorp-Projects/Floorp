@@ -28,7 +28,6 @@ TESTING_JS_MODULES += [
 ]
 
 SPHINX_TREES["docs"] = "docs"
-SPHINX_TREES["content-src/asrouter/docs"] = "content-src/asrouter/docs"
 
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/xpcshell.toml",

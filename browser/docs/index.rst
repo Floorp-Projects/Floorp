@@ -19,7 +19,7 @@ This is the nascent documentation of the Firefox front-end code.
    components/migration/docs/index
    components/pagedata/docs/index
    places/index
-   components/newtab/content-src/asrouter/docs/index
+   components/asrouter/docs/index
    search/index
    base/tabbrowser/index
    touchbar/index
