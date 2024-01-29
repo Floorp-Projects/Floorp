@@ -10,10 +10,10 @@ Messages shown inside `about:privatebrowsing` (incognito) content page. This mes
 
 ### Via the dev tools:
 1. In the search tab go to `about:config`, set `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled` to `true`
-2. Open a new tab, in the search tab go to `about:newtab#devtools`
+2. Open a new tab, in the search tab go to `about:asrouter`
 3. On the left navigation, click on `Private Browsing`
 4. This shows all example messages developed for `about:privatebrowsing` messaging surface
-5. You can directly modify the message in the text area with your changes or by pasting your custom message JSON. Ensure that all required properties are covered according to the [Private Browsing Schema](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json)
+5. You can directly modify the message in the text area with your changes or by pasting your custom message JSON. Ensure that all required properties are covered according to the [Private Browsing Schema](https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/PBNewtab/NewtabPromoMessage.schema.json)
 6. To view message in private browsing window, click the circle to select respective message. Then hit the blue `Open a Private Browsing Window` at the top of the screen. This opens new private window with promotion and info section updated with custom message.
 
 ![Circle](./selected-PB.png)

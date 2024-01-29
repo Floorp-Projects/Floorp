@@ -6,7 +6,7 @@ Docs
 
 More information about `Messaging System`__.
 
-.. __: /browser/components/newtab/content-src/asrouter/docs
+.. __: /browser/components/asrouter/docs
 
 Messages
 --------
@@ -67,8 +67,8 @@ To add a new message type to the Messaging Experiments schema:
 
    .. code-block:: shell
 
-      cd browser/components/newtab/content-src/asrouter/schemas/
-      ../../../../../../mach python make-schemas.py
+      cd browser/components/asrouter/content-src/schemas/
+      ../../../../../mach python make-schemas.py
 
 5. Commit the results.
 
@@ -77,8 +77,8 @@ schema:
 
 .. code-block:: shell
 
-   cd browser/components/newtab/content-src/asrouter/schemas/
-   ../../../../../../mach python make-schemas.py
+   cd browser/components/asrouter/content-src/schemas/
+   ../../../../../mach python make-schemas.py
 
 If you do not, the `Firefox MS Schemas CI job <make_schemas_check_>`_ will fail.
 
@@ -88,9 +88,9 @@ You can run this locally via:
 
 .. code-block:: shell
 
-   cd browser/components/newtab/content-src/asrouter/schemas/
-   ../../../../../../mach xpcshell extract-test-corpus.js
-   ../../../../../../mach python make-schemas.py --check
+   cd browser/components/asrouter/content-src/schemas/
+   ../../../../../mach xpcshell extract-test-corpus.js
+   ../../../../../mach python make-schemas.py --check
 
 This test will re-generate the schema and compare it to
 ``MessagingExperiment.schema.json``. If there is a difference, it will fail.
@@ -159,28 +159,28 @@ Triggers and actions
   SpecialMessageActionSchemas/index
   TriggerActionSchemas/index
 
-..  _cfr_urlbar_chiclet_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/CFRUrlbarChiclet.schema.json
-..  _extension_doorhanger_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json
-..  _infobar_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/InfoBar.schema.json
-..  _spotlight_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json
-..  _toast_notification_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/ToastNotification/ToastNotification.schema.json
-..  _toolbar_badge_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json
-..  _update_action_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json
-..  _whats_new_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json
-..  _protections_panel_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/ProtectionsPanelMessage.schema.json
-..  _pbnewtab_promo_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
-..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json
-..  _common_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/FxMSCommon.schema.json
+..  _cfr_urlbar_chiclet_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/CFR/templates/CFRUrlbarChiclet.schema.json
+..  _extension_doorhanger_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/CFR/templates/ExtensionDoorhanger.schema.json
+..  _infobar_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/CFR/templates/InfoBar.schema.json
+..  _spotlight_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/Spotlight.schema.json
+..  _toast_notification_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/ToastNotification/ToastNotification.schema.json
+..  _toolbar_badge_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json
+..  _update_action_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/UpdateAction.schema.json
+..  _whats_new_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json
+..  _protections_panel_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/ProtectionsPanelMessage.schema.json
+..  _pbnewtab_promo_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/PBNewtab/NewtabPromoMessage.schema.json
+..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json
+..  _common_schema: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/schemas/FxMSCommon.schema.json
 
-..  _make_schemas_script: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/make-schemas.py
+..  _make_schemas_script: https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/schemas/make-schemas.py
 ..  _jsonschema_bundling: https://json-schema.org/understanding-json-schema/structuring.html#bundling
 ..  _make_schemas_check: https://searchfox.org/mozilla-central/source/taskcluster/ci/source-test/python.yml#425-438
 
 ..  _Experimenter: https://experimenter.info
 
-..  _CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/lib/CFRMessageProvider.jsm
-..  _PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/lib/PanelTestProvider.jsm
-..  _OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/lib/OnboardingMessageProvider.jsm
-..  _Test_CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/test/xpcshell/test_CFMessageProvider.js
-..  _Test_OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/test/xpcshell/test_OnboardingMessageProvider.js
-..  _Test_PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/newtab/test/xpcshell/test_PanelTestProvider.js
+..  _CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/CFRMessageProvider.jsm
+..  _PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/PanelTestProvider.jsm
+..  _OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/OnboardingMessageProvider.jsm
+..  _Test_CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_CFMessageProvider.js
+..  _Test_OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_OnboardingMessageProvider.js
+..  _Test_PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_PanelTestProvider.js

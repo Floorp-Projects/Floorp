@@ -16,11 +16,11 @@ For new messages, [Feature Callout](./feature-callout.md) is recommended instead
 
 ### Via the dev tools:
 1. Go to `about:config`, set pref `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled` to `true`
-2. Open a new tab and go to `about:newtab#devtools` in the url bar
+2. Open a new tab and go to `about:asrouter` in the url bar
 3. In devtools Messages section, select and show messages from `cfr` as provider
 4. You should see example JSON messages with `"template": "cfr_doorhanger"` or `"template": "milestone_message"`. Clicking `Show` next to CFR message should show respective message UI
 5. You can directly modify the message in the text area with your changes or by pasting your custom message JSON. Clicking `Modify` shows your new updated CFR message.
-6. Ensure that all required properties are covered according to the [Doorhanger Schema](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json)
+6. Ensure that all required properties are covered according to the [Doorhanger Schema](https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/CFR/templates/ExtensionDoorhanger.schema.json)
 7. Clicking `Share`, copies link to clipboard that can be pasted in the url bar to preview doorhanger UI in browser and can be shared to get feedback from your team.
 - **Note:** Some messages will not be shown when testing multiple CFRs due to overlap, ensure you close the previous message before testing another
 

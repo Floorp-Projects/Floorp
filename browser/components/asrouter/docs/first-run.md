@@ -31,7 +31,7 @@ Note that this uses [attribution data](https://docs.google.com/document/d/1zB5zw
 
 Testing instructions:
 - Set pref browser.newtabpage.activity-stream.asrouter.devtoolsEnabled as true
-- Open about:newtab#devtools
+- Open about:asrouter
 - Click Targeting -> Attribution -> Force Attribution
 - Open about:welcome, should display RTAMO page
 
