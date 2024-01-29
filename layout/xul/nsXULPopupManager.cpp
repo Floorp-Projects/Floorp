@@ -213,10 +213,11 @@ void nsXULPopupManager::AddMenuChainItem(UniquePtr<nsMenuChainItem> aItem) {
   PopupType popupType = aItem->Frame()->GetPopupType();
   if (StaticPrefs::layout_cursor_disable_for_popups() &&
       popupType != PopupType::Tooltip) {
-    nsPresContext* rootPresContext =
-        aItem->Frame()->PresContext()->GetRootPresContext();
-    if (nsCOMPtr<nsIWidget> rootWidget = rootPresContext->GetRootWidget()) {
-      rootWidget->SetCustomCursorAllowed(false);
+    if (nsPresContext* rootPC =
+            aItem->Frame()->PresContext()->GetRootPresContext()) {
+      if (nsCOMPtr<nsIWidget> rootWidget = rootPC->GetRootWidget()) {
+        rootWidget->SetCustomCursorAllowed(false);
+      }
     }
   }
 
@@ -234,17 +235,15 @@ void nsXULPopupManager::AddMenuChainItem(UniquePtr<nsMenuChainItem> aItem) {
 }
 
 void nsXULPopupManager::RemoveMenuChainItem(nsMenuChainItem* aItem) {
-  nsPresContext* presContext =
-      aItem->Frame()->PresContext()->GetRootPresContext();
+  nsPresContext* rootPC = aItem->Frame()->PresContext()->GetRootPresContext();
   auto matcher = [&](nsMenuChainItem* aChainItem) -> bool {
     return aChainItem != aItem &&
-           presContext ==
-               aChainItem->Frame()->PresContext()->GetRootPresContext();
+           rootPC == aChainItem->Frame()->PresContext()->GetRootPresContext();
   };
-  nsCOMPtr<nsIWidget> rootWidget =
-      presContext->GetRootPresContext()->GetRootWidget();
-  if (!FirstMatchingPopup(matcher) && rootWidget) {
-    rootWidget->SetCustomCursorAllowed(true);
+  if (rootPC && !FirstMatchingPopup(matcher)) {
+    if (nsCOMPtr<nsIWidget> rootWidget = rootPC->GetRootWidget()) {
+      rootWidget->SetCustomCursorAllowed(true);
+    }
   }
 
   auto parent = aItem->Detach();
