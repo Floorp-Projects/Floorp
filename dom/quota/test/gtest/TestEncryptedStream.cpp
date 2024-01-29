@@ -23,7 +23,6 @@
 #include "mozilla/FixedBufferOutputStream.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SafeRefPtr.h"
@@ -229,12 +228,6 @@ NS_IMETHODIMP ArrayBufferInputStream::Clone(nsIInputStream** _retval) {
 }
 }  // namespace mozilla::dom::quota
 
-namespace mozilla {
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSContext, NSSInitContext,
-                                          NSS_ShutdownContext);
-
-}  // namespace mozilla
-
 using namespace mozilla;
 using namespace mozilla::dom::quota;
 
@@ -243,18 +236,22 @@ class DOM_Quota_EncryptedStream : public ::testing::Test {
   static void SetUpTestCase() {
     // Do this only once, do not tear it down per test case.
     if (!sNssContext) {
-      sNssContext =
+      sNssContext.reset(
           NSS_InitContext("", "", "", "", nullptr,
                           NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
                               NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                              NSS_INIT_OPTIMIZESPACE | NSS_INIT_NOROOTINIT);
+                              NSS_INIT_OPTIMIZESPACE | NSS_INIT_NOROOTINIT));
     }
   }
 
   static void TearDownTestCase() { sNssContext = nullptr; }
 
  private:
-  inline static ScopedNSSContext sNssContext = ScopedNSSContext{};
+  struct NSSInitContextDeleter {
+    void operator()(NSSInitContext* p) { NSS_ShutdownContext(p); }
+  };
+  inline static std::unique_ptr<NSSInitContext, NSSInitContextDeleter>
+      sNssContext;
 };
 
 enum struct FlushMode { AfterEachChunk, Never };
