@@ -245,11 +245,14 @@ module.exports = function (config) {
       },
       // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.jsm"
       resolve: {
-        extensions: [".js", ".jsx"],
+        extensions: [".js", ".jsx", ".jsm"],
         modules: [PATHS.moduleResolveDirectory, "node_modules"],
         fallback: {
           stream: require.resolve("stream-browserify"),
           buffer: require.resolve("buffer"),
+        },
+        alias: {
+          asroutermodules: path.join(__dirname, "../asrouter/modules"),
         },
       },
       plugins: [
@@ -326,7 +329,6 @@ module.exports = function (config) {
               path.resolve("test"),
               path.resolve("vendor"),
               path.resolve("lib/ASRouterTargeting.jsm"),
-              path.resolve("lib/ASRouterTriggerListeners.jsm"),
               path.resolve("lib/OnboardingMessageProvider.jsm"),
               path.resolve("lib/CFRMessageProvider.sys.mjs"),
               path.resolve("lib/CFRPageActions.jsm"),

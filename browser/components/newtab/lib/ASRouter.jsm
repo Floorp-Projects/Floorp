@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TARGETING_PREFERENCES:
     "resource://activity-stream/lib/ASRouterPreferences.jsm",
   ASRouterTriggerListeners:
-    "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
+    "resource:///modules/asrouter/ASRouterTriggerListeners.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

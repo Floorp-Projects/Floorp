@@ -114,7 +114,4 @@ skip-if = [
 
 ["browser_topsites_section.js"]
 
-["browser_trigger_listeners.js"]
-https_first_disabled = true
-
 ["browser_trigger_messagesLoaded.js"]
