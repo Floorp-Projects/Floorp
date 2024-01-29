@@ -164,6 +164,46 @@ jobs:
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
 
+    android-aarch64-shippable/opt:
+        description: "Android 5.0 Aarch64 Profile Generation"
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            product: mobile
+            job-name: android-aarch64-profile
+        treeherder:
+            platform: android-5-0-aarch64/pgo
+        worker-type: b-linux-kvm-gcp
+        worker:
+            chain-of-trust: true
+            max-run-time: 2700
+            kvm: true  # for access to /dev/kvm for hw accel in the emulator
+            docker-image: {in-tree: ubuntu1804-test}
+            env:
+                WORKING_DIR: "/builds/worker"
+                MOZHARNESS_PATH: "/builds/worker/checkouts/gecko/testing/mozharness"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
+        run:
+            using: mozharness
+            job-script: taskcluster/scripts/tester/test-linux.sh
+            script: android_emulator_pgo.py
+            tooltool-downloads: internal
+            options: [installer-path=/builds/worker/fetches/geckoview-test_runner.apk]
+            config:
+                - android/android_common.py
+                - android/android-aarch64-profile-generation.py
+                - android/android_pgo.py
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-minidump-stackwalk
+                - android-sdk-linux
+                - android31-system-image-x86_64-linux
+                - android31-avd-x86_64-linux
+
     win32-shippable/opt:
         description: "Win32 Profile Generation"
         shipping-phase: build
