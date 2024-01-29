@@ -763,6 +763,39 @@ add_task(async function testAcceptButtonDisabled() {
 });
 
 /**
+ * Tests to see if the warning box is hidden when opened in the clear on shutdown context
+ */
+add_task(async function testWarningBoxInClearOnShutdown() {
+  let dh = new DialogHelper();
+  dh.setMode("clearSiteData");
+  dh.onload = function () {
+    this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
+    is(
+      BrowserTestUtils.isVisible(this.getWarningPanel()),
+      true,
+      `warning panel should be visible`
+    );
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  dh = new DialogHelper();
+  dh.setMode("clearOnShutdown");
+  dh.onload = function () {
+    is(
+      BrowserTestUtils.isVisible(this.getWarningPanel()),
+      false,
+      `warning panel should not be visible`
+    );
+
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
+
+/**
  * Checks if clearing history and downloads for the simple timespan
  * behaves as expected
  */
