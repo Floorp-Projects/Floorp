@@ -898,6 +898,8 @@
   cursor: pointer;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
+  /* Prevent line break when copy/pasting an entire rule */
+  user-select: auto;
 }
 
 .ruleview-selectorhighlighter:hover {
