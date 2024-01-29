@@ -465,7 +465,7 @@ fxms-schemas:
             - 'browser/components/newtab/content-src/asrouter/schemas/extract-test-corpus.js'
             - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'
             - 'browser/components/newtab/content-src/**/*.schema.json'
-            - 'browser/components/newtab/lib/OnboardingMessageProvider.jsm'
+            - 'browser/components/asrouter/modules/OnboardingMessageProvider.jsm'
             - 'browser/components/newtab/lib/PanelTestProvider.sys.mjs'
 
 condprof:

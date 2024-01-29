@@ -100,7 +100,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource:///modules/asrouter/ASRouterDefaultConfig.jsm",
   ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
   OnboardingMessageProvider:
-    "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
+    "resource:///modules/asrouter/OnboardingMessageProvider.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {
