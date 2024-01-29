@@ -453,9 +453,6 @@ module.exports = {
         "dom/websocket/tests/**",
         "dom/workers/test/**",
         "dom/worklet/tests/**",
-        "dom/xml/test/**",
-        "dom/xslt/tests/**",
-        "dom/xul/test/**",
       ],
       rules: {
         "mozilla/avoid-removeChild": "off",

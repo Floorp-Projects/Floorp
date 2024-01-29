@@ -121,16 +121,16 @@
   }
 
   function testParameter(value) {
-    let processor = new XSLTProcessor();
+    let testProcessor = new XSLTProcessor();
 
-    processor.setParameter(null, "test", value);
-    let parameter = processor.getParameter(null, "test");
+    testProcessor.setParameter(null, "test", value);
+    let parameter = testProcessor.getParameter(null, "test");
 
     checkParameter(value, parameter);
 
-    processor.importStylesheet(styleDoc);
+    testProcessor.importStylesheet(styleDoc);
 
-    let fragment = processor.transformToFragment(sourceDoc, document);
+    let fragment = testProcessor.transformToFragment(sourceDoc, document);
 
     is(
       fragment.getElementById("result").textContent,

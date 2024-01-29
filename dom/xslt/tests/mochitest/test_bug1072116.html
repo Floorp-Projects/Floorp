@@ -22,14 +22,14 @@ var attr = document.createAttribute("c");
 
 var xpathExpr = document.createExpression('a', null);
 
-var status = false;
+let isAlive = false;
 try {
   xpathExpr.evaluate(attr, null, null, null, null);
 } catch(e) {
-  status = true;
+  isAlive = true;
 }
 
-ok(status, "Still alive \\o/");
+ok(isAlive, "Still alive \\o/");
 
 </script>
 </pre>
