@@ -7531,6 +7531,21 @@ void MacroAssembler::branchIfClassIsNotTypedArray(Register clasp,
             notTypedArray);
 }
 
+void MacroAssembler::branchIfClassIsNotFixedLengthTypedArray(
+    Register clasp, Label* notTypedArray) {
+  // Inline implementation of IsFixedLengthTypedArrayClass().
+
+  const auto* firstTypedArrayClass =
+      std::begin(TypedArrayObject::fixedLengthClasses);
+  const auto* lastTypedArrayClass =
+      std::prev(std::end(TypedArrayObject::fixedLengthClasses));
+
+  branchPtr(Assembler::Below, clasp, ImmPtr(firstTypedArrayClass),
+            notTypedArray);
+  branchPtr(Assembler::Above, clasp, ImmPtr(lastTypedArrayClass),
+            notTypedArray);
+}
+
 void MacroAssembler::branchIfHasDetachedArrayBuffer(Register obj, Register temp,
                                                     Label* label) {
   // Inline implementation of ArrayBufferViewObject::hasDetachedBuffer().
