@@ -96,7 +96,7 @@
   REAL(WeakMap, OCLASP(WeakMap))                                            \
   REAL(Map, OCLASP(Map))                                                    \
   REAL(Set, OCLASP(Set))                                                    \
-  REAL(DataView, OCLASP(DataView))                                          \
+  REAL(DataView, OCLASP(FixedLengthDataView))                               \
   REAL(Symbol, OCLASP(Symbol))                                              \
   REAL(ShadowRealm, OCLASP(ShadowRealm))                                    \
   REAL(SharedArrayBuffer, OCLASP(SharedArrayBuffer))                        \

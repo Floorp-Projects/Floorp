@@ -2181,8 +2181,8 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::SharedArrayBuffer:
       clasp = &SharedArrayBufferObject::class_;
       break;
-    case GuardClassKind::DataView:
-      clasp = &DataViewObject::class_;
+    case GuardClassKind::FixedLengthDataView:
+      clasp = &FixedLengthDataViewObject::class_;
       break;
     case GuardClassKind::MappedArguments:
       clasp = &MappedArgumentsObject::class_;
