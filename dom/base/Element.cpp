@@ -978,30 +978,23 @@ static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame) {
       .Size();
 }
 
-int32_t Element::ScrollHeight() {
+nsSize Element::GetScrollSize() {
   nsIFrame* frame;
-  nsIScrollableFrame* sf = GetScrollFrame(&frame);
-  nscoord height;
-  if (sf) {
-    height = sf->GetScrollRange().Height() + sf->GetScrollPortRect().Height();
+  nsSize size;
+  if (nsIScrollableFrame* sf = GetScrollFrame(&frame)) {
+    size = sf->GetScrollRange().Size() + sf->GetScrollPortRect().Size();
   } else {
-    height = GetScrollRectSizeForOverflowVisibleFrame(frame).height;
+    size = GetScrollRectSizeForOverflowVisibleFrame(frame);
   }
+  return size;
+}
 
-  return nsPresContext::AppUnitsToIntCSSPixels(height);
+int32_t Element::ScrollHeight() {
+  return nsPresContext::AppUnitsToIntCSSPixels(GetScrollSize().height);
 }
 
 int32_t Element::ScrollWidth() {
-  nsIFrame* frame;
-  nsIScrollableFrame* sf = GetScrollFrame(&frame);
-  nscoord width;
-  if (sf) {
-    width = sf->GetScrollRange().Width() + sf->GetScrollPortRect().Width();
-  } else {
-    width = GetScrollRectSizeForOverflowVisibleFrame(frame).width;
-  }
-
-  return nsPresContext::AppUnitsToIntCSSPixels(width);
+  return nsPresContext::AppUnitsToIntCSSPixels(GetScrollSize().width);
 }
 
 nsRect Element::GetClientAreaRect() {
@@ -1055,7 +1048,7 @@ nsRect Element::GetClientAreaRect() {
   }
 
   // SVG nodes reach here and just return 0
-  return nsRect(0, 0, 0, 0);
+  return nsRect();
 }
 
 int32_t Element::ScreenX() {
