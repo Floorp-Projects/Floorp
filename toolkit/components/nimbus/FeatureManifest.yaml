@@ -2189,6 +2189,12 @@ cookieBannerHandling:
         branch: default
         pref: browser.promo.cookiebanners.enabled
       description: Enables the cookie banner promo in about:privatebrowsing.
+    enableDesktopFeatureCallout:
+      type: boolean
+      setPref:
+        branch: default
+        pref: cookiebanners.ui.desktop.showCallout
+      description: Enables the cookie banner feature callout on desktop.
 
 backgroundThreads:
   description: Prefs to control MacOS thread priorities for power savings.
