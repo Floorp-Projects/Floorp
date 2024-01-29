@@ -9,6 +9,7 @@ const ROLE_ANIMATION = nsIAccessibleRole.ROLE_ANIMATION;
 const ROLE_APPLICATION = nsIAccessibleRole.ROLE_APPLICATION;
 const ROLE_APP_ROOT = nsIAccessibleRole.ROLE_APP_ROOT;
 const ROLE_BLOCKQUOTE = nsIAccessibleRole.ROLE_BLOCKQUOTE;
+const ROLE_BUTTONMENU = nsIAccessibleRole.ROLE_BUTTONMENU;
 const ROLE_CANVAS = nsIAccessibleRole.ROLE_CANVAS;
 const ROLE_CAPTION = nsIAccessibleRole.ROLE_CAPTION;
 const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
