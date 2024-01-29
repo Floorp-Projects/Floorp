@@ -5230,6 +5230,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void typedArrayElementSize(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
+  void branchIfClassIsNotFixedLengthTypedArray(Register clasp,
+                                               Label* notTypedArray);
 
   void branchIfHasDetachedArrayBuffer(Register obj, Register temp,
                                       Label* label);

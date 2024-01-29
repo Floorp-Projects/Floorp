@@ -1715,6 +1715,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(GuardIsNotProxy)
   CACHEOP_CASE_UNIMPL(GuardIsNotArrayBufferMaybeShared)
   CACHEOP_CASE_UNIMPL(GuardIsTypedArray)
+  CACHEOP_CASE_UNIMPL(GuardIsFixedLengthTypedArray)
   CACHEOP_CASE_UNIMPL(GuardHasProxyHandler)
   CACHEOP_CASE_UNIMPL(GuardIsNotDOMProxy)
   CACHEOP_CASE_UNIMPL(GuardObjectIdentity)

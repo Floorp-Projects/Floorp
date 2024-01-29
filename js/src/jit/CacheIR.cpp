@@ -3892,7 +3892,7 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  writer.guardIsTypedArray(objId);
+  writer.guardIsFixedLengthTypedArray(objId);
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(idVal_, keyId, /* supportOOB = */ true);
   writer.loadTypedArrayElementExistsResult(objId, intPtrIndexId);
@@ -10109,6 +10109,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
+  writer.guardIsFixedLengthTypedArray(objArgId);
   if (tarr->byteOffset() <= INT32_MAX) {
     writer.arrayBufferViewByteOffsetInt32Result(objArgId);
   } else {
@@ -10173,6 +10174,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
     writer.guardIsNotProxy(objArgId);
   }
 
+  writer.guardIsFixedLengthTypedArray(objArgId);
   if (tarr->length() <= INT32_MAX) {
     writer.loadArrayBufferViewLengthInt32Result(objArgId);
   } else {
