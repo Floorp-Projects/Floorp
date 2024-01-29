@@ -357,13 +357,13 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
   AutoSetNewObjectMetadata metadata(cx);
-  Rooted<SharedArrayBufferObject*> obj(
-      cx, NewObjectWithClassProto<SharedArrayBufferObject>(cx, proto));
+  auto* obj =
+      NewObjectWithClassProto<FixedLengthSharedArrayBufferObject>(cx, proto);
   if (!obj) {
     return nullptr;
   }
 
-  MOZ_ASSERT(obj->getClass() == &class_);
+  MOZ_ASSERT(obj->getClass() == &FixedLengthSharedArrayBufferObject::class_);
 
   cx->runtime()->incSABCount();
 
@@ -389,7 +389,8 @@ bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
 }
 
 void SharedArrayBufferObject::dropRawBuffer() {
-  size_t size = SharedArrayMappedSize(isWasm(), byteLength());
+  size_t length = byteLengthOrMaxByteLength();
+  size_t size = SharedArrayMappedSize(isWasm(), length);
   zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), size,
                                           MemoryUse::SharedArrayRawBuffer);
   rawBufferObject()->dropReference();
@@ -428,12 +429,13 @@ void SharedArrayBufferObject::addSizeOfExcludingThis(
   // the refcount goes down). But that's unlikely and hard to avoid, so we
   // just live with the risk.
   const SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
-  size_t owned = buf.byteLength() / buf.rawBufferObject()->refcount();
+  size_t nbytes = buf.byteLengthOrMaxByteLength();
+  size_t owned = nbytes / buf.rawBufferObject()->refcount();
   if (buf.isWasm()) {
     info->objectsNonHeapElementsWasmShared += owned;
     if (runtimeSizes) {
-      size_t ownedGuardPages = (buf.wasmMappedSize() - buf.byteLength()) /
-                               buf.rawBufferObject()->refcount();
+      size_t ownedGuardPages =
+          (buf.wasmMappedSize() - nbytes) / buf.rawBufferObject()->refcount();
       runtimeSizes->wasmGuardPages += ownedGuardPages;
     }
   } else {
@@ -461,8 +463,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
   AutoSetNewObjectMetadata metadata(cx);
-  SharedArrayBufferObject* obj =
-      NewBuiltinClassInstance<SharedArrayBufferObject>(cx);
+  auto* obj = NewBuiltinClassInstance<FixedLengthSharedArrayBufferObject>(cx);
   if (!obj) {
     buffer->dropReference();
     return nullptr;
@@ -499,41 +500,70 @@ static const JSClassOps SharedArrayBufferObjectClassOps = {
     nullptr,                            // trace
 };
 
-static const JSFunctionSpec sharedarrray_functions[] = {JS_FS_END};
+static const JSFunctionSpec sharedarray_functions[] = {
+    JS_FS_END,
+};
 
-static const JSPropertySpec sharedarrray_properties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "$SharedArrayBufferSpecies", 0), JS_PS_END};
+static const JSPropertySpec sharedarray_properties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "$SharedArrayBufferSpecies", 0),
+    JS_PS_END,
+};
 
 static const JSFunctionSpec sharedarray_proto_functions[] = {
-    JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0),
+    JS_FS_END,
+};
 
 static const JSPropertySpec sharedarray_proto_properties[] = {
     JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
     JS_STRING_SYM_PS(toStringTag, "SharedArrayBuffer", JSPROP_READONLY),
-    JS_PS_END};
+    JS_PS_END,
+};
+
+static JSObject* CreateSharedArrayBufferPrototype(JSContext* cx,
+                                                  JSProtoKey key) {
+  return GlobalObject::createBlankPrototype(
+      cx, cx->global(), &SharedArrayBufferObject::protoClass_);
+}
 
 static const ClassSpec SharedArrayBufferObjectClassSpec = {
     GenericCreateConstructor<SharedArrayBufferObject::class_constructor, 1,
                              gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype<SharedArrayBufferObject>,
-    sharedarrray_functions,
-    sharedarrray_properties,
+    CreateSharedArrayBufferPrototype,
+    sharedarray_functions,
+    sharedarray_properties,
     sharedarray_proto_functions,
-    sharedarray_proto_properties};
+    sharedarray_proto_properties,
+};
 
-const JSClass SharedArrayBufferObject::class_ = {
+const JSClass SharedArrayBufferObject::protoClass_ = {
+    "SharedArrayBuffer.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &SharedArrayBufferObjectClassSpec,
+};
+
+const JSClass FixedLengthSharedArrayBufferObject::class_ = {
     "SharedArrayBuffer",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
         JSCLASS_FOREGROUND_FINALIZE,
-    &SharedArrayBufferObjectClassOps, &SharedArrayBufferObjectClassSpec,
-    JS_NULL_CLASS_EXT};
+    &SharedArrayBufferObjectClassOps,
+    &SharedArrayBufferObjectClassSpec,
+    JS_NULL_CLASS_EXT,
+};
 
-const JSClass SharedArrayBufferObject::protoClass_ = {
-    "SharedArrayBuffer.prototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer), JS_NULL_CLASS_OPS,
-    &SharedArrayBufferObjectClassSpec};
+const JSClass GrowableSharedArrayBufferObject::class_ = {
+    "SharedArrayBuffer",
+    JSCLASS_DELAY_METADATA_BUILDER |
+        JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &SharedArrayBufferObjectClassOps,
+    &SharedArrayBufferObjectClassSpec,
+    JS_NULL_CLASS_EXT,
+};
 
 JS_PUBLIC_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();

@@ -98,7 +98,7 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToArrayBuffer:
       return &FixedLengthArrayBufferObject::class_;
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return &SharedArrayBufferObject::class_;
+      return &FixedLengthSharedArrayBufferObject::class_;
 
     default:
       MOZ_CRASH("Not a GuardTo instruction");
