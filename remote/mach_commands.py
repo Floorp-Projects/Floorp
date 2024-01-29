@@ -384,11 +384,11 @@ class PuppeteerRunner(MozbuildObject):
 
         Possible optional test parameters:
 
-        `bidi`:
-          Boolean to indicate whether to test Firefox with BiDi protocol.
         `binary`:
           Path for the browser binary to use.  Defaults to the local
           build.
+        `cdp`:
+          Boolean to indicate whether to test Firefox with CDP protocol.
         `headless`:
           Boolean to indicate whether to activate Firefox' headless mode.
         `extra_prefs`:
@@ -399,7 +399,7 @@ class PuppeteerRunner(MozbuildObject):
         """
         setup()
 
-        with_bidi = params.get("bidi", False)
+        with_cdp = params.get("cdp", False)
         binary = params.get("binary") or self.get_binary_path()
         product = params.get("product", "firefox")
 
@@ -444,7 +444,7 @@ class PuppeteerRunner(MozbuildObject):
                 ".cache",
             )
 
-        if with_bidi is True:
+        if not with_cdp:
             test_command = test_command + ":bidi"
         elif env["HEADLESS"] == "True":
             test_command = test_command + ":headless"
@@ -488,7 +488,7 @@ class PuppeteerRunner(MozbuildObject):
             expectation
             for expectation in expected_data
             if is_relevant_expectation(
-                expectation, product, with_bidi, env["HEADLESS"], expected_platform
+                expectation, product, with_cdp, env["HEADLESS"], expected_platform
             )
         ]
 
@@ -517,14 +517,14 @@ def create_parser_puppeteer():
         "--product", type=str, default="firefox", choices=["chrome", "firefox"]
     )
     p.add_argument(
-        "--bidi",
-        action="store_true",
-        help="Flag that indicates whether to test Firefox with BiDi protocol.",
-    )
-    p.add_argument(
         "--binary",
         type=str,
         help="Path to browser binary.  Defaults to local Firefox build.",
+    )
+    p.add_argument(
+        "--cdp",
+        action="store_true",
+        help="Flag that indicates whether to test Firefox with the CDP protocol.",
     )
     p.add_argument(
         "--ci",
@@ -575,7 +575,7 @@ def create_parser_puppeteer():
 
 
 def is_relevant_expectation(
-    expectation, expected_product, with_bidi, is_headless, expected_platform
+    expectation, expected_product, with_cdp, is_headless, expected_platform
 ):
     parameters = expectation["parameters"]
 
@@ -584,11 +584,11 @@ def is_relevant_expectation(
     else:
         is_expected_product = "firefox" not in parameters
 
-    if with_bidi is True:
+    if with_cdp:
+        is_expected_protocol = "webDriverBiDi" not in parameters
+    else:
         is_expected_protocol = "cdp" not in parameters
         is_headless = "True"
-    else:
-        is_expected_protocol = "webDriverBiDi" not in parameters
 
     if is_headless == "True":
         is_expected_mode = "headful" not in parameters
@@ -620,8 +620,8 @@ def is_relevant_expectation(
 )
 def puppeteer_test(
     command_context,
-    bidi=None,
     binary=None,
+    cdp=False,
     ci=False,
     disable_fission=False,
     enable_webrender=False,
@@ -683,8 +683,8 @@ def puppeteer_test(
         install_puppeteer(command_context, product, ci)
 
     params = {
-        "bidi": bidi,
         "binary": binary,
+        "cdp": cdp,
         "headless": headless,
         "enable_webrender": enable_webrender,
         "extra_prefs": prefs,
