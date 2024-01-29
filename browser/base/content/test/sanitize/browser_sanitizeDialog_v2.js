@@ -365,7 +365,7 @@ DialogHelper.prototype = {
    * Makes sure all the checkboxes are checked.
    */
   _checkAllCheckboxesCustom(check) {
-    var cb = this.win.document.querySelectorAll("checkbox[id]");
+    var cb = this.win.document.querySelectorAll(".clearingItemCheckbox");
     ok(cb.length, "found checkboxes for ids");
     for (var i = 0; i < cb.length; ++i) {
       if (cb[i].checked != check) {
@@ -727,6 +727,36 @@ add_task(async function test_everything_warning() {
     await promiseSanitized;
 
     await promiseHistoryClearedState(uris, true);
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
+
+/**
+ * Tests that the clearing button gets disabled if no checkboxes are checked
+ * and enabled when at least one checkbox is checked
+ */
+add_task(async function testAcceptButtonDisabled() {
+  let dh = new DialogHelper();
+  dh.onload = async function () {
+    let clearButton = this.win.document
+      .querySelector("dialog")
+      .getButton("accept");
+    this.uncheckAllCheckboxes();
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+    is(clearButton.disabled, true, "Clear button should be disabled");
+    // await BrowserTestUtils.waitForMutationCondition(
+    //   clearButton,
+    //   { attributes: true },
+    //   () => clearButton.disabled,
+    //   "Clear button should be disabled"
+    // );
+
+    this.checkPrefCheckbox("cache", true);
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+    is(clearButton.disabled, false, "Clear button should not be disabled");
+
+    this.cancelDialog();
   };
   dh.open();
   await dh.promiseClosed;
