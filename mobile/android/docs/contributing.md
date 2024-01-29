@@ -45,6 +45,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [0006 - Determining the set of default search engines]({{ site.baseurl }}/rfc/0006-search-defaults)
 * [0007 - Synchronizing the branching and versioning of Android Components with the Mozilla release trains]({{ site.baseurl }}/rfc/0007-synchronized-releases)
 * [0008 - Adding tab partitions (groups) to BrowserState]({{ site.baseurl }}/rfc/0008-tab-groups)
+* [0012 - Allow customisation of the Store dispatcher]({{ site.baseurl }}/rfc/0012-customizable-store-dispatcher)
 
 ### Presentations
 
