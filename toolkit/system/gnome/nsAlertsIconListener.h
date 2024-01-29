@@ -65,6 +65,7 @@ class nsAlertsIconListener : public nsIAlertNotificationImageListener,
   using notify_notification_close_t = bool (*)(void*, GError**);
   using notify_notification_set_hint_t = void (*)(NotifyNotification*,
                                                   const char*, GVariant*);
+  using notify_notification_set_timeout_t = void (*)(NotifyNotification*, gint);
 
   nsCOMPtr<nsICancelable> mIconRequest;
   nsCString mAlertTitle;
@@ -78,6 +79,7 @@ class nsAlertsIconListener : public nsIAlertNotificationImageListener,
 
   bool mAlertHasAction;
   bool mAlertIsSilent;
+  bool mAlertRequiresInteraction;
 
   static void* libNotifyHandle;
   static bool libNotifyNotAvail;
@@ -91,6 +93,7 @@ class nsAlertsIconListener : public nsIAlertNotificationImageListener,
   static notify_notification_add_action_t notify_notification_add_action;
   static notify_notification_close_t notify_notification_close;
   static notify_notification_set_hint_t notify_notification_set_hint;
+  static notify_notification_set_timeout_t notify_notification_set_timeout;
   NotifyNotification* mNotification;
   gulong mClosureHandler;
 
