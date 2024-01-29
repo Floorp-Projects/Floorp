@@ -227,12 +227,10 @@ class TransactionWrapper final {
   void AppendTransformProperties(
       const nsTArray<wr::WrTransformProperty>& aTransformArray);
   void UpdateScrollPosition(
-      const wr::WrPipelineId& aPipelineId,
-      const layers::ScrollableLayerGuid::ViewID& aScrollId,
+      const wr::ExternalScrollId& aScrollId,
       const nsTArray<wr::SampledScrollOffset>& aSampledOffsets);
   void UpdateIsTransformAsyncZooming(uint64_t aAnimationId, bool aIsZooming);
-  void AddMinimapData(const wr::WrPipelineId& aPipelineId,
-                      const layers::ScrollableLayerGuid::ViewID& aScrollId,
+  void AddMinimapData(const wr::ExternalScrollId& aScrollId,
                       const MinimapData& aMinimapData);
 
  private:

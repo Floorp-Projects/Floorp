@@ -320,10 +320,9 @@ void TransactionWrapper::AppendTransformProperties(
 }
 
 void TransactionWrapper::UpdateScrollPosition(
-    const wr::WrPipelineId& aPipelineId,
-    const layers::ScrollableLayerGuid::ViewID& aScrollId,
+    const wr::ExternalScrollId& aScrollId,
     const nsTArray<wr::SampledScrollOffset>& aSampledOffsets) {
-  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, &aSampledOffsets);
+  wr_transaction_scroll_layer(mTxn, aScrollId, &aSampledOffsets);
 }
 
 void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
@@ -331,11 +330,9 @@ void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
   wr_transaction_set_is_transform_async_zooming(mTxn, aAnimationId, aIsZooming);
 }
 
-void TransactionWrapper::AddMinimapData(
-    const wr::WrPipelineId& aPipelineId,
-    const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    const MinimapData& aMinimapData) {
-  wr_transaction_add_minimap_data(mTxn, aPipelineId, aScrollId, aMinimapData);
+void TransactionWrapper::AddMinimapData(const wr::ExternalScrollId& aScrollId,
+                                        const MinimapData& aMinimapData) {
+  wr_transaction_add_minimap_data(mTxn, aScrollId, aMinimapData);
 }
 
 /*static*/

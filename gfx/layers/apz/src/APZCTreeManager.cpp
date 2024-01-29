@@ -822,8 +822,9 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
 
     nsTArray<wr::SampledScrollOffset> sampledOffsets =
         apzc->GetSampledScrollOffsets();
-    aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
-                              apzc->GetGuid().mScrollId, sampledOffsets);
+    wr::ExternalScrollId scrollId{apzc->GetGuid().mScrollId,
+                                  wr::AsPipelineId(apzc->GetGuid().mLayersId)};
+    aTxn.UpdateScrollPosition(scrollId, sampledOffsets);
 
     if (StaticPrefs::apz_minimap_enabled()) {
       wr::MinimapData minimapData = apzc->GetMinimapData();
@@ -855,8 +856,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
       minimapData.root_content_pipeline_id =
           wr::AsPipelineId(enclosingRootContentId.mLayersId);
       minimapData.root_content_scroll_id = enclosingRootContentId.mScrollId;
-      aTxn.AddMinimapData(wr::AsPipelineId(apzc->GetGuid().mLayersId),
-                          apzc->GetGuid().mScrollId, minimapData);
+      aTxn.AddMinimapData(scrollId, minimapData);
     }
 
 #if defined(MOZ_WIDGET_ANDROID)
