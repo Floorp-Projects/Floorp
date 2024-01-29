@@ -276,8 +276,6 @@ async function test_unsafe_grips(
 
       response = await objClient.getPrototype();
       check_prototype(response.prototype, data, isUnsafe, isWorkerServer);
-
-      await objClient.release();
     }
 
     await threadFront.resume();
