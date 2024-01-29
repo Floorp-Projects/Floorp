@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json",
+  "$id": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
   "if": {
@@ -10,15 +10,13 @@
         "const": "multi"
       }
     },
-    "required": [
-      "template"
-    ]
+    "required": ["template"]
   },
   "then": {
-    "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/MultiMessage"
+    "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/MultiMessage"
   },
   "else": {
-    "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
+    "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
   },
   "$defs": {
     "ToastNotification": {
@@ -28,7 +26,7 @@
       "description": "A template for toast notifications displayed by the Alert service.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -37,11 +35,11 @@
           "type": "object",
           "properties": {
             "title": {
-              "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of toast notification title"
             },
             "body": {
-              "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of toast notification body"
             },
             "icon_url": {
@@ -70,9 +68,7 @@
                   "type": "object"
                 }
               },
-              "required": [
-                "type"
-              ],
+              "required": ["type"],
               "additionalProperties": true
             },
             "requireInteraction": {
@@ -93,7 +89,7 @@
                 "type": "object",
                 "properties": {
                   "title": {
-                    "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
+                    "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
                     "description": "The action text to be shown to the user."
                   },
                   "action": {
@@ -120,37 +116,24 @@
                         "type": "object"
                       }
                     },
-                    "required": [
-                      "type"
-                    ],
+                    "required": ["type"],
                     "additionalProperties": true
                   }
                 },
-                "required": [
-                  "action",
-                  "title"
-                ],
+                "required": ["action", "title"],
                 "additionalProperties": true
               }
             }
           },
           "additionalProperties": true,
-          "required": [
-            "title",
-            "body"
-          ]
+          "required": ["title", "body"]
         },
         "template": {
           "type": "string",
           "const": "toast_notification"
         }
       },
-      "required": [
-        "content",
-        "targeting",
-        "template",
-        "trigger"
-      ],
+      "required": ["content", "targeting", "template", "trigger"],
       "additionalProperties": true
     },
     "Message": {
@@ -171,9 +154,7 @@
         "template": {
           "type": "string",
           "description": "Which messaging template this message is using.",
-          "enum": [
-            "toast_notification"
-          ]
+          "enum": ["toast_notification"]
         },
         "frequency": {
           "type": "object",
@@ -203,10 +184,7 @@
                     "maximum": 100
                   }
                 },
-                "required": [
-                  "period",
-                  "cap"
-                ]
+                "required": ["period", "cap"]
               }
             }
           }
@@ -246,9 +224,7 @@
               }
             }
           },
-          "required": [
-            "id"
-          ]
+          "required": ["id"]
         },
         "provider": {
           "description": "An identifier for the provider of this message, such as \"cfr\" or \"preview\".",
@@ -257,14 +233,8 @@
       },
       "additionalProperties": true,
       "dependentRequired": {
-        "content": [
-          "id",
-          "template"
-        ],
-        "template": [
-          "id",
-          "content"
-        ]
+        "content": ["id", "template"],
+        "template": ["id", "content"]
       }
     },
     "localizedText": {
@@ -275,9 +245,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "string_id"
-      ]
+      "required": ["string_id"]
     },
     "localizableText": {
       "description": "Either a raw string or an object containing the string_id of the localized text",
@@ -287,7 +255,7 @@
           "description": "The string to be rendered."
         },
         {
-          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizedText"
+          "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizedText"
         }
       ]
     },
@@ -296,7 +264,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
         },
         {
           "if": {
@@ -304,17 +272,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "toast_notification"
-                ]
+                "enum": ["toast_notification"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
+            "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
           }
         }
       ]
@@ -331,14 +295,11 @@
           "type": "array",
           "description": "An array of messages.",
           "items": {
-            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
+            "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
           }
         }
       },
-      "required": [
-        "template",
-        "messages"
-      ]
+      "required": ["template", "messages"]
     }
   }
 }

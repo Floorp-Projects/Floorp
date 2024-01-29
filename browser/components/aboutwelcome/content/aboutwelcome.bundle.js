@@ -176,7 +176,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(10);
 /* harmony import */ var _SubmenuButton__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(15);
-/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(19);
+/* harmony import */ var asrouter_content_src_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(19);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -473,7 +473,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } = action;
     if (type === "SHOW_FIREFOX_ACCOUNTS") {
       let params = {
-        ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.BASE_PARAMS,
+        ...asrouter_content_src_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.BASE_PARAMS,
         utm_term: `${UTMTerm}-screen`
       };
       if (action.addFlowParams && flowParams) {
@@ -488,7 +488,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
-      (0,_newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.addUtmParams)(url, `${UTMTerm}-screen`);
+      (0,asrouter_content_src_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_6__.addUtmParams)(url, `${UTMTerm}-screen`);
       if (action.addFlowParams && flowParams) {
         url.searchParams.append("device_id", flowParams.deviceId);
         url.searchParams.append("flow_id", flowParams.flowId);
@@ -2274,7 +2274,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
-/* harmony import */ var _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(19);
+/* harmony import */ var asrouter_content_src_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(19);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2325,7 +2325,7 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
       };
     } else if (type === "SHOW_FIREFOX_ACCOUNTS") {
       let params = {
-        ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__.BASE_PARAMS,
+        ...asrouter_content_src_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__.BASE_PARAMS,
         utm_term: `aboutwelcome-${utm_term}-screen`
       };
       if (action.addFlowParams && this.state.flowParams) {

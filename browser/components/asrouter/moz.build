@@ -31,4 +31,21 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
 ]
 
+XPCSHELL_TESTS_MANIFESTS += [
+    "tests/xpcshell/xpcshell.toml",
+]
+
+TESTING_JS_MODULES += [
+    "content-src/schemas/FxMSCommon.schema.json",
+    "content-src/templates/CFR/templates/CFRUrlbarChiclet.schema.json",
+    "content-src/templates/CFR/templates/ExtensionDoorhanger.schema.json",
+    "content-src/templates/CFR/templates/InfoBar.schema.json",
+    "content-src/templates/OnboardingMessage/Spotlight.schema.json",
+    "content-src/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json",
+    "content-src/templates/OnboardingMessage/UpdateAction.schema.json",
+    "content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json",
+    "content-src/templates/PBNewtab/NewtabPromoMessage.schema.json",
+    "content-src/templates/ToastNotification/ToastNotification.schema.json",
+]
+
 SPHINX_TREES["docs"] = "docs"

@@ -25,7 +25,7 @@ let EXPERIMENT_VALIDATOR;
 
 add_setup(async function setup() {
   EXPERIMENT_VALIDATOR = await schemaValidatorFor(
-    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
   );
 });
 

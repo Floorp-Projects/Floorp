@@ -60,7 +60,7 @@ SCHEMA_DIR = Path("..", "templates")
 
 SCHEMAS = [
     SchemaDefinition(
-        schema_id="resource://activity-stream/schemas/MessagingExperiment.schema.json",
+        schema_id="chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json",
         schema_path=Path("MessagingExperiment.schema.json"),
         message_types={
             "CFRUrlbarChiclet": (
@@ -100,7 +100,7 @@ SCHEMAS = [
     ),
     SchemaDefinition(
         schema_id=(
-            "resource://activity-stream/schemas/"
+            "chrome://browser/content/asrouter/schemas/"
             "BackgroundTaskMessagingExperiment.schema.json"
         ),
         schema_path=Path("BackgroundTaskMessagingExperiment.schema.json"),
