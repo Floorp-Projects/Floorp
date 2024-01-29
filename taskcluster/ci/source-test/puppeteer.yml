@@ -38,7 +38,7 @@ puppeteer:
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
-            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --cdp --headless --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json
 
 puppeteer-with-bidi:
     description: Puppeteer tests against Firefox Webdriver BiDi remote protocol
@@ -49,4 +49,4 @@ puppeteer-with-bidi:
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
-            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --bidi --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json

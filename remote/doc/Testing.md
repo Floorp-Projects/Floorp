@@ -133,6 +133,13 @@ You can also run them against Chrome as:
 % ./mach puppeteer-test --product=chrome
 ```
 
+By default, Puppeteer will be configured to use the WebDriver BiDi protocol. You
+can also force Puppeteer to use the CDP protocol with the `--cdp` option:
+
+```shell
+% ./mach puppeteer-test --cdp
+```
+
 By default the mach command will automatically install Puppeteer but that's
 only needed for the very first time, or when a new Puppeteer release has been
 vendored in. To skip the install step use the `--no-install` option.
