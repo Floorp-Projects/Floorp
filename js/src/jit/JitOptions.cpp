@@ -396,6 +396,8 @@ DefaultJitOptions::DefaultJitOptions() {
 #else
   SET_DEFAULT(regexp_peephole_optimization, true);
 #endif
+
+  SET_DEFAULT(useHasSeenEmulatesUndefinedFuse, false);
 }
 
 bool DefaultJitOptions::isSmallFunction(JSScript* script) const {

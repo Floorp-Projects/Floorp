@@ -438,6 +438,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // Return true if the fuse is intact, andd if the fuse is intact note the
   // dependency
   bool hasSeenObjectEmulateUndefinedFuseIntactAndDependencyNoted() {
+    if (!JitOptions.useHasSeenEmulatesUndefinedFuse) {
+      // if we're not active, simply pretend the fuse is popped.
+      return false;
+    }
+
     bool intact = gen->outerInfo().hasSeenObjectEmulateUndefinedFuseIntact();
     if (intact) {
       addHasSeenObjectEmulateUndefinedFuseDependency();
