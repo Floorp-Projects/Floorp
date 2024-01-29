@@ -540,6 +540,14 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
                                                      Register scratch,
                                                      Label* slowCheck,
                                                      Label* label) {
+  MOZ_ASSERT(objReg != scratch);
+
+  Label done;
+  loadPtr(
+      AbsoluteAddress(runtime()->addressOfHasSeenObjectEmulateUndefinedFuse()),
+      scratch);
+  branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &done);
+
   // The branches to out-of-line code here implement a conservative version
   // of the JSObject::isWrapper test performed in EmulatesUndefined.
   loadObjClassUnsafe(objReg, scratch);
@@ -549,6 +557,7 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
   Address flags(scratch, JSClass::offsetOfFlags());
   branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_EMULATES_UNDEFINED),
                label);
+  bind(&done);
 }
 
 void MacroAssembler::branchFunctionKind(Condition cond,

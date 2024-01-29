@@ -8351,6 +8351,23 @@ static bool GetFuseState(JSContext* cx, unsigned argc, Value* vp) {
   FOR_EACH_REALM_FUSE(FUSE)
 #undef FUSE
 
+  // Register hasSeenUndefinedFuse
+  fuseObj = JS_NewPlainObject(cx);
+  if (!fuseObj) {
+    return false;
+  }
+  intactValue.setBoolean(
+      cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().intact());
+  if (!JS_DefineProperty(cx, fuseObj, "intact", intactValue,
+                         JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  if (!JS_DefineProperty(cx, returnObj, "hasSeenObjectEmulateUndefinedFuse",
+                         fuseObj, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
   args.rval().setObject(*returnObj);
   return true;
 }
@@ -10171,9 +10188,9 @@ JS_FN_HELP("getEnvironmentObjectType", GetEnvironmentObjectType, 1, 0,
       "      the starting point will be the set of GC roots."),
 
     JS_FN_HELP("getFuseState", GetFuseState, 0, 0,
-"getFuseState()",
-"  Return an object describing the calling realm's fuse state"),
-
+      "getFuseState()",
+      "  Return an object describing the calling realm's fuse state, "
+      "as well as the state of any runtime fuses."),
 
     JS_FS_HELP_END
 };

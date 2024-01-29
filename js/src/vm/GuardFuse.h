@@ -29,10 +29,8 @@ namespace js {
 // 1. Guard fuses are used as guards at various points through the engine to
 //    allow dynamic choice of a fallback path vs. fast path. A guard is checked
 //    explicitly before each action.
-// 2. An Invalidating Fuse, *not currently implemented*, would instead perform
-//    some cleanup actions when popped to inform various parts of the code that
-//    the assumption made no longer holds. For example, invalidating JIT code
-//    compiled under a fuse assumption.
+// 2. An Invalidating Fuse instead performs some cleanup actions invalidating
+//    Ion compiled under the assumption the fuse is intact.
 //
 // Fuses are designed to be checked easily for validity -- a single load and
 // compare should suffice.

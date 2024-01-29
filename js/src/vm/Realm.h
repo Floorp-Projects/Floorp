@@ -24,6 +24,7 @@
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GuardFuse.h"
+#include "vm/InvalidatingFuse.h"
 #include "vm/JSContext.h"
 #include "vm/PromiseLookup.h"  // js::PromiseLookup
 #include "vm/RealmFuses.h"

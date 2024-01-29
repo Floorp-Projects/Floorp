@@ -301,6 +301,12 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
   // for a gray object.
   ExposeObjectToActiveJS(obj);
 
+  // If we're wrapping an object which emulates undefined then the runtime fuse
+  // should already have been popped.
+  MOZ_ASSERT_IF(
+      obj->getClass()->emulatesUndefined(),
+      !cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().intact());
+
   // Create a new wrapper for the object.
   auto wrap = cx->runtime()->wrapObjectCallbacks->wrap;
   RootedObject wrapper(cx, wrap(cx, existing, obj));

@@ -1057,7 +1057,8 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
                              obj->shape()->proto(), nfixed);
 }
 
-BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
+BaseShape::BaseShape(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
+                     TaggedProto proto)
     : TenuredCellWithNonGCPointer(clasp), realm_(realm), proto_(proto) {
 #ifdef DEBUG
   AssertJSClassInvariants(clasp);
@@ -1069,6 +1070,10 @@ BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
 
   // Windows may not appear on prototype chains.
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
+
+  if (MOZ_UNLIKELY(clasp->emulatesUndefined())) {
+    cx->runtime()->hasSeenObjectEmulateUndefinedFuse.ref().popFuse(cx);
+  }
 
 #ifdef DEBUG
   if (GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal()) {
@@ -1089,7 +1094,7 @@ BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
     return *p;
   }
 
-  BaseShape* nbase = cx->newCell<BaseShape>(clasp, realm, proto);
+  BaseShape* nbase = cx->newCell<BaseShape>(cx, clasp, realm, proto);
   if (!nbase) {
     return nullptr;
   }
