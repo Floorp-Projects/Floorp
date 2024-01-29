@@ -1636,15 +1636,6 @@ bool KeyframeEffect::CanAnimateTransformOnCompositor(
   const nsIFrame* primaryFrame =
       nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame);
 
-  // Note that testing BackfaceIsHidden() is not a sufficient test for
-  // what we need for animating backface-visibility correctly if we
-  // remove the above test for Extend3DContext(); that would require
-  // looking at backface-visibility on descendants as well. See bug 1186204.
-  if (primaryFrame->BackfaceIsHidden()) {
-    aPerformanceWarning =
-        AnimationPerformanceWarning::Type::TransformBackfaceVisibilityHidden;
-    return false;
-  }
   // Async 'transform' animations of aFrames with SVG transforms is not
   // supported.  See bug 779599.
   if (primaryFrame->IsSVGTransformed()) {

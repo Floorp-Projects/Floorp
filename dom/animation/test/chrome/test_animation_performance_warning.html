@@ -421,8 +421,7 @@ function testStyleChanges() {
       expected: [
         {
           property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+          runningOnCompositor: true,
         }
       ]
     },
@@ -435,8 +434,7 @@ function testStyleChanges() {
       expected: [
         {
           property: 'translate',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+          runningOnCompositor: true,
         }
       ]
     },
@@ -479,13 +477,11 @@ function testStyleChanges() {
         },
         {
           property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+          runningOnCompositor: true,
         },
         {
           property: 'translate',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+          runningOnCompositor: true,
         }
       ]
     },
@@ -649,8 +645,7 @@ function testMultipleAnimations() {
           expected: [
             {
               property: 'transform',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+              runningOnCompositor: true,
             }
           ]
         },
@@ -661,8 +656,7 @@ function testMultipleAnimations() {
           expected: [
             {
               property: 'translate',
-              runningOnCompositor: false,
-              warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
+              runningOnCompositor: true,
             }
           ]
         },

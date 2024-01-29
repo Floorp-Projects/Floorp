@@ -90,8 +90,16 @@
 
     .compositor-notall {
       animation: compositor-notall 2s infinite;
-      /* Blocks the transform animation from running in the compositor */
-      backface-visibility: hidden;
+    }
+
+    .compositor-warning {
+      animation: compositor-all 2s infinite;
+    }
+
+    .warning-observer {
+      width: 10px;
+      height: 10px;
+      background-image: -moz-element(#warning);
     }
 
     .longhand {
@@ -159,7 +167,9 @@
   <div class="ball end-delay"></div>
   <div class="ball compositor-all"></div>
   <div class="ball compositor-notall"></div>
+  <div class="ball compositor-warning" id="warning"></div>
   <div class="ball longhand"></div>
+  <div class="warning-observer"></div>
   <script>
     /* globals KeyframeEffect, Animation */
     "use strict";

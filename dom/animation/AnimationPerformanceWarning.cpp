@@ -41,9 +41,6 @@ bool AnimationPerformanceWarning::ToLocalizedString(
 
       return NS_SUCCEEDED(ToLocalizedStringWithIntParams<2>(
           "CompositorAnimationWarningContentTooLargeArea", aLocalizedString));
-    case Type::TransformBackfaceVisibilityHidden:
-      key = "CompositorAnimationWarningTransformBackfaceVisibilityHidden";
-      break;
     case Type::TransformSVG:
       key = "CompositorAnimationWarningTransformSVG";
       break;
