@@ -1387,7 +1387,7 @@ bool GCMarker::markCurrentColorInParallel(SliceBudget& budget) {
     // TODO: It might be better to only check this occasionally, possibly
     // combined with the slice budget check. Experiments with giving this its
     // own counter resulted in worse performance.
-    if (waitingTaskCount && canDonateWork()) {
+    if (waitingTaskCount && shouldDonateWork()) {
       parallelMarker_->donateWorkFrom(this);
     }
   }
@@ -2230,12 +2230,22 @@ void GCMarker::leaveParallelMarkingMode() {
   parallelMarker_ = nullptr;
 }
 
+// It may not be worth the overhead of donating very few mark stack entries. For
+// some (non-parallelizable) workloads this could lead to constantly
+// interrupting marking work and makes parallel marking slower than single
+// threaded.
+//
+// Conversely, we do want to try splitting up work occasionally or we may fail
+// to parallelize workloads that result in few mark stack entries.
+//
+// Therefore we try hard to split work up at the start of a slice (calling
+// canDonateWork) but when a slice is running we only donate if there is enough
+// work to make it worthwhile (calling shouldDonateWork).
 bool GCMarker::canDonateWork() const {
-  // It's not worth the overhead of donating very few entries. For some
-  // (non-parallelizable) workloads this can lead to constantly interrupting
-  // marking work and makes parallel marking slower than single threaded.
+  return stack.position() > ValueRangeWords;
+}
+bool GCMarker::shouldDonateWork() const {
   constexpr size_t MinWordCount = 12;
-
   static_assert(MinWordCount >= ValueRangeWords,
                 "We must always leave at least one stack entry.");
 
