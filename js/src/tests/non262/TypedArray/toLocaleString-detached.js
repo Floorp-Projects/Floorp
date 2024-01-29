@@ -8,7 +8,7 @@ if (typeof detachArrayBuffer === "function") {
         assertThrowsInstanceOf(() => typedArray.toLocaleString(), TypeError);
     }
 
-    // Throws a TypeError if detached in Number.prototype.toLocaleString.
+    // Doesn't throw a TypeError if detached in Number.prototype.toLocaleString.
     for (let constructor of typedArrayConstructors) {
         Number.prototype.toLocaleString = function() {
             "use strict";
@@ -25,10 +25,10 @@ if (typeof detachArrayBuffer === "function") {
         assertEq(typedArray.toLocaleString(), "0");
         assertEq(detached, true);
 
-        // TypeError if more than one element is present.
+        // And no error if more than one element is present.
         detached = false;
         typedArray = new constructor(2);
-        assertThrowsInstanceOf(() => typedArray.toLocaleString(), TypeError);
+        assertEq(typedArray.toLocaleString(), "0,");
         assertEq(detached, true);
     }
     Number.prototype.toLocaleString = originalNumberToLocaleString;
