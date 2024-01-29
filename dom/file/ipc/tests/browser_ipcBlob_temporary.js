@@ -23,7 +23,7 @@ add_task(async function test() {
       let bc = new content.window.BroadcastChannel("foobar");
       bc.onmessage = e => {
         function realTest() {
-          return new content.window.Promise(resolve => {
+          return new content.window.Promise(innerResolve => {
             let count = 10;
             for (let i = 0; i < count; ++i) {
               info("FileReader at the same time: " + i);
@@ -36,7 +36,7 @@ add_task(async function test() {
               fr.onloadend = () => {
                 is(fr.result.length, e.data.size, "FileReader worked fine.");
                 if (!--count) {
-                  resolve(true);
+                  innerResolve(true);
                 }
               };
             }

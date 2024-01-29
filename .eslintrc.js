@@ -432,7 +432,6 @@ module.exports = {
         "dom/canvas/test/**",
         "dom/events/test/**",
         "dom/fetch/tests/**",
-        "dom/file/ipc/tests/**",
         "dom/file/tests/**",
         "dom/html/test/**",
         "dom/jsurl/test/**",
