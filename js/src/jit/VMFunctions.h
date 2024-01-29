@@ -27,6 +27,7 @@ namespace js {
 
 class AbstractGeneratorObject;
 class ArrayObject;
+class FixedLengthTypedArrayObject;
 class GlobalObject;
 class InterpreterFrame;
 class LexicalScope;
@@ -639,11 +640,11 @@ bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
 BigInt* BigIntAsIntN(JSContext* cx, HandleBigInt x, int32_t bits);
 BigInt* BigIntAsUintN(JSContext* cx, HandleBigInt x, int32_t bits);
 
-using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, size_t, int32_t,
-                                             int32_t);
+using AtomicsCompareExchangeFn = int32_t (*)(FixedLengthTypedArrayObject*,
+                                             size_t, int32_t, int32_t);
 
-using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, size_t,
-                                             int32_t);
+using AtomicsReadWriteModifyFn = int32_t (*)(FixedLengthTypedArrayObject*,
+                                             size_t, int32_t);
 
 AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsExchange(Scalar::Type elementType);
@@ -653,29 +654,31 @@ AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 
-BigInt* AtomicsLoad64(JSContext* cx, TypedArrayObject* typedArray,
+BigInt* AtomicsLoad64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
                       size_t index);
 
-void AtomicsStore64(TypedArrayObject* typedArray, size_t index,
+void AtomicsStore64(FixedLengthTypedArrayObject* typedArray, size_t index,
                     const BigInt* value);
 
-BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
+BigInt* AtomicsCompareExchange64(JSContext* cx,
+                                 FixedLengthTypedArrayObject* typedArray,
                                  size_t index, const BigInt* expected,
                                  const BigInt* replacement);
 
-BigInt* AtomicsExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                          size_t index, const BigInt* value);
+BigInt* AtomicsExchange64(JSContext* cx,
+                          FixedLengthTypedArrayObject* typedArray, size_t index,
+                          const BigInt* value);
 
-BigInt* AtomicsAdd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     const BigInt* value);
-BigInt* AtomicsAnd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     const BigInt* value);
-BigInt* AtomicsOr64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                    const BigInt* value);
-BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     const BigInt* value);
-BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     const BigInt* value);
+BigInt* AtomicsAdd64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
+                     size_t index, const BigInt* value);
+BigInt* AtomicsAnd64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
+                     size_t index, const BigInt* value);
+BigInt* AtomicsOr64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
+                    size_t index, const BigInt* value);
+BigInt* AtomicsSub64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
+                     size_t index, const BigInt* value);
+BigInt* AtomicsXor64(JSContext* cx, FixedLengthTypedArrayObject* typedArray,
+                     size_t index, const BigInt* value);
 
 JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str);
 
