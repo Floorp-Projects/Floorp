@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
+  "$id": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
   "if": {
@@ -10,15 +10,13 @@
         "const": "multi"
       }
     },
-    "required": [
-      "template"
-    ]
+    "required": ["template"]
   },
   "then": {
-    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
+    "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
   },
   "else": {
-    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+    "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
   },
   "$defs": {
     "CFRUrlbarChiclet": {
@@ -28,7 +26,7 @@
       "description": "A template with a chiclet button with text.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -43,16 +41,14 @@
             "layout": {
               "type": "string",
               "description": "Describes how content should be displayed.",
-              "enum": [
-                "chiclet_open_url"
-              ]
+              "enum": ["chiclet_open_url"]
             },
             "bucket_id": {
               "type": "string",
               "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
             },
             "notification_text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "active_color": {
@@ -70,17 +66,11 @@
                 "where": {
                   "description": "Should it open in a new tab or the current tab",
                   "type": "string",
-                  "enum": [
-                    "current",
-                    "tabshifted"
-                  ]
+                  "enum": ["current", "tabshifted"]
                 }
               },
               "additionalProperties": true,
-              "required": [
-                "url",
-                "where"
-              ]
+              "required": ["url", "where"]
             }
           },
           "additionalProperties": true,
@@ -97,10 +87,7 @@
           "const": "cfr_urlbar_chiclet"
         }
       },
-      "required": [
-        "targeting",
-        "trigger"
-      ]
+      "required": ["targeting", "trigger"]
     },
     "ExtensionDoorhanger": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -109,7 +96,7 @@
       "description": "A template with a heading, addon icon, title and description. No markup allowed.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -155,7 +142,7 @@
               "description": "Whether to allow the message to be shown in private browsing mode. Defaults to false."
             },
             "notification_text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "info_icon": {
@@ -171,21 +158,17 @@
                           "type": "object",
                           "properties": {
                             "tooltiptext": {
-                              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
                               "description": "Text for button tooltip used to provide information about the doorhanger."
                             }
                           },
-                          "required": [
-                            "tooltiptext"
-                          ]
+                          "required": ["tooltiptext"]
                         }
                       },
-                      "required": [
-                        "attributes"
-                      ]
+                      "required": ["attributes"]
                     },
                     {
-                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
+                      "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
                     }
                   ]
                 },
@@ -202,13 +185,10 @@
             "learn_more": {
               "type": "string",
               "description": "Last part of the path in the SUMO URL to the support page with the information about the doorhanger.",
-              "examples": [
-                "extensionpromotions",
-                "extensionrecommendations"
-              ]
+              "examples": ["extensionpromotions", "extensionrecommendations"]
             },
             "heading_text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The larger heading text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "icon": {
@@ -256,15 +236,10 @@
                   "description": "Link that offers more information related to the addon."
                 }
               },
-              "required": [
-                "title",
-                "author",
-                "icon",
-                "amo_url"
-              ]
+              "required": ["title", "author", "icon", "amo_url"]
             },
             "text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The body text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "descriptionDetails": {
@@ -275,14 +250,12 @@
                   "description": "Array of string_ids",
                   "type": "array",
                   "items": {
-                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
+                    "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
                     "description": "Id of string to localized addon description"
                   }
                 }
               },
-              "required": [
-                "steps"
-              ]
+              "required": ["steps"]
             },
             "buttons": {
               "description": "The label and functionality for the buttons in the pop-over.",
@@ -308,19 +281,14 @@
                                   "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
                                 }
                               },
-                              "required": [
-                                "accesskey"
-                              ],
+                              "required": ["accesskey"],
                               "description": "Button attributes."
                             }
                           },
-                          "required": [
-                            "value",
-                            "attributes"
-                          ]
+                          "required": ["value", "attributes"]
                         },
                         {
-                          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
+                          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
                         }
                       ],
                       "description": "Id of localized string or message override."
@@ -373,16 +341,11 @@
                                     "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
                                   }
                                 },
-                                "required": [
-                                  "accesskey"
-                                ],
+                                "required": ["accesskey"],
                                 "description": "Button attributes."
                               }
                             },
-                            "required": [
-                              "value",
-                              "attributes"
-                            ]
+                            "required": ["value", "attributes"]
                           },
                           {
                             "properties": {
@@ -397,9 +360,7 @@
                                 ]
                               }
                             },
-                            "required": [
-                              "string_id"
-                            ]
+                            "required": ["string_id"]
                           }
                         ],
                         "description": "Id of localized string or message override."
@@ -456,25 +417,16 @@
             }
           },
           "then": {
-            "required": [
-              "category",
-              "notification_text"
-            ]
+            "required": ["category", "notification_text"]
           }
         },
         "template": {
           "type": "string",
-          "enum": [
-            "cfr_doorhanger",
-            "milestone_message"
-          ]
+          "enum": ["cfr_doorhanger", "milestone_message"]
         }
       },
       "additionalProperties": true,
-      "required": [
-        "targeting",
-        "trigger"
-      ],
+      "required": ["targeting", "trigger"],
       "$defs": {
         "plainText": {
           "description": "Plain text (no HTML allowed)",
@@ -494,7 +446,7 @@
       "description": "A template with an image, test and buttons.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -505,13 +457,10 @@
             "type": {
               "type": "string",
               "description": "Should the message be global (persisted across tabs) or local (disappear when switching to a different tab).",
-              "enum": [
-                "global",
-                "tab"
-              ]
+              "enum": ["global", "tab"]
             },
             "text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The text show in the notification box."
             },
             "priority": {
@@ -526,7 +475,7 @@
                 "type": "object",
                 "properties": {
                   "label": {
-                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                    "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
                     "description": "The text label of the button."
                   },
                   "primary": {
@@ -548,9 +497,7 @@
                         "type": "object"
                       }
                     },
-                    "required": [
-                      "type"
-                    ],
+                    "required": ["type"],
                     "additionalProperties": true
                   },
                   "supportPage": {
@@ -558,19 +505,13 @@
                     "description": "A page title on SUMO to link to"
                   }
                 },
-                "required": [
-                  "label",
-                  "action"
-                ],
+                "required": ["label", "action"],
                 "additionalProperties": true
               }
             }
           },
           "additionalProperties": true,
-          "required": [
-            "text",
-            "buttons"
-          ]
+          "required": ["text", "buttons"]
         },
         "template": {
           "type": "string",
@@ -578,10 +519,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "targeting",
-        "trigger"
-      ],
+      "required": ["targeting", "trigger"],
       "$defs": {
         "plainText": {
           "description": "Plain text (no HTML allowed)",
@@ -601,7 +539,7 @@
       "description": "Message shown on the private browsing newtab page.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -649,22 +587,12 @@
             "promoType": {
               "type": "string",
               "description": "Promo type used to determine if promo should show to a given user",
-              "enum": [
-                "FOCUS",
-                "VPN",
-                "PIN",
-                "COOKIE_BANNERS",
-                "OTHER"
-              ]
+              "enum": ["FOCUS", "VPN", "PIN", "COOKIE_BANNERS", "OTHER"]
             },
             "promoSectionStyle": {
               "type": "string",
               "description": "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
-              "enum": [
-                "top",
-                "below-search",
-                "bottom"
-              ]
+              "enum": ["top", "below-search", "bottom"]
             },
             "promoTitle": {
               "type": "string",
@@ -696,23 +624,16 @@
                       "type": "object"
                     }
                   },
-                  "required": [
-                    "type"
-                  ],
+                  "required": ["type"],
                   "additionalProperties": true
                 }
               },
-              "required": [
-                "action"
-              ]
+              "required": ["action"]
             },
             "promoLinkType": {
               "type": "string",
               "description": "Type of promo link type. Possible values: link, button. Default is link.",
-              "enum": [
-                "link",
-                "button"
-              ]
+              "enum": ["link", "button"]
             },
             "promoImageLarge": {
               "type": "string",
@@ -734,14 +655,10 @@
                     "const": true
                   }
                 },
-                "required": [
-                  "promoEnabled"
-                ]
+                "required": ["promoEnabled"]
               },
               "then": {
-                "required": [
-                  "promoButton"
-                ]
+                "required": ["promoButton"]
               }
             },
             {
@@ -751,28 +668,20 @@
                     "const": true
                   }
                 },
-                "required": [
-                  "infoEnabled"
-                ]
+                "required": ["infoEnabled"]
               },
               "then": {
-                "required": [
-                  "infoLinkText"
-                ],
+                "required": ["infoLinkText"],
                 "if": {
                   "properties": {
                     "infoTitleEnabled": {
                       "const": true
                     }
                   },
-                  "required": [
-                    "infoTitleEnabled"
-                  ]
+                  "required": ["infoTitleEnabled"]
                 },
                 "then": {
-                  "required": [
-                    "infoTitle"
-                  ]
+                  "required": ["infoTitle"]
                 }
               }
             }
@@ -784,9 +693,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "targeting"
-      ]
+      "required": ["targeting"]
     },
     "Spotlight": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -795,7 +702,7 @@
       "description": "A template with an image, title, content and two buttons.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -852,16 +759,11 @@
         "template": {
           "type": "string",
           "description": "Specify whether the surface is shown as a Spotlight modal or an in-surface Feature Callout dialog",
-          "enum": [
-            "spotlight",
-            "feature_callout"
-          ]
+          "enum": ["spotlight", "feature_callout"]
         }
       },
       "additionalProperties": true,
-      "required": [
-        "targeting"
-      ]
+      "required": ["targeting"]
     },
     "ToastNotification": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -870,7 +772,7 @@
       "description": "A template for toast notifications displayed by the Alert service.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -879,11 +781,11 @@
           "type": "object",
           "properties": {
             "title": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of toast notification title"
             },
             "body": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of toast notification body"
             },
             "icon_url": {
@@ -912,9 +814,7 @@
                   "type": "object"
                 }
               },
-              "required": [
-                "type"
-              ],
+              "required": ["type"],
               "additionalProperties": true
             },
             "requireInteraction": {
@@ -935,7 +835,7 @@
                 "type": "object",
                 "properties": {
                   "title": {
-                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                    "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
                     "description": "The action text to be shown to the user."
                   },
                   "action": {
@@ -962,37 +862,24 @@
                         "type": "object"
                       }
                     },
-                    "required": [
-                      "type"
-                    ],
+                    "required": ["type"],
                     "additionalProperties": true
                   }
                 },
-                "required": [
-                  "action",
-                  "title"
-                ],
+                "required": ["action", "title"],
                 "additionalProperties": true
               }
             }
           },
           "additionalProperties": true,
-          "required": [
-            "title",
-            "body"
-          ]
+          "required": ["title", "body"]
         },
         "template": {
           "type": "string",
           "const": "toast_notification"
         }
       },
-      "required": [
-        "content",
-        "targeting",
-        "template",
-        "trigger"
-      ],
+      "required": ["content", "targeting", "template", "trigger"],
       "additionalProperties": true
     },
     "ToolbarBadgeMessage": {
@@ -1002,7 +889,7 @@
       "description": "A template that specifies to which element in the browser toolbar to add a notification.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -1021,9 +908,7 @@
                 }
               },
               "additionalProperties": true,
-              "required": [
-                "id"
-              ],
+              "required": ["id"],
               "description": "Optional action to take in addition to showing the notification"
             },
             "delay": {
@@ -1031,14 +916,12 @@
               "description": "Optional delay in ms after which to show the notification"
             },
             "badgeDescription": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
               "description": "This is used in combination with the badged button to offer a text based alternative to the visual badging. Example 'New Feature: What's New'"
             }
           },
           "additionalProperties": true,
-          "required": [
-            "target"
-          ]
+          "required": ["target"]
         },
         "template": {
           "type": "string",
@@ -1046,9 +929,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "targeting"
-      ]
+      "required": ["targeting"]
     },
     "UpdateAction": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -1057,7 +938,7 @@
       "description": "A template for messages that execute predetermined actions.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -1088,25 +969,18 @@
               },
               "additionalProperties": true,
               "description": "Optional action to take in addition to showing the notification",
-              "required": [
-                "id",
-                "data"
-              ]
+              "required": ["id", "data"]
             }
           },
           "additionalProperties": true,
-          "required": [
-            "action"
-          ]
+          "required": ["action"]
         },
         "template": {
           "type": "string",
           "const": "update_action"
         }
       },
-      "required": [
-        "targeting"
-      ]
+      "required": ["targeting"]
     },
     "WhatsNewMessage": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -1115,7 +989,7 @@
       "description": "A template for the messages that appear in the What's New panel.",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
       ],
       "type": "object",
@@ -1125,9 +999,7 @@
           "properties": {
             "layout": {
               "description": "Different message layouts",
-              "enum": [
-                "tracking-protections"
-              ]
+              "enum": ["tracking-protections"]
             },
             "bucket_id": {
               "type": "string",
@@ -1138,19 +1010,19 @@
               "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
             },
             "title": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of What's New message title"
             },
             "subtitle": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of What's New message subtitle"
             },
             "body": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Id of localized string or message override of What's New message body"
             },
             "link_text": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "(optional) Id of localized string or message override of What's New message link text"
             },
             "cta_url": {
@@ -1160,21 +1032,11 @@
             },
             "cta_type": {
               "description": "Type of url open action",
-              "enum": [
-                "OPEN_URL",
-                "OPEN_ABOUT_PAGE",
-                "OPEN_PROTECTION_REPORT"
-              ]
+              "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PROTECTION_REPORT"]
             },
             "cta_where": {
               "description": "How to open the cta: new window, tab, focused, unfocused.",
-              "enum": [
-                "current",
-                "tabshifted",
-                "tab",
-                "save",
-                "window"
-              ]
+              "enum": ["current", "tabshifted", "tab", "save", "window"]
             },
             "icon_url": {
               "description": "(optional) URL for the What's New message icon.",
@@ -1182,7 +1044,7 @@
               "format": "uri"
             },
             "icon_alt": {
-              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "Alt text for image."
             }
           },
@@ -1200,9 +1062,7 @@
           "const": "whatsnew_panel_message"
         }
       },
-      "required": [
-        "order"
-      ],
+      "required": ["order"],
       "additionalProperties": true
     },
     "Message": {
@@ -1265,10 +1125,7 @@
                     "maximum": 100
                   }
                 },
-                "required": [
-                  "period",
-                  "cap"
-                ]
+                "required": ["period", "cap"]
               }
             }
           }
@@ -1308,9 +1165,7 @@
               }
             }
           },
-          "required": [
-            "id"
-          ]
+          "required": ["id"]
         },
         "provider": {
           "description": "An identifier for the provider of this message, such as \"cfr\" or \"preview\".",
@@ -1319,14 +1174,8 @@
       },
       "additionalProperties": true,
       "dependentRequired": {
-        "content": [
-          "id",
-          "template"
-        ],
-        "template": [
-          "id",
-          "content"
-        ]
+        "content": ["id", "template"],
+        "template": ["id", "content"]
       }
     },
     "localizedText": {
@@ -1337,9 +1186,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "string_id"
-      ]
+      "required": ["string_id"]
     },
     "localizableText": {
       "description": "Either a raw string or an object containing the string_id of the localized text",
@@ -1349,7 +1196,7 @@
           "description": "The string to be rendered."
         },
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
         }
       ]
     },
@@ -1358,7 +1205,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+          "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Message"
         },
         {
           "if": {
@@ -1366,17 +1213,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "cfr_urlbar_chiclet"
-                ]
+                "enum": ["cfr_urlbar_chiclet"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
           }
         },
         {
@@ -1385,18 +1228,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "cfr_doorhanger",
-                  "milestone_message"
-                ]
+                "enum": ["cfr_doorhanger", "milestone_message"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
           }
         },
         {
@@ -1405,17 +1243,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "infobar"
-                ]
+                "enum": ["infobar"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
           }
         },
         {
@@ -1424,17 +1258,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "pb_newtab"
-                ]
+                "enum": ["pb_newtab"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
           }
         },
         {
@@ -1443,18 +1273,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "spotlight",
-                  "feature_callout"
-                ]
+                "enum": ["spotlight", "feature_callout"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
           }
         },
         {
@@ -1463,17 +1288,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "toast_notification"
-                ]
+                "enum": ["toast_notification"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToastNotification"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/ToastNotification"
           }
         },
         {
@@ -1482,17 +1303,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "toolbar_badge"
-                ]
+                "enum": ["toolbar_badge"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
           }
         },
         {
@@ -1501,17 +1318,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "update_action"
-                ]
+                "enum": ["update_action"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
           }
         },
         {
@@ -1520,17 +1333,13 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": [
-                  "whatsnew_panel_message"
-                ]
+                "enum": ["whatsnew_panel_message"]
               }
             },
-            "required": [
-              "template"
-            ]
+            "required": ["template"]
           },
           "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
           }
         }
       ]
@@ -1547,14 +1356,11 @@
           "type": "array",
           "description": "An array of messages.",
           "items": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+            "$ref": "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
           }
         }
       },
-      "required": [
-        "template",
-        "messages"
-      ]
+      "required": ["template", "messages"]
     }
   }
 }

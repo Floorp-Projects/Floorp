@@ -1,7 +1,7 @@
-import { CFRMessageProvider } from "asrouter/modules/CFRMessageProvider.sys.mjs";
-import CFRDoorhangerSchema from "content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json";
-import CFRChicletSchema from "content-src/asrouter/templates/CFR/templates/CFRUrlbarChiclet.schema.json";
-import InfoBarSchema from "content-src/asrouter/templates/CFR/templates/InfoBar.schema.json";
+import { CFRMessageProvider } from "modules/CFRMessageProvider.sys.mjs";
+import CFRDoorhangerSchema from "content-src/templates/CFR/templates/ExtensionDoorhanger.schema.json";
+import CFRChicletSchema from "content-src/templates/CFR/templates/CFRUrlbarChiclet.schema.json";
+import InfoBarSchema from "content-src/templates/CFR/templates/InfoBar.schema.json";
 
 const SCHEMAS = {
   cfr_urlbar_chiclet: CFRChicletSchema,

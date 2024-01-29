@@ -977,8 +977,8 @@ cfr:
   hasExposure: true
   exposureDescription: "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 "moments-page":
@@ -988,8 +988,8 @@ cfr:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 infobar:
@@ -999,8 +999,8 @@ infobar:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 spotlight:
@@ -1010,8 +1010,8 @@ spotlight:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 # Before 117, this feature only included one variable, pdfJsTourProgress. So,
@@ -1023,8 +1023,8 @@ featureCallout:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fullPageTranslation:
@@ -1085,8 +1085,8 @@ fxms-message-1:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-2:
@@ -1096,8 +1096,8 @@ fxms-message-2:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-3:
@@ -1107,8 +1107,8 @@ fxms-message-3:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-4:
@@ -1118,8 +1118,8 @@ fxms-message-4:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-5:
@@ -1129,8 +1129,8 @@ fxms-message-5:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-6:
@@ -1140,8 +1140,8 @@ fxms-message-6:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-7:
@@ -1151,8 +1151,8 @@ fxms-message-7:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-8:
@@ -1162,8 +1162,8 @@ fxms-message-8:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-9:
@@ -1173,8 +1173,8 @@ fxms-message-9:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-10:
@@ -1184,8 +1184,8 @@ fxms-message-10:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 fxms-message-11:
@@ -1195,8 +1195,8 @@ fxms-message-11:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 pbNewtab:
@@ -1206,8 +1206,8 @@ pbNewtab:
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
   schema:
-    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
 backgroundTaskMessage:
@@ -1219,8 +1219,8 @@ backgroundTaskMessage:
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
   schema:
-    uri: "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json"
-    path: "browser/components/newtab/content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json"
+    uri: "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json"
+    path: "browser/components/asrouter/content-src/schemas/BackgroundTaskMessagingExperiment.schema.json"
   variables: {}
 
 backgroundUpdateAutomaticRestart:

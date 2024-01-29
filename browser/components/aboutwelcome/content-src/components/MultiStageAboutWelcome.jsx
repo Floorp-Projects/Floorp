@@ -11,7 +11,7 @@ import { SubmenuButton } from "./SubmenuButton";
 import {
   BASE_PARAMS,
   addUtmParams,
-} from "../../../newtab/content-src/asrouter/templates/FirstRun/addUtmParams";
+} from "asrouter/content-src/templates/FirstRun/addUtmParams";
 
 // Amount of milliseconds for all transitions to complete (including delays).
 const TRANSITION_OUT_TIME = 1000;

@@ -7,3 +7,5 @@ browser.jar:
   content/browser/asrouter/asrouter-admin.bundle.js                      (content/asrouter-admin.bundle.js)
   content/browser/asrouter/components/ASRouterAdmin/ASRouterAdmin.css    (content/components/ASRouterAdmin/ASRouterAdmin.css)
   content/browser/asrouter/render.js                                     (content/render.js)
+  content/browser/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json     (content-src/schemas/BackgroundTaskMessagingExperiment.schema.json)
+  content/browser/asrouter/schemas/MessagingExperiment.schema.json                   (content-src/schemas/MessagingExperiment.schema.json)

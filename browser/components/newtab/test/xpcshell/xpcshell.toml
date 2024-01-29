@@ -1,5 +1,4 @@
 [DEFAULT]
-head = "head.js"
 firefox-appdir = "browser"
 skip-if = ["os == 'android'"] # bug 1730213
 prefs = [
@@ -28,25 +27,11 @@ skip-if = ["socketprocess_networking"] # Bug 1759035
 
 ["test_AboutWelcomeTelemetry_glean.js"]
 
-["test_CFRMessageProvider.js"]
-
 ["test_HighlightsFeed.js"]
-
-["test_InflightAssetsMessageProvider.js"]
-
-["test_NimbusRolloutMessageProvider.js"]
-
-["test_OnboardingMessageProvider.js"]
-
-["test_PanelTestProvider.js"]
 
 ["test_PlacesFeed.js"]
 
 ["test_TopSitesFeed_glean.js"]
-
-["test_reach_experiments.js"]
-
-["test_remoteExperiments.js"]
 
 ["test_Store.js"]
 

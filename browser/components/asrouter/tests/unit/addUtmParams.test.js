@@ -1,7 +1,7 @@
 import {
   addUtmParams,
   BASE_PARAMS,
-} from "content-src/asrouter/templates/FirstRun/addUtmParams";
+} from "content-src/templates/FirstRun/addUtmParams";
 
 describe("addUtmParams", () => {
   it("should convert a string URL", () => {

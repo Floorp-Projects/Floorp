@@ -22,6 +22,7 @@ function assertValidates(validator, obj, msg) {
 
 async function fetchSchema(uri) {
   try {
+    dump(`URI: ${uri}\n`);
     return fetch(uri, { credentials: "omit" }).then(rsp => rsp.json());
   } catch (e) {
     throw new Error(`Could not fetch ${uri}`);
@@ -44,7 +45,7 @@ async function schemaValidatorFor(uri, { common = false } = {}) {
 
 async function makeValidators() {
   const experimentValidator = await schemaValidatorFor(
-    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json"
   );
 
   const messageValidators = {

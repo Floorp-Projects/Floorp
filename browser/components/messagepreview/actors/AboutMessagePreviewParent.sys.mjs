@@ -65,7 +65,7 @@ export class AboutMessagePreviewParent extends JSWindowActorParent {
     }
 
     const schema = await fetch(
-      "resource://activity-stream/schemas/MessagingExperiment.schema.json",
+      "chrome://browser/content/asrouter/schemas/MessagingExperiment.schema.json",
       { credentials: "omit" }
     ).then(rsp => rsp.json());
 
