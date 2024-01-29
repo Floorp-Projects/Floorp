@@ -11230,8 +11230,10 @@ activetrail.biz
 // Submitted by Ian Boston <boston@adobe.com> and Lars Trieloff <trieloff@adobe.com>
 adobeaemcloud.com
 *.dev.adobeaemcloud.com
+aem.live
 hlx.live
 adobeaemcloud.net
+aem.page
 hlx.page
 hlx3.page
 
@@ -13006,10 +13008,6 @@ url.tw
 // Submitted by Eric Jiang <eric@fabrica.dev>
 onfabrica.com
 
-// Facebook, Inc.
-// Submitted by Peter Ruibal <public-suffix@fb.com>
-apps.fbsbx.com
-
 // FAITID : https://faitid.org/
 // Submitted by Maxim Alzoba <tech.contact@faitid.org>
 // https://www.flexireg.net/stat_info
@@ -14037,6 +14035,11 @@ memset.net
 // Submitted by Ruben Schmidmeister <psl-maintainers@messerli.ch>
 messerli.app
 
+// Meta Platforms, Inc. : https://meta.com/
+// Submitted by Jacob Cordero <public-suffix@meta.com>
+atmeta.com
+apps.fbsbx.com
+
 // MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
 // Submitted by Zdeněk Šustr <zdenek.sustr@cesnet.cz>
 *.cloud.metacentrum.cz
@@ -14725,10 +14728,11 @@ from.tv
 sakura.tv
 
 // Salesforce.com, Inc. https://salesforce.com/
-// Submitted by Michael Biven <mbiven@salesforce.com>
+// Submitted by Michael Biven <mbiven@salesforce.com> and Aaron Romeo <aaron.romeo@salesforce.com>
 *.builder.code.com
 *.dev-builder.code.com
 *.stg-builder.code.com
+*.001.test.code-builder-stg.platform.salesforce.com
 
 // Sandstorm Development Group, Inc. : https://sandcats.io/
 // Submitted by Asheesh Laroia <asheesh@sandstorm.io>
