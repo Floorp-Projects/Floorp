@@ -187,7 +187,6 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
   }
   asr->mParent = aParent;
   asr->mScrollableFrame = aScrollableFrame;
-  asr->mViewId = Nothing();
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
   asr->mRetained = aIsRetained;
 
