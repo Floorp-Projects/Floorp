@@ -35,6 +35,27 @@ linux64-android-avd-x86_64-repack:
             # Aliases aren't allowed for toolchains depending on toolchains.
             - linux64-jdk-repack
 
+linux64-android31-avd-x86_64-repack:
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd31-x86_64-linux)
+    worker-type: b-linux-kvm-gcp
+    worker:
+        kvm: true
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/android31-x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
+        toolchain-alias: android31-avd-x86_64-linux
+    fetches:
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-jdk-repack
+
+
 linux64-android-avd-arm-repack:
     attributes:
         local-toolchain: true
@@ -89,6 +110,24 @@ linux64-android-system-image-x86_64-repack:
         toolchain:
             # Aliases aren't allowed for toolchains depending on toolchains.
             - linux64-jdk-repack
+
+linux64-android31-system-image-x86_64-repack:
+    description: "Android System Images (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(x86_64-avd31-img-linux)
+    run:
+        script: repack-android-system-images-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/android31-x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-system-images/android-system-images-linux.tar.zst
+        toolchain-alias: android31-system-image-x86_64-linux
+    fetches:
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-jdk-repack
+
 
 linux64-jdk-repack:
     description: "Java JDK (Linux) repack toolchain build"
