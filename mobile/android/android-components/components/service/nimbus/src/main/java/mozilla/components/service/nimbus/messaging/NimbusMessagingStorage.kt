@@ -52,8 +52,15 @@ class NimbusMessagingStorage(
     private val customAttributes: JSONObject
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
-    val helper: NimbusMessagingHelperInterface
-        get() = gleanPlumb.createMessageHelper(customAttributes)
+    /**
+     * Returns a Nimbus message helper, for evaluating JEXL.
+     *
+     * The JEXL context is time-sensitive, so this should be created new for each set of evaluations.
+     *
+     * Since it has a native peer, it should be [destroy]ed after finishing the set of evaluations.
+     */
+    fun createMessagingHelper(): NimbusMessagingHelperInterface =
+        gleanPlumb.createMessageHelper(customAttributes)
 
     /**
      * Returns the [Message] for the given [key] or returns null if none found.
@@ -113,13 +120,14 @@ class NimbusMessagingStorage(
      * Returns the next higher priority message which all their triggers are true.
      */
     fun getNextMessage(surface: MessageSurfaceId, availableMessages: List<Message>): Message? =
-        getNextMessage(
-            surface,
-            availableMessages,
-            setOf(),
-            helper,
-            mutableMapOf(),
-        )
+        createMessagingHelper().use {
+            getNextMessage(
+                surface,
+                availableMessages,
+                setOf(),
+                it,
+            )
+        }
 
     @Suppress("ReturnCount")
     private fun getNextMessage(
@@ -127,12 +135,11 @@ class NimbusMessagingStorage(
         availableMessages: List<Message>,
         excluded: Set<String>,
         helper: NimbusMessagingHelperInterface,
-        jexlCache: MutableMap<String, Boolean>,
     ): Message? {
         val message = availableMessages
             .filter { surface == it.surface }
             .filter { !excluded.contains(it.id) }
-            .firstOrNull { isMessageEligible(it, helper, jexlCache) } ?: return null
+            .firstOrNull { isMessageEligible(it, helper) } ?: return null
 
         val slug = message.data.experiment
         if (slug != null) {
@@ -167,7 +174,6 @@ class NimbusMessagingStorage(
                     availableMessages,
                     excluded + message.id,
                     helper,
-                    jexlCache,
                 )
 
             ControlMessageBehavior.SHOW_NONE -> null
@@ -189,12 +195,12 @@ class NimbusMessagingStorage(
      * The fully resolved (with all substitutions) action is returned as the second value
      * of the [Pair].
      */
-    fun generateUuidAndFormatAction(action: String): Pair<String?, String> {
-        val helper = gleanPlumb.createMessageHelper(customAttributes)
-        val uuid = helper.getUuid(action)
-
-        return Pair(uuid, helper.stringFormat(action, uuid))
-    }
+    fun generateUuidAndFormatAction(action: String): Pair<String?, String> =
+        createMessagingHelper().use { helper ->
+            val uuid = helper.getUuid(action)
+            val url = helper.stringFormat(action, uuid)
+            Pair(uuid, url)
+        }
 
     /**
      * Updated the provided [metadata] in the storage.
@@ -259,23 +265,19 @@ class NimbusMessagingStorage(
     fun isMessageEligible(
         message: Message,
         helper: NimbusMessagingHelperInterface,
-        jexlCache: MutableMap<String, Boolean> = mutableMapOf(),
     ): Boolean {
         return message.triggers.all { condition ->
-            jexlCache[condition]
-                ?: try {
-                    if (malFormedMap.containsKey(condition)) {
-                        return false
-                    }
-                    helper.evalJexl(condition).also { result ->
-                        jexlCache[condition] = result
-                    }
-                } catch (e: NimbusException.EvaluationException) {
-                    reportMalformedMessage(message.id)
-                    malFormedMap[condition] = message.id
-                    logger.info("Unable to evaluate $condition")
-                    false
+            try {
+                if (malFormedMap.containsKey(condition)) {
+                    return false
                 }
+                helper.evalJexl(condition)
+            } catch (e: NimbusException.EvaluationException) {
+                reportMalformedMessage(message.id)
+                malFormedMap[condition] = message.id
+                logger.info("Unable to evaluate $condition")
+                false
+            }
         }
     }
 
@@ -290,3 +292,11 @@ class NimbusMessagingStorage(
         )
     }
 }
+
+/**
+ * A helper method to safely destroy the message helper after use.
+ */
+fun <R> NimbusMessagingHelperInterface.use(block: (NimbusMessagingHelperInterface) -> R) =
+    block(this).also {
+        this.destroy()
+    }

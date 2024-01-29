@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import mozilla.components.service.nimbus.evalJexlSafe
+import mozilla.components.service.nimbus.messaging.use
 import mozilla.components.support.base.ext.areNotificationsEnabledSafe
 import mozilla.components.support.utils.BrowsersCache
 import org.mozilla.fenix.R
@@ -228,7 +229,7 @@ class OnboardingFragment : Fragment() {
         showAddWidgetPage: Boolean,
     ): List<OnboardingPageUiData> {
         val jexlConditions = FxNimbus.features.junoOnboarding.value().conditions
-        val jexlHelper = requireContext().components.analytics.messagingStorage.helper
+        val jexlHelper = requireContext().components.analytics.messagingStorage.createMessagingHelper()
 
         val privacyCaption = Caption(
             text = getString(R.string.juno_onboarding_privacy_notice_text),
@@ -249,12 +250,14 @@ class OnboardingFragment : Fragment() {
                 },
             ),
         )
-        return FxNimbus.features.junoOnboarding.value().cards.values.toPageUiData(
-            privacyCaption,
-            showDefaultBrowserPage,
-            showNotificationPage,
-            showAddWidgetPage,
-            jexlConditions,
-        ) { condition -> jexlHelper.evalJexlSafe(condition) }
+        return jexlHelper.use {
+            FxNimbus.features.junoOnboarding.value().cards.values.toPageUiData(
+                privacyCaption,
+                showDefaultBrowserPage,
+                showNotificationPage,
+                showAddWidgetPage,
+                jexlConditions,
+            ) { condition -> jexlHelper.evalJexlSafe(condition) }
+        }
     }
 }

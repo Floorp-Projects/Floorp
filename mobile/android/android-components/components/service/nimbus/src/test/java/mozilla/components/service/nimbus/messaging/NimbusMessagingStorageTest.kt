@@ -83,6 +83,8 @@ class NimbusMessagingStorageTest {
             gleanPlumb,
             messagingFeature,
         )
+
+        `when`(gleanPlumb.createMessageHelper(any())).thenReturn(mock())
     }
 
     @After
@@ -489,7 +491,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(false).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(false).`when`(spiedStorage).isMessageEligible(any(), any())
 
         val result = spiedStorage.getNextMessage(HOMESCREEN, listOf(message))
 
@@ -508,7 +510,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any())
 
         val result = spiedStorage.getNextMessage(HOMESCREEN, listOf(message))
 
@@ -530,7 +532,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any())
 
         val result = spiedStorage.getNextMessage(HOMESCREEN, listOf(message))
 
@@ -565,7 +567,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any())
 
         val result = spiedStorage.getNextMessage(
             HOMESCREEN,
@@ -603,7 +605,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any())
 
         val result = spiedStorage.getNextMessage(
             HOMESCREEN,
@@ -652,7 +654,7 @@ class NimbusMessagingStorageTest {
             Message.Metadata("same-id"),
         )
 
-        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any())
 
         var result = spiedStorage.getNextMessage(
             HOMESCREEN,
