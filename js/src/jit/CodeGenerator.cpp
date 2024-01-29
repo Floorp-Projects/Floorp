@@ -1522,6 +1522,25 @@ void CodeGenerator::visitTestBIAndBranch(LTestBIAndBranch* lir) {
   }
 }
 
+void CodeGenerator::assertObjectDoesNotEmulateUndefined(
+    Register input, Register temp, const MInstruction* mir) {
+#ifdef DEBUG
+  // Validate that the object indeed doesn't have the emulates undefined flag.
+  auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
+  addOutOfLineCode(ool, mir);
+
+  Label* doesNotEmulateUndefined = ool->label1();
+  Label* emulatesUndefined = ool->label2();
+
+  testObjectEmulatesUndefined(input, emulatesUndefined, doesNotEmulateUndefined,
+                              temp, ool);
+  masm.bind(emulatesUndefined);
+  masm.assumeUnreachable(
+      "Found an object emulating undefined while the fuse is intact");
+  masm.bind(doesNotEmulateUndefined);
+#endif
+}
+
 void CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir) {
   Label* truthy = getJumpLabelForBranch(lir->ifTruthy());
   Label* falsy = getJumpLabelForBranch(lir->ifFalsy());
@@ -1529,6 +1548,8 @@ void CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir) {
 
   bool intact = hasSeenObjectEmulateUndefinedFuseIntactAndDependencyNoted();
   if (intact) {
+    assertObjectDoesNotEmulateUndefined(input, ToRegister(lir->temp()),
+                                        lir->mir());
     // Bug 1874905: It would be fantastic if this could be optimized out
     masm.jump(truthy);
   } else {
@@ -11162,14 +11183,29 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
     // Both branches meet here.
     masm.bind(&done);
   } else {
-    Label nullOrUndefined;
+    Label nullOrUndefined, notNullOrLikeUndefined;
+#ifdef DEBUG
+    Register objreg = Register::Invalid();
+#endif
     {
       ScratchTagScope tag(masm, value);
       masm.splitTagForTest(value, tag);
 
       masm.branchTestNull(Assembler::Equal, tag, &nullOrUndefined);
       masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
+
+#ifdef DEBUG
+      // Check whether it's a truthy object or a falsy object that emulates
+      // undefined.
+      masm.branchTestObject(Assembler::NotEqual, tag, &notNullOrLikeUndefined);
+      objreg = masm.extractObject(value, ToTempUnboxRegister(lir->temp0()));
+#endif
     }
+
+#ifdef DEBUG
+    assertObjectDoesNotEmulateUndefined(objreg, output, lir->mir());
+    masm.bind(&notNullOrLikeUndefined);
+#endif
 
     Label done;
 
@@ -11220,17 +11256,26 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
     masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
   }
 
+  bool extractObject = !intact;
+#ifdef DEBUG
+  // always extract objreg if we're in debug and
+  // assertObjectDoesNotEmulateUndefined;
+  extractObject = true;
+#endif
+
+  Register objreg = Register::Invalid();
+  Register scratch = ToRegister(lir->temp());
+  if (extractObject) {
+    objreg = masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
+  }
   if (!intact) {
+    // Objects that emulate undefined are loosely equal to null/undefined.
     OutOfLineTestObject* ool = new (alloc()) OutOfLineTestObject();
     addOutOfLineCode(ool, lir->cmpMir());
-
-    // Objects that emulate undefined are loosely equal to null/undefined.
-    Register objreg =
-        masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
-    Register scratch = ToRegister(lir->temp());
     testObjectEmulatesUndefined(objreg, ifTrueLabel, ifFalseLabel, scratch,
                                 ool);
   } else {
+    assertObjectDoesNotEmulateUndefined(objreg, scratch, lir->cmpMir());
     // Bug 1874905. This would be nice to optimize out at the MIR level.
     masm.jump(ifFalseLabel);
   }
@@ -11244,11 +11289,10 @@ void CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT* lir) {
   bool intact = hasSeenObjectEmulateUndefinedFuseIntactAndDependencyNoted();
   JSOp op = lir->mir()->jsop();
   Register output = ToRegister(lir->output());
+  Register objreg = ToRegister(lir->input());
   if (!intact) {
     MOZ_ASSERT(IsLooseEqualityOp(op),
                "Strict equality should have been folded");
-
-    Register objreg = ToRegister(lir->input());
 
     auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
     addOutOfLineCode(ool, lir->mir());
@@ -11268,7 +11312,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT* lir) {
     masm.move32(Imm32(op == JSOp::Eq), output);
     masm.bind(&done);
   } else {
-    // No need to check object if fuse is intact.
+    assertObjectDoesNotEmulateUndefined(objreg, output, lir->mir());
     masm.move32(Imm32(op == JSOp::Ne), output);
   }
 }
@@ -11292,21 +11336,20 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(
     std::swap(ifTrue, ifFalse);
   }
 
+  Register input = ToRegister(lir->getOperand(0));
+  Register scratch = ToRegister(lir->temp());
+  Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
+  Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
+
   if (intact) {
     // Bug 1874905. Ideally branches like this would be optimized out.
-    Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
+    assertObjectDoesNotEmulateUndefined(input, scratch, lir->mir());
     masm.jump(ifFalseLabel);
   } else {
-    Register input = ToRegister(lir->getOperand(0));
-
     auto* ool = new (alloc()) OutOfLineTestObject();
     addOutOfLineCode(ool, lir->cmpMir());
 
-    Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
-    Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
-
     // Objects that emulate undefined are loosely equal to null/undefined.
-    Register scratch = ToRegister(lir->temp());
     testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
   }
 }
@@ -13221,10 +13264,13 @@ void CodeGenerator::visitNotBI(LNotBI* lir) {
 }
 
 void CodeGenerator::visitNotO(LNotO* lir) {
+  Register objreg = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
   bool intact = hasSeenObjectEmulateUndefinedFuseIntactAndDependencyNoted();
   if (intact) {
     // Bug 1874905: It would be fantastic if this could be optimized out.
-    Register output = ToRegister(lir->output());
+    assertObjectDoesNotEmulateUndefined(objreg, output, lir->mir());
     masm.move32(Imm32(0), output);
   } else {
     auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
@@ -13233,8 +13279,6 @@ void CodeGenerator::visitNotO(LNotO* lir) {
     Label* ifEmulatesUndefined = ool->label1();
     Label* ifDoesntEmulateUndefined = ool->label2();
 
-    Register objreg = ToRegister(lir->input());
-    Register output = ToRegister(lir->output());
     branchTestObjectEmulatesUndefined(objreg, ifEmulatesUndefined,
                                       ifDoesntEmulateUndefined, output, ool);
     // fall through

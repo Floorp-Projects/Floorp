@@ -410,6 +410,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   LIR_OPCODE_LIST(LIR_OP)
 #undef LIR_OP
 
+  // In debug mode, we need to validate that we've not made a mistake with the
+  // fuse.
+  void assertObjectDoesNotEmulateUndefined(Register input, Register temp,
+                                           const MInstruction* mir);
+
   // Enumerates the fuses that a code generation can depend on. These will
   // be mapped to an actual fuse by validateAndRegisterFuseDependencies.
   enum class FuseDependencyKind {
