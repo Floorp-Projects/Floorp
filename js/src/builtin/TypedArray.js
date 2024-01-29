@@ -231,6 +231,10 @@ function TypedArrayEntries() {
   // Step 2-6.
   EnsureTypedArrayWithArrayBuffer(O);
 
+  // We also need to make sure the length is in-bounds. This is checked by
+  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
+  PossiblyWrappedTypedArrayLength(O);
+
   // Step 7.
   return CreateArrayIterator(O, ITEM_KIND_KEY_AND_VALUE);
 }
@@ -697,6 +701,7 @@ function TypedArrayKeys() {
 
   // Step 2.
   EnsureTypedArrayWithArrayBuffer(O);
+  PossiblyWrappedTypedArrayLength(O);
 
   // Step 3.
   return CreateArrayIterator(O, ITEM_KIND_KEY);
@@ -1427,6 +1432,7 @@ function $TypedArrayValues() {
 
   // See the big comment in TypedArrayEntries for what we're doing here.
   EnsureTypedArrayWithArrayBuffer(O);
+  PossiblyWrappedTypedArrayLength(O);
 
   // Step 7.
   return CreateArrayIterator(O, ITEM_KIND_VALUE);
