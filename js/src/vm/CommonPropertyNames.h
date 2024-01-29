@@ -247,6 +247,8 @@
   MACRO_(group, "group")                                                       \
   MACRO_(groupBy, "groupBy")                                                   \
   MACRO_(groups, "groups")                                                     \
+  MACRO_(grow, "grow")                                                         \
+  MACRO_(growable, "growable")                                                 \
   MACRO_(h11, "h11")                                                           \
   MACRO_(h12, "h12")                                                           \
   MACRO_(h23, "h23")                                                           \
