@@ -1800,6 +1800,9 @@ void nsLookAndFeel::PerThemeData::Init() {
     if (mName.EqualsLiteral("Breeze") || mName.EqualsLiteral("Breeze-Dark")) {
       return ThemeFamily::Breeze;
     }
+    if (StringBeginsWith(mName, "Yaru-remix"_ns)) {
+      return ThemeFamily::YaruRemix;
+    }
     if (StringBeginsWith(mName, "Yaru"_ns)) {
       return ThemeFamily::Yaru;
     }
