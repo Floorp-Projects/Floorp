@@ -1,6 +1,6 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
+  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",

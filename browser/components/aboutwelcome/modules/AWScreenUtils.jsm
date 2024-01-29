@@ -10,7 +10,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 
 const AWScreenUtils = {

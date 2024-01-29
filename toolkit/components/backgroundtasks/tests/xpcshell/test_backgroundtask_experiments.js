@@ -15,7 +15,7 @@
 //     Messaging System experience.
 
 const { ASRouterTargeting } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+  "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
 
 // These randomization IDs were extracted by hand from Firefox instances.

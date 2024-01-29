@@ -9,11 +9,17 @@ JAR_MANIFESTS += ["jar.mn"]
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Messaging System")
 
+FINAL_TARGET_FILES.actors += [
+    "actors/ASRouterChild.sys.mjs",
+    "actors/ASRouterParent.sys.mjs",
+]
+
 EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterDefaultConfig.jsm",
     "modules/ASRouterNewTabHook.sys.mjs",
     "modules/ASRouterParentProcessMessageHandler.jsm",
     "modules/ASRouterPreferences.jsm",
+    "modules/ASRouterTargeting.jsm",
     "modules/ASRouterTriggerListeners.jsm",
 ]
 

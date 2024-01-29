@@ -1,5 +1,5 @@
 import { _ASRouter, MessageLoaderUtils } from "lib/ASRouter.jsm";
-import { QueryCache } from "lib/ASRouterTargeting.jsm";
+import { QueryCache } from "asroutermodules/ASRouterTargeting.jsm";
 import {
   FAKE_LOCAL_MESSAGES,
   FAKE_LOCAL_PROVIDER,
