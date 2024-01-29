@@ -85,11 +85,9 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   const unsigned long TYPE_LOADING     = 0;
   [ChromeOnly]
+  const unsigned long TYPE_DOCUMENT    = 1;
+  [ChromeOnly]
   const unsigned long TYPE_FALLBACK    = 2;
-  [ChromeOnly]
-  const unsigned long TYPE_DOCUMENT    = 3;
-  [ChromeOnly]
-  const unsigned long TYPE_NULL        = 4;
 
   /**
    * The actual mime type (the one we got back from the network

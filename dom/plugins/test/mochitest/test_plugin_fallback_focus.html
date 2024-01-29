@@ -61,7 +61,7 @@ embedElt.type = "image/jpg";
 // embed elements must be reparented before new type is recognized.
 checkFocusable(false, "<object> image", objElt);
 checkFocusable(true, "<object> image with tabindex", objEltWithIdx);
-checkFocusable(false, "<embed> plugin with image attribs before reparenting", embedElt);
+checkFocusable(true, "<embed> plugin with image attribs before reparenting", embedElt);
 embedElt.parentNode.appendChild(embedElt);
 checkFocusable(true, "<embed> image", embedElt);
 

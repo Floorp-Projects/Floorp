@@ -26,9 +26,8 @@ interface nsIObjectLoadingContent : nsISupports
    * See notes in nsObjectLoadingContent.h
    */
   const unsigned long TYPE_LOADING     = 0;
+  const unsigned long TYPE_DOCUMENT    = 1;
   const unsigned long TYPE_FALLBACK    = 2;
-  const unsigned long TYPE_DOCUMENT    = 3;
-  const unsigned long TYPE_NULL        = 4;
 
   /**
    * The actual mime type (the one we got back from the network
