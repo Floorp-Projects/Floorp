@@ -280,6 +280,60 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
+    android-aarch64-shippable/opt:
+        description: "Android 5.0 AArch64 PGO instrumented"
+        index:
+            product: mobile
+            job-name: instrumented-android-aarch64
+        shipping-product: fennec
+        treeherder:
+            platform: android-5-0-aarch64/pgo
+        worker-type: b-linux-gcp
+        worker:
+            docker-image: {in-tree: android-build}
+            env:
+                GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            artifacts:
+                - name: public/build
+                  path: /builds/worker/artifacts/
+                  type: directory
+                - name: public/build/geckoview-androidTest.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+                  type: file
+                - name: public/build/geckoview-test_runner.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/apk/withGeckoBinaries/debug/test_runner-withGeckoBinaries-debug.apk
+                  type: file
+                - name: public/build/geckoview-test_runner.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/bundle/withGeckoBinariesDebug/test_runner-withGeckoBinaries-debug.aab
+                  type: file
+                - name: public/build/geckoview_example.apk
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+                - name: public/build/geckoview_example.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/bundle/withGeckoBinariesDebug/geckoview_example-withGeckoBinaries-debug.aab
+                  type: file
+        run:
+            config:
+                - builds/releng_base_android_64_builds.py
+            custom-build-variant-cfg: aarch64-profile-generate
+            tooltool-downloads: internal
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-jdk
+                - linux64-clang
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
     win32-shippable/opt:
         description: "Win32 Shippable PGO Instrumented"
         index:
