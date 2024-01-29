@@ -6,13 +6,6 @@ prefs = [
   "browser.startup.homepage.abouthome_cache.testing=true",
 ]
 
-["test_ASRouterTargeting_attribution.js"]
-run-if = ["os == 'mac'"] # osx specific tests
-
-["test_ASRouterTargeting_snapshot.js"]
-
-["test_ASRouter_getTargetingParameters.js"]
-
 ["test_AboutHomeStartupCacheChild.js"]
 
 ["test_AboutHomeStartupCacheWorker.js"]

@@ -70,7 +70,7 @@ Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.provid
 Services.prefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.devtoolsEnabled", true);
 ```
 
-**4. Go to `about:newtab#devtools`**
+**4. Go to `about:asrouter`**
 There should be a "cfr-remote" provider listed.
 
 ## Using the staging server for Remote CFR

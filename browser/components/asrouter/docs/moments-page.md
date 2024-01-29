@@ -29,11 +29,11 @@ When the message is shown at startup:
 
 ### Via the dev tools:
 1. In the search tab go to `about:config`, set `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled` to `true`
-2. Open a new tab, in the search tab go to `about:newtab#devtools`
+2. Open a new tab, in the search tab go to `about:asrouter`
 3. In devtools, select and show messages from `panel_local_testing` as provider
 4. You should see example JSON messages with  `"template": "update_action"`. You can directly modify the message in the text area with your changes or by pasting your custom message JSON. For testing, please keep `id` property in config same as respective message modified.
 5. Clicking `Modify` updates the override pref `browser.startup.homepage_override.once` and configures the Messaging System to open moments url in message config on next browser restart.
-6. Ensure that all required properties are covered according to the [Moments Schema](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json)
+6. Ensure that all required properties are covered according to the [Moments Schema](https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/UpdateAction.schema.json)
 7. Restart firefox and your moments page should pop up on re-run
 
 ### Via Experiments:

@@ -10,11 +10,11 @@ Spotlights by default are `“window modal”` preventing access to the rest of 
 
 ## Testing Spotlight
 1. Go to `about:config`, set pref `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled` to `true`
-2. Open a new tab and go to `about:newtab#devtools` in the url bar
+2. Open a new tab and go to `about:asrouter` in the url bar
 3. In devtools `Messages` section, select and show messages from `onboarding` as provider
 4. You should see example JSON messages with `"template": "spotlight"`. Clicking `Show` next to spotlight template message should show respective message UI
 5. For quick testing, you can directly modify the message in the text area with your changes or by pasting your custom screen message JSON. Clicking `Modify` shows your new updated spotlight message.
-6. Ensure that all required properties are covered according to the [Spotlight Schema](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json)
+6. Ensure that all required properties are covered according to the [Spotlight Schema](https://searchfox.org/mozilla-central/source/browser/components/asrouter/content-src/templates/OnboardingMessage/Spotlight.schema.json)
 7. Clicking `Share`, copies link to clipboard that can be pasted in the url bar to preview spotlight custom screen(s) in browser and can be shared to get feedback from your team.
 - **Note:** Spotlight can be either window or tab level, with the `"modal": "tab"` or `"modal": "window"` property in the recipe
 

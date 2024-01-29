@@ -45,7 +45,7 @@ component and set of conventions that provides:
 * Generalized and privacy conscious event telemetry
 * Flexible Frequency Capping to mitigate user message fatigue
 * Localized off train Messages
-* Powerful development/debugging/QA tools on about:newtab#devtools
+* Powerful development/debugging/QA tools on about:asrouter
 
 Message Routing
 ---------------
@@ -102,6 +102,7 @@ Detailed Docs
   simple-cfr-template
   debugging-docs
   first-run
+  remote_cfr
   targeting-attributes
   targeting-guide
   telemetry
