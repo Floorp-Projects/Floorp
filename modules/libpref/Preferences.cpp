@@ -3940,10 +3940,6 @@ Preferences::Observe(nsISupports* aSubject, const char* aTopic,
     MOZ_ASSERT(!mDirty, "Preferences should not be dirty");
     mProfileShutdown = true;
 
-  } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
-    // Reload the default prefs from file.
-    Unused << InitInitialObjects(/* isStartup */ false);
-
   } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
     // Our process is being suspended. The OS may wake our process later,
     // or it may kill the process. In case our process is going to be killed
