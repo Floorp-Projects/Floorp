@@ -347,6 +347,13 @@ export let URICountListener = {
         uriSpec,
         webProgress.loadType
       );
+    } else {
+      lazy.SearchSERPTelemetry.updateTrackingSinglePageApp(
+        browser,
+        uriSpec,
+        webProgress.loadType,
+        flags
+      );
     }
 
     // Update total URI count, including when in private mode.

@@ -1,6 +1,6 @@
 [DEFAULT]
 tags = "search-telemetry"
-support-files = ["head.js"]
+support-files = ["head.js", "head-spa.js"]
 prefs = ["browser.search.log=true"]
 
 ["browser_search_glean_serp_event_telemetry_categorization_enabled_by_nimbus_variable.js"]
@@ -180,3 +180,15 @@ support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
 ["browser_search_telemetry_sources_webextension.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
+
+["browser_search_telemetry_spa_in_content.js"]
+support-files = ["searchTelemetrySinglePageApp.html"]
+
+["browser_search_telemetry_spa_multi_provider.js"]
+support-files = ["searchTelemetrySinglePageApp.html"]
+
+["browser_search_telemetry_spa_multi_tab.js"]
+support-files = ["searchTelemetrySinglePageApp.html"]
+
+["browser_search_telemetry_spa_single_tab.js"]
+support-files = ["searchTelemetrySinglePageApp.html"]
