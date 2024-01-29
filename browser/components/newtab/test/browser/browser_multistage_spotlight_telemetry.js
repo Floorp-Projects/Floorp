@@ -4,7 +4,7 @@ const { Spotlight } = ChromeUtils.import(
   "resource://activity-stream/lib/Spotlight.jsm"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+  "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(

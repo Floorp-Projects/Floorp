@@ -7,7 +7,7 @@ const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+  "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"

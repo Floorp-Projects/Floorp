@@ -26,6 +26,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/CFRPageActions.jsm",
     "modules/MessagingExperimentConstants.sys.mjs",
     "modules/OnboardingMessageProvider.jsm",
+    "modules/PanelTestProvider.sys.mjs",
     "modules/RemoteL10n.sys.mjs",
 ]
 

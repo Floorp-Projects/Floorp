@@ -11,7 +11,7 @@ const { ToastNotification } = ChromeUtils.import(
   "resource://activity-stream/lib/ToastNotification.jsm"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+  "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
 
 function getMessage(id) {

@@ -15,7 +15,7 @@ import {
 import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.jsm";
 import { CFRPageActions } from "modules/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { PanelTestProvider } from "newtab/lib/PanelTestProvider.sys.mjs";
+import { PanelTestProvider } from "modules/PanelTestProvider.sys.mjs";
 import ProviderResponseSchema from "content-src/schemas/provider-response.schema.json";
 
 const MESSAGE_PROVIDER_PREF_NAME =
