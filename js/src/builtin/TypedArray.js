@@ -176,6 +176,34 @@ function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
   // Step 2.
   ValidateTypedArray(newTypedArray);
 
+  // We also need to make sure the length is in-bounds. This is checked by
+  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
+  PossiblyWrappedTypedArrayLength(newTypedArray);
+
+  // Step 3 (not applicable).
+
+  // Step 4.
+  return newTypedArray;
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
+function TypedArrayCreateWithResizableBuffer(constructor, buffer, byteOffset) {
+  // Step 1.
+  var newTypedArray = constructContentFunction(
+    constructor,
+    constructor,
+    buffer,
+    byteOffset
+  );
+
+  // Step 2.
+  ValidateTypedArray(newTypedArray);
+
+  // We also need to make sure the length is in-bounds. This is checked by
+  // calling PossiblyWrappedTypedArrayLength, which throws for out-of-bounds.
+  PossiblyWrappedTypedArrayLength(newTypedArray);
+
   // Step 3 (not applicable).
 
   // Step 4.
@@ -209,6 +237,22 @@ function TypedArraySpeciesCreateWithBuffer(
 
   // Step 4.
   return TypedArrayCreateWithBuffer(C, buffer, byteOffset, length);
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
+function TypedArraySpeciesCreateWithResizableBuffer(
+  exemplar,
+  buffer,
+  byteOffset
+) {
+  // Step 1 (omitted).
+
+  // Steps 2-3.
+  var C = TypedArraySpeciesConstructor(exemplar);
+
+  // Step 4.
+  return TypedArrayCreateWithResizableBuffer(C, buffer, byteOffset);
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.6 %TypedArray%.prototype.entries()
@@ -1270,6 +1314,20 @@ function TypedArraySubarray(begin, end) {
       ? std_Math_max(srcLength + relativeBegin, 0)
       : std_Math_min(relativeBegin, srcLength);
 
+  // Steps 11-12. (Reordered)
+  var elementSize = TypedArrayElementSize(obj);
+
+  // Step 14. (Reordered)
+  var beginByteOffset = srcByteOffset + beginIndex * elementSize;
+
+  if (end === undefined && TypedArrayIsAutoLength(obj)) {
+    return TypedArraySpeciesCreateWithResizableBuffer(
+      obj,
+      buffer,
+      beginByteOffset
+    );
+  }
+
   // Step 8.
   var relativeEnd = end === undefined ? srcLength : ToInteger(end);
 
@@ -1281,12 +1339,6 @@ function TypedArraySubarray(begin, end) {
 
   // Step 10.
   var newLength = std_Math_max(endIndex - beginIndex, 0);
-
-  // Steps 11-12.
-  var elementSize = TypedArrayElementSize(obj);
-
-  // Step 14.
-  var beginByteOffset = srcByteOffset + beginIndex * elementSize;
 
   // Steps 15-16.
   return TypedArraySpeciesCreateWithBuffer(
