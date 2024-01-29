@@ -169,7 +169,7 @@ const testSearchEngine = {
   loadPath: SearchUtils.newSearchConfigEnabled
     ? "[app]engine@search.mozilla.org"
     : "[addon]engine@search.mozilla.org",
-  submissionUrl: "https://www.google.com/search?q=",
+  submissionURL: "https://www.google.com/search?q=",
 };
 const testChromeIconEngine = {
   id: "engine-chromeicon",
@@ -178,7 +178,7 @@ const testChromeIconEngine = {
     ? "[app]engine-chromeicon@search.mozilla.org"
     : "[addon]engine-chromeicon@search.mozilla.org",
 
-  submissionUrl: "https://www.google.com/search?q=",
+  submissionURL: "https://www.google.com/search?q=",
 };
 const testFrEngine = {
   id: "engine-fr",
@@ -186,7 +186,7 @@ const testFrEngine = {
   loadPath: SearchUtils.newSearchConfigEnabled
     ? "[app]engine-fr@search.mozilla.org"
     : "[addon]engine-fr@search.mozilla.org",
-  submissionUrl: "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
+  submissionURL: "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
 };
 const testPrefEngine = {
   id: "engine-pref",
@@ -194,7 +194,7 @@ const testPrefEngine = {
   loadPath: SearchUtils.newSearchConfigEnabled
     ? "[app]engine-pref@search.mozilla.org"
     : "[addon]engine-pref@search.mozilla.org",
-  submissionUrl: "https://www.google.com/search?q=",
+  submissionURL: "https://www.google.com/search?q=",
 };
 const testEngine2 = {
   id: "engine2",
@@ -202,7 +202,7 @@ const testEngine2 = {
   loadPath: SearchUtils.newSearchConfigEnabled
     ? "[app]engine2@search.mozilla.org"
     : "[addon]engine2@search.mozilla.org",
-  submissionUrl: "https://duckduckgo.com/?q=",
+  submissionURL: "https://duckduckgo.com/?q=",
 };
 
 function clearTelemetry() {
@@ -214,10 +214,34 @@ async function checkTelemetry(
   source,
   prevEngine,
   newEngine,
-  checkPrivate = false
+  checkPrivate = false,
+  additionalEventsExpected = false
 ) {
+  // TODO Bug 1876178 - Improve engine change telemetry.
+  // When we reload engines due to a config change, we update the engines as
+  // they may have changed, we don't track if any attribute has actually changed
+  // from previous, and so we send out an update regardless. This is why in
+  // this test we test for the additional `engine-update` event that's recorded.
+  // In future, we should be more specific about when to record the event and
+  // so only one event is captured and not two.
+  let additionalEvent = [
+    {
+      object: checkPrivate ? "change_private" : "change_default",
+      value: "engine-update",
+      extra: {
+        prev_id: prevEngine?.id ?? "",
+        new_id: prevEngine?.id ?? "",
+        new_name: prevEngine?.name ?? "",
+        new_load_path: prevEngine?.loadPath ?? "",
+        // Telemetry has a limit of 80 characters.
+        new_sub_url: prevEngine?.submissionURL.slice(0, 80) ?? "",
+      },
+    },
+  ];
+
   TelemetryTestUtils.assertEvents(
     [
+      ...(additionalEventsExpected ? additionalEvent : []),
       {
         object: checkPrivate ? "change_private" : "change_default",
         value: source,
@@ -227,7 +251,7 @@ async function checkTelemetry(
           new_name: newEngine?.name ?? "",
           new_load_path: newEngine?.loadPath ?? "",
           // Telemetry has a limit of 80 characters.
-          new_sub_url: newEngine?.submissionUrl.slice(0, 80) ?? "",
+          new_sub_url: newEngine?.submissionURL.slice(0, 80) ?? "",
         },
       },
     ],
@@ -240,6 +264,30 @@ async function checkTelemetry(
   } else {
     snapshot = await Glean.searchEngineDefault.changed.testGetValue();
   }
+
+  if (additionalEventsExpected) {
+    delete snapshot[0].timestamp;
+    Assert.deepEqual(
+      snapshot[0],
+      {
+        category: checkPrivate
+          ? "search.engine.private"
+          : "search.engine.default",
+        name: "changed",
+        extra: {
+          change_source: "engine-update",
+          previous_engine_id: prevEngine?.id ?? "",
+          new_engine_id: prevEngine?.id ?? "",
+          new_display_name: prevEngine?.name ?? "",
+          new_load_path: prevEngine?.loadPath ?? "",
+          new_submission_url: prevEngine?.submissionURL ?? "",
+        },
+      },
+      "Should have received the correct event details"
+    );
+    snapshot.shift();
+  }
+
   delete snapshot[0].timestamp;
   Assert.deepEqual(
     snapshot[0],
@@ -254,7 +302,7 @@ async function checkTelemetry(
         new_engine_id: newEngine?.id ?? "",
         new_display_name: newEngine?.name ?? "",
         new_load_path: newEngine?.loadPath ?? "",
-        new_submission_url: newEngine?.submissionUrl ?? "",
+        new_submission_url: newEngine?.submissionURL ?? "",
       },
     },
     "Should have received the correct event details"
@@ -298,7 +346,13 @@ add_task(async function test_configuration_changes_default() {
 
   await SearchTestUtils.updateRemoteSettingsConfig(MAIN_CONFIG);
 
-  await checkTelemetry("config", testSearchEngine, testChromeIconEngine);
+  await checkTelemetry(
+    "config",
+    testSearchEngine,
+    testChromeIconEngine,
+    false,
+    true
+  );
 });
 
 add_task(async function test_experiment_changes_default() {
@@ -310,7 +364,13 @@ add_task(async function test_experiment_changes_default() {
   NimbusFeatures.searchConfiguration.onUpdate.firstCall.args[0]();
   await reloadObserved;
 
-  await checkTelemetry("experiment", testChromeIconEngine, testEngine2);
+  await checkTelemetry(
+    "experiment",
+    testChromeIconEngine,
+    testEngine2,
+    false,
+    true
+  );
 
   // Reset the stub so that we are no longer in an experiment.
   getVariableStub.returns(null);
@@ -324,7 +384,7 @@ add_task(async function test_locale_changes_default() {
   Services.locale.requestedLocales = ["fr"];
   await reloadObserved;
 
-  await checkTelemetry("locale", testEngine2, testFrEngine);
+  await checkTelemetry("locale", testEngine2, testFrEngine, false, true);
 });
 
 add_task(async function test_region_changes_default() {
@@ -335,7 +395,7 @@ add_task(async function test_region_changes_default() {
   Region._setHomeRegion("DE", true);
   await reloadObserved;
 
-  await checkTelemetry("region", testFrEngine, testPrefEngine);
+  await checkTelemetry("region", testFrEngine, testPrefEngine, false, true);
 });
 
 add_task(async function test_user_changes_separate_private_pref() {
@@ -402,4 +462,56 @@ add_task(async function test_experiment_with_separate_default_notifies() {
   NimbusFeatures.searchConfiguration.onUpdate.firstCall.args[0]();
 
   await checkTelemetry("experiment", testChromeIconEngine, null, true);
+});
+
+add_task(async function test_default_engine_update() {
+  clearTelemetry();
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "engine",
+      id: "engine@tests.mozilla.org",
+      search_url_get_params: `q={searchTerms}&version=1.0`,
+      search_url: "https://www.google.com/search",
+      version: "1.0",
+    },
+    { skipUnload: true }
+  );
+  let engine = Services.search.getEngineByName("engine");
+
+  Assert.ok(!!engine, "Should have loaded the engine");
+
+  await Services.search.setDefault(
+    engine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+
+  clearTelemetry();
+
+  let promiseChanged = TestUtils.topicObserved(
+    "browser-search-engine-modified",
+    (eng, verb) => verb == "engine-changed"
+  );
+  let manifest = SearchTestUtils.createEngineManifest({
+    name: "Bar",
+    id: "engine@tests.mozilla.org",
+    search_url_get_params: `q={searchTerms}&version=2.0`,
+    search_url: "https://www.google.com/search",
+    version: "2.0",
+  });
+
+  await extension.upgrade({
+    useAddonManager: "permanent",
+    manifest,
+  });
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
+  await promiseChanged;
+
+  const defaultEngineData = {
+    id: engine.telemetryId,
+    name: "Bar",
+    loadPath: engine.wrappedJSObject._loadPath,
+    submissionURL: "https://www.google.com/search?q=&version=2.0",
+  };
+  await checkTelemetry("engine-update", defaultEngineData, defaultEngineData);
+  await extension.unload();
 });
