@@ -67,8 +67,11 @@ var gExceptionPaths = [
   // Nimbus schemas are referenced programmatically.
   "resource://nimbus/schemas/",
 
-  // Activity stream schemas are referenced programmatically.
-  "resource://activity-stream/schemas",
+  // Normandy schemas are referenced programmatically.
+  "resource://normandy/schemas/",
+
+  // ASRouter schemas are referenced programmatically.
+  "chrome://browser/content/asrouter/schemas/",
 
   // Localization file added programatically in FeatureCallout.sys.mjs
   "resource://app/localization/en-US/browser/featureCallout.ftl",
