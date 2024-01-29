@@ -728,6 +728,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
   switch (aID) {
     case ColorID::Window:  // --in-content-page-background
     case ColorID::Background:
+    case ColorID::Appworkspace:
+    case ColorID::Scrollbar:
       color = kWindowBackground;
       break;
 
