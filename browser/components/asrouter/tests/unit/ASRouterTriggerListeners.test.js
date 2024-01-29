@@ -1,5 +1,5 @@
-import { ASRouterTriggerListeners } from "asroutermodules/ASRouterTriggerListeners.jsm";
-import { ASRouterPreferences } from "asroutermodules/ASRouterPreferences.jsm";
+import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.jsm";
+import { ASRouterPreferences } from "modules/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("ASRouterTriggerListeners", () => {
