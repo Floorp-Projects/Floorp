@@ -1693,7 +1693,11 @@ async function switchToDetailView({ id, win }) {
   ok(card, `Addon card found for ${id}`);
   ok(!card.querySelector("addon-details"), "The card doesn't have details");
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(card, { clickCount: 1 }, win);
+  EventUtils.synthesizeMouseAtCenter(
+    card.querySelector(".addon-name-link"),
+    { clickCount: 1 },
+    win
+  );
   await loaded;
   card = getAddonCard(win, id);
   ok(card.querySelector("addon-details"), "The card does have details");

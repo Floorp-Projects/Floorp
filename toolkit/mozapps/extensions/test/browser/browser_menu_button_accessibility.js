@@ -69,7 +69,12 @@ add_task(async function testCardMoreOptionsButton() {
   await testButton(card.querySelector(".more-options-button"));
 
   let viewLoaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(card, {}, win);
+
+  EventUtils.synthesizeMouseAtCenter(
+    card.querySelector(".addon-name-link"),
+    {},
+    win
+  );
   await viewLoaded;
 
   info("Check detail page");

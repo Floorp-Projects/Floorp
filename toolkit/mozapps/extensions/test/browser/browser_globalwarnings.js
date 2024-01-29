@@ -8,7 +8,11 @@ async function loadDetail(win, id) {
   let loaded = waitForViewLoad(win);
   // Check the detail view.
   let card = win.document.querySelector(`addon-card[addon-id="${id}"]`);
-  EventUtils.synthesizeMouseAtCenter(card, {}, win);
+  EventUtils.synthesizeMouseAtCenter(
+    card.querySelector(".addon-name-link"),
+    {},
+    win
+  );
   await loaded;
 }
 
