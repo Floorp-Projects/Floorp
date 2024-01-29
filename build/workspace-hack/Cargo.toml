@@ -160,14 +160,25 @@ features = [
 version = "0.52"
 optional = true
 features = [
+    "Wdk_System_Threading",
+    "Win32_Foundation",
     "Win32_Security",
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_ErrorReporting",
+    "Win32_System_Kernel",
+    "Win32_System_LibraryLoader",
     "Win32_System_Memory",
     "Win32_System_Pipes",
+    "Win32_System_ProcessStatus",
+    "Win32_System_SystemInformation",
     "Win32_System_SystemServices",
-    "Win32_System_Threading"
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
 ]
+
 
 [features]
 builtins-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
@@ -177,5 +188,5 @@ gkrust-gtest = ["gkrust"]
 http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:windows-sys"]
 ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
 jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
-mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid"]
+mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]
 osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:env_logger", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
