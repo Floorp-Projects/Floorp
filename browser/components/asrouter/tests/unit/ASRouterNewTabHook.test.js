@@ -1,5 +1,5 @@
 /*eslint max-nested-callbacks: ["error", 10]*/
-import { ASRouterNewTabHook } from "lib/ASRouterNewTabHook.sys.mjs";
+import { ASRouterNewTabHook } from "modules/ASRouterNewTabHook.sys.mjs";
 
 describe("ASRouterNewTabHook", () => {
   let sandbox = null;

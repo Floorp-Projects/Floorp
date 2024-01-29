@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ASRouterNewTabHook } from "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs";
+import { ASRouterNewTabHook } from "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs";
 
 const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterDefaultConfig.jsm"
@@ -13,6 +13,8 @@ export class ASRouterTabs {
   constructor({ asRouterNewTabHook }) {
     this.actors = new Set();
     this.destroy = () => {};
+    // This is one of several entrypoints to ASRouter Initialization. There is
+    // another one in BrowserGlue, and another in BackgroundTaskUtils.
     asRouterNewTabHook.createInstance(ASRouterDefaultConfig());
     this.loadingMessageHandler = asRouterNewTabHook
       .getInstance()
