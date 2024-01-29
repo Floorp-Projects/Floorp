@@ -173,6 +173,8 @@ support-files = [
 
 ["browser_contextualsearch.js"]
 
+["browser_copy_and_paste_first_result.js"]
+
 ["browser_copy_during_load.js"]
 support-files = ["slow-page.sjs"]
 
