@@ -104,12 +104,22 @@ add_task(async function open_empty() {
 
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Clicking icon");
+  is(
+    searchIcon.getAttribute("aria-expanded"),
+    "false",
+    "The search icon is not expanded by default"
+  );
   EventUtils.synthesizeMouseAtCenter(searchIcon, {});
   await promise;
   is(
     searchPopup.getAttribute("showonlysettings"),
     "true",
     "Should only show the settings"
+  );
+  is(
+    searchIcon.getAttribute("aria-expanded"),
+    "true",
+    "The search icon is now expanded"
   );
   is(textbox.mController.searchString, "", "Should be an empty search string");
 
@@ -139,6 +149,11 @@ add_task(async function open_empty() {
     textbox.mController.searchString,
     "",
     "Should not have started to search for the new text"
+  );
+  is(
+    searchIcon.getAttribute("aria-expanded"),
+    "false",
+    "The search icon should not be expanded"
   );
 
   // Cancel the search if it started.

@@ -32,7 +32,7 @@
     static get markup() {
       return `
         <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
-        <hbox class="searchbar-search-button" data-l10n-id="searchbar-icon">
+        <hbox class="searchbar-search-button" data-l10n-id="searchbar-icon" role="button" keyNav="false" aria-expanded="false" aria-controls="PopupSearchAutoComplete" aria-haspopup="true">
           <image class="searchbar-search-icon"></image>
           <image class="searchbar-search-icon-overlay"></image>
         </hbox>
@@ -263,6 +263,8 @@
       }
 
       this._textbox.showHistoryPopup();
+      let searchIcon = document.querySelector(".searchbar-search-button");
+      searchIcon.setAttribute("aria-expanded", "true");
 
       if (this._textbox.value) {
         // showHistoryPopup does a startSearch("") call, ensure the
@@ -563,6 +565,8 @@
         // Hide popup when icon is clicked while popup is open
         if (isIconClick && this.textbox.popup.popupOpen) {
           this.textbox.popup.closePopup();
+          let searchIcon = document.querySelector(".searchbar-search-button");
+          searchIcon.setAttribute("aria-expanded", "false");
         } else if (isIconClick || this._textbox.value) {
           // Open the suggestions whenever clicking on the search icon or if there
           // is text in the textbox.
@@ -703,6 +707,8 @@
         }
 
         let popup = this.textbox.popup;
+        let searchIcon = document.querySelector(".searchbar-search-button");
+        searchIcon.setAttribute("aria-expanded", popup.popupOpen);
         if (popup.popupOpen) {
           let suggestionsHidden =
             popup.richlistbox.getAttribute("collapsed") == "true";
@@ -732,6 +738,7 @@
         }
 
         let popup = this.textbox.popup;
+        let searchIcon = document.querySelector(".searchbar-search-button");
         if (!popup.mPopupOpen) {
           // Initially the panel used for the searchbar (PopupSearchAutoComplete
           // in browser.xhtml) is hidden to avoid impacting startup / new
@@ -763,6 +770,7 @@
           popup.style.setProperty("--panel-width", width + "px");
           popup._invalidate();
           popup.openPopup(this, "after_start");
+          searchIcon.setAttribute("aria-expanded", "true");
         }
       };
 

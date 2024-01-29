@@ -90,7 +90,6 @@ skip-if = [
 ]
 
 ["browser_searchbar_openpopup.js"]
-fail-if = ["a11y_checks"] # Bug 1871980 Search expand/collapse image button needs a programmatic role and expanded/collapsed state
 
 ["browser_searchbar_results.js"]
 
