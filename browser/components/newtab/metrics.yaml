@@ -1024,24 +1024,6 @@ messaging_system:
     send_in_pings:
       - messaging-system
 
-  page:
-    type: string
-    description: >
-      One of [”about:newtab”, “about:home”, “about:welcome”,
-      “unknown” (which either means not-applicable or is a bug)].
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - pmcmanis@mozilla.com
-      - dmosedale@mozilla.com
-    expires: never
-    send_in_pings:
-      - messaging-system
-
   source:
     type: string
     description: >
@@ -1162,44 +1144,6 @@ messaging_system:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
     data_sensitivity:
       - technical
-    notification_emails:
-      - pmcmanis@mozilla.com
-      - dmosedale@mozilla.com
-    expires: never
-    send_in_pings:
-      - messaging-system
-
-  action:
-    type: string
-    lifetime: ping
-    description: >
-      What type of action resulted in the event.
-      One of "IMPRESSION" or "DISMISS".
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - pmcmanis@mozilla.com
-      - dmosedale@mozilla.com
-    expires: never
-    send_in_pings:
-      - messaging-system
-
-
-  cfr_action:
-    type: text
-    lifetime: ping
-    description: >
-      The Contextual Feature Recommender's action.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
-    data_sensitivity:
-      - web_activity
     notification_emails:
       - pmcmanis@mozilla.com
       - dmosedale@mozilla.com
