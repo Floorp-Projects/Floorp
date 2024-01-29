@@ -157,11 +157,11 @@ def display_push_estimates(try_task_config):
         )
     )
     if "percentile" in durations:
-        print(
-            "estimates: In the top {}% of durations".format(
-                100 - durations["percentile"]
-            )
-        )
+        percentile = durations["percentile"]
+        if percentile > 50:
+            print("estimates: In the longest {}% of durations".format(100 - percentile))
+        else:
+            print("estimates: In the shortest {}% of durations".format(percentile))
     print(
         "estimates: Should take about {} (Finished around {})".format(
             durations["wall_duration_seconds"],
