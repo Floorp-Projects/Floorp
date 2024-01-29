@@ -8,23 +8,9 @@
 // * display compositor sign when the property was running on compositor.
 // * display warning when the property is runnable on compositor but was not.
 
-const TEST_DATA = [
-  {
-    property: "opacity",
-    isOnCompositor: true,
-  },
-  {
-    property: "transform",
-    isWarning: true,
-  },
-  {
-    property: "width",
-  },
-];
-
-add_task(async function () {
+async function test_element(className, data) {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  await removeAnimatedElementsExcept([".compositor-notall"]);
+  await removeAnimatedElementsExcept([className]);
   const { panel } = await openAnimationInspector();
 
   info("Checking animated property name component");
@@ -33,15 +19,15 @@ add_task(async function () {
   );
   is(
     animatedPropertyNameEls.length,
-    TEST_DATA.length,
-    `Number of animated property name elements should be ${TEST_DATA.length}`
+    data.length,
+    `Number of animated property name elements should be ${data.length}`
   );
 
   for (const [
     index,
     animatedPropertyNameEl,
   ] of animatedPropertyNameEls.entries()) {
-    const { property, isOnCompositor, isWarning } = TEST_DATA[index];
+    const { property, isOnCompositor, isWarning } = data[index];
 
     info(`Checking text content for ${property}`);
 
@@ -110,4 +96,29 @@ add_task(async function () {
       );
     }
   }
+}
+
+add_task(async function compositor_notall() {
+  await test_element(".compositor-notall", [
+    {
+      property: "opacity",
+      isOnCompositor: true,
+    },
+    {
+      property: "transform",
+      isOnCompositor: true,
+    },
+    {
+      property: "width",
+    },
+  ]);
+});
+
+add_task(async function compositor_warning() {
+  await test_element(".compositor-warning", [
+    {
+      property: "opacity",
+      isWarning: true,
+    },
+  ]);
 });

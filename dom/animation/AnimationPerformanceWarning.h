@@ -21,7 +21,6 @@ struct AnimationPerformanceWarning {
     None,
     ContentTooLarge,
     ContentTooLargeArea,
-    TransformBackfaceVisibilityHidden,
     TransformSVG,
     TransformFrameInactive,
     TransformIsBlockedByImportantRules,
