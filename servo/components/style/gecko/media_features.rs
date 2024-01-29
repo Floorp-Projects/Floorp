@@ -593,6 +593,8 @@ pub enum GtkThemeFamily {
     Breeze,
     /// Yaru, the default Ubuntu theme.
     Yaru,
+    /// Yaru-remix, a theme derived from Yaru, but with different titlebar colors.
+    YaruRemix,
 }
 
 fn eval_gtk_theme_family(_: &Context, query_value: Option<GtkThemeFamily>) -> bool {
