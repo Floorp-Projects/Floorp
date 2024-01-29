@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1070049
     SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
 
     // Throw.
-    throw "flimfniffle";
+    throw new Error("flimfniffle");
   });
   ]]>
   </script>
