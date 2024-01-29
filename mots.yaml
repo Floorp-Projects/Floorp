@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-01-24T14:04:49.153380'
+updated_at: '2024-01-28T14:50:15.474360'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -47,6 +47,10 @@ people:
     bmo_id: 517691
     name: Alastor Wu
     nick: alwu
+  - &aminomancer
+    bmo_id: 636965
+    name: Shane Hughes
+    nick: aminomancer
   - &amy
     bmo_id: 622155
     name: Amy Churchwell
@@ -271,10 +275,6 @@ people:
     bmo_id: 713270
     name: DJ
     nick: dwalker
-  - &ed
-    bmo_id: 629148
-    name: Ed Lee
-    nick: ed
   - &edgar
     bmo_id: 455480
     name: Edgar Chen
@@ -2252,7 +2252,7 @@ modules:
     peers:
       - *standard8
       - *dcoates
-      - *ed
+      - *Mardak
       - *mossop
     machine_name: core_nodejs_usage_tools_and_style
 
@@ -3352,19 +3352,29 @@ modules:
         machine_name: form_autofill
 
       - name: In-product Messaging
-        description: The system for delivering in-product messaging.
+        description: The system for delivering in-product messaging and onboarding
+          including Activity Stream Router, about:welcome, UI tour.
         includes:
+          - browser/components/asrouter/**/*
+          - browser/components/aboutwelcome/**/*
+          - browser/components/uitour/**/*
           - toolkit/components/messaging-system/**/*
         meta:
           components:
             - Firefox::Messaging System
+            - Firefox::Tours
+          owners_emeritus:
+            - *Mardak
           peers_emeritus:
             - *k88hudson
+            - *MattN
         owners:
           - *pdahiya
         peers:
           - *nanj
           - *Mardak
+          - *dmosedale
+          - *aminomancer
         machine_name: inproduct_messaging
 
       - name: Launcher Process
@@ -3402,27 +3412,16 @@ modules:
         meta:
           components:
             - Firefox::New Tab Page
+          owners_emeritus:
+            - *Mardak
           peers_emeritus:
             - *k88hudson
             - *aoprea
         owners:
-          - *ed
-        peers:
           - *thecount
-        machine_name: new_tab_page
-
-      - name: Onboarding
-        description: The onboarding experience including UI tours.
-        includes:
-          - browser/components/uitour/**/*
-        meta:
-          components:
-            - Firefox::Tours
-        owners:
-          - *ed
         peers:
-          - *MattN
-        machine_name: onboarding
+          - *amy
+        machine_name: new_tab_page
 
       - name: Password Manager
         description: Managing, saving and filling logins.
@@ -4204,5 +4203,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 01c5dda522e6944fd8302151694447b2421e0f86
-  export: bcaa46c2d8f0b2569d6b4eeb9e22dc0e8888d484
+  config: 40b9a7ee05e463fa260f24f217af11652df147cd
+  export: 32abed7d90a5cb2a9baf904d3b4b41aa30712d23
