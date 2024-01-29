@@ -1,4 +1,4 @@
-import { safeURI } from "content-src/asrouter/template-utils";
+import { safeURI } from "content-src/template-utils";
 
 describe("safeURI", () => {
   let warnStub;
