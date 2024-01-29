@@ -55,7 +55,20 @@ class ProviderClipboard extends UrlbarProvider {
     ) {
       return false;
     }
+    const obj = {};
+    if (
+      !TelemetryStopwatch.running(
+        "FX_URLBAR_PROVIDER_CLIPBOARD_READ_TIME_MS",
+        obj
+      )
+    ) {
+      TelemetryStopwatch.start(
+        "FX_URLBAR_PROVIDER_CLIPBOARD_READ_TIME_MS",
+        obj
+      );
+    }
     let textFromClipboard = controller.browserWindow.readFromClipboard();
+    TelemetryStopwatch.finish("FX_URLBAR_PROVIDER_CLIPBOARD_READ_TIME_MS", obj);
 
     // Check for spaces in clipboard text to avoid suggesting
     // clipboard content including both a url and the following text.
