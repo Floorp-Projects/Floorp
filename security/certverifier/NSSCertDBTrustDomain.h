@@ -54,6 +54,13 @@ enum class OCSPFetchStatus : uint16_t {
   Fetched = 1,
 };
 
+// Helper struct to associate the DER bytes of a potential issuer certificate
+// with its source (i.e. where it came from).
+struct IssuerCandidateWithSource {
+  mozilla::pkix::Input mDER;  // non-owning
+  IssuerSource mIssuerSource;
+};
+
 SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
                         PKCS11DBConfig pkcs11DbConfig);
 
@@ -245,6 +252,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
   OCSPFetchStatus GetOCSPFetchStatus() { return mOCSPFetchStatus; }
+  IssuerSources GetIssuerSources() { return mIssuerSources; }
 
  private:
   Result CheckCRLiteStash(
@@ -290,6 +298,12 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
                            const Result error,
                            /*out*/ bool& softFailure);
 
+  bool ShouldSkipSelfSignedNonTrustAnchor(mozilla::pkix::Input certDER);
+  Result CheckCandidates(IssuerChecker& checker,
+                         nsTArray<IssuerCandidateWithSource>& candidates,
+                         mozilla::pkix::Input* nameConstraintsInputPtr,
+                         bool& keepGoing);
+
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
   OCSPCache& mOCSPCache;  // non-owning!
@@ -321,6 +335,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   UniqueSECMODModule mBuiltInRootsModule;
 
   OCSPFetchStatus mOCSPFetchStatus;
+  IssuerSources mIssuerSources;
 };
 
 }  // namespace psm

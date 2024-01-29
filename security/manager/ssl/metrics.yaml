@@ -1,7 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 # Adding a new metric? We have docs for that!
 # https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
 
@@ -73,3 +72,78 @@ oskeystore:
       - available
       - encrypt
       - decrypt
+
+tls:
+  certificate_verifications:
+    type: counter
+    description: >
+      The total number of successful TLS server certificate verifications.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+
+verification_used_cert_from:
+  tls_handshake:
+    type: rate
+    description: >
+      How many successfully-built certificate chains used a certificate from the TLS handshake.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    denominator_metric: tls.certificate_verifications
+  preloaded_intermediates:
+    type: rate
+    description: >
+      How many successfully-built certificate chains used a certificate from preloaded intermediates.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    denominator_metric: tls.certificate_verifications
+  third_party_certificates:
+    type: rate
+    description: >
+      How many successfully-built certificate chains used a third-party certificate from the OS.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    denominator_metric: tls.certificate_verifications
+  nss_cert_db:
+    type: rate
+    description: >
+      How many successfully-built certificate chains used a certificate from the NSS cert DB.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    denominator_metric: tls.certificate_verifications
+  built_in_roots_module:
+    type: rate
+    description: >
+      How many successfully-built certificate chains used a certificate from the built-in roots module.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876435
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    denominator_metric: tls.certificate_verifications
