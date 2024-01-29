@@ -65,6 +65,14 @@ function loadContentWindow(windowlessBrowser, uri) {
   });
 }
 
+add_setup(function () {
+  Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
+});
+
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref("security.allow_unsafe_parent_loads");
+});
+
 add_task(async function test_snapshot() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
   let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_URL);
