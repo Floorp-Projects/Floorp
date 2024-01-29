@@ -495,7 +495,6 @@ module.exports = {
         "dom/base/test/jsmodules/**",
         "dom/canvas/test/**",
         "dom/events/test/**",
-        "dom/file/ipc/tests/**",
         "dom/file/tests/**",
         "dom/html/test/**",
         "dom/media/webrtc/tests/**",

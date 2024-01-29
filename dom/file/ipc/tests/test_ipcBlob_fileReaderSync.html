@@ -10,6 +10,8 @@
 <script type="text/javascript">
 
 function workerScript() {
+  // Available to workers.
+  /* global FileReaderSync */
   onmessage = function(event) {
     let readerMemoryBlob = new FileReaderSync();
     let status = readerMemoryBlob.readAsText(new Blob(['hello world'])) == 'hello world';
