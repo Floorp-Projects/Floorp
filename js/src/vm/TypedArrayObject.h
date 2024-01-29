@@ -58,12 +58,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static const JSClass protoClasses[Scalar::MaxTypedArrayViewType];
   static const JSClass sharedTypedArrayPrototypeClass;
 
-  // TODO(anba): Integrate with resizable TypedArrays
-  static const JSClass* classForType(Scalar::Type type) {
-    MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
-    return &fixedLengthClasses[type];
-  }
-
   static const JSClass* protoClassForType(Scalar::Type type) {
     MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
     return &protoClasses[type];
