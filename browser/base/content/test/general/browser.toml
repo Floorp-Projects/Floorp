@@ -64,18 +64,6 @@ https_first_disabled = true
 https_first_disabled = true
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
-["browser_bug1261299.js"]
-skip-if = ["os != 'mac'"] # Because of tests for supporting Service Menu of macOS, bug 1261299
-# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
-
-["browser_bug1297539.js"]
-skip-if = ["os != 'mac'"] # Because of tests for supporting pasting from Service Menu of macOS, bug 1297539
-# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
-
-["browser_bug1299667.js"]
-https_first_disabled = true
-# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
-
 ["browser_bug321000.js"]
 skip-if = ["true"] # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
@@ -256,6 +244,18 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1556066
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_bug963945.js"]
+# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
+
+["browser_bug1261299.js"]
+skip-if = ["os != 'mac'"] # Because of tests for supporting Service Menu of macOS, bug 1261299
+# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
+
+["browser_bug1297539.js"]
+skip-if = ["os != 'mac'"] # Because of tests for supporting pasting from Service Menu of macOS, bug 1297539
+# DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
+
+["browser_bug1299667.js"]
+https_first_disabled = true
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_clipboard.js"]

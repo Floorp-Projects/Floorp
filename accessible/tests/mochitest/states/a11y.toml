@@ -10,51 +10,51 @@ support-files = [
   "!/accessible/tests/mochitest/formimage.png",
   "!/accessible/tests/mochitest/treeview.css"]
 
-['test_aria.html']
+["test_aria.html"]
 
-['test_aria.xhtml']
+["test_aria.xhtml"]
 
-['test_aria_imgmap.html']
+["test_aria_imgmap.html"]
 
-['test_aria_widgetitems.html']
+["test_aria_widgetitems.html"]
 
-['test_buttons.html']
+["test_buttons.html"]
 
-['test_controls.html']
+["test_controls.html"]
 
-['test_controls.xhtml']
+["test_controls.xhtml"]
 
-['test_doc.html']
+["test_doc.html"]
 
-['test_doc_busy.html']
+["test_doc_busy.html"]
 
-['test_docarticle.html']
+["test_docarticle.html"]
 
-['test_editablebody.html']
+["test_editablebody.html"]
 
-['test_expandable.xhtml']
+["test_expandable.xhtml"]
 
-['test_frames.html']
+["test_frames.html"]
 
-['test_inputs.html']
+["test_inputs.html"]
 
-['test_link.html']
+["test_link.html"]
 
-['test_popup.xhtml']
+["test_popup.xhtml"]
 
-['test_selects.html']
+["test_selects.html"]
 
-['test_stale.html']
+["test_stale.html"]
 
-['test_tabs.xhtml']
+["test_tabs.xhtml"]
 
-['test_textbox.xhtml']
+["test_textbox.xhtml"]
 
-['test_tree.xhtml']
+["test_tree.xhtml"]
 
-['test_visibility.html']
+["test_visibility.html"]
 
-['test_visibility.xhtml']
+["test_visibility.xhtml"]
 skip-if = [
   "asan",  # Bug 1199631
 ]

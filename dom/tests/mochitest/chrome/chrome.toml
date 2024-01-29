@@ -42,6 +42,10 @@ support-files = [
 ["test_activation.xhtml"]
 tags = "fullscreen"
 
+["test_bug800817.xhtml"]
+
+["test_bug830858.xhtml"]
+
 ["test_bug1224790-1.xhtml"]
 tags = "openwindow"
 skip-if = ["os != 'mac'"]
@@ -49,10 +53,6 @@ skip-if = ["os != 'mac'"]
 ["test_bug1224790-2.xhtml"]
 tags = "openwindow"
 skip-if = ["os != 'mac'"]
-
-["test_bug800817.xhtml"]
-
-["test_bug830858.xhtml"]
 
 ["test_callback_wrapping.xhtml"]
 

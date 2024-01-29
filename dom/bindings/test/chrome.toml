@@ -6,14 +6,14 @@ support-files = [
   "!/dom/bindings/test/file_proxies_via_xray.html",
 ]
 
+["test_bug775543.html"]
+
 ["test_bug1123516_maplikesetlikechrome.xhtml"]
 skip-if = ["!debug"] # TestFunctions is only available in debug builds
 
 ["test_bug1287912.html"]
 
 ["test_bug1457051.html"]
-
-["test_bug775543.html"]
 
 ["test_document_location_set_via_xray.html"]
 

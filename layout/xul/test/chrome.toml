@@ -14,8 +14,6 @@ support-files = [
   "titledpanelwindow.xhtml",
 ]
 
-["test_bug1197913.xhtml"]
-
 ["test_bug159346.xhtml"]
 
 ["test_bug381167.xhtml"]
@@ -32,6 +30,8 @@ support-files = [
 
 ["test_bug987230.xhtml"]
 skip-if = ["os == 'linux'"] # No native mousedown event on Linux
+
+["test_bug1197913.xhtml"]
 
 ["test_menuitem_ctrl_click.xhtml"]
 

@@ -4,82 +4,81 @@ support-files = [
   "!/accessible/tests/mochitest/letters.gif",
   "!/accessible/tests/mochitest/moz.png"]
 
-['test_ariadialog.html']
+["test_ariadialog.html"]
 
-['test_ariahidden.html']
+["test_ariahidden.html"]
 
-['test_ariaowns.html']
+["test_ariaowns.html"]
 
-['test_bug1040735.html']
+["test_bug852150.xhtml"]
 
-['test_bug1175913.html']
+["test_bug883708.xhtml"]
 
-['test_bug1189277.html']
+["test_bug884251.xhtml"]
 
-['test_bug1276857.html']
+["test_bug895082.html"]
+
+["test_bug1040735.html"]
+
+["test_bug1175913.html"]
+
+["test_bug1189277.html"]
+
+["test_bug1276857.html"]
 support-files = "test_bug1276857_subframe.html"
 
-['test_bug852150.xhtml']
+["test_canvas.html"]
 
-['test_bug883708.xhtml']
+["test_contextmenu.xhtml"]
 
-['test_bug884251.xhtml']
+["test_cssoverflow.html"]
 
-['test_bug895082.html']
+["test_deck.xhtml"]
 
-['test_canvas.html']
+["test_delayed_removal.html"]
 
-['test_contextmenu.xhtml']
+["test_doc.html"]
 
-['test_cssoverflow.html']
+["test_gencontent.html"]
 
-['test_deck.xhtml']
+["test_general.html"]
 
-['test_delayed_removal.html']
+["test_hidden.html"]
 
-['test_doc.html']
+["test_imagemap.html"]
 
-['test_gencontent.html']
+["test_inert.html"]
 
-['test_general.html']
+["test_inner_reorder.html"]
 
-['test_hidden.html']
+["test_list.html"]
 
-['test_imagemap.html']
+["test_list_editabledoc.html"]
 
-['test_inert.html']
+["test_list_style.html"]
 
-['test_inner_reorder.html']
+["test_listbox.xhtml"]
 
-['test_list.html']
+["test_menu.xhtml"]
 
-['test_list_editabledoc.html']
+["test_menubutton.xhtml"]
 
-['test_list_style.html']
+["test_optgroup.html"]
 
-['test_listbox.xhtml']
+["test_recreation.html"]
 
-['test_menu.xhtml']
+["test_select.html"]
 
-['test_menubutton.xhtml']
+["test_shadow_slots.html"]
 
-['test_optgroup.html']
+["test_shutdown.xhtml"]
 
-['test_recreation.html']
+["test_table.html"]
 
-['test_select.html']
+["test_textleaf.html"]
 
-['test_shadow_slots.html']
+["test_tooltip.xhtml"]
 
-['test_shutdown.xhtml']
+["test_visibility.html"]
 
-['test_table.html']
-
-['test_textleaf.html']
-
-['test_tooltip.xhtml']
-
-['test_visibility.html']
-
-['test_whitespace.html']
-
+["test_whitespace.html"]

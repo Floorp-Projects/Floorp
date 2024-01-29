@@ -36,34 +36,6 @@ prefs = ["javascript.options.large_arraybuffers=true"]
 
 ["test_APIExposer.xhtml"]
 
-["test_bug1041626.xhtml"]
-
-["test_bug1042436.xhtml"]
-
-["test_bug1065185.html"]
-
-["test_bug1074863.html"]
-
-["test_bug1092477.xhtml"]
-
-["test_bug1124898.html"]
-
-["test_bug1126911.html"]
-
-["test_bug1281071.xhtml"]
-
-["test_bug1390159.xhtml"]
-
-["test_bug1430164.html"]
-
-["test_bug1516237.html"]
-
-["test_bug1530146.html"]
-support-files = [
-  "file_bug1530146.html",
-  "file_bug1530146_inner.html",
-]
-
 ["test_bug361111.xhtml"]
 
 ["test_bug448587.xhtml"]
@@ -151,6 +123,34 @@ skip-if = [
 allow_xul_xbl = true
 
 ["test_bug996069.xhtml"]
+
+["test_bug1041626.xhtml"]
+
+["test_bug1042436.xhtml"]
+
+["test_bug1065185.html"]
+
+["test_bug1074863.html"]
+
+["test_bug1092477.xhtml"]
+
+["test_bug1124898.html"]
+
+["test_bug1126911.html"]
+
+["test_bug1281071.xhtml"]
+
+["test_bug1390159.xhtml"]
+
+["test_bug1430164.html"]
+
+["test_bug1516237.html"]
+
+["test_bug1530146.html"]
+support-files = [
+  "file_bug1530146.html",
+  "file_bug1530146_inner.html",
+]
 
 ["test_chrometoSource.xhtml"]
 

@@ -20,11 +20,14 @@ skip-if = [
 ]
 
 ["browser_networkobserver_auth_listener.js"]
-skip-if = ["debug || asan"] # Disabled for frequent leaks in Bug 1873571.
+skip-if = [
+  "debug", # Disabled for frequent leaks in Bug 1873571.
+  "asan",
+]
 
 ["browser_networkobserver_invalid_constructor.js"]
 
 ["browser_networkobserver_override.js"]
 
 ["browser_networkobserver_serviceworker.js"]
-fail-if = true # Disabled until Bug 1267119 and Bug 1246289
+fail-if = ["true"] # Disabled until Bug 1267119 and Bug 1246289

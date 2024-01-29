@@ -16,6 +16,11 @@ skip-if = ["bits == 64 && (os == 'mac' || os == 'linux')"] #Bug 1646862
 
 ["browser_ImageDocument_svg_zoom.js"]
 
+["browser_bug436200.js"]
+support-files = ["bug436200.html"]
+
+["browser_bug592641.js"]
+
 ["browser_bug1081537.js"]
 
 ["browser_bug1108547.js"]
@@ -24,11 +29,6 @@ support-files = [
   "file_bug1108547-2.html",
   "file_bug1108547-3.html",
 ]
-
-["browser_bug436200.js"]
-support-files = ["bug436200.html"]
-
-["browser_bug592641.js"]
 
 ["browser_containerLoadingContent.js"]
 
