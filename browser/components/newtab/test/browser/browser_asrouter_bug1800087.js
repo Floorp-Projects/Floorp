@@ -11,7 +11,7 @@ const { ASRouterNewTabHook } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs"
 );
 const { ASRouterDefaultConfig } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
+  "resource:///modules/asrouter/ASRouterDefaultConfig.jsm"
 );
 
 add_setup(() => ASRouterNewTabHook.destroy());

@@ -98,7 +98,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterDefaultConfig:
-    "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
+    "resource:///modules/asrouter/ASRouterDefaultConfig.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
   OnboardingMessageProvider:
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",

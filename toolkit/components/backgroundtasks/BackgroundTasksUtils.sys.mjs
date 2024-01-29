@@ -39,7 +39,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 
   ASRouterDefaultConfig:
-    "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "resource:///modules/asrouter/ASRouterDefaultConfig.jsm",
 });
 
 class CannotLockProfileError extends Error {
