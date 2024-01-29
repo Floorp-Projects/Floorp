@@ -102,7 +102,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
+  CFRPageActions: "resource:///modules/asrouter/CFRPageActions.jsm",
 });
 
 ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
