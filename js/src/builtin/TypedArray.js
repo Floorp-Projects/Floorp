@@ -1885,7 +1885,14 @@ function ArrayBufferSlice(start, end) {
   }
 
   // Steps 20-22.
-  ArrayBufferCopyData(newBuffer, 0, O, first, newLen, isWrapped);
+  //
+  // Reacquire the length in case the buffer has been resized.
+  var currentLen = ArrayBufferByteLength(O);
+
+  if (first < currentLen) {
+    var count = std_Math_min(newLen, currentLen - first);
+    ArrayBufferCopyData(newBuffer, 0, O, first, count, isWrapped);
+  }
 
   // Step 23.
   return newBuffer;
