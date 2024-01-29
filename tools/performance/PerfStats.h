@@ -47,6 +47,7 @@
   MACRO(HttpChannelAsyncOpenToTransactionPending) \
   MACRO(HttpChannelResponseStartParentToContent)  \
   MACRO(HttpChannelResponseEndParentToContent)    \
+  MACRO(HttpTransactionWaitTime)                  \
   MACRO(ResponseEndSocketToParent)                \
   MACRO(OnStartRequestSocketToParent)             \
   MACRO(OnDataAvailableSocketToParent)            \

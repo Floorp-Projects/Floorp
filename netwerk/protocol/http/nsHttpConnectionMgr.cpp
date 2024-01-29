@@ -20,6 +20,7 @@
 #include "NullHttpTransaction.h"
 #include "SpeculativeTransaction.h"
 #include "mozilla/Components.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -1622,9 +1623,10 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
   // when a muxed connection (e.g. h2) becomes available.
   trans->CancelPacing(NS_OK);
 
+  TimeStamp now = TimeStamp::Now();
   auto recordPendingTimeForHTTPSRR = [&](nsCString& aKey) {
     uint32_t stage = trans->HTTPSSVCReceivedStage();
-    TimeDuration elapsed = TimeStamp::Now() - trans->GetPendingTime();
+    TimeDuration elapsed = now - trans->GetPendingTime();
     if (HTTPS_RR_IS_USED(stage)) {
       glean::networking::transaction_wait_time_https_rr.AccumulateRawDuration(
           elapsed);
@@ -1632,6 +1634,8 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
     } else {
       glean::networking::transaction_wait_time.AccumulateRawDuration(elapsed);
     }
+    PerfStats::RecordMeasurement(PerfStats::Metric::HttpTransactionWaitTime,
+                                 elapsed);
   };
 
   nsAutoCString httpVersionkey("h1"_ns);
@@ -1645,11 +1649,11 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
       if (conn->UsingSpdy()) {
         httpVersionkey = "h2"_ns;
         AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
-                            trans->GetPendingTime(), TimeStamp::Now());
+                            trans->GetPendingTime(), now);
       } else {
         httpVersionkey = "h3"_ns;
         AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP3,
-                            trans->GetPendingTime(), TimeStamp::Now());
+                            trans->GetPendingTime(), now);
       }
       recordPendingTimeForHTTPSRR(httpVersionkey);
       trans->SetPendingTime(false);
@@ -1664,7 +1668,7 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
 
   if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
     AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP,
-                        trans->GetPendingTime(), TimeStamp::Now());
+                        trans->GetPendingTime(), now);
     recordPendingTimeForHTTPSRR(httpVersionkey);
     trans->SetPendingTime(false);
   }
