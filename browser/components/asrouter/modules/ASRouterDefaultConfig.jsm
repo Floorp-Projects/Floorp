@@ -20,7 +20,7 @@ const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
 const { ASRouterPreferences } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterPreferences.jsm"
+  "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
 const { QueryCache } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTargeting.jsm"

@@ -8,7 +8,7 @@
 const EXPORTED_SYMBOLS = ["ASRouterParentProcessMessageHandler"];
 
 const { ASRouterPreferences } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterPreferences.jsm"
+  "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
 
 const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(

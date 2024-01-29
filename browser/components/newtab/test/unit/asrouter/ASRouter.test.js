@@ -11,7 +11,7 @@ import {
 import {
   ASRouterPreferences,
   TARGETING_PREFERENCES,
-} from "lib/ASRouterPreferences.jsm";
+} from "asroutermodules/ASRouterPreferences.jsm";
 import { ASRouterTriggerListeners } from "asroutermodules/ASRouterTriggerListeners.jsm";
 import { CFRPageActions } from "lib/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
