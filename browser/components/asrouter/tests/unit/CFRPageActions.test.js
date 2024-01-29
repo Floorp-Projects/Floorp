@@ -1,7 +1,7 @@
 /* eslint max-nested-callbacks: ["error", 100] */
 
 import { CFRPageActions, PageAction } from "modules/CFRPageActions.jsm";
-import { FAKE_RECOMMENDATION } from "test/unit/asrouter/constants";
+import { FAKE_RECOMMENDATION } from "./constants";
 import { GlobalOverrider } from "test/unit/utils";
 import { CFRMessageProvider } from "modules/CFRMessageProvider.sys.mjs";
 
