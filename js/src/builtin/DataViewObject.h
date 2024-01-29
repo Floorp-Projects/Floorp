@@ -46,8 +46,9 @@ class DataViewObject : public ArrayBufferViewObject {
 
   static bool getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj,
                                          const CallArgs& args,
-                                         size_t* byteOffset,
-                                         size_t* byteLength);
+                                         size_t* byteOffsetPtr,
+                                         size_t* byteLengthPtr,
+                                         bool* autoLengthPtr);
   static bool constructSameCompartment(JSContext* cx, HandleObject bufobj,
                                        const CallArgs& args);
   static bool constructWrapped(JSContext* cx, HandleObject bufobj,
@@ -191,6 +192,12 @@ class FixedLengthDataViewObject : public DataViewObject {
  * DataView whose buffer is a resizable (Shared)ArrayBuffer object.
  */
 class ResizableDataViewObject : public DataViewObject {
+  friend class DataViewObject;
+
+  static ResizableDataViewObject* create(
+      JSContext* cx, size_t byteOffset, size_t byteLength, bool autoLength,
+      Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
+
  public:
   static const uint8_t AUTO_LENGTH_SLOT = DataViewObject::RESERVED_SLOTS;
 
