@@ -4,6 +4,12 @@ prefs = ["dom.security.https_first=false"]
 ["browser_background_redirect.js"]
 support-files = ["file_background_redirect.sjs"]
 
+["browser_bug1874801.js"]
+support-files = [
+  "file_bug1874801.sjs",
+  "file_bug1874801.html",
+]
+
 ["browser_console_logging.js"]
 support-files = ["file_console_logging.html"]
 

@@ -42,6 +42,11 @@ bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
 
 /* static */
 bool nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(bool aFromPrivateWindow) {
+  // HTTPS-Only takes priority over HTTPS-First
+  if (IsHttpsOnlyModeEnabled(aFromPrivateWindow)) {
+    return false;
+  }
+
   // if the general pref is set to true, then we always return
   if (mozilla::StaticPrefs::dom_security_https_first()) {
     return true;
@@ -122,8 +127,7 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
   // early if attempting to send a background request to a non standard port.
   if ((IsHttpsFirstModeEnabled(isPrivateWin) ||
        (loadInfo->GetWasSchemelessInput() &&
-        mozilla::StaticPrefs::dom_security_https_first_schemeless())) &&
-      !IsHttpsOnlyModeEnabled(isPrivateWin)) {
+        mozilla::StaticPrefs::dom_security_https_first_schemeless()))) {
     int32_t port = 0;
     nsresult rv = channelURI->GetPort(&port);
     int defaultPortforScheme = NS_GetDefaultPort("http");
