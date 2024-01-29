@@ -7101,6 +7101,12 @@ static bool ParseCompileOptionsForModule(JSContext* cx,
   if (!v.isUndefined() && JS::ToBoolean(v)) {
     options.setModule();
     isModule = true;
+
+    // js::ParseCompileOptions should already be called.
+    if (options.lineno == 0) {
+      JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+      return false;
+    }
   } else {
     isModule = false;
   }
