@@ -11,6 +11,7 @@ with Files("**"):
 
 EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterDefaultConfig.jsm",
+    "modules/ASRouterNewTabHook.sys.mjs",
     "modules/ASRouterParentProcessMessageHandler.jsm",
     "modules/ASRouterPreferences.jsm",
     "modules/ASRouterTriggerListeners.jsm",

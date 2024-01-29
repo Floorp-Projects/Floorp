@@ -11,8 +11,7 @@ const lazy = {};
 // eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
-  ASRouterNewTabHook:
-    "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs",
+  ASRouterNewTabHook: "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",

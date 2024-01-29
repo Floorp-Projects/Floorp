@@ -8,7 +8,7 @@
 // after the next watershed release.
 
 const { ASRouterNewTabHook } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs"
+  "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs"
 );
 const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterDefaultConfig.jsm"
