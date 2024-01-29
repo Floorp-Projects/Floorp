@@ -1103,6 +1103,8 @@ bool ArrayBufferObject::prepareForAsmJS() {
              "prior size checking should have guaranteed page-size multiple");
   MOZ_ASSERT(byteLength() > 0,
              "prior size checking should have excluded empty buffers");
+  MOZ_ASSERT(!isResizable(),
+             "prior checks should have excluded resizable buffers");
 
   switch (bufferKind()) {
     case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:

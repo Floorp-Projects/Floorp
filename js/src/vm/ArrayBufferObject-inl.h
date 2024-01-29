@@ -31,6 +31,13 @@ inline bool ArrayBufferObjectMaybeShared::isDetached() const {
   return false;
 }
 
+inline bool ArrayBufferObjectMaybeShared::isResizable() const {
+  if (this->is<ArrayBufferObject>()) {
+    return this->as<ArrayBufferObject>().isResizable();
+  }
+  return this->as<SharedArrayBufferObject>().isGrowable();
+}
+
 inline size_t ArrayBufferObjectMaybeShared::byteLength() const {
   if (this->is<ArrayBufferObject>()) {
     return this->as<ArrayBufferObject>().byteLength();

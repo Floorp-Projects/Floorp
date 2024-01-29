@@ -176,6 +176,13 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   return true;
 }
 
+bool ArrayBufferViewObject::hasResizableBuffer() const {
+  if (auto* buffer = bufferEither()) {
+    return buffer->isResizable();
+  }
+  return false;
+}
+
 /* JS Public API */
 
 JS_PUBLIC_API bool JS_IsArrayBufferViewObject(JSObject* obj) {
@@ -278,6 +285,11 @@ bool JS::ArrayBufferView::isDetached() const {
   return obj->as<ArrayBufferViewObject>().hasDetachedBuffer();
 }
 
+bool JS::ArrayBufferView::isResizable() const {
+  MOZ_ASSERT(obj);
+  return obj->as<ArrayBufferViewObject>().hasResizableBuffer();
+}
+
 JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
@@ -347,6 +359,14 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
                 ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return false;
 #endif
+}
+
+JS_PUBLIC_API bool JS::IsResizableArrayBufferView(JSObject* obj) {
+  auto* view = &obj->unwrapAs<ArrayBufferViewObject>();
+  if (auto* buffer = view->bufferEither()) {
+    return buffer->isResizable();
+  }
+  return false;
 }
 
 JS_PUBLIC_API bool JS::PinArrayBufferOrViewLength(JSObject* obj, bool pin) {
