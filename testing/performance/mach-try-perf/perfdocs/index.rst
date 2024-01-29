@@ -174,7 +174,7 @@ In the future, this section will be populated dynamically. If you are wondering 
    Executing queries: 'browsertime 'benchmark, !android 'shippable !-32 !clang, !live, !profil, !chrom
    estimates: Runs 66 tasks (54 selected, 12 dependencies)
    estimates: Total task duration 8:45:58
-   estimates: In the top 62% of durations
+   estimates: In the shortest 38% of durations (thanks!)
    estimates: Should take about 1:04:58 (Finished around 2022-11-22 15:08)
    Commit message:
    Perf selections=Benchmarks desktop (queries='browsertime 'benchmark&!android 'shippable !-32 !clang&!live&!profil&!chrom)
