@@ -14,7 +14,6 @@ BROWSER_CHROME_MANIFESTS += [
 
 TESTING_JS_MODULES += [
     "test/InflightAssetsMessageProvider.sys.mjs",
-    "test/NimbusRolloutMessageProvider.sys.mjs",
 ]
 
 SPHINX_TREES["docs"] = "docs"
