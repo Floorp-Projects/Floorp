@@ -484,6 +484,9 @@
             "type": "string"
           }
         },
+        "Fallback": {
+          "type": "boolean"
+        },
         "Locked": {
           "type": "boolean"
         }
