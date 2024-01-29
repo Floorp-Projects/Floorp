@@ -11,4 +11,9 @@ with Files("**"):
 
 EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterDefaultConfig.jsm",
+    "modules/ASRouterTriggerListeners.jsm",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.toml",
 ]

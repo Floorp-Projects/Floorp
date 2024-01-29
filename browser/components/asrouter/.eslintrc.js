@@ -33,7 +33,7 @@ module.exports = {
     {
       // Use a configuration that's appropriate for modules, workers and
       // non-production files.
-      files: ["tests/**"],
+      files: ["tests/**", "modules/**"],
       rules: {
         "no-implicit-globals": "off",
       },

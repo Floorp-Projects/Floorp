@@ -1,6 +1,10 @@
 /* eslint-disable @microsoft/sdl/no-insecure-url */
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 const { ASRouterTriggerListeners } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
+  "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
 );
 
 const { ASRouter } = ChromeUtils.import(
@@ -27,6 +31,12 @@ const mockIdleService = {
 const sleepMs = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms)); // eslint-disable-line mozilla/no-arbitrary-setTimeout
 
 const inChaosMode = !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
+
+async function waitForUrlLoad(url) {
+  let browser = gBrowser.selectedBrowser;
+  BrowserTestUtils.startLoadingURIString(browser, url);
+  await BrowserTestUtils.browserLoaded(browser, false, url);
+}
 
 add_setup(async function () {
   // Runtime increases in chaos mode on Mac.

@@ -180,7 +180,11 @@ module.exports = function (config) {
             loader: "@jsdevtools/coverage-istanbul-loader",
             options: { esModules: true },
             include: [path.resolve("content-src"), path.resolve("modules")],
-            exclude: [path.resolve("tests"), path.resolve("../newtab")],
+            exclude: [
+              path.resolve("tests"),
+              path.resolve("../newtab"),
+              path.resolve("modules/ASRouterTriggerListeners.jsm"),
+            ],
           },
         ],
       },
