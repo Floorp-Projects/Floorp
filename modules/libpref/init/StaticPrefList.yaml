@@ -7401,6 +7401,12 @@
   mirror: always
   do_not_use_directly: true
 
+- name: javascript.options.use_emulates_undefined_fuse
+  type: bool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true

@@ -990,6 +990,11 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_WRITE_PROTECT_CODE,
                                 writeProtectCode);
 
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_USE_EMULATES_UNDEFINED_FUSE,
+      StaticPrefs::
+          javascript_options_use_emulates_undefined_fuse_DoNotUseDirectly());
+
   if (disableWasmHugeMemory) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
