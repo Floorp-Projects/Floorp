@@ -41,10 +41,10 @@
   var URL = global.URL;
 
   var document = global.document;
-  var documentAll = global.document.all;
   var documentDocumentElement = global.document.documentElement;
   var DocumentCreateElement = global.document.createElement;
 
+  var DocumentPrototypeAllGetter = ObjectGetOwnPropertyDescriptor(global.Document.prototype, "all").get;
   var EventTargetPrototypeAddEventListener = global.EventTarget.prototype.addEventListener;
   var HTMLElementPrototypeStyleSetter =
     ObjectGetOwnPropertyDescriptor(global.HTMLElement.prototype, "style").set;
@@ -210,7 +210,7 @@
   var createIsHTMLDDA = global.createIsHTMLDDA;
   if (typeof createIsHTMLDDA !== "function") {
     createIsHTMLDDA = function() {
-      return documentAll;
+      return ReflectApply(DocumentPrototypeAllGetter, document, []);
     };
 
     global.createIsHTMLDDA = createIsHTMLDDA;
