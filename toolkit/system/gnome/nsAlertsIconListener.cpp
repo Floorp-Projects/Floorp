@@ -47,6 +47,8 @@ nsAlertsIconListener::notify_notification_close_t
     nsAlertsIconListener::notify_notification_close = nullptr;
 nsAlertsIconListener::notify_notification_set_hint_t
     nsAlertsIconListener::notify_notification_set_hint = nullptr;
+nsAlertsIconListener::notify_notification_set_timeout_t
+    nsAlertsIconListener::notify_notification_set_timeout = nullptr;
 
 static void notify_action_cb(NotifyNotification* notification, gchar* action,
                              gpointer user_data) {
@@ -125,6 +127,8 @@ nsAlertsIconListener::nsAlertsIconListener(nsSystemAlertsService* aBackend,
         libNotifyHandle, "notify_notification_close");
     notify_notification_set_hint = (notify_notification_set_hint_t)dlsym(
         libNotifyHandle, "notify_notification_set_hint");
+    notify_notification_set_timeout = (notify_notification_set_timeout_t)dlsym(
+        libNotifyHandle, "notify_notification_set_timeout");
     if (!notify_is_initted || !notify_init || !notify_get_server_caps ||
         !notify_notification_new || !notify_notification_show ||
         !notify_notification_set_icon_from_pixbuf ||
@@ -193,6 +197,11 @@ nsresult nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf) {
       notify_notification_set_hint(mNotification, "desktop-entry",
                                    g_variant_new("s", gAppData->remotingName));
     }
+  }
+
+  if (notify_notification_set_timeout && mAlertRequiresInteraction) {
+    constexpr gint kNotifyExpiresNever = 0;
+    notify_notification_set_timeout(mNotification, kNotifyExpiresNever);
   }
 
   // Fedora 10 calls NotifyNotification "closed" signal handlers with a
@@ -318,6 +327,9 @@ nsresult nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
     return NS_ERROR_FAILURE;  // No good, fallback to XUL
 
   rv = aAlert->GetSilent(&mAlertIsSilent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aAlert->GetRequireInteraction(&mAlertRequiresInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString title;
