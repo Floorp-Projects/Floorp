@@ -6848,6 +6848,11 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
     return LinkFail(cx, msg.get());
   }
 
+  if (buffer->isResizable()) {
+    return LinkFail(cx,
+                    "Unable to prepare resizable ArrayBuffer for asm.js use");
+  }
+
   if (!buffer->prepareForAsmJS()) {
     return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
   }

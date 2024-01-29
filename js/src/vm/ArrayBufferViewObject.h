@@ -151,6 +151,8 @@ class ArrayBufferViewObject : public NativeObject {
     return buffer->isDetached();
   }
 
+  bool hasResizableBuffer() const;
+
   bool isLengthPinned() const {
     Value buffer = bufferValue();
     if (buffer.isBoolean()) {
