@@ -140,7 +140,7 @@ tasks.register('ktlint', JavaExec) {
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
     mainClass.set("com.pinterest.ktlint.Main")
-    args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+    args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }
 
 
@@ -148,7 +148,7 @@ tasks.register('ktlintFormat', JavaExec) {
     description = "Fix Kotlin code style deviations."
     classpath = configurations.ktlint
     mainClass.set("com.pinterest.ktlint.Main")
-    args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+    args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
     jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
