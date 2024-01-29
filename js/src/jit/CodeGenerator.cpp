@@ -1269,10 +1269,21 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Label* ifDoesntEmulateUndefined,
                                       Register scratch) {
   saveVolatile(scratch);
+#ifdef DEBUG
+  masm.loadPtr(AbsoluteAddress(
+                   gen->runtime->addressOfHasSeenObjectEmulateUndefinedFuse()),
+               scratch);
+  using Fn = bool (*)(JSObject* obj, size_t fuseValue);
+  masm.setupAlignedABICall();
+  masm.passABIArg(objreg);
+  masm.passABIArg(scratch);
+  masm.callWithABI<Fn, js::EmulatesUndefinedCheckFuse>();
+#else
   using Fn = bool (*)(JSObject* obj);
   masm.setupAlignedABICall();
   masm.passABIArg(objreg);
   masm.callWithABI<Fn, js::EmulatesUndefined>();
+#endif
   masm.storeCallPointerResult(scratch);
   restoreVolatile(scratch);
 
