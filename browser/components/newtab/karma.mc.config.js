@@ -307,11 +307,7 @@ module.exports = function (config) {
               path.resolve("lib"),
               path.resolve("common"),
             ],
-            exclude: [
-              path.resolve("test"),
-              path.resolve("vendor"),
-              path.resolve("lib/OnboardingMessageProvider.jsm"),
-            ],
+            exclude: [path.resolve("test"), path.resolve("vendor")],
           },
         ],
       },

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

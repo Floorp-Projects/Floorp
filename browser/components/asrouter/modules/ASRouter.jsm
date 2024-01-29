@@ -62,7 +62,7 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
 const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"

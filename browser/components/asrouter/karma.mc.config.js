@@ -211,6 +211,7 @@ module.exports = function (config) {
               path.resolve("modules/ASRouterTriggerListeners.jsm"),
               path.resolve("modules/CFRMessageProvider.sys.mjs"),
               path.resolve("modules/CFRPageActions.jsm"),
+              path.resolve("modules/OnboardingMessageProvider.jsm"),
             ],
           },
         ],

@@ -1,6 +1,6 @@
 import { _ToolbarBadgeHub } from "lib/ToolbarBadgeHub.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
+import { OnboardingMessageProvider } from "asrouter/modules/OnboardingMessageProvider.jsm";
 import { _ToolbarPanelHub, ToolbarPanelHub } from "lib/ToolbarPanelHub.jsm";
 
 describe("ToolbarBadgeHub", () => {

@@ -1,5 +1,5 @@
 const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { ToolbarBadgeHub } = ChromeUtils.import(
   "resource://activity-stream/lib/ToolbarBadgeHub.jsm"
