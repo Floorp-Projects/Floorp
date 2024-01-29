@@ -543,10 +543,12 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
   MOZ_ASSERT(objReg != scratch);
 
   Label done;
-  loadPtr(
-      AbsoluteAddress(runtime()->addressOfHasSeenObjectEmulateUndefinedFuse()),
-      scratch);
-  branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &done);
+  if (JitOptions.useHasSeenEmulatesUndefinedFuse) {
+    loadPtr(AbsoluteAddress(
+                runtime()->addressOfHasSeenObjectEmulateUndefinedFuse()),
+            scratch);
+    branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &done);
+  }
 
   // The branches to out-of-line code here implement a conservative version
   // of the JSObject::isWrapper test performed in EmulatesUndefined.
