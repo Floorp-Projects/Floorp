@@ -101,8 +101,7 @@ bool TypedArrayObject::convertForSideEffect(JSContext* cx,
   return false;
 }
 
-/* static */
-bool TypedArrayObject::is(HandleValue v) {
+static bool IsTypedArrayObject(HandleValue v) {
   return v.isObject() && v.toObject().is<TypedArrayObject>();
 }
 
@@ -395,10 +394,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static inline const JSClass* instanceClass() {
     return TypedArrayObject::classForType(ArrayTypeID());
-  }
-
-  static bool is(HandleValue v) {
-    return v.isObject() && v.toObject().hasClass(instanceClass());
   }
 
   static bool convertValue(JSContext* cx, HandleValue v, NativeType* result);
@@ -1007,11 +1002,6 @@ template <typename NativeType>
   return result.succeed();
 }
 
-#define CREATE_TYPE_FOR_TYPED_ARRAY(_, T, N) \
-  typedef TypedArrayObjectTemplate<T> N##Array;
-JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPE_FOR_TYPED_ARRAY)
-#undef CREATE_TYPE_FOR_TYPED_ARRAY
-
 } /* anonymous namespace */
 
 TypedArrayObject* js::NewTypedArrayWithTemplateAndLength(
@@ -1325,7 +1315,7 @@ template <typename T>
   return obj;
 }
 
-bool TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
+static bool TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TYPED_ARRAY_CALL_OR_CONSTRUCT,
@@ -1386,13 +1376,13 @@ static bool GetTemplateObjectForNative(JSContext* cx,
 
 static bool LengthGetterImpl(JSContext* cx, const CallArgs& args) {
   auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
-  args.rval().set(tarr->lengthValue());
+  args.rval().setNumber(tarr->length());
   return true;
 }
 
 static bool TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is, LengthGetterImpl>(cx, args);
+  return CallNonGenericMethod<IsTypedArrayObject, LengthGetterImpl>(cx, args);
 }
 
 static bool ByteOffsetGetterImpl(JSContext* cx, const CallArgs& args) {
@@ -1404,25 +1394,25 @@ static bool ByteOffsetGetterImpl(JSContext* cx, const CallArgs& args) {
 static bool TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is, ByteOffsetGetterImpl>(cx,
-                                                                          args);
+  return CallNonGenericMethod<IsTypedArrayObject, ByteOffsetGetterImpl>(cx,
+                                                                        args);
 }
 
 static bool ByteLengthGetterImpl(JSContext* cx, const CallArgs& args) {
   auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
-  args.rval().set(tarr->byteLengthValue());
+  args.rval().setNumber(tarr->byteLength());
   return true;
 }
 
 static bool TypedArray_byteLengthGetter(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is, ByteLengthGetterImpl>(cx,
-                                                                          args);
+  return CallNonGenericMethod<IsTypedArrayObject, ByteLengthGetterImpl>(cx,
+                                                                        args);
 }
 
 static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
+  MOZ_ASSERT(IsTypedArrayObject(args.thisv()));
   Rooted<TypedArrayObject*> tarray(
       cx, &args.thisv().toObject().as<TypedArrayObject>());
   if (!TypedArrayObject::ensureHasBuffer(cx, tarray)) {
@@ -1434,7 +1424,7 @@ static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
 
 static bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is, BufferGetterImpl>(cx, args);
+  return CallNonGenericMethod<IsTypedArrayObject, BufferGetterImpl>(cx, args);
 }
 
 // ES2019 draft rev fc9ecdcd74294d0ca3146d4b274e2a8e79565dc3
@@ -1636,7 +1626,7 @@ static bool SetTypedArrayFromArrayLike(JSContext* cx,
 // 23.2.3.24.2 SetTypedArrayFromArrayLike ( target, targetOffset, source )
 /* static */
 bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
+  MOZ_ASSERT(IsTypedArrayObject(args.thisv()));
 
   // Steps 1-3 (Validation performed as part of CallNonGenericMethod).
   Rooted<TypedArrayObject*> target(
@@ -1704,7 +1694,7 @@ bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
 /* static */
 bool TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is, TypedArrayObject::set_impl>(
+  return CallNonGenericMethod<IsTypedArrayObject, TypedArrayObject::set_impl>(
       cx, args);
 }
 
@@ -1712,7 +1702,7 @@ bool TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp) {
 // 22.2.3.5 %TypedArray%.prototype.copyWithin ( target, start [ , end ] )
 /* static */
 bool TypedArrayObject::copyWithin_impl(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
+  MOZ_ASSERT(IsTypedArrayObject(args.thisv()));
 
   // Steps 1-2.
   Rooted<TypedArrayObject*> tarray(
@@ -1845,7 +1835,7 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "[TypedArray].prototype",
                                         "copyWithin");
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<TypedArrayObject::is,
+  return CallNonGenericMethod<IsTypedArrayObject,
                               TypedArrayObject::copyWithin_impl>(cx, args);
 }
 
@@ -2050,7 +2040,7 @@ bool TypedArrayObject::getElement<CanGC>(JSContext* cx, size_t index,
   switch (type()) {
 #define GET_ELEMENT(_, T, N) \
   case Scalar::N:            \
-    return N##Array::getElement(cx, this, index, val);
+    return TypedArrayObjectTemplate<T>::getElement(cx, this, index, val);
     JS_FOR_EACH_TYPED_ARRAY(GET_ELEMENT)
 #undef GET_ELEMENT
     case Scalar::MaxTypedArrayViewType:
@@ -2075,7 +2065,7 @@ bool TypedArrayObject::getElementPure(size_t index, Value* vp) {
   switch (type()) {
 #define GET_ELEMENT_PURE(_, T, N) \
   case Scalar::N:                 \
-    return N##Array::getElementPure(this, index, vp);
+    return TypedArrayObjectTemplate<T>::getElementPure(this, index, vp);
     JS_FOR_EACH_TYPED_ARRAY(GET_ELEMENT_PURE)
 #undef GET_ELEMENT
     case Scalar::MaxTypedArrayViewType:
@@ -2095,14 +2085,14 @@ bool TypedArrayObject::getElements(JSContext* cx,
   MOZ_ASSERT_IF(length > 0, !tarray->hasDetachedBuffer());
 
   switch (tarray->type()) {
-#define GET_ELEMENTS(_, T, N)                                                  \
-  case Scalar::N:                                                              \
-    for (size_t i = 0; i < length; ++i, ++vp) {                                \
-      if (!N##Array::getElement(cx, tarray, i,                                 \
-                                MutableHandleValue::fromMarkedLocation(vp))) { \
-        return false;                                                          \
-      }                                                                        \
-    }                                                                          \
+#define GET_ELEMENTS(_, T, N)                                               \
+  case Scalar::N:                                                           \
+    for (size_t i = 0; i < length; ++i, ++vp) {                             \
+      if (!TypedArrayObjectTemplate<T>::getElement(                         \
+              cx, tarray, i, MutableHandleValue::fromMarkedLocation(vp))) { \
+        return false;                                                       \
+      }                                                                     \
+    }                                                                       \
     return true;
     JS_FOR_EACH_TYPED_ARRAY(GET_ELEMENTS)
 #undef GET_ELEMENTS
@@ -2142,10 +2132,13 @@ static const ClassExtension TypedArrayClassExtension = {
 
 static const JSPropertySpec
     static_prototype_properties[Scalar::MaxTypedArrayViewType][2] = {
-#define IMPL_TYPED_ARRAY_PROPERTIES(ExternalType, NativeType, Name) \
-  {JS_INT32_PS("BYTES_PER_ELEMENT", Name##Array::BYTES_PER_ELEMENT, \
-               JSPROP_READONLY | JSPROP_PERMANENT),                 \
-   JS_PS_END},
+#define IMPL_TYPED_ARRAY_PROPERTIES(ExternalType, NativeType, Name)        \
+  {                                                                        \
+      JS_INT32_PS("BYTES_PER_ELEMENT",                                     \
+                  TypedArrayObjectTemplate<NativeType>::BYTES_PER_ELEMENT, \
+                  JSPROP_READONLY | JSPROP_PERMANENT),                     \
+      JS_PS_END,                                                           \
+  },
 
         JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_PROPERTIES)
 #undef IMPL_TYPED_ARRAY_PROPERTIES
@@ -2154,14 +2147,16 @@ static const JSPropertySpec
 static const ClassSpec
     TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType] = {
 #define IMPL_TYPED_ARRAY_CLASS_SPEC(ExternalType, NativeType, Name) \
-  {Name##Array::createConstructor,                                  \
-   Name##Array::createPrototype,                                    \
-   nullptr,                                                         \
-   static_prototype_properties[Scalar::Type::Name],                 \
-   nullptr,                                                         \
-   static_prototype_properties[Scalar::Type::Name],                 \
-   nullptr,                                                         \
-   JSProto_TypedArray},
+  {                                                                 \
+      TypedArrayObjectTemplate<NativeType>::createConstructor,      \
+      TypedArrayObjectTemplate<NativeType>::createPrototype,        \
+      nullptr,                                                      \
+      static_prototype_properties[Scalar::Type::Name],              \
+      nullptr,                                                      \
+      static_prototype_properties[Scalar::Type::Name],              \
+      nullptr,                                                      \
+      JSProto_TypedArray,                                           \
+  },
 
         JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_CLASS_SPEC)
 #undef IMPL_TYPED_ARRAY_CLASS_SPEC
@@ -2195,9 +2190,13 @@ const JSClass TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
 // above), but it's what we've always done, so keep doing it till we
 // implement @@toStringTag or ES6 changes.
 const JSClass TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
-#define IMPL_TYPED_ARRAY_PROTO_CLASS(ExternalType, NativeType, Name)         \
-  {#Name "Array.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_##Name##Array), \
-   JS_NULL_CLASS_OPS, &TypedArrayObjectClassSpecs[Scalar::Type::Name]},
+#define IMPL_TYPED_ARRAY_PROTO_CLASS(ExternalType, NativeType, Name) \
+  {                                                                  \
+      #Name "Array.prototype",                                       \
+      JSCLASS_HAS_CACHED_PROTO(JSProto_##Name##Array),               \
+      JS_NULL_CLASS_OPS,                                             \
+      &TypedArrayObjectClassSpecs[Scalar::Type::Name],               \
+  },
 
     JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_PROTO_CLASS)
 #undef IMPL_TYPED_ARRAY_PROTO_CLASS
@@ -2219,9 +2218,9 @@ bool TypedArrayObject::isOriginalByteLengthGetter(Native native) {
 }
 
 bool js::IsTypedArrayConstructor(const JSObject* obj) {
-#define CHECK_TYPED_ARRAY_CONSTRUCTOR(_, T, N)              \
-  if (IsNativeFunction(obj, N##Array::class_constructor)) { \
-    return true;                                            \
+#define CHECK_TYPED_ARRAY_CONSTRUCTOR(_, T, N)                                 \
+  if (IsNativeFunction(obj, TypedArrayObjectTemplate<T>::class_constructor)) { \
+    return true;                                                               \
   }
   JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
 #undef CHECK_TYPED_ARRAY_CONSTRUCTOR
@@ -2233,9 +2232,9 @@ bool js::IsTypedArrayConstructor(HandleValue v, Scalar::Type type) {
 }
 
 JSNative js::TypedArrayConstructorNative(Scalar::Type type) {
-#define TYPED_ARRAY_CONSTRUCTOR_NATIVE(_, T, N) \
-  if (type == Scalar::N) {                      \
-    return N##Array::class_constructor;         \
+#define TYPED_ARRAY_CONSTRUCTOR_NATIVE(_, T, N)            \
+  if (type == Scalar::N) {                                 \
+    return TypedArrayObjectTemplate<T>::class_constructor; \
   }
   JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_CONSTRUCTOR_NATIVE)
 #undef TYPED_ARRAY_CONSTRUCTOR_NATIVE
