@@ -452,7 +452,8 @@ Result CertVerifier::VerifyCert(
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional out*/ CertificateTransparencyInfo* ctInfo,
     /*optional out*/ bool* isBuiltChainRootBuiltInRoot,
-    /*optional out*/ bool* madeOCSPRequests) {
+    /*optional out*/ bool* madeOCSPRequests,
+    /*optional out*/ IssuerSources* issuerSources) {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
   MOZ_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
@@ -492,6 +493,10 @@ Result CertVerifier::VerifyCert(
 
   if (madeOCSPRequests) {
     *madeOCSPRequests = false;
+  }
+
+  if (issuerSources) {
+    issuerSources->clear();
   }
 
   Input certDER;
@@ -584,6 +589,9 @@ Result CertVerifier::VerifyCert(
           *madeOCSPRequests |=
               trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
         }
+        if (issuerSources) {
+          *issuerSources = trustDomain.GetIssuerSources();
+        }
         if (rv == Success) {
           rv = VerifyCertificateTransparencyPolicy(
               trustDomain, builtChain, sctsFromTLSInput, time, ctInfo);
@@ -642,6 +650,9 @@ Result CertVerifier::VerifyCert(
         if (madeOCSPRequests) {
           *madeOCSPRequests |=
               trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
+        }
+        if (issuerSources) {
+          *issuerSources = trustDomain.GetIssuerSources();
         }
         if (rv != Success && !IsFatalError(rv) &&
             rv != Result::ERROR_REVOKED_CERTIFICATE &&
@@ -807,7 +818,8 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional out*/ CertificateTransparencyInfo* ctInfo,
     /*optional out*/ bool* isBuiltChainRootBuiltInRoot,
-    /*optional out*/ bool* madeOCSPRequests) {
+    /*optional out*/ bool* madeOCSPRequests,
+    /*optional out*/ IssuerSources* issuerSources) {
   // XXX: MOZ_ASSERT(pinarg);
   MOZ_ASSERT(!hostname.IsEmpty());
 
@@ -832,12 +844,12 @@ Result CertVerifier::VerifySSLServerCert(
     return rv;
   }
   bool isBuiltChainRootBuiltInRootLocal;
-  rv = VerifyCert(peerCertBytes, certificateUsageSSLServer, time, pinarg,
-                  PromiseFlatCString(hostname).get(), builtChain, flags,
-                  extraCertificates, stapledOCSPResponse, sctsFromTLS,
-                  originAttributes, evStatus, ocspStaplingStatus, keySizeStatus,
-                  pinningTelemetryInfo, ctInfo,
-                  &isBuiltChainRootBuiltInRootLocal, madeOCSPRequests);
+  rv = VerifyCert(
+      peerCertBytes, certificateUsageSSLServer, time, pinarg,
+      PromiseFlatCString(hostname).get(), builtChain, flags, extraCertificates,
+      stapledOCSPResponse, sctsFromTLS, originAttributes, evStatus,
+      ocspStaplingStatus, keySizeStatus, pinningTelemetryInfo, ctInfo,
+      &isBuiltChainRootBuiltInRootLocal, madeOCSPRequests, issuerSources);
   if (rv != Success) {
     // we don't use the certificate for path building, so this parameter doesn't
     // matter

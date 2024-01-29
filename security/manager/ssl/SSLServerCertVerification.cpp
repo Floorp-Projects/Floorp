@@ -112,6 +112,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsICertOverrideService.h"
@@ -529,7 +530,8 @@ static void CollectCertTelemetry(
     KeySizeStatus aKeySizeStatus,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
+    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
+    const IssuerSources& issuerSources) {
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
                       : (aEVStatus != EVStatus::EV)        ? 1  // 1 = DV
                                                            : 2;        // 2 = EV
@@ -562,6 +564,28 @@ static void CollectCertTelemetry(
                                  rootCert);
     GatherCertificateTransparencyTelemetry(rootCert, aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
+
+    mozilla::glean::tls::certificate_verifications.Add(1);
+    if (issuerSources.contains(IssuerSource::TLSHandshake)) {
+      mozilla::glean::verification_used_cert_from::tls_handshake.AddToNumerator(
+          1);
+    }
+    if (issuerSources.contains(IssuerSource::PreloadedIntermediates)) {
+      mozilla::glean::verification_used_cert_from::preloaded_intermediates
+          .AddToNumerator(1);
+    }
+    if (issuerSources.contains(IssuerSource::ThirdPartyCertificates)) {
+      mozilla::glean::verification_used_cert_from::third_party_certificates
+          .AddToNumerator(1);
+    }
+    if (issuerSources.contains(IssuerSource::NSSCertDB)) {
+      mozilla::glean::verification_used_cert_from::nss_cert_db.AddToNumerator(
+          1);
+    }
+    if (issuerSources.contains(IssuerSource::BuiltInRootsModule)) {
+      mozilla::glean::verification_used_cert_from::built_in_roots_module
+          .AddToNumerator(1);
+    }
   }
 }
 
@@ -594,17 +618,18 @@ Result AuthCertificate(
         [](const auto& elementArray) { return elementArray.Clone(); });
   }
 
+  IssuerSources issuerSources;
   Result rv = certVerifier.VerifySSLServerCert(
       certBytes, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &pinningTelemetryInfo,
       &certificateTransparencyInfo, &aIsBuiltCertChainRootBuiltInRoot,
-      &aMadeOCSPRequests);
+      &aMadeOCSPRequests, &issuerSources);
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        pinningTelemetryInfo, builtCertChain,
-                       certificateTransparencyInfo);
+                       certificateTransparencyInfo, issuerSources);
 
   return rv;
 }
