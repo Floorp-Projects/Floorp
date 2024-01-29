@@ -330,7 +330,9 @@ void ReflowInput::SetComputedBSize(nscoord aComputedBSize,
   NS_WARNING_ASSERTION(aComputedBSize >= 0, "Invalid computed block-size!");
   if (ComputedBSize() != aComputedBSize) {
     mComputedSize.BSize(mWritingMode) = std::max(0, aComputedBSize);
-    InitResizeFlags(mFrame->PresContext(), mFrame->Type());
+    if (aFlags == ResetResizeFlags::Yes) {
+      InitResizeFlags(mFrame->PresContext(), mFrame->Type());
+    }
   }
 }
 
