@@ -96,7 +96,7 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToSetObject:
       return &SetObject::class_;
     case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return &ArrayBufferObject::class_;
+      return &FixedLengthArrayBufferObject::class_;
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
       return &SharedArrayBufferObject::class_;
 

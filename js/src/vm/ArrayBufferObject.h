@@ -67,6 +67,8 @@ uint64_t WasmReservedBytes();
 //   - NativeObject
 //     - ArrayBufferObjectMaybeShared
 //       - ArrayBufferObject
+//         - FixedLengthArrayBufferObject
+//         - ResizableArrayBufferObject
 //       - SharedArrayBufferObject
 //     - ArrayBufferViewObject
 //       - DataViewObject
@@ -78,6 +80,10 @@ uint64_t WasmReservedBytes();
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation
 // detail that makes implementing its various subclasses easier.
+//
+// FixedLengthArrayBufferObject and ResizableArrayBufferObject are also
+// implementation specific types to differentiate between fixed-length and
+// resizable ArrayBuffers.
 //
 // ArrayBufferObject and SharedArrayBufferObject are unrelated data types:
 // the racy memory of the latter cannot substitute for the non-racy memory of
@@ -147,6 +153,9 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   inline bool isWasm() const;
 };
 
+class FixedLengthArrayBufferObject;
+class ResizableArrayBufferObject;
+
 /*
  * ArrayBufferObject
  *
@@ -154,6 +163,9 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
  * (DataViewObject and the TypedArrays) access. It can be created explicitly and
  * used to construct an ArrayBufferView, or can be created lazily when it is
  * first accessed for a TypedArrayObject that doesn't have an explicit buffer.
+ *
+ * ArrayBufferObject is an abstract base class and has exactly two concrete
+ * subclasses, FixedLengthArrayBufferObject and ResizableArrayBufferObject.
  *
  * ArrayBufferObject (or really the underlying memory) /is not racy/: the
  * memory is private to a single worker.
@@ -187,10 +199,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 #else
   static constexpr size_t MaxByteLength = MaxByteLengthForSmallBuffer;
 #endif
-
-  /** The largest number of bytes that can be stored inline. */
-  static constexpr size_t MaxInlineBytes =
-      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
 
  public:
   enum BufferKind {
@@ -344,7 +352,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     WasmArrayRawBuffer* wasmBuffer() const;
   };
 
-  static const JSClass class_;
   static const JSClass protoClass_;
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -555,12 +562,48 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 };
 
-inline bool ArrayBufferObjectMaybeShared::pinLength(bool pin) {
-  if (is<ArrayBufferObject>()) {
-    return as<ArrayBufferObject>().pinLength(pin);
-  }
-  return false;  // Cannot pin or unpin shared array buffers.
-}
+/**
+ * FixedLengthArrayBufferObject
+ *
+ * ArrayBuffer object with a fixed length. Its length is unmodifiable, except
+ * when zeroing it for detached buffers. Supports all possible memory stores
+ * for ArrayBuffer objects, including inline data, malloc'ed memory, mapped
+ * memory, and user-owner memory.
+ *
+ * Fixed-length ArrayBuffers can be used for asm.js and WebAssembly.
+ */
+class FixedLengthArrayBufferObject : public ArrayBufferObject {
+ public:
+  // Fixed-length ArrayBuffer objects don't have any additional reserved slots.
+  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS;
+
+  /** The largest number of bytes that can be stored inline. */
+  static constexpr size_t MaxInlineBytes =
+      (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
+
+  static const JSClass class_;
+};
+
+/**
+ * ResizableArrayBufferObject
+ *
+ * ArrayBuffer object which can both grow and shrink. The maximum byte length it
+ * can grow to is set when creating the object. The data of resizable
+ * ArrayBuffer object is either stored inline or malloc'ed memory.
+ *
+ * When a resizable ArrayBuffer object is detached, its maximum byte length
+ * slot is set to zero in addition to the byte length slot.
+ *
+ * Resizable ArrayBuffers can neither be used for asm.js nor WebAssembly.
+ */
+class ResizableArrayBufferObject : public ArrayBufferObject {
+  friend class ArrayBufferObject;
+
+ public:
+  static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS;
+
+  static const JSClass class_;
+};
 
 // Create a buffer for a wasm memory, whose type is determined by
 // memory.indexType().
@@ -725,6 +768,12 @@ class WasmArrayRawBuffer {
 };
 
 }  // namespace js
+
+template <>
+inline bool JSObject::is<js::ArrayBufferObject>() const {
+  return is<js::FixedLengthArrayBufferObject>() ||
+         is<js::ResizableArrayBufferObject>();
+}
 
 template <>
 bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const;
