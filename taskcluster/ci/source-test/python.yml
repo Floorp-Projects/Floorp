@@ -466,7 +466,7 @@ fxms-schemas:
             - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'
             - 'browser/components/newtab/content-src/**/*.schema.json'
             - 'browser/components/asrouter/modules/OnboardingMessageProvider.jsm'
-            - 'browser/components/newtab/lib/PanelTestProvider.sys.mjs'
+            - 'browser/components/asrouter/modules/PanelTestProvider.sys.mjs'
 
 condprof:
     description: testing/condprofile unit tests

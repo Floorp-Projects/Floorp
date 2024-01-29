@@ -1,5 +1,5 @@
 const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+  "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
 const { MomentsPageHub } = ChromeUtils.import(
   "resource://activity-stream/lib/MomentsPageHub.jsm"

@@ -11,7 +11,7 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+  "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
 
 const CWD = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
