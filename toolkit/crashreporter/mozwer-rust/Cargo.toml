@@ -12,7 +12,27 @@ rust-ini = "0.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 uuid = { version = "1.0", features = ["v4"] }
-winapi = { version = "0.3", features = ["basetsd", "combaseapi", "handleapi", "impl-default", "knownfolders", "memoryapi", "minwinbase", "minwindef", "ntdef", "ntstatus", "processthreadsapi", "psapi", "shlobj", "synchapi", "winbase", "winerror"] }
+
+[dependencies.windows-sys]
+version = "0.52"
+features = [
+    "Wdk_System_Threading",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_ErrorReporting",
+    "Win32_System_Kernel",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_ProcessStatus",
+    "Win32_System_SystemInformation",
+    "Win32_System_SystemServices",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+]
 
 [lib]
 name = "mozwer_s"

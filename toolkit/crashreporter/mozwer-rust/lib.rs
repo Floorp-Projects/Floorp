@@ -2,15 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-extern crate ini;
-extern crate winapi;
-
 use ini::Ini;
 use libc::time;
 use serde::Serialize;
 use serde_json::ser::to_writer;
 use std::convert::TryInto;
-use std::ffi::OsString;
+use std::ffi::{c_void, OsString};
 use std::fs::{read_to_string, File};
 use std::io::{BufRead, BufReader, Write};
 use std::mem::{size_of, zeroed};
@@ -20,36 +17,49 @@ use std::path::{Path, PathBuf};
 use std::ptr::{addr_of_mut, null, null_mut};
 use std::slice::from_raw_parts;
 use uuid::Uuid;
-use winapi::shared::basetsd::{SIZE_T, ULONG_PTR};
-use winapi::shared::minwindef::{
-    BOOL, BYTE, DWORD, FALSE, FILETIME, LPVOID, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
+use windows_sys::core::{HRESULT, PWSTR};
+use windows_sys::Wdk::System::Threading::{NtQueryInformationProcess, ProcessBasicInformation};
+use windows_sys::Win32::{
+    Foundation::{
+        CloseHandle, BOOL, EXCEPTION_BREAKPOINT, E_UNEXPECTED, FALSE, FILETIME, HANDLE, HWND,
+        LPARAM, MAX_PATH, STATUS_SUCCESS, S_OK, TRUE, UNICODE_STRING, WAIT_OBJECT_0,
+    },
+    System::Com::CoTaskMemFree,
+    System::Diagnostics::Debug::{
+        GetThreadContext, MiniDumpWithFullMemoryInfo, MiniDumpWithIndirectlyReferencedMemory,
+        MiniDumpWithProcessThreadData, MiniDumpWithUnloadedModules, MiniDumpWriteDump,
+        ReadProcessMemory, WriteProcessMemory, EXCEPTION_POINTERS, MINIDUMP_EXCEPTION_INFORMATION,
+        MINIDUMP_TYPE,
+    },
+    System::ErrorReporting::WER_RUNTIME_EXCEPTION_INFORMATION,
+    System::Kernel::STRING,
+    System::ProcessStatus::K32GetModuleFileNameExW,
+    System::SystemInformation::{
+        VerSetConditionMask, VerifyVersionInfoW, OSVERSIONINFOEXW, VER_MAJORVERSION,
+        VER_MINORVERSION, VER_SERVICEPACKMAJOR, VER_SERVICEPACKMINOR,
+    },
+    System::SystemServices::VER_GREATER_EQUAL,
+    System::Threading::{
+        CreateProcessW, CreateRemoteThread, GetProcessId, GetProcessTimes, GetThreadId,
+        OpenProcess, OpenThread, TerminateProcess, WaitForSingleObject, CREATE_NO_WINDOW,
+        CREATE_UNICODE_ENVIRONMENT, LPTHREAD_START_ROUTINE, NORMAL_PRIORITY_CLASS, PEB,
+        PROCESS_ALL_ACCESS, PROCESS_BASIC_INFORMATION, PROCESS_INFORMATION, STARTUPINFOW,
+        THREAD_GET_CONTEXT,
+    },
+    UI::Shell::{FOLDERID_RoamingAppData, SHGetKnownFolderPath},
+    UI::WindowsAndMessaging::{EnumWindows, GetWindowThreadProcessId, IsHungAppWindow},
 };
-use winapi::shared::ntdef::{NTSTATUS, STRING, UNICODE_STRING};
-use winapi::shared::ntstatus::STATUS_SUCCESS;
-use winapi::shared::winerror::{E_UNEXPECTED, S_OK};
-use winapi::um::combaseapi::CoTaskMemFree;
-use winapi::um::handleapi::CloseHandle;
-use winapi::um::knownfolders::FOLDERID_RoamingAppData;
-use winapi::um::memoryapi::{ReadProcessMemory, WriteProcessMemory};
-use winapi::um::minwinbase::{EXCEPTION_BREAKPOINT, LPTHREAD_START_ROUTINE};
-use winapi::um::processthreadsapi::{
-    CreateProcessW, CreateRemoteThread, GetProcessId, GetProcessTimes, GetThreadContext,
-    GetThreadId, OpenProcess, OpenThread, TerminateProcess, PROCESS_INFORMATION, STARTUPINFOW,
-};
-use winapi::um::psapi::K32GetModuleFileNameExW;
-use winapi::um::shlobj::SHGetKnownFolderPath;
-use winapi::um::synchapi::WaitForSingleObject;
-use winapi::um::winbase::{
-    VerifyVersionInfoW, CREATE_NO_WINDOW, CREATE_UNICODE_ENVIRONMENT, NORMAL_PRIORITY_CLASS,
-    WAIT_OBJECT_0,
-};
-use winapi::um::winnt::{
-    VerSetConditionMask, CONTEXT, DWORDLONG, EXCEPTION_POINTERS, EXCEPTION_RECORD, HANDLE, HRESULT,
-    LIST_ENTRY, LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR, PEXCEPTION_POINTERS,
-    PROCESS_ALL_ACCESS, PVOID, PWSTR, THREAD_GET_CONTEXT, VER_GREATER_EQUAL, VER_MAJORVERSION,
-    VER_MINORVERSION, VER_SERVICEPACKMAJOR, VER_SERVICEPACKMINOR,
-};
-use winapi::STRUCT;
+
+type WORD = u16;
+type DWORD = u32;
+type ULONG = u32;
+type DWORDLONG = u64;
+type LPVOID = *mut c_void;
+type PVOID = LPVOID;
+type PBOOL = *mut BOOL;
+type PDWORD = *mut DWORD;
+#[allow(non_camel_case_types)]
+type PWER_RUNTIME_EXCEPTION_INFORMATION = *mut WER_RUNTIME_EXCEPTION_INFORMATION;
 
 /* The following struct must be kept in sync with the identically named one in
  * nsExceptionHandler.h. There is one copy of this structure for every child
@@ -152,7 +162,7 @@ fn out_of_process_exception_event_callback(
                     // This is all best-effort, so don't return errors (just fall through to the
                     // Ok return).
                     let thread_handle = unsafe { OpenThread(THREAD_GET_CONTEXT, FALSE, thread_id) };
-                    if thread_handle != std::ptr::null_mut()
+                    if thread_handle != 0
                         && unsafe {
                             GetThreadContext(thread_handle, &mut exception_information.context)
                         }
@@ -195,9 +205,6 @@ fn out_of_process_exception_event_callback(
 /// Find whether the given process has a hung window, and return the thread id related to the
 /// window.
 fn find_hung_window_thread(process: HANDLE) -> Result<DWORD> {
-    use winapi::shared::{minwindef::LPARAM, windef::HWND};
-    use winapi::um::winuser::{EnumWindows, GetWindowThreadProcessId, IsHungAppWindow};
-
     let process_id = get_process_id(process)?;
 
     struct WindowSearch {
@@ -268,7 +275,7 @@ fn read_from_process<T>(process: HANDLE, data_ptr: *mut T) -> Result<T> {
             process,
             data_ptr as *mut _,
             addr_of_mut!(data) as *mut _,
-            size_of::<T>() as SIZE_T,
+            size_of::<T>(),
             null_mut(),
         )
     }
@@ -281,7 +288,7 @@ fn read_array_from_process<T: Clone + Default>(
     count: usize,
 ) -> Result<Vec<T>> {
     let mut array = vec![Default::default(); count];
-    let size = size_of::<T>() as SIZE_T;
+    let size = size_of::<T>();
     let size = size.checked_mul(count).ok_or(())?;
     unsafe {
         ReadProcessMemory(
@@ -301,7 +308,7 @@ fn write_to_process<T>(process: HANDLE, mut data: T, data_ptr: *mut T) -> Result
             process,
             data_ptr as LPVOID,
             addr_of_mut!(data) as *mut _,
-            size_of::<T>() as SIZE_T,
+            size_of::<T>(),
             null_mut(),
         )
     }
@@ -325,7 +332,7 @@ fn notify_main_process(
         )
     };
 
-    if thread == null_mut() {
+    if thread == 0 {
         return Err(());
     }
 
@@ -339,10 +346,14 @@ fn notify_main_process(
 }
 
 fn get_startup_time(process: HANDLE) -> Result<u64> {
-    let mut create_time: FILETIME = Default::default();
-    let mut exit_time: FILETIME = Default::default();
-    let mut kernel_time: FILETIME = Default::default();
-    let mut user_time: FILETIME = Default::default();
+    const ZERO_FILETIME: FILETIME = FILETIME {
+        dwLowDateTime: 0,
+        dwHighDateTime: 0,
+    };
+    let mut create_time: FILETIME = ZERO_FILETIME;
+    let mut exit_time: FILETIME = ZERO_FILETIME;
+    let mut kernel_time: FILETIME = ZERO_FILETIME;
+    let mut user_time: FILETIME = ZERO_FILETIME;
     unsafe {
         if GetProcessTimes(
             process,
@@ -389,7 +400,7 @@ fn get_process_id(process: HANDLE) -> Result<DWORD> {
 
 fn get_process_handle(pid: DWORD) -> Result<HANDLE> {
     let handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) };
-    if handle != null_mut() {
+    if handle != 0 {
         Ok(handle)
     } else {
         Err(())
@@ -411,10 +422,10 @@ fn launch_crash_reporter_client(
     cmd_line.push("\"\0");
     let mut cmd_line: Vec<u16> = cmd_line.encode_wide().collect();
 
-    let mut pi: PROCESS_INFORMATION = Default::default();
+    let mut pi = unsafe { zeroed::<PROCESS_INFORMATION>() };
     let mut si = STARTUPINFOW {
         cb: size_of::<STARTUPINFOW>().try_into().unwrap(),
-        ..Default::default()
+        ..unsafe { zeroed() }
     };
 
     unsafe {
@@ -571,11 +582,11 @@ impl ApplicationInformation {
     }
 
     fn get_application_path(process: HANDLE) -> Result<PathBuf> {
-        let mut path: [u16; MAX_PATH + 1] = [0; MAX_PATH + 1];
+        let mut path: [u16; MAX_PATH as usize + 1] = [0; MAX_PATH as usize + 1];
         unsafe {
             let res = K32GetModuleFileNameExW(
                 process,
-                null_mut(),
+                0,
                 (&mut path).as_mut_ptr(),
                 (MAX_PATH + 1) as DWORD,
             );
@@ -606,7 +617,7 @@ impl ApplicationInformation {
             let res = SHGetKnownFolderPath(
                 &FOLDERID_RoamingAppData as *const _,
                 0,
-                null_mut(),
+                0,
                 &mut psz_path as *mut _,
             );
 
@@ -778,18 +789,19 @@ fn is_windows8_or_later() -> bool {
         dwOSVersionInfoSize: size_of::<OSVERSIONINFOEXW>().try_into().unwrap(),
         dwMajorVersion: 6,
         dwMinorVersion: 2,
-        ..Default::default()
+        ..unsafe { zeroed() }
     };
 
     unsafe {
         let mut mask: DWORDLONG = 0;
-        mask = VerSetConditionMask(mask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-        mask = VerSetConditionMask(mask, VER_MINORVERSION, VER_GREATER_EQUAL);
-        mask = VerSetConditionMask(mask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
-        mask = VerSetConditionMask(mask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
+        let ge: u8 = VER_GREATER_EQUAL.try_into().unwrap();
+        mask = VerSetConditionMask(mask, VER_MAJORVERSION, ge);
+        mask = VerSetConditionMask(mask, VER_MINORVERSION, ge);
+        mask = VerSetConditionMask(mask, VER_SERVICEPACKMAJOR, ge);
+        mask = VerSetConditionMask(mask, VER_SERVICEPACKMINOR, ge);
 
         VerifyVersionInfoW(
-            &mut info as LPOSVERSIONINFOEXW,
+            &mut info,
             VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
             mask,
         )
@@ -841,7 +853,9 @@ fn read_command_line(process: HANDLE) -> Result<String> {
     String::from_utf16(&command_line).map_err(|_err| ())
 }
 
-fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARAMETERS> {
+fn read_user_process_parameters(
+    process: HANDLE,
+) -> Result<RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED> {
     let mut pbi: PROCESS_BASIC_INFORMATION = unsafe { zeroed() };
     let mut length: ULONG = 0;
     let result = unsafe {
@@ -862,159 +876,30 @@ fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARA
     let peb: PEB = read_from_process(process, pbi.PebBaseAddress)?;
 
     // Read the user process parameters
-    read_from_process::<RTL_USER_PROCESS_PARAMETERS>(process, peb.ProcessParameters)
+    read_from_process(
+        process,
+        peb.ProcessParameters as *mut RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED,
+    )
 }
 
-/******************************************************************************
- * The stuff below should be migrated to the winapi crate, see bug 1696414    *
- ******************************************************************************/
+// The below structs encompass undocumented fields.
 
-// we can't use winapi's ENUM macro directly because it doesn't support
-// attributes, so let's define this one here until we migrate this code
-macro_rules! ENUM {
-    {enum $name:ident { $($variant:ident = $value:expr,)+ }} => {
-        #[allow(non_camel_case_types)] pub type $name = u32;
-        $(#[allow(non_upper_case_globals)] pub const $variant: $name = $value;)+
-    };
-}
-
-// winapi doesn't export the FN macro, so we duplicate it here
-macro_rules! FN {
-    (stdcall $func:ident($($t:ty,)*) -> $ret:ty) => (
-        #[allow(non_camel_case_types)] pub type $func = Option<unsafe extern "system" fn($($t,)*) -> $ret>;
-    );
-    (stdcall $func:ident($($p:ident: $t:ty,)*) -> $ret:ty) => (
-        #[allow(non_camel_case_types)] pub type $func = Option<unsafe extern "system" fn($($p: $t,)*) -> $ret>;
-    );
-}
-
-// From um/WerApi.h
-
-STRUCT! {#[allow(non_snake_case)] struct WER_RUNTIME_EXCEPTION_INFORMATION
-{
-    dwSize: DWORD,
-    hProcess: HANDLE,
-    hThread: HANDLE,
-    exceptionRecord: EXCEPTION_RECORD,
-    context: CONTEXT,
-    pwszReportId: PCWSTR,
-    bIsFatal: BOOL,
-    dwReserved: DWORD,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PWER_RUNTIME_EXCEPTION_INFORMATION = *mut WER_RUNTIME_EXCEPTION_INFORMATION;
-
-// From minidumpapiset.hProcess
-
-STRUCT! {#[allow(non_snake_case)] #[repr(packed(4))] struct MINIDUMP_EXCEPTION_INFORMATION {
-    ThreadId: DWORD,
-    ExceptionPointers: PEXCEPTION_POINTERS,
-    ClientPointers: BOOL,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PMINIDUMP_EXCEPTION_INFORMATION = *mut MINIDUMP_EXCEPTION_INFORMATION;
-
-ENUM! { enum MINIDUMP_TYPE {
-    MiniDumpNormal                         = 0x00000000,
-    MiniDumpWithDataSegs                   = 0x00000001,
-    MiniDumpWithFullMemory                 = 0x00000002,
-    MiniDumpWithHandleData                 = 0x00000004,
-    MiniDumpFilterMemory                   = 0x00000008,
-    MiniDumpScanMemory                     = 0x00000010,
-    MiniDumpWithUnloadedModules            = 0x00000020,
-    MiniDumpWithIndirectlyReferencedMemory = 0x00000040,
-    MiniDumpFilterModulePaths              = 0x00000080,
-    MiniDumpWithProcessThreadData          = 0x00000100,
-    MiniDumpWithPrivateReadWriteMemory     = 0x00000200,
-    MiniDumpWithoutOptionalData            = 0x00000400,
-    MiniDumpWithFullMemoryInfo             = 0x00000800,
-    MiniDumpWithThreadInfo                 = 0x00001000,
-    MiniDumpWithCodeSegs                   = 0x00002000,
-    MiniDumpWithoutAuxiliaryState          = 0x00004000,
-    MiniDumpWithFullAuxiliaryState         = 0x00008000,
-    MiniDumpWithPrivateWriteCopyMemory     = 0x00010000,
-    MiniDumpIgnoreInaccessibleMemory       = 0x00020000,
-    MiniDumpWithTokenInformation           = 0x00040000,
-    MiniDumpWithModuleHeaders              = 0x00080000,
-    MiniDumpFilterTriage                   = 0x00100000,
-    MiniDumpWithAvxXStateContext           = 0x00200000,
-    MiniDumpWithIptTrace                   = 0x00400000,
-    MiniDumpScanInaccessiblePartialPages   = 0x00800000,
-    MiniDumpValidTypeFlags                 = 0x00ffffff,
-}}
-
-// We don't actually need the following three structs so we use placeholders
-STRUCT! {#[allow(non_snake_case)] struct MINIDUMP_CALLBACK_INPUT {
-    dummy: u32,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PMINIDUMP_CALLBACK_INPUT = *const MINIDUMP_CALLBACK_INPUT;
-
-STRUCT! {#[allow(non_snake_case)] struct MINIDUMP_USER_STREAM_INFORMATION {
-    dummy: u32,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PMINIDUMP_USER_STREAM_INFORMATION = *const MINIDUMP_USER_STREAM_INFORMATION;
-
-STRUCT! {#[allow(non_snake_case)] struct MINIDUMP_CALLBACK_OUTPUT {
-    dummy: u32,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PMINIDUMP_CALLBACK_OUTPUT = *const MINIDUMP_CALLBACK_OUTPUT;
-
-// MiniDumpWriteDump() function and structs
-FN! {stdcall MINIDUMP_CALLBACK_ROUTINE(
-CallbackParam: PVOID,
-CallbackInput: PMINIDUMP_CALLBACK_INPUT,
-CallbackOutput: PMINIDUMP_CALLBACK_OUTPUT,
-) -> BOOL}
-
-STRUCT! {#[allow(non_snake_case)] #[repr(packed(4))] struct MINIDUMP_CALLBACK_INFORMATION {
-    CallbackRoutine: MINIDUMP_CALLBACK_ROUTINE,
-    CallbackParam: PVOID,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PMINIDUMP_CALLBACK_INFORMATION = *const MINIDUMP_CALLBACK_INFORMATION;
-
-extern "system" {
-    pub fn MiniDumpWriteDump(
-        hProcess: HANDLE,
-        ProcessId: DWORD,
-        hFile: HANDLE,
-        DumpType: MINIDUMP_TYPE,
-        Exceptionparam: PMINIDUMP_EXCEPTION_INFORMATION,
-        UserStreamParam: PMINIDUMP_USER_STREAM_INFORMATION,
-        CallbackParam: PMINIDUMP_CALLBACK_INFORMATION,
-    ) -> BOOL;
-}
-
-// From um/winternl.h
-
-STRUCT! {#[allow(non_snake_case)] struct PEB_LDR_DATA {
-    Reserved1: [BYTE; 8],
-    Reserved2: [PVOID; 3],
-    InMemoryOrderModuleList: LIST_ENTRY,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PPEB_LDR_DATA = *mut PEB_LDR_DATA;
-
-STRUCT! {#[allow(non_snake_case)] struct RTL_DRIVE_LETTER_CURDIR {
+#[repr(C)]
+#[allow(non_snake_case)]
+struct RTL_DRIVE_LETTER_CURDIR {
     Flags: WORD,
     Length: WORD,
     TimeStamp: ULONG,
     DosPath: STRING,
-}}
+}
 
-STRUCT! {#[allow(non_snake_case)] struct RTL_USER_PROCESS_PARAMETERS {
-    Reserved1: [BYTE; 16],
-    Reserved2: [PVOID; 10],
+#[repr(C)]
+#[allow(non_snake_case)]
+struct RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED {
+    // These first 4 members are copied from
+    // `windows_sys::Win32::System::Threading::RTL_USER_PROCESS_PARAMETERS`.
+    Reserved1: [u8; 16],
+    Reserved2: [*mut c_void; 10],
     ImagePathName: UNICODE_STRING,
     CommandLine: UNICODE_STRING,
     // Everything below this point is undocumented
@@ -1034,60 +919,4 @@ STRUCT! {#[allow(non_snake_case)] struct RTL_USER_PROCESS_PARAMETERS {
     RuntimeData: UNICODE_STRING,
     CurrentDirectores: [RTL_DRIVE_LETTER_CURDIR; 32],
     EnvironmentSize: ULONG,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PRTL_USER_PROCESS_PARAMETERS = *mut RTL_USER_PROCESS_PARAMETERS;
-
-FN! {stdcall PPS_POST_PROCESS_INIT_ROUTINE() -> ()}
-
-STRUCT! {#[allow(non_snake_case)] struct PEB {
-    Reserved1: [BYTE; 2],
-    BeingDebugged: BYTE,
-    Reserved2: [BYTE; 1],
-    Reserved3: [PVOID; 2],
-    Ldr: PPEB_LDR_DATA,
-    ProcessParameters: PRTL_USER_PROCESS_PARAMETERS,
-    Reserved4: [PVOID; 3],
-    AtlThunkSListPtr: PVOID,
-    Reserved5: PVOID,
-    Reserved6: ULONG,
-    Reserved7: PVOID,
-    Reserved8: ULONG,
-    AtlThunkSListPtr32: ULONG,
-    Reserved9: [PVOID; 45],
-    Reserved10: [BYTE; 96],
-    PostProcessInitRoutine: PPS_POST_PROCESS_INIT_ROUTINE,
-    Reserved11: [BYTE; 128],
-    Reserved12: [PVOID; 1],
-    SessionId: ULONG,
-}}
-
-#[allow(non_camel_case_types)]
-pub type PPEB = *mut PEB;
-
-STRUCT! {#[allow(non_snake_case)] struct PROCESS_BASIC_INFORMATION {
-    Reserved1: PVOID,
-    PebBaseAddress: PPEB,
-    Reserved2: [PVOID; 2],
-    UniqueProcessId: ULONG_PTR,
-    Reserved3: PVOID,
-}}
-
-ENUM! {enum PROCESSINFOCLASS {
-    ProcessBasicInformation = 0,
-    ProcessDebugPort = 7,
-    ProcessWow64Information = 26,
-    ProcessImageFileName = 27,
-    ProcessBreakOnTermination = 29,
-}}
-
-extern "system" {
-    pub fn NtQueryInformationProcess(
-        ProcessHandle: HANDLE,
-        ProcessInformationClass: PROCESSINFOCLASS,
-        ProcessInformation: PVOID,
-        ProcessInformationLength: ULONG,
-        ReturnLength: PULONG,
-    ) -> NTSTATUS;
 }
