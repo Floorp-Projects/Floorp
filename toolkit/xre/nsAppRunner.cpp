@@ -5375,10 +5375,6 @@ nsresult XREMain::XRE_mainRun() {
       }
     }
 
-#ifdef XP_MACOSX
-    InitializeMacApp();
-#endif
-
     // We'd like to initialize the JSContext *after* reading the user prefs.
     // Unfortunately that's not possible if we have to do profile migration
     // because that requires us to execute JS before reading user prefs.
@@ -5405,6 +5401,10 @@ nsresult XREMain::XRE_mainRun() {
             aKey = MOZ_APP_NAME;
             gResetOldProfile->GetName(aName);
           }
+#ifdef XP_MACOSX
+          // Necessary for migration wizard to be accessible.
+          InitializeMacApp();
+#endif
           pm->Migrate(&mDirProvider, aKey, aName);
         }
       }
@@ -5590,6 +5590,8 @@ nsresult XREMain::XRE_mainRun() {
 #endif
 
 #ifdef XP_MACOSX
+      InitializeMacApp();
+
       // we re-initialize the command-line service and do appleevents munging
       // after we are sure that we're not restarting
       cmdLine = new nsCommandLine();
