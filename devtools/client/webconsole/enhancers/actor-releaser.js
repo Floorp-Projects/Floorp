@@ -26,25 +26,19 @@ function enableActorReleaser(webConsoleUI) {
         webConsoleUI &&
         [MESSAGES_ADD, MESSAGES_CLEAR, PRIVATE_MESSAGES_CLEAR].includes(type)
       ) {
-        const promises = [];
-        state.messages.frontsToRelease.forEach(front => {
-          // We only release the front if it actually has a release method, if it isn't
-          // already destroyed, and if it's not in the sidebar (where we might still need it).
-          if (
-            front &&
-            typeof front.release === "function" &&
-            !front.isDestroyed() &&
-            (!state.ui.frontInSidebar ||
-              state.ui.frontInSidebar.actorID !== front.actorID)
-          ) {
-            promises.push(front.release());
-          }
-        });
+        const { frontInSidebar } = state.ui;
+        let { frontsToRelease } = state.messages;
+        // Ignore the front for object still displayed in the sidebar, if there is one.
+        frontsToRelease = frontInSidebar
+          ? frontsToRelease.filter(
+              front => frontInSidebar.actorID !== front.actorID
+            )
+          : state.messages.frontsToRelease;
 
-        // Emit an event we can listen to to make sure all the fronts were released.
-        Promise.all(promises).then(() =>
-          webConsoleUI.emitForTests("fronts-released")
-        );
+        webConsoleUI.hud.commands.objectCommand
+          .releaseObjects(frontsToRelease)
+          // Emit an event we can listen to to make sure all the fronts were released.
+          .then(() => webConsoleUI.emitForTests("fronts-released"));
 
         // Reset `frontsToRelease` in message reducer.
         state = reducer(state, {

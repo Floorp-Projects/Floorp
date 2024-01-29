@@ -135,6 +135,8 @@ class RootActor extends Actor {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
+      // @backward-compat { version 123 } A new Objects Manager front has a new "releaseActors" method.
+      supportsReleaseActors: true,
     };
   }
 
