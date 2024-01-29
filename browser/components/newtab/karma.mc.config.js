@@ -82,12 +82,6 @@ module.exports = function (config) {
               functions: 94,
               branches: 66,
             },
-            "lib/ASRouter.jsm": {
-              statements: 75,
-              lines: 75,
-              functions: 64,
-              branches: 66,
-            },
             "content-src/asrouter/asrouter-utils.js": {
               statements: 66,
               lines: 66,

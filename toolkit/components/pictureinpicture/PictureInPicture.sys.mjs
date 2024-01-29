@@ -14,7 +14,9 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  ASRouter:
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {

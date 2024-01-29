@@ -3,7 +3,7 @@
 
 "use strict";
 const { MessageLoaderUtils } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 
 const { BuiltInThemes } = ChromeUtils.importESModule(

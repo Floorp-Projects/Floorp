@@ -4,7 +4,7 @@
 "use strict";
 
 const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/PanelTestProvider.sys.mjs"

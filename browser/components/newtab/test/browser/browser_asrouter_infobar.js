@@ -10,7 +10,7 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 
 add_task(async function show_and_send_telemetry() {

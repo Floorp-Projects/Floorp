@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 const OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";

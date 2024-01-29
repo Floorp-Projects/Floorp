@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 // A mapping of loaded new tab pages, where the mapping is:

@@ -4,7 +4,7 @@
 "use strict";
 
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 
 const { ASRouterTargeting } = ChromeUtils.import(

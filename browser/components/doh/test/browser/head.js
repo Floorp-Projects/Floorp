@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

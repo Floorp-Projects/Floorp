@@ -1,5 +1,5 @@
-import { _ASRouter, MessageLoaderUtils } from "lib/ASRouter.jsm";
-import { QueryCache } from "asroutermodules/ASRouterTargeting.jsm";
+import { _ASRouter, MessageLoaderUtils } from "modules/ASRouter.jsm";
+import { QueryCache } from "modules/ASRouterTargeting.jsm";
 import {
   FAKE_LOCAL_MESSAGES,
   FAKE_LOCAL_PROVIDER,
@@ -7,16 +7,16 @@ import {
   FAKE_REMOTE_MESSAGES,
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
-} from "./constants";
+} from "test/unit/asrouter/constants";
 import {
   ASRouterPreferences,
   TARGETING_PREFERENCES,
-} from "asroutermodules/ASRouterPreferences.jsm";
-import { ASRouterTriggerListeners } from "asroutermodules/ASRouterTriggerListeners.jsm";
-import { CFRPageActions } from "lib/CFRPageActions.jsm";
+} from "modules/ASRouterPreferences.jsm";
+import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.jsm";
+import { CFRPageActions } from "newtab/lib/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { PanelTestProvider } from "lib/PanelTestProvider.sys.mjs";
-import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
+import { PanelTestProvider } from "newtab/lib/PanelTestProvider.sys.mjs";
+import ProviderResponseSchema from "newtab/content-src/asrouter/schemas/provider-response.schema.json";
 
 const MESSAGE_PROVIDER_PREF_NAME =
   "browser.newtabpage.activity-stream.asrouter.providers.cfr";

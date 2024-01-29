@@ -83,6 +83,12 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
+            "modules/ASRouter.jsm": {
+              statements: 75,
+              lines: 75,
+              functions: 64,
+              branches: 66,
+            },
             "modules/ASRouterParentProcessMessageHandler.jsm": {
               statements: 98,
               lines: 98,
