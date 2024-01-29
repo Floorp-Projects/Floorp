@@ -1,3 +1,8 @@
+const { ChromeUtils } = SpecialPowers;
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
+
 // Get test filename for page being run in popup so errors are more useful
 var testName = location.pathname.split("/").pop();
 
@@ -85,15 +90,23 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
       throw "'type' must be either 'enter', or 'exit'.";
     }
   }
-  function invokeCallback(event) {
-    // Use async call after a paint to workaround unfinished fullscreen
-    // change even when the window size has changed on Linux.
-    requestAnimationFrame(() => setTimeout(() => callback(event), 0), 0);
-  }
   function onFullscreenChange(event) {
     doc.removeEventListener("fullscreenchange", onFullscreenChange);
     ok(checkCondition(), `Should ${type} fullscreen.`);
-    invokeCallback(event);
+
+    // Invoke the callback after the browsingContext has become active
+    // (or we've timed out waiting for it to become active).
+    let bc = SpecialPowers.wrap(topWin).browsingContext;
+    TestUtils.waitForCondition(
+      () => bc.isActive,
+      "browsingContext should become active"
+    )
+      .catch(e =>
+        ok(false, `Wait for browsingContext.isActive failed with ${e}`)
+      )
+      .finally(() => {
+        requestAnimationFrame(() => setTimeout(() => callback(event), 0), 0);
+      });
   }
   doc.addEventListener("fullscreenchange", onFullscreenChange);
 }
