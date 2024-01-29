@@ -8,7 +8,7 @@
 // leaking to window scope.
 {
   const { RemoteL10n } = ChromeUtils.importESModule(
-    "resource://activity-stream/lib/RemoteL10n.sys.mjs"
+    "resource:///modules/asrouter/RemoteL10n.sys.mjs"
   );
   class MozTextParagraph extends HTMLElement {
     constructor() {

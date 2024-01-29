@@ -12,7 +12,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
+  RemoteL10n: "resource:///modules/asrouter/RemoteL10n.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
