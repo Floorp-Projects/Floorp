@@ -77,6 +77,12 @@ module.exports = function (config) {
           functions: 100,
           branches: 66,
           overrides: {
+            "content-src/asrouter-utils.js": {
+              statements: 66,
+              lines: 66,
+              functions: 76,
+              branches: 33,
+            },
             "content-src/components/ASRouterAdmin/*.jsx": {
               statements: 0,
               lines: 0,

@@ -1,5 +1,5 @@
 import { ASRouterAdminInner } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
-import { ASRouterUtils } from "content-src/asrouter/asrouter-utils";
+import { ASRouterUtils } from "content-src/asrouter-utils";
 import { GlobalOverrider } from "test/unit/utils";
 import React from "react";
 import { shallow } from "enzyme";

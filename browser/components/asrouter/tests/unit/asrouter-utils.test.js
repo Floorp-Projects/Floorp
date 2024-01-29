@@ -1,4 +1,4 @@
-import { ASRouterUtils } from "content-src/asrouter/asrouter-utils";
+import { ASRouterUtils } from "content-src/asrouter-utils";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("ASRouterUtils", () => {

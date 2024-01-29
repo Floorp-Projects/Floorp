@@ -754,7 +754,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ImpressionsSection": () => (/* binding */ ImpressionsSection)
 /* harmony export */ });
-/* harmony import */ var newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -770,26 +770,26 @@ const ImpressionsSection = ({
   screenImpressions
 }) => {
   const handleSaveMessageImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(newImpressions => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("messageImpressions", newImpressions);
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("messageImpressions", newImpressions);
   }, []);
   const handleSaveGroupImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(newImpressions => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("groupImpressions", newImpressions);
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("groupImpressions", newImpressions);
   }, []);
   const handleSaveScreenImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(newImpressions => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("screenImpressions", newImpressions);
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.editState("screenImpressions", newImpressions);
   }, []);
   const handleResetMessageImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(() => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_MESSAGE_STATE"
     });
   }, []);
   const handleResetGroupImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(() => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE"
     });
   }, []);
   const handleResetScreenImpressions = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(() => {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_SCREEN_IMPRESSIONS"
     });
   }, []);
@@ -974,7 +974,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "ASRouterAdmin": () => (/* binding */ ASRouterAdmin),
 /* harmony export */   "renderASRouterAdmin": () => (/* binding */ renderASRouterAdmin)
 /* harmony export */ });
-/* harmony import */ var newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
@@ -1135,9 +1135,9 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }
   }
   componentWillMount() {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.addListener(this.onMessageFromParent);
-    const endpoint = newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.getPreviewEndpoint();
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.addListener(this.onMessageFromParent);
+    const endpoint = _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.getPreviewEndpoint();
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "ADMIN_CONNECT_STATE",
       data: {
         endpoint
@@ -1145,13 +1145,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }).then(this.setStateFromParent);
   }
   componentWillUnmount() {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.removeListener(this.onMessageFromParent);
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.removeListener(this.onMessageFromParent);
   }
   handleBlock(msg) {
-    return () => newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.blockById(msg.id);
+    return () => _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.blockById(msg.id);
   }
   handleUnblock(msg) {
-    return () => newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.unblockById(msg.id);
+    return () => _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.unblockById(msg.id);
   }
   resetJSON(msg) {
     // reset the displayed JSON for the given message
@@ -1163,7 +1163,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }));
   }
   handleOverride(id) {
-    return () => newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.overrideMessage(id).then(state => {
+    return () => _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.overrideMessage(id).then(state => {
       this.setStateFromParent(state);
     });
   }
@@ -1173,8 +1173,8 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
 
     PBMessages.forEach(message => {
       if (message?.id) {
-        newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.blockById(message.id);
-        newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.unblockById(message.id);
+        _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.blockById(message.id);
+        _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.unblockById(message.id);
       }
     });
     // Clear the selected messages & radio buttons
@@ -1186,7 +1186,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(msg, null, 2);
   }
   handleOpenPB() {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "FORCE_PRIVATE_BROWSING_WINDOW",
       data: {
         message: {
@@ -1196,17 +1196,17 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     });
   }
   expireCache() {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "EXPIRE_QUERY_CACHE"
     });
   }
   resetPref() {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_PROVIDER_PREF"
     });
   }
   resetGroups(id, value) {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE"
     }).then(this.setStateFromParent);
   }
@@ -1216,7 +1216,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       const value = this.state.stringTargetingParameters[param];
       context[param] = value ? JSON.parse(value) : null;
     }
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "EVALUATE_JEXL_EXPRESSION",
       data: {
         expression: this.refs.expressionInput.value,
@@ -1256,7 +1256,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     });
   }
   unblockAll() {
-    return newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    return _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "UNBLOCK_ALL"
     }).then(this.setStateFromParent);
   }
@@ -1267,12 +1267,12 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }
     const userPrefInfo = this.state.userPrefs;
     const isUserEnabled = providerId in userPrefInfo ? userPrefInfo[providerId] : true;
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "DISABLE_PROVIDER",
       data: providerId
     });
     if (!isUserEnabled) {
-      newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+      _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
         type: "SET_PROVIDER_USER_PREF",
         data: {
           id: providerId,
@@ -1280,7 +1280,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
         }
       });
     }
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "ENABLE_PROVIDER",
       data: providerId
     });
@@ -1293,7 +1293,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     const isEnabling = event.target.checked;
     if (isEnabling) {
       if (!isUserEnabled) {
-        newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+        _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
           type: "SET_PROVIDER_USER_PREF",
           data: {
             id: provider.id,
@@ -1302,13 +1302,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
         });
       }
       if (!isSystemEnabled) {
-        newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+        _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
           type: "ENABLE_PROVIDER",
           data: provider.id
         });
       }
     } else {
-      newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+      _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
         type: "DISABLE_PROVIDER",
         data: provider.id
       });
@@ -1325,7 +1325,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
         value: event.target.checked
       }
     };
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage(action);
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage(action);
     this.setState({
       messageFilter: "all"
     });
@@ -1482,7 +1482,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
   }
   modifyJson(content) {
     const message = JSON.parse(document.getElementById(`${content.id}-textarea`).value);
-    return newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.modifyMessageJson(message).then(state => {
+    return _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.modifyMessageJson(message).then(state => {
       this.setStateFromParent(state);
     });
   }
@@ -1735,7 +1735,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     });
   }
   setAttribution(e) {
-    newtab_content_src_asrouter_asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
+    _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "FORCE_ATTRIBUTION",
       data: this.state.attributionParameters
     }).then(this.setStateFromParent);

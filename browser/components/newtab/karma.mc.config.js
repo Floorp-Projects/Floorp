@@ -82,12 +82,6 @@ module.exports = function (config) {
               functions: 94,
               branches: 66,
             },
-            "content-src/asrouter/asrouter-utils.js": {
-              statements: 66,
-              lines: 66,
-              functions: 76,
-              branches: 33,
-            },
             /**
              * TelemetryFeed.sys.mjs is tested via an xpcshell test
              */
