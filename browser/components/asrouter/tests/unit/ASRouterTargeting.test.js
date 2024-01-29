@@ -3,9 +3,9 @@ import {
   CachedTargetingGetter,
   getSortedMessages,
   QueryCache,
-} from "lib/ASRouterTargeting.jsm";
-import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
-import { ASRouterPreferences } from "asroutermodules/ASRouterPreferences.jsm";
+} from "modules/ASRouterTargeting.jsm";
+import { OnboardingMessageProvider } from "newtab/lib/OnboardingMessageProvider.jsm";
+import { ASRouterPreferences } from "modules/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
 // Note that tests for the ASRouterTargeting environment can be found in

@@ -23,7 +23,7 @@ const { ASRouterPreferences } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
 const { QueryCache } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+  "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
 const { ActivityStreamStorage } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamStorage.jsm"

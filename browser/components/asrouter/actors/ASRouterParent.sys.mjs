@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ASRouterNewTabHook } from "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs";
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module, since
+// it doesn't seem to understand using static import for sys.mjs
+// files.
+// eslint-disable-next-line mozilla/use-static-import
+const { ASRouterNewTabHook } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs"
+);
 
 const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterDefaultConfig.jsm"

@@ -44,11 +44,6 @@ EXTRA_JS_MODULES += [
     "AboutNewTabService.sys.mjs",
 ]
 
-FINAL_TARGET_FILES.actors += [
-    "actors/ASRouterChild.sys.mjs",
-    "actors/ASRouterParent.sys.mjs",
-]
-
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

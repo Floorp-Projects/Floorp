@@ -6,7 +6,7 @@
 import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
 
 const { ASRouterTargeting } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+  "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
 
 // Background tasks are "live" with a temporary profile that doesn't map common

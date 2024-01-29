@@ -9,7 +9,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 
 // Set the content pref to make it available across tests

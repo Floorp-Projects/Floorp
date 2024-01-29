@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
   MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.jsm",
   InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
   ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
   TARGETING_PREFERENCES: "resource:///modules/asrouter/ASRouterPreferences.jsm",
   ASRouterTriggerListeners:
