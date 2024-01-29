@@ -25,6 +25,7 @@ class BigInt;
 
 namespace js {
 
+class FixedLengthTypedArrayObject;
 class TypedArrayObject;
 enum class UnaryMathFunction : uint8_t;
 
@@ -845,16 +846,16 @@ class MOZ_RAII CacheIRCompiler {
 
   bool emitDoubleIncDecResult(bool isInc, NumberOperandId inputId);
 
-  using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, size_t,
-                                               int32_t);
+  using AtomicsReadWriteModifyFn = int32_t (*)(FixedLengthTypedArrayObject*,
+                                               size_t, int32_t);
 
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult(
       ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
       Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
 
-  using AtomicsReadWriteModify64Fn = JS::BigInt* (*)(JSContext*,
-                                                     TypedArrayObject*, size_t,
-                                                     const JS::BigInt*);
+  using AtomicsReadWriteModify64Fn =
+      JS::BigInt* (*)(JSContext*, FixedLengthTypedArrayObject*, size_t,
+                      const JS::BigInt*);
 
   template <AtomicsReadWriteModify64Fn fn>
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(ObjOperandId objId,
