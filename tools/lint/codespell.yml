@@ -4,8 +4,8 @@ codespell:
     include:
         - browser/base/content/docs/
         - browser/branding/
+        - browser/components/asrouter/docs/
         - browser/components/newtab/docs/
-        - browser/components/newtab/content-src/asrouter/docs/
         - browser/components/places/docs/
         - browser/components/search/docs/
         - browser/components/search/schema/
