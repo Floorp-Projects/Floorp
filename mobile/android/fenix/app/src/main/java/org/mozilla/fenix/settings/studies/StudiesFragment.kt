@@ -30,7 +30,7 @@ class StudiesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        val experiments = requireComponents.analytics.experiments
+        val experiments = requireComponents.nimbus.sdk
         _binding = SettingsStudiesBinding.inflate(inflater, container, false)
         val interactor = DefaultStudiesInteractor((activity as HomeActivity), experiments)
         StudiesView(

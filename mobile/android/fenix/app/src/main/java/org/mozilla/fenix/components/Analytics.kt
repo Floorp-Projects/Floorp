@@ -14,10 +14,6 @@ import mozilla.components.lib.crash.sentry.SentryService
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
-import mozilla.components.service.nimbus.NimbusApi
-import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
-import mozilla.components.service.nimbus.messaging.NimbusMessagingStorage
-import mozilla.components.service.nimbus.messaging.OnDiskMessageMetadataStorage
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.utils.BrowsersCache
 import mozilla.components.support.utils.RunWhenReadyQueue
@@ -33,10 +29,8 @@ import org.mozilla.fenix.components.metrics.InstallReferrerMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsStorage
 import org.mozilla.fenix.crashes.CrashFactCollector
-import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.messaging.CustomAttributeProvider
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
@@ -157,20 +151,6 @@ class Analytics(
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },
             isMarketingDataTelemetryEnabled = { context.settings().isMarketingTelemetryEnabled },
             context.settings(),
-        )
-    }
-
-    val experiments: NimbusApi by lazyMonitored {
-        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT)
-    }
-
-    val messagingStorage by lazyMonitored {
-        NimbusMessagingStorage(
-            context = context,
-            metadataStorage = OnDiskMessageMetadataStorage(context),
-            nimbus = experiments,
-            messagingFeature = FxNimbusMessaging.features.messaging,
-            attributeProvider = CustomAttributeProvider,
         )
     }
 }

@@ -232,7 +232,7 @@ class OnboardingFragment : Fragment() {
         showAddWidgetPage: Boolean,
     ): List<OnboardingPageUiData> {
         val jexlConditions = FxNimbus.features.junoOnboarding.value().conditions
-        val jexlHelper = requireContext().components.analytics.messagingStorage.createMessagingHelper()
+        val jexlHelper = requireContext().components.nimbus.createJexlHelper()
 
         val privacyCaption = Caption(
             text = getString(R.string.juno_onboarding_privacy_notice_text),

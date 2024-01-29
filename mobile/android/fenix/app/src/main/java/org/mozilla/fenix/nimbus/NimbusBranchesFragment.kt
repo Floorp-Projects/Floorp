@@ -51,7 +51,7 @@ class NimbusBranchesFragment : Fragment() {
             context = requireContext(),
             navController = findNavController(),
             nimbusBranchesStore = nimbusBranchesStore,
-            experiments = requireContext().components.analytics.experiments,
+            experiments = requireContext().components.nimbus.sdk,
             experimentId = args.experimentId,
         )
 
@@ -77,7 +77,7 @@ class NimbusBranchesFragment : Fragment() {
     private fun loadExperimentBranches() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val experiments = requireContext().components.analytics.experiments
+                val experiments = requireContext().components.nimbus.sdk
                 val branches = experiments.getExperimentBranches(args.experimentId) ?: emptyList()
                 val selectedBranch = experiments.getExperimentBranch(args.experimentId) ?: ""
 

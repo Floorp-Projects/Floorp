@@ -38,7 +38,7 @@ class NimbusMessagingTriggerTest {
     @Before
     fun setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        nimbus = TestHelper.appContext.components.analytics.experiments
+        nimbus = TestHelper.appContext.components.nimbus.sdk
         feature = FxNimbusMessaging.features.messaging.value()
     }
 

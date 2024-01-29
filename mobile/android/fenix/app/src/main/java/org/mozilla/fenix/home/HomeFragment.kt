@@ -360,7 +360,7 @@ class HomeFragment : Fragment() {
                 engine = components.core.engine,
                 messageController = DefaultMessageController(
                     appStore = components.appStore,
-                    messagingController = FenixNimbusMessagingController(components.analytics.messagingStorage),
+                    messagingController = FenixNimbusMessagingController(components.nimbus.messagingStorage),
                     homeActivity = activity,
                 ),
                 store = store,

@@ -9,11 +9,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestHelper.appContext
 
 object Experimentation {
-    val experiments =
-        appContext.components.analytics.experiments
-
     fun withHelper(block: NimbusMessagingHelperInterface.() -> Unit) {
-        val helper = experiments.createMessageHelper()
+        val helper = appContext.components.nimbus.createJexlHelper()
         block(helper)
     }
 }

@@ -45,7 +45,7 @@ class MessageNotificationWorker(
     override suspend fun doWork(): Result {
         val context = applicationContext
 
-        val messagingStorage = context.components.analytics.messagingStorage
+        val messagingStorage = context.components.nimbus.messagingStorage
         val messages = messagingStorage.getMessages()
         val nextMessage =
             messagingStorage.getNextMessage(FenixMessageSurfaceId.NOTIFICATION, messages)
@@ -178,7 +178,7 @@ class NotificationDismissedService : LifecycleService() {
 
         if (intent != null) {
             val nimbusMessagingController =
-                FenixNimbusMessagingController(applicationContext.components.analytics.messagingStorage)
+                FenixNimbusMessagingController(applicationContext.components.nimbus.messagingStorage)
 
             lifecycleScope.launch {
                 // Get the relevant message.
@@ -209,7 +209,7 @@ class NotificationClickedReceiverActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val nimbusMessagingController =
-            FenixNimbusMessagingController(components.analytics.messagingStorage)
+            FenixNimbusMessagingController(components.nimbus.messagingStorage)
 
         lifecycleScope.launch {
             // Get the relevant message.

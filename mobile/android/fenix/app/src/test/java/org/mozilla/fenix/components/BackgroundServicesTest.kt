@@ -56,8 +56,9 @@ class BackgroundServicesTest {
 
         val mockComponents: Components = mockk()
         every { mockComponents.settings } returns settings
-        every { mockComponents.analytics } returns mockk {
-            every { experiments } returns nimbus
+        every { mockComponents.nimbus } returns mockk {
+            every { sdk } returns nimbus
+            every { events } returns nimbus
         }
         every { context.components } returns mockComponents
         every { nimbus.recordEvent(any()) } returns Unit

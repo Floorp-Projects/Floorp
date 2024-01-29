@@ -37,7 +37,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
                 // Reset experiment identifiers on both opt-in and opt-out; it's likely
                 // that in future we will need to pass in the new telemetry client_id
                 // to this method when the user opts back in.
-                context.components.analytics.experiments.resetTelemetryIdentifiers()
+                context.components.nimbus.sdk.resetTelemetryIdentifiers()
             } else if (key == getPreferenceKey(R.string.pref_key_marketing_telemetry)) {
                 if (context.settings().isMarketingTelemetryEnabled) {
                     context.components.analytics.metrics.start(MetricServiceType.Marketing)

@@ -225,7 +225,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         val startTimeProfiler = components.core.engine.profiler?.getProfilerTime()
 
         // Setup nimbus-cli tooling. This is a NOOP when launching normally.
-        components.analytics.experiments.initializeTooling(applicationContext, intent)
+        components.nimbus.sdk.initializeTooling(applicationContext, intent)
         components.strictMode.attachListenerToDisablePenaltyDeath(supportFragmentManager)
         MarkersFragmentLifecycleCallbacks.register(supportFragmentManager, components.core.engine)
 
@@ -354,7 +354,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 ?.also {
                     Events.appOpened.record(Events.AppOpenedExtra(it))
                     // This will record an event in Nimbus' internal event store. Used for behavioral targeting
-                    components.analytics.experiments.recordEvent("app_opened")
+                    components.nimbus.events.recordEvent("app_opened")
 
                     if (safeIntent.action.equals(ACTION_OPEN_PRIVATE_TAB) && it == APP_ICON) {
                         AppIcon.newPrivateTabTapped.record(NoExtras())
@@ -1221,7 +1221,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     private suspend fun showFullscreenMessageIfNeeded(context: Context) {
-        val messagingStorage = context.components.analytics.messagingStorage
+        val messagingStorage = context.components.nimbus.messagingStorage
         val messages = messagingStorage.getMessages()
         val nextMessage =
             messagingStorage.getNextMessage(FenixMessageSurfaceId.SURVEY, messages)

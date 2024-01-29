@@ -20,7 +20,6 @@ import org.junit.Test
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.messaging.CustomAttributeProvider
 
 /**
  * This test is to test the integrity of messages hardcoded in the FML.
@@ -35,7 +34,7 @@ class NimbusMessagingMessageTest {
     private lateinit var context: Context
 
     private val storage
-        get() = context.components.analytics.messagingStorage
+        get() = context.components.nimbus.messagingStorage
 
     @get:Rule
     val activityTestRule =
@@ -73,10 +72,7 @@ class NimbusMessagingMessageTest {
      */
     @Test
     fun testAllMessageTriggers() = runTest {
-        val nimbus = context.components.analytics.experiments
-        val helper = nimbus.createMessageHelper(
-            CustomAttributeProvider.getCustomAttributes(context),
-        )
+        val helper = context.components.nimbus.createJexlHelper()
         val messages = storage.getMessages()
         messages.forEach { message ->
             storage.isMessageEligible(message, helper)
@@ -84,6 +80,7 @@ class NimbusMessagingMessageTest {
                 fail("${message.id} has a problem with its JEXL trigger: ${storage.malFormedMap.keys}")
             }
         }
+        helper.destroy()
     }
 
     private fun checkIsLocalized(string: String) {
