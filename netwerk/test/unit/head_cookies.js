@@ -162,18 +162,18 @@ async function do_set_cookies(uri, channel, session, expected) {
         url: uri.spec,
       },
     ],
-    async obj => {
-      // eslint-disable-next-line no-undef
-      await new content.Promise(resolve => {
-        // eslint-disable-next-line no-undef
-        const ifr = content.document.createElement("iframe");
-        // eslint-disable-next-line no-undef
-        content.document.body.appendChild(ifr);
+    async function (obj) {
+      await new this.content.Promise(resolve => {
+        let doc = this.content.document;
+        let ifr = doc.createElement("iframe");
         ifr.src = obj.url;
-        ifr.onload = () => {
-          ifr.contentDocument.cookie = obj.cookie;
+        doc.body.appendChild(ifr);
+        ifr.addEventListener("load", async () => {
+          await this.SpecialPowers.spawn(ifr, [obj.cookie], cookie => {
+            this.content.document.cookie = cookie;
+          });
           resolve();
-        };
+        });
       });
     }
   );
