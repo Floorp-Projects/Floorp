@@ -203,6 +203,7 @@ module.exports = function (config) {
               path.resolve("../newtab"),
               path.resolve("modules/ASRouterTargeting.jsm"),
               path.resolve("modules/ASRouterTriggerListeners.jsm"),
+              path.resolve("modules/CFRMessageProvider.sys.mjs"),
             ],
           },
         ],

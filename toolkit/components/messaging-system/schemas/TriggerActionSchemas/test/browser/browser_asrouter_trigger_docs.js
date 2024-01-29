@@ -5,7 +5,7 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+  "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
 const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"

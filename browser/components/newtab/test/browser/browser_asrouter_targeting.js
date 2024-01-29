@@ -10,8 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
-  CFRMessageProvider:
-    "resource://activity-stream/lib/CFRMessageProvider.sys.mjs",
+  CFRMessageProvider: "resource:///modules/asrouter/CFRMessageProvider.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",

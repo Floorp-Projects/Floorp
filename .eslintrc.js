@@ -623,6 +623,7 @@ module.exports = {
         // these test files for now. Bug 1758951
         "browser/components/aboutlogins/tests/browser/browser_createLogin.js",
         "browser/components/aboutlogins/tests/chrome/test_login_item.html",
+        "browser/components/asrouter/modules/CFRMessageProvider.sys.mjs",
         "browser/components/contextualidentity/test/browser/browser_broadcastchannel.js",
         "browser/components/contextualidentity/test/browser/browser_eme.js",
         "browser/components/contextualidentity/test/browser/browser_favicon.js",
@@ -732,7 +733,6 @@ module.exports = {
         "browser/components/firefoxview/tests/browser/browser_recently_closed_tabs.js",
         "browser/components/newtab/content-src/components/DiscoveryStreamComponents/TopSites/TopSites.jsx ",
         "browser/components/newtab/content-src/components/TopSites/TopSiteForm.jsx ",
-        "browser/components/newtab/lib/CFRMessageProvider.sys.mjs ",
         "browser/components/newtab/lib/PlacesFeed.sys.mjs ",
         "browser/components/originattributes/test/browser/browser_broadcastChannel.js",
         "browser/components/originattributes/test/browser/browser_cache.js",

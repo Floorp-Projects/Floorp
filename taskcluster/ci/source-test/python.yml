@@ -461,10 +461,10 @@ fxms-schemas:
             ../../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
+            - 'browser/components/asrouter/modules/CFRMessageProvider.sys.mjs'
             - 'browser/components/newtab/content-src/asrouter/schemas/extract-test-corpus.js'
             - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'
             - 'browser/components/newtab/content-src/**/*.schema.json'
-            - 'browser/components/newtab/lib/CFRMessageProvider.sys.mjs'
             - 'browser/components/newtab/lib/OnboardingMessageProvider.jsm'
             - 'browser/components/newtab/lib/PanelTestProvider.sys.mjs'
 
