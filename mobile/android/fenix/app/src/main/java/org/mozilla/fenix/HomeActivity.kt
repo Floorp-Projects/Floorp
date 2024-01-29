@@ -121,7 +121,6 @@ import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
-import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessageNotificationWorker
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
@@ -1221,13 +1220,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     private suspend fun showFullscreenMessageIfNeeded(context: Context) {
-        val messagingStorage = context.components.nimbus.messagingStorage
-        val messages = messagingStorage.getMessages()
-        val nextMessage =
-            messagingStorage.getNextMessage(FenixMessageSurfaceId.SURVEY, messages)
-                ?: return
-
-        val fenixNimbusMessagingController = FenixNimbusMessagingController(messagingStorage)
+        val messaging = context.components.nimbus.messaging
+        val nextMessage = messaging.getNextMessage(FenixMessageSurfaceId.SURVEY) ?: return
         val researchSurfaceDialogFragment = ResearchSurfaceDialogFragment.newInstance(
             keyMessageText = nextMessage.text,
             keyAcceptButtonText = nextMessage.buttonLabel,
@@ -1235,7 +1229,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         )
 
         researchSurfaceDialogFragment.onAccept = {
-            processIntent(fenixNimbusMessagingController.getIntentForMessage(nextMessage))
+            processIntent(messaging.getIntentForMessage(nextMessage))
             components.appStore.dispatch(AppAction.MessagingAction.MessageClicked(nextMessage))
         }
 
@@ -1252,15 +1246,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         // Update message as displayed.
         val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
-        val updatedMessage =
-            fenixNimbusMessagingController.updateMessageAsDisplayed(
-                nextMessage,
-                currentBootUniqueIdentifier,
-            )
 
-        fenixNimbusMessagingController.onMessageDisplayed(updatedMessage)
-
-        return
+        messaging.onMessageDisplayed(nextMessage, currentBootUniqueIdentifier)
     }
 
     companion object {

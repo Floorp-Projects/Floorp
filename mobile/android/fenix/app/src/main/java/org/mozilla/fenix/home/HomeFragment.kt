@@ -117,7 +117,6 @@ import org.mozilla.fenix.home.toolbar.SearchSelectorBinding
 import org.mozilla.fenix.home.toolbar.SearchSelectorMenuBinding
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.messaging.DefaultMessageController
-import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessagingFeature
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
@@ -360,7 +359,7 @@ class HomeFragment : Fragment() {
                 engine = components.core.engine,
                 messageController = DefaultMessageController(
                     appStore = components.appStore,
-                    messagingController = FenixNimbusMessagingController(components.nimbus.messagingStorage),
+                    messagingController = components.nimbus.messaging,
                     homeActivity = activity,
                 ),
                 store = store,

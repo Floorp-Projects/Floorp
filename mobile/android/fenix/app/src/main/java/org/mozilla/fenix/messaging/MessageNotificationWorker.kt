@@ -45,10 +45,10 @@ class MessageNotificationWorker(
     override suspend fun doWork(): Result {
         val context = applicationContext
 
-        val messagingStorage = context.components.nimbus.messagingStorage
-        val messages = messagingStorage.getMessages()
+        val messaging = context.components.nimbus.messaging
+
         val nextMessage =
-            messagingStorage.getNextMessage(FenixMessageSurfaceId.NOTIFICATION, messages)
+            messaging.getNextMessage(FenixMessageSurfaceId.NOTIFICATION)
                 ?: return Result.success()
 
         val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
@@ -57,23 +57,15 @@ class MessageNotificationWorker(
             return Result.success()
         }
 
-        val nimbusMessagingController = FenixNimbusMessagingController(messagingStorage)
-
         // Update message as displayed.
-        val updatedMessage =
-            nimbusMessagingController.updateMessageAsDisplayed(
-                nextMessage,
-                currentBootUniqueIdentifier,
-            )
-
-        nimbusMessagingController.onMessageDisplayed(updatedMessage)
+        messaging.onMessageDisplayed(nextMessage, currentBootUniqueIdentifier)
 
         context.components.notificationsDelegate.notify(
             MESSAGE_TAG,
-            SharedIdsHelper.getIdForTag(context, updatedMessage.id),
+            SharedIdsHelper.getIdForTag(context, nextMessage.id),
             buildNotification(
                 context,
-                updatedMessage,
+                nextMessage,
             ),
         )
 
@@ -177,18 +169,17 @@ class NotificationDismissedService : LifecycleService() {
         super.onStartCommand(intent, flags, startId)
 
         if (intent != null) {
-            val nimbusMessagingController =
-                FenixNimbusMessagingController(applicationContext.components.nimbus.messagingStorage)
+            val messaging = applicationContext.components.nimbus.messaging
 
             lifecycleScope.launch {
                 // Get the relevant message.
                 val message = intent.getStringExtra(DISMISSED_MESSAGE_ID)?.let { messageId ->
-                    nimbusMessagingController.getMessage(messageId)
+                    messaging.getMessage(messageId)
                 }
 
                 if (message != null) {
                     // Update message as 'dismissed'.
-                    nimbusMessagingController.onMessageDismissed(message)
+                    messaging.onMessageDismissed(message)
                 }
             }
         }
@@ -208,21 +199,20 @@ class NotificationClickedReceiverActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val nimbusMessagingController =
-            FenixNimbusMessagingController(components.nimbus.messagingStorage)
+        val messaging = applicationContext.components.nimbus.messaging
 
         lifecycleScope.launch {
             // Get the relevant message.
             val message = intent.getStringExtra(CLICKED_MESSAGE_ID)?.let { messageId ->
-                nimbusMessagingController.getMessage(messageId)
+                messaging.getMessage(messageId)
             }
 
             if (message != null) {
                 // Update message as 'clicked'.
-                nimbusMessagingController.onMessageClicked(message)
+                messaging.onMessageClicked(message)
 
                 // Create the intent.
-                val intent = nimbusMessagingController.getIntentForMessage(message)
+                val intent = messaging.getIntentForMessage(message)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
 

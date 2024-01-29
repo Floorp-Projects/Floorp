@@ -33,8 +33,8 @@ class NimbusMessagingMessageTest {
 
     private lateinit var context: Context
 
-    private val storage
-        get() = context.components.nimbus.messagingStorage
+    private val messaging
+        get() = context.components.nimbus.messaging
 
     @get:Rule
     val activityTestRule =
@@ -54,7 +54,7 @@ class NimbusMessagingMessageTest {
      */
     @Test
     fun testAllMessageIntegrity() = runTest {
-        val messages = storage.getMessages()
+        val messages = messaging.getMessages()
         val rawMessages = feature.messages
         assertTrue(rawMessages.isNotEmpty())
 
@@ -65,22 +65,6 @@ class NimbusMessagingMessageTest {
             fail("Problem with message(s) in FML: $missing")
         }
         assertEquals(messages.size, rawMessages.size)
-    }
-
-    /**
-     * Check if the messages' triggers are well formed JEXL.
-     */
-    @Test
-    fun testAllMessageTriggers() = runTest {
-        val helper = context.components.nimbus.createJexlHelper()
-        val messages = storage.getMessages()
-        messages.forEach { message ->
-            storage.isMessageEligible(message, helper)
-            if (storage.malFormedMap.isNotEmpty()) {
-                fail("${message.id} has a problem with its JEXL trigger: ${storage.malFormedMap.keys}")
-            }
-        }
-        helper.destroy()
     }
 
     private fun checkIsLocalized(string: String) {

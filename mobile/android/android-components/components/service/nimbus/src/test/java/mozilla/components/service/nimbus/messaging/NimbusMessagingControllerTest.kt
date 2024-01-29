@@ -97,7 +97,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN message not expired WHEN calling onMessageDisplayed THEN record a messageShown event and update storage`() =
         coroutineScope.runTest {
-            val message = createMessage("id-1", style = StyleData(maxDisplayCount = 1))
+            val message = createMessage("id-1", style = StyleData(maxDisplayCount = 2))
             // Assert telemetry is initially null
             assertNull(GleanMessaging.messageShown.testGetValue())
             assertNull(GleanMessaging.messageExpired.testGetValue())
@@ -113,14 +113,14 @@ class NimbusMessagingControllerTest {
             // Expired telemetry
             assertNull(GleanMessaging.messageExpired.testGetValue())
 
-            verify(storage).updateMetadata(message.metadata)
+            verify(storage).updateMetadata(message.metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
         }
 
     @Test
     fun `GIVEN message is expired WHEN calling onMessageDisplayed THEN record messageShown, messageExpired events and update storage`() =
         coroutineScope.runTest {
             val message =
-                createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 1)
+                createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 0)
             // Assert telemetry is initially null
             assertNull(GleanMessaging.messageShown.testGetValue())
             assertNull(GleanMessaging.messageExpired.testGetValue())
@@ -139,7 +139,7 @@ class NimbusMessagingControllerTest {
             assertEquals(1, expiredEvent.size)
             assertEquals(message.id, expiredEvent.single().extra!!["message_key"])
 
-            verify(storage).updateMetadata(message.metadata)
+            verify(storage).updateMetadata(message.metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
         }
 
     @Test

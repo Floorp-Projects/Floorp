@@ -232,7 +232,7 @@ class Components(private val context: Context) {
                     context.pocketStoriesSelectedCategoriesDataStore,
                 ),
                 MessagingMiddleware(
-                    messagingStorage = nimbus.messagingStorage,
+                    controller = nimbus.messaging,
                 ),
                 MetricsMiddleware(metrics = analytics.metrics),
             ),
