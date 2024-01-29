@@ -88,16 +88,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
   }
 
-  Value byteLengthValue() const {
-    size_t len = byteLength();
-    return NumberValue(len);
-  }
-
-  Value lengthValue() const {
-    size_t len = length();
-    return NumberValue(len);
-  }
-
   bool hasInlineElements() const;
   void setInlineElements();
   uint8_t* elementsRaw() const {
@@ -150,8 +140,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static const JSPropertySpec staticProperties[];
 
   /* Accessors and functions */
-
-  static bool is(HandleValue v);
 
   static bool set(JSContext* cx, unsigned argc, Value* vp);
   static bool copyWithin(JSContext* cx, unsigned argc, Value* vp);
