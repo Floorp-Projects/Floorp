@@ -112,6 +112,8 @@ const REASON_CHANGE_MAP = new Map([
   [Ci.nsISearchService.CHANGE_REASON_ENTERPRISE, "enterprise"],
   // The UI Tour caused a change of default.
   [Ci.nsISearchService.CHANGE_REASON_UITOUR, "uitour"],
+  // The engine updated.
+  [Ci.nsISearchService.CHANGE_REASON_ENGINE_UPDATE, "engine-update"],
 ]);
 
 /**
@@ -3460,7 +3462,23 @@ export class SearchService {
       case lazy.SearchUtils.TOPIC_ENGINE_MODIFIED:
         switch (verb) {
           case lazy.SearchUtils.MODIFIED_TYPE.ADDED:
+            this.#parseSubmissionMap = null;
+            break;
           case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
+            engine = engine.wrappedJSObject;
+            if (
+              engine == this.defaultEngine ||
+              engine == this.defaultPrivateEngine
+            ) {
+              this.#recordDefaultChangedEvent(
+                engine != this.defaultEngine,
+                engine,
+                engine,
+                Ci.nsISearchService.CHANGE_REASON_ENGINE_UPDATE
+              );
+            }
+            this.#parseSubmissionMap = null;
+            break;
           case lazy.SearchUtils.MODIFIED_TYPE.REMOVED:
             // Invalidate the map used to parse URLs to search engines.
             this.#parseSubmissionMap = null;

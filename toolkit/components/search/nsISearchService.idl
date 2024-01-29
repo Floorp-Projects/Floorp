@@ -255,6 +255,7 @@ interface nsISearchService : nsISupports
   const unsigned short CHANGE_REASON_EXPERIMENT = 0xA;
   const unsigned short CHANGE_REASON_ENTERPRISE = 0xB;
   const unsigned short CHANGE_REASON_UITOUR = 0xC;
+  const unsigned short CHANGE_REASON_ENGINE_UPDATE = 0xD;
 
   /**
    * Start asynchronous initialization.
