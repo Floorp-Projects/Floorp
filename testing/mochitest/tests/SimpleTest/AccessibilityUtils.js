@@ -234,12 +234,17 @@ this.AccessibilityUtils = (function () {
       return false;
     }
     const toolbar = node.closest("toolbar");
-    if (
-      !toolbar ||
-      toolbar.getAttribute("keyNav") != "true" ||
-      node.id == "urlbar-go-button"
-    ) {
+    if (!toolbar || toolbar.getAttribute("keyNav") != "true") {
       return false;
+    }
+    // The Go button in the Url Bar is an example of a purposefully
+    // non-focusable image toolbar button that provides an mouse/touch-only
+    // control for the search query submission, while a keyboard user could
+    // press `Enter` to do it. We do not want to create an extra tab stop for
+    // such controls and the markup would include `keyNav="false"` to flag it.
+    if (node.getAttribute("keyNav") == "false") {
+      const ariaRoles = getAriaRoles(accessible);
+      return ariaRoles.includes("button");
     }
     return node.ownerGlobal.ToolbarKeyboardNavigator._isButton(node);
   }
