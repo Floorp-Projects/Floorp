@@ -7,7 +7,7 @@ import {
   FAKE_REMOTE_MESSAGES,
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
-} from "test/unit/asrouter/constants";
+} from "./constants";
 import {
   ASRouterPreferences,
   TARGETING_PREFERENCES,
