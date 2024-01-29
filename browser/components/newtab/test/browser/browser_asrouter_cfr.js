@@ -6,7 +6,7 @@ const { ASRouter } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+  "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
 
 const { TelemetryFeed } = ChromeUtils.importESModule(

@@ -7,7 +7,7 @@ const { InfoBar } = ChromeUtils.import(
   "resource://activity-stream/lib/InfoBar.jsm"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+  "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
 const { ASRouter } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"

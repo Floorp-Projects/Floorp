@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+  "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
 
 add_task(async function test_cfrMessages() {
