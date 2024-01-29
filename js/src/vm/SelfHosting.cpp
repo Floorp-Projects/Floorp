@@ -1065,7 +1065,7 @@ static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
   MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
   auto* tarr = &args[0].toObject().as<TypedArrayObject>();
-  args.rval().set(tarr->byteOffsetValue());
+  args.rval().setNumber(tarr->byteOffset());
   return true;
 }
 

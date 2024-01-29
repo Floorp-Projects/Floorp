@@ -8,6 +8,7 @@
 #define vm_DataViewObject_h
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
 
 #include "js/Class.h"
 #include "vm/ArrayBufferViewObject.h"
@@ -31,7 +32,8 @@ class DataViewObject : public ArrayBufferViewObject {
 
  private:
   template <typename NativeType>
-  SharedMem<uint8_t*> getDataPointer(uint64_t offset, bool* isSharedMemory);
+  SharedMem<uint8_t*> getDataPointer(uint64_t offset, size_t length,
+                                     bool* isSharedMemory);
 
   static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
   static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -55,27 +57,27 @@ class DataViewObject : public ArrayBufferViewObject {
       JSContext* cx, size_t byteOffset, size_t byteLength,
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
- public:
-  static const JSClass protoClass_;
-
-  size_t byteLength() const {
+ protected:
+  size_t rawByteLength() const {
     return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
   }
 
-  Value byteLengthValue() const {
-    size_t len = byteLength();
-    return NumberValue(len);
-  }
+ public:
+  static const JSClass protoClass_;
+
+  mozilla::Maybe<size_t> byteLength();
+  mozilla::Maybe<size_t> byteOffset();
 
   template <typename NativeType>
-  bool offsetIsInBounds(uint64_t offset) const {
-    return offsetIsInBounds(sizeof(NativeType), offset);
+  static bool offsetIsInBounds(uint64_t offset, size_t byteLength) {
+    return offsetIsInBounds(sizeof(NativeType), offset, byteLength);
   }
-  bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
+  static bool offsetIsInBounds(uint32_t byteSize, uint64_t offset,
+                               size_t byteLength) {
     MOZ_ASSERT(byteSize <= 8);
     mozilla::CheckedInt<uint64_t> endOffset(offset);
     endOffset += byteSize;
-    return endOffset.isValid() && endOffset.value() <= byteLength();
+    return endOffset.isValid() && endOffset.value() <= byteLength;
   }
 
   static bool isOriginalByteOffsetGetter(Native native) {
@@ -149,7 +151,7 @@ class DataViewObject : public ArrayBufferViewObject {
   static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
 
   template <typename NativeType>
-  NativeType read(uint64_t offset, bool isLittleEndian);
+  NativeType read(uint64_t offset, size_t length, bool isLittleEndian);
 
   template <typename NativeType>
   static bool read(JSContext* cx, Handle<DataViewObject*> obj,
@@ -169,6 +171,20 @@ class DataViewObject : public ArrayBufferViewObject {
 class FixedLengthDataViewObject : public DataViewObject {
  public:
   static const JSClass class_;
+
+  size_t byteOffset() const { return ArrayBufferViewObject::byteOffset(); }
+
+  size_t byteLength() const { return rawByteLength(); }
+
+  bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
+    return DataViewObject::offsetIsInBounds(byteSize, offset, byteLength());
+  }
+
+  template <typename NativeType>
+  NativeType read(uint64_t offset, bool isLittleEndian) {
+    return DataViewObject::read<NativeType>(offset, byteLength(),
+                                            isLittleEndian);
+  }
 };
 
 /**
@@ -176,7 +192,15 @@ class FixedLengthDataViewObject : public DataViewObject {
  */
 class ResizableDataViewObject : public DataViewObject {
  public:
+  static const uint8_t AUTO_LENGTH_SLOT = DataViewObject::RESERVED_SLOTS;
+
+  static const uint8_t RESERVED_SLOTS = DataViewObject::RESERVED_SLOTS + 1;
+
   static const JSClass class_;
+
+  bool isAutoLength() const {
+    return getFixedSlot(AUTO_LENGTH_SLOT).toBoolean();
+  }
 };
 
 }  // namespace js
