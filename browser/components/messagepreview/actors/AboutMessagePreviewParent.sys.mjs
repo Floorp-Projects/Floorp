@@ -17,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
-  CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
+  CFRPageActions: "resource:///modules/asrouter/CFRPageActions.jsm",
 });
 
 function dispatchCFRAction({ type, data }, browser) {

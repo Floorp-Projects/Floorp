@@ -23,6 +23,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterTargeting.jsm",
     "modules/ASRouterTriggerListeners.jsm",
     "modules/CFRMessageProvider.sys.mjs",
+    "modules/CFRPageActions.jsm",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

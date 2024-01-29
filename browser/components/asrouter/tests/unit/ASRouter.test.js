@@ -13,7 +13,7 @@ import {
   TARGETING_PREFERENCES,
 } from "modules/ASRouterPreferences.jsm";
 import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.jsm";
-import { CFRPageActions } from "newtab/lib/CFRPageActions.jsm";
+import { CFRPageActions } from "modules/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 import { PanelTestProvider } from "newtab/lib/PanelTestProvider.sys.mjs";
 import ProviderResponseSchema from "newtab/content-src/asrouter/schemas/provider-response.schema.json";
