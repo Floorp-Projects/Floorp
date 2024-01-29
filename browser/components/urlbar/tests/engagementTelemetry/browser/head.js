@@ -204,11 +204,9 @@ async function doPasteAndGo(data) {
 async function doTest(testFn) {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
-  // Enable recording telemetry for abandonment, engagement and impression.
+  // Enable recording telemetry for impression, as it is disabled by default.
   Services.fog.setMetricsFeatureConfig(
     JSON.stringify({
-      "urlbar.abandonment": true,
-      "urlbar.engagement": true,
       "urlbar.impression": true,
     })
   );

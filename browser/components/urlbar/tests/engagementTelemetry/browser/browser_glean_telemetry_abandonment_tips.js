@@ -11,10 +11,6 @@ Services.scriptloader.loadSubScript(
 );
 
 add_setup(async function () {
-  Services.fog.setMetricsFeatureConfig(
-    JSON.stringify({ "urlbar.abandonment": false })
-  );
-
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.searchTips.test.ignoreShowLimits", true],
@@ -32,7 +28,6 @@ add_setup(async function () {
   await Services.search.moveEngine(engine, 0);
 
   registerCleanupFunction(async function () {
-    Services.fog.setMetricsFeatureConfig("{}");
     await SpecialPowers.popPrefEnv();
     await Services.search.setDefault(
       originalDefaultEngine,
