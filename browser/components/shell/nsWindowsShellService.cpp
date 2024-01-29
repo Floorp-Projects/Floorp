@@ -1468,7 +1468,8 @@ static void ValidateFilename(nsAString& aFilename) {
     return;
   }
 
-  uint32_t flags = nsIMIMEService::VALIDATE_SANITIZE_ONLY;
+  uint32_t flags = nsIMIMEService::VALIDATE_SANITIZE_ONLY |
+                   nsIMIMEService::VALIDATE_DONT_COLLAPSE_WHITESPACE;
 
   nsAutoString outFilename;
   mimeService->ValidateFileNameForSaving(aFilename, EmptyCString(), flags,
