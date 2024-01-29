@@ -2244,7 +2244,13 @@ GeckoDriver.prototype.newWindow = async function (cmd) {
   }
 
   // If an invalid or no type has been specified default to a tab.
-  if (typeof type == "undefined" || !["tab", "window"].includes(type)) {
+  // On Android always use a new tab instead because the application has a
+  // single window only.
+  if (
+    typeof type == "undefined" ||
+    !["tab", "window"].includes(type) ||
+    lazy.AppInfo.isAndroid
+  ) {
     type = "tab";
   }
 
