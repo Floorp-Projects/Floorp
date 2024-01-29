@@ -8,3 +8,7 @@ JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Messaging System")
+
+EXTRA_JS_MODULES.asrouter += [
+    "modules/ASRouterDefaultConfig.jsm",
+]
