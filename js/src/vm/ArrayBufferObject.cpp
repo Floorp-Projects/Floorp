@@ -3040,8 +3040,10 @@ const JSClass* const JS::ArrayBuffer::FixedLengthUnsharedClass =
     &FixedLengthArrayBufferObject::class_;
 const JSClass* const JS::ArrayBuffer::ResizableUnsharedClass =
     &ResizableArrayBufferObject::class_;
-const JSClass* const JS::ArrayBuffer::SharedClass =
-    &SharedArrayBufferObject::class_;
+const JSClass* const JS::ArrayBuffer::FixedLengthSharedClass =
+    &FixedLengthSharedArrayBufferObject::class_;
+const JSClass* const JS::ArrayBuffer::GrowableSharedClass =
+    &GrowableSharedArrayBufferObject::class_;
 
 /* static */ JS::ArrayBuffer JS::ArrayBuffer::create(JSContext* cx,
                                                      size_t nbytes) {
