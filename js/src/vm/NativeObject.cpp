@@ -1836,8 +1836,13 @@ static bool DefineNonexistentProperty(JSContext* cx, Handle<NativeObject*> obj,
     // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
     if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
       // This method is only called for non-existent properties, which
-      // means any absent indexed property must be out of range.
-      MOZ_ASSERT(index.value() >= obj->as<TypedArrayObject>().length());
+      // means any absent indexed property must be out of range. Unless the
+      // typed array is backed by a growable SharedArrayBuffer, in which case
+      // another thread may have grown the buffer.
+      MOZ_ASSERT(index.value() >=
+                     obj->as<TypedArrayObject>().length().valueOr(0) ||
+                 (obj->as<TypedArrayObject>().isSharedMemory() &&
+                  obj->as<TypedArrayObject>().bufferShared()->isGrowable()));
 
       // The following steps refer to 9.4.5.11 IntegerIndexedElementSet.
 

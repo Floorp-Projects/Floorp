@@ -578,7 +578,7 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
     return false;
   }
   void* buf = obj->dataPointerUnshared();
-  size_t length = obj->length();
+  size_t length = obj->length().valueOr(0);
   if (fwrite(buf, obj->bytesPerElement(), length, file) != length ||
       !autoClose.release()) {
     JS_ReportErrorUTF8(cx, "can't write %s", filename.get());
