@@ -10538,7 +10538,7 @@ static bool HtmlObjectContentSupportsDocument(const nsCString& aMimeType) {
 uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     const nsCString& aMIMEType) {
   if (aMIMEType.IsEmpty()) {
-    return nsIObjectLoadingContent::TYPE_NULL;
+    return nsIObjectLoadingContent::TYPE_FALLBACK;
   }
 
   if (imgLoader::SupportImageWithMimeType(aMIMEType)) {
@@ -10555,11 +10555,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 
-  if (nsObjectLoadingContent::IsFallbackMimeType(aMIMEType)) {
-    return nsIObjectLoadingContent::TYPE_FALLBACK;
-  }
-
-  return nsIObjectLoadingContent::TYPE_NULL;
+  return nsIObjectLoadingContent::TYPE_FALLBACK;
 }
 
 /* static */

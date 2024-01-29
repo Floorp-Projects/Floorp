@@ -9303,13 +9303,6 @@
   value: false
   mirror: always
 
-# Should deprecated plugin behavior fallback to normal behavior or use
-# the experimental design.
-- name: layout.use-plugin-fallback
-  type: bool
-  value: false
-  mirror: always
-
 # Whether to draw images in CSS backgrounds if we only have a partial frame.
 - name: layout.display_partial_background_images
   type: bool
