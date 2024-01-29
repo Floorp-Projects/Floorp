@@ -49,7 +49,11 @@ function openDetailsView(win, id) {
   is_element_visible(item, "Add-on element should be visible.");
 
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(item, {}, item.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(
+    item.querySelector(".addon-name-link"),
+    {},
+    item.ownerGlobal
+  );
   return loaded;
 }
 

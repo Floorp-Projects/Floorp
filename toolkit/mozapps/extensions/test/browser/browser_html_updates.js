@@ -28,7 +28,11 @@ function loadDetailView(win, id) {
   let doc = win.document;
   let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
   let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(card, { clickCount: 1 }, win);
+  EventUtils.synthesizeMouseAtCenter(
+    card.querySelector(".addon-name-link"),
+    { clickCount: 1 },
+    win
+  );
   return loaded;
 }
 
