@@ -162,7 +162,7 @@ uint64_t js::WasmReservedBytes() { return wasmReservedBytes; }
 [[nodiscard]] static bool CheckArrayBufferTooLarge(JSContext* cx,
                                                    uint64_t nbytes) {
   // Refuse to allocate too large buffers.
-  if (MOZ_UNLIKELY(nbytes > ArrayBufferObject::MaxByteLength)) {
+  if (MOZ_UNLIKELY(nbytes > ArrayBufferObject::ByteLengthLimit)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
@@ -1488,7 +1488,7 @@ inline size_t ArrayBufferObject::associatedBytes() const {
 }
 
 void ArrayBufferObject::setByteLength(size_t length) {
-  MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(length <= ArrayBufferObject::ByteLengthLimit);
   setFixedSlot(BYTE_LENGTH_SLOT, PrivateValue(length));
 }
 
@@ -1594,7 +1594,7 @@ ArrayBufferObject* ArrayBufferObject::wasmGrowToPagesInPlace(
     return nullptr;
   }
   MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
-             newPages.byteLength() <= ArrayBufferObject::MaxByteLength);
+             newPages.byteLength() <= ArrayBufferObject::ByteLengthLimit);
 
   // We have checked against the clamped maximum and so we know we can convert
   // to byte lengths now.
@@ -1652,7 +1652,7 @@ ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
     return nullptr;
   }
   MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
-             newPages.byteLength() < ArrayBufferObject::MaxByteLength);
+             newPages.byteLength() < ArrayBufferObject::ByteLengthLimit);
 
   // We have checked against the clamped maximum and so we know we can convert
   // to byte lengths now.
@@ -1847,7 +1847,7 @@ template <class ArrayBufferType, ArrayBufferObject::FillContents FillType>
 ArrayBufferObject::createUninitializedBufferAndData(
     JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata&,
     JS::Handle<JSObject*> proto) {
-  MOZ_ASSERT(nbytes <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(nbytes <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   static_assert(std::is_same_v<ArrayBufferType, FixedLengthArrayBufferObject> ||
@@ -1898,7 +1898,7 @@ template <ArrayBufferObject::FillContents FillType>
 ArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t nbytes, AutoSetNewObjectMetadata& metadata,
     JS::Handle<JSObject*> proto /* = nullptr */) {
-  MOZ_ASSERT(nbytes <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(nbytes <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   auto [buffer, data] =
@@ -1925,7 +1925,7 @@ ResizableArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t byteLength, size_t maxByteLength,
     AutoSetNewObjectMetadata& metadata, Handle<JSObject*> proto) {
   MOZ_ASSERT(byteLength <= maxByteLength);
-  MOZ_ASSERT(maxByteLength <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(maxByteLength <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   // NOTE: The spec proposal for resizable ArrayBuffers suggests to use a
@@ -1958,7 +1958,7 @@ ResizableArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
-  MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(newByteLength <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   size_t sourceByteLength = source->byteLength();
@@ -2037,7 +2037,7 @@ ResizableArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
-  MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(newByteLength <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   if (newByteLength > FixedLengthArrayBufferObject::MaxInlineBytes &&
@@ -2103,7 +2103,7 @@ ResizableArrayBufferObject::createBufferAndData(
   MOZ_ASSERT(source->bufferKind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
   MOZ_ASSERT(newByteLength > FixedLengthArrayBufferObject::MaxInlineBytes,
              "prefer copying small buffers");
-  MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
+  MOZ_ASSERT(newByteLength <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
   size_t oldByteLength = source->associatedBytes();
