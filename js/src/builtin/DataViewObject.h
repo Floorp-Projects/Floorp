@@ -210,6 +210,9 @@ class ResizableDataViewObject : public DataViewObject {
   }
 };
 
+// For structured cloning.
+JSObject* NewDataView(JSContext* cx, HandleObject buffer, size_t byteOffset);
+
 }  // namespace js
 
 template <>
