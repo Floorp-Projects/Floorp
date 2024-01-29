@@ -14,7 +14,7 @@ const { TelemetryFeed } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
 );
 const { ASRouterParentProcessMessageHandler } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterParentProcessMessageHandler.jsm"
+  "resource:///modules/asrouter/ASRouterParentProcessMessageHandler.jsm"
 );
 const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"

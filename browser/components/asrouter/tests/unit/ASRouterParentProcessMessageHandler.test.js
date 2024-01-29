@@ -1,5 +1,5 @@
-import { ASRouterParentProcessMessageHandler } from "lib/ASRouterParentProcessMessageHandler.jsm";
-import { _ASRouter } from "lib/ASRouter.jsm";
+import { ASRouterParentProcessMessageHandler } from "modules/ASRouterParentProcessMessageHandler.jsm";
+import { _ASRouter } from "newtab/lib/ASRouter.jsm";
 import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
 
 describe("ASRouterParentProcessMessageHandler", () => {
