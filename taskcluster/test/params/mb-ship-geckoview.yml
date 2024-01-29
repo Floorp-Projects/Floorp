@@ -6,7 +6,6 @@ base_rev: d7e3fb8cd375eaf56ea5d3a43285557eaee0a5e0
 build_date: 1688503841
 build_number: 1
 do_not_optimize: []
-enable_always_target: false
 existing_tasks:
   build-android-aarch64-shippable-lite/opt: YOCn8npuQv-tIhxnjREZyg
   build-android-aarch64-shippable-lite/opt-upload-symbols: aYNob-h-QiugZd25sEtCMw
