@@ -2141,6 +2141,9 @@ class Element : public FragmentOrElement {
    */
   MOZ_CAN_RUN_SCRIPT nsRect GetClientAreaRect();
 
+  /** Gets the scroll size as for the scroll{Width,Height} APIs */
+  MOZ_CAN_RUN_SCRIPT nsSize GetScrollSize();
+
   /**
    * GetCustomInterface is somewhat like a GetInterface, but it is expected
    * that the implementation is provided by a custom element or via the
