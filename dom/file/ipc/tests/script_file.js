@@ -4,8 +4,7 @@
 Cu.importGlobalProperties(["File"]);
 
 addMessageListener("file.open", function (e) {
-  var testFile = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIDirectoryService)
+  var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);
   testFile.append("ipc_fileReader_testing");
@@ -31,8 +30,7 @@ addMessageListener("file.open", function (e) {
 });
 
 addMessageListener("emptyfile.open", function (e) {
-  var testFile = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIDirectoryService)
+  var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);
   testFile.append("ipc_fileReader_testing");

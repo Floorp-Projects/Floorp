@@ -22,8 +22,8 @@ function test_mainThread() {
   }
 
   fetch('green.jpg').then(r => r.blob()).then(blob => {
-    let bc = new BroadcastChannel('testMainThread');
-    bc.postMessage(blob);
+    let innerBc = new BroadcastChannel('testMainThread');
+    innerBc.postMessage(blob);
   });
 }
 
@@ -42,8 +42,8 @@ function test_worker() {
     }
 
     fetch('http://mochi.test:8888/tests/dom/file/ipc/tests/green.jpg').then(r => r.blob()).then(blob => {
-      let bc = new BroadcastChannel('testWorker');
-      bc.postMessage(blob);
+      let innerBc = new BroadcastChannel('testWorker');
+      innerBc.postMessage(blob);
     });
   }
   let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));

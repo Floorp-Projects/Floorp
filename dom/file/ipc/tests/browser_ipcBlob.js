@@ -10,8 +10,8 @@ add_task(async function test_CtoPtoC_big() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blob = await SpecialPowers.spawn(browser1, [], function () {
-    let blob = new Blob([new Array(1024 * 1024).join("123456789ABCDEF")]);
-    return blob;
+    let innerBlob = new Blob([new Array(1024 * 1024).join("123456789ABCDEF")]);
+    return innerBlob;
   });
 
   ok(blob, "CtoPtoC-big: We have a blob!");
@@ -24,15 +24,19 @@ add_task(async function test_CtoPtoC_big() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  let status = await SpecialPowers.spawn(browser2, [blob], function (blob) {
-    return new Promise(resolve => {
-      let fr = new content.FileReader();
-      fr.readAsText(blob);
-      fr.onloadend = function () {
-        resolve(fr.result == new Array(1024 * 1024).join("123456789ABCDEF"));
-      };
-    });
-  });
+  let status = await SpecialPowers.spawn(
+    browser2,
+    [blob],
+    function (innerBlob) {
+      return new Promise(resolve => {
+        let fr = new content.FileReader();
+        fr.readAsText(innerBlob);
+        fr.onloadend = function () {
+          resolve(fr.result == new Array(1024 * 1024).join("123456789ABCDEF"));
+        };
+      });
+    }
+  );
 
   ok(status, "CtoPtoC-big: Data match!");
 
@@ -46,8 +50,8 @@ add_task(async function test_CtoPtoC_small() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blob = await SpecialPowers.spawn(browser1, [], function () {
-    let blob = new Blob(["hello world!"]);
-    return blob;
+    let innerBlob = new Blob(["hello world!"]);
+    return innerBlob;
   });
 
   ok(blob, "CtoPtoC-small: We have a blob!");
@@ -56,15 +60,19 @@ add_task(async function test_CtoPtoC_small() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  let status = await SpecialPowers.spawn(browser2, [blob], function (blob) {
-    return new Promise(resolve => {
-      let fr = new content.FileReader();
-      fr.readAsText(blob);
-      fr.onloadend = function () {
-        resolve(fr.result == "hello world!");
-      };
-    });
-  });
+  let status = await SpecialPowers.spawn(
+    browser2,
+    [blob],
+    function (innerBlob) {
+      return new Promise(resolve => {
+        let fr = new content.FileReader();
+        fr.readAsText(innerBlob);
+        fr.onloadend = function () {
+          resolve(fr.result == "hello world!");
+        };
+      });
+    }
+  );
 
   ok(status, "CtoPtoC-small: Data match!");
 
@@ -161,10 +169,10 @@ add_task(async function test_CtoPtoC_bc_small() {
   let status = await SpecialPowers.spawn(
     browser2,
     [blobURL],
-    function (blobURL) {
+    function (innerBlobURL) {
       return new Promise(resolve => {
         var xhr = new content.XMLHttpRequest();
-        xhr.open("GET", blobURL);
+        xhr.open("GET", innerBlobURL);
         xhr.onloadend = function () {
           resolve(xhr.response == "hello world!");
         };
@@ -197,15 +205,19 @@ add_task(async function test_CtoPtoC_multipart() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  let status = await SpecialPowers.spawn(browser2, [newBlob], function (blob) {
-    return new Promise(resolve => {
-      let fr = new content.FileReader();
-      fr.readAsText(new Blob(["hello ", blob]));
-      fr.onloadend = function () {
-        resolve(fr.result == "hello world!");
-      };
-    });
-  });
+  let status = await SpecialPowers.spawn(
+    browser2,
+    [newBlob],
+    function (innerBlob) {
+      return new Promise(resolve => {
+        let fr = new content.FileReader();
+        fr.readAsText(new Blob(["hello ", innerBlob]));
+        fr.onloadend = function () {
+          resolve(fr.result == "hello world!");
+        };
+      });
+    }
+  );
 
   ok(status, "CtoPtoC-multipart: Data match!");
 
