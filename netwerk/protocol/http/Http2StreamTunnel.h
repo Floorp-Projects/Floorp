@@ -39,7 +39,7 @@ class Http2StreamTunnel : public Http2StreamBase,
 
   already_AddRefed<nsHttpConnection> CreateHttpConnection(
       nsAHttpTransaction* httpTransaction, nsIInterfaceRequestor* aCallbacks,
-      PRIntervalTime aRtt);
+      PRIntervalTime aRtt, bool aIsWebSocket);
 
   nsHttpConnectionInfo* ConnectionInfo() override { return mConnectionInfo; }
 
