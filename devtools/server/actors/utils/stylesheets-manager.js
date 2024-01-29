@@ -59,15 +59,6 @@ const modifiedStyleSheets = new WeakMap();
 
 /**
  * Manage stylesheets related to a given Target Actor.
- *
- * @emits applicable-stylesheet-added: emitted when an applicable stylesheet is added to the document.
- *        First arg is an object with the following properties:
- *        - resourceId {String}: The id that was assigned to the stylesheet
- *        - styleSheet {StyleSheet}: The actual stylesheet
- *        - creationData {Object}: An object with:
- *            - isCreatedByDevTools {Boolean}: Was the stylesheet created by DevTools (e.g.
- *              by the user clicking the new stylesheet button in the styleeditor)
- *            - fileName {String}
  * @emits stylesheet-updated: emitted when there was changes in a stylesheet
  *        First arg is an object with the following properties:
  *        - resourceId {String}: The id that was assigned to the stylesheet
@@ -85,6 +76,11 @@ class StyleSheetsManager extends EventEmitter {
   #targetActor;
   #transitionSheetLoaded;
   #transitionTimeout;
+  #watchListeners = {
+    onAvailable: [],
+    onUpdated: [],
+    onDestroyed: [],
+  };
 
   /**
    * @param TargetActor targetActor
@@ -125,10 +121,59 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Calling this function will make the StyleSheetsManager start the event listeners needed
    * to watch for stylesheet additions and modifications.
-   * It will also trigger applicable-stylesheet-added events for the existing stylesheets.
-   * This function resolves once it notified about existing stylesheets.
+   * This resolves once it notified about existing stylesheets.
+   * @param {Object} options
+   * @param {Function} onAvailable: Function that will be called when a stylesheet is
+   *                   registered, but also with already registered stylesheets
+   *                   if ignoreExisting is not set to true.
+   *                   This is called with a single object parameter with the following properties:
+   *                   - {String} resourceId: The id that was assigned to the stylesheet
+   *                   - {StyleSheet} styleSheet: The actual stylesheet object
+   *                   - {Object} creationData: An object with:
+   *                              - {Boolean} isCreatedByDevTools: Was the stylesheet created
+   *                                by DevTools (e.g. by the user clicking the new stylesheet
+   *                                button in the styleeditor)
+   *                              - {String} fileName
+   * @param {Function} onUpdated: Function that will be called when a stylesheet is updated
+   *                   This is called with a single object parameter with the following properties:
+   *                   - {String} resourceId: The id that was assigned to the stylesheet
+   *                   - {String} updateKind: Which kind of update it is ("style-applied",
+   *                     "at-rules-changed", "matches-change", "property-change")
+   *                   - {Object} updates : The update data
+   * @param {Function} onDestroyed: Function that will be called when a stylesheet is removed
+   *                   This is called with a single object parameter with the following properties:
+   *                   - {String} resourceId: The id that was assigned to the stylesheet
+   * @param {Boolean} ignoreExisting: Pass to true to avoid onAvailable to be called with
+   *                  already registered stylesheets.
    */
-  async startWatching() {
+  async watch({ onAvailable, onUpdated, onDestroyed, ignoreExisting = false }) {
+    if (!onAvailable && !onUpdated && !onDestroyed) {
+      throw new Error("Expect onAvailable, onUpdated or onDestroyed");
+    }
+
+    if (onAvailable) {
+      if (typeof onAvailable !== "function") {
+        throw new Error("onAvailable should be a function");
+      }
+
+      // Don't register the listener yet if we're ignoring existing stylesheets, we'll do
+      // that at the end of the function, after we processed existing stylesheets.
+    }
+
+    if (onUpdated) {
+      if (typeof onUpdated !== "function") {
+        throw new Error("onUpdated should be a function");
+      }
+      this.#watchListeners.onUpdated.push(onUpdated);
+    }
+
+    if (onDestroyed) {
+      if (typeof onDestroyed !== "function") {
+        throw new Error("onDestroyed should be a function");
+      }
+      this.#watchListeners.onDestroyed.push(onDestroyed);
+    }
+
     // Process existing stylesheets
     const promises = [];
     for (const window of this.#targetActor.windows) {
@@ -138,19 +183,58 @@ class StyleSheetsManager extends EventEmitter {
     this.#setEventListenersIfNeeded();
 
     // Finally, notify about existing stylesheets
-    let styleSheets = await Promise.all(promises);
-    styleSheets = styleSheets.flat();
-    for (const styleSheet of styleSheets) {
-      const resourceId = this.#findStyleSheetResourceId(styleSheet);
-      if (resourceId) {
-        // If the stylesheet was already registered before any consumer started
-        // watching, emit "applicable-stylesheet-added" immediately.
-        this.emitAsync("applicable-stylesheet-added", {
-          resourceId,
-          styleSheet,
-        });
-      } else {
-        this.#registerStyleSheet(styleSheet);
+    const styleSheets = await Promise.all(promises);
+    const styleSheetsData = styleSheets.flat().map(styleSheet => ({
+      styleSheet,
+      resourceId: this.#registerStyleSheet(styleSheet),
+    }));
+
+    let registeredStyleSheetsPromises;
+    if (onAvailable && ignoreExisting !== true) {
+      registeredStyleSheetsPromises = styleSheetsData.map(
+        ({ resourceId, styleSheet }) => onAvailable({ resourceId, styleSheet })
+      );
+    }
+
+    // Only register the listener after we went over the list of existing stylesheets
+    // so the listener is not triggered by possible calls to #registerStyleSheet earlier.
+    if (onAvailable) {
+      this.#watchListeners.onAvailable.push(onAvailable);
+    }
+
+    if (registeredStyleSheetsPromises) {
+      await Promise.all(registeredStyleSheetsPromises);
+    }
+  }
+
+  /**
+   * Remove the passed listeners
+   *
+   * @param {Object} options: See this.watch
+   */
+  unwatch({ onAvailable, onUpdated, onDestroyed }) {
+    if (!this.#watchListeners) {
+      return;
+    }
+
+    if (onAvailable) {
+      const index = this.#watchListeners.onAvailable.indexOf(onAvailable);
+      if (index !== -1) {
+        this.#watchListeners.onAvailable.splice(index, 1);
+      }
+    }
+
+    if (onUpdated) {
+      const index = this.#watchListeners.onUpdated.indexOf(onUpdated);
+      if (index !== -1) {
+        this.#watchListeners.onUpdated.splice(index, 1);
+      }
+    }
+
+    if (onDestroyed) {
+      const index = this.#watchListeners.onDestroyed.indexOf(onDestroyed);
+      if (index !== -1) {
+        this.#watchListeners.onDestroyed.splice(index, 1);
       }
     }
   }
@@ -378,7 +462,7 @@ class StyleSheetsManager extends EventEmitter {
     if (transition) {
       this.#startTransition(resourceId, kind, cause);
     } else {
-      this.emit("stylesheet-updated", {
+      this.#onStyleSheetUpdated({
         resourceId,
         updateKind: "style-applied",
         updates: {
@@ -387,7 +471,7 @@ class StyleSheetsManager extends EventEmitter {
       });
     }
 
-    this.emit("stylesheet-updated", {
+    this.#onStyleSheetUpdated({
       resourceId,
       updateKind: "at-rules-changed",
       updates: {
@@ -448,7 +532,7 @@ class StyleSheetsManager extends EventEmitter {
     this.#transitionTimeout = null;
     removePseudoClassLock(document.documentElement, TRANSITION_PSEUDO_CLASS);
 
-    this.emit("stylesheet-updated", {
+    this.#onStyleSheetUpdated({
       resourceId,
       updateKind: "style-applied",
       updates: {
@@ -629,7 +713,7 @@ class StyleSheetsManager extends EventEmitter {
    *        The result of matchMedia for the given media rule
    */
   #onMatchesChange(resourceId, index, mql) {
-    this.emit("stylesheet-updated", {
+    this.#onStyleSheetUpdated({
       resourceId,
       updateKind: "matches-change",
       updates: {
@@ -751,7 +835,7 @@ class StyleSheetsManager extends EventEmitter {
    *        The value of the property
    */
   #notifyPropertyChanged(resourceId, property, value) {
-    this.emit("stylesheet-updated", {
+    this.#onStyleSheetUpdated({
       resourceId,
       updateKind: "property-change",
       updates: { resourceUpdates: { [property]: value } },
@@ -804,7 +888,7 @@ class StyleSheetsManager extends EventEmitter {
 
   /**
    * If the stylesheet isn't registered yet, this function will generate an associated
-   * resourceId and will emit an "applicable-stylesheet-added" event.
+   * resourceId and call registered `onAvailable` listeners.
    *
    * @param {StyleSheet} styleSheet
    * @returns {String} the associated resourceId
@@ -825,27 +909,29 @@ class StyleSheetsManager extends EventEmitter {
     const creationData = this.#styleSheetCreationData?.get(styleSheet);
     this.#styleSheetCreationData?.delete(styleSheet);
 
-    // We need to use emitAsync and await on it so the watcher can sends the resource to
-    // the client before we resolve a potential creationData promise.
-    const onEventHandlerDone = this.emitAsync("applicable-stylesheet-added", {
-      resourceId,
-      styleSheet,
-      creationData,
-    });
+    const onAvailablePromises = [];
+    for (const onAvailable of this.#watchListeners.onAvailable) {
+      onAvailablePromises.push(
+        onAvailable({
+          resourceId,
+          styleSheet,
+          creationData,
+        })
+      );
+    }
 
     // creationData exists if this stylesheet was created via `addStyleSheet`.
     if (creationData) {
-      //  We resolve the promise once the handler of applicable-stylesheet-added are settled,
-      // (e.g. the watcher sent the resources to the client) so `addStyleSheet` calls can
-      // be fullfilled.
-      onEventHandlerDone.then(() => creationData?.resolve());
+      //  We resolve the promise once the watcher sent the resources to the client,
+      // so `addStyleSheet` calls can be fullfilled.
+      Promise.all(onAvailablePromises).then(() => creationData?.resolve());
     }
     return resourceId;
   }
 
   /**
-   * If the stylesheet is registered, this function will emit an "applicable-stylesheet-removed" event
-   * with the stylesheet resourceId.
+   * If the stylesheet is registered, this function will call registered `onDestroyed`
+   * listeners with the stylesheet resourceId.
    *
    * @param {StyleSheet} styleSheet
    */
@@ -857,9 +943,20 @@ class StyleSheetsManager extends EventEmitter {
 
     this.#styleSheetMap.delete(existingResourceId);
     this.#styleSheetCreationData?.delete(styleSheet);
-    this.emit("applicable-stylesheet-removed", {
-      resourceId: existingResourceId,
-    });
+
+    for (const onDestroyed of this.#watchListeners.onDestroyed) {
+      onDestroyed({
+        resourceId: existingResourceId,
+      });
+    }
+  }
+
+  #onStyleSheetUpdated(data) {
+    this.emit("stylesheet-updated", data);
+
+    for (const onUpdated of this.#watchListeners.onUpdated) {
+      onUpdated(data);
+    }
   }
 
   /**
@@ -909,6 +1006,7 @@ class StyleSheetsManager extends EventEmitter {
     this.#styleSheetCreationData = null;
     this.#styleSheetMap = null;
     this.#targetActor = null;
+    this.#watchListeners = null;
   }
 }
 

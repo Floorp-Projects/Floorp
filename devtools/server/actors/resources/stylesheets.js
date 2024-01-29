@@ -40,22 +40,12 @@ class StyleSheetWatcher {
 
     this._styleSheetsManager = targetActor.getStyleSheetsManager();
 
-    // Add event listener for new additions and updates
-    this._styleSheetsManager.on(
-      "applicable-stylesheet-added",
-      this._onApplicableStylesheetAdded
-    );
-    this._styleSheetsManager.on(
-      "stylesheet-updated",
-      this._onStylesheetUpdated
-    );
-    this._styleSheetsManager.on(
-      "applicable-stylesheet-removed",
-      this._onStylesheetRemoved
-    );
-
-    // startWatching will emit applicable-stylesheet-added for already existing stylesheet
-    await this._styleSheetsManager.startWatching();
+    // watch will call onAvailable for already existing stylesheets
+    await this._styleSheetsManager.watch({
+      onAvailable: this._onApplicableStylesheetAdded,
+      onUpdated: this._onStylesheetUpdated,
+      onDestroyed: this._onStylesheetRemoved,
+    });
   }
 
   _onApplicableStylesheetAdded(styleSheetData) {
@@ -144,18 +134,11 @@ class StyleSheetWatcher {
   }
 
   destroy() {
-    this._styleSheetsManager.off(
-      "applicable-stylesheet-added",
-      this._onApplicableStylesheetAdded
-    );
-    this._styleSheetsManager.off(
-      "stylesheet-updated",
-      this._onStylesheetUpdated
-    );
-    this._styleSheetsManager.off(
-      "applicable-stylesheet-removed",
-      this._onStylesheetRemoved
-    );
+    this._styleSheetsManager.unwatch({
+      onAvailable: this._onApplicableStylesheetAdded,
+      onUpdated: this._onStylesheetUpdated,
+      onDestroyed: this._onStylesheetRemoved,
+    });
   }
 }
 
