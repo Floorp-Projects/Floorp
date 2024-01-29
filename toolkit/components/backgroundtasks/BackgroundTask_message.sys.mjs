@@ -54,7 +54,8 @@
 import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
 
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 import { BackgroundTasksUtils } from "resource://gre/modules/BackgroundTasksUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";

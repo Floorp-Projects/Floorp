@@ -5,7 +5,7 @@
 "use strict";
 
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 
 add_task(async function nested_objects() {

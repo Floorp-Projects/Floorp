@@ -161,6 +161,7 @@ module.exports = function (config) {
         },
         alias: {
           newtab: path.join(__dirname, "../newtab"),
+          asroutermodules: path.join(__dirname, "../asrouter/modules"),
         },
       },
       plugins: [

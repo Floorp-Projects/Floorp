@@ -8,7 +8,7 @@ const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 
 const HOMEPAGE_OVERRIDE_PREF = "browser.startup.homepage_override.once";

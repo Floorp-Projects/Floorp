@@ -3,7 +3,7 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
 );
 const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+  "resource:///modules/asrouter/ASRouter.jsm"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
