@@ -153,6 +153,10 @@ var gSanitizePromptDialog = {
       this._dialog.setAttribute("inClearOnShutdown", "true");
       // remove the clear private data groupbox element
       clearPrivateDataGroupbox.remove();
+
+      // If this is the first time the user is opening the new clear on shutdown
+      // dialog, migrate their prefs
+      Sanitizer.maybeMigrateSanitizeOnShutdownPrefs();
     } else if (!lazy.USE_OLD_DIALOG) {
       okButtonl10nID = "sanitize-button-ok2";
       // remove the clear on shutdown groupbox element
