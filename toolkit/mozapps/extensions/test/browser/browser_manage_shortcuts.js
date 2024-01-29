@@ -172,7 +172,7 @@ add_task(async function testUpdatingCommands() {
   // Escape should clear the focus and hide the error.
   is(doc.activeElement, input, "The input is focused");
   EventUtils.synthesizeKey("Escape", {});
-  ok(doc.activeElement != input, "The input is no longer focused");
+  Assert.notEqual(doc.activeElement, input, "The input is no longer focused");
   is(error.style.visibility, "hidden", "The error is hidden");
 
   // Check if assigning already assigned shortcut is prevented.
@@ -242,8 +242,9 @@ add_task(async function testExpanding() {
     for (let i = 0; i < shortcutRows.length; i++) {
       let row = shortcutRows[i];
       if (i < visibleCommands) {
-        ok(
-          getComputedStyle(row).display != "none",
+        Assert.notEqual(
+          getComputedStyle(row).display,
+          "none",
           `The first ${visibleCommands} rows are visible`
         );
       } else {
@@ -271,7 +272,11 @@ add_task(async function testExpanding() {
   is(card.getAttribute("expanded"), "true", "The card is now expanded");
 
   for (let row of shortcutRows) {
-    ok(getComputedStyle(row).display != "none", "All the rows are visible");
+    Assert.notEqual(
+      getComputedStyle(row).display,
+      "none",
+      "All the rows are visible"
+    );
   }
 
   // The collapse text is now shown.
@@ -314,7 +319,11 @@ add_task(async function testOneExtraCommandIsNotCollapsed() {
 
   // All of the rows are visible, to avoid a "Show 1 More" button.
   for (let row of shortcutRows) {
-    ok(getComputedStyle(row).display != "none", "All the rows are visible");
+    Assert.notEqual(
+      getComputedStyle(row).display,
+      "none",
+      "All the rows are visible"
+    );
   }
 
   await closeView(win);

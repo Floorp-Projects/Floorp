@@ -250,8 +250,9 @@ function makeRegularTest(options, what) {
 
     // Sanity check to ensure that the test in makeInstallTest() that
     // installs.size == 0 means we actually did clean up.
-    ok(
-      AddonManager.webAPI.installs.size > 0,
+    Assert.greater(
+      AddonManager.webAPI.installs.size,
+      0,
       "webAPI is tracking the AddonInstall"
     );
 
@@ -316,8 +317,9 @@ add_task(
     let addons = await promiseAddonsByIDs([ID]);
     is(addons[0], null, "The addon was not installed");
 
-    ok(
-      AddonManager.webAPI.installs.size > 0,
+    Assert.greater(
+      AddonManager.webAPI.installs.size,
+      0,
       "webAPI is tracking the AddonInstall"
     );
   })
@@ -351,8 +353,9 @@ add_task(
     let addons = await promiseAddonsByIDs([ID]);
     is(addons[0], null, "The addon was not installed");
 
-    ok(
-      AddonManager.webAPI.installs.size > 0,
+    Assert.greater(
+      AddonManager.webAPI.installs.size,
+      0,
       "webAPI is tracking the AddonInstall"
     );
   })
@@ -386,8 +389,9 @@ add_task(
     let addons = await promiseAddonsByIDs([ID]);
     is(addons[0], null, "The addon was not installed");
 
-    ok(
-      AddonManager.webAPI.installs.size > 0,
+    Assert.greater(
+      AddonManager.webAPI.installs.size,
+      0,
       "webAPI is tracking the AddonInstall"
     );
   })

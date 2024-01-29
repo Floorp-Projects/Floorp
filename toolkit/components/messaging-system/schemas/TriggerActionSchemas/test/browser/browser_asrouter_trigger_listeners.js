@@ -291,7 +291,7 @@ add_task(async function check_contentBlocking_listener() {
       1,
       `event ${type} is valid`
     );
-    ok(pageLoadSum <= pageLoad, "pageLoad is non-decreasing");
+    Assert.lessOrEqual(pageLoadSum, pageLoad, "pageLoad is non-decreasing");
 
     observerEvent += 1;
     pageLoadSum = pageLoad;

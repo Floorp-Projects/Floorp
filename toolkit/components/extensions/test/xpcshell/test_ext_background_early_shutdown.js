@@ -547,9 +547,9 @@ add_task(
       );
 
       if (expectToBeSet) {
-        ok(
-          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue() >
-            0,
+        Assert.greater(
+          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue(),
+          0,
           "Expect crashed_over_threshold_fg count to be set."
         );
         return;
@@ -709,9 +709,9 @@ add_task(
 
     function assertCrashThresholdTelemetry({ fg, bg }) {
       if (fg) {
-        ok(
-          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue() >
-            0,
+        Assert.greater(
+          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue(),
+          0,
           "Expect crashed_over_threshold_fg count to be set."
         );
       } else {
@@ -722,9 +722,9 @@ add_task(
         );
       }
       if (bg) {
-        ok(
-          Glean.extensions.processEvent.crashed_over_threshold_bg.testGetValue() >
-            0,
+        Assert.greater(
+          Glean.extensions.processEvent.crashed_over_threshold_bg.testGetValue(),
+          0,
           "Expect crashed_over_threshold_bg count to be set."
         );
       } else {

@@ -117,12 +117,14 @@ add_task(async function test_unsigned_no_id_temp_install() {
   const addon = await AddonManager.installTemporaryAddon(addonDir);
 
   ok(addon.id, "ID should have been auto-generated");
-  ok(
-    Math.abs(addon.installDate - testDate) < 10000,
+  Assert.less(
+    Math.abs(addon.installDate - testDate),
+    10000,
     "addon has an expected installDate"
   );
-  ok(
-    Math.abs(addon.updateDate - testDate) < 10000,
+  Assert.less(
+    Math.abs(addon.updateDate - testDate),
+    10000,
     "addon has an expected updateDate"
   );
 

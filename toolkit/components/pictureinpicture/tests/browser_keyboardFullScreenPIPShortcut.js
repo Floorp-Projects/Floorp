@@ -23,8 +23,9 @@ add_task(async () => {
     EventUtils.synthesizeKey("f", {}, pipWin);
   });
 
-  ok(
-    pipWin.document.fullscreenElement == pipWin.document.body,
+  Assert.equal(
+    pipWin.document.fullscreenElement,
+    pipWin.document.body,
     "F-key should have caused to enter fullscreen."
   );
 

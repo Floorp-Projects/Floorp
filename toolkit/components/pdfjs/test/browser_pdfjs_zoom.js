@@ -247,8 +247,9 @@ add_task(async function test_browser_zoom() {
       let newWidthPromise = waitForRenderAndGetWidth(newTabBrowser);
       await waitForRoundTrip(newTabBrowser);
       FullZoom.enlarge();
-      ok(
-        (await newWidthPromise) > initialWidth,
+      Assert.greater(
+        await newWidthPromise,
+        initialWidth,
         "Zoom in makes the page bigger."
       );
 
@@ -262,8 +263,9 @@ add_task(async function test_browser_zoom() {
       newWidthPromise = waitForRenderAndGetWidth(newTabBrowser);
       await waitForRoundTrip(newTabBrowser);
       FullZoom.reduce();
-      ok(
-        (await newWidthPromise) < initialWidth,
+      Assert.less(
+        await newWidthPromise,
+        initialWidth,
         "Zoom out makes the page smaller."
       );
 

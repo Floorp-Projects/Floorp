@@ -57,7 +57,7 @@ add_task(async function testStartingAutoScrollInAboutContent() {
     });
     info("Waiting to start autoscrolling");
     await promiseStartAutoScroll;
-    ok(autoScroller != null, "Autoscrolling should be started");
+    Assert.notEqual(autoScroller, null, "Autoscrolling should be started");
     await EventUtils.promiseNativeMouseEvent({
       type: "mouseup",
       button: 1, // middle click

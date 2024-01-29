@@ -50,7 +50,11 @@ var TEST_CASES = [
 
       // The number of difference bits should never bigger than the expected
       // number. It could be zero if the randomization is disabled.
-      ok(diffCnt <= expected, "The number of noise bits is expected.");
+      Assert.lessOrEqual(
+        diffCnt,
+        expected,
+        "The number of noise bits is expected."
+      );
 
       return diffCnt <= expected && diffCnt > 0;
     },
@@ -284,9 +288,10 @@ async function runTest(enabled) {
   if (enabled) {
     await Services.fog.testFlushAllChildren();
 
-    ok(
+    Assert.greater(
       Glean.fingerprintingProtection.canvasNoiseCalculateTime.testGetValue()
-        .sum > 0,
+        .sum,
+      0,
       "The telemetry of canvas randomization is recorded."
     );
   }

@@ -69,9 +69,14 @@ add_task(async function testPrintToStream() {
       let fileStat = await IOUtils.stat(filePath);
       let streamStat = await IOUtils.stat(streamPath);
 
-      ok(fileStat.size > 0, "File file should not be empty: " + fileStat.size);
-      ok(
-        streamStat.size > 0,
+      Assert.greater(
+        fileStat.size,
+        0,
+        "File file should not be empty: " + fileStat.size
+      );
+      Assert.greater(
+        streamStat.size,
+        0,
         "Stream file should not be empty: " + streamStat.size
       );
       return Math.abs(fileStat.size - streamStat.size) <= maxSizeDifference;

@@ -334,7 +334,11 @@ function open_manager(
         aManagerWindow.loadView(aView);
       }
 
-      ok(aManagerWindow != null, "Should have an add-ons manager window");
+      Assert.notEqual(
+        aManagerWindow,
+        null,
+        "Should have an add-ons manager window"
+      );
       is(
         aManagerWindow.location.href,
         MANAGER_URI,
@@ -373,8 +377,9 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
   let p = new Promise((resolve, reject) => {
     requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
 
-    ok(
-      aManagerWindow != null,
+    Assert.notEqual(
+      aManagerWindow,
+      null,
       "Should have an add-ons manager window to close"
     );
     is(
@@ -1678,7 +1683,11 @@ async function handlePermissionPrompt({
   );
 
   if (assertIcon) {
-    ok(info.icon != null, "Got an addon icon in the permission prompt info");
+    Assert.notEqual(
+      info.icon,
+      null,
+      "Got an addon icon in the permission prompt info"
+    );
   }
 
   if (reject) {

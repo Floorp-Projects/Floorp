@@ -382,8 +382,9 @@ async function test_abusereport_suggestions(addonId) {
         `Category suggestions should not be empty for "${reason}"`
       );
     } else {
-      ok(
-        localizedSuggestionsContent.length === 0,
+      Assert.strictEqual(
+        localizedSuggestionsContent.length,
+        0,
         `Category suggestions should be empty for "${reason}"`
       );
     }

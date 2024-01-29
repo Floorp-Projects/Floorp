@@ -1139,7 +1139,11 @@ add_task(async function test_estimatedendtime() {
   equal(msg.status, "success", "search() succeeded");
   equal(msg.result.length, 1, "search() found 1 download");
   ok(msg.result[0].estimatedEndTime, "download.estimatedEndTime is correct");
-  ok(msg.result[0].bytesReceived > 0, "download.bytesReceived is correct");
+  Assert.greater(
+    msg.result[0].bytesReceived,
+    0,
+    "download.bytesReceived is correct"
+  );
 
   msg = await runInExtension("cancel", id);
 

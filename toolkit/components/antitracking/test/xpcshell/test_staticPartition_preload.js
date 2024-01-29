@@ -48,8 +48,9 @@ async function checkCache(originAttributes) {
     "example.org",
     "style.css"
   );
-  ok(
-    foundEntryCount > 0,
+  Assert.greater(
+    foundEntryCount,
+    0,
     `Cache entries expected for style.css and OA=${originAttributes}`
   );
 }

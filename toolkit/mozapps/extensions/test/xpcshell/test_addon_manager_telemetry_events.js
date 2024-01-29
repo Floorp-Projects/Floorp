@@ -653,8 +653,9 @@ add_task(
     AddonTestUtils.getAMGleanEvents("update")
       .filter(e => ["download_completed", "download_failed"].includes(e.step))
       .forEach(e =>
-        ok(
-          parseInt(e.download_time, 10) > 0,
+        Assert.greater(
+          parseInt(e.download_time, 10),
+          0,
           `At step ${e.step} download_time: ${e.download_time}`
         )
       );

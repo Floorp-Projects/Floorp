@@ -100,7 +100,11 @@ add_task(async function thumbnails_captureAndStoreIfStale_error_response() {
       let now = Date.now() - 1000;
       await PageThumbs.captureAndStoreIfStale(gBrowser.selectedBrowser);
 
-      ok(getThumbnailModifiedTime(URL) < now, "modified time should be < now");
+      Assert.less(
+        getThumbnailModifiedTime(URL),
+        now,
+        "modified time should be < now"
+      );
       let [r, g, b] = await retrieveImageDataForURL(URL);
       is("" + [r, g, b], "" + [0, 255, 0], "thumbnail is still green");
     }

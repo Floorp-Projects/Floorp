@@ -11,7 +11,11 @@ add_task(async function testSheetCount() {
     let { id } = helper.doc.l10n.getAttributes(sheetCountElement);
     is(id, "printui-sheets-count", "The l10n id is correct");
     let initialSheetCount = helper.sheetCount;
-    ok(initialSheetCount >= 1, "There is an initial sheet count");
+    Assert.greaterOrEqual(
+      initialSheetCount,
+      1,
+      "There is an initial sheet count"
+    );
 
     await helper.openMoreSettings();
 
@@ -22,7 +26,11 @@ add_task(async function testSheetCount() {
     await helper.waitForPreview(() => helper.text(percentScale, "200"));
 
     let zoomedSheetCount = helper.sheetCount;
-    ok(zoomedSheetCount > initialSheetCount, "The sheet count increased");
+    Assert.greater(
+      zoomedSheetCount,
+      initialSheetCount,
+      "The sheet count increased"
+    );
 
     // Since we're using the Save to PDF printer, the numCopies element should
     // be hidden and its value ignored.
@@ -102,7 +110,7 @@ add_task(async function testSheetCountPageRange() {
       "Wait for sheet count to update"
     );
     let sheets = helper.sheetCount;
-    ok(sheets >= 3, "There are at least 3 pages");
+    Assert.greaterOrEqual(sheets, 3, "There are at least 3 pages");
 
     // Set page range to 2-3, sheet count should be 2.
     await helper.waitForPreview(() =>
@@ -140,7 +148,7 @@ add_task(async function testSheetCountDuplex() {
       "Wait for sheet count to update"
     );
     let singleSidedSheets = helper.sheetCount;
-    ok(singleSidedSheets >= 2, "There are at least 2 pages");
+    Assert.greaterOrEqual(singleSidedSheets, 2, "There are at least 2 pages");
 
     // Turn on long-edge duplex printing and ensure the sheet count is halved.
     await helper.waitForSettingsEvent(() =>
@@ -284,7 +292,7 @@ add_task(async function testPagesPerSheetCount() {
     );
     let sheets = helper.sheetCount;
 
-    ok(sheets > 1, "There are multiple pages");
+    Assert.greater(sheets, 1, "There are multiple pages");
 
     await helper.openMoreSettings();
     let pagesPerSheet = helper.get("pages-per-sheet-picker");

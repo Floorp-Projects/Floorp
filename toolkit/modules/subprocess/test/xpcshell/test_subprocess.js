@@ -213,8 +213,9 @@ add_task(
       equal(exitCode, 0, "Got expected exit code");
     }
 
-    ok(
-      roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
+    Assert.lessOrEqual(
+      roundTripTime,
+      MAX_ROUND_TRIP_TIME_MS,
       `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`
     );
   }
@@ -625,8 +626,9 @@ add_task(async function test_subprocess_kill_timeout() {
   // testing the timeout there.
   if (AppConstants.platform != "win") {
     let diff = Date.now() - startTime;
-    ok(
-      diff >= TIMEOUT,
+    Assert.greaterOrEqual(
+      diff,
+      TIMEOUT,
       `Process was killed after ${diff}ms (expected ~${TIMEOUT}ms)`
     );
   }

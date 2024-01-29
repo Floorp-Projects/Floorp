@@ -13,8 +13,9 @@ add_task(async function () {
             info("got find result");
             browser.finder.removeResultListener(listener);
 
-            ok(
-              aData.result == Ci.nsITypeAheadFind.FIND_FOUND,
+            Assert.equal(
+              aData.result,
+              Ci.nsITypeAheadFind.FIND_FOUND,
               "should find string"
             );
             resolve();
@@ -41,8 +42,9 @@ add_task(async function () {
       BrowserTestUtils.startLoadingURIString(browser, "about:blank");
       await BrowserTestUtils.browserLoaded(browser);
 
-      ok(
-        browser.currentURI.spec == "about:blank",
+      Assert.equal(
+        browser.currentURI.spec,
+        "about:blank",
         "got load event for about:blank"
       );
 

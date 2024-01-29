@@ -61,12 +61,14 @@ add_task(async function thumbnails_bg_image_capture() {
       expectedWidth
     );
     // Fuzzy equality to account for rounding
-    ok(
-      Math.abs(img.naturalWidth - expectedWidth) <= 1,
+    Assert.lessOrEqual(
+      Math.abs(img.naturalWidth - expectedWidth),
+      1,
       "The thumbnail should have the right width"
     );
-    ok(
-      Math.abs(img.naturalHeight - expectedHeight) <= 1,
+    Assert.lessOrEqual(
+      Math.abs(img.naturalHeight - expectedHeight),
+      1,
       "The thumbnail should have the right height"
     );
 

@@ -216,7 +216,7 @@ add_task(async function test_apply_update() {
   // Make sure that the extension lastModifiedTime was updated.
   let testFile = getAddonFile(a1);
   let difference = testFile.lastModifiedTime - startupTime;
-  ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
+  Assert.less(Math.abs(difference), MAX_TIME_DIFFERENCE);
 
   await a1.uninstall();
 });

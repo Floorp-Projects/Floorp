@@ -59,7 +59,7 @@ add_task(async function test_perf_observers_cors() {
   }
 
   ok(b.url.startsWith("http://b."), "Observed resource from b.example.com");
-  ok(b.time > 0, "connectionEnd available from b.example.com");
+  Assert.greater(b.time, 0, "connectionEnd available from b.example.com");
   equal(b.size, 46, "encodedBodySize available from b.example.com");
 
   ok(c.url.startsWith("http://c."), "Observed resource from c.example.com");

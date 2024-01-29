@@ -17,7 +17,11 @@ add_setup(() => {
 
 add_task(async function test_OS_data() {
   const os = ClientEnvironmentBase.os;
-  ok(os !== undefined, "OS data should be available in the context");
+  Assert.notStrictEqual(
+    os,
+    undefined,
+    "OS data should be available in the context"
+  );
 
   let osCount = 0;
   if (os.isWindows) {
@@ -29,7 +33,7 @@ add_task(async function test_OS_data() {
   if (os.isLinux) {
     osCount += 1;
   }
-  ok(osCount <= 1, "At most one OS should match");
+  Assert.lessOrEqual(osCount, 1, "At most one OS should match");
 
   // if on Windows, Windows versions should be set, and Mac versions should not be
   if (os.isWindows) {
@@ -110,16 +114,19 @@ add_task(async function testLiveTelemetry() {
 });
 
 add_task(function testBuildId() {
-  ok(
-    ClientEnvironmentBase.appinfo !== undefined,
+  Assert.notStrictEqual(
+    ClientEnvironmentBase.appinfo,
+    undefined,
     "appinfo should be available in the context"
   );
-  ok(
-    typeof ClientEnvironmentBase.appinfo === "object",
+  Assert.strictEqual(
+    typeof ClientEnvironmentBase.appinfo,
+    "object",
     "appinfo should be an object"
   );
-  ok(
-    typeof ClientEnvironmentBase.appinfo.appBuildID === "string",
+  Assert.strictEqual(
+    typeof ClientEnvironmentBase.appinfo.appBuildID,
+    "string",
     "buildId should be a string"
   );
 });

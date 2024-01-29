@@ -86,8 +86,9 @@ add_task(async function test_updatePing() {
   );
   const channelField = updatePing.payload.previousChannel;
   if (channelField != null) {
-    ok(
-      typeof channelField == "string",
+    Assert.equal(
+      typeof channelField,
+      "string",
       "'previousChannel' must be a string, if available."
     );
   }

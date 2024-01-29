@@ -398,8 +398,9 @@ add_task(async function testPageCountChangeNoRangeNoRerender() {
     );
 
     let newSheetCount = getSheetCount(helper);
-    ok(
-      initialSheetCount < newSheetCount,
+    Assert.less(
+      initialSheetCount,
+      newSheetCount,
       `There are more sheets now ${initialSheetCount} < ${newSheetCount}`
     );
 
@@ -522,8 +523,9 @@ add_task(async function testPageCountChangeRangeRerender() {
     );
 
     let newSheetCount = getSheetCount(helper);
-    ok(
-      initialSheetCount < newSheetCount,
+    Assert.less(
+      initialSheetCount,
+      newSheetCount,
       `There are more sheets now ${initialSheetCount} < ${newSheetCount}`
     );
     Assert.deepEqual(

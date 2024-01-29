@@ -54,8 +54,9 @@ async function checkCache(originAttributes) {
     "example.org",
     "image.png"
   );
-  ok(
-    foundEntryCount > 0,
+  Assert.greater(
+    foundEntryCount,
+    0,
     `Cache entries expected for image.png and OA=${originAttributes}`
   );
 }

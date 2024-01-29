@@ -2221,8 +2221,9 @@ add_task(async function test_migrateOldTrackerEntries() {
   );
   for (let field of fields) {
     if (field.guid == normalBmk.guid) {
-      ok(
-        field.lastModified > normalBmk.lastModified,
+      Assert.greater(
+        field.lastModified,
+        normalBmk.lastModified,
         `Should bump last modified date for migrated bookmark ${field.guid}`
       );
       equal(

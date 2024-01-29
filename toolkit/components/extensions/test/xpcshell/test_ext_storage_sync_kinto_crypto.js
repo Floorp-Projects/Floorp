@@ -47,7 +47,7 @@ async function throwsGen(constraint, f) {
     if (typeof exception === "object") {
       message = exception.message;
     }
-    ok(constraint === message, debuggingMessage);
+    Assert.strictEqual(constraint, message, debuggingMessage);
   }
 }
 

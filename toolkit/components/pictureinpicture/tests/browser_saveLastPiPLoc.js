@@ -374,7 +374,7 @@ async function doTest() {
         pipWin = await triggerPictureInPicture(browser, "with-controls");
         ok(pipWin, "Got Picture-in-Picture window.");
 
-        ok(pipWin.innerWidth < width, "New video width is smaller");
+        Assert.less(pipWin.innerWidth, width, "New video width is smaller");
         isfuzzy(
           pipWin.innerWidth + pipWin.screenX,
           rightEdge,
