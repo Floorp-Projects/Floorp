@@ -2,10 +2,10 @@
 tags = "devtools"
 subsuite = "devtools"
 
+["browser_document_tracer.js"]
+
 ["browser_worker_tracer.js"]
 support-files = [
   "Worker.tracer.js",
   "WorkerDebugger.tracer.js",
 ]
-
-["browser_document_tracer.js"]

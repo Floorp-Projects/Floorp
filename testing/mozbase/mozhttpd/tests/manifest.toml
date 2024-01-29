@@ -2,14 +2,14 @@
 subsuite = "mozbase"
 
 ["api.py"]
-skip-if = true
+skip-if = ["true"]
 
 ["baseurl.py"]
 
 ["basic.py"]
 
 ["filelisting.py"]
-skip-if = true
+skip-if = ["true"]
 
 ["paths.py"]
 

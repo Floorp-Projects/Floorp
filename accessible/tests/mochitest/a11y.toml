@@ -12,16 +12,16 @@ support-files = [
   "*.js",
   "treeview.css"]
 
-['test_OuterDocAccessible.html']
+["test_OuterDocAccessible.html"]
 
-['test_aria_token_attrs.html']
+["test_aria_token_attrs.html"]
 
-['test_bug420863.html']
+["test_bug420863.html"]
 
-['test_custom_element_accessibility_defaults.html']
+["test_custom_element_accessibility_defaults.html"]
 
-['test_descr.html']
+["test_descr.html"]
 
-['test_nsIAccessibleDocument.html']
+["test_nsIAccessibleDocument.html"]
 
-['test_nsIAccessibleImage.html']
+["test_nsIAccessibleImage.html"]

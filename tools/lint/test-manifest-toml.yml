@@ -1,0 +1,32 @@
+---
+test-manifest-toml:
+    description: ManifestParser TOML linter.
+    exclude:
+        - 'intl/icu/source/test/testdata/codepointtrie/'
+        - 'python/mozbuild/mozbuild/test/'
+        - 'testing/marionette/harness/marionette_harness/tests/unit-tests.toml'
+        - 'testing/mozbase/manifestparser/tests/'
+        - 'third_party/rust/'
+        - 'toolkit/components/featuregates/test/python/data/'
+        - '**/.*ruff.toml'
+        - '**/Cargo.toml'
+        - '**/Cross.toml'
+        - '**/Features.toml'
+        - '**/ServoBindings.toml'
+        - '**/askama.toml'
+        - '**/audits.toml'
+        - '**/cbindgen.toml'
+        - '**/clippy.toml'
+        - '**/config-lock.toml'
+        - '**/config.toml'
+        - '**/cram.toml'
+        - '**/empty.toml'
+        - '**/generated-mochitest.toml'
+        - '**/l10n.toml'
+        - '**/labels.toml'
+        - '**/pyproject.toml'
+        - '**/rustfmt.toml'
+        - '**/uniffi.toml'
+    extensions: ['toml']
+    type: external
+    payload: test-manifest-toml:lint

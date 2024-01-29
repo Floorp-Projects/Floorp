@@ -113,6 +113,65 @@ https_first_disabled = true
 ["browser_browsing_context_discarded.js"]
 https_first_disabled = true
 
+["browser_bug92473.js"]
+
+["browser_bug134911.js"]
+
+["browser_bug234628-1.js"]
+
+["browser_bug234628-10.js"]
+
+["browser_bug234628-11.js"]
+
+["browser_bug234628-2.js"]
+
+["browser_bug234628-3.js"]
+
+["browser_bug234628-4.js"]
+
+["browser_bug234628-5.js"]
+
+["browser_bug234628-6.js"]
+
+["browser_bug234628-8.js"]
+
+["browser_bug234628-9.js"]
+
+["browser_bug349769.js"]
+
+["browser_bug388121-1.js"]
+
+["browser_bug388121-2.js"]
+
+["browser_bug420605.js"]
+skip-if = ["verify"]
+
+["browser_bug422543.js"]
+https_first_disabled = true
+
+["browser_bug441169.js"]
+
+["browser_bug503832.js"]
+skip-if = ["verify"]
+
+["browser_bug554155.js"]
+
+["browser_bug655270.js"]
+
+["browser_bug655273.js"]
+
+["browser_bug670318.js"]
+skip-if = ["os == 'linux' && (debug || asan || tsan)"]  # Bug 1717403
+
+["browser_bug673087-1.js"]
+
+["browser_bug673087-2.js"]
+
+["browser_bug673467.js"]
+
+["browser_bug852909.js"]
+skip-if = ["verify && debug && os == 'win'"]
+
 ["browser_bug1206879.js"]
 https_first_disabled = true
 
@@ -123,8 +182,6 @@ https_first_disabled = true
 https_first_disabled = true
 
 ["browser_bug1347823.js"]
-
-["browser_bug134911.js"]
 
 ["browser_bug1415918_beforeunload_options.js"]
 https_first_disabled = true
@@ -183,63 +240,6 @@ https_first_disabled = true
 ["browser_bug1769189.js"]
 
 ["browser_bug1798780.js"]
-
-["browser_bug234628-1.js"]
-
-["browser_bug234628-10.js"]
-
-["browser_bug234628-11.js"]
-
-["browser_bug234628-2.js"]
-
-["browser_bug234628-3.js"]
-
-["browser_bug234628-4.js"]
-
-["browser_bug234628-5.js"]
-
-["browser_bug234628-6.js"]
-
-["browser_bug234628-8.js"]
-
-["browser_bug234628-9.js"]
-
-["browser_bug349769.js"]
-
-["browser_bug388121-1.js"]
-
-["browser_bug388121-2.js"]
-
-["browser_bug420605.js"]
-skip-if = ["verify"]
-
-["browser_bug422543.js"]
-https_first_disabled = true
-
-["browser_bug441169.js"]
-
-["browser_bug503832.js"]
-skip-if = ["verify"]
-
-["browser_bug554155.js"]
-
-["browser_bug655270.js"]
-
-["browser_bug655273.js"]
-
-["browser_bug670318.js"]
-skip-if = ["os == 'linux' && (debug || asan || tsan)"]  # Bug 1717403
-
-["browser_bug673087-1.js"]
-
-["browser_bug673087-2.js"]
-
-["browser_bug673467.js"]
-
-["browser_bug852909.js"]
-skip-if = ["verify && debug && os == 'win'"]
-
-["browser_bug92473.js"]
 
 ["browser_click_link_within_view_source.js"]
 

@@ -39,13 +39,13 @@ support-files = [
 
 ["test_dynamicImportErrorMessage.html"]
 
-["test_import_errorMessage.html"]
-
 ["test_importIntroType.html"]
 
 ["test_importNotFound.html"]
 
 ["test_importResolveFailed.html"]
+
+["test_import_errorMessage.html"]
 
 ["test_import_meta_resolve.html"]
 
