@@ -10,6 +10,21 @@
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Câmara e microfone ligados</string>
 
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Toque para abrir o separador que está a utilizar a sua câmara.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Toque para abrir o separador que está a utilizar o seu microfone.</string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Toque para abrir o separador que está a utilizar o seu microfone e câmara.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Lembrete: %1$s ainda está a utilizar a sua câmara. Toque para abrir o separador.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text">Lembrete: %1$s ainda está a utilizar o seu microfone. Toque para abrir o separador</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text">Lembrete: %1$s ainda está a utilizar o seu microfone e câmara. Toque para abrir o separador</string>
+
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Reproduzir</string>
 

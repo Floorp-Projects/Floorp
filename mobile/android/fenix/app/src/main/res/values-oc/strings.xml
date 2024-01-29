@@ -2323,18 +2323,48 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="review_quality_check_analysis_in_progress_warning_body">Aquò trigar unes 60 segondas.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title">Mercés pel senhalament !</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body">Deuriam aver d’informacions tocant los avises d’aqueste produch d’aquí 24 oras. Tornatz mai tard.</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">Podèm pas verificar aquestes avises</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Malastrosament, podèm pas verificar la qualitat dels avises d’unes tipes de produches. Per exemple, las cartas present, la transmission de vidèo, la musica e los jòcs.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Mai d’info lèu</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Deuriam aver d’informacions tocant los avises d’aqueste produch d’aquí 24 oras. Tornatz mai tard.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Las analisis son a jorn</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Plan realizat</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
     <string name="review_quality_check_generic_error_title">Cap d’info pas disponible pel moment</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body">Sèm a trabalhar per resòlver aqueste problèma. Mercés de tornar ensajar mai tard.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">Cap de connexion ret</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">Verificatz la connexion ret puèi tornatz ensajar d’actualizar la pagina.</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">Cap d’informacion suls avises pel moment</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">Per saber si los avises son fisables, verificatz lor qualitat. Sonque pren 60 segondas.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Valorar la qualitat dels avises</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Ensajatz nòstra guida de fisança pels avises de produches</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Agachatz quina fisabilitat acordar als avises de produches sus %1$s abans de crompar. Lo verificador d’avises, una foncionalitat experimentala de %2$s, es integrada al navegador. Fonciona tanben per %3$s e %4$s.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Agachatz quina fisabilitat acordar als avises de produches sus %1$s abans de crompar. Lo verificador d’avises, una foncionalitat experimentala de %2$s, es integrada al navegador.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Amb lo poder de %1$s per Mozilla, vos ajudam a evitar los avises biaissats e non autentics. Nòstre modèl d’IA es a se melhorar en permanéncia per vos protegir quand crompatz. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ne saber mai</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">En seleccionant « Òc-ben, ensajar », acceptatz la %1$s de %2$s e las %3$s de Mozilla.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">En seleccionant « òc-ben, ensajar » acceptatz los elements seguent de %1$s :</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">politica de confidencialitat</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2347,8 +2377,12 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Òc-ben, ensajar</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Mai tard</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Verificatz se vos podètz fisar dels avises sul produch, abans de crompar.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Ensajar lo verificador d’avises</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Aquestes avises son fisables ? Verificatz-o ara per veire una evaluacion corregida.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Dobrir lo verificador d’avises</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->

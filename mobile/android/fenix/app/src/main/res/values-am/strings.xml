@@ -710,6 +710,8 @@
     <string name="default_device_name_2">%1$s በ%2$s %3$s ላይ</string>
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">ክሬዲት ካርዶች</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">የክፍያ ዘዴዎች</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">አድራሻዎች</string>
 
@@ -1640,8 +1642,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">መግቢያዎች እና የይለፍ ቃሎች</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">የይለፍ ቃሎች</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">መግቢያዎችን እና የይለፍ ቃሎችን ያስቀምጡ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">የይለፍ ቃሎችን አስቀምጥ</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">ለማስቀመጥ ይጠይቁ</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1657,16 +1663,28 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">መግቢያ አክል</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">የይለፍ ቃል ያክሉ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">መግቢያዎችን ያመሳስሉ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">የይለፍ ቃሎችን አሰናስል</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">በመሳሪያዎች ላይ መግቢያዎችን ያመሳስሉ</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">የይለፍ ቃሎችን በሁሉም መሳሪያዎች ላይ ያሰናስሉ</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">የተቀመጡ መግቢያዎች</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">ያስቀመጡት ወይም ከ%s ጋር ያመሳስሏቸው መግቢያዎች እዚህ ይታያሉ።</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">ከ%s ጋር ያስቀመጧቸው ወይም ያሰናሰሏቸው የይለፍ ቃሎች እዚህ ይዘረዘራሉ። የሚያስቀምጡት ሁሉም የይለፍ ቃሎች የተመሰጠሩ ናቸው።
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ስለ ማመሳሰል የበለጠ ይረዱ።</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">ስለ ማሰናሰል የበለጠ ይረዱ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ልዩ ሁኔታዎች</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1705,6 +1723,8 @@
     <string name="saved_login_hide_password">የይለፍ ቃል ደብቅ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">የተቀመጡ መግቢያዎችዎን ለማየት ይክፈቱ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">ያስቀመጧቸውን የይለፍ ቃሎች ለማየት ቁልፉን ይክፈቱ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">የእርስዎን መግቢያዎች እና የይለፍ ቃላት ደህንነት ይጠብቁ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
@@ -1744,8 +1764,12 @@
 
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">ክሬዲት ካርድ ያክሉ</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">ካርድ ጨምር</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">የተቀመጡ ካርዶችን ያስተዳድሩ</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">ካርዶችን ያስተዳድሩ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">አድራሻ ጨምር</string>
     <!-- Preference option for managing saved addresses -->
@@ -1753,8 +1777,13 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">አድራሻዎችን ያስቀምጡ እና በራስ-ሙላ</string>
 
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">አድራሻዎችን ያስቀምጡ እና በራስ-ሰር ይሙሉ</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">እንደ ቁጥሮች፣ ኢሜይል እና የመላኪያ አድራሻዎች ያሉ መረጃዎችን ያካትቱ</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">ስልክ ቁጥሮች እና የኢሜይል አድራሻዎችን ያካትታል</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ካርድ ጨምር</string>
@@ -1776,6 +1805,8 @@
     <string name="credit_cards_delete_card_button">ካርድ ሰርዝ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">እርግጠኛ ነዎት ይህን ክሬዲት ካርድ መሰረዝ ይፈልጋሉ?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">ካርዱ ይጥፋ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ሰርዝ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1788,12 +1819,18 @@
     <string name="credit_cards_saved_cards">የተቀመጡ ካርዶች</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">እባክዎ የሚሰራ የክሬዲት ካርድ ቁጥር ያስገቡ</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">የሚሰራ ካርድ ቁጥር ያስገቡ</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">እባክዎ ይህንን መስክ ይሙሉ</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">ስም ይጨምሩ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">የተቀመጡ ካርዶችዎን ለማየት ይክፈቱ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">የክሬዲት ካርዶችዎን ደህንነት ይጠብቁ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">የተቀመጡ የመክፈያ ዘዴዎችዎን ደህንነት ይጠብቁ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">የተቀመጡ ክሬዲት ካርዶችዎን ሌላ ሰው የእርስዎን መሣሪያ በመጠቀም እንዳይደረስበት ለመከላከል የመሣሪያ መቆለፊያ ስርዓተ ጥለትን፣ ፒን ወይም የይለፍ ቃል ያዘጋጁ።</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1840,6 +1877,8 @@
     <string name="addressess_delete_address_button">አድራሻ ሰርዝ</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">እርግጠኛ ነዎት ይህን አድራሻ መሰረዝ ይፈልጋሉ?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">ይህ አድራሻ ይጥፋ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ሰርዝ</string>
 
@@ -1941,30 +1980,52 @@
     <string name="login_menu_edit_button">አርትዕ</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">እርግጠኛ ነዎት ይህን መግቢያ መሰረዝ ይፈልጋሉ?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">እርግጠኛ ነዎት ይህን የይለፍ ቃል መሰረዝ ይፈልጋሉ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ሰርዝ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ተወው</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">የመግቢያ አማራጮች</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">የይለፍ ቃል አማራጮች</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">ለመግቢያው የድር አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">የይለፍ ቃል የድርጣቢያ አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">ለመግቢያው የተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">የይለፍ ቃል የተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">ለመግቢያው የይለፍ ቃል ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">ለይለፍ ቃል ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">መግቢያው ላይ የተደረገውን ለውጥ አስቀምጥ።</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">ለውጦችን አስቀምጥ።</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">አርትዕ</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">የይለፍ ቃል አርትዕ</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">አዲስ መግቢያ ያክሉ</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">የይለፍ ቃል ያክሉ</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">የይለፍ ቃል ያስፈልጋል</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">የይለፍ ቃል ያስገቡ</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">የተጠቃሚ ስም ያስፈልጋል</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">የተጠቃሚ ስም ያስገቡ</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">የአስተናጋጅ ስም ያስፈልጋል</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">የድር አድራሻ ያስገቡ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">የድምጽ ፍለጋ</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2333,6 +2394,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$sን በጭራሽ አትተርጉም</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">ይህን ጣቢያ በጭራሽ አትተርጉም</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">ሁሉንም ሌሎች ቅንብሮችን ይሽራል</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">የመተርጎም ቅናሾችን ይሽራል</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">የትርጉም ቅንብሮች</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

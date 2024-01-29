@@ -44,4 +44,140 @@
     <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">گؤز آتما گئچمیشینی اوخویون</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">فایل‌لاری یئندیرین و مورورچو گئچمیشینی اوخویوب ایصلاح ائله‌یین</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">جاهازیزدا ایندیریلمیش فایللاری آچین</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">بوتون آچیق تاغلارین متنینی اوخویون.</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">قونوموزا ال چاتما</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">مورور گئچمیشینه ال چاتما</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">اوزانتی ایشه آلماسینی ایزله‌یین و تم‌لری ایداره ائله‌یین</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ساولاری بوندان باشقا اپ‌لره آلین وئرین.</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">سیزه بیلدیریش‌لری گؤسترمک</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">رمزلشدیرمه کیملیک دوغورلاما خیدمت‌لرین ایرائه‌سی</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">مورورچو پروکسی تنظیم‌لرینی کونترول ائدین</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">یاخین باغلانمیش تاغلارا ال چاتین</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">مورورچو تاغلارینی گیزله و گؤستر</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">مورور گئچمیشینه ال چاتما</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">آچیق تاغلاردا بیلگی‌لریزه ال چاتماق اوچون گلیشدیریجی آلت‌لرینی گئنیشله‌دین.</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">یازیم</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">یازیجی</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">یازیجی‌لار</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">سون گونجلله‌مه</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">آنایارپاق</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">ایجازه‌لر حاقیندا داها آرتیق بیلین</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">دگرلندیرمه</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">بو تاخیلان حاقیندا آرتیقراق بیلگی</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">تنظیم‌‎لر</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">آچیق</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">باغلی</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">اؤزل مورورچویا ایجازه وئر</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">اؤزل موروردا چالیشدیر</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">گوجلنمیش</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">گوجدن سالینمیش</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">قورولدو</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">توصیه اولموش</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">هله‌لیک آرخالانمیر</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">هله‌لیک موجود دئییل</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">گوجدن سالینمیش</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">آیرینتی‌لار</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">ایجازه‌لر</string>
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
+    <string name="mozac_feature_addons_remove">قالدیر</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">راپورت</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s اکلنسین؟</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s داها آرتیق ایجازه‌لر ایستییر.</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">بونون اوچون سیزین ایجازه‌ز لازیم:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">ایسته‌نن‌لر:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">اکله</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">ایجازه</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">رد </string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">لغو</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">تاخیلانی قور</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">لغو</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">نظرلر: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">تاخیلان‌لار</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">تاخیلان مودیریتی</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">تاخیلان‌لار گئچیجی اولاراق گوجدن سالینمیش.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">تاخیلان‌لاری یئنی‌دن باشلات</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">داها آرتیق تاخیلان آختار</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">ایجازه</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">رد </string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s -ین یئنی گونجلله‌مه‌سی وار</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d یئنی ایجازه‌لر لازیمدیر</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">بیر یئنی ایجازه لازیمدیر</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">تاخیلان گونجلله‌مه‌لری</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">آرخالانمیش تاخیلان‌لارین چک ائلیه‌نی</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">یئنی تاخیلان الده وار</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">یئنی تاخیلان‌لار الده وار</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">باشاریلی قورولدو %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s باشاریلی گوجلندی.</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s باشاریلی گوجدن سالیندی.</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s باشاریلی قالدیریلدی</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s باشاریلی قالدیریلدی</string>
     </resources>

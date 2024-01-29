@@ -323,10 +323,12 @@
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text">Shënim Firefox mbi privatësinë</string>
+    <string name="juno_onboarding_privacy_notice_text">Shënim mbi privatësinë në Firefox</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Duam fort t’ju mbajmë të parrezik</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Shfletuesi ynë, me entin jofitimprurës nga pas, ndihmon të ndalen shoqëri t’ju ndjekin fshehtazi nëpër internet.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Shfletuesi ynë, me entin jofitimprurës nga pas, ndihmon të ndalen shoqëri t’ju ndjekin fshehtazi nëpër internet.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -1696,14 +1698,22 @@
     <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Fjalëkalime të ruajtur</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Këtu do të shfaqen kredencialet e hyrjeve që ruani ose njëkohësoni në %s.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Këtu do të shfaqen fjalëkalimet që ruani, ose njëkohësoni në %s. Krejt fjalëkalimet që ruani, fshehtëzohen.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Mësoni më tepër mbi Sync-un.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Mësoni më tepër mbi njëkohësimin</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Përjashtime</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Këtu do të shfaqen kredenciale hyrjesh dhe fjalëkalime që nuk janë ruajtur.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s s’do të ruajë fjalëkalime për sajte të radhitur këtu.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Për këto sajte s’do të ruhen kredenciale hyrjesh dhe fjalëkalime.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s s’do të ruajë fjalëkalime për këta sajte.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Fshi krejt përjashtimet</string>
     <!-- Hint for search box in logins list -->
@@ -1738,10 +1748,16 @@
     <string name="saved_login_hide_password">Fshihe fjalëkalimin</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Që të shihni kredenciale tuajt hyrjesh të ruajtur, shkyçeni</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Që të shihni fjalëkalimet tuaj të ruajtura, shkyçeni</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Siguroni kredenciale hyrjesh dhe fjalëkalime tuajt</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Siguroni fjalëkalimet tuaj të ruajtur</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kredencialet e hyrjes dhe fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Më vonë</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1761,6 +1777,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Renditni menu kredencialesh</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menu renditjeje fjalëkalimesh</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Vetëplotësime</string>
@@ -1776,6 +1795,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Ruaj dhe plotëso metoda pagesash</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Të dhënat janë të fshehtëzuara</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s fshehtëzon krejt metodat e pagesave që ruani</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Njëkohëso të dhëna kartash mes pajisjesh</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1799,6 +1820,9 @@
     <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Ruaj dhe vetëplotëso adresa</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Përfshini hollësi të tilla si numra, email dhe adresa dërgimi</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Përfshin numra telefonash dhe adresa email</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Shtoni kartë</string>
@@ -1846,8 +1870,12 @@
     <string name="credit_cards_biometric_prompt_message">Që të shihni kartat tuaja të ruajtura, shkyçeni</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Siguroni kartat tuaja të kreditit</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Siguroni metodat tuaja të ruajtura të pagesave</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to hollësitë e ruajtura për kartat tuaja, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Ujdiseni tani</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1857,6 +1885,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Që të përdorni të dhëna karte krediti të depozituara, shkyçeni</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Që të përdorni metoda të ruajtura pagesash, shkyçeni</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Shtoni adresë</string>
     <!-- Title of the "Edit address" screen -->
@@ -1893,6 +1923,8 @@
     <string name="addressess_delete_address_button">Përzgjidhni adresë</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Jeni i sigurt se doni të fshihet kjo adresë?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Të fshihet kjo adresë?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Fshije</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2003,10 +2035,16 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Mundësi fjalëkalimesh</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Fusha e përpunueshme e teksteve për adresën web të kredencialeve të hyrjes.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për adresën web të fjalëkalimit.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Fusha e përpunueshme e teksteve për emrin e përdoruesit të kredencialeve të hyrjes.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për emrin e përdoruesit të fjalëkalimit.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Fusha e përpunueshme e teksteve për fjalëkalimin e kredencialeve të hyrjes.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për fjalëkalimin.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Ruani ndryshimet te kredenciale hyrjesh.</string>
     <!--  The button description to save changes to an edited password. -->

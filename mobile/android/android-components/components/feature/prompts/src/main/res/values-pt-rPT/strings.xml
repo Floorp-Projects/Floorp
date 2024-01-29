@@ -97,6 +97,9 @@
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password">Sugerir palavra-passe forte</string>
 
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Utilizar palavra-passe forte: %1$s</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Reenviar dados para este site?</string>
     <string name="mozac_feature_prompt_repost_message">Atualizar esta página pode duplicar ações recentes, tais como enviar um pagamento ou publicar novamente um comentário. </string>
