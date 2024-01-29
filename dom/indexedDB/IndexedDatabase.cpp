@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "MainThreadUtils.h"
 #include "jsapi.h"
@@ -358,9 +359,27 @@ JSObject* CommonStructuredCloneReadCallback(
                     SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xffff8002 &&
                     SCTAG_DOM_MUTABLEFILE == 0xffff8004 &&
                     SCTAG_DOM_FILE == 0xffff8005 &&
-                    SCTAG_DOM_WASM_MODULE == 0xffff8006,
+                    SCTAG_DOM_WASM_MODULE == 0xffff8006 &&
+                    SCTAG_DOM_URLSEARCHPARAMS == 0xffff8014,
                 "You changed our structured clone tag values and just ate "
                 "everyone's IndexedDB data.  I hope you are happy.");
+
+  if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
+    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+    if (!global) {
+      return nullptr;
+    }
+
+    RefPtr<URLSearchParams> params =
+        URLSearchParams::ReadStructuredClone(aCx, global, aReader);
+
+    JS::Rooted<JSObject*> result(aCx);
+    if (!WrapAsJSObject(aCx, params, &result)) {
+      return nullptr;
+    }
+
+    return result;
+  }
 
   using StructuredCloneFile =
       typename StructuredCloneReadInfo::StructuredCloneFile;
