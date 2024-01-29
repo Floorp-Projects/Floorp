@@ -29,7 +29,14 @@ async function testButton(btn) {
   });
   await testCloseMenu(btn, () => {
     let spacer = win.document.querySelector(".main-heading .spacer");
+    // We intentionally turn off this a11y check, because the following click
+    // is purposefully targeting a non-interactive element to dismiss the
+    // opened menu with a mouse which can be done by assistive technology and
+    // keyboard by pressing `Esc` key, this rule check shall be ignored by
+    // a11y_checks suite.
+    AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
     EventUtils.synthesizeMouseAtCenter(spacer, {}, win);
+    AccessibilityUtils.resetEnv();
   });
 
   info("Test open/close with keyboard");
