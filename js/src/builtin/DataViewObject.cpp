@@ -1249,3 +1249,24 @@ JS_PUBLIC_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
   }
   return obj;
 }
+
+JSObject* js::NewDataView(JSContext* cx, HandleObject buffer,
+                          size_t byteOffset) {
+  JSProtoKey key = JSProto_DataView;
+  RootedObject constructor(cx, GlobalObject::getOrCreateConstructor(cx, key));
+  if (!constructor) {
+    return nullptr;
+  }
+
+  FixedConstructArgs<2> cargs(cx);
+
+  cargs[0].setObject(*buffer);
+  cargs[1].setNumber(byteOffset);
+
+  RootedValue fun(cx, ObjectValue(*constructor));
+  RootedObject obj(cx);
+  if (!Construct(cx, fun, cargs, fun, &obj)) {
+    return nullptr;
+  }
+  return obj;
+}
