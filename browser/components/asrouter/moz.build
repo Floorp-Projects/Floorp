@@ -24,6 +24,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterTriggerListeners.jsm",
     "modules/CFRMessageProvider.sys.mjs",
     "modules/CFRPageActions.jsm",
+    "modules/MessagingExperimentConstants.sys.mjs",
     "modules/RemoteL10n.sys.mjs",
 ]
 
@@ -46,6 +47,7 @@ TESTING_JS_MODULES += [
     "content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json",
     "content-src/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "content-src/templates/ToastNotification/ToastNotification.schema.json",
+    "tests/NimbusRolloutMessageProvider.sys.mjs",
 ]
 
 SPHINX_TREES["docs"] = "docs"

@@ -56,7 +56,7 @@ const { actionCreators: ac } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
 const { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/MessagingExperimentConstants.sys.mjs"
+  "resource:///modules/asrouter/MessagingExperimentConstants.sys.mjs"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"

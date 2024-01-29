@@ -103,7 +103,6 @@
     "fix": "npm-run-all fix:*",
     "fix:eslint": "npm run lint:eslint -- --fix",
     "fix:stylelint": "npm run lint:stylelint -- --fix",
-    "import-rollouts": "node ./bin/import-rollouts.js",
     "help": "yamscripts help",
     "yamscripts": "yamscripts compile",
     "__": "# NOTE: THESE SCRIPTS ARE COMPILED!!! EDIT yamscripts.yml instead!!!"
