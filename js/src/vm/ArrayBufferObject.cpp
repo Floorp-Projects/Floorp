@@ -669,20 +669,66 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Step 3 (Inlined 24.1.1.1 AllocateArrayBuffer).
-  // 24.1.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
+  mozilla::Maybe<uint64_t> maxByteLength;
+#ifdef NIGHTLY_BUILD
+  // Step 3.
+  if (cx->realm()->creationOptions().getArrayBufferResizableEnabled()) {
+    // Inline call to GetArrayBufferMaxByteLengthOption.
+    if (args.get(1).isObject()) {
+      Rooted<JSObject*> options(cx, &args[1].toObject());
+
+      Rooted<Value> val(cx);
+      if (!GetProperty(cx, options, options, cx->names().maxByteLength, &val)) {
+        return false;
+      }
+      if (!val.isUndefined()) {
+        uint64_t maxByteLengthInt;
+        if (!ToIndex(cx, val, &maxByteLengthInt)) {
+          return false;
+        }
+
+        // AllocateArrayBuffer, step 3.a.
+        if (byteLength > maxByteLengthInt) {
+          JS_ReportErrorNumberASCII(
+              cx, GetErrorMessage, nullptr,
+              JSMSG_ARRAYBUFFER_LENGTH_LARGER_THAN_MAXIMUM);
+          return false;
+        }
+        maxByteLength = mozilla::Some(maxByteLengthInt);
+      }
+    }
+  }
+#endif
+
+  // Step 4 (Inlined 25.1.2.1 AllocateArrayBuffer).
+  // 25.1.2.1, step 1 (Inlined 10.1.13 OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
   if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_ArrayBuffer,
                                           &proto)) {
     return false;
   }
 
-  // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
+  // 25.1.2.1, step 5 (Inlined 6.2.9.1 CreateByteDataBlock, step 2).
   if (!CheckArrayBufferTooLarge(cx, byteLength)) {
     return false;
   }
 
-  // 24.1.1.1, steps 1 and 4-6.
+  if (maxByteLength) {
+    // 25.1.2.1, step 8.a.
+    if (!CheckArrayBufferTooLarge(cx, *maxByteLength)) {
+      return false;
+    }
+
+    auto* bufobj = ResizableArrayBufferObject::createZeroed(
+        cx, byteLength, *maxByteLength, proto);
+    if (!bufobj) {
+      return false;
+    }
+    args.rval().setObject(*bufobj);
+    return true;
+  }
+
+  // 25.1.2.1, steps 1 and 4-9.
   JSObject* bufobj = createZeroed(cx, byteLength, proto);
   if (!bufobj) {
     return false;
