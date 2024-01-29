@@ -167,6 +167,6 @@ input {
 @import '../components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget';
 
 // AS Router
-@import '../asrouter/components/Button/Button';
+@import '../../../asrouter/content-src/components/Button/Button';
 @import '../../../asrouter/content-src/components/ModalOverlay/ModalOverlay';
 // stylelint-enable no-invalid-position-at-import-rule
