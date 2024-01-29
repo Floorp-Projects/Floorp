@@ -49,7 +49,6 @@ class NimbusMessagingStorage(
     @VisibleForTesting
     val malFormedMap = mutableMapOf<String, String>()
     private val logger = Logger("MessagingStorage")
-    private val nimbusFeature = messagingFeature
     private val customAttributes: JSONObject
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
@@ -281,7 +280,7 @@ class NimbusMessagingStorage(
     }
 
     @VisibleForTesting
-    internal fun getOnControlBehavior(): ControlMessageBehavior = nimbusFeature.value().onControl
+    internal fun getOnControlBehavior(): ControlMessageBehavior = messagingFeature.value().onControl
 
     private suspend fun addMetadata(id: String): Message.Metadata {
         return metadataStorage.addMetadata(
