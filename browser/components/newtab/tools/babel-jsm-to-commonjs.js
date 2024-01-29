@@ -24,7 +24,7 @@
 
 const DEFAULT_OPTIONS = {
   // Only Cu.imports matching the following pattern will be rewritten as import statements.
-  basePath: /^resource:\/\//,
+  basePaths: [[/^resource:\/\//, ""]],
 
   // Should the import path be rewritten to exclude the basePath?
   // e.g. if the basePath is "resource://}, "resource://foo.jsm" becomes "foo.jsm"
@@ -168,7 +168,7 @@ module.exports = function plugin(babel) {
     nodes,
     ComponentNames,
     CuNames,
-    basePath,
+    basePaths,
     replacePath,
     removeOtherImports
   ) {
@@ -207,20 +207,21 @@ module.exports = function plugin(babel) {
               }
             }
             let filePath = path.node.arguments[0].value;
-
-            if (
-              !removeOtherImports ||
-              (replacePath && filePath.match(basePath))
-            ) {
-              if (replacePath) {
-                filePath = filePath.replace(basePath, "");
+            let matched = false;
+            for (let [basePath, replaceWith] of basePaths) {
+              if (replacePath && filePath.match(basePath)) {
+                filePath = filePath.replace(basePath, replaceWith);
+                const requireStatement = t.callExpression(
+                  t.identifier("require"),
+                  [t.stringLiteral(filePath)]
+                );
+                path.replaceWith(requireStatement);
+                matched = true;
+                break;
               }
-              const requireStatement = t.callExpression(
-                t.identifier("require"),
-                [t.stringLiteral(filePath)]
-              );
-              path.replaceWith(requireStatement);
-            } else if (removeOtherImports) {
+            }
+
+            if (!matched && removeOtherImports) {
               path.parentPath.parentPath.remove();
             }
           }
@@ -229,7 +230,32 @@ module.exports = function plugin(babel) {
     });
   }
 
-  function replaceModuleGetters(paths, basePath, replacePath) {
+  /**
+   * Does inline replacement of various module import paths to use the CommonJS
+   * require format. Optionally can replace paths in those imports based on the
+   * passed in configuration. The word "path" is overloaded a bit here in these
+   * parameters, which is unfortunate. We try to clear that up a bit in the
+   * param documentation.
+   *
+   * @param {object[]} paths
+   *   An array of Paths, which is a Babel Plugin construction representing
+   *   a path between two nodes in the AST of a parsed JavaScript file.
+   * @typedef {RegEx} PathTupleIndex0
+   *   A regular expression that matches a module path to be replaced.
+   *   Example: new RegExp("^resource:///modules/asrouter/")
+   * @typedef {string} PathTupleIndex1
+   *   A string to replace any module import matching the PathTupleIndex0
+   *   regular expression with.
+   * @typedef {[PathTupleIndex0, PathTupleIndex1]} PathTuple
+   * @param {PathTuple[]} basePaths
+   *   An array of PathTuples for mdoule path replacements that should occur,
+   *   if replacePath is true.
+   * @param {boolean} replacePath
+   *   Set to true to replace module import paths using basePaths. If false,
+   *   module import paths will stay the same, but will be replaced with
+   *   CommonJS requires only.
+   */
+  function replaceModuleGetters(paths, basePaths, replacePath) {
     paths.forEach(path => {
       if (
         path.isExpressionStatement() &&
@@ -245,30 +271,31 @@ module.exports = function plugin(babel) {
         const idName = argPaths[1].node.value;
         let filePath = argPaths[2].node.value;
 
-        if (!filePath.match(basePath)) {
-          return;
-        }
-
-        if (replacePath) {
-          filePath = filePath.replace(basePath, "");
-        }
-        const requireStatement = t.callExpression(t.identifier("require"), [
-          t.stringLiteral(filePath),
-        ]);
-        const varDecl = t.variableDeclaration("var", [
-          t.variableDeclarator(
-            t.objectPattern([
-              t.objectProperty(
-                t.identifier(idName),
-                t.identifier(idName),
-                false,
-                true
+        for (let [basePath, replaceWith] of basePaths) {
+          if (filePath.match(basePath)) {
+            if (replacePath) {
+              filePath = filePath.replace(basePath, replaceWith);
+            }
+            const requireStatement = t.callExpression(t.identifier("require"), [
+              t.stringLiteral(filePath),
+            ]);
+            const varDecl = t.variableDeclaration("var", [
+              t.variableDeclarator(
+                t.objectPattern([
+                  t.objectProperty(
+                    t.identifier(idName),
+                    t.identifier(idName),
+                    false,
+                    true
+                  ),
+                ]),
+                requireStatement
               ),
-            ]),
-            requireStatement
-          ),
-        ]);
-        path.replaceWith(varDecl);
+            ]);
+            path.replaceWith(varDecl);
+            break;
+          }
+        }
       }
     });
   }
@@ -286,11 +313,11 @@ module.exports = function plugin(babel) {
           topLevelNodes,
           ids,
           utils,
-          opts.basePath,
+          opts.basePaths,
           opts.replace,
           opts.removeOtherImports
         );
-        replaceModuleGetters(topLevelNodes, opts.basePath, opts.replace);
+        replaceModuleGetters(topLevelNodes, opts.basePaths, opts.replace);
         replaceExports(topLevelNodes);
         if (exportItems.length) {
           path.pushContainer("body", createModuleExports(exportItems));

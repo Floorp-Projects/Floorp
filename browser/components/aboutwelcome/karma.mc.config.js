@@ -197,7 +197,7 @@ module.exports = function (config) {
                     [
                       "../newtab/tools/babel-jsm-to-commonjs.js",
                       {
-                        basePath: PATHS.resourcePathRegEx,
+                        basePaths: [[PATHS.resourcePathRegEx, ""]],
                         removeOtherImports: true,
                         replace: true,
                       },

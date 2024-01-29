@@ -276,7 +276,7 @@ module.exports = function (config) {
                     [
                       "./tools/babel-jsm-to-commonjs.js",
                       {
-                        basePath: PATHS.resourcePathRegEx,
+                        basePaths: [[PATHS.resourcePathRegEx, ""]],
                         removeOtherImports: true,
                         replace: true,
                       },
