@@ -461,6 +461,19 @@ const POLICIES_TESTS = [
     },
   },
 
+  // POLICY: DNSOverHTTPS Fallback off
+  {
+    policies: {
+      DNSOverHTTPS: {
+        Enabled: true,
+        Fallback: false,
+      },
+    },
+    unlockedPrefs: {
+      "network.trr.mode": 3,
+    },
+  },
+
   // POLICY: DNSOverHTTPS Locked
   {
     policies: {
