@@ -7,7 +7,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "common/Actions.sys.mjs";
-import { ModalOverlayWrapper } from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
+import { ModalOverlayWrapper } from "asrouter/content-src/components/ModalOverlay/ModalOverlay";
 
 export class DSPrivacyModal extends React.PureComponent {
   constructor(props) {

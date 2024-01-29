@@ -161,7 +161,7 @@ module.exports = function (config) {
         },
         alias: {
           newtab: path.join(__dirname, "../newtab"),
-          asroutermodules: path.join(__dirname, "../asrouter/modules"),
+          asrouter: path.join(__dirname, "../asrouter"),
         },
       },
       plugins: [
@@ -201,7 +201,7 @@ module.exports = function (config) {
                           [PATHS.resourcePathRegEx, ""],
                           [
                             /^resource:\/\/\/modules\/asrouter\//,
-                            "asroutermodules/",
+                            "asrouter/modules/",
                           ],
                         ],
                         removeOtherImports: true,

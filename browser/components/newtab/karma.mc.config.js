@@ -240,7 +240,7 @@ module.exports = function (config) {
           buffer: require.resolve("buffer"),
         },
         alias: {
-          asroutermodules: path.join(__dirname, "../asrouter/modules"),
+          asrouter: path.join(__dirname, "../asrouter"),
         },
       },
       plugins: [
