@@ -367,6 +367,7 @@ class GCMarker {
   bool hasEntries(gc::MarkColor color) const;
 
   bool canDonateWork() const;
+  bool shouldDonateWork() const;
 
   void start();
   void stop();
