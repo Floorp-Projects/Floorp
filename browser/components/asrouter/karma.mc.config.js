@@ -89,6 +89,12 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
+            "content-src/components/ModalOverlay/ModalOverlay.jsx": {
+              statements: 92,
+              lines: 92,
+              functions: 100,
+              branches: 66,
+            },
             "modules/ASRouter.jsm": {
               statements: 75,
               lines: 75,
