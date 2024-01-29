@@ -41,7 +41,9 @@ NotificationController::NotificationController(DocAccessible* aDocument,
 
 NotificationController::~NotificationController() {
   NS_ASSERTION(!mDocument, "Controller wasn't shutdown properly!");
-  if (mDocument) Shutdown();
+  if (mDocument) {
+    Shutdown();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +55,9 @@ NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(NotificationController)
 NS_IMPL_CYCLE_COLLECTION_CLASS(NotificationController)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController)
-  if (tmp->mDocument) tmp->Shutdown();
+  if (tmp->mDocument) {
+    tmp->Shutdown();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
@@ -835,7 +839,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   nsTArray<RefPtr<DocAccessible>> newChildDocs;
   for (uint32_t idx = 0; idx < hangingDocCnt; idx++) {
     DocAccessible* childDoc = mHangingChildDocuments[idx];
-    if (childDoc->IsDefunct()) continue;
+    if (childDoc->IsDefunct()) {
+      continue;
+    }
 
     if (IPCAccessibilityActive() && !mDocument->IPCDoc()) {
       childDoc->Shutdown();
@@ -874,12 +880,16 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     uint32_t childDocCnt = mDocument->ChildDocumentCount(), childDocIdx = 0;
     for (; childDocIdx < childDocCnt; childDocIdx++) {
       DocAccessible* childDoc = mDocument->GetChildDocumentAt(childDocIdx);
-      if (!childDoc->HasLoadState(DocAccessible::eCompletelyLoaded)) break;
+      if (!childDoc->HasLoadState(DocAccessible::eCompletelyLoaded)) {
+        break;
+      }
     }
 
     if (childDocIdx == childDocCnt) {
       mDocument->ProcessLoad();
-      if (!mDocument) return;
+      if (!mDocument) {
+        return;
+      }
     }
   }
 
@@ -909,7 +919,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   uint32_t notificationCount = notifications.Length();
   for (uint32_t idx = 0; idx < notificationCount; idx++) {
     notifications[idx]->Process();
-    if (!mDocument) return;
+    if (!mDocument) {
+      return;
+    }
   }
 
   if (ipc::ProcessChild::ExpectingShutdown()) {
@@ -992,7 +1004,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   }
 
   mObservingState = eRefreshObserving;
-  if (!mDocument) return;
+  if (!mDocument) {
+    return;
+  }
 
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
