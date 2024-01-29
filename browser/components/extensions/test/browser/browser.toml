@@ -381,6 +381,8 @@ run-if = ["crashreporter"]
 
 ["browser_ext_request_permissions.js"]
 
+["browser_ext_runtime_onPerformanceWarning.js"]
+
 ["browser_ext_runtime_openOptionsPage.js"]
 
 ["browser_ext_runtime_openOptionsPage_uninstall.js"]
@@ -455,6 +457,7 @@ https_first_disabled = true
 skip-if = [
   "debug",
   "asan",
+  "tsan" # Bug 1874317
 ]
 
 ["browser_ext_tab_runtimeConnect.js"]
