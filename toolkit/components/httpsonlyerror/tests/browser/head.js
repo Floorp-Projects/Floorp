@@ -74,7 +74,11 @@ async function openErrorPage(src, useFrame, privateWindow, sandboxed) {
 function waitForAndClickOpenInsecureButton(browser) {
   return SpecialPowers.spawn(browser, [], async function () {
     let openInsecureButton = content.document.getElementById("openInsecure");
-    ok(openInsecureButton != null, "openInsecureButton should exist.");
+    Assert.notEqual(
+      openInsecureButton,
+      null,
+      "openInsecureButton should exist."
+    );
     info("Waiting for openInsecureButton to be enabled.");
     function callback() {
       if (!openInsecureButton.inert) {

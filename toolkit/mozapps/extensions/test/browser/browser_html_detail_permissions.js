@@ -278,8 +278,9 @@ async function runTest(options) {
       perms = enabled ? perms.removed : perms.added;
     }
 
-    ok(
-      perms.permissions.length + perms.origins.length > 0,
+    Assert.greater(
+      perms.permissions.length + perms.origins.length,
+      0,
       "Some permission(s) toggled."
     );
 

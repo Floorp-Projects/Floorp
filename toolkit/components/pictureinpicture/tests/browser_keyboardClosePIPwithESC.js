@@ -37,8 +37,9 @@ add_task(async () => {
       EventUtils.sendMouseEvent({ type: "dblclick" }, controls, pipWin);
     });
 
-    ok(
-      pipWin.document.fullscreenElement == pipWin.document.body,
+    Assert.equal(
+      pipWin.document.fullscreenElement,
+      pipWin.document.body,
       "Double-click should have caused to enter fullscreen."
     );
 

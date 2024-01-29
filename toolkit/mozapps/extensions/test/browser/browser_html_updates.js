@@ -246,19 +246,22 @@ function assertUpdateState({
   releaseNotes = false,
 }) {
   let menuButton = card.querySelector(".more-options-button");
-  ok(
-    menuButton.classList.contains("more-options-button-badged") == shown,
+  Assert.equal(
+    menuButton.classList.contains("more-options-button-badged"),
+    shown,
     "The menu button is badged"
   );
   let installButton = card.querySelector('panel-item[action="install-update"]');
-  ok(
-    installButton.hidden != shown,
+  Assert.notEqual(
+    installButton.hidden,
+    shown,
     `The install button is ${shown ? "hidden" : "shown"}`
   );
   if (expanded) {
     let updateCheckButton = card.querySelector('button[action="update-check"]');
-    ok(
-      updateCheckButton.hidden == shown,
+    Assert.equal(
+      updateCheckButton.hidden,
+      shown,
       `The update check button is ${shown ? "hidden" : "shown"}`
     );
 

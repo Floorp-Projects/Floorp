@@ -81,7 +81,11 @@ add_task(async function testDuplicateShortcutsWarnings() {
   for (let warning of warningBars) {
     let l10nAttrs = doc.l10n.getAttributes(warning);
     await TestUtils.waitForCondition(() => warning.message !== "");
-    ok(warning.message !== "", "Warning message attribute is set");
+    Assert.notStrictEqual(
+      warning.message,
+      "",
+      "Warning message attribute is set"
+    );
     is(
       l10nAttrs.id,
       "shortcuts-duplicate-warning-message2",
@@ -99,7 +103,11 @@ add_task(async function testDuplicateShortcutsWarnings() {
     // Ensure warning messages are correct with correct shortcuts.
     let warning = warningBars[index];
     let l10nAttrs = doc.l10n.getAttributes(warning);
-    ok(warning.message !== "", "Warning message attribute is set");
+    Assert.notStrictEqual(
+      warning.message,
+      "",
+      "Warning message attribute is set"
+    );
     is(
       l10nAttrs.id,
       "shortcuts-duplicate-warning-message2",

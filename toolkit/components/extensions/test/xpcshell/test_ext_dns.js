@@ -123,8 +123,9 @@ add_task(async function test_dns_resolve() {
       // testing difficult. We're going to rely on other existing dns tests to validate
       // the dns service itself works and only validate that we're getting generally
       // expected results in the webext api.
-      ok(
-        result.addresses.length >= test.expect.addresses.length,
+      Assert.greaterOrEqual(
+        result.addresses.length,
+        test.expect.addresses.length,
         "expected number of addresses returned"
       );
       if (test.expect.addresses.length && result.addresses.length) {

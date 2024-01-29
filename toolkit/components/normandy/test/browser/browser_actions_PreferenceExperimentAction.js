@@ -743,8 +743,9 @@ decorate_task(
         let modifiedExperiment = await PreferenceExperiments.get(
           experiment.slug
         );
-        ok(
-          modifiedExperiment.temporaryErrorDeadline != invalidDeadline,
+        Assert.notEqual(
+          modifiedExperiment.temporaryErrorDeadline,
+          invalidDeadline,
           `The temporary failure deadline should be reset for suitabilitiy ${suitability}`
         );
         let deadline = new Date(modifiedExperiment.temporaryErrorDeadline);

@@ -81,7 +81,7 @@ add_task(async function test_BHRObserver() {
   let hangs = await hangsPromise;
   equal(hangs.length, 3);
   hangs.forEach(hang => {
-    ok(hang.duration > 0);
+    Assert.greater(hang.duration, 0);
     ok(hang.thread == "Gecko" || hang.thread == "Gecko_Child");
     equal(typeof hang.runnableName, "string");
 
@@ -121,7 +121,7 @@ add_task(async function test_BHRObserver() {
   });
 
   // Check that the telemetry service collected pings which make sense
-  ok(telSvc.payload.hangs.length - beforeLen >= 3);
+  Assert.greaterOrEqual(telSvc.payload.hangs.length - beforeLen, 3);
   ok(Array.isArray(telSvc.payload.modules));
   telSvc.payload.modules.forEach(module => {
     ok(Array.isArray(module));
@@ -131,7 +131,7 @@ add_task(async function test_BHRObserver() {
   });
 
   telSvc.payload.hangs.forEach(hang => {
-    ok(hang.duration > 0);
+    Assert.greater(hang.duration, 0);
     ok(hang.thread == "Gecko" || hang.thread == "Gecko_Child");
     equal(typeof hang.runnableName, "string");
 
@@ -145,7 +145,7 @@ add_task(async function test_BHRObserver() {
       if (Array.isArray(entry)) {
         equal(entry.length, 2);
         equal(typeof entry[0], "number");
-        ok(entry[0] < telSvc.payload.modules.length);
+        Assert.less(entry[0], telSvc.payload.modules.length);
         equal(typeof entry[1], "string");
       } else {
         equal(typeof entry, "string");

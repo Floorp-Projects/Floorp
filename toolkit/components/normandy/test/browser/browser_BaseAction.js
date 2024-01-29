@@ -136,8 +136,9 @@ decorate_task(
   async function ({ reportActionStub }) {
     const action = new NoopAction();
     await action.finalize();
-    ok(
-      action.state == NoopAction.STATE_FINALIZED,
+    Assert.equal(
+      action.state,
+      NoopAction.STATE_FINALIZED,
       "Action should be marked as finalized"
     );
     Assert.deepEqual(

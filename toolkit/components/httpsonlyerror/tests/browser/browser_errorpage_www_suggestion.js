@@ -59,7 +59,7 @@ add_task(async function () {
 
     // click on www button
     let wwwButton = content.document.getElementById("openWWW");
-    ok(wwwButton !== null, "The www Button should be shown");
+    Assert.notStrictEqual(wwwButton, null, "The www Button should be shown");
 
     if (!wwwButton) {
       ok(false, "We should not be here");

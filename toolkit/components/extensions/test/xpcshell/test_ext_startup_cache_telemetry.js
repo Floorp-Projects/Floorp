@@ -55,7 +55,11 @@ add_task(async function test_startupCache_write_byteLength() {
     "number",
     "Got a numeric byteLength for the expected startupCache data"
   );
-  ok(expectedByteLength > 0, "Got a non-zero byteLength as expected");
+  Assert.greater(
+    expectedByteLength,
+    0,
+    "Got a non-zero byteLength as expected"
+  );
   await StartupCache._saveNow();
 
   let scalars = TelemetryTestUtils.getProcessScalars("parent");
@@ -161,8 +165,9 @@ add_task(async function test_startupCache_load_timestamps() {
   );
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1865850.
-  ok(
-    Math.abs(gleanMetric - mirror) <= 1,
+  Assert.lessOrEqual(
+    Math.abs(gleanMetric - mirror),
+    1,
     `Expect Glean metric ${gleanMetric} and mirrored scalar ${mirror} to be within 1ms of each other.`
   );
 });

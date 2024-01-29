@@ -36,7 +36,7 @@ function test() {
       "chrome,all,dialog=no",
       "about:blank"
     );
-    ok(win2 != null, "Should have been able to open a new window");
+    Assert.notEqual(win2, null, "Should have been able to open a new window");
     win2.addEventListener(
       "load",
       () => {

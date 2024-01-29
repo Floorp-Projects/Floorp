@@ -52,8 +52,9 @@ add_task(async function telemetry_updatePing_ready() {
       f in updatePing.payload,
       `${f} must be available in the update ping payload.`
     );
-    ok(
-      typeof updatePing.payload[f] == "string",
+    Assert.equal(
+      typeof updatePing.payload[f],
+      "string",
       `${f} must have the correct format.`
     );
   }

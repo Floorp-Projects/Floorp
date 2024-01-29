@@ -391,7 +391,11 @@ const prepareHiddenTrackTest = () =>
         await SpecialPowers.spawn(browser, [{ videoID }], async args => {
           let video = content.document.getElementById(args.videoID);
           const tracks = video.textTracks;
-          ok(tracks[0].mode === "hidden", "Track 1 mode is 'hidden'");
+          Assert.strictEqual(
+            tracks[0].mode,
+            "hidden",
+            "Track 1 mode is 'hidden'"
+          );
         });
 
         let pipWin = await triggerPictureInPicture(browser, videoID);

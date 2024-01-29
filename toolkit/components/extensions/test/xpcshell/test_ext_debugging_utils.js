@@ -150,8 +150,9 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
 
   const { chromeDocument } = ExtensionParent.DebugUtils.hiddenXULWindow;
 
-  ok(
-    addonDebugBrowser.parentElement === chromeDocument.documentElement,
+  Assert.strictEqual(
+    addonDebugBrowser.parentElement,
+    chromeDocument.documentElement,
     "The addon debugging browser is part of the hiddenXULWindow chromeDocument"
   );
 
@@ -264,12 +265,14 @@ add_task(async function testExtensionDebuggingUtilsWithMultipleAddons() {
     2,
     "Got the expected number of debug browsers requested"
   );
-  ok(
-    debugBrowser.parentElement === chromeDocument.documentElement,
+  Assert.strictEqual(
+    debugBrowser.parentElement,
+    chromeDocument.documentElement,
     "The first debug browser is part of the hiddenXUL chromeDocument"
   );
-  ok(
-    anotherDebugBrowser.parentElement === chromeDocument.documentElement,
+  Assert.strictEqual(
+    anotherDebugBrowser.parentElement,
+    chromeDocument.documentElement,
     "The second debug browser is part of the hiddenXUL chromeDocument"
   );
 
@@ -283,13 +286,15 @@ add_task(async function testExtensionDebuggingUtilsWithMultipleAddons() {
     "Got the expected number of debug browsers requested"
   );
 
-  ok(
-    anotherDebugBrowser.parentElement === chromeDocument.documentElement,
+  Assert.strictEqual(
+    anotherDebugBrowser.parentElement,
+    chromeDocument.documentElement,
     "The second debug browser is still part of the hiddenXUL chromeDocument"
   );
 
-  ok(
-    debugBrowser.parentElement == null,
+  Assert.equal(
+    debugBrowser.parentElement,
+    null,
     "The first debug browser has been removed from the hiddenXUL chromeDocument"
   );
 
@@ -297,8 +302,9 @@ add_task(async function testExtensionDebuggingUtilsWithMultipleAddons() {
     anotherFakeAddonActor
   );
 
-  ok(
-    anotherDebugBrowser.parentElement == null,
+  Assert.equal(
+    anotherDebugBrowser.parentElement,
+    null,
     "The second debug browser has been removed from the hiddenXUL chromeDocument"
   );
   equal(

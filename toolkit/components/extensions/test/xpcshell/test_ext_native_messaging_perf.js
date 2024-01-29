@@ -123,8 +123,9 @@ add_task(async function test_round_trip_perf() {
 
   await extension.unload();
 
-  ok(
-    roundTripTime <= MAX_ROUND_TRIP_TIME_MS,
+  Assert.lessOrEqual(
+    roundTripTime,
+    MAX_ROUND_TRIP_TIME_MS,
     `Expected round trip time (${roundTripTime}ms) to be less than ${MAX_ROUND_TRIP_TIME_MS}ms`
   );
 });

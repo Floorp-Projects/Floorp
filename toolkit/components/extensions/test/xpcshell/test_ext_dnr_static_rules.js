@@ -1215,8 +1215,9 @@ add_task(async function test_static_rulesets_limits() {
     "number",
     "Expect MAX_NUMBER_OF_ENABLED_STATIC_RULESETS to be a number"
   );
-  ok(
-    MAX_NUMBER_OF_STATIC_RULESETS > MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+  Assert.greater(
+    MAX_NUMBER_OF_STATIC_RULESETS,
+    MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
     "Expect MAX_NUMBER_OF_STATIC_RULESETS to be greater"
   );
 

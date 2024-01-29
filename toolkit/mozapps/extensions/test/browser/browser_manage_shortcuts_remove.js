@@ -27,7 +27,7 @@ async function waitForShortcutSet(input, expected) {
     () => input.getAttribute("shortcut") == expected,
     `Shortcut should be set to ${JSON.stringify(expected)}`
   );
-  ok(doc.activeElement != input, "The input is no longer focused");
+  Assert.notEqual(doc.activeElement, input, "The input is no longer focused");
   checkHasRemoveButton(input, expected !== "");
 }
 
@@ -97,7 +97,7 @@ add_task(async function test_remove_shortcut() {
 
   // Now, verify that the original shortcut still works.
   EventUtils.synthesizeKey("KEY_Escape");
-  ok(doc.activeElement != input, "The input is no longer focused");
+  Assert.notEqual(doc.activeElement, input, "The input is no longer focused");
   is(errorElem.style.visibility, "hidden", "The error is hidden");
 
   EventUtils.synthesizeKey("1", { altKey: true, shiftKey: true });
@@ -168,7 +168,11 @@ add_task(async function test_remove_shortcut() {
   removeButtonForInput(inputTwo).click();
   is(inputTwo.getAttribute("shortcut"), "", "cleared shortcut");
   checkHasRemoveButton(inputTwo, false);
-  ok(doc.activeElement != inputTwo, "input of removed shortcut is not focused");
+  Assert.notEqual(
+    doc.activeElement,
+    inputTwo,
+    "input of removed shortcut is not focused"
+  );
 
   await closeShortcutsView(doc);
 

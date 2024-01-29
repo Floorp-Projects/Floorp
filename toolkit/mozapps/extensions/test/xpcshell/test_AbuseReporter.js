@@ -659,10 +659,14 @@ add_task(async function test_submission_aborting() {
 
   await onRequestReceived;
 
-  ok(receivedRequestsCount > 0, "Got the expected number of requests");
-  ok(
-    (await Promise.race([promiseResult, Promise.resolve("pending")])) ===
-      "pending",
+  Assert.greater(
+    receivedRequestsCount,
+    0,
+    "Got the expected number of requests"
+  );
+  Assert.strictEqual(
+    await Promise.race([promiseResult, Promise.resolve("pending")]),
+    "pending",
     "Submission fetch request should still be pending"
   );
 

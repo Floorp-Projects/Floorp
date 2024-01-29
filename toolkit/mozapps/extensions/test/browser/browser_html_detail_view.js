@@ -171,15 +171,16 @@ function assertDeckHeadingHidden(group) {
   ok(group.hidden, "The tab group is hidden");
   let buttons = group.querySelectorAll(".tab-button");
   for (let button of buttons) {
-    ok(button.offsetHeight == 0, `The ${button.name} is hidden`);
+    Assert.equal(button.offsetHeight, 0, `The ${button.name} is hidden`);
   }
 }
 
 function assertDeckHeadingButtons(group, visibleButtons) {
   ok(!group.hidden, "The tab group is shown");
   let buttons = group.querySelectorAll(".tab-button");
-  ok(
-    buttons.length >= visibleButtons.length,
+  Assert.greaterOrEqual(
+    buttons.length,
+    visibleButtons.length,
     `There should be at least ${visibleButtons.length} buttons`
   );
   for (let button of buttons) {

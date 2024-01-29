@@ -197,8 +197,8 @@ add_task(async function test_found_resize() {
   info(`values: ${JSON.stringify(values)}`);
   info(`resizedValues: ${JSON.stringify(resizedValues)}`);
   isfuzzy(resizedValues[0], values[0], 2, "first value");
-  ok(resizedValues[1] - 50 > values[1], "second value");
-  ok(resizedValues[2] - 50 > values[2], "third value");
+  Assert.greater(resizedValues[1] - 50, values[1], "second value");
+  Assert.greater(resizedValues[2] - 50, values[2], "third value");
 
   endFn();
 

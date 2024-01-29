@@ -164,8 +164,9 @@ add_task(async function test_eventpage_idle() {
     }
   );
 
-  ok(
-    Glean.extensionsTiming.eventPageRunningTime.testGetValue()?.sum > 0,
+  Assert.greater(
+    Glean.extensionsTiming.eventPageRunningTime.testGetValue()?.sum,
+    0,
     `Expect stored values in the eventPageRunningTime Glean metric`
   );
 });
@@ -212,7 +213,7 @@ add_task(
     await promiseExtensionEvent(extension, "shutdown-background-script");
 
     let time = await extension.awaitMessage("done");
-    ok(time > 100, `Background script suspended after ${time}ms.`);
+    Assert.greater(time, 100, `Background script suspended after ${time}ms.`);
 
     // Disabled because the telemetry is too chatty, see bug 1868960.
     // assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {

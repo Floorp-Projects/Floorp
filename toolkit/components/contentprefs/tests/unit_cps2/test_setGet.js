@@ -209,12 +209,14 @@ add_task(async function setSetsCurrentDate() {
   let end = now + MINUTE;
   await set("a.com", "foo", 1);
   let timestamp = await getDate("a.com", "foo");
-  ok(
-    start <= timestamp,
+  Assert.lessOrEqual(
+    start,
+    timestamp,
     "Timestamp is not too early (" + start + "<=" + timestamp + ")."
   );
-  ok(
-    timestamp <= end,
+  Assert.lessOrEqual(
+    timestamp,
+    end,
     "Timestamp is not too late (" + timestamp + "<=" + end + ")."
   );
   await reset();

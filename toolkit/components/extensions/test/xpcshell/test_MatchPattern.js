@@ -501,8 +501,9 @@ add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
     let first_matches = glob.matches(title);
     let first_duration = Date.now() - first_start;
     ok(first_matches, `Expected match: ${title}, ${title}`);
-    ok(
-      first_duration < first_limit,
+    Assert.less(
+      first_duration,
+      first_limit,
       `First matching duration: ${first_duration}ms (limit: ${first_limit}ms)`
     );
 
@@ -511,7 +512,7 @@ add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
     let duration = Date.now() - start;
 
     ok(matches, `Expected match: ${title}, ${title}`);
-    ok(duration < 10, `Matching duration: ${duration}ms`);
+    Assert.less(duration, 10, `Matching duration: ${duration}ms`);
   }
   {
     // Similarly with any continuous combination of ?**???****? wildcards.
@@ -523,8 +524,9 @@ add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
     let first_matches = glob.matches(title);
     let first_duration = Date.now() - first_start;
     ok(first_matches, `Expected match: ${title}, ${title}`);
-    ok(
-      first_duration < first_limit,
+    Assert.less(
+      first_duration,
+      first_limit,
       `First matching duration: ${first_duration}ms (limit: ${first_limit}ms)`
     );
 
@@ -533,7 +535,7 @@ add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
     let duration = Date.now() - start;
 
     ok(matches, `Expected match: ${title}, ${title}`);
-    ok(duration < 10, `Matching duration: ${duration}ms`);
+    Assert.less(duration, 10, `Matching duration: ${duration}ms`);
   }
 });
 

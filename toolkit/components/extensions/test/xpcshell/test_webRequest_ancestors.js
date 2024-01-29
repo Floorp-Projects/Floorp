@@ -20,8 +20,9 @@ add_task(async function test_ancestors_exist() {
   let deferred = Promise.withResolvers();
   function onBeforeRequest(details) {
     info(`onBeforeRequest ${details.url}`);
-    ok(
-      typeof details.frameAncestors === "object",
+    Assert.strictEqual(
+      typeof details.frameAncestors,
+      "object",
       `ancestors exists [${typeof details.frameAncestors}]`
     );
     deferred.resolve();
@@ -46,7 +47,11 @@ add_task(async function test_ancestors_null() {
   let deferred = Promise.withResolvers();
   function onBeforeRequest(details) {
     info(`onBeforeRequest ${details.url}`);
-    ok(details.frameAncestors === undefined, "ancestors do not exist");
+    Assert.strictEqual(
+      details.frameAncestors,
+      undefined,
+      "ancestors do not exist"
+    );
     deferred.resolve();
   }
 

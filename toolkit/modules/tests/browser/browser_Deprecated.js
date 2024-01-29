@@ -37,8 +37,9 @@ var tests = [
     deprecatedFunction: basicDeprecatedFunction,
     expectedObservation(aMessage) {
       testAMessage(aMessage);
-      ok(
-        aMessage.indexOf("basicDeprecatedFunction") > 0,
+      Assert.greater(
+        aMessage.indexOf("basicDeprecatedFunction"),
+        0,
         "Callstack is correctly logged."
       );
     },
@@ -50,8 +51,9 @@ var tests = [
       return true;
     },
     expectedObservation(aMessage) {
-      ok(
-        aMessage.indexOf("must provide a URL") > 0,
+      Assert.greater(
+        aMessage.indexOf("must provide a URL"),
+        0,
         "Deprecation warning logged an empty URL argument."
       );
     },
@@ -62,8 +64,9 @@ var tests = [
     deprecatedFunction: deprecationFunctionBogusCallstack,
     expectedObservation(aMessage) {
       testAMessage(aMessage);
-      ok(
-        aMessage.indexOf("deprecationFunctionBogusCallstack") > 0,
+      Assert.greater(
+        aMessage.indexOf("deprecationFunctionBogusCallstack"),
+        0,
         "Callstack is correctly logged."
       );
     },
@@ -73,8 +76,9 @@ var tests = [
     deprecatedFunction: deprecationFunctionCustomCallstack,
     expectedObservation(aMessage) {
       testAMessage(aMessage);
-      ok(
-        aMessage.indexOf("deprecationFunctionCustomCallstack") > 0,
+      Assert.greater(
+        aMessage.indexOf("deprecationFunctionCustomCallstack"),
+        0,
         "Callstack is correctly logged."
       );
     },
@@ -85,11 +89,16 @@ var tests = [
 
 // Test Console Message attributes.
 function testAMessage(aMessage) {
-  ok(
-    aMessage.indexOf("DEPRECATION WARNING: this method is deprecated.") === 0,
+  Assert.strictEqual(
+    aMessage.indexOf("DEPRECATION WARNING: this method is deprecated."),
+    0,
     "Deprecation is correctly logged."
   );
-  ok(aMessage.indexOf("https://example.com") > 0, "URL is correctly logged.");
+  Assert.greater(
+    aMessage.indexOf("https://example.com"),
+    0,
+    "URL is correctly logged."
+  );
 }
 
 add_task(async function test_setup() {

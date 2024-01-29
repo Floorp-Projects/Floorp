@@ -121,7 +121,7 @@ add_task(async function testInlineOptions() {
     stack.clientWidth,
     "Browser should be the same width as its direct parent"
   );
-  ok(stack.clientWidth > 0, "The stack has a width");
+  Assert.greater(stack.clientWidth, 0, "The stack has a width");
   ok(
     card.querySelector('[action="preferences"]').hidden,
     "The preferences option is hidden now"
@@ -164,7 +164,7 @@ add_task(async function testInlineOptions() {
   prefsBtn.click();
 
   is(browser.clientWidth, stack.clientWidth, "The browser width is set again");
-  ok(stack.clientWidth > 0, "The stack has a width");
+  Assert.greater(stack.clientWidth, 0, "The stack has a width");
 
   await closeView(win);
   await extension.unload();
@@ -479,8 +479,9 @@ async function testSelectPosition(optionsBrowser, zoom) {
     ".menupopup-arrowscrollbox"
   ).screenX;
   let browserLeft = optionsBrowser.screenX * zoom;
-  ok(
-    Math.abs(popupLeft - browserLeft) <= 1,
+  Assert.lessOrEqual(
+    Math.abs(popupLeft - browserLeft),
+    1,
     `Popup should be correctly positioned: ${popupLeft} vs. ${browserLeft}`
   );
   popup.hidePopup();
