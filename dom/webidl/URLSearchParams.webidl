@@ -13,8 +13,7 @@
  * http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
  */
 
-[Exposed=(Window,Worker,WorkerDebugger),
- Serializable]
+[Exposed=(Window,Worker,WorkerDebugger)]
 interface URLSearchParams {
   [Throws]
   constructor(optional (sequence<sequence<USVString>> or
