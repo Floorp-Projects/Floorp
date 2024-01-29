@@ -31,6 +31,12 @@ add_task(async function test_searchbar_a11y_tree() {
     role: ROLE_EDITCOMBOBOX,
 
     children: [
+      // image button toggling the results list
+      {
+        role: ROLE_BUTTONMENU,
+        children: [],
+      },
+
       // input element
       {
         role: ROLE_ENTRY,
@@ -64,6 +70,12 @@ add_task(async function test_searchbar_a11y_tree() {
     role: ROLE_EDITCOMBOBOX,
 
     children: [
+      // image button toggling the results list
+      {
+        role: ROLE_BUTTONMENU,
+        children: [],
+      },
+
       // input element
       {
         role: ROLE_ENTRY,
