@@ -145,10 +145,10 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     // nursery-allocated data and we shouldn't see such buffers here.
     MOZ_ASSERT_IF(buffer->byteLength() > 0, !cx->nursery().isInside(ptr));
   } else {
-    MOZ_ASSERT(is<TypedArrayObject>());
+    MOZ_ASSERT(is<FixedLengthTypedArrayObject>());
     MOZ_ASSERT(length * bytesPerElement <=
-               TypedArrayObject::INLINE_BUFFER_LIMIT);
-    void* data = fixedData(TypedArrayObject::FIXED_DATA_START);
+               FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT);
+    void* data = fixedData(FixedLengthTypedArrayObject::FIXED_DATA_START);
     initReservedSlot(DATA_SLOT, PrivateValue(data));
     memset(data, 0, length * bytesPerElement);
 #ifdef DEBUG
@@ -228,8 +228,8 @@ JS_PUBLIC_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
 
   // TypedArrays (but not DataViews) can have inline data, in which case we
   // need to copy into the given buffer.
-  if (view->is<TypedArrayObject>()) {
-    TypedArrayObject* ta = &view->as<TypedArrayObject>();
+  if (view->is<FixedLengthTypedArrayObject>()) {
+    auto* ta = &view->as<FixedLengthTypedArrayObject>();
     if (ta->hasInlineElements()) {
       size_t bytes = ta->byteLength();
       if (bytes > bufSize) {

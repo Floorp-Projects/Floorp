@@ -753,8 +753,8 @@ class ElementSpecific {
   }
 };
 
-/* static */ gc::AllocKind js::TypedArrayObject::AllocKindForLazyBuffer(
-    size_t nbytes) {
+/* static */ gc::AllocKind
+js::FixedLengthTypedArrayObject::AllocKindForLazyBuffer(size_t nbytes) {
   MOZ_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
   if (nbytes == 0) {
     nbytes += sizeof(uint8_t);

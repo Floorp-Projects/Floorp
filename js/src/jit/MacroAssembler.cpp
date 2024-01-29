@@ -829,11 +829,12 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
   constexpr size_t dataOffset = dataSlotOffset + sizeof(HeapSlot);
 
   static_assert(
-      TypedArrayObject::FIXED_DATA_START == TypedArrayObject::DATA_SLOT + 1,
+      FixedLengthTypedArrayObject::FIXED_DATA_START ==
+          FixedLengthTypedArrayObject::DATA_SLOT + 1,
       "fixed inline element data assumed to begin after the data slot");
 
   static_assert(
-      TypedArrayObject::INLINE_BUFFER_LIMIT ==
+      FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT ==
           JSObject::MAX_BYTE_SIZE - dataOffset,
       "typed array inline buffer is limited by the maximum object byte size");
 
@@ -844,7 +845,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
   size_t nbytes = length * templateObj->bytesPerElement();
 
   if (lengthKind == TypedArrayLength::Fixed &&
-      nbytes <= TypedArrayObject::INLINE_BUFFER_LIMIT) {
+      nbytes <= FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT) {
     MOZ_ASSERT(dataOffset + nbytes <= templateObj->tenuredSizeOfThis());
 
     // Store data elements inside the remaining JSObject slots.
@@ -7422,6 +7423,7 @@ void MacroAssembler::typedArrayElementSize(Register obj, Register output) {
 
   Label one, two, four, eight, done;
 
+  // TODO(anba): Handle resizable TypedArrays
   loadObjClassUnsafe(obj, output);
 
   static_assert(ValidateSizeRange(Scalar::Int8, Scalar::Int16),
@@ -7475,6 +7477,7 @@ void MacroAssembler::typedArrayElementSize(Register obj, Register output) {
 
 void MacroAssembler::branchIfClassIsNotTypedArray(Register clasp,
                                                   Label* notTypedArray) {
+  // TODO(anba): Handle resizable TypedArrays
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
   const JSClass* firstTypedArrayClass =
       TypedArrayObject::classForType(Scalar::Int8);
