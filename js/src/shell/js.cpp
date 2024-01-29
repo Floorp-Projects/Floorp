@@ -6177,6 +6177,11 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+
+    if (options.lineno == 0) {
+      JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+      return false;
+    }
   }
 
   options.setIsRunOnce(true).setSourceIsLazy(false);

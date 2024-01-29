@@ -1144,6 +1144,8 @@ template <typename Unit>
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<Unit>& srcBuf, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
+  MOZ_ASSERT(input.options.lineno != 0,
+             "Module cannot be compiled with lineNumber == 0");
 
   if (!input.initForModule(fc)) {
     return false;
