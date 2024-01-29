@@ -107,6 +107,7 @@ namespace jit {
   _(js::ecmaHypot)                                                    \
   _(js::ecmaPow)                                                      \
   _(js::EmulatesUndefined)                                            \
+  _(js::EmulatesUndefinedCheckFuse)                                   \
   _(js::ExecuteRegExpAtomRaw)                                         \
   _(js_free)                                                          \
   _(js::hypot3)                                                       \
