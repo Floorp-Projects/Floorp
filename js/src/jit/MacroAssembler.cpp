@@ -1461,6 +1461,9 @@ void MacroAssembler::branchIfMaybeSplitSurrogatePair(Register leftChild,
   branch32(Assembler::Above, Address(leftChild, JSString::offsetOfLength()),
            scratch, notSplit);
 
+  // Jump to |maybeSplit| if the left child is another rope.
+  branchIfRope(leftChild, maybeSplit);
+
   // Load the character at |index|.
   loadStringChars(leftChild, scratch, CharEncoding::TwoByte);
   loadChar(scratch, index, scratch, CharEncoding::TwoByte);
