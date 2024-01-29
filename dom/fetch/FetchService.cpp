@@ -256,8 +256,13 @@ void FetchService::FetchInstance::Cancel() {
 
   FETCH_LOG(("FetchInstance::Cancel() [%p]", this));
 
+  // If mFetchDriver is not null here, FetchInstance::Fetch() has already
+  // started, let mFetchDriver::RunAbortAlgorithm() to call
+  // FetchInstance::OnResponseEnd() to resolve the pending promises.
+  // Otherwise, resolving the pending promises here.
   if (mFetchDriver) {
     mFetchDriver->RunAbortAlgorithm();
+    return;
   }
 
   MOZ_ASSERT(mPromises);
@@ -294,17 +299,29 @@ void FetchService::FetchInstance::OnResponseEnd(
 
   MOZ_ASSERT(mPromises);
 
-  // If ResponseTimingPromise is not resolved, it means the fetch is aborted.
-  // Resolving ResponseTimingPromise with an emtpy ResponseTiming.
-  if (!mPromises->GetResponseTimingPromise()->IsResolved()) {
-    mPromises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
-  }
-  // Resolve the ResponseEndPromise
-  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason), __func__);
-
   if (aReason == eAborted) {
+    // If ResponseAvailablePromise has not resolved yet, resolved with
+    // NS_ERROR_DOM_ABORT_ERR response.
+    if (!mPromises->GetResponseAvailablePromise()->IsResolved()) {
+      mPromises->ResolveResponseAvailablePromise(
+          InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+    }
+
+    // If ResponseTimingPromise has not resolved yet, resolved with empty
+    // ResponseTiming.
+    if (!mPromises->GetResponseTimingPromise()->IsResolved()) {
+      mPromises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
+    }
+    // Resolve the ResponseEndPromise
+    mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason), __func__);
     return;
   }
+
+  MOZ_ASSERT(mPromises->GetResponseAvailablePromise()->IsResolved() &&
+             mPromises->GetResponseTimingPromise()->IsResolved());
+
+  // Resolve the ResponseEndPromise
+  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason), __func__);
 
   // Remove the FetchInstance from FetchInstanceTable
   RefPtr<FetchService> fetchService = FetchService::GetInstance();
@@ -414,7 +431,10 @@ void FetchService::FetchInstance::OnReportPerformanceTiming() {
   UniquePtr<PerformanceTimingData> performanceTiming(
       mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
                                              timing.entryName()));
+  // FetchDriver has no corresponding performance timing when fetch() failed.
+  // Resolve the ResponseTimingPromise with empty timing.
   if (!performanceTiming) {
+    mPromises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
     return;
   }
   timing.timingData() = performanceTiming->ToIPC();
