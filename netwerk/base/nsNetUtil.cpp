@@ -1862,18 +1862,10 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("file")) {
-    nsAutoCString buf(aSpec);
-#if defined(XP_WIN)
-    buf.Truncate();
-    if (!net_NormalizeFileURL(aSpec, buf)) {
-      buf = aSpec;
-    }
-#endif
-
     return NS_MutateURI(new nsStandardURL::Mutator())
         .Apply(&nsIFileURLMutator::MarkFileURL)
         .Apply(&nsIStandardURLMutator::Init,
-               nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, buf, aCharset,
+               nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aCharset,
                aBaseURI, nullptr)
         .Finalize(aURI);
   }

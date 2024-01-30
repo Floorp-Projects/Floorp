@@ -516,6 +516,11 @@ bool net_NormalizeFileURL(const nsACString& aURL, nsCString& aResultBuf) {
       aResultBuf += '/';
       begin = s + 1;
     }
+    if (*s == '#') {
+      // Don't normalize any backslashes following the hash.
+      s = endIter.get();
+      break;
+    }
   }
   if (writing && s > begin) aResultBuf.Append(begin, s - begin);
 
