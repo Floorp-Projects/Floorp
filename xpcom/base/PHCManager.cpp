@@ -19,6 +19,9 @@ using namespace phc;
 
 static const char kPHCEnabledPref[] = "memory.phc.enabled";
 static const char kPHCMinRamMBPref[] = "memory.phc.min_ram_mb";
+static const char kPHCAvgDelayFirst[] = "memory.phc.avg_delay.first";
+static const char kPHCAvgDelayNormal[] = "memory.phc.avg_delay.normal";
+static const char kPHCAvgDelayPageRuse[] = "memory.phc.avg_delay.page_reuse";
 
 // True if PHC has ever been enabled for this process.
 static bool sWasPHCEnabled = false;
@@ -32,6 +35,12 @@ static void UpdatePHCState() {
   // slightly lower actual RAM available after some hardware devices
   // reserve some.
   if (StaticPrefs::memory_phc_enabled() && mem_size >= min_mem_size) {
+    // Set PHC probablities before enabling PHC so that the first allocation
+    // delay gets used.
+    SetPHCProbabilities(StaticPrefs::memory_phc_avg_delay_first(),
+                        StaticPrefs::memory_phc_avg_delay_normal(),
+                        StaticPrefs::memory_phc_avg_delay_page_reuse());
+
     SetPHCState(Enabled);
     sWasPHCEnabled = true;
   } else {
@@ -41,7 +50,10 @@ static void UpdatePHCState() {
 
 static void PrefChangeCallback(const char* aPrefName, void* aNull) {
   MOZ_ASSERT((0 == strcmp(aPrefName, kPHCEnabledPref)) ||
-             (0 == strcmp(aPrefName, kPHCMinRamMBPref)));
+             (0 == strcmp(aPrefName, kPHCMinRamMBPref)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayFirst)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayNormal)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayPageRuse)));
 
   UpdatePHCState();
 }
@@ -49,6 +61,9 @@ static void PrefChangeCallback(const char* aPrefName, void* aNull) {
 void InitPHCState() {
   Preferences::RegisterCallback(PrefChangeCallback, kPHCEnabledPref);
   Preferences::RegisterCallback(PrefChangeCallback, kPHCMinRamMBPref);
+  Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayFirst);
+  Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayNormal);
+  Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayPageRuse);
   UpdatePHCState();
 }
 
