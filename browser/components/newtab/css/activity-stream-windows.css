@@ -601,7 +601,6 @@ main section {
 
 .top-site-outer {
   width: 120px;
-  padding: 20px 16px 4px;
   border-radius: 8px;
   display: inline-block;
 }
@@ -609,6 +608,7 @@ main section {
   position: relative;
 }
 .top-site-outer .top-site-inner > a {
+  padding: 20px 16px 4px;
   color: inherit;
   display: block;
   outline: none;
