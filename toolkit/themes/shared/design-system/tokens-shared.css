@@ -78,6 +78,11 @@
   --button-line-height: var(--line-height-small);
   --button-min-height: var(--size-item-large);
 
+  /*** Checkbox ***/
+  --checkbox-margin-inline: var(--space-small);
+  /* TODO Bug 1876537: Make this em-based, probably? */
+  --checkbox-size: var(--size-item-small);
+
   /*** Text ***/
   --input-text-line-height: var(--button-line-height);
   --input-text-min-height: var(--button-min-height);
@@ -96,8 +101,11 @@
   --size-item-medium: 28px;
   --size-item-large: 32px;
 
-  /** Spacing **/
-  --spacing-small: 0.5rem;
+  /** Space **/
+  --space-xxsmall: calc(0.5 * var(--space-xsmall));
+  --space-xsmall: 0.267rem;
+  --space-small: calc(2 * var(--space-xsmall));
+  --space-xlarge: calc(8 * var(--space-xsmall));
 }
 
 @media not (prefers-contrast) {
