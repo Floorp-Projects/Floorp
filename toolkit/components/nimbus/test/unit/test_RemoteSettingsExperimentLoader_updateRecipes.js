@@ -1675,17 +1675,22 @@ add_task(async function test_update_experiments_ordered_by_published_date() {
 
 add_task(
   async function test_record_is_ready_no_value_for_nimbus_is_ready_feature() {
-    await Services.fog.testFlushAllChildren();
-    Services.fog.testResetFOG();
-
     const sandbox = sinon.createSandbox();
     const loader = ExperimentFakes.rsLoader();
     const manager = loader.manager;
 
-    sinon.stub(loader.remoteSettingsClient, "get").resolves([]);
-    sandbox.stub(manager.store, "ready").resolves();
+    sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+    sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
     await loader.init();
+    await manager.onStartup();
+    await manager.store.ready();
+
+    sandbox.stub(loader.remoteSettingsClient, "get").resolves([]);
+
+    await Services.fog.testFlushAllChildren();
+    Services.fog.testResetFOG();
+    await loader.updateRecipes();
 
     const isReadyEvents = Glean.nimbusEvents.isReady.testGetValue();
 
