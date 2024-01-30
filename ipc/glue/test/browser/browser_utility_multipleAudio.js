@@ -14,17 +14,10 @@ add_setup(async function checkAudioDecodingNonUtility() {
   const isAudioDecodingNonUtilityAllowed = await SpecialPowers.getBoolPref(
     "media.allow-audio-non-utility"
   );
-  if (isNightlyOrEalyBeta()) {
-    ok(
-      !isAudioDecodingNonUtilityAllowed,
-      "Audio decoding should not be allowed on non utility processes by default on Nightly"
-    );
-  } else {
-    ok(
-      isAudioDecodingNonUtilityAllowed,
-      "Audio decoding is allowed on non utility processes by default on Beta or Release"
-    );
-  }
+  ok(
+    !isAudioDecodingNonUtilityAllowed,
+    "Audio decoding should not be allowed on non utility processes by default"
+  );
 });
 
 add_task(async function testAudioDecodingInUtility() {
@@ -36,17 +29,11 @@ add_task(async function testFailureAudioDecodingInRDD() {
 });
 
 add_task(async function testFailureAudioDecodingInContent() {
-  // TODO: When getting rid of audio decoding on non utility at all, this
-  // should be removed
-  if (!isNightlyOrEalyBeta()) {
-    return;
-  }
-
   const platform = Services.appinfo.OS;
   if (platform === "WINNT") {
     ok(
       true,
-      "Manually skippig on Windows because of gfx killing us, cf browser.ini"
+      "Manually skipping on Windows because of gfx killing us, cf browser.ini"
     );
     return;
   }
