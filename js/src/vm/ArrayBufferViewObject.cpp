@@ -190,6 +190,34 @@ bool ArrayBufferViewObject::hasResizableBuffer() const {
   return false;
 }
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void ArrayBufferViewObject::dumpOwnFields(js::JSONPrinter& json) const {
+  json.formatProperty("length", "%zu",
+                      size_t(getFixedSlot(LENGTH_SLOT).toPrivate()));
+  json.formatProperty("byteOffset", "%zu",
+                      size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate()));
+  void* data = dataPointerEither_();
+  if (data) {
+    json.formatProperty("data", "0x%p", data);
+  } else {
+    json.nullProperty("data");
+  }
+}
+
+void ArrayBufferViewObject::dumpOwnStringContent(
+    js::GenericPrinter& out) const {
+  out.printf("length=%zu, byteOffset=%zu, ",
+             size_t(getFixedSlot(LENGTH_SLOT).toPrivate()),
+             size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate()));
+  void* data = dataPointerEither_();
+  if (data) {
+    out.printf("data=0x%p", data);
+  } else {
+    out.put("data=null");
+  }
+}
+#endif
+
 /* JS Public API */
 
 JS_PUBLIC_API bool JS_IsArrayBufferViewObject(JSObject* obj) {

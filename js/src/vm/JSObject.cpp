@@ -46,6 +46,8 @@
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ArrayBufferObject.h"
+#include "vm/ArrayBufferViewObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compartment.h"
 #include "vm/DateObject.h"
@@ -2818,9 +2820,11 @@ void JSObject::dump(js::JSONPrinter& json) const {
   json.endObject();
 }
 
-#  define FOR_EACH_CLASS(M) \
-    M(JSFunction)           \
-    M(PromiseObject)        \
+#  define FOR_EACH_CLASS(M)  \
+    M(ArrayBufferViewObject) \
+    M(ArrayBufferObject)     \
+    M(JSFunction)            \
+    M(PromiseObject)         \
     M(RegExpObject)
 
 static void DumpOwnFields(const JSObject* obj, js::JSONPrinter& json) {
