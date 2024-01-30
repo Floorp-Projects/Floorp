@@ -73,6 +73,10 @@ export class MarionetteReftestChild extends JSWindowActorChild {
    *        The expected test page URL
    * @param {boolean} options.useRemote
    *        True when using e10s
+   * @param {boolean} options.warnOnOverflow
+   *        True if we should check the content fits in the viewport.
+   *        This isn't necessary for print reftests where we will render the full
+   *        size of the paginated content.
    * @returns {boolean}
    *         Returns true when the correct page is loaded and ready for
    *         screenshots. Returns false if the page loaded bug does not have the
@@ -106,8 +110,9 @@ export class MarionetteReftestChild extends JSWindowActorChild {
       await this.paintComplete({ useRemote, ignoreThrottledAnimations: false });
     }
     if (
-      this.document.defaultView.innerWidth < documentElement.scrollWidth ||
-      this.document.defaultView.innerHeight < documentElement.scrollHeight
+      options.warnOnOverflow &&
+      (this.document.defaultView.innerWidth < documentElement.scrollWidth ||
+        this.document.defaultView.innerHeight < documentElement.scrollHeight)
     ) {
       lazy.logger.warn(
         `${url} overflows viewport (width: ${documentElement.scrollWidth}, height: ${documentElement.scrollHeight})`
