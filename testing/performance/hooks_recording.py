@@ -40,7 +40,7 @@ def before_iterations(kw):
         # tests and exclude all the others
         specified_tests = kw["proxy_perftest_page"]
         if specified_tests is not None:
-            if test.get("name") in specified_tests:
+            if test.get("name") == specified_tests:
                 if test.get("login"):
                     print(f"WARNING: You selected a login test: {test.get('name')}")
                 return True

@@ -44,7 +44,7 @@ playback_settings = [
 
 def filter_app(tests, values):
     for test in tests:
-        if values["app"] in test["apps"]:
+        if values["app"] in [app.strip() for app in test["apps"].split(",")]:
             yield test
 
 
@@ -349,6 +349,18 @@ def get_raptor_test_list(args, oskey):
         if next_test["name"] == args.test:
             tests_to_run.append(next_test)
             break
+
+    # Check to make sure that there isn't another test with the same name
+    # and raise an exception if that happens
+    all_tests_available = [
+        next_test for next_test in available_tests if next_test["name"] == args.test
+    ]
+    if len(all_tests_available) > 1:
+        raise Exception(
+            f"Too many tests found with the same test name `{args.test}` for this app. "
+            f"Found in these manifests: "
+            f"{[test['manifest'] for test in all_tests_available]}"
+        )
 
     # no matches, so now look for all subtests that come from a test toml
     # manifest that matches the test name provided on the commmand line
