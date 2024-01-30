@@ -540,6 +540,12 @@ void JSString::dumpChars(js::GenericPrinter& out) const {
   out.putChar('"');
 }
 
+void JSString::dumpCharsSingleQuote(js::GenericPrinter& out) const {
+  out.putChar('\'');
+  dumpCharsNoQuote(out);
+  out.putChar('\'');
+}
+
 void JSString::dumpCharsNoQuote(js::GenericPrinter& out) const {
   if (isLinear()) {
     const JSLinearString* linear = &asLinear();

@@ -750,6 +750,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   void dumpFields(js::JSONPrinter& json) const;
 
   void dumpChars(js::GenericPrinter& out) const;
+  void dumpCharsSingleQuote(js::GenericPrinter& out) const;
   void dumpCharsNoQuote(js::GenericPrinter& out) const;
 
   template <typename CharT>
