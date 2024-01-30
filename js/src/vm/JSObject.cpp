@@ -2780,7 +2780,7 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
       out.printf("%g", v.toDouble());
       break;
     case ValueType::String:
-      v.toString()->dumpNoNewline(out);
+      v.toString()->dumpChars(out);
       break;
     case ValueType::Symbol:
       v.toSymbol()->dump(out);
@@ -2882,7 +2882,7 @@ static void DumpProperty(const NativeObject* obj, PropMap* map, uint32_t index,
   PropertyInfoWithKey prop = map->getPropertyInfoWithKey(index);
   jsid id = prop.key();
   if (id.isAtom()) {
-    id.toAtom()->dumpCharsNoNewline(out);
+    id.toAtom()->dumpChars(out);
   } else if (id.isInt()) {
     out.printf("%d", id.toInt());
   } else if (id.isSymbol()) {
