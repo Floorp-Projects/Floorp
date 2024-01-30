@@ -376,10 +376,22 @@ JSObject* CommonStructuredCloneReadCallback(
         return nullptr;
       }
 
-      RefPtr<URLSearchParams> params =
-          URLSearchParams::ReadStructuredClone(aCx, global, aReader);
-      if (!params) {
+      RefPtr<URLSearchParams> params = new URLSearchParams(global);
+
+      uint32_t paramCount;
+      uint32_t zero;
+      if (!JS_ReadUint32Pair(aReader, &paramCount, &zero)) {
         return nullptr;
+      }
+
+      nsAutoString key;
+      nsAutoString value;
+      for (uint32_t index = 0; index < paramCount; index++) {
+        if (!StructuredCloneHolder::ReadString(aReader, key) ||
+            !StructuredCloneHolder::ReadString(aReader, value)) {
+          return nullptr;
+        }
+        params->Append(key, value);
       }
 
       if (!WrapAsJSObject(aCx, params, &result)) {
