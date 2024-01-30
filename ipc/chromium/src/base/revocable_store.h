@@ -40,7 +40,7 @@ class RevocableStore {
   class Revocable {
    public:
     explicit Revocable(RevocableStore* store);
-    ~Revocable();
+    ~Revocable() = default;
 
     // This item has been revoked if it no longer has a pointer to the store.
     bool revoked() const { return !store_reference_->store(); }
@@ -59,9 +59,6 @@ class RevocableStore {
   // Revokes all the items in the store.
   void RevokeAll();
 
-  // Returns true if there are no items in the store.
-  bool empty() const { return count_ == 0; }
-
  private:
   friend class Revocable;
 
@@ -71,9 +68,6 @@ class RevocableStore {
 
   // This is the reference the unrevoked items in the store hold.
   RefPtr<StoreRef> owning_reference_;
-
-  // The number of unrevoked items in the store.
-  int count_;
 
   DISALLOW_EVIL_CONSTRUCTORS(RevocableStore);
 };
