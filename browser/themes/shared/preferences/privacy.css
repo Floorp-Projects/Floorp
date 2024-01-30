@@ -12,11 +12,7 @@
   width: 20px;
   height: 20px;
   vertical-align: middle;
-  margin-inline-end: var(--space-xsmall);
-
-  + label {
-    vertical-align: middle;
-  }
+  margin-inline-end: 0.2em;
 }
 
 .permission-icon,
@@ -155,6 +151,7 @@
 }
 
 .content-blocking-reload-description {
+  line-height: 1.8em;
   margin-inline-end: 5px;
 }
 
@@ -257,6 +254,7 @@
 .content-blocking-label,
 .doh-label {
   display: list-item;
+  line-height: 1.2em;
 }
 
 .content-blocking-warning-image {
@@ -281,6 +279,7 @@
 
 #telemetry-container {
   margin-block: 4px;
+  line-height: 1.8em;
   width: 100%;
 }
 
@@ -336,6 +335,14 @@
 #dismissedSuggestions,
 #openSearchEnginePreferences.extraMargin {
   margin-block-start: 2em;
+}
+
+/* DNS over HTTPS */
+
+#dohDescription,
+#dohLearnMore,
+#dohStatusSection {
+  line-height: 1.8em;
 }
 
 /* Logins and Passwords */

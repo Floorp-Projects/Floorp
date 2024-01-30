@@ -233,6 +233,7 @@
 
 :root:not(.system-font-size) {
   font-size: var(--font-size-root);
+  line-height: var(--line-height-default);
 }
 
 html|body {
@@ -689,12 +690,11 @@ button.text-link {
 xul|*.radio-check,
 xul|*.checkbox-check,
 html|input:where([type="checkbox"], [type="radio"]) {
-  /* TODO Bug 1876537: Make this em-based, probably? */
   height: 16px;
   width: 16px;
   padding: 0;
-  margin-block: var(--space-xxsmall);
-  margin-inline: 0 var(--checkbox-margin-inline);
+  margin-block: 2px;
+  margin-inline: 0 6px;
   flex-shrink: 0; /* avoid shrinking inside flex container */
 }
 

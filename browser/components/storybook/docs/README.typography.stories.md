@@ -4,8 +4,6 @@
 
 We set `font: message-box` at the root of `common-shared.css` and `global.css` stylesheets so that both in-content and the chrome can have access to operating system font families.
 
-We also don't specify line height units and rely on the default.
-
 ### In-content
 <table class="sb-preview-design-tokens">
   <thead>
@@ -15,6 +13,7 @@ We also don't specify line height units and rely on the default.
       <th>Preview</th>
       <th>Font size</th>
       <th>Font weight</th>
+      <th>Line height</th>
     </tr>
   </thead>
   <tbody>
@@ -32,6 +31,9 @@ We also don't specify line height units and rely on the default.
       <td>
         <code>300</code>
       </td>
+      <td>
+        <code>1.3</code>
+      </td>
     </tr>
     <tr>
       <th>Heading Large</th>
@@ -46,6 +48,9 @@ We also don't specify line height units and rely on the default.
       </td>
       <td>
         <code>300</code>
+      </td>
+      <td>
+        <code>1.3</code>
       </td>
     </tr>
     <tr>
@@ -62,6 +67,9 @@ We also don't specify line height units and rely on the default.
       <td>
         <code>600</code>
       </td>
+      <td>
+        <code>1.3</code>
+      </td>
     </tr>
     <tr>
       <th>Root (body)</th>
@@ -77,6 +85,9 @@ We also don't specify line height units and rely on the default.
       <td>
         <code>normal</code>
       </td>
+      <td>
+        <code>1.5</code>
+      </td>
     </tr>
     <tr>
       <th>Body Small</th>
@@ -91,6 +102,9 @@ We also don't specify line height units and rely on the default.
       </td>
       <td>
         <code>normal</code>
+      </td>
+      <td>
+        <code>1.5</code>
       </td>
     </tr>
   </tbody>
@@ -110,6 +124,7 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
       <th>Preview</th>
       <th>Font keyword</th>
       <th>Font weight</th>
+      <th>Line height</th>
     </tr>
   </thead>
   <tbody>
@@ -127,6 +142,9 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
       <td>
         <code>600</code>
       </td>
+      <td>
+        <code>normal</code>
+      </td>
     </tr>
     <tr>
       <th>Menu</th>
@@ -138,6 +156,9 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
       </td>
       <td>
         <code>menu</code>
+      </td>
+      <td>
+        <code>normal</code>
       </td>
       <td>
         <code>normal</code>
@@ -157,6 +178,9 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
       <td>
         <code>600</code>
       </td>
+      <td>
+        <code>normal</code>
+      </td>
     </tr>
     <tr>
       <th>Root (body)</th>
@@ -172,12 +196,15 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
       <td>
         <code>normal</code>
       </td>
+      <td>
+        <code>normal</code>
+      </td>
     </tr>
   </tbody>
 </table>
 
 ## Design tokens
-Type setting relies on design tokens for font size and font weight.
+Type setting relies on typography design tokens for for font size, font weight, and line height.
 
 #### Font size
 <table class="sb-preview-design-tokens">
@@ -283,6 +310,41 @@ Type setting relies on design tokens for font size and font weight.
   </tbody>
 </table>
 
+#### Line height
+<table class="sb-preview-design-tokens">
+  <thead>
+    <tr>
+      <th>Base token</th>
+      <th>In-content value</th>
+      <th>Chrome value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>
+        <code>--line-height-small</code>
+      </th>
+      <td>
+        <code>1.3</code>
+      </td>
+      <td>
+        <code>unset</code>
+      </td>
+    </tr>
+    <tr>
+      <th>
+        <code>--line-height-default</code>
+      </th>
+      <td>
+        <code>1.5</code>
+      </td>
+      <td>
+        <code>normal</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ## Helpers
 ### text-and-typography.css
 
@@ -317,6 +379,7 @@ h1,
 .heading-large {
   font-weight: var(--font-weight-light, var(--font-weight-bold));
   font-size: var(--font-size-xlarge);
+  line-height: var(--line-height-small)
 }
 ```
 
@@ -332,6 +395,7 @@ h2,
 .heading-medium {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-large);
+  line-height: var(--line-height-small);
 }
 ```
 
