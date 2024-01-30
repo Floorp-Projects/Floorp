@@ -1318,8 +1318,8 @@ struct StackMapGenerator {
  public:
   // --- These are constant once we've completed beginFunction() ---
 
-  // The number of words of arguments passed to this function in memory.
-  size_t numStackArgWords;
+  // The number of bytes of arguments passed to this function in memory.
+  size_t numStackArgBytes;
 
   MachineStackTracker machineStackTracker;  // tracks machine stack pointerness
 
@@ -1336,14 +1336,14 @@ struct StackMapGenerator {
   // memory.  That is, for an upcoming function call, this will hold
   //
   //   masm.framePushed() at the call instruction -
-  //      StackArgAreaSizeUnaligned(argumentTypes)
+  //      StackArgAreaSizeAligned(argumentTypes)
   //
   // This value denotes the lowest-addressed stack word covered by the current
   // function's stackmap.  Words below this point form the highest-addressed
   // area of the callee's stackmap.  Note that all alignment padding above the
-  // arguments-in-memory themselves belongs to the caller's stackmap, which
-  // is why this is defined in terms of StackArgAreaSizeUnaligned() rather than
-  // StackArgAreaSizeAligned().
+  // arguments-in-memory themselves belongs to the callee's stackmap, as return
+  // calls will replace the function arguments with a new set of arguments which
+  // may have different alignment.
   //
   // When not inside a function call setup/teardown sequence, it is Nothing.
   // It can make Nothing-to/from-Some transitions arbitrarily as we progress
@@ -1366,7 +1366,7 @@ struct StackMapGenerator {
         trapExitLayoutNumWords_(trapExitLayoutNumWords),
         stackMaps_(stackMaps),
         masm_(masm),
-        numStackArgWords(0),
+        numStackArgBytes(0),
         memRefsOnStk(0) {}
 
   // At the beginning of a function, we may have live roots in registers (as

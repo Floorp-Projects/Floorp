@@ -224,18 +224,16 @@ bool StackMapGenerator::createStackMap(
   // function's prologue.  We now need to calculate how far the machine's
   // stack pointer is below where it was at the start of the body.  But we
   // must take care not to include any words pushed as arguments to an
-  // upcoming function call, since those words "belong" to the stackmap of
-  // the callee, not to the stackmap of this function.  Note however that
-  // any alignment padding pushed prior to pushing the args *does* belong to
-  // this function.
+  // upcoming function call, since those words belong to the stackmap of
+  // the callee, not to the stackmap of this function.  Any alignment padding
+  // for the args also belongs to the callee.
   //
-  // That padding is taken into account at the point where
-  // framePushedExcludingOutboundCallArgs is set, viz, in startCallArgs(),
-  // and comprises two components:
+  // The only padding belonging to the stackmap of this function is that
+  // required to align the upcoming frame. This is accounted for where
+  // framePushedExcludingOutboundCallArgs is set, in startCallArgs(), and is
+  // comprised of just one component:
   //
   // * call->frameAlignAdjustment
-  // * the padding applied to the stack arg area itself.  That is:
-  //   StackArgAreaSize(argTys) - StackArgAreaSizeUnpadded(argTys)
   Maybe<uint32_t> framePushedExcludingArgs;
   if (framePushedAtEntryToBody.isNothing()) {
     // Still in the prologue.  framePushedExcludingArgs remains Nothing.
@@ -355,11 +353,19 @@ bool StackMapGenerator::createStackMap(
     augmentedMst.setGCPointer(offsFromMapLowest / sizeof(void*));
   }
 
+  MOZ_ASSERT(numStackArgBytes % sizeof(void*) == 0);
+  const size_t numStackArgWords = numStackArgBytes / sizeof(void*);
+  const size_t numStackArgPaddingBytes =
+      AlignStackArgAreaSize(numStackArgBytes) - numStackArgBytes;
+  const size_t numStackArgPaddingWords =
+      numStackArgPaddingBytes / sizeof(void*);
+
   // Create the final StackMap.  The initial map is zeroed out, so there's
   // no need to write zero bits in it.
   const uint32_t extraWords = extras.length();
   const uint32_t augmentedMstWords = augmentedMst.length();
-  const uint32_t numMappedWords = extraWords + augmentedMstWords;
+  const uint32_t numMappedWords =
+      numStackArgPaddingWords + extraWords + augmentedMstWords;
   StackMap* stackMap = StackMap::create(numMappedWords);
   if (!stackMap) {
     return false;
@@ -398,7 +404,7 @@ bool StackMapGenerator::createStackMap(
   // Record in the map, how far down from the highest address the Frame* is.
   // Take the opportunity to check that we haven't marked any part of the
   // Frame itself as a pointer.
-  stackMap->setFrameOffsetFromTop(numStackArgWords +
+  stackMap->setFrameOffsetFromTop(numStackArgPaddingWords + numStackArgWords +
                                   sizeof(Frame) / sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < sizeof(Frame) / sizeof(void*); i++) {
