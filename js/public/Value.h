@@ -396,6 +396,9 @@ enum JSWhyMagic {
 };
 
 namespace js {
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
+
 static inline JS::Value PoisonedObjectValue(uintptr_t poison);
 #ifdef ENABLE_RECORD_TUPLE
 // Re-defined in vm/RecordTupleBoxShared.h. We cannot include that
@@ -1055,6 +1058,10 @@ class alignas(8) Value {
     return reinterpret_cast<void*>(uintptr_t(asBits_));
   }
 
+  void* toPrivateUnchecked() const {
+    return reinterpret_cast<void*>(uintptr_t(asBits_));
+  }
+
   void setPrivateUint32(uint32_t ui) {
     MOZ_ASSERT(uint32_t(int32_t(ui)) == ui);
     setInt32(int32_t(ui));
@@ -1098,6 +1105,15 @@ class alignas(8) Value {
   }
 
   bool isPrivateGCThing() const { return toTag() == JSVAL_TAG_PRIVATE_GCTHING; }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump() const;
+  void dump(js::GenericPrinter& out) const;
+  void dump(js::JSONPrinter& json) const;
+
+  void dumpFields(js::JSONPrinter& json) const;
+  void dumpStringContent(js::GenericPrinter& out) const;
+#endif
 } JS_HAZ_GC_POINTER MOZ_NON_PARAM;
 
 static_assert(sizeof(Value) == 8,
