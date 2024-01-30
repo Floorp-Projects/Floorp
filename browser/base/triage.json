@@ -1,0 +1,31 @@
+{
+  "triagers": {
+    "Gijs": {
+      "bzmail": "gijskruitbosch+bugs@gmail.com"
+    },
+    "Mark Banner": {
+      "bzmail": "standard8@mozilla.com"
+    },
+    "Dave Townsend": {
+      "bzmail": "dtownsend@mozilla.com"
+    },
+    "Mike Conley": {
+      "bzmail": "mconley@mozilla.com"
+    },
+    "Marco Bonardo": {
+      "bzmail": "mak@mozilla.com"
+    },
+    "Fred Chasen": {
+      "bzmail": "fchasen@mozilla.com"
+    }
+  },
+  "duty-start-dates": {
+    "2024-01-01": "Gijs",
+    "2024-02-01": "Mark Banner",
+    "2024-03-01": "Fred Chasen",
+    "2024-04-01": "Mike Conley",
+    "2024-05-01": "Marco Bonardo"
+  }
+}
+
+
