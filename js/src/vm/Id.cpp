@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/Id.h"
+#include "js/Printer.h"  // js::GenericPrinter, js::Fprinter
 #include "js/RootingAPI.h"
 
 #include "vm/JSContext.h"
+#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/SymbolType.h"
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
@@ -48,3 +50,41 @@ bool JS::PropertyKey::isWellKnownSymbol(JS::SymbolCode code) const {
 /* static */ bool JS::PropertyKey::isNonIntAtom(JSString* str) {
   return JS::PropertyKey::isNonIntAtom(&str->asAtom());
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+
+void JS::PropertyKey::dump() const {
+  js::Fprinter out(stderr);
+  dump(out);
+}
+
+void JS::PropertyKey::dump(js::GenericPrinter& out) const {
+  js::JSONPrinter json(out);
+  dump(json);
+  out.put("\n");
+}
+
+void JS::PropertyKey::dump(js::JSONPrinter& json) const {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void JS::PropertyKey::dumpFields(js::JSONPrinter& json) const {
+  if (isAtom()) {
+    json.property("type", "atom");
+    toAtom()->dumpFields(json);
+  } else if (isInt()) {
+    json.property("type", "int");
+    json.property("value", toInt());
+  } else if (isSymbol()) {
+    json.property("type", "symbol");
+    toSymbol()->dumpFields(json);
+  } else if (isVoid()) {
+    json.property("type", "void");
+  } else {
+    json.formatProperty("type", "Unknown(%lx)", asRawBits());
+  }
+}
+
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
