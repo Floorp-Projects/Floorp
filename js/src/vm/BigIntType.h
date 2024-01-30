@@ -35,6 +35,13 @@ class MacroAssembler;
 
 }  // namespace js
 
+namespace js {
+
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
+
+}  // namespace js
+
 namespace JS {
 
 class JS_PUBLIC_API BigInt;
@@ -253,6 +260,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;  // Debugger-friendly stderr dump.
   void dump(js::GenericPrinter& out) const;
+  void dump(js::JSONPrinter& json) const;
+
+  void dumpFields(js::JSONPrinter& json) const;
+  void dumpLiteral(js::GenericPrinter& out) const;
 #endif
 
  public:
