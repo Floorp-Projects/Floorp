@@ -4827,10 +4827,17 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   nsIWidget::ContentAndAPZEventStatus eventStatus = DispatchInputEvent(&event);
 
-  if (mDraggableRegion.Contains(refPoint) &&
-      domButton == MouseButton::ePrimary &&
-      eventStatus.mContentStatus != nsEventStatus_eConsumeNoDefault) {
-    mWindowShouldStartDragging = true;
+  const bool defaultPrevented =
+      eventStatus.mContentStatus == nsEventStatus_eConsumeNoDefault;
+
+  if (!defaultPrevented && mDrawInTitlebar &&
+      mDraggableRegion.Contains(refPoint)) {
+    if (domButton == MouseButton::ePrimary) {
+      mWindowShouldStartDragging = true;
+    } else if (domButton == MouseButton::eMiddle &&
+               StaticPrefs::widget_gtk_titlebar_action_middle_click_enabled()) {
+      DoTitlebarAction(nsXPLookAndFeel::TitlebarEvent::Middle_Click, aEvent);
+    }
   }
 
   // right menu click on linux should also pop up a context menu
