@@ -222,11 +222,6 @@ const serializable = [
   ["DOMMatrixReadOnly", ["Window", "Worker"], () => new DOMMatrixReadOnly()],
   ["ImageBitmap", ["Window", "Worker"], makeImageBitmap],
   ["RTCCertificate", ["Window"], generateCertificate],
-  [
-    "URLSearchParams",
-    ["Window", "Worker", "WorkerDebugger"],
-    () => new URLSearchParams(),
-  ],
   ["VideoFrame", ["Window", "DedicatedWorker"], makeVideoFrame],
 ];
 

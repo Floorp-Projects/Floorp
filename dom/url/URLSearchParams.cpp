@@ -171,60 +171,6 @@ void URLSearchParams::Sort(ErrorResult& aRv) {
   NotifyObserver();
 }
 
-bool URLSearchParams::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
-  const uint32_t& nParams = mParams->Length();
-  if (!JS_WriteUint32Pair(aWriter, nParams, 0)) {
-    return false;
-  }
-  for (uint32_t i = 0; i < nParams; ++i) {
-    if (!StructuredCloneHolder::WriteString(aWriter,
-                                            mParams->GetKeyAtIndex(i)) ||
-        !StructuredCloneHolder::WriteString(aWriter,
-                                            mParams->GetValueAtIndex(i))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader) {
-  MOZ_ASSERT(aReader);
-
-  DeleteAll();
-
-  uint32_t nParams, zero;
-  nsAutoString key, value;
-  if (!JS_ReadUint32Pair(aReader, &nParams, &zero) || zero != 0) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < nParams; ++i) {
-    if (!StructuredCloneHolder::ReadString(aReader, key) ||
-        !StructuredCloneHolder::ReadString(aReader, value)) {
-      return false;
-    }
-    Append(key, value);
-  }
-  return true;
-}
-
-bool URLSearchParams::WriteStructuredClone(
-    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
-  return WriteStructuredClone(aWriter);
-}
-
-// static
-already_AddRefed<URLSearchParams> URLSearchParams::ReadStructuredClone(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    JSStructuredCloneReader* aReader) {
-  RefPtr<URLSearchParams> params = new URLSearchParams(aGlobal);
-  if (!params->ReadStructuredClone(aReader)) {
-    return nullptr;
-  }
-  return params.forget();
-}
-
 // contentTypeWithCharset can be set to the contentType or
 // contentType+charset based on what the spec says.
 // See: https://fetch.spec.whatwg.org/#concept-bodyinit-extract
