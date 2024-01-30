@@ -13,16 +13,21 @@ export class MarionetteReftestParent extends JSWindowActorParent {
    *        The expected url.
    * @param {boolean} useRemote
    *        True if tests are running with e10s.
+   * @param {boolean} warnOnOverflow
+   *        True if we should check the content fits in the viewport.
+   *        This isn't necessary for print reftests where we will render the full
+   *        size of the paginated content.
    * @returns {boolean} true if the page is fully loaded with the expected url,
    *         false otherwise.
    */
-  async reftestWait(url, useRemote) {
+  async reftestWait(url, useRemote, warnOnOverflow) {
     try {
       const isCorrectUrl = await this.sendQuery(
         "MarionetteReftestParent:reftestWait",
         {
           url,
           useRemote,
+          warnOnOverflow,
         }
       );
 

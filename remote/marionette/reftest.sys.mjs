@@ -651,7 +651,7 @@ reftest.Runner = class {
     }
   }
 
-  async loadTestUrl(win, url, timeout) {
+  async loadTestUrl(win, url, timeout, warnOnOverflow = true) {
     const browsingContext = this.driver.getBrowsingContext({ top: true });
     const webProgress = browsingContext.webProgress;
 
@@ -685,7 +685,11 @@ reftest.Runner = class {
         webProgress.browsingContext.currentWindowGlobal.getActor(
           "MarionetteReftest"
         );
-      isReftestReady = await actor.reftestWait(url, this.useRemoteTabs);
+      isReftestReady = await actor.reftestWait(
+        url,
+        this.useRemoteTabs,
+        warnOnOverflow
+      );
     }
   }
 
@@ -778,7 +782,7 @@ browserRect.height: ${browserRect.height}`);
 
   async screenshotPaginated(win, url, timeout, pageRanges) {
     url = new URL(url).href; // normalize the URL
-    await this.loadTestUrl(win, url, timeout);
+    await this.loadTestUrl(win, url, timeout, false);
 
     const [width, height] = [DEFAULT_PAGE_WIDTH, DEFAULT_PAGE_HEIGHT];
     const margin = DEFAULT_PAGE_MARGIN;
