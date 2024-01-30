@@ -51,6 +51,8 @@ const SUPPORTED_OPTIONS = {
   setTabOffline: true,
   // Enable touch events simulation
   touchEventsOverride: true,
+  // Used to configure and start/stop the JavaScript tracer
+  tracerOptions: true,
   // Use simplified highlighters when prefers-reduced-motion is enabled.
   useSimpleHighlightersForReducedMotion: true,
 };

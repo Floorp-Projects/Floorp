@@ -47,7 +47,10 @@ add_task(async function testBasicRecord() {
     ":trace --logMethod console --prefix foo --values --on-next-interaction",
     "console-api"
   );
-  is(msg.textContent.trim(), "Started tracing to Web Console");
+  is(
+    msg.textContent.trim(),
+    "Waiting for next user interaction before tracing (next mousedown or keydown event)"
+  );
 
   info("Trigger some code before the user interaction");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -61,6 +64,11 @@ add_task(async function testBasicRecord() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.main("arg", 2);
   });
+
+  info("Ensure a message notified about the tracer actual start");
+  await waitFor(
+    () => !!findConsoleAPIMessage(hud, `Started tracing to Web Console`)
+  );
 
   // Assert that we also see the custom prefix, as well as function arguments
   await waitFor(

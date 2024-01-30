@@ -1308,6 +1308,9 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       return;
     }
 
+    // Also update configurations which applies to all target types
+    super.updateTargetConfiguration(options, calledFromDocumentCreation);
+
     let reload = false;
     if (typeof options.touchEventsOverride !== "undefined") {
       const enableTouchSimulator = options.touchEventsOverride === "enabled";

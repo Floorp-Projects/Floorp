@@ -438,12 +438,15 @@ add_task(async function testTracingOnNextInteraction() {
 
   await clickElement(dbg, "trace");
 
-  const topLevelThreadActorID =
-    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
-  info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
-    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  const traceButton = findElement(dbg, "trace");
+  // Wait for the trace button to be highlighted
+  await waitFor(() => {
+    return traceButton.classList.contains("pending");
   });
+  ok(
+    traceButton.classList.contains("pending"),
+    "The tracer button is also highlighted as pending until the user interaction is triggered"
+  );
 
   invokeInTab("foo");
 
@@ -469,8 +472,24 @@ add_task(async function testTracingOnNextInteraction() {
   );
   AccessibilityUtils.resetEnv();
 
+  let topLevelThreadActorID =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be enabled");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
   await hasConsoleMessage(dbg, "λ onmousedown");
   await hasConsoleMessage(dbg, "λ onclick");
+
+  ok(
+    traceButton.classList.contains("active"),
+    "The tracer button is still highlighted as active"
+  );
+  ok(
+    !traceButton.classList.contains("pending"),
+    "The tracer button is no longer pending after the user interaction"
+  );
 
   is(
     (await findConsoleMessages(dbg.toolbox, "λ foo")).length,
@@ -482,6 +501,24 @@ add_task(async function testTracingOnNextInteraction() {
   invokeInTab("foo");
   await hasConsoleMessage(dbg, "λ foo");
   ok(true, "foo was traced as expected");
+
+  await clickElement(dbg, "trace");
+
+  topLevelThreadActorID =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be disabled");
+  await waitForState(dbg, state => {
+    return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
+  ok(
+    !traceButton.classList.contains("active"),
+    "The tracer button is no longer highlighted as active"
+  );
+  ok(
+    !traceButton.classList.contains("pending"),
+    "The tracer button is still not pending after disabling"
+  );
 
   // Reset the trace on next interaction setting
   Services.prefs.clearUserPref(

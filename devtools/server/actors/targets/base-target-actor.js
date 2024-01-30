@@ -107,6 +107,9 @@ class BaseTargetActor extends Actor {
     );
   }
 
+  // List of actor prefixes (string) which have already been instantiated via getTargetScopedActor method.
+  #instantiatedTargetScopedActors = new Set();
+
   /**
    * Try to return any target scoped actor instance, if it exists.
    * They are lazily instantiated and so will only be available
@@ -121,7 +124,38 @@ class BaseTargetActor extends Actor {
       return null;
     }
     const form = this.form();
+    this.#instantiatedTargetScopedActors.add(prefix);
     return this.conn._getOrCreateActor(form[prefix + "Actor"]);
+  }
+
+  /**
+   * Returns true, if the related target scoped actor has already been queried
+   * and instantiated via `getTargetScopedActor` method.
+   *
+   * @param {String} prefix
+   *        See getTargetScopedActor definition
+   * @return Boolean
+   *         True, if the actor has already been instantiated.
+   */
+  hasTargetScopedActor(prefix) {
+    return this.#instantiatedTargetScopedActors.has(prefix);
+  }
+
+  /**
+   * Apply target-specific options.
+   *
+   * This will be called by the watcher when the DevTools target-configuration
+   * is updated, or when a target is created via JSWindowActors.
+   */
+  updateTargetConfiguration(options = {}, calledFromDocumentCreation = false) {
+    // If there is some tracer options, we should start tracing, otherwise we should stop (if we were)
+    if (options.tracerOptions) {
+      const tracerActor = this.getTargetScopedActor("tracer");
+      tracerActor.startTracing(options.tracerOptions);
+    } else if (this.hasTargetScopedActor("tracer")) {
+      const tracerActor = this.getTargetScopedActor("tracer");
+      tracerActor.stopTracing();
+    }
   }
 }
 exports.BaseTargetActor = BaseTargetActor;

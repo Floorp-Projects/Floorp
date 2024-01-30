@@ -24,7 +24,11 @@ const EXPORTED_SYMBOLS = [
   "stopTracing",
   "addTracingListener",
   "removeTracingListener",
+  "NEXT_INTERACTION_MESSAGE",
 ];
+
+const NEXT_INTERACTION_MESSAGE =
+  "Waiting for next user interaction before tracing (next mousedown or keydown event)";
 
 const listeners = new Set();
 
@@ -163,20 +167,43 @@ class JavaScriptTracer {
         this.tracedGlobal.docShell.chromeEventHandler || this.tracedGlobal;
       eventHandler.addEventListener("mousedown", listener, eventOptions);
       eventHandler.addEventListener("keydown", listener, eventOptions);
+
+      // Significate to the user that the tracer is registered, but not tracing just yet.
+      let shouldLogToStdout = listeners.size == 0;
+      for (const l of listeners) {
+        if (typeof l.onTracingPending == "function") {
+          shouldLogToStdout |= l.onTracingPending();
+        }
+      }
+      if (shouldLogToStdout) {
+        this.loggingMethod(this.prefix + NEXT_INTERACTION_MESSAGE + "\n");
+      }
     } else {
       this.#startTracing();
     }
-
-    // In any case, we consider the tracing as started
-    this.notifyToggle(true);
   }
 
+  // Is actively tracing?
+  // We typically start tracing from the constructor, unless the "trace on next user interaction" feature is used.
+  isTracing = false;
+
+  /**
+   * Actually really start watching for executions.
+   *
+   * This may be delayed when traceOnNextInteraction options is used.
+   * Otherwise we start tracing as soon as the class instantiates.
+   */
   #startTracing() {
+    this.isTracing = true;
+
     this.dbg.onEnterFrame = this.onEnterFrame;
 
     if (this.traceDOMEvents) {
       this.startTracingDOMEvents();
     }
+
+    // In any case, we consider the tracing as started
+    this.notifyToggle(true);
   }
 
   startTracingDOMEvents() {
@@ -242,7 +269,8 @@ class JavaScriptTracer {
    *        Optional string to justify why the tracer stopped.
    */
   stopTracing(reason = "") {
-    if (!this.isTracing()) {
+    // Note that this may be called before `#startTracing()`, but still want to completely shut it down.
+    if (!this.dbg) {
       return;
     }
 
@@ -250,8 +278,10 @@ class JavaScriptTracer {
     this.dbg.removeAllDebuggees();
     this.dbg.onNewGlobalObject = undefined;
     this.dbg = null;
+
     this.depth = 0;
-    this.options = null;
+
+    // Cancel the traceOnNextInteraction event listeners.
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -262,12 +292,9 @@ class JavaScriptTracer {
     }
 
     this.tracedGlobal = null;
+    this.isTracing = false;
 
     this.notifyToggle(false, reason);
-  }
-
-  isTracing() {
-    return !!this.dbg;
   }
 
   /**
@@ -597,7 +624,7 @@ function addTracingListener(listener) {
   listeners.add(listener);
 
   if (
-    activeTracer?.isTracing() &&
+    activeTracer?.isTracing &&
     typeof listener.onTracingToggled == "function"
   ) {
     listener.onTracingToggled(true);
