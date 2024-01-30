@@ -925,9 +925,6 @@ nsFormFillController::HandleEvent(Event* aEvent) {
         RemoveForDocument(doc);
       }
     } break;
-    case eResize:
-      SetPopupOpen(false);
-      break;
     default:
       // Handling the default case to shut up stupid -Wswitch warnings.
       // One day compilers will be smarter...
@@ -955,7 +952,6 @@ void nsFormFillController::AttachListeners(EventTarget* aEventTarget) {
                               TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, u"contextmenu"_ns,
                               TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, u"resize"_ns, TrustedEventsAtCapture());
 }
 
 void nsFormFillController::RemoveForDocument(Document* aDoc) {
