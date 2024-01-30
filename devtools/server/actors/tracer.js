@@ -12,6 +12,7 @@ const {
   stopTracing,
   addTracingListener,
   removeTracingListener,
+  NEXT_INTERACTION_MESSAGE,
 } = require("resource://devtools/server/tracer/tracer.jsm");
 
 const { Actor } = require("resource://devtools/shared/protocol.js");
@@ -83,7 +84,7 @@ class TracerActor extends Actor {
    */
   toggleTracing(options) {
     if (!this.tracingListener) {
-      this.#startTracing(options);
+      this.startTracing(options);
       return true;
     }
     this.stopTracing();
@@ -93,18 +94,11 @@ class TracerActor extends Actor {
   /**
    * Start tracing.
    *
-   * @param {String} logMethod
-   *        The output method used by the tracer.
-   *        See `LOG_METHODS` for potential values.
    * @param {Object} options
    *        Options used to configure JavaScriptTracer.
    *        See `JavaScriptTracer.startTracing`.
    */
-  startTracing(logMethod = LOG_METHODS.STDOUT, options = {}) {
-    this.#startTracing({ ...options, logMethod });
-  }
-
-  #startTracing(options) {
+  startTracing(options = {}) {
     if (options.logMethod && !VALID_LOG_METHODS.includes(options.logMethod)) {
       throw new Error(
         `Invalid log method '${options.logMethod}'. Only supports: ${VALID_LOG_METHODS}`
@@ -119,6 +113,14 @@ class TracerActor extends Actor {
     if (options.maxRecords && typeof options.maxRecords != "number") {
       throw new Error("Invalid max-records, only support numbers");
     }
+
+    // When tracing on next user interaction is enabled,
+    // disable logging from workers as this makes the tracer work
+    // against visible documents and is actived per document thread.
+    if (options.traceOnNextInteraction && isWorker) {
+      return;
+    }
+
     this.logMethod = options.logMethod || LOG_METHODS.STDOUT;
 
     if (this.logMethod == LOG_METHODS.PROFILER) {
@@ -129,6 +131,7 @@ class TracerActor extends Actor {
       onTracingFrame: this.onTracingFrame.bind(this),
       onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
       onTracingToggled: this.onTracingToggled.bind(this),
+      onTracingPending: this.onTracingPending.bind(this),
     };
     addTracingListener(this.tracingListener);
     this.traceValues = !!options.traceValues;
@@ -152,10 +155,12 @@ class TracerActor extends Actor {
     if (!this.tracingListener) {
       return;
     }
-    stopTracing();
+    // Remove before stopping to prevent receiving the stop notification
     removeTracingListener(this.tracingListener);
-    this.logMethod = null;
     this.tracingListener = null;
+
+    stopTracing();
+    this.logMethod = null;
   }
 
   /**
@@ -193,6 +198,37 @@ class TracerActor extends Actor {
       this.stopTracing();
     }
     return shouldLogToStdout;
+  }
+
+  /**
+   * Called when "trace on next user interaction" is enabled, to notify the user
+   * that the tracer is initialized but waiting for the user first input.
+   */
+  onTracingPending() {
+    // Delegate to JavaScriptTracer to log to stdout
+    if (this.logMethod == LOG_METHODS.STDOUT) {
+      return true;
+    }
+
+    if (this.logMethod == LOG_METHODS.CONSOLE) {
+      const consoleMessageWatcher = getResourceWatcher(
+        this.targetActor,
+        TYPES.CONSOLE_MESSAGE
+      );
+      if (consoleMessageWatcher) {
+        consoleMessageWatcher.emitMessages([
+          {
+            arguments: [NEXT_INTERACTION_MESSAGE],
+            styles: [],
+            level: "log",
+            chromeContext: false,
+            timeStamp: ChromeUtils.dateNow(),
+          },
+        ]);
+      }
+      return false;
+    }
+    return false;
   }
 
   onTracingInfiniteLoop() {
