@@ -11353,3 +11353,19 @@ fx_suggest:
     expires: never
     send_in_pings:
       - fx-suggest
+debug_drawer:
+  debug_drawer_enabled:
+    type: boolean
+    description: |
+      Whether or not the user has enabled the Debug Drawer feature.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876596
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/5356
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never

@@ -23,6 +23,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.GleanMetrics.DebugDrawer as DebugDrawerMetrics
 
 class SecretSettingsFragment : PreferenceFragmentCompat() {
 
@@ -114,6 +115,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                 onPreferenceChangeListener =
                     Preference.OnPreferenceChangeListener { _, newValue ->
                         debugSettingsRepository.setDebugDrawerEnabled(enabled = newValue as Boolean)
+                        DebugDrawerMetrics.debugDrawerEnabled.set(newValue)
                         true
                     }
             }
