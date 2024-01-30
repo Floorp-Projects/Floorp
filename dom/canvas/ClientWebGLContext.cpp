@@ -405,78 +405,50 @@ void ClientWebGLContext::ThrowEvent_WebGLContextCreationError(
   target->DispatchEvent(*event);
 }
 
-// -
-
-// If we are running WebGL in this process then call the HostWebGLContext
-// method directly.  Otherwise, dispatch over IPC.
-template <typename MethodType, MethodType method, typename... Args>
-void ClientWebGLContext::Run(Args&&... args) const {
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (IsContextLost()) return;
-
-  const auto& inProcess = notLost->inProcess;
-  if (inProcess) {
-    return (inProcess.get()->*method)(std::forward<Args>(args)...);
-  }
-
-  const auto& child = notLost->outOfProcess;
-
-  const auto id = IdByMethod<MethodType, method>();
-
-  const auto info = webgl::SerializationInfo(id, args...);
-  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
-                                                     info.alignmentOverhead);
-  if (!maybeDest) {
-    JsWarning("Failed to allocate internal command buffer.");
-    OnContextLoss(webgl::ContextLossReason::None);
-    return;
-  }
-  const auto& destBytes = *maybeDest;
-  webgl::Serialize(destBytes, id, args...);
-}
-
-template <typename MethodType, MethodType method, typename... Args>
-void ClientWebGLContext::RunWithGCData(JS::AutoCheckCannotGC&& aNoGC,
-                                       Args&&... args) const {
-  // Hold a strong-ref to prevent LoseContext=>UAF.
-  //
-  // Note that `aNoGC` must be reset after the GC data is done being used and
-  // before the `notLost` destructor runs, since it could GC.
-  const auto notLost = mNotLost;
-  if (IsContextLost()) {
-    aNoGC.reset();  // GC data will not be used.
-    return;
-  }
-
-  const auto& inProcess = notLost->inProcess;
-  if (inProcess) {
-    (inProcess.get()->*method)(std::forward<Args>(args)...);
-    aNoGC.reset();  // Done with any GC data
-    return;
-  }
-
-  const auto& child = notLost->outOfProcess;
-
-  const auto id = IdByMethod<MethodType, method>();
-
-  const auto info = webgl::SerializationInfo(id, args...);
-  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
-                                                     info.alignmentOverhead);
-  if (!maybeDest) {
-    aNoGC.reset();  // GC data will not be used.
-    JsWarning("Failed to allocate internal command buffer.");
-    OnContextLoss(webgl::ContextLossReason::None);
-    return;
-  }
-  const auto& destBytes = *maybeDest;
-  webgl::Serialize(destBytes, id, args...);
-  aNoGC.reset();  // Done with any GC data
-}
-
 // -------------------------------------------------------------------------
 // Client-side helper methods.  Dispatch to a Host method.
 // -------------------------------------------------------------------------
+
+// If we are running WebGL in this process then call the HostWebGLContext
+// method directly.  Otherwise, dispatch over IPC.
+template <typename MethodT, typename... Args>
+void ClientWebGLContext::Run_WithDestArgTypes(
+    std::optional<JS::AutoCheckCannotGC>&& noGc, const MethodT method,
+    const size_t id, const Args&... args) const {
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+
+  // `AutoCheckCannotGC` must be reset after the GC data is done being used but
+  // *before* the `notLost` destructor runs, since the latter can GC.
+  const auto cleanup = MakeScopeExit([&]() { noGc.reset(); });
+
+  if (IsContextLost()) {
+    return;
+  }
+
+  const auto& inProcess = notLost->inProcess;
+  if (inProcess) {
+    (inProcess.get()->*method)(args...);
+    return;
+  }
+
+  const auto& child = notLost->outOfProcess;
+
+  const auto info = webgl::SerializationInfo(id, args...);
+  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
+                                                     info.alignmentOverhead);
+  if (!maybeDest) {
+    noGc.reset();  // Reset early, as GC data will not be used, but JsWarning
+                   // can GC.
+    JsWarning("Failed to allocate internal command buffer.");
+    OnContextLoss(webgl::ContextLossReason::None);
+    return;
+  }
+  const auto& destBytes = *maybeDest;
+  webgl::Serialize(destBytes, id, args...);
+}
+
+// -
 
 #define RPROC(_METHOD) \
   decltype(&HostWebGLContext::_METHOD), &HostWebGLContext::_METHOD
