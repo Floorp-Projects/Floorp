@@ -4659,11 +4659,12 @@ HTMLEditor::FormatBlockContainerWithTransaction(
       aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
           ? EditSubAction::eFormatBlockForHTMLCommand
           : EditSubAction::eCreateOrRemoveBlock,
-      BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
+      BlockInlineCheck::UseComputedDisplayOutsideStyle, aEditingHost);
   Result<EditorDOMPoint, nsresult> splitResult =
       aSelectionRanges
           .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
-              *this, BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
+              *this, BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              aEditingHost);
   if (MOZ_UNLIKELY(splitResult.isErr())) {
     NS_WARNING(
         "AutoRangeArray::"
@@ -4698,7 +4699,7 @@ HTMLEditor::FormatBlockContainerWithTransaction(
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (HTMLEditUtils::IsEmptyOneHardLine(
-          arrayOfContents, BlockInlineCheck::UseHTMLDefaultStyle)) {
+          arrayOfContents, BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     if (NS_WARN_IF(aSelectionRanges.Ranges().IsEmpty())) {
       return Err(NS_ERROR_FAILURE);
     }
@@ -4719,7 +4720,7 @@ HTMLEditor::FormatBlockContainerWithTransaction(
           HTMLEditUtils::GetInclusiveAncestorElement(
               *pointToInsertBlock.ContainerAs<nsIContent>(),
               HTMLEditUtils::ClosestEditableBlockElement,
-              BlockInlineCheck::UseHTMLDefaultStyle);
+              BlockInlineCheck::UseComputedDisplayOutsideStyle);
       if (!editableBlockElement) {
         NS_WARNING(
             "HTMLEditor::FormatBlockContainerWithTransaction() couldn't find "
@@ -4738,7 +4739,8 @@ HTMLEditor::FormatBlockContainerWithTransaction(
       // which is visually bad.
       if (nsCOMPtr<nsIContent> brContent = HTMLEditUtils::GetNextContent(
               pointToInsertBlock, {WalkTreeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
+              BlockInlineCheck::UseComputedDisplayOutsideStyle,
+              &aEditingHost)) {
         if (brContent && brContent->IsHTMLElement(nsGkAtoms::br)) {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
           nsresult rv = DeleteNodeWithTransaction(*brContent);
@@ -4784,7 +4786,7 @@ HTMLEditor::FormatBlockContainerWithTransaction(
             pointToInsertBlock,
             {WalkTreeOption::IgnoreNonEditableNode,
              WalkTreeOption::StopAtBlockBoundary},
-            BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
+            BlockInlineCheck::UseComputedDisplayOutsideStyle, &aEditingHost)) {
       if (maybeBRContent->IsHTMLElement(nsGkAtoms::br)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
         nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
@@ -4862,7 +4864,7 @@ HTMLEditor::FormatBlockContainerWithTransaction(
       Result<EditorDOMPoint, nsresult> removeBlockContainerElementsResult =
           RemoveBlockContainerElementsWithTransaction(
               arrayOfContents, FormatBlockMode::XULParagraphStateCommand,
-              BlockInlineCheck::UseHTMLDefaultStyle);
+              BlockInlineCheck::UseComputedDisplayOutsideStyle);
       if (MOZ_UNLIKELY(removeBlockContainerElementsResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
