@@ -3806,6 +3806,12 @@ void BigInt::dumpFields(js::JSONPrinter& json) const {
   json.endStringProperty();
 }
 
+void BigInt::dumpStringContent(js::GenericPrinter& out) const {
+  dumpLiteral(out);
+
+  out.printf(" @ (JS::BigInt*)0x%p", this);
+}
+
 void BigInt::dumpLiteral(js::GenericPrinter& out) const {
   if (isNegative()) {
     out.putChar('-');

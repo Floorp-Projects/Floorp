@@ -263,6 +263,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   void dump(js::JSONPrinter& json) const;
 
   void dumpFields(js::JSONPrinter& json) const;
+  void dumpStringContent(js::GenericPrinter& out) const;
   void dumpLiteral(js::GenericPrinter& out) const;
 #endif
 
