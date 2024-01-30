@@ -49,7 +49,8 @@ class RecordedTextureData final : public TextureData {
 
   bool RequiresRefresh() const final;
 
-  void UseCompositableForwarder(CompositableForwarder* aForwarder) final;
+  already_AddRefed<FwdTransactionTracker> UseCompositableForwarder(
+      CompositableForwarder* aForwarder) final;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(RecordedTextureData);
@@ -66,8 +67,7 @@ class RecordedTextureData final : public TextureData {
   OpenMode mLockedMode;
   RemoteTextureId mLastRemoteTextureId;
   RemoteTextureOwnerId mRemoteTextureOwnerId;
-  RemoteTextureTxnType mLastTxnType = 0;
-  RemoteTextureTxnId mLastTxnId = 0;
+  RefPtr<layers::FwdTransactionTracker> mFwdTransactionTracker;
   bool mUsedRemoteTexture = false;
   bool mInvalidContents = true;
 };

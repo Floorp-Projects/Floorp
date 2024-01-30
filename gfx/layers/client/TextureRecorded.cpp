@@ -32,8 +32,9 @@ RecordedTextureData::~RecordedTextureData() {
   // because the TextureData might need to destroy its DrawTarget within a lock.
   mDT = nullptr;
   mCanvasChild->CleanupTexture(mTextureId);
-  mCanvasChild->RecordEvent(
-      RecordedTextureDestruction(mTextureId, mLastTxnType, mLastTxnId));
+  mCanvasChild->RecordEvent(RecordedTextureDestruction(
+      mTextureId, ToRemoteTextureTxnType(mFwdTransactionTracker),
+      ToRemoteTextureTxnId(mFwdTransactionTracker)));
 }
 
 void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
@@ -168,10 +169,10 @@ bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
   return true;
 }
 
-void RecordedTextureData::UseCompositableForwarder(
+already_AddRefed<FwdTransactionTracker>
+RecordedTextureData::UseCompositableForwarder(
     CompositableForwarder* aForwarder) {
-  mLastTxnType = (RemoteTextureTxnType)aForwarder->GetFwdTransactionType();
-  mLastTxnId = (RemoteTextureTxnId)aForwarder->GetFwdTransactionId();
+  return FwdTransactionTracker::GetOrCreate(mFwdTransactionTracker);
 }
 
 void RecordedTextureData::OnForwardedToHost() {

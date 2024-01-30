@@ -29,6 +29,7 @@ class DrawTarget;
 namespace layers {
 
 class CompositableForwarder;
+class FwdTransactionTracker;
 class KnowsCompositor;
 struct RemoteTextureOwnerId;
 class TextureClient;
@@ -108,9 +109,10 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual Maybe<SurfaceDescriptor> GetFrontBuffer() { return Nothing(); }
 
-  virtual void UseCompositableForwarder(CompositableForwarder* aForwarder) {}
-
-  virtual bool WaitForRemoteTextureOwner() const { return false; }
+  virtual already_AddRefed<FwdTransactionTracker> UseCompositableForwarder(
+      CompositableForwarder* aForwarder) {
+    return nullptr;
+  }
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider {
@@ -176,9 +178,8 @@ class PersistentBufferProviderAccelerated : public PersistentBufferProvider {
 
   bool RequiresRefresh() const override;
 
-  void UseCompositableForwarder(CompositableForwarder* aForwarder) override;
-
-  bool WaitForRemoteTextureOwner() const override { return true; }
+  already_AddRefed<FwdTransactionTracker> UseCompositableForwarder(
+      CompositableForwarder* aForwarder) override;
 
  protected:
   explicit PersistentBufferProviderAccelerated(

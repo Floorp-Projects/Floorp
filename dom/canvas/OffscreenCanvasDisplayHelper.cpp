@@ -195,6 +195,7 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   RefPtr<layers::TextureClient> texture;
   RefPtr<gfx::SourceSurface> surface;
   Maybe<layers::SurfaceDescriptor> desc;
+  RefPtr<layers::FwdTransactionTracker> tracker;
 
   {
     MutexAutoUnlock unlock(mMutex);
@@ -207,6 +208,12 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
       hasRemoteTextureDesc =
           desc->type() ==
           layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture;
+      if (hasRemoteTextureDesc) {
+        tracker = aContext->UseCompositableForwarder(imageBridge);
+        if (tracker) {
+          flags |= layers::TextureFlags::WAIT_FOR_REMOTE_TEXTURE_OWNER;
+        }
+      }
     } else {
       if (layers::PersistentBufferProvider* provider =
               aContext->GetBufferProvider()) {
@@ -245,7 +252,8 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   if (hasRemoteTextureDesc) {
     const auto& textureDesc = desc->get_SurfaceDescriptorRemoteTexture();
     imageBridge->UpdateCompositable(mImageContainer, textureDesc.textureId(),
-                                    textureDesc.ownerId(), mData.mSize, flags);
+                                    textureDesc.ownerId(), mData.mSize, flags,
+                                    tracker);
     return true;
   }
 

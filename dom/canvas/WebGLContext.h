@@ -1269,8 +1269,14 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void EnsureContextLostRemoteTextureOwner(
       const webgl::SwapChainOptions& options);
 
+ public:
+  void WaitForTxn(layers::RemoteTextureOwnerId ownerId,
+                  layers::RemoteTextureTxnType txnType,
+                  layers::RemoteTextureTxnId txnId);
+
   // --
 
+ protected:
   bool EnsureDefaultFB();
   bool ValidateAndInitFB(
       const WebGLFramebuffer* fb,

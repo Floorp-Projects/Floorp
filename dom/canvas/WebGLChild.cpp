@@ -15,7 +15,17 @@ WebGLChild::WebGLChild(ClientWebGLContext& context)
     : mContext(&context),
       mDefaultCmdsShmemSize(StaticPrefs::webgl_out_of_process_shmem_size()) {}
 
-WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
+WebGLChild::~WebGLChild() { Destroy(); }
+
+void WebGLChild::Destroy() {
+  if (!CanSend()) {
+    return;
+  }
+  if (mContext) {
+    mContext->OnDestroyChild(this);
+  }
+  (void)Send__delete__(this);
+}
 
 void WebGLChild::ActorDestroy(ActorDestroyReason why) {
   mPendingCmdsShmem = {};

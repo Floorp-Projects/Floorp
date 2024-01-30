@@ -98,6 +98,15 @@ mozilla::ipc::IPCResult WebGLParent::Recv__delete__() {
 
 void WebGLParent::ActorDestroy(ActorDestroyReason aWhy) { mHost = nullptr; }
 
+mozilla::ipc::IPCResult WebGLParent::RecvWaitForTxn(
+    layers::RemoteTextureOwnerId aOwnerId,
+    layers::RemoteTextureTxnType aTxnType, layers::RemoteTextureTxnId aTxnId) {
+  if (mHost) {
+    mHost->WaitForTxn(aOwnerId, aTxnType, aTxnId);
+  }
+  return IPC_OK();
+}
+
 // -
 
 IPCResult WebGLParent::RecvGetFrontBufferSnapshot(

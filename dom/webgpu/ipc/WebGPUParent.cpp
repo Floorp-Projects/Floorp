@@ -1310,10 +1310,8 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainDrop(
-    const layers::RemoteTextureOwnerId& aOwnerId) {
-  if (mRemoteTextureOwner) {
-    mRemoteTextureOwner->UnregisterTextureOwner(aOwnerId);
-  }
+    const layers::RemoteTextureOwnerId& aOwnerId,
+    layers::RemoteTextureTxnType aTxnType, layers::RemoteTextureTxnId aTxnId) {
   const auto& lookup = mPresentationDataMap.find(aOwnerId);
   MOZ_ASSERT(lookup != mPresentationDataMap.end());
   if (lookup == mPresentationDataMap.end()) {
@@ -1322,6 +1320,14 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDrop(
   }
 
   RefPtr<PresentationData> data = lookup->second.get();
+
+  if (mRemoteTextureOwner) {
+    if (aTxnType && aTxnId) {
+      mRemoteTextureOwner->WaitForTxn(aOwnerId, aTxnType, aTxnId);
+    }
+    mRemoteTextureOwner->UnregisterTextureOwner(aOwnerId);
+  }
+
   mPresentationDataMap.erase(lookup);
 
   MutexAutoLock lock(data->mBuffersLock);

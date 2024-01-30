@@ -79,6 +79,17 @@ void RemoteTextureOwnerClient::UnregisterAllTextureOwners() {
   mSharedRecycleBin = nullptr;
 }
 
+bool RemoteTextureOwnerClient::WaitForTxn(const RemoteTextureOwnerId aOwnerId,
+                                          RemoteTextureTxnType aTxnType,
+                                          RemoteTextureTxnId aTxnId) {
+  auto it = mOwnerIds.find(aOwnerId);
+  if (it == mOwnerIds.end() || !aTxnType || !aTxnId) {
+    return false;
+  }
+  return RemoteTextureMap::Get()->WaitForTxn(aOwnerId, mForPid, aTxnType,
+                                             aTxnId);
+}
+
 void RemoteTextureOwnerClient::ClearRecycledTextures() {
   RemoteTextureMap::Get()->ClearRecycledTextures(mOwnerIds, mForPid,
                                                  mSharedRecycleBin);
@@ -587,7 +598,7 @@ void RemoteTextureMap::KeepTextureDataAliveForTextureHostIfNecessary(
 
 UniquePtr<RemoteTextureMap::TextureOwner>
 RemoteTextureMap::UnregisterTextureOwner(
-    const MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
+    MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
     const base::ProcessId aForPid,
     std::vector<RefPtr<TextureHost>>& aReleasingTextures,
     std::vector<std::function<void(const RemoteTextureInfo&)>>&
@@ -604,6 +615,12 @@ RemoteTextureMap::UnregisterTextureOwner(
   // unregistering.
   if (owner->mWaitForTxn) {
     owner->mDeferUnregister = GetCurrentSerialEventTarget();
+    // If another thread is waiting on this owner to produce textures,
+    // it must be notified that owner is going away.
+    if (!owner->mLatestTextureHost &&
+        owner->mWaitingTextureDataHolders.empty()) {
+      aProofOfLock.Notify();
+    }
     return nullptr;
   }
 
@@ -977,7 +994,7 @@ bool RemoteTextureMap::GetRemoteTexture(
       const TimeDuration timeout = TimeDuration::FromMilliseconds(10000);
       while (!owner || (!owner->mLatestTextureHost &&
                         owner->mWaitingTextureDataHolders.empty())) {
-        if (owner && owner->mIsContextLost) {
+        if (owner && (owner->mIsContextLost || owner->mDeferUnregister)) {
           // If the context was lost, no further updates are expected.
           return false;
         }

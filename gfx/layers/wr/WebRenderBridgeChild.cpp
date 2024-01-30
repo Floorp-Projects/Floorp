@@ -442,14 +442,14 @@ void WebRenderBridgeChild::UseTextures(
                                                   OpUseTexture(textures)));
 }
 
-void WebRenderBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
-                                            const RemoteTextureId aTextureId,
-                                            const RemoteTextureOwnerId aOwnerId,
-                                            const gfx::IntSize aSize,
-                                            const TextureFlags aFlags) {
+void WebRenderBridgeChild::UseRemoteTexture(
+    CompositableClient* aCompositable, const RemoteTextureId aTextureId,
+    const RemoteTextureOwnerId aOwnerId, const gfx::IntSize aSize,
+    const TextureFlags aFlags, const RefPtr<FwdTransactionTracker>& aTracker) {
   AddWebRenderParentCommand(CompositableOperation(
       aCompositable->GetIPCHandle(),
       OpUseRemoteTexture(aTextureId, aOwnerId, aSize, aFlags)));
+  TrackFwdTransaction(aTracker);
 }
 
 FwdTransactionCounter& WebRenderBridgeChild::GetFwdTransactionCounter() {

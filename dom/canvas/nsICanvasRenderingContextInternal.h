@@ -42,6 +42,8 @@ class PresShell;
 class WebGLFramebufferJS;
 namespace layers {
 class CanvasRenderer;
+class CompositableForwarder;
+class FwdTransactionTracker;
 class Layer;
 class Image;
 class LayerManager;
@@ -210,6 +212,11 @@ class nsICanvasRenderingContextInternal : public nsISupports,
       mozilla::WebGLFramebufferJS* fb, mozilla::layers::TextureType,
       const bool webvr = false) {
     return GetFrontBuffer(fb, webvr);
+  }
+
+  virtual already_AddRefed<mozilla::layers::FwdTransactionTracker>
+  UseCompositableForwarder(mozilla::layers::CompositableForwarder* aForwarder) {
+    return nullptr;
   }
 
   void DoSecurityCheck(nsIPrincipal* aPrincipal, bool forceWriteOnly,

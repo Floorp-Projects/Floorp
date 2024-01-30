@@ -200,7 +200,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void UpdateCompositable(const RefPtr<ImageContainer> aContainer,
                           const RemoteTextureId aTextureId,
                           const RemoteTextureOwnerId aOwnerId,
-                          const gfx::IntSize aSize, const TextureFlags aFlags);
+                          const gfx::IntSize aSize, const TextureFlags aFlags,
+                          const RefPtr<FwdTransactionTracker> aTracker);
 
   /**
    * Flush all Images sent to CompositableHost.
@@ -251,8 +252,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void UseRemoteTexture(CompositableClient* aCompositable,
                         const RemoteTextureId aTextureId,
                         const RemoteTextureOwnerId aOwnerId,
-                        const gfx::IntSize aSize,
-                        const TextureFlags aFlags) override;
+                        const gfx::IntSize aSize, const TextureFlags aFlags,
+                        const RefPtr<FwdTransactionTracker>& aTracker) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
 

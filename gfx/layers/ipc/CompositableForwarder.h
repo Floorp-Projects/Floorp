@@ -9,6 +9,7 @@
 
 #include <stdint.h>  // for int32_t, uint32_t, uint64_t
 #include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT, MOZ_ASSERT_HELPER1
+#include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol, ProtocolID
@@ -53,6 +54,48 @@ struct FwdTransactionCounter {
    */
   uint64_t mFwdTransactionId = 0;
 };
+
+/**
+ * FwdTransactionTracker is to be used by CompositableForwarder consumers that
+ * must remember the last transaction in which they were used.
+ */
+class FwdTransactionTracker {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FwdTransactionTracker)
+
+  static already_AddRefed<FwdTransactionTracker> GetOrCreate(
+      RefPtr<FwdTransactionTracker>& aTracker) {
+    if (!aTracker) {
+      aTracker = new FwdTransactionTracker;
+    }
+    return do_AddRef(aTracker);
+  }
+
+  bool IsUsed() const { return mFwdTransactionType && mFwdTransactionId; }
+
+  void Use(const FwdTransactionCounter& aCounter) {
+    mFwdTransactionType = aCounter.mFwdTransactionType;
+    mFwdTransactionId = aCounter.mFwdTransactionId;
+  }
+
+  Atomic<mozilla::ipc::ProtocolId> mFwdTransactionType{
+      (mozilla::ipc::ProtocolId)0};
+  Atomic<uint64_t> mFwdTransactionId{0};
+
+ private:
+  FwdTransactionTracker() = default;
+  ~FwdTransactionTracker() = default;
+};
+
+inline RemoteTextureTxnType ToRemoteTextureTxnType(
+    const RefPtr<FwdTransactionTracker>& aTracker) {
+  return aTracker ? (RemoteTextureTxnType)aTracker->mFwdTransactionType : 0;
+}
+
+inline RemoteTextureTxnId ToRemoteTextureTxnId(
+    const RefPtr<FwdTransactionTracker>& aTracker) {
+  return aTracker ? (RemoteTextureTxnId)aTracker->mFwdTransactionId : 0;
+}
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -111,11 +154,11 @@ class CompositableForwarder : public KnowsCompositor {
   virtual void UseTextures(CompositableClient* aCompositable,
                            const nsTArray<TimedTextureClient>& aTextures) = 0;
 
-  virtual void UseRemoteTexture(CompositableClient* aCompositable,
-                                const RemoteTextureId aTextureId,
-                                const RemoteTextureOwnerId aOwnerId,
-                                const gfx::IntSize aSize,
-                                const TextureFlags aFlags) = 0;
+  virtual void UseRemoteTexture(
+      CompositableClient* aCompositable, const RemoteTextureId aTextureId,
+      const RemoteTextureOwnerId aOwnerId, const gfx::IntSize aSize,
+      const TextureFlags aFlags,
+      const RefPtr<layers::FwdTransactionTracker>& aTracker) = 0;
 
   void UpdateFwdTransactionId() {
     ++GetFwdTransactionCounter().mFwdTransactionId;
@@ -133,6 +176,12 @@ class CompositableForwarder : public KnowsCompositor {
 
  protected:
   virtual FwdTransactionCounter& GetFwdTransactionCounter() = 0;
+
+  void TrackFwdTransaction(const RefPtr<FwdTransactionTracker>& aTracker) {
+    if (aTracker) {
+      aTracker->Use(GetFwdTransactionCounter());
+    }
+  }
 
   nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;

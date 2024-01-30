@@ -105,8 +105,9 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
       RawId aTextureId, RawId aCommandEncoderId,
       const layers::RemoteTextureId& aRemoteTextureId,
       const layers::RemoteTextureOwnerId& aOwnerId);
-  ipc::IPCResult RecvSwapChainDrop(
-      const layers::RemoteTextureOwnerId& aOwnerId);
+  ipc::IPCResult RecvSwapChainDrop(const layers::RemoteTextureOwnerId& aOwnerId,
+                                   layers::RemoteTextureTxnType aTxnType,
+                                   layers::RemoteTextureTxnId aTxnId);
 
   ipc::IPCResult RecvDeviceAction(RawId aDeviceId,
                                   const ipc::ByteBuf& aByteBuf);

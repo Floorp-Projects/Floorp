@@ -22,6 +22,7 @@
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/OOPCanvasRenderer.h"
@@ -52,7 +53,7 @@ webgl::NotLostData::NotLostData(ClientWebGLContext& _context)
 
 webgl::NotLostData::~NotLostData() {
   if (outOfProcess) {
-    Unused << dom::WebGLChild::Send__delete__(outOfProcess.get());
+    outOfProcess->Destroy();
   }
 }
 
@@ -484,24 +485,25 @@ webgl::SwapChainOptions ClientWebGLContext::PrepareAsyncSwapChainOptions(
   // Currently remote texture ids should only be set internally.
   MOZ_ASSERT(!options.remoteTextureOwnerId.IsValid() &&
              !options.remoteTextureId.IsValid());
-  auto& ownerId = fb ? fb->mRemoteTextureOwnerId : mRemoteTextureOwnerId;
-  auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
   // Async present only works when out-of-process. It is not supported in WebVR.
   // Allow it if it is either forced or if the pref is set.
-  if (!IsContextLost() && !mNotLost->inProcess && !webvr &&
+  if (fb || webvr) {
+    return options;
+  }
+  if (!IsContextLost() && !mNotLost->inProcess &&
       (options.forceAsyncPresent ||
        StaticPrefs::webgl_out_of_process_async_present())) {
-    if (!ownerId) {
-      ownerId = Some(layers::RemoteTextureOwnerId::GetNext());
+    if (!mRemoteTextureOwnerId) {
+      mRemoteTextureOwnerId = Some(layers::RemoteTextureOwnerId::GetNext());
     }
-    textureId = Some(layers::RemoteTextureId::GetNext());
+    mLastRemoteTextureId = Some(layers::RemoteTextureId::GetNext());
     webgl::SwapChainOptions asyncOptions = options;
-    asyncOptions.remoteTextureOwnerId = *ownerId;
-    asyncOptions.remoteTextureId = *textureId;
+    asyncOptions.remoteTextureOwnerId = *mRemoteTextureOwnerId;
+    asyncOptions.remoteTextureId = *mLastRemoteTextureId;
     return asyncOptions;
   }
   // Clear the current remote texture id so that we disable async.
-  textureId = Nothing();
+  mRemoteTextureOwnerId = Nothing();
   return options;
 }
 
@@ -550,19 +552,13 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   auto& info = child->GetFlushedCmdInfo();
 
   // If valid remote texture data was set for async present, then use it.
-  const auto& ownerId = fb ? fb->mRemoteTextureOwnerId : mRemoteTextureOwnerId;
-  const auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
-  auto& needsSync = fb ? fb->mNeedsRemoteTextureSync : mNeedsRemoteTextureSync;
-  if (ownerId && textureId) {
+  if (!fb && !vr && mRemoteTextureOwnerId && mLastRemoteTextureId) {
     const auto tooManyFlushes = 10;
     // If there are many flushed cmds, force synchronous IPC to avoid too many
     // pending ipc messages.
-    if (info.flushesSinceLastCongestionCheck > tooManyFlushes) {
-      needsSync = true;
-    }
     if (XRE_IsParentProcess() ||
-        gfx::gfxVars::WebglOopAsyncPresentForceSync() || needsSync) {
-      needsSync = false;
+        gfx::gfxVars::WebglOopAsyncPresentForceSync() ||
+        info.flushesSinceLastCongestionCheck > tooManyFlushes) {
       // Request the front buffer from IPDL to cause a sync, even though we
       // will continue to use the remote texture descriptor after.
       (void)child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret);
@@ -571,7 +567,8 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
     info.flushesSinceLastCongestionCheck = 0;
     info.congestionCheckGeneration++;
 
-    return Some(layers::SurfaceDescriptorRemoteTexture(*textureId, *ownerId));
+    return Some(layers::SurfaceDescriptorRemoteTexture(*mLastRemoteTextureId,
+                                                       *mRemoteTextureOwnerId));
   }
 
   if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
@@ -587,6 +584,27 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::PresentFrontBuffer(
     WebGLFramebufferJS* const fb, const layers::TextureType type, bool webvr) {
   Present(fb, type, webvr);
   return GetFrontBuffer(fb, webvr);
+}
+
+already_AddRefed<layers::FwdTransactionTracker>
+ClientWebGLContext::UseCompositableForwarder(
+    layers::CompositableForwarder* aForwarder) {
+  if (mRemoteTextureOwnerId) {
+    return layers::FwdTransactionTracker::GetOrCreate(mFwdTransactionTracker);
+  }
+  return nullptr;
+}
+
+void ClientWebGLContext::OnDestroyChild(dom::WebGLChild* aChild) {
+  // Since NotLostData may be destructing at this point, the RefPtr to
+  // WebGLChild may be unreliable. Instead, it must be explicitly passed in.
+  if (mRemoteTextureOwnerId && mFwdTransactionTracker &&
+      mFwdTransactionTracker->IsUsed()) {
+    (void)aChild->SendWaitForTxn(
+        *mRemoteTextureOwnerId,
+        layers::ToRemoteTextureTxnType(mFwdTransactionTracker),
+        layers::ToRemoteTextureTxnId(mFwdTransactionTracker));
+  }
 }
 
 void ClientWebGLContext::ClearVRSwapChain() { Run<RPROC(ClearVRSwapChain)>(); }
@@ -622,7 +640,6 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
 
   MOZ_ASSERT(renderer);
   mResetLayer = false;
-  mNeedsRemoteTextureSync = true;
 
   return true;
 }
@@ -865,6 +882,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     // WebGLParent.
     if (mRemoteTextureOwnerId.isSome()) {
       mRemoteTextureOwnerId = Nothing();
+      mFwdTransactionTracker = nullptr;
     }
 
     if (!outOfProcess->SendInitialize(initDesc, &notLost.info)) {

@@ -46,6 +46,7 @@ class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   Maybe<Range<uint8_t>> AllocPendingCmdBytes(size_t,
                                              size_t fyiAlignmentOverhead);
   void FlushPendingCmds();
+  void Destroy();
   void ActorDestroy(ActorDestroyReason why) override;
 
   FlushedCmdInfo& GetFlushedCmdInfo() { return mFlushedCmdInfo; }

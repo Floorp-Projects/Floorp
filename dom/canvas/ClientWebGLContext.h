@@ -300,12 +300,6 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
  private:
   bool mHasBeenBound = false;  // !IsFramebuffer until Bind
   std::unordered_map<GLenum, Attachment> mAttachments;
-  // Holds Some Id if async present is used
-  Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
-  Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
-  // Needs sync IPC to ensure that the remote texture exists in the
-  // RemoteTextureMap.
-  bool mNeedsRemoteTextureSync = true;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebufferJS)
@@ -787,12 +781,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   mutable GLenum mNextError = 0;
   mutable webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
   mutable bool mAwaitingRestore = false;
+
+ public:
   // Holds Some Id if async present is used
   mutable Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   mutable Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
-  // Needs sync IPC to ensure that the remote texture exists in the
-  // RemoteTextureMap.
-  bool mNeedsRemoteTextureSync = true;
+  mutable RefPtr<layers::FwdTransactionTracker> mFwdTransactionTracker;
 
   // -
 
@@ -1084,6 +1078,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
       const bool webvr = false) override;
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
       bool requireAlphaPremult = true) override;
+  already_AddRefed<layers::FwdTransactionTracker> UseCompositableForwarder(
+      layers::CompositableForwarder* aForwarder) override;
+  void OnDestroyChild(dom::WebGLChild* aChild);
 
   void ClearVRSwapChain();
 

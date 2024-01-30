@@ -255,9 +255,10 @@ bool PersistentBufferProviderAccelerated::RequiresRefresh() const {
   return mTexture->GetInternalData()->RequiresRefresh();
 }
 
-void PersistentBufferProviderAccelerated::UseCompositableForwarder(
+already_AddRefed<FwdTransactionTracker>
+PersistentBufferProviderAccelerated::UseCompositableForwarder(
     CompositableForwarder* aForwarder) {
-  mTexture->GetInternalData()->UseCompositableForwarder(aForwarder);
+  return mTexture->GetInternalData()->UseCompositableForwarder(aForwarder);
 }
 
 // static

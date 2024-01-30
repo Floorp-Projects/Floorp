@@ -959,9 +959,9 @@ void CanvasTranslator::RemoveTexture(int64_t aTextureId,
     return;
   }
   auto& info = result->second;
-  if (aTxnType && aTxnId) {
-    RemoteTextureMap::Get()->WaitForTxn(info.mRemoteTextureOwnerId, mOtherPid,
-                                        aTxnType, aTxnId);
+  if (mRemoteTextureOwner && aTxnType && aTxnId) {
+    mRemoteTextureOwner->WaitForTxn(info.mRemoteTextureOwnerId, aTxnType,
+                                    aTxnId);
   }
   if (--info.mLocked > 0) {
     return;
