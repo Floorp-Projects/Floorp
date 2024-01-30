@@ -2,6 +2,8 @@
 alert_threshold = 2.0
 apps = "firefox, chrome, chromium, safari"
 gecko_profile_interval = 1
+gecko_profile_features = "stackwalk,js,cpu,java,processcpu"
+gecko_profile_threads = "GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate"
 expose_gecko_profiler = true
 expose_chrome_trace = true
 lower_is_better = false
