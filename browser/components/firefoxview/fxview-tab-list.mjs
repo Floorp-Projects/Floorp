@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  classMap,
   html,
   ifDefined,
   repeat,
@@ -185,7 +186,19 @@ export default class FxviewTabList extends MozLitElement {
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.currentActiveElementId = fxviewTabRow.focusLink();
+        if (
+          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+          this.currentActiveElementId === "fxview-tab-row-secondary-button"
+        ) {
+          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        } else {
+          this.currentActiveElementId = fxviewTabRow.focusLink();
+        }
+      } else if (
+        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+        this.currentActiveElementId === "fxview-tab-row-main"
+      ) {
+        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
       } else {
         this.currentActiveElementId = fxviewTabRow.focusButton();
       }
@@ -194,7 +207,19 @@ export default class FxviewTabList extends MozLitElement {
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.currentActiveElementId = fxviewTabRow.focusButton();
+        if (
+          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+          this.currentActiveElementId === "fxview-tab-row-main"
+        ) {
+          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        } else {
+          this.currentActiveElementId = fxviewTabRow.focusButton();
+        }
+      } else if (
+        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+        this.currentActiveElementId === "fxview-tab-row-secondary-button"
+      ) {
+        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
       } else {
         this.currentActiveElementId = fxviewTabRow.focusLink();
       }
@@ -264,14 +289,20 @@ export default class FxviewTabList extends MozLitElement {
         ?active=${i == this.activeIndex}
         ?compact=${this.compactRows}
         .hasPopup=${this.hasPopup}
+        .containerObj=${tabItem.containerObj}
         .currentActiveElementId=${this.currentActiveElementId}
         .dateTimeFormat=${this.dateTimeFormat}
         .favicon=${tabItem.icon}
+        .isBookmark=${ifDefined(tabItem.isBookmark)}
+        .muted=${ifDefined(tabItem.muted)}
+        .pinned=${ifDefined(tabItem.pinned)}
         .primaryL10nId=${tabItem.primaryL10nId}
         .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
         role="listitem"
         .secondaryL10nId=${tabItem.secondaryL10nId}
         .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
+        .attention=${ifDefined(tabItem.attention)}
+        .soundPlaying=${ifDefined(tabItem.soundPlaying)}
         .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
         .sourceWindowId=${ifDefined(tabItem.sourceWindowId)}
         .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
@@ -280,6 +311,7 @@ export default class FxviewTabList extends MozLitElement {
         .time=${ifDefined(time)}
         .timeMsPref=${ifDefined(this.timeMsPref)}
         .title=${tabItem.title}
+        .titleChanged=${ifDefined(tabItem.titleChanged)}
         .url=${tabItem.url}
       ></fxview-tab-row>
     `;
@@ -338,20 +370,27 @@ customElements.define("fxview-tab-list", FxviewTabList);
  *
  * @property {boolean} active - Should current item have focus on keydown
  * @property {boolean} compact - Whether to hide the URL and date/time for this tab.
+ * @property {object} containerObj - Info about an open tab's container if within one
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
+ * @property {boolean} isBookmark - Whether an open tab is bookmarked
  * @property {number} closedId - The tab ID for when the tab item was closed.
  * @property {number} sourceClosedId - The closedId of the closed window its from if applicable
  * @property {number} sourceWindowId - The sessionstore id of the window its from if applicable
  * @property {string} favicon - The favicon for the tab item.
+ * @property {boolean} muted - Whether an open tab is muted
+ * @property {boolean} pinned - Whether an open tab is pinned
  * @property {string} primaryL10nId - The l10n id used for the primary action element
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
  * @property {string} secondaryL10nId - The l10n id used for the secondary action button
  * @property {string} secondaryL10nArgs - The l10n args used for the secondary action element
+ * @property {boolean} attention - Whether to show a notification dot
+ * @property {boolean} soundPlaying - Whether an open tab has soundPlaying
  * @property {object} tabElement - The MozTabbrowserTab element for the tab item.
  * @property {number} time - The timestamp for when the tab was last accessed.
  * @property {string} title - The title for the tab item.
+ * @property {boolean} titleChanged - Whether the title has changed for an open tab
  * @property {string} url - The url for the tab item.
  * @property {number} timeMsPref - The frequency in milliseconds of updates to relative time
  * @property {string} searchQuery - The query string to highlight, if provided.
@@ -366,20 +405,27 @@ export class FxviewTabRow extends MozLitElement {
   static properties = {
     active: { type: Boolean },
     compact: { type: Boolean },
+    containerObj: { type: Object },
     currentActiveElementId: { type: String },
     dateTimeFormat: { type: String },
     favicon: { type: String },
     hasPopup: { type: String },
+    isBookmark: { type: Boolean },
+    muted: { type: Boolean },
+    pinned: { type: Boolean },
     primaryL10nId: { type: String },
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
     secondaryL10nArgs: { type: String },
+    soundPlaying: { type: Boolean },
     closedId: { type: Number },
     sourceClosedId: { type: Number },
     sourceWindowId: { type: String },
     tabElement: { type: Object },
     time: { type: Number },
     title: { type: String },
+    titleChanged: { type: Boolean },
+    attention: { type: Boolean },
     timeMsPref: { type: Number },
     url: { type: String },
     searchQuery: { type: String },
@@ -387,11 +433,16 @@ export class FxviewTabRow extends MozLitElement {
 
   static queries = {
     mainEl: ".fxview-tab-row-main",
-    buttonEl: ".fxview-tab-row-button:not([hidden])",
+    buttonEl: "#fxview-tab-row-secondary-button:not([hidden])",
+    mediaButtonEl: "#fxview-tab-row-media-button",
   };
 
   get currentFocusable() {
-    return this.renderRoot.getElementById(this.currentActiveElementId);
+    let focusItem = this.renderRoot.getElementById(this.currentActiveElementId);
+    if (!focusItem) {
+      focusItem = this.renderRoot.getElementById("fxview-tab-row-main");
+    }
+    return focusItem;
   }
 
   focus() {
@@ -401,6 +452,11 @@ export class FxviewTabRow extends MozLitElement {
   focusButton() {
     this.buttonEl.focus();
     return this.buttonEl.id;
+  }
+
+  focusMediaButton() {
+    this.mediaButtonEl.focus();
+    return this.mediaButtonEl.id;
   }
 
   focusLink() {
@@ -475,6 +531,16 @@ export class FxviewTabRow extends MozLitElement {
     return icon;
   }
 
+  getContainerClasses() {
+    let containerClasses = ["fxview-tab-row-container-indicator", "icon"];
+    if (this.containerObj) {
+      let { icon, color } = this.containerObj;
+      containerClasses.push(`identity-icon-${icon}`);
+      containerClasses.push(`identity-color-${color}`);
+    }
+    return containerClasses;
+  }
+
   primaryActionHandler(event) {
     if (
       (event.type == "click" && !event.altKey) ||
@@ -511,6 +577,11 @@ export class FxviewTabRow extends MozLitElement {
     }
   }
 
+  muteOrUnmuteTab() {
+    this.tabElement.toggleMuteAudio();
+    this.muted = !this.muted;
+  }
+
   render() {
     const title = this.title;
     const relativeString = this.relativeTime(
@@ -528,6 +599,15 @@ export class FxviewTabRow extends MozLitElement {
     const time = this.time;
     const timeArgs = JSON.stringify({ time });
     return html`
+      ${when(
+        this.containerObj,
+        () => html`
+          <link
+            rel="stylesheet"
+            href="chrome://browser/content/usercontext/usercontext.css"
+          />
+        `
+      )}
       <link
         rel="stylesheet"
         href="chrome://global/skin/in-content/common.css"
@@ -550,12 +630,27 @@ export class FxviewTabRow extends MozLitElement {
         @keydown=${this.primaryActionHandler}
       >
         <span
-          class="fxview-tab-row-favicon icon"
-          id="fxview-tab-row-favicon"
-          style=${styleMap({
-            backgroundImage: `url(${this.getImageUrl(this.favicon, this.url)})`,
-          })}
-        ></span>
+          class="${classMap({
+            "fxview-tab-row-favicon-wrapper": true,
+            bookmark: this.isBookmark && !this.attention,
+            notification: this.pinned
+              ? this.attention || this.titleChanged
+              : this.attention,
+            soundplaying: this.soundPlaying && !this.muted && this.pinned,
+            muted: this.muted && this.pinned,
+          })}"
+        >
+          <span
+            class="fxview-tab-row-favicon icon"
+            id="fxview-tab-row-favicon"
+            style=${styleMap({
+              backgroundImage: `url(${this.getImageUrl(
+                this.favicon,
+                this.url
+              )})`,
+            })}
+          ></span>
+        </span>
         <span
           class="fxview-tab-row-title text-truncated-ellipsis"
           id="fxview-tab-row-title"
@@ -567,6 +662,7 @@ export class FxviewTabRow extends MozLitElement {
             () => title
           )}
         </span>
+        <span class=${this.getContainerClasses().join(" ")}></span>
         <span
           class="fxview-tab-row-url text-truncated-ellipsis"
           id="fxview-tab-row-url"
@@ -604,6 +700,29 @@ export class FxviewTabRow extends MozLitElement {
         >
         </span>
       </a>
+      ${when(
+        (this.soundPlaying || this.muted) && !this.pinned,
+        () => html`<button
+          class=fxview-tab-row-button ghost-button icon-button semi-transparent"
+          id="fxview-tab-row-media-button"
+          data-l10n-id=${
+            this.muted
+              ? "fxviewtabrow-unmute-tab-button"
+              : "fxviewtabrow-mute-tab-button"
+          }
+          data-l10n-args=${JSON.stringify({ tabTitle: title })}
+          muted=${ifDefined(this.muted)}
+          soundplaying=${this.soundPlaying && !this.muted}
+          @click=${this.muteOrUnmuteTab}
+          tabindex="${
+            this.active &&
+            this.currentActiveElementId === "fxview-tab-row-media-button"
+              ? "0"
+              : "-1"
+          }"
+        ></button>`,
+        () => html`<span></span>`
+      )}
       ${when(
         this.secondaryL10nId && this.secondaryActionHandler,
         () => html`<button

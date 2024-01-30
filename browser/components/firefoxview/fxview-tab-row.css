@@ -7,7 +7,7 @@
   --fxviewtabrow-element-background-active: color-mix(in srgb, currentColor 21%, transparent);
   display: grid;
   grid-template-columns: subgrid;
-  grid-column: span 6;
+  grid-column: span 9;
   align-items: stretch;
   border-radius: 4px;
 }
@@ -23,7 +23,7 @@
 .fxview-tab-row-main {
   display: grid;
   grid-template-columns: subgrid;
-  grid-column: span 5;
+  grid-column: span 6;
   gap: 16px;
   border-radius: 4px;
   align-items: center;
@@ -66,6 +66,56 @@
   }
 }
 
+.fxview-tab-row-favicon-wrapper {
+  height: 16px;
+
+  .fxview-tab-row-favicon::after {
+    display: block;
+    content: "";
+    background-size: 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    height: 12px;
+    width: 12px;
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: var(--fxview-background-color-secondary);
+  }
+
+  &.bookmark .fxview-tab-row-favicon::after {
+    background-image: url("chrome://browser/skin/bookmark-12.svg");
+    inset-block-start: 9px;
+    inset-inline-end: -6px;
+    fill: var(--fxview-primary-action-background);
+  }
+
+  &.notification .fxview-tab-row-favicon::after {
+    background-image: radial-gradient(circle, light-dark(rgb(42, 195, 162), rgb(84, 255, 189)), light-dark(rgb(42, 195, 162), rgb(84, 255, 189)) 2px, transparent 2px);
+    height: 4px;
+    width: 100%;
+    inset-block-start: 20px;
+  }
+
+  &.soundplaying .fxview-tab-row-favicon::after {
+    background-image: url("chrome://global/skin/media/audio.svg");
+    inset-block-start: -5px;
+    inset-inline-end: -7px;
+    border-radius: 100%;
+    background-color: var(--fxview-background-color-secondary);
+    padding: 2px;
+  }
+
+  &.muted .fxview-tab-row-favicon::after {
+    background-image: url("chrome://global/skin/media/audio-muted.svg");
+    inset-block-start: -5px;
+    inset-inline-end: -7px;
+    border-radius: 100%;
+    background-color: var(--fxview-background-color-secondary);
+    padding: 2px;
+  }
+}
+
 .fxview-tab-row-favicon {
   background-size: cover;
   -moz-context-properties: fill;
@@ -78,6 +128,15 @@
 
 .fxview-tab-row-title {
   text-align: match-parent;
+}
+
+.fxview-tab-row-container-indicator {
+  height: 16px;
+  width: 16px;
+  background-image: var(--identity-icon);
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
 }
 
 .fxview-tab-row-url {
@@ -101,6 +160,25 @@
 .fxview-tab-row-button {
   margin: 0;
   cursor: pointer;
+  min-width: 0;
+  background-color: transparent;
+
+  &[muted="true"],
+  &[soundplaying="true"] {
+    background-size: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+
+  &[muted="true"] {
+    background-image: url("chrome://global/skin/media/audio-muted.svg");
+  }
+
+  &[soundplaying="true"] {
+    background-image: url("chrome://global/skin/media/audio.svg");
+  }
 }
 
 @media (prefers-contrast) {
