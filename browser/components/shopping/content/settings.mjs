@@ -16,11 +16,19 @@ class ShoppingSettings extends MozLitElement {
   static properties = {
     adsEnabled: { type: Boolean },
     adsEnabledByUser: { type: Boolean },
+    autoOpenEnabled: { type: Boolean },
+    autoOpenEnabledByUser: { type: Boolean },
+    hostname: { type: String },
   };
 
   static get queries() {
     return {
+      wrapperEl: "#shopping-settings-wrapper",
       recommendationsToggleEl: "#shopping-settings-recommendations-toggle",
+      autoOpenToggleEl: "#shopping-settings-auto-open-toggle",
+      autoOpenToggleDescriptionEl: "#shopping-auto-open-description",
+      dividerEl: ".divider",
+      sidebarEnabledStateEl: "#shopping-settings-sidebar-enabled-state",
       optOutButtonEl: "#shopping-settings-opt-out-button",
       shoppingCardEl: "shopping-card",
       adsLearnMoreLinkEl: "#shopping-ads-learn-more-link",
@@ -36,6 +44,17 @@ class ShoppingSettings extends MozLitElement {
       "browser.shopping.experience2023.ads.userEnabled",
       this.adsEnabledByUser
     );
+  }
+
+  onToggleAutoOpen() {
+    this.autoOpenEnabledByUser = this.autoOpenToggleEl.pressed;
+    RPMSetPref(
+      "browser.shopping.experience2023.autoOpen.userEnabled",
+      this.autoOpenEnabledByUser
+    );
+    if (!this.autoOpenEnabledByUser) {
+      RPMSetPref("browser.shopping.experience2023.active", false);
+    }
   }
 
   onDisableShopping() {
@@ -58,25 +77,74 @@ class ShoppingSettings extends MozLitElement {
     // control for them) is controlled via a nimbus-enabled pref.
     let canShowRecommendationToggle = this.adsEnabled;
 
-    let toggleMarkup = canShowRecommendationToggle
+    let adsToggleMarkup = canShowRecommendationToggle
       ? html`
-        <moz-toggle
-          id="shopping-settings-recommendations-toggle"
-          ?pressed=${this.adsEnabledByUser}
-          data-l10n-id="shopping-settings-recommendations-toggle"
-          data-l10n-attrs="label"
-          @toggle=${this.onToggleRecommendations}>
-        </moz-toggle/>
-        <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more2">
-          <a
-            id="shopping-ads-learn-more-link"
-            target="_blank"
-            href="${window.RPMGetFormatURLPref(
-              "app.support.baseURL"
-            )}review-checker-review-quality?utm_campaign=learn-more&utm_medium=inproduct&utm_term=core-sidebar#w_ads_for_relevant_products"
-            data-l10n-name="review-quality-url"
-          ></a>
-        </span>`
+        <div class="shopping-settings-toggle-option-wrapper">
+          <moz-toggle
+            id="shopping-settings-recommendations-toggle"
+            ?pressed=${this.adsEnabledByUser}
+            data-l10n-id="shopping-settings-recommendations-toggle"
+            data-l10n-attrs="label"
+            @toggle=${this.onToggleRecommendations}>
+          </moz-toggle/>
+          <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more2">
+            <a
+              id="shopping-ads-learn-more-link"
+              target="_blank"
+              href="${window.RPMGetFormatURLPref(
+                "app.support.baseURL"
+              )}review-checker-review-quality?utm_campaign=learn-more&utm_medium=inproduct&utm_term=core-sidebar#w_ads_for_relevant_products"
+              data-l10n-name="review-quality-url"
+            ></a>
+          </span>
+        </div>`
+      : null;
+
+    /* Auto-open experiment changes how the settings card appears by:
+     * 1. Showing a new toggle for enabling/disabling auto-open behaviour
+     * 2. Adding a divider between the toggles and opt-out button
+     * 3. Showing text indicating that Review Checker is enabled (not opted-out) above the opt-out button
+     *
+     * Only show if `browser.shopping.experience2023.autoOpen.enabled` is true.
+     */
+    let autoOpenDescriptionL10nId;
+    let autoOpenDescriptionL10nArgs;
+
+    switch (this.hostname) {
+      case "www.amazon.fr":
+      case "www.amazon.de":
+        autoOpenDescriptionL10nId =
+          "shopping-settings-auto-open-description-single-site";
+        autoOpenDescriptionL10nArgs = {
+          currentSite: "Amazon",
+        };
+        break;
+      default:
+        autoOpenDescriptionL10nId =
+          "shopping-settings-auto-open-description-three-sites";
+        autoOpenDescriptionL10nArgs = {
+          firstSite: "Amazon",
+          secondSite: "Best Buy",
+          thirdSite: "Walmart",
+        };
+    }
+
+    let autoOpenToggleMarkup = this.autoOpenEnabled
+      ? html` <div class="shopping-settings-toggle-option-wrapper">
+          <moz-toggle
+            id="shopping-settings-auto-open-toggle"
+            ?pressed=${this.autoOpenEnabledByUser}
+            data-l10n-id="shopping-settings-auto-open-toggle"
+            data-l10n-attrs="label"
+            @toggle=${this.onToggleAutoOpen}
+          >
+          </moz-toggle>
+          <span
+            id="shopping-auto-open-description"
+            data-l10n-id=${autoOpenDescriptionL10nId}
+            data-l10n-args=${JSON.stringify(autoOpenDescriptionL10nArgs)}
+          ></span>
+        </div>`
       : null;
 
     return html`
@@ -91,16 +159,35 @@ class ShoppingSettings extends MozLitElement {
       <shopping-card
         data-l10n-id="shopping-settings-label"
         data-l10n-attrs="label"
-        type="accordion"
+        type=${!this.autoOpenEnabled ? "accordion" : ""}
       >
-        <div id="shopping-settings-wrapper" slot="content">
-          ${toggleMarkup}
-          <button
-            class="shopping-button"
-            id="shopping-settings-opt-out-button"
-            data-l10n-id="shopping-settings-opt-out-button"
-            @click=${this.onDisableShopping}
-          ></button>
+        <div
+          id="shopping-settings-wrapper"
+          class=${this.autoOpenEnabled
+            ? "shopping-settings-auto-open-ui-enabled"
+            : ""}
+          slot="content"
+        >
+          <section id="shopping-settings-toggles-section">
+            ${adsToggleMarkup} ${autoOpenToggleMarkup}
+          </section>
+          ${this.autoOpenEnabled
+            ? html`<span class="divider" role="separator"></span>`
+            : null}
+          <section id="shopping-settings-opt-out-section">
+            ${this.autoOpenEnabled
+              ? html`<span
+                  id="shopping-settings-sidebar-enabled-state"
+                  data-l10n-id="shopping-settings-sidebar-enabled-state"
+                ></span>`
+              : null}
+            <button
+              class="shopping-button"
+              id="shopping-settings-opt-out-button"
+              data-l10n-id="shopping-settings-opt-out-button"
+              @click=${this.onDisableShopping}
+            ></button>
+          </section>
         </div>
       </shopping-card>
       <p

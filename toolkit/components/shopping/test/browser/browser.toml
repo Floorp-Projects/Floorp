@@ -6,6 +6,8 @@ prefs = [
   # that need them can re-enable them as needed.
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features=false",
   "toolkit.shopping.environment=test",
+  "browser.shopping.experience2023.autoOpen.enabled=false",
+  "browser.shopping.experience2023.autoOpen.userEnabled=true",
 ]
 support-files = [
   "head.js",
@@ -19,6 +21,9 @@ support-files = [
 ]
 
 ["browser_shopping_ad_not_available.js"]
+
 ["browser_shopping_ads_test.js"]
+
 ["browser_shopping_integration.js"]
+
 ["browser_shopping_sidebar_messages.js"]
