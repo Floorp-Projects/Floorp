@@ -39,8 +39,8 @@ def main(args):
     dmg.extract_dmg(
         dmgfile=Path(options.dmgfile),
         output=Path(options.outpath),
-        dmg_tool=Path(dmg_tool),
-        hfs_tool=Path(hfs_tool),
+        dmg_tool=_path_or_none(dmg_tool),
+        hfs_tool=_path_or_none(hfs_tool),
         dsstore=_path_or_none(options.dsstore),
         background=_path_or_none(options.background),
         icon=_path_or_none(options.icon),
