@@ -49,6 +49,8 @@ skip-if = ["a11y_checks"] # Bugs 1858041 and 1849179 for causing intermittent cr
 ["browser_protectionsUI_icon_state.js"]
 https_first_disabled = true
 
+["browser_protectionsUI_info_message.js"]
+
 ["browser_protectionsUI_milestones.js"]
 
 ["browser_protectionsUI_open_preferences.js"]
