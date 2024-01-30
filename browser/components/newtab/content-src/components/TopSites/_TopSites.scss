@@ -104,7 +104,6 @@ $letter-fallback-color: $white;
 // container for drop zone
 .top-site-outer {
   width: 120px;
-  padding: 20px $half-base-gutter 4px;
   border-radius: 8px;
   display: inline-block;
 
@@ -113,6 +112,7 @@ $letter-fallback-color: $white;
     position: relative;
 
     > a {
+      padding: 20px $half-base-gutter 4px;
       color: inherit;
       display: block;
       outline: none;
