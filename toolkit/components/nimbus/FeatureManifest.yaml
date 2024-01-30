@@ -2288,6 +2288,24 @@ phc:
       setPref:
         branch: user
         pref: memory.phc.min_ram_mb
+    phcAvgDelayFirst:
+      description: The delay before the first PHC allocation
+      type: int
+      setPref:
+        branch: user
+        pref: memory.phc.avg_delay.first
+    phcAvgDelayNormal:
+      description: The delay between PHC allocations
+      type: int
+      setPref:
+        branch: user
+        pref: memory.phc.avg_delay.normal
+    phcAvgDelayPageReuse:
+      description: The delay before reusing a PHC page
+      type: int
+      setPref:
+        branch: user
+        pref: memory.phc.avg_delay.page_reuse
 
 mailto:
   description: Prefs to control aspects of the mailto handler
