@@ -441,7 +441,7 @@ function transformTracerStateResource(stateResource) {
   return new ConsoleMessage({
     targetFront,
     source: MESSAGE_SOURCE.CONSOLE_API,
-    type: MESSAGE_TYPE.LOG,
+    type: MESSAGE_TYPE.JSTRACER,
     level: MESSAGE_LEVEL.LOG,
     messageText: message,
     timeStamp,

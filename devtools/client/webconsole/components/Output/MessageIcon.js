@@ -45,7 +45,9 @@ function getIconElement(level, type, title) {
     title = l10n.getStr("command.title");
   } else if (type === MESSAGE_TYPE.RESULT) {
     title = l10n.getStr("result.title");
-  } else if (level == "level.jstracer") {
+  } else if (level == "level.jstracer" || type == MESSAGE_TYPE.JSTRACER) {
+    // Actual traces uses JSTracerTrace objects and `level` attribute,
+    // while log messages relating to tracing uses ConsoleApiCall, where level == "log" and so rather uses `type` attribute.
     classnames.push("logtrace");
   }
 
