@@ -1558,8 +1558,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // Do we need to start a `text-wrap: balance` iteration?
     if (tryBalance) {
       tryBalance = false;
-      // Don't try to balance an incomplete block.
-      if (!reflowStatus.IsFullyComplete()) {
+      // Don't try to balance an incomplete block, or if we had to use an
+      // overflow-wrap break position in the initial reflow.
+      if (!reflowStatus.IsFullyComplete() || trialState.mUsedOverflowWrap) {
         break;
       }
       balanceTarget.mOffset =
@@ -1596,7 +1597,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // Helper to determine whether the current trial succeeded (i.e. was able
     // to fit the content into the expected number of lines).
     auto trialSucceeded = [&]() -> bool {
-      if (!reflowStatus.IsFullyComplete()) {
+      if (!reflowStatus.IsFullyComplete() || trialState.mUsedOverflowWrap) {
         return false;
       }
       if (balanceTarget.mContent) {
@@ -1626,7 +1627,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // If we were attempting to balance, check whether the final iteration was
     // successful, and if not, back up by one step.
     if (balanceTarget.mOffset >= 0) {
-      if (trialSucceeded()) {
+      if (!trialState.mInset || trialSucceeded()) {
         break;
       }
       trialState.ResetForBalance(-1);
@@ -1907,7 +1908,7 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
   }
 
   // Now reflow...
-  ReflowDirtyLines(state);
+  aTrialState.mUsedOverflowWrap = ReflowDirtyLines(state);
 
   // If we have a next-in-flow, and that next-in-flow has pushed floats from
   // this frame from a previous iteration of reflow, then we should not return
@@ -2832,11 +2833,12 @@ static bool LinesAreEmpty(const nsLineList& aList) {
   return true;
 }
 
-void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
+bool nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
   bool keepGoing = true;
   bool repositionViews = false;  // should we really need this?
   bool foundAnyClears = aState.mTrailingClearFromPIF != StyleClear::None;
   bool willReflowAgain = false;
+  bool usedOverflowWrap = false;
 
 #ifdef DEBUG
   if (gNoisyReflow) {
@@ -3157,7 +3159,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       } else {
         // Reflow the dirty line. If it's an incremental reflow, then force
         // it to invalidate the dirty area if necessary
-        ReflowLine(aState, line, &keepGoing);
+        usedOverflowWrap |= ReflowLine(aState, line, &keepGoing);
       }
 
       if (aState.mReflowInput.WillReflowAgainForClearance()) {
@@ -3454,7 +3456,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
         // line to be created; see SplitLine's callers for examples of
         // when this happens).
         while (line != LinesEnd()) {
-          ReflowLine(aState, line, &keepGoing);
+          usedOverflowWrap |= ReflowLine(aState, line, &keepGoing);
 
           if (aState.mReflowInput.WillReflowAgainForClearance()) {
             line->MarkDirty();
@@ -3558,6 +3560,8 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
            ToString(aState.mReflowStatus).c_str());
   }
 #endif
+
+  return usedOverflowWrap;
 }
 
 void nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine) {
@@ -3618,8 +3622,9 @@ void nsBlockFrame::DeleteLine(BlockReflowState& aState,
  * Reflow a line. The line will either contain a single block frame
  * or contain 1 or more inline frames. aKeepReflowGoing indicates
  * whether or not the caller should continue to reflow more lines.
+ * Returns true if the reflow used an overflow-wrap breakpoint.
  */
-void nsBlockFrame::ReflowLine(BlockReflowState& aState, LineIterator aLine,
+bool nsBlockFrame::ReflowLine(BlockReflowState& aState, LineIterator aLine,
                               bool* aKeepReflowGoing) {
   MOZ_ASSERT(aLine->GetChildCount(), "reflowing empty line");
 
@@ -3639,15 +3644,16 @@ void nsBlockFrame::ReflowLine(BlockReflowState& aState, LineIterator aLine,
   nsIFrame* firstChild = aLine->mFirstChild;
   if (firstChild->IsHiddenByContentVisibilityOfInFlowParentForLayout() &&
       !HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES)) {
-    return;
+    return false;
   }
 
   // Now that we know what kind of line we have, reflow it
+  bool usedOverflowWrap = false;
   if (aLine->IsBlock()) {
     ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
   } else {
     aLine->SetLineWrapped(false);
-    ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+    usedOverflowWrap = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
 
     // Store the line's float edges for overflow marker analysis if needed.
     aLine->ClearFloatEdges();
@@ -3670,6 +3676,8 @@ void nsBlockFrame::ReflowLine(BlockReflowState& aState, LineIterator aLine,
   }
 
   aLine->ClearMovedFragments();
+
+  return usedOverflowWrap;
 }
 
 nsIFrame* nsBlockFrame::PullFrame(BlockReflowState& aState,
@@ -4635,10 +4643,12 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
 #endif
 }
 
-void nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
+// Returns true if an overflow-wrap break was used.
+bool nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
                                       LineIterator aLine,
                                       bool* aKeepReflowGoing) {
   *aKeepReflowGoing = true;
+  bool usedOverflowWrap = false;
 
   aLine->SetLineIsImpactedByFloat(false);
 
@@ -4678,7 +4688,7 @@ void nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
         DoReflowInlineFrames(aState, lineLayout, aLine, floatAvailableSpace,
                              availableSpaceBSize, &floatManagerState,
                              aKeepReflowGoing, &lineReflowStatus, allowPullUp);
-        lineLayout.EndLineReflow();
+        usedOverflowWrap = lineLayout.EndLineReflow();
 
         if (LineReflowStatus::RedoNoPull == lineReflowStatus ||
             LineReflowStatus::RedoMoreFloats == lineReflowStatus ||
@@ -4707,6 +4717,8 @@ void nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
       } while (LineReflowStatus::RedoNoPull == lineReflowStatus);
     } while (LineReflowStatus::RedoMoreFloats == lineReflowStatus);
   } while (LineReflowStatus::RedoNextBand == lineReflowStatus);
+
+  return usedOverflowWrap;
 }
 
 void nsBlockFrame::SetBreakBeforeStatusBeforeLine(BlockReflowState& aState,
