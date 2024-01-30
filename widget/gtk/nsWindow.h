@@ -26,6 +26,7 @@
 #include "nsIDragService.h"
 #include "nsRefPtrHashtable.h"
 #include "IMContextWrapper.h"
+#include "LookAndFeel.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/LocalAccessible.h"
@@ -490,6 +491,9 @@ class nsWindow final : public nsBaseWidget {
       const mozilla::LayoutDeviceIntPoint& aRefPoint);
 
   void TryToShowNativeWindowMenu(GdkEventButton* aEvent);
+
+  bool DoTitlebarAction(mozilla::LookAndFeel::TitlebarEvent aEvent,
+                        GdkEventButton* aButtonEvent);
 
   void WaylandStartVsync();
   void WaylandStopVsync();
