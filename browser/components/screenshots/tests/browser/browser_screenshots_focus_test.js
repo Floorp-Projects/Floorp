@@ -186,7 +186,23 @@ add_task(async function test_focusLastUsedMethod() {
     set: [
       [SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF, ""],
       [SCREENSHOTS_LAST_SAVED_METHOD_PREF, ""],
+      ["browser.download.useDownloadDir", true],
     ],
+  });
+
+  let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
+  // First ensure we catch the download finishing.
+  let downloadFinishedPromise = new Promise(resolve => {
+    publicDownloads.addView({
+      onDownloadChanged(download) {
+        info("Download changed!");
+        if (download.succeeded || download.error) {
+          info("Download succeeded or errored");
+          publicDownloads.removeView(this);
+          resolve(download);
+        }
+      },
+    });
   });
 
   await BrowserTestUtils.withNewTab(
@@ -214,14 +230,17 @@ add_task(async function test_focusLastUsedMethod() {
         "The visible button in the panel should have focus"
       );
 
-      helper.triggerUIFromToolbar();
-      await helper.waitForOverlayClosed();
+      let screenshotReady = TestUtils.topicObserved(
+        "screenshots-preview-ready"
+      );
+      let fullpageButton = await helper.getPanelButton(".full-page");
+      fullpageButton.click();
+      await screenshotReady;
 
-      await SpecialPowers.pushPrefEnv({
-        set: [[SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF, "fullpage"]],
-      });
+      let dialog = helper.getDialog();
+      let retryButton = dialog._frame.contentDocument.getElementById("retry");
+      retryButton.click();
 
-      helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
       expectedFocusedButton = await helper.getPanelButton(".full-page");
@@ -239,13 +258,37 @@ add_task(async function test_focusLastUsedMethod() {
         "The full button in the panel should have focus"
       );
 
-      let screenshotReady = TestUtils.topicObserved(
-        "screenshots-preview-ready"
+      screenshotReady = TestUtils.topicObserved("screenshots-preview-ready");
+      let visiblepageButton = await helper.getPanelButton(".visible-page");
+      visiblepageButton.click();
+      await screenshotReady;
+
+      dialog = helper.getDialog();
+      retryButton = dialog._frame.contentDocument.getElementById("retry");
+      retryButton.click();
+
+      await helper.waitForOverlay();
+
+      expectedFocusedButton = await helper.getPanelButton(".visible-page");
+
+      await BrowserTestUtils.waitForCondition(() => {
+        return (
+          expectedFocusedButton.getRootNode().activeElement ===
+          expectedFocusedButton
+        );
+      }, "The visible button in the panel should have focus");
+
+      is(
+        Services.focus.focusedElement,
+        expectedFocusedButton,
+        "The visible button in the panel should have focus"
       );
+
+      screenshotReady = TestUtils.topicObserved("screenshots-preview-ready");
       expectedFocusedButton.click();
       await screenshotReady;
 
-      let dialog = helper.getDialog();
+      dialog = helper.getDialog();
 
       expectedFocusedButton =
         dialog._frame.contentDocument.getElementById("download");
@@ -264,12 +307,9 @@ add_task(async function test_focusLastUsedMethod() {
       );
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      helper.triggerUIFromToolbar();
+      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      copyButton.click();
       await screenshotExit;
-
-      await SpecialPowers.pushPrefEnv({
-        set: [[SCREENSHOTS_LAST_SAVED_METHOD_PREF, "copy"]],
-      });
 
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
@@ -296,6 +336,42 @@ add_task(async function test_focusLastUsedMethod() {
         Services.focus.focusedElement,
         expectedFocusedButton,
         "The copy button in the preview dialog should have focus"
+      );
+
+      screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      let downloadButton =
+        dialog._frame.contentDocument.getElementById("download");
+      downloadButton.click();
+
+      await Promise.all([screenshotExit, downloadFinishedPromise]);
+
+      await publicDownloads.removeFinished();
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      visibleButton = await helper.getPanelButton(".visible-page");
+
+      screenshotReady = TestUtils.topicObserved("screenshots-preview-ready");
+      visibleButton.click();
+      await screenshotReady;
+
+      dialog = helper.getDialog();
+
+      expectedFocusedButton =
+        dialog._frame.contentDocument.getElementById("download");
+
+      await BrowserTestUtils.waitForCondition(() => {
+        return (
+          expectedFocusedButton.getRootNode().activeElement ===
+          expectedFocusedButton
+        );
+      }, "The download button in the preview dialog should have focus");
+
+      is(
+        Services.focus.focusedElement,
+        expectedFocusedButton,
+        "The download button in the preview dialog should have focus"
       );
 
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
