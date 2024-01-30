@@ -423,6 +423,23 @@ class ElementStyle {
   }
 
   /**
+   * Update CSS variable tooltip information on textProp editor when registered property
+   * are added/modified/removed.
+   *
+   * @param {Set<String>} registeredPropertyNamesSet: A Set containing the name of the
+   *                      registered properties which were added/modified/removed.
+   */
+  onRegisteredPropertiesChange(registeredPropertyNamesSet) {
+    for (const rule of this.rules) {
+      for (const textProp of rule.textProps) {
+        if (this._hasUpdatedCSSVariable(textProp, registeredPropertyNamesSet)) {
+          textProp.updateEditor();
+        }
+      }
+    }
+  }
+
+  /**
    * Returns true if the given declaration's property value contains a CSS variable
    * matching any of the updated CSS variable names.
    *
@@ -820,19 +837,30 @@ class ElementStyle {
   }
 
   /**
-   * Returns the current value of a CSS variable; or null if the
-   * variable is not defined.
+   * Returns the current value of a CSS variable; or its initial value if the
+   * variable is registered but not defined; or null if it's not registered and not defined.
    *
    * @param  {String} name
    *         The name of the variable.
    * @param  {String} pseudo
    *         The pseudo-element name of the rule.
-   * @return {String} the variable's value or null if the variable is
-   *         not defined.
+   * @return {String|null} the variable's value (or initial value) or null if the variable
+   *         is not defined and not registered.
    */
   getVariable(name, pseudo = "") {
     const variables = this.variablesMap.get(pseudo);
-    return variables ? variables.get(name) : null;
+
+    if (variables && variables.has(name)) {
+      return variables.get(name);
+    }
+
+    // If the variable wasn't defined, we want to check if it is a registered custom
+    // properties so we can get its initial value
+    const registeredPropertiesMap =
+      this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();
+    return registeredPropertiesMap && registeredPropertiesMap.has(name)
+      ? registeredPropertiesMap.get(name).initialValue
+      : null;
   }
 }
 

@@ -830,6 +830,9 @@ class ResourceCommand {
     for (const resource of resources) {
       const { resourceType, resourceId } = resource;
       this._cache.delete(cacheKey(resourceType, resourceId));
+      if (!resource.targetFront) {
+        resource.targetFront = targetFront;
+      }
       this._queueResourceEvent("destroyed", resourceType, resource);
     }
     this._throttledNotifyWatchers();

@@ -16,6 +16,7 @@ const OutputParser = require("resource://devtools/client/shared/output-parser.js
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 const ElementStyle = require("resource://devtools/client/inspector/rules/models/element-style.js");
 const RuleEditor = require("resource://devtools/client/inspector/rules/views/rule-editor.js");
+const RegisteredPropertyEditor = require("resource://devtools/client/inspector/rules/views/registered-property-editor.js");
 const TooltipsOverlay = require("resource://devtools/client/inspector/shared/tooltips-overlay.js");
 const {
   createChild,
@@ -78,6 +79,7 @@ const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 
 const RULE_VIEW_HEADER_CLASSNAME = "ruleview-header";
 const PSEUDO_ELEMENTS_CONTAINER_ID = "pseudo-elements-container";
+const REGISTERED_PROPERTIES_CONTAINER_ID = "registered-properties-container";
 
 /**
  * Our model looks like this:
@@ -254,6 +256,8 @@ function CssRuleView(inspector, document, store) {
 
   // Add the tooltips and highlighters to the view
   this.tooltips = new TooltipsOverlay(this);
+
+  this.cssRegisteredPropertiesByTarget = new Map();
 }
 
 CssRuleView.prototype = {
@@ -1326,6 +1330,32 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Create the `@property` expandable container
+   *
+   * @returns {Element}
+   */
+  createRegisteredPropertiesExpandableContainer() {
+    const el = this.createExpandableContainer(
+      "@property",
+      REGISTERED_PROPERTIES_CONTAINER_ID
+    );
+    el.classList.add("registered-properties");
+    return el;
+  },
+
+  /**
+   * Return the RegisteredPropertyEditor element for a given property name
+   *
+   * @param {String} registeredPropertyName
+   * @returns {Element|null}
+   */
+  getRegisteredPropertyElement(registeredPropertyName) {
+    return this.styleDocument.querySelector(
+      `#${REGISTERED_PROPERTIES_CONTAINER_ID} [data-name="${registeredPropertyName}"]`
+    );
+  },
+
+  /**
    * Toggle the visibility of an expandable container
    *
    * @param  {DOMNode}  twisty
@@ -1409,7 +1439,10 @@ CssRuleView.prototype = {
       const inheritedSource = rule.inherited;
       if (inheritedSource && inheritedSource !== lastInheritedSource) {
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
-        div.className = RULE_VIEW_HEADER_CLASSNAME;
+        div.classList.add(
+          RULE_VIEW_HEADER_CLASSNAME,
+          "ruleview-header-inherited"
+        );
         div.setAttribute("role", "heading");
         div.setAttribute("aria-level", "3");
         div.textContent = rule.inheritedSource;
@@ -1447,6 +1480,28 @@ CssRuleView.prototype = {
         this._focusNextUserAddedRule = null;
         rule.editor.selectorText.click();
         this.emitForTests("new-rule-added");
+      }
+    }
+
+    const targetRegisteredProperties =
+      this.getRegisteredPropertiesForSelectedNodeTarget();
+    if (targetRegisteredProperties?.size) {
+      const registeredPropertiesContainer =
+        this.createRegisteredPropertiesExpandableContainer();
+
+      // Sort properties by their name, as we want to display them in alphabetical order
+      const propertyDefinitions = Array.from(
+        targetRegisteredProperties.values()
+      ).sort((a, b) => (a.name < b.name ? -1 : 1));
+      for (const propertyDefinition of propertyDefinitions) {
+        const registeredPropertyEditor = new RegisteredPropertyEditor(
+          this,
+          propertyDefinition
+        );
+
+        registeredPropertiesContainer.appendChild(
+          registeredPropertyEditor.element
+        );
       }
     }
 
@@ -2095,6 +2150,18 @@ CssRuleView.prototype = {
 
     return false;
   },
+
+  /**
+   * Returns a Map (keyed by name) of the registered
+   * properties for the currently selected node document.
+   *
+   * @returns Map<String, Object>|null
+   */
+  getRegisteredPropertiesForSelectedNodeTarget() {
+    return this.cssRegisteredPropertiesByTarget.get(
+      this.inspector.selection.nodeFront.targetFront
+    );
+  },
 };
 
 class RuleViewTool {
@@ -2159,6 +2226,31 @@ class RuleViewTool {
       }
     );
 
+    // We do want to get already existing registered properties, so we need to watch
+    // them separately
+    this.inspector.commands.resourceCommand
+      .watchResources(
+        [
+          this.inspector.commands.resourceCommand.TYPES
+            .CSS_REGISTERED_PROPERTIES,
+        ],
+        {
+          onAvailable: this.#onResourceAvailable,
+          onUpdated: this.#onResourceUpdated,
+          onDestroyed: this.#onResourceDestroyed,
+          ignoreExistingResources: false,
+        }
+      )
+      .catch(e => {
+        // watchResources is async and even making it's resulting promise part of
+        // this.readyPromise still causes test failures, so simply ignore the rejection
+        // if the view was already destroyed.
+        if (!this.view) {
+          return;
+        }
+        throw e;
+      });
+
     // At the moment `readyPromise` is only consumed in tests (see `openRuleView`) to be
     // notified when the ruleview was first populated to match the initial selected node.
     this.readyPromise = this.onSelected();
@@ -2221,14 +2313,17 @@ class RuleViewTool {
     }
 
     let hasNewStylesheet = false;
+    const addedRegisteredProperties = [];
     for (const resource of resources) {
       if (
         resource.resourceType ===
           this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT &&
-        resource.name === "will-navigate" &&
-        resource.targetFront.isTopLevel
+        resource.name === "will-navigate"
       ) {
-        this.clearUserProperties();
+        this.view.cssRegisteredPropertiesByTarget.delete(resource.targetFront);
+        if (resource.targetFront.isTopLevel) {
+          this.clearUserProperties();
+        }
         continue;
       }
 
@@ -2242,12 +2337,184 @@ class RuleViewTool {
       ) {
         hasNewStylesheet = true;
       }
+
+      if (
+        resource.resourceType ===
+        this.inspector.commands.resourceCommand.TYPES.CSS_REGISTERED_PROPERTIES
+      ) {
+        if (
+          !this.view.cssRegisteredPropertiesByTarget.has(resource.targetFront)
+        ) {
+          this.view.cssRegisteredPropertiesByTarget.set(
+            resource.targetFront,
+            new Map()
+          );
+        }
+        this.view.cssRegisteredPropertiesByTarget
+          .get(resource.targetFront)
+          .set(resource.name, resource);
+        // Only add properties from the same target as the selected node
+        if (
+          this.view.inspector.selection?.nodeFront?.targetFront ===
+          resource.targetFront
+        ) {
+          addedRegisteredProperties.push(resource);
+        }
+      }
+    }
+
+    if (addedRegisteredProperties.length) {
+      // Retrieve @property container
+      let registeredPropertiesContainer =
+        this.view.styleDocument.getElementById(
+          REGISTERED_PROPERTIES_CONTAINER_ID
+        );
+      // create it if it didn't exist before
+      if (!registeredPropertiesContainer) {
+        registeredPropertiesContainer =
+          this.view.createRegisteredPropertiesExpandableContainer();
+      }
+
+      // Then add all new registered properties
+      const names = new Set();
+      for (const propertyDefinition of addedRegisteredProperties) {
+        const editor = new RegisteredPropertyEditor(
+          this.view,
+          propertyDefinition
+        );
+        names.add(propertyDefinition.name);
+
+        // We need to insert the element at the right position so we keep the list of
+        // properties alphabetically sorted.
+        let referenceNode = null;
+        for (const child of registeredPropertiesContainer.children) {
+          if (child.getAttribute("data-name") > propertyDefinition.name) {
+            referenceNode = child;
+            break;
+          }
+        }
+        registeredPropertiesContainer.insertBefore(
+          editor.element,
+          referenceNode
+        );
+      }
+
+      // Finally, update textProps that might rely on those new properties
+      this._updateElementStyleRegisteredProperties(names);
     }
 
     if (hasNewStylesheet) {
       this.refresh();
     }
   };
+
+  #onResourceUpdated = updates => {
+    const updatedProperties = [];
+    for (const update of updates) {
+      if (
+        update.resource.resourceType ===
+        this.inspector.commands.resourceCommand.TYPES.CSS_REGISTERED_PROPERTIES
+      ) {
+        const { resource } = update;
+        if (
+          !this.view.cssRegisteredPropertiesByTarget.has(resource.targetFront)
+        ) {
+          continue;
+        }
+
+        this.view.cssRegisteredPropertiesByTarget
+          .get(resource.targetFront)
+          .set(resource.name, resource);
+
+        // Only consider properties from the same target as the selected node
+        if (
+          this.view.inspector.selection?.nodeFront?.targetFront ===
+          resource.targetFront
+        ) {
+          updatedProperties.push(resource);
+        }
+      }
+    }
+
+    const names = new Set();
+    if (updatedProperties.length) {
+      const registeredPropertiesContainer =
+        this.view.styleDocument.getElementById(
+          REGISTERED_PROPERTIES_CONTAINER_ID
+        );
+      for (const resource of updatedProperties) {
+        // Replace the existing registered property editor element with a new one,
+        // so we don't have to compute which elements should be updated.
+        const name = resource.name;
+        const el = this.view.getRegisteredPropertyElement(name);
+        const editor = new RegisteredPropertyEditor(this.view, resource);
+        registeredPropertiesContainer.replaceChild(editor.element, el);
+
+        names.add(resource.name);
+      }
+      // Finally, update textProps that might rely on those new properties
+      this._updateElementStyleRegisteredProperties(names);
+    }
+  };
+
+  #onResourceDestroyed = resources => {
+    const destroyedPropertiesNames = new Set();
+    for (const resource of resources) {
+      if (
+        resource.resourceType ===
+        this.inspector.commands.resourceCommand.TYPES.CSS_REGISTERED_PROPERTIES
+      ) {
+        if (
+          !this.view.cssRegisteredPropertiesByTarget.has(resource.targetFront)
+        ) {
+          continue;
+        }
+
+        const targetRegisteredProperties =
+          this.view.cssRegisteredPropertiesByTarget.get(resource.targetFront);
+        const resourceName = Array.from(
+          targetRegisteredProperties.entries()
+        ).find(
+          ([_, propDef]) => propDef.resourceId === resource.resourceId
+        )?.[0];
+        if (!resourceName) {
+          continue;
+        }
+
+        targetRegisteredProperties.delete(resourceName);
+
+        // Only consider properties from the same target as the selected node
+        if (
+          this.view.inspector.selection?.nodeFront?.targetFront ===
+          resource.targetFront
+        ) {
+          destroyedPropertiesNames.add(resourceName);
+        }
+      }
+    }
+    if (destroyedPropertiesNames.size > 0) {
+      for (const name of destroyedPropertiesNames) {
+        this.view.getRegisteredPropertyElement(name)?.remove();
+      }
+      // Finally, update textProps that were relying on those removed properties
+      this._updateElementStyleRegisteredProperties(destroyedPropertiesNames);
+    }
+  };
+
+  /**
+   * Update rules that reference registered properties whose name is in the passed Set,
+   * so the `var()` tooltip has up-to-date information.
+   *
+   * @param {Set<String>} registeredPropertyNames
+   */
+  _updateElementStyleRegisteredProperties(registeredPropertyNames) {
+    if (!this.view._elementStyle) {
+      return;
+    }
+    this.view._elementStyle.onRegisteredPropertiesChange(
+      registeredPropertyNames
+    );
+  }
 
   clearUserProperties() {
     if (this.view && this.view.store && this.view.store.userProperties) {
@@ -2273,9 +2540,21 @@ class RuleViewTool {
     }
 
     this.inspector.commands.resourceCommand.unwatchResources(
-      [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      [
+        this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.inspector.commands.resourceCommand.TYPES.STYLESHEET,
+      ],
       {
         onAvailable: this.#onResourceAvailable,
+      }
+    );
+
+    this.inspector.commands.resourceCommand.unwatchResources(
+      [this.inspector.commands.resourceCommand.TYPES.CSS_REGISTERED_PROPERTIES],
+      {
+        onAvailable: this.#onResourceAvailable,
+        onUpdated: this.#onResourceUpdated,
+        onDestroyed: this.#onResourceDestroyed,
       }
     );
 

@@ -4,6 +4,7 @@
 
 DevToolsModules(
     "class-list-previewer.js",
+    "registered-property-editor.js",
     "rule-editor.js",
     "text-property-editor.js",
 )

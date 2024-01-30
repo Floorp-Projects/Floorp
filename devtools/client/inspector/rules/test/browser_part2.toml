@@ -283,6 +283,9 @@ skip-if = [
 ["browser_rules_refresh-on-stylesheet-change.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
+["browser_rules_registered-custom-properties.js"]
+skip-if = ["!fission"]
+
 ["browser_rules_search-filter-computed-list_01.js"]
 
 ["browser_rules_search-filter-computed-list_02.js"]

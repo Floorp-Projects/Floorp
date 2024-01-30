@@ -49,10 +49,12 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
 
-  const gutters = view.element.querySelectorAll(".ruleview-header");
-  is(gutters.length, 1, "There's one inherited section header");
+  const inheritedHeaders = view.element.querySelectorAll(
+    ".ruleview-header-inherited"
+  );
+  is(inheritedHeaders.length, 1, "There's one inherited section header");
   is(
-    gutters[0].textContent,
+    inheritedHeaders[0].textContent,
     "Inherited from main",
     "The header is the expected inherited one"
   );
