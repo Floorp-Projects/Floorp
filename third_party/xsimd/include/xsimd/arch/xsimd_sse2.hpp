@@ -1090,6 +1090,13 @@ namespace xsimd
             return _mm_mul_pd(self, other);
         }
 
+        // mul
+        template <class A>
+        inline batch<int16_t, A> mul(batch<int16_t, A> const& self, batch<int16_t, A> const& other, requires_arch<sse2>) noexcept
+        {
+            return _mm_mullo_epi16(self, other);
+        }
+
         // nearbyint_as_int
         template <class A>
         inline batch<int32_t, A> nearbyint_as_int(batch<float, A> const& self,
