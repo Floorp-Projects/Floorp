@@ -83,6 +83,7 @@ class DefaultToolbarIntegration(
     lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
     isPrivate: Boolean,
+    isNavBarEnabled: Boolean = false,
     interactor: BrowserToolbarInteractor,
 ) : ToolbarIntegration(
     context = context,
@@ -115,40 +116,44 @@ class DefaultToolbarIntegration(
             DisplayToolbar.Indicators.HIGHLIGHT,
         )
 
-        val tabCounterMenu = FenixTabCounterMenu(
-            context = context,
-            onItemTapped = {
-                interactor.onTabCounterMenuItemTapped(it)
-            },
-            iconColor = if (isPrivate) {
-                ContextCompat.getColor(context, R.color.fx_mobile_private_text_color_primary)
-            } else {
-                null
-            },
-        ).also {
-            it.updateMenu(context.settings().toolbarPosition)
-        }
-
-        val tabsAction = TabCounterToolbarButton(
-            lifecycleOwner = lifecycleOwner,
-            showTabs = {
-                toolbar.hideKeyboard()
-                interactor.onTabCounterClicked()
-            },
-            store = store,
-            menu = tabCounterMenu,
-            showMaskInPrivateMode = context.settings().feltPrivateBrowsingEnabled,
-        )
-
-        val tabCount = if (isPrivate) {
-            store.state.privateTabs.size
+        if (isNavBarEnabled) {
+            toolbar.hideMenuButton()
         } else {
-            store.state.normalTabs.size
+            val tabCounterMenu = FenixTabCounterMenu(
+                context = context,
+                onItemTapped = {
+                    interactor.onTabCounterMenuItemTapped(it)
+                },
+                iconColor = if (isPrivate) {
+                    ContextCompat.getColor(context, R.color.fx_mobile_private_text_color_primary)
+                } else {
+                    null
+                },
+            ).also {
+                it.updateMenu(context.settings().toolbarPosition)
+            }
+
+            val tabsAction = TabCounterToolbarButton(
+                lifecycleOwner = lifecycleOwner,
+                showTabs = {
+                    toolbar.hideKeyboard()
+                    interactor.onTabCounterClicked()
+                },
+                store = store,
+                menu = tabCounterMenu,
+                showMaskInPrivateMode = context.settings().feltPrivateBrowsingEnabled,
+            )
+
+            val tabCount = if (isPrivate) {
+                store.state.privateTabs.size
+            } else {
+                store.state.normalTabs.size
+            }
+
+            tabsAction.updateCount(tabCount)
+
+            toolbar.addBrowserAction(tabsAction)
         }
-
-        tabsAction.updateCount(tabCount)
-
-        toolbar.addBrowserAction(tabsAction)
     }
 
     override fun start() {
