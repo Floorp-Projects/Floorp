@@ -8,3 +8,5 @@ skip-if = ["verify"]
 
 ["browser_privbrowsing_perwindowpb.js"]
 skip-if = ["verify"]
+
+["browser_window_resize.js"]
