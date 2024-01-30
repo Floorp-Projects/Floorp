@@ -19,15 +19,7 @@ unset MOZ_AUTOMATION
 
 MOZCONFIG=mozconfig.in
 
-# ESR currently still has a hard dependency against zstandard==0.17.0 so
-# install this specific version here
-if [ "${BRANCH}" = "esr" ]; then
-  sudo apt-get remove -y python3-zstandard && sudo apt-get install -y python3-pip && sudo pip3 install --no-input zstandard==0.17.0
-  MOZCONFIG=mozconfig
-fi
-
-# Stable and beta runs out of file descriptors during link with gold
-ulimit -n 65536
+USE_SNAP_FROM_STORE=${USE_SNAP_FROM_STORE:-0}
 
 TRY=0
 if [ "${BRANCH}" = "try" ]; then
@@ -35,59 +27,83 @@ if [ "${BRANCH}" = "try" ]; then
   TRY=1
 fi
 
-git clone --single-branch --depth 1 --branch "${BRANCH}" https://github.com/canonical/firefox-snap/
-cd firefox-snap/
+if [ "${USE_SNAP_FROM_STORE}" = "0" ]; then
+  # ESR currently still has a hard dependency against zstandard==0.17.0 so
+  # install this specific version here
+  if [ "${BRANCH}" = "esr" ]; then
+    sudo apt-get remove -y python3-zstandard && sudo apt-get install -y python3-pip && sudo pip3 install --no-input zstandard==0.17.0
+    MOZCONFIG=mozconfig
+  fi
 
-if [ "${TRY}" = "1" ]; then
-  # Symlink so that we can directly re-use Gecko mercurial checkout
-  ln -s /builds/worker/checkouts/gecko gecko
+  # Stable and beta runs out of file descriptors during link with gold
+  ulimit -n 65536
+
+  git clone --single-branch --depth 1 --branch "${BRANCH}" https://github.com/canonical/firefox-snap/
+  cd firefox-snap/
+
+  if [ "${TRY}" = "1" ]; then
+    # Symlink so that we can directly re-use Gecko mercurial checkout
+    ln -s /builds/worker/checkouts/gecko gecko
+  fi
+
+  # Force an update to avoid the case of a stale docker image and repos updated
+  # after
+  sudo apt-get update
+
+  # shellcheck disable=SC2046
+  sudo apt-get install -y $(/usr/bin/python3 /builds/worker/parse.py snapcraft.yaml)
+
+  # CRAFT_PARTS_PACKAGE_REFRESH required to avoid snapcraft running apt-get update
+  # especially for stage-packages
+  if [ -d "/builds/worker/patches/${BRANCH}/" ]; then
+    for p in /builds/worker/patches/"${BRANCH}"/*.patch; do
+      patch -p1 < "$p"
+    done;
+  fi
+
+  if [ "${TRY}" = "1" ]; then
+    # don't remove hg source, and don't force changeset so we get correct stamp
+    # still force repo because the try clone is from mozilla-unified but the
+    # generated link does not work
+    sed -ri 's|rm -rf .hg||g' snapcraft.yaml
+    # shellcheck disable=SC2016
+    sed -ri 's|MOZ_SOURCE_REPO=\$\{REPO\}|MOZ_SOURCE_REPO=${GECKO_HEAD_REPOSITORY}|g' snapcraft.yaml
+    # shellcheck disable=SC2016
+    sed -ri 's|MOZ_SOURCE_CHANGESET=\$\{REVISION\}|MOZ_SOURCE_CHANGESET=${GECKO_HEAD_REV}|g' snapcraft.yaml
+    # shellcheck disable=SC2016
+    sed -ri 's|hg clone --stream \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
+  fi
+
+  if [ "${DEBUG}" = "1" ]; then
+    {
+      echo "ac_add_options --enable-debug"
+      echo "ac_add_options --disable-install-strip"
+    } >> ${MOZCONFIG}
+    echo "MOZ_DEBUG=1" >> ${MOZCONFIG}
+
+    # No PGO on debug builds
+    sed -ri 's/ac_add_options --enable-linker=gold//g' snapcraft.yaml
+    sed -ri 's/ac_add_options --enable-lto=cross//g' snapcraft.yaml
+    sed -ri 's/ac_add_options MOZ_PGO=1//g' snapcraft.yaml
+  fi
+
+  SNAPCRAFT_BUILD_ENVIRONMENT_MEMORY=64G \
+  SNAPCRAFT_BUILD_ENVIRONMENT_CPU=$(nproc) \
+  CRAFT_PARTS_PACKAGE_REFRESH=0 \
+    snapcraft --destructive-mode --verbose
+else
+  mkdir from-snap-store && cd from-snap-store
+
+  CHANNEL="${BRANCH}"
+  if [ "${CHANNEL}" = "try" ] || [ "${CHANNEL}" = "nightly" ]; then
+    CHANNEL=edge
+  fi;
+
+  snap download --channel="${CHANNEL}" firefox
+  SNAP_DEBUG_NAME=$(find . -maxdepth 1 -type f -name "firefox*.snap" | sed -e 's/\.snap$/.debug/g')
+  touch "${SNAP_DEBUG_NAME}"
 fi
 
-# Force an update to avoid the case of a stale docker image and repos updated
-# after
-sudo apt-get update
-
-# shellcheck disable=SC2046
-sudo apt-get install -y $(/usr/bin/python3 /builds/worker/parse.py snapcraft.yaml)
-
-# CRAFT_PARTS_PACKAGE_REFRESH required to avoid snapcraft running apt-get update
-# especially for stage-packages
-if [ -d "/builds/worker/patches/${BRANCH}/" ]; then
-  for p in /builds/worker/patches/"${BRANCH}"/*.patch; do
-    patch -p1 < "$p"
-  done;
-fi
-
-if [ "${TRY}" = "1" ]; then
-  # don't remove hg source, and don't force changeset so we get correct stamp
-  # still force repo because the try clone is from mozilla-unified but the
-  # generated link does not work
-  sed -ri 's|rm -rf .hg||g' snapcraft.yaml
-  # shellcheck disable=SC2016
-  sed -ri 's|MOZ_SOURCE_REPO=\$\{REPO\}|MOZ_SOURCE_REPO=${GECKO_HEAD_REPOSITORY}|g' snapcraft.yaml
-  # shellcheck disable=SC2016
-  sed -ri 's|MOZ_SOURCE_CHANGESET=\$\{REVISION\}|MOZ_SOURCE_CHANGESET=${GECKO_HEAD_REV}|g' snapcraft.yaml
-  # shellcheck disable=SC2016
-  sed -ri 's|hg clone --stream \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
-fi
-
-if [ "${DEBUG}" = "1" ]; then
-  {
-    echo "ac_add_options --enable-debug"
-    echo "ac_add_options --disable-install-strip"
-  } >> ${MOZCONFIG}
-  echo "MOZ_DEBUG=1" >> ${MOZCONFIG}
-
-  # No PGO on debug builds
-  sed -ri 's/ac_add_options --enable-linker=gold//g' snapcraft.yaml
-  sed -ri 's/ac_add_options --enable-lto=cross//g' snapcraft.yaml
-  sed -ri 's/ac_add_options MOZ_PGO=1//g' snapcraft.yaml
-fi
-
-SNAPCRAFT_BUILD_ENVIRONMENT_MEMORY=64G \
-SNAPCRAFT_BUILD_ENVIRONMENT_CPU=$(nproc) \
-CRAFT_PARTS_PACKAGE_REFRESH=0 \
-  snapcraft --destructive-mode --verbose
 cp ./*.snap ./*.debug /builds/worker/artifacts/
 
 # Those are for fetches usage by the test task
