@@ -6203,13 +6203,6 @@ static bool DumpObject(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setUndefined();
   return true;
 }
-
-static bool DumpValue(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.get(0).get().dump();
-  args.rval().setUndefined();
-  return true;
-}
 #endif
 
 static bool SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp) {
@@ -7065,7 +7058,7 @@ static bool DumpStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Fprinter out(stderr);
-  str->dumpRepresentation(out);
+  str->dumpRepresentation(out, 0);
 
   args.rval().setUndefined();
   return true;
@@ -7083,7 +7076,7 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   if (!out.init()) {
     return false;
   }
-  str->dumpRepresentation(out);
+  str->dumpRepresentation(out, 0);
 
   JSString* rep = out.release(cx);
   if (!rep) {
@@ -9855,10 +9848,6 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
 "dumpObject()",
 "  Dump an internal representation of an object."),
-
-    JS_FN_HELP("dumpValue", DumpValue, 1, 0,
-"dumpValue(v)",
-"  Dump an internal representation of a value."),
 #endif
 
     JS_FN_HELP("sharedMemoryEnabled", SharedMemoryEnabled, 0, 0,
