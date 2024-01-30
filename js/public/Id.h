@@ -215,6 +215,7 @@ class PropertyKey {
   void dump(js::JSONPrinter& json) const;
 
   void dumpFields(js::JSONPrinter& json) const;
+  void dumpPropertyName(js::GenericPrinter& out) const;
 #endif
 
  private:

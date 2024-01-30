@@ -106,6 +106,7 @@ class Symbol
   void dump(js::JSONPrinter& json) const;
 
   void dumpFields(js::JSONPrinter& json) const;
+  void dumpPropertyName(js::GenericPrinter& out) const;
 #endif
 
   static constexpr size_t offsetOfHash() { return offsetof(Symbol, hash_); }
