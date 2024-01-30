@@ -1423,11 +1423,12 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
     MOZ_ASSERT(bc == chromeTop);
 
     chromeTop->SetIsActiveBrowserWindow(aActive);
-    chromeTop->CallOnAllTopDescendants(
+    auto propagate =
         [aActive](CanonicalBrowsingContext* aBrowsingContext) -> CallState {
-          aBrowsingContext->SetIsActiveBrowserWindow(aActive);
-          return CallState::Continue;
-        });
+      aBrowsingContext->SetIsActiveBrowserWindow(aActive);
+      return CallState::Continue;
+    };
+    chromeTop->CallOnAllTopDescendants(propagate);
   }
 
   if (aWindow->GetExtantDoc()) {
@@ -1849,14 +1850,13 @@ Maybe<uint64_t> nsFocusManager::SetFocusInner(Element* aNewContent,
   return Some(actionId);
 }
 
-static already_AddRefed<BrowsingContext> GetParentIgnoreChromeBoundary(
-    BrowsingContext* aBC) {
+static BrowsingContext* GetParentIgnoreChromeBoundary(BrowsingContext* aBC) {
   // Chrome BrowsingContexts are only available in the parent process, so if
   // we're in a content process, we only worry about the context tree.
   if (XRE_IsParentProcess()) {
     return aBC->Canonical()->GetParentCrossChromeBoundary();
   }
-  return do_AddRef(aBC->GetParent());
+  return aBC->GetParent();
 }
 
 bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
@@ -1865,7 +1865,7 @@ bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
     return false;
   }
 
-  for (RefPtr<BrowsingContext> bc = aContext; bc;
+  for (BrowsingContext* bc = aContext; bc;
        bc = GetParentIgnoreChromeBoundary(bc)) {
     if (bc == aPossibleAncestor) {
       return true;

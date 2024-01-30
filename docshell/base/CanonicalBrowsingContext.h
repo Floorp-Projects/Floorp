@@ -119,9 +119,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // content/chrome boundaries.
   already_AddRefed<WindowGlobalParent> GetEmbedderWindowGlobal() const;
 
-  already_AddRefed<CanonicalBrowsingContext> GetParentCrossChromeBoundary();
-
-  already_AddRefed<CanonicalBrowsingContext> TopCrossChromeBoundary();
+  CanonicalBrowsingContext* GetParentCrossChromeBoundary();
+  CanonicalBrowsingContext* TopCrossChromeBoundary();
   Nullable<WindowProxyHolder> GetTopChromeWindow();
 
   nsISHistory* GetSessionHistory();

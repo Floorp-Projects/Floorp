@@ -469,26 +469,23 @@ CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
   return WindowGlobalParent::GetByInnerWindowId(windowId);
 }
 
-already_AddRefed<CanonicalBrowsingContext>
+CanonicalBrowsingContext*
 CanonicalBrowsingContext::GetParentCrossChromeBoundary() {
   if (GetParent()) {
-    return do_AddRef(Cast(GetParent()));
+    return Cast(GetParent());
   }
-  if (GetEmbedderElement()) {
-    return do_AddRef(
-        Cast(GetEmbedderElement()->OwnerDoc()->GetBrowsingContext()));
+  if (auto* embedder = GetEmbedderElement()) {
+    return Cast(embedder->OwnerDoc()->GetBrowsingContext());
   }
   return nullptr;
 }
 
-already_AddRefed<CanonicalBrowsingContext>
-CanonicalBrowsingContext::TopCrossChromeBoundary() {
-  RefPtr<CanonicalBrowsingContext> bc(this);
-  while (RefPtr<CanonicalBrowsingContext> parent =
-             bc->GetParentCrossChromeBoundary()) {
-    bc = parent.forget();
+CanonicalBrowsingContext* CanonicalBrowsingContext::TopCrossChromeBoundary() {
+  CanonicalBrowsingContext* bc = this;
+  while (auto* parent = bc->GetParentCrossChromeBoundary()) {
+    bc = parent;
   }
-  return bc.forget();
+  return bc;
 }
 
 Nullable<WindowProxyHolder> CanonicalBrowsingContext::GetTopChromeWindow() {
@@ -823,10 +820,9 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::Print(
 void CanonicalBrowsingContext::CallOnAllTopDescendants(
     const std::function<mozilla::CallState(CanonicalBrowsingContext*)>&
         aCallback) {
-#ifdef DEBUG
-  RefPtr<CanonicalBrowsingContext> parent = GetParentCrossChromeBoundary();
-  MOZ_ASSERT(!parent, "Should only call on top chrome BC");
-#endif
+  MOZ_ASSERT(IsChrome(), "Should only call in chrome BC");
+  MOZ_ASSERT(!GetParentCrossChromeBoundary(),
+             "Should only call on top chrome BC");
 
   nsTArray<RefPtr<BrowsingContextGroup>> groups;
   BrowsingContextGroup::GetAllGroups(groups);
