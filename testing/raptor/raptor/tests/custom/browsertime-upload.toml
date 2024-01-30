@@ -2,7 +2,6 @@
 apps = "firefox, chrome, chromium, safari"
 alert_threshold = 2.0
 browser_cycles = 1
-gecko_profile_entries = 14000000
 gecko_profile_interval = 1
 subtest_lower_is_better = false
 owner = "Network Team"

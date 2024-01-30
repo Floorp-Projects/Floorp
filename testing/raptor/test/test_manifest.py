@@ -197,7 +197,6 @@ def test_get_raptor_test_list_gecko_profiling_enabled(create_args):
     assert len(test_list) == 1
     assert test_list[0]["name"] == "amazon"
     assert test_list[0]["gecko_profile"] is True
-    assert test_list[0].get("gecko_profile_entries") == "14000000"
     assert test_list[0].get("gecko_profile_interval") == "1"
     assert test_list[0].get("gecko_profile_threads") is None
     assert test_list[0].get("gecko_profile_features") is None

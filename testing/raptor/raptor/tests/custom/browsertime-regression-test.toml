@@ -3,7 +3,6 @@ apps = "firefox, chrome, chromium, safari, geckoview, fenix"
 alert_threshold = 2.0
 browser_cycles = 1
 fore_window = 1
-gecko_profile_entries = 14000000
 gecko_profile_interval = 1
 lower_is_better = true
 min_back_window = 2
