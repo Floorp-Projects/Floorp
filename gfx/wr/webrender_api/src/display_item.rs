@@ -35,7 +35,7 @@ pub type ItemTag = (u64, u16);
 pub type ItemKey = u16;
 
 #[repr(C)]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
 pub struct PrimitiveFlags(u8);
 
 bitflags! {
@@ -56,6 +56,16 @@ bitflags! {
         const ANTIALISED = 1 << 4;
         /// If true, this primitive is used as a background for checkerboarding
         const CHECKERBOARD_BACKGROUND = 1 << 5;
+    }
+}
+
+impl core::fmt::Debug for PrimitiveFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 
@@ -933,7 +943,7 @@ impl Hash for RasterSpace {
 }
 
 #[repr(C)]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
 pub struct StackingContextFlags(u8);
 
 bitflags! {
@@ -945,6 +955,16 @@ bitflags! {
         /// a clip-mask). This is needed to allow the correct selection of a backdrop root
         /// since a clip-mask stacking context creates a parent surface.
         const WRAPS_BACKDROP_FILTER = 1 << 1;
+    }
+}
+
+impl core::fmt::Debug for StackingContextFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 

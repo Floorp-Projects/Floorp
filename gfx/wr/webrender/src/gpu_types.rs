@@ -612,7 +612,7 @@ pub struct MaskInstance {
 /// code should process this instance.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
 pub struct BrushFlags(u16);
 
 bitflags! {
@@ -643,6 +643,16 @@ bitflags! {
         /// Whether to force the anti-aliasing when the primitive
         /// is axis-aligned.
         const FORCE_AA = 1024;
+    }
+}
+
+impl core::fmt::Debug for BrushFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 

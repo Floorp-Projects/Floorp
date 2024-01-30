@@ -70,7 +70,7 @@ const MAX_SEGMENTS: usize = 64;
 /// `write_transform_vertex()` function.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
 pub struct EdgeAaSegmentMask(u8);
 
 bitflags! {
@@ -83,6 +83,16 @@ bitflags! {
         const RIGHT = 0x4;
         ///
         const BOTTOM = 0x8;
+    }
+}
+
+impl core::fmt::Debug for EdgeAaSegmentMask {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 
