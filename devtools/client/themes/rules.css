@@ -419,6 +419,12 @@
   margin: 0;
 }
 
+.ruleview-expandable-container.registered-properties .ruleview-propertylist {
+  /* Since we don't have a toggle checkbox for registered property definitions, we set
+     a padding so they have the same indent as properties in regular rules */
+  padding-inline-start: 28px;
+}
+
 .ruleview-enableproperty {
   position: relative;
   margin-top: 0;
@@ -813,7 +819,8 @@
   margin-inline: 1ch 0;
 }
 
-.ruleview-selectors-container {
+.ruleview-selectors-container,
+.ruleview-registered-property-name {
   word-wrap: break-word;
   cursor: text;
 }
