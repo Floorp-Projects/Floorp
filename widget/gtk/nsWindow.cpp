@@ -4673,6 +4673,43 @@ void nsWindow::TryToShowNativeWindowMenu(GdkEventButton* aEvent) {
   }
 }
 
+bool nsWindow::DoTitlebarAction(LookAndFeel::TitlebarEvent aEvent,
+                                GdkEventButton* aButtonEvent) {
+  LOG("DoTitlebarAction %s click",
+      aEvent == LookAndFeel::TitlebarEvent::Double_Click ? "double" : "middle");
+  switch (LookAndFeel::GetTitlebarAction(aEvent)) {
+    case LookAndFeel::TitlebarAction::WindowMenu:
+      // Titlebar app menu
+      LOG("  action menu");
+      TryToShowNativeWindowMenu(aButtonEvent);
+      break;
+    // Lower is part of gtk_surface1 protocol which we can't support
+    // as Gtk keeps it private. So emulate it by minimize.
+    case LookAndFeel::TitlebarAction::WindowLower:
+    case LookAndFeel::TitlebarAction::WindowMinimize:
+      LOG("  action minimize");
+      SetSizeMode(nsSizeMode_Minimized);
+      break;
+    case LookAndFeel::TitlebarAction::WindowMaximize:
+      LOG("  action maximize");
+      SetSizeMode(nsSizeMode_Maximized);
+      break;
+    case LookAndFeel::TitlebarAction::WindowMaximizeToggle:
+      LOG("  action toggle maximize");
+      if (mSizeMode == nsSizeMode_Maximized) {
+        SetSizeMode(nsSizeMode_Normal);
+      } else if (mSizeMode == nsSizeMode_Normal) {
+        SetSizeMode(nsSizeMode_Maximized);
+      }
+      break;
+    case LookAndFeel::TitlebarAction::None:
+    default:
+      LOG("  action none");
+      return false;
+  }
+  return true;
+}
+
 void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   LOG("Button %u press\n", aEvent->button);
 
