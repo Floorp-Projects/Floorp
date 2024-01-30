@@ -56,6 +56,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/JSScript.h"
+#include "vm/PromiseObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
@@ -2819,6 +2820,7 @@ void JSObject::dump(js::JSONPrinter& json) const {
 
 #  define FOR_EACH_CLASS(M) \
     M(JSFunction)           \
+    M(PromiseObject)        \
     M(RegExpObject)
 
 static void DumpOwnFields(const JSObject* obj, js::JSONPrinter& json) {

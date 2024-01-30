@@ -536,6 +536,10 @@ class PromiseDebugInfo : public NativeObject {
     debugInfo->setFixedSlot(Slot_ResolutionTime,
                             DoubleValue(MillisecondsSinceStartup()));
   }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpOwnFields(js::JSONPrinter& json) const;
+#endif
 };
 
 const JSClass PromiseDebugInfo::class_ = {
@@ -762,6 +766,10 @@ class PromiseReactionRecord : public NativeObject {
   // rejection.
   static constexpr uint32_t REACTION_FLAG_IGNORE_UNHANDLED_REJECTION = 0x40;
 
+  template <typename KnownF, typename UnknownF>
+  static void forEachReactionFlag(uint32_t flags, KnownF known,
+                                  UnknownF unknown);
+
   void setFlagOnInitialState(uint32_t flag) {
     int32_t flags = this->flags();
     MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
@@ -786,7 +794,7 @@ class PromiseReactionRecord : public NativeObject {
  public:
   static const JSClass class_;
 
-  JSObject* promise() {
+  JSObject* promise() const {
     return getFixedSlot(ReactionRecordSlot_Promise).toObjectOrNull();
   }
 
@@ -794,7 +802,7 @@ class PromiseReactionRecord : public NativeObject {
     return getFixedSlot(ReactionRecordSlot_Flags).toInt32();
   }
 
-  JS::PromiseState targetState() {
+  JS::PromiseState targetState() const {
     int32_t flags = this->flags();
     if (!(flags & REACTION_FLAG_RESOLVED)) {
       return JS::PromiseState::Pending;
@@ -832,7 +840,7 @@ class PromiseReactionRecord : public NativeObject {
     setFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve,
                  ObjectValue(*promiseToResolve));
   }
-  bool isDefaultResolvingHandler() {
+  bool isDefaultResolvingHandler() const {
     int32_t flags = this->flags();
     return flags & REACTION_FLAG_DEFAULT_RESOLVING_HANDLER;
   }
@@ -848,7 +856,7 @@ class PromiseReactionRecord : public NativeObject {
     setFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve,
                  ObjectValue(*genObj));
   }
-  bool isAsyncFunction() {
+  bool isAsyncFunction() const {
     int32_t flags = this->flags();
     return flags & REACTION_FLAG_ASYNC_FUNCTION;
   }
@@ -864,7 +872,7 @@ class PromiseReactionRecord : public NativeObject {
     setFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve,
                  ObjectValue(*generator));
   }
-  bool isAsyncGenerator() {
+  bool isAsyncGenerator() const {
     int32_t flags = this->flags();
     return flags & REACTION_FLAG_ASYNC_GENERATOR;
   }
@@ -878,7 +886,7 @@ class PromiseReactionRecord : public NativeObject {
   void setIsDebuggerDummy() {
     setFlagOnInitialState(REACTION_FLAG_DEBUGGER_DUMMY);
   }
-  bool isDebuggerDummy() {
+  bool isDebuggerDummy() const {
     int32_t flags = this->flags();
     return flags & REACTION_FLAG_DEBUGGER_DUMMY;
   }
@@ -898,6 +906,10 @@ class PromiseReactionRecord : public NativeObject {
     setFixedSlot(ReactionRecordSlot_IncumbentGlobalObject, UndefinedValue());
     return obj;
   }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpOwnFields(js::JSONPrinter& json) const;
+#endif
 };
 
 const JSClass PromiseReactionRecord::class_ = {
@@ -6494,6 +6506,283 @@ void PromiseObject::copyUserInteractionFlagsFrom(PromiseObject& rhs) {
   setRequiresUserInteractionHandling(rhs.requiresUserInteractionHandling());
   setHadUserInteractionUponCreation(rhs.hadUserInteractionUponCreation());
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void PromiseDebugInfo::dumpOwnFields(js::JSONPrinter& json) const {
+  if (getFixedSlot(Slot_Id).isNumber()) {
+    json.formatProperty("id", "%lf", getFixedSlot(Slot_Id).toNumber());
+  }
+
+  if (getFixedSlot(Slot_AllocationTime).isNumber()) {
+    json.formatProperty("allocationTime", "%lf",
+                        getFixedSlot(Slot_AllocationTime).toNumber());
+  }
+
+  {
+    js::GenericPrinter& out = json.beginStringProperty("allocationSite");
+    getFixedSlot(Slot_AllocationSite).dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  if (getFixedSlot(Slot_ResolutionTime).isNumber()) {
+    json.formatProperty("resolutionTime", "%lf",
+                        getFixedSlot(Slot_ResolutionTime).toNumber());
+  }
+
+  {
+    js::GenericPrinter& out = json.beginStringProperty("resolutionSite");
+    getFixedSlot(Slot_ResolutionSite).dumpStringContent(out);
+    json.endStringProperty();
+  }
+}
+
+template <typename KnownF, typename UnknownF>
+/* static */
+void PromiseReactionRecord::forEachReactionFlag(uint32_t flags, KnownF known,
+                                                UnknownF unknown) {
+  for (uint32_t i = 1; i; i = i << 1) {
+    if (!(flags & i)) {
+      continue;
+    }
+    switch (flags & i) {
+      case REACTION_FLAG_RESOLVED:
+        known("RESOLVED");
+        break;
+      case REACTION_FLAG_FULFILLED:
+        known("FULFILLED");
+        break;
+      case REACTION_FLAG_DEFAULT_RESOLVING_HANDLER:
+        known("DEFAULT_RESOLVING_HANDLER");
+        break;
+      case REACTION_FLAG_ASYNC_FUNCTION:
+        known("ASYNC_FUNCTION");
+        break;
+      case REACTION_FLAG_ASYNC_GENERATOR:
+        known("ASYNC_GENERATOR");
+        break;
+      case REACTION_FLAG_DEBUGGER_DUMMY:
+        known("DEBUGGER_DUMMY");
+        break;
+      case REACTION_FLAG_IGNORE_UNHANDLED_REJECTION:
+        known("IGNORE_UNHANDLED_REJECTION");
+        break;
+      default:
+        unknown(i);
+        break;
+    }
+  }
+}
+
+void PromiseReactionRecord::dumpOwnFields(js::JSONPrinter& json) const {
+  if (promise()) {
+    js::GenericPrinter& out = json.beginStringProperty("promise");
+    promise()->dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  if (targetState() == JS::PromiseState::Fulfilled) {
+    {
+      js::GenericPrinter& out = json.beginStringProperty("onFulfilled");
+      getFixedSlot(ReactionRecordSlot_OnFulfilled).dumpStringContent(out);
+      json.endStringProperty();
+    }
+    {
+      js::GenericPrinter& out = json.beginStringProperty("onFulfilledArg");
+      getFixedSlot(ReactionRecordSlot_OnFulfilledArg).dumpStringContent(out);
+      json.endStringProperty();
+    }
+  }
+
+  if (targetState() == JS::PromiseState::Rejected) {
+    {
+      js::GenericPrinter& out = json.beginStringProperty("onRejected");
+      getFixedSlot(ReactionRecordSlot_OnRejected).dumpStringContent(out);
+      json.endStringProperty();
+    }
+    {
+      js::GenericPrinter& out = json.beginStringProperty("onRejectedArg");
+      getFixedSlot(ReactionRecordSlot_OnRejectedArg).dumpStringContent(out);
+      json.endStringProperty();
+    }
+  }
+
+  if (!getFixedSlot(ReactionRecordSlot_Resolve).isNull()) {
+    js::GenericPrinter& out = json.beginStringProperty("resolve");
+    getFixedSlot(ReactionRecordSlot_Resolve).dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  if (!getFixedSlot(ReactionRecordSlot_Reject).isNull()) {
+    js::GenericPrinter& out = json.beginStringProperty("reject");
+    getFixedSlot(ReactionRecordSlot_Reject).dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  {
+    js::GenericPrinter& out = json.beginStringProperty("incumbentGlobal");
+    getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject)
+        .dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  json.beginInlineListProperty("flags");
+  forEachReactionFlag(
+      flags(), [&](const char* name) { json.value("%s", name); },
+      [&](uint32_t value) { json.value("Unknown(%08x)", value); });
+  json.endInlineList();
+
+  if (isDefaultResolvingHandler()) {
+    js::GenericPrinter& out = json.beginStringProperty("promiseToResolve");
+    getFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve)
+        .dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  if (isAsyncFunction()) {
+    js::GenericPrinter& out = json.beginStringProperty("generator");
+    getFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve)
+        .dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  if (isAsyncGenerator()) {
+    js::GenericPrinter& out = json.beginStringProperty("generator");
+    getFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve)
+        .dumpStringContent(out);
+    json.endStringProperty();
+  }
+}
+
+void DumpReactions(js::JSONPrinter& json, const JS::Value& reactionsVal) {
+  if (reactionsVal.isUndefined()) {
+    return;
+  }
+
+  if (reactionsVal.isObject()) {
+    JSObject* reactionsObj = &reactionsVal.toObject();
+    if (IsProxy(reactionsObj)) {
+      reactionsObj = UncheckedUnwrap(reactionsObj);
+    }
+
+    if (reactionsObj->is<PromiseReactionRecord>()) {
+      json.beginObject();
+      reactionsObj->as<PromiseReactionRecord>().dumpOwnFields(json);
+      json.endObject();
+      return;
+    }
+
+    if (reactionsObj->is<NativeObject>()) {
+      NativeObject* reactionsList = &reactionsObj->as<NativeObject>();
+      uint32_t len = reactionsList->getDenseInitializedLength();
+      for (uint32_t i = 0; i < len; i++) {
+        const JS::Value& reactionVal = reactionsList->getDenseElement(i);
+        if (reactionVal.isObject()) {
+          JSObject* reactionsObj = &reactionVal.toObject();
+          if (IsProxy(reactionsObj)) {
+            reactionsObj = UncheckedUnwrap(reactionsObj);
+          }
+
+          if (reactionsObj->is<PromiseReactionRecord>()) {
+            json.beginObject();
+            reactionsObj->as<PromiseReactionRecord>().dumpOwnFields(json);
+            json.endObject();
+            continue;
+          }
+        }
+
+        js::GenericPrinter& out = json.beginString();
+        out.put("Unknown(");
+        reactionVal.dumpStringContent(out);
+        out.put(")");
+        json.endString();
+      }
+      return;
+    }
+  }
+
+  js::GenericPrinter& out = json.beginString();
+  out.put("Unknown(");
+  reactionsVal.dumpStringContent(out);
+  out.put(")");
+  json.endString();
+}
+
+template <typename KnownF, typename UnknownF>
+void ForEachPromiseFlag(uint32_t flags, KnownF known, UnknownF unknown) {
+  for (uint32_t i = 1; i; i = i << 1) {
+    if (!(flags & i)) {
+      continue;
+    }
+    switch (flags & i) {
+      case PROMISE_FLAG_RESOLVED:
+        known("RESOLVED");
+        break;
+      case PROMISE_FLAG_FULFILLED:
+        known("FULFILLED");
+        break;
+      case PROMISE_FLAG_HANDLED:
+        known("HANDLED");
+        break;
+      case PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS:
+        known("DEFAULT_RESOLVING_FUNCTIONS");
+        break;
+      case PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS_ALREADY_RESOLVED:
+        known("DEFAULT_RESOLVING_FUNCTIONS_ALREADY_RESOLVED");
+        break;
+      case PROMISE_FLAG_ASYNC:
+        known("ASYNC");
+        break;
+      case PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING:
+        known("REQUIRES_USER_INTERACTION_HANDLING");
+        break;
+      case PROMISE_FLAG_HAD_USER_INTERACTION_UPON_CREATION:
+        known("HAD_USER_INTERACTION_UPON_CREATION");
+        break;
+      default:
+        unknown(i);
+        break;
+    }
+  }
+}
+
+void PromiseObject::dumpOwnFields(js::JSONPrinter& json) const {
+  json.beginInlineListProperty("flags");
+  ForEachPromiseFlag(
+      flags(), [&](const char* name) { json.value("%s", name); },
+      [&](uint32_t value) { json.value("Unknown(%08x)", value); });
+  json.endInlineList();
+
+  if (state() == JS::PromiseState::Pending) {
+    json.property("state", "pending");
+
+    json.beginListProperty("reactions");
+    DumpReactions(json, reactions());
+    json.endList();
+  } else if (state() == JS::PromiseState::Fulfilled) {
+    json.property("state", "fulfilled");
+
+    json.beginObjectProperty("value");
+    value().dumpFields(json);
+    json.endObject();
+  } else if (state() == JS::PromiseState::Rejected) {
+    json.property("state", "rejected");
+
+    json.beginObjectProperty("reason");
+    reason().dumpFields(json);
+    json.endObject();
+  }
+
+  JS::Value debugInfo = getFixedSlot(PromiseSlot_DebugInfo);
+  if (debugInfo.isNumber()) {
+    json.formatProperty("id", "%lf", debugInfo.toNumber());
+  } else if (debugInfo.isObject() &&
+             debugInfo.toObject().is<PromiseDebugInfo>()) {
+    debugInfo.toObject().as<PromiseDebugInfo>().dumpOwnFields(json);
+  }
+}
+
+void PromiseObject::dumpOwnStringContent(js::GenericPrinter& out) const {}
+#endif
 
 // We can skip `await` with an already resolved value only if the current frame
 // is the topmost JS frame and the current job is the last job in the job queue.
