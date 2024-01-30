@@ -192,7 +192,7 @@ export class ScreenshotsOverlay {
     return this.content.root.getElementById(id);
   }
 
-  initialize() {
+  async initialize() {
     if (this.initialized) {
       return;
     }
@@ -1451,13 +1451,13 @@ export class ScreenshotsOverlay {
    * container size so we don't draw outside the page bounds.
    * @param {String} eventType will be "scroll" or "resize"
    */
-  async updateScreenshotsOverlayDimensions(eventType) {
-    let updateWindowDimensionsPromise = this.updateWindowDimensions();
+  updateScreenshotsOverlayDimensions(eventType) {
+    this.updateWindowDimensions();
 
     if (this.#state === STATES.CROSSHAIRS) {
       if (eventType === "resize") {
         this.hideHoverElementContainer();
-        this.#cachedEle = null;
+        this.updatePreviewContainer();
       } else if (eventType === "scroll") {
         if (this.#lastClientX && this.#lastClientY) {
           this.#cachedEle = null;
@@ -1465,9 +1465,6 @@ export class ScreenshotsOverlay {
         }
       }
     } else if (this.#state === STATES.SELECTED) {
-      await updateWindowDimensionsPromise;
-      this.selectionRegion.shift();
-      this.drawSelectionContainer();
       this.drawButtonsContainer();
       this.updateSelectionSizeText();
     }
@@ -1530,21 +1527,13 @@ export class ScreenshotsOverlay {
   }
 
   /**
-   * We have to be careful not to draw the overlay larger than the document
-   * because the overlay is absolutely position and within the document so we
-   * can cause the document to overflow when it shouldn't. To mitigate this,
-   * we will temporarily position the overlay to position fixed with width and
-   * height 100% so the overlay is within the document bounds. Then we will get
-   * the dimensions of the document to correctly draw the overlay.
+   * Update the screenshots container because the window has changed size of
+   * scrolled. The screenshots-overlay-container doesn't shrink with the page
+   * when the window is resized so we have to manually find the width and
+   * height of the page and make sure we aren't drawing outside the actual page
+   * dimensions.
    */
-  async updateWindowDimensions() {
-    // Setting the screenshots container attribute "resizing" will make the
-    // overlay fixed position with width and height of 100% percent so it
-    // does not draw outside the actual document.
-    this.screenshotsContainer.toggleAttribute("resizing", true);
-
-    await new Promise(r => this.window.requestAnimationFrame(r));
-
+  updateWindowDimensions() {
     let {
       clientWidth,
       clientHeight,
@@ -1555,7 +1544,49 @@ export class ScreenshotsOverlay {
       scrollMinX,
       scrollMinY,
     } = this.getDimensionsFromWindow();
-    this.screenshotsContainer.toggleAttribute("resizing", false);
+
+    let shouldUpdate = true;
+
+    if (
+      clientHeight < this.windowDimensions.clientHeight ||
+      clientWidth < this.windowDimensions.clientWidth
+    ) {
+      let widthDiff = this.windowDimensions.clientWidth - clientWidth;
+      let heightDiff = this.windowDimensions.clientHeight - clientHeight;
+
+      this.windowDimensions.dimensions = {
+        scrollWidth: scrollWidth - Math.max(widthDiff, 0),
+        scrollHeight: scrollHeight - Math.max(heightDiff, 0),
+        clientWidth,
+        clientHeight,
+      };
+
+      if (this.#state === STATES.SELECTED) {
+        let didShift = this.selectionRegion.shift();
+        if (didShift) {
+          this.drawSelectionContainer();
+          this.drawButtonsContainer();
+        }
+      } else if (this.#state === STATES.CROSSHAIRS) {
+        this.updatePreviewContainer();
+      }
+      this.updateScreenshotsOverlayContainer();
+      // We just updated the screenshots container so we check if the window
+      // dimensions are still accurate
+      let { scrollWidth: updatedWidth, scrollHeight: updatedHeight } =
+        this.getDimensionsFromWindow();
+
+      // If the width and height are the same then we don't need to draw the overlay again
+      if (updatedWidth === scrollWidth && updatedHeight === scrollHeight) {
+        shouldUpdate = false;
+      }
+
+      scrollWidth = updatedWidth;
+      scrollHeight = updatedHeight;
+    }
+
+    setMaxDetectHeight(Math.max(clientHeight + 100, 700));
+    setMaxDetectWidth(Math.max(clientWidth + 100, 1000));
 
     this.windowDimensions.dimensions = {
       clientWidth,
@@ -1569,10 +1600,9 @@ export class ScreenshotsOverlay {
       devicePixelRatio: this.window.devicePixelRatio,
     };
 
-    this.updatePreviewContainer();
-    this.updateScreenshotsOverlayContainer();
-
-    setMaxDetectHeight(Math.max(clientHeight + 100, 700));
-    setMaxDetectWidth(Math.max(clientWidth + 100, 1000));
+    if (shouldUpdate) {
+      this.updatePreviewContainer();
+      this.updateScreenshotsOverlayContainer();
+    }
   }
 }
