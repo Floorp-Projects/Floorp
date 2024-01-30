@@ -27,6 +27,8 @@ class JSONPrinter {
 
   void indent();
 
+  void beforeValue();
+
  public:
   explicit JSONPrinter(GenericPrinter& out, bool indent = true)
       : indentLevel_(0), indent_(indent), first_(true), out_(out) {}
