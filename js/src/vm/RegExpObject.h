@@ -187,10 +187,6 @@ class RegExpObject : public NativeObject {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dumpOwnFields(js::JSONPrinter& json) const;
   void dumpOwnStringContent(js::GenericPrinter& out) const;
-
-  [[nodiscard]] static bool dumpBytecode(JSContext* cx,
-                                         Handle<RegExpObject*> regexp,
-                                         Handle<JSLinearString*> input);
 #endif
 
  private:
