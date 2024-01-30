@@ -12,9 +12,34 @@ loader.lazyGetter(this, "TARGET_TYPES", function () {
 class TracerCommand {
   constructor({ commands }) {
     this.#targetCommand = commands.targetCommand;
+    this.#resourceCommand = commands.resourceCommand;
   }
+
+  #resourceCommand;
   #targetCommand;
   #isTracing = false;
+
+  async initialize() {
+    return this.#resourceCommand.watchResources(
+      [this.#resourceCommand.TYPES.JSTRACER_STATE],
+      { onAvailable: this.onResourcesAvailable }
+    );
+  }
+  destroy() {
+    this.#resourceCommand.unwatchResources(
+      [this.#resourceCommand.TYPES.JSTRACER_STATE],
+      { onAvailable: this.onResourcesAvailable }
+    );
+  }
+
+  onResourcesAvailable = resources => {
+    for (const resource of resources) {
+      if (resource.resourceType != this.#resourceCommand.TYPES.JSTRACER_STATE) {
+        continue;
+      }
+      this.#isTracing = resource.enabled;
+    }
+  };
 
   /**
    * Toggle JavaScript tracing for all targets.

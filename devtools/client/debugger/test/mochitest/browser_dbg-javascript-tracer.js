@@ -488,3 +488,68 @@ add_task(async function testTracingOnNextInteraction() {
     "devtools.debugger.javascript-tracing-on-next-interaction"
   );
 });
+
+add_task(async function testInteractionBetweenDebuggerAndConsole() {
+  const jsCode = `function foo() {};`;
+  const dbg = await initDebuggerWithAbsoluteURL(
+    "data:text/html," + encodeURIComponent(`<script>${jsCode}</script>`)
+  );
+
+  info("Enable the tracing via the debugger button");
+  await clickElement(dbg, "trace");
+
+  const topLevelThreadActorID =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be enabled");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
+  invokeInTab("foo");
+
+  await hasConsoleMessage(dbg, "λ foo");
+
+  info("Disable the tracing via a console command");
+  const { hud } = await dbg.toolbox.getPanel("webconsole");
+  let msg = await evaluateExpressionInConsole(hud, ":trace", "console-api");
+  is(msg.textContent.trim(), "Stopped tracing");
+
+  ok(
+    !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID),
+    "Tracing is also reported as disabled in the debugger"
+  );
+
+  info(
+    "Clear the console output from the first tracing session started from the debugger"
+  );
+  hud.ui.clearOutput();
+  await waitFor(
+    async () => !(await findConsoleMessages(dbg.toolbox, "λ foo")).length,
+    "Wait for console to be cleared"
+  );
+
+  info("Enable the tracing via a console command");
+  msg = await evaluateExpressionInConsole(hud, ":trace", "console-api");
+  is(msg.textContent.trim(), "Started tracing to Web Console");
+
+  info("Wait for tracing to be also enabled in the debugger");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+  ok(true, "Debugger also reports the tracing in progress");
+
+  invokeInTab("foo");
+
+  await hasConsoleMessage(dbg, "λ foo");
+
+  info("Disable the tracing via the debugger button");
+  await clickElement(dbg, "trace");
+
+  info("Wait for tracing to be disabled per debugger button");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
+  });
+
+  info("Also wait for stop message in the console");
+  await hasConsoleMessage(dbg, "Stopped tracing");
+});

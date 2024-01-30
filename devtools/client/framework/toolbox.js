@@ -920,6 +920,7 @@ Toolbox.prototype = {
         this.resourceCommand.TYPES.THREAD_STATE,
       ];
 
+      let tracerInitialization;
       if (
         Services.prefs.getBoolPref(
           "devtools.debugger.features.javascript-tracing",
@@ -927,6 +928,7 @@ Toolbox.prototype = {
         )
       ) {
         watchedResources.push(this.resourceCommand.TYPES.JSTRACER_STATE);
+        tracerInitialization = this.commands.tracerCommand.initialize();
       }
 
       if (!this.isBrowserToolbox) {
@@ -1078,6 +1080,7 @@ Toolbox.prototype = {
         splitConsolePromise,
         framesPromise,
         onResourcesWatched,
+        tracerInitialization,
       ]);
 
       // We do not expect the focus to be restored when using about:debugging toolboxes
