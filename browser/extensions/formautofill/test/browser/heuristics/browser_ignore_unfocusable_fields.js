@@ -8,12 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 add_heuristic_tests([
   {
     description: "All visual fields are considered focusable.",
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "focusability",
-      ],
-    ],
+
     fixtureData: `
         <html>
         <body>
@@ -55,12 +50,7 @@ add_heuristic_tests([
     // ignore opacity (see  Bug 1835852),
     description:
       "Invisible fields with style.opacity=0 set are considered focusable.",
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "focusability",
-      ],
-    ],
+
     fixtureData: `
         <html>
         <body>
@@ -101,12 +91,7 @@ add_heuristic_tests([
   {
     description:
       "Some fields are considered unfocusable due to their invisibility.",
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "focusability",
-      ],
-    ],
+
     fixtureData: `
         <html>
         <body>
@@ -140,12 +125,7 @@ add_heuristic_tests([
   },
   {
     description: `Disabled field and field with tabindex="-1" is considered unfocusable`,
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "focusability",
-      ],
-    ],
+
     fixtureData: `
         <html>
         <body>
