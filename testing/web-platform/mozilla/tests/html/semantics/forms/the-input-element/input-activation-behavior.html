@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Activation behavior of input</title>
+<link rel="help" href="https://dom.spec.whatwg.org/#eventtarget-activation-behavior">
+<link rel="help" href="https://dom.spec.whatwg.org/#concept-event-dispatch">
+<link rel="help" href="https://html.spec.whatwg.org/#the-input-element">
+<link rel="help" href="https://github.com/whatwg/html/issues/1568">
+<link rel="help" href="https://github.com/whatwg/html/issues/1576">
+<link rel="help" href="https://github.com/whatwg/html/issues/10032">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+
+<div id=test_container>
+  <a href="javascript:activated(document.querySelector('a'))" class="target"></a>
+  <area href="javascript:activated(document.querySelector('area'))" class="target">
+</div>
+
+<script>
+let activations = [];
+function activated(e) {
+  activations.push(e);
+}
+
+function testActivation(inputType, hasFormOwner, followTheParentLink) {
+  const elements = document.getElementsByClassName("target");
+  for (const anchor of elements) {
+    promise_test(async t => {
+      const input = document.createElement("input");
+      input.type = inputType;
+      input.oninput = function (e) {
+        activated(this);
+      };
+
+      if (hasFormOwner) {
+        const form = document.createElement("form");
+        form.onsubmit = function (e) {
+          activated(this.firstElementChild);
+          e.preventDefault();
+          return false;
+        };
+        form.onreset = function (e) {
+          activated(this.firstElementChild);
+        };
+        form.appendChild(input);
+        anchor.appendChild(form);
+        t.add_cleanup(function() {
+          form.remove();
+          activations = [];
+        });
+      } else {
+        anchor.appendChild(input);
+        t.add_cleanup(function() {
+          input.remove();
+          activations = [];
+        });
+      }
+
+      input.click();
+
+      // This is for a/area where JavaScript is executed in a queued task.
+      await new Promise(resolve => {
+        t.step_timeout(() => {
+          t.step_timeout(() => {
+            // All browser doesn't follow the spec for input button, see
+            // https://github.com/whatwg/html/issues/1576.
+            assert_array_equals(activations, [followTheParentLink ? anchor : input]);
+            if (inputType == "checkbox" || inputType == "radio") {
+              assert_equals(input.checked, true, "check input.checked");
+            }
+            resolve();
+          }, 0);
+        }, 0);
+      });
+    }, `Click child input ${inputType} ${hasFormOwner ? "with" : "without"} form owner ` +
+       `of parent ${anchor.tagName}, activation target should be ${followTheParentLink ? anchor.tagName : "input"}`);
+  }
+}
+
+// Click input types without form owner should not follow the parent link.
+const TypesWithoutFormOwnerNotFollowParentLink = ["checkbox", "radio"];
+for (const type of TypesWithoutFormOwnerNotFollowParentLink) {
+  testActivation(type, false /* hasFormOwner */, false /* followTheParentLink */);
+}
+
+// Click input types without form owner should follow the parent link.
+const TypesWithoutFormOwnerFollowParentLink = ["button", "reset", "submit"];
+for (const type of TypesWithoutFormOwnerFollowParentLink) {
+  testActivation(type, false /* hasFormOwner */, true /* followTheParentLink */);
+}
+
+// Click input types with form owner should not follow the parent link.
+const TypesWithFormOwnerNotFollowParentLink = ["submit", "reset", "checkbox", "radio"];
+for (const type of TypesWithFormOwnerNotFollowParentLink) {
+  testActivation(type, true /* hasFormOwner */, false /* followTheParentLink */);
+}
+
+// Click input types with form owner should follow the parent link.
+const TypesWithFormOwnerFollowParentLink = ["button"];
+for (const type of TypesWithFormOwnerFollowParentLink) {
+  testActivation(type, true /* hasFormOwner */, true /* followTheParentLink */);
+}
+</script>
