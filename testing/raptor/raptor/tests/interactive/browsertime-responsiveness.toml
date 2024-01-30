@@ -4,7 +4,6 @@ alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedInde
 alert_threshold = 2.0
 apps = "firefox, chrome, chromium, safari"
 browser_cycles = 25
-gecko_profile_entries = 14000000
 gecko_profile_interval = 1
 interactive = true
 lower_is_better = true

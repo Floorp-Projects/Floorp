@@ -48,7 +48,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 4
@@ -287,7 +286,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 2000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
@@ -528,7 +526,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 4
@@ -770,7 +767,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 30
@@ -1007,7 +1003,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
@@ -1287,7 +1282,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: fenix, chrome-m, geckoview
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
@@ -1571,7 +1565,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
@@ -1861,7 +1854,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: fenix, chrome-m, geckoview
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
@@ -2156,7 +2148,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -2437,7 +2428,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -2722,7 +2712,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -3013,7 +3002,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -3307,7 +3295,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -3635,7 +3622,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: fenix, geckoview, refbrow, chrome-m, cstm-car-m
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -3969,7 +3955,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **cold**: true
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **host from parent**: false
    * **lower is better**: false
@@ -4299,7 +4284,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **cold**: true
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **host from parent**: false
    * **lower is better**: false
@@ -4631,7 +4615,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -4870,7 +4853,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
@@ -5107,7 +5089,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
@@ -5325,7 +5306,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
@@ -5608,7 +5588,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: geckoview, refbrow, fenix, chrome-m
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
@@ -5895,7 +5874,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **newtab per cycle**: true
@@ -6133,7 +6111,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **newtab per cycle**: true
@@ -6347,7 +6324,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **newtab per cycle**: true
@@ -6561,7 +6537,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
@@ -6796,7 +6771,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
@@ -7012,7 +6986,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
@@ -7228,7 +7201,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
@@ -7467,7 +7439,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -7490,7 +7461,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -7532,7 +7502,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -7734,7 +7703,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -7936,7 +7904,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -8138,7 +8105,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -8339,7 +8305,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -8599,7 +8564,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -8859,7 +8823,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -9061,7 +9024,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -9263,7 +9225,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -9465,7 +9426,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose browser profiler**: true
    * **gather cpuTime**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -9666,7 +9626,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -9883,7 +9842,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -10100,7 +10058,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -10317,7 +10274,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
    * **expose browser profiler**: true
-   * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
    * **lower is better**: true
@@ -13504,7 +13460,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **apps**: firefox
    * **browser cycles**: 1
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **measure**: fnbpaint, fcp, dcf, loadtime
@@ -13532,7 +13487,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **cold**: true
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
@@ -13733,7 +13687,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **fore window**: 1
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **max back window**: 3
@@ -14040,7 +13993,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **browsertime args**: --browsertime.grandprix_iterations=25
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **output timeout**: 2000000
@@ -14067,7 +14019,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **browser cycles**: 25
    * **browsertime args**: --pageCompleteWaitTime=1000 --pageCompleteCheckInactivity=true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **measure**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
@@ -14272,7 +14223,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **fore window**: 1
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **max back window**: 3
@@ -14301,7 +14251,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **cold**: true
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
@@ -14501,7 +14450,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **cold**: true
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **output timeout**: 2000000
@@ -14707,7 +14655,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:false --chrome.args disable-quic
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **output timeout**: 2000000
@@ -14936,7 +14883,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:true
    * **custom data**: true
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **output timeout**: 2000000
@@ -15164,7 +15110,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **apps**: firefox
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **measure**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
@@ -15373,7 +15318,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -15949,7 +15893,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -16347,7 +16290,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -16586,7 +16528,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -17067,7 +17008,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -17391,7 +17331,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -17702,7 +17641,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -17988,7 +17926,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -18354,7 +18291,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -18752,7 +18688,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page complete wait time**: 8000
@@ -19077,7 +19012,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -19400,7 +19334,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -19723,7 +19656,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -20122,7 +20054,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -20553,7 +20484,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -20858,7 +20788,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -21359,7 +21288,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -21683,7 +21611,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -22007,7 +21934,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -22326,7 +22252,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -22612,7 +22537,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -22851,7 +22775,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -23169,7 +23092,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -23492,7 +23414,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -23816,7 +23737,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -24247,7 +24167,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -24571,7 +24490,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **measure**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
@@ -24897,7 +24815,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -25290,7 +25207,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -25529,7 +25445,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -26035,7 +25950,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -26433,7 +26347,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 25
@@ -26869,7 +26782,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
@@ -27109,7 +27021,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
@@ -27349,7 +27260,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
@@ -27589,7 +27499,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
@@ -27829,7 +27738,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
-   * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
