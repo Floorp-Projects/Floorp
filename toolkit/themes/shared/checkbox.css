@@ -35,12 +35,13 @@ checkbox {
 .checkbox-check {
   appearance: auto;
   -moz-default-appearance: checkbox;
-  margin-inline-end: var(--checkbox-margin-inline);
+  margin-inline-end: 6px;
 
   &:not([native]) {
     -moz-theme: non-native;
-    width: var(--checkbox-size);
-    height: var(--checkbox-size);
+    /* TODO: Make this em-based, probably? */
+    width: 16px;
+    height: 16px;
   }
 
   checkbox:focus-visible > & {

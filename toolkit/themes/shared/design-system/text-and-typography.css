@@ -8,6 +8,13 @@
 }
 
 h1,
+h2,
+.heading-large,
+.heading-medium {
+  line-height: var(--line-height-small);
+}
+
+h1,
 .heading-large {
   font-weight: var(--font-weight-light, var(--font-weight-bold));
   font-size: var(--font-size-xlarge);

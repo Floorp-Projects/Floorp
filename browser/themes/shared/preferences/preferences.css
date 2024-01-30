@@ -70,19 +70,16 @@ groupbox[data-category] {
 }
 
 html|h1 {
-  margin: 0 0 var(--space-small);
+  margin: 0 0 8px;
 }
 
 html|h2 {
-  margin: var(--space-small) 0 var(--space-xxsmall) 0;
+  margin: 16px 0 4px;
 }
 
 description.indent,
 .indent:not(#browserPrivateEngineSelection) > description {
   color: var(--text-color-deemphasized);
-
-  /* Ensures margin on checkboxes, radios, and description don't create a big gap between the input and indented description */
-  margin-top: calc(var(--space-xsmall) * -1);
 }
 
 button,
@@ -103,16 +100,8 @@ button[flex] {
 
 description,
 label {
-  margin: var(--space-xxsmall) 0;
-}
-
-label {
-  margin: var(--space-xxsmall) 0;
-
-  &.tail-with-learn-more + a {
-    margin-block: var(--space-xxsmall);
-    margin-inline: var(--space-small) 0;
-  }
+  line-height: 1.8em;
+  margin: 0;
 }
 
 .description-deemphasized {
@@ -131,17 +120,18 @@ button > hbox > label {
 }
 
 .indent {
-  margin-inline-start: calc(var(--checkbox-size) + var(--checkbox-margin-inline)) !important;
+  /* This should match the checkboxes/radiobuttons' width and inline margin,
+     such that when we have a toggle with a label followed by another element
+     with this class, the other element's text aligns with the toggle label. */
+  margin-inline-start: 22px !important;
 }
 
-checkbox,
-radio {
-  margin: var(--space-small) 0;
+checkbox {
+  margin-inline: 0;
+}
 
-  &.tail-with-learn-more + a {
-    margin-block: var(--space-small);
-    margin-inline: var(--space-small) 0;
-  }
+.tail-with-learn-more {
+  margin-inline: 0 10px;
 }
 
 /* Add a bit of space to the end of descriptions to
@@ -193,7 +183,8 @@ radio {
  */
 
 .subcategory:not([hidden]) ~ .subcategory {
-  padding-top: var(--space-xlarge);
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--in-content-border-color);
 }
 
@@ -434,7 +425,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 
 #homepageGroup menulist,
 #homepageGroup html|input {
-  margin: var(--space-xsmall) 0;
+  margin: 5px 0;
 }
 
 #homepageGroup html|input {
@@ -468,7 +459,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 #homeContentsGroup .checkbox-icon[src] {
   -moz-context-properties: fill;
   fill: currentColor;
-  margin-inline-end: var(--checkbox-margin-inline);
+  margin-inline: 2px 8px;
   width: 16px;
 }
 
@@ -482,10 +473,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
 
 #homeContentsGroup [data-subcategory] > vbox menulist {
   margin-block: 0;
-}
-
-#homeContentsGroup .checkbox-label {
-  margin-inline-end: var(--space-small);
 }
 
 .addon-with-favicon .menu-iconic-icon {
@@ -751,11 +738,16 @@ html|dialog,
   margin-inline-end: 0;
 }
 
+#noFxaAccount {
+  line-height: 1.2em;
+}
+
 #noFxaAccount > label:first-child {
   margin-bottom: 0.6em;
 }
 
 #noFxaCaption {
+  line-height: 30px;
   margin-block: 0 4px;
 }
 
@@ -782,6 +774,7 @@ html|dialog,
 }
 
 .openLink {
+  line-height: 30px;
   cursor: pointer;
 }
 
@@ -1100,6 +1093,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 
 #no-results-message > label {
   margin: 2px 0;
+  line-height: 30px;
 }
 
 /* Proxy port input */
@@ -1232,7 +1226,7 @@ richlistitem .text-link:hover {
 }
 
 .featureGateDescription {
-  margin-inline-start: calc(var(--checkbox-size) + var(--checkbox-margin-inline));
+  margin-inline-start: 28px;
 }
 
 .checkbox-row {
@@ -1248,8 +1242,13 @@ richlistitem .text-link:hover {
   margin-inline-start: 6px;
 }
 
+#moreFromMozillaCategory-header .title {
+  margin-block-end: 4px;
+}
+
 #moreFromMozillaCategory-header .subtitle {
   margin-block-end: 24px;
+  line-height: 1.4em;
 }
 
 #moreFromMozillaCategory:not([hidden]) {
@@ -1277,6 +1276,7 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory .product-description-box {
   padding-inline-start: 30px;
   margin: 2px 0;
+  line-height: 1.4em;
 }
 
 #moreFromMozillaCategory .description {
@@ -1343,6 +1343,7 @@ richlistitem .text-link:hover {
 .qr-code-box-title {
   font-size: .87em;
   font-weight: normal;
+  line-height: 1.42em;
 
   text-align: center;
 
@@ -1366,6 +1367,7 @@ richlistitem .text-link:hover {
 
 #moreFromMozillaCategory .qr-code-link {
   font-size: .87em;
+  line-height: 1.42em;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1444,6 +1446,10 @@ richlistitem .text-link:hover {
   padding: 4px 8px;
   overflow-wrap: anywhere;
   display: flex;
+}
+
+.web-appearance-choice input {
+  margin-top: 0.4em;
 }
 
 #translations-manage-install-list {
