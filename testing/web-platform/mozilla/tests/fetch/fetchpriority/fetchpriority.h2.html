@@ -79,12 +79,9 @@
           assert_true(containsOnlyUniqueFileNames(httpOnOpeningRequests),
             "Observed only one HTTP request per filename");
 
-          // Only requests where fetchpriority differs from "auto" are checked,
-          // because only then the priority is adjusted.
-          //
           // The actual order of the "http-on-opening-request"s is not checked,
           // since the corresponding notification is sent when the resource is
-          // started to be loaded. However, since the resources might be to
+          // started to be loaded. However, since the resources might be too
           // quick to load, depending on the machine and network, it can't be
           // ensured that the server can reflect the priorities correctly.
           // Hence, here only the internal priority sent to the server is
