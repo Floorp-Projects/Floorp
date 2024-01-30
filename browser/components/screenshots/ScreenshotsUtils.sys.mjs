@@ -732,7 +732,7 @@ export var ScreenshotsUtils = {
 
     Services.prefs.setStringPref(
       SCREENSHOTS_LAST_SCREENSHOT_METHOD_PREF,
-      "fullpage"
+      lastUsedMethod
     );
     this.methodsUsed[lastUsedMethod] += 1;
     this.recordTelemetryEvent("selected", type, {});
