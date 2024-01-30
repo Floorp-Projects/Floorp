@@ -6134,17 +6134,18 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
               }
               hasBaseline = true;
             } else {
-              hasBaseline = isFirstBaseline
-                                ? nsLayoutUtils::GetFirstLineBaseline(
-                                      containerWM, child, &baseline)
-                                : nsLayoutUtils::GetLastLineBaseline(
-                                      containerWM, child, &baseline);
+              auto maybeBaseline = child->GetNaturalBaselineBOffset(
+                  childWM, aBaselineSharingGroup, BaselineExportContext::Other);
+              if (maybeBaseline) {
+                hasBaseline = true;
+                baseline = *maybeBaseline;
+              } else {
+                hasBaseline = false;
+              }
 
               if (!hasBaseline && ItemParticipatesInBaselineAlignment()) {
-                // TODO(tlouw): This should really be `aBaselineSharingGroup`,
-                // but then "last baseline" tests start to fail.
                 baseline = Baseline::SynthesizeBOffsetFromBorderBox(
-                    child, containerWM, BaselineSharingGroup::First);
+                    child, containerWM, aBaselineSharingGroup);
                 hasBaseline = true;
               }
             }
@@ -6158,10 +6159,6 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
                                          : margin.BStart(containerWM);
 
               } else {
-                if (!grid) {
-                  // Convert to distance from border-box end.
-                  baseline = frameSize - baseline;
-                }
                 baseline += isInlineAxis ? margin.IEnd(containerWM)
                                          : margin.BEnd(containerWM);
                 state |= ItemState::eEndSideBaseline;
