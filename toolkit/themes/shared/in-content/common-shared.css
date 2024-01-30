@@ -233,7 +233,6 @@
 
 :root:not(.system-font-size) {
   font-size: var(--font-size-root);
-  line-height: var(--line-height-default);
 }
 
 html|body {
