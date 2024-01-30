@@ -29,11 +29,13 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });
 
+const osVersion = Services.sysinfo.get("version");
+
 const DEFAULT_APPVERSION = {
   linux: "5.0 (X11)",
   win: "5.0 (Windows)",
   macosx: "5.0 (Macintosh)",
-  android: "5.0 (Android 10)",
+  android: `5.0 (Android ${osVersion})`,
   other: "5.0 (X11)",
 };
 
@@ -116,7 +118,7 @@ const SPOOFED_OSCPU = {
 const DEFAULT_UA_OS = {
   linux: `X11; Linux ${defaultLinuxCpu}`,
   macosx: "Macintosh; Intel Mac OS X 10.15",
-  android: "Android 10; Mobile",
+  android: `Android ${osVersion}; Mobile`,
   other: `X11; Linux ${defaultLinuxCpu}`,
 };
 
