@@ -15536,6 +15536,13 @@
   value: true
   mirror: always
 
+# Whether to use gtk titlebar actions for middle click instead of Firefox
+# build in one
+- name: widget.gtk.titlebar-action-middle-click-enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether we enable rounded bottom corners on GTK by default.
 #
 # The implementation is a bit hacky (see details in bug 1850827) so behind a
