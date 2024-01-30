@@ -42,6 +42,8 @@ export class ShoppingContainer extends MozLitElement {
     isAnalysisInProgress: { type: Boolean },
     analysisProgress: { type: Number },
     isOverflow: { type: Boolean },
+    autoOpenEnabled: { type: Boolean },
+    autoOpenEnabledByUser: { type: Boolean },
   };
 
   static get queries() {
@@ -74,6 +76,7 @@ export class ShoppingContainer extends MozLitElement {
     window.document.addEventListener("scroll", this);
     window.document.addEventListener("UpdateRecommendations", this);
     window.document.addEventListener("UpdateAnalysisProgress", this);
+    window.document.addEventListener("autoOpenEnabledByUserChanged", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -99,6 +102,8 @@ export class ShoppingContainer extends MozLitElement {
     isAnalysisInProgress,
     analysisProgress,
     focusCloseButton,
+    autoOpenEnabled,
+    autoOpenEnabledByUser,
   }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
@@ -113,6 +118,8 @@ export class ShoppingContainer extends MozLitElement {
     this.adsEnabledByUser = adsEnabledByUser;
     this.analysisProgress = analysisProgress;
     this.focusCloseButton = focusCloseButton;
+    this.autoOpenEnabled = autoOpenEnabled;
+    this.autoOpenEnabledByUser = autoOpenEnabledByUser;
   }
 
   _updateRecommendations({ recommendationData }) {
@@ -165,6 +172,20 @@ export class ShoppingContainer extends MozLitElement {
       case "UpdateAnalysisProgress":
         this._updateAnalysisProgress(event.detail);
         break;
+      case "autoOpenEnabledByUserChanged":
+        this.autoOpenEnabledByUser = event.detail?.autoOpenEnabledByUser;
+        break;
+    }
+  }
+
+  getHostnameFromProductUrl() {
+    let hostname;
+    try {
+      hostname = new URL(this.productUrl)?.hostname;
+      return hostname;
+    } catch (e) {
+      console.error(`Unknown product url ${this.productUrl}.`);
+      return null;
     }
   }
 
@@ -172,14 +193,7 @@ export class ShoppingContainer extends MozLitElement {
     /* At present, en is supported as the default language for reviews. As we support more sites,
      * update `lang` accordingly if highlights need to be displayed in other languages. */
     let lang;
-    let hostname;
-    try {
-      hostname = new URL(this.productUrl)?.hostname;
-    } catch (e) {
-      console.error(
-        `Unknown product url ${this.productUrl} for review highlights. Defaulting to en.`
-      );
-    }
+    let hostname = this.getHostnameFromProductUrl();
 
     switch (hostname) {
       case "www.amazon.fr":
@@ -355,6 +369,7 @@ export class ShoppingContainer extends MozLitElement {
   }
 
   getFooterTemplate() {
+    let hostname = this.getHostnameFromProductUrl();
     return html`
       <analysis-explainer
         productUrl=${ifDefined(this.productUrl)}
@@ -363,6 +378,9 @@ export class ShoppingContainer extends MozLitElement {
       <shopping-settings
         ?adsEnabled=${this.adsEnabled}
         ?adsEnabledByUser=${this.adsEnabledByUser}
+        ?autoOpenEnabled=${this.autoOpenEnabled}
+        ?autoOpenEnabledByUser=${this.autoOpenEnabledByUser}
+        .hostname=${hostname}
       ></shopping-settings>
     `;
   }
