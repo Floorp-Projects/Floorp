@@ -862,6 +862,39 @@ class ElementStyle {
       ? registeredPropertiesMap.get(name).initialValue
       : null;
   }
+
+  /**
+   * Get all custom properties.
+   *
+   * @param  {String} pseudo
+   *         The pseudo-element name of the rule.
+   * @returns Map<String, String> A map whose key is the custom property name and value is
+   *                              the custom property value (or registered property initial
+   *                              value if the property is not defined)
+   */
+  getAllCustomProperties(pseudo = "") {
+    const customProperties = new Map();
+
+    const variables = this.variablesMap.get(pseudo);
+    if (variables) {
+      for (const [name, value] of variables) {
+        customProperties.set(name, value);
+      }
+    }
+
+    const registeredPropertiesMap =
+      this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();
+    if (registeredPropertiesMap) {
+      for (const [name, propertyDefinition] of registeredPropertiesMap) {
+        // Only set the registered property if it's not defined (i.e. not in variablesMap)
+        if (!customProperties.has(name)) {
+          customProperties.set(name, propertyDefinition.initialValue);
+        }
+      }
+    }
+
+    return customProperties;
+  }
 }
 
 module.exports = ElementStyle;
