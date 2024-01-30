@@ -1694,6 +1694,9 @@
     <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Bewarre wachtwurden</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">De oanmeldingen dy’t jo bewarje of syngronisearje mei %s wurde hjir toand.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">De wachtwurden dy’t jo bewarje of syngronisearje mei %s sille hjir fermeld wurde. Alle wachtwurden dy’t jo bewarje binne fersifere.
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Mear ynfo oer Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
@@ -1702,12 +1705,18 @@
     <string name="preferences_passwords_exceptions">Utsûnderingen</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Net-bewarre oanmeldingen en wachtwurden wurde hjir werjûn.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s sil gjin wachtwurden foar de hjir fermelde websites bewarje.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Oanmeldingen en wachtwurden wurde foar dizze websites net bewarre. </string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s sil gjin wachtwurden foar dizze websites bewarje.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Alle útsûnderingen fuortsmite</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Oanmeldingen sykje</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Wachtwurden sykje</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Website</string>
     <!-- The header for the username for a login -->
@@ -1736,10 +1745,16 @@
     <string name="saved_login_hide_password">Wachtwurd ferstopje</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Untskoattelje om jo bewarre oanmeldingen te besjen</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Untskoattelje om jo bewarre wachtwurden te besjen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Befeiligje jo oanmeldingen en wachtwurden</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Befeiligje jo bewarre wachtwurden</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre oanmeldingen en wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Letter</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1776,6 +1791,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Betellingsmetoaden bewarje en ynfolje</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Gegevens binne fersifere</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s fersiferet alle betellingsmetoaden dy’t jo bewarje</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kaarten syngronisearje tusken apparaten</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1856,6 +1873,8 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre creditcards te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
 
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre kaarten te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">No ynstelle</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1866,6 +1885,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Untskoattelje om bewarre creditkaartynformaasje te brûken</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Untskoattelje om bewarre betellingsmetoaden te brûken</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adres tafoegje</string>
     <!-- Title of the "Edit address" screen -->
@@ -2003,30 +2024,52 @@
     <string name="login_menu_edit_button">Bewurkje</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Binne jo wis dat jo dizze oanmelding fuortsmite wolle?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Binne jo wis dat jo dit wachtwurd fuortsmite wolle?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Fuortsmite</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annulearje</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Oanmeldopsjes</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Wachtwurdopsjes</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">It bewurkbere tekstfjild foar it webadres fan de oanmelding.</string>
+    <!--  The editable text field for a password's website address. -->
+    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it websiteadres fan it wachtwurd.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">It bewurkbere tekstfjild foar de brûkersnamme fan de oanmelding.</string>
+    <!--  The editable text field for a password's username. -->
+    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar de brûkersnamme fan it wachtwurd.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">It bewurkbere tekstfjild foar it wachtwurd fan de oanmelding.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it wachtwurd.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Wizigingen oan oanmelding bewarje.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Wizigingen bewarje.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Bewurkje</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Wachtwurd bewurkje</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Nije oanmelding tafoegje</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Wachtwurd tafoegje</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Wachtwurd fereaske</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Folje in wachtwurd yn</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Brûkersnamme fereaske</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Folje in brûkersnamme yn</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostnamme fereaske</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Fier in websiteadres yn</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Sprutsen sykopdracht</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2403,6 +2446,10 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s nea oersette</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Dizze website nea oersette</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Oerskriuwt alle oare ynstellingen</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Negearret oersetoanbiedingen</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Oersetynstellingen</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
