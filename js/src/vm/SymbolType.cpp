@@ -145,6 +145,14 @@ void Symbol::dumpFields(js::JSONPrinter& json) const {
   }
 }
 
+void Symbol::dumpStringContent(js::GenericPrinter& out) const {
+  dumpPropertyName(out);
+
+  if (!isWellKnownSymbol()) {
+    out.printf(" @ (JS::Symbol*)0x%p", this);
+  }
+}
+
 void Symbol::dumpPropertyName(js::GenericPrinter& out) const {
   if (isWellKnownSymbol()) {
     // All the well-known symbol names are ASCII.

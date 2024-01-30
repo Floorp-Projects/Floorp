@@ -534,6 +534,12 @@ void JSString::dumpRepresentationFields(js::JSONPrinter& json) const {
   dumpCharsFields(json);
 }
 
+void JSString::dumpStringContent(js::GenericPrinter& out) const {
+  dumpCharsSingleQuote(out);
+
+  out.printf(" @ (%s*)0x%p", RepresentationToString(this), this);
+}
+
 void JSString::dumpPropertyName(js::GenericPrinter& out) const {
   dumpCharsNoQuote(out);
 }
