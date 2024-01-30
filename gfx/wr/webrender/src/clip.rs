@@ -894,7 +894,7 @@ impl From<ClipItemKey> for ClipNode {
 // Flags that are attached to instances of clip nodes.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
 pub struct ClipNodeFlags(u8);
 
 bitflags! {
@@ -902,6 +902,16 @@ bitflags! {
         const SAME_SPATIAL_NODE = 0x1;
         const SAME_COORD_SYSTEM = 0x2;
         const USE_FAST_PATH = 0x4;
+    }
+}
+
+impl core::fmt::Debug for ClipNodeFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 

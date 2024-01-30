@@ -182,7 +182,7 @@ impl Default for GlyphOptions {
 }
 
 #[repr(C)]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+#[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
 pub struct FontInstanceFlags(u32);
 
 bitflags! {
@@ -217,6 +217,16 @@ bitflags! {
         const NO_AUTOHINT       = 1 << 17;
         const VERTICAL_LAYOUT   = 1 << 18;
         const LCD_VERTICAL      = 1 << 19;
+    }
+}
+
+impl core::fmt::Debug for FontInstanceFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 

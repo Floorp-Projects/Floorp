@@ -167,7 +167,7 @@ fn split_from_end<T>(s: &[T], at: usize) -> (&[T], &[T]) {
 }
 
 /// Flags that indicate at which point of parsing a selector are we.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ToShmem)]
+#[derive(Clone, Copy, Default, Eq, PartialEq, ToShmem)]
 pub(crate) struct SelectorFlags(u8);
 
 bitflags! {
@@ -178,6 +178,16 @@ bitflags! {
         const HAS_PARENT = 1 << 3;
         const HAS_NON_FEATURELESS_COMPONENT = 1 << 4;
         const HAS_HOST = 1 << 5;
+    }
+}
+
+impl core::fmt::Debug for SelectorFlags {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "{:#x}", Self::empty().bits())
+        } else {
+            bitflags::parser::to_writer(self, f)
+        }
     }
 }
 
