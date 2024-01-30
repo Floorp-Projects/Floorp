@@ -34,10 +34,6 @@
     /** Font weight **/
     --font-weight-light: unset;
 
-    /** Line height **/
-    --line-height-small: unset;
-    --line-height-default: normal;
-
     /** Link **/
     --link-color: LinkText;
     --link-color-hover: LinkText;
