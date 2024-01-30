@@ -94,6 +94,8 @@ class nsTableCellFrame : public nsContainerFrame,
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
+  nsIFrame* CellContentFrame() const;
+
   nsMargin GetUsedMargin() const override;
 
   void NotifyPercentBSize(const ReflowInput& aReflowInput) override;
