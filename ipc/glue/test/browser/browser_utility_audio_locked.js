@@ -21,5 +21,8 @@ add_task(async function testAudioDecodingInUtility() {
   // should be removed
   // We only lock the preference in Nightly builds so far, but on beta we expect
   // audio decoding error
-  await runTest({ expectUtility: isNightlyOnly(), expectError: isBetaOnly() });
+  await runTest({
+    expectUtility: isNightlyOnly(),
+    expectError: !isNightlyOnly(),
+  });
 });

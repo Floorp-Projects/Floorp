@@ -560,17 +560,3 @@ function isNightlyOnly() {
   );
   return AppConstants.NIGHTLY_BUILD;
 }
-
-function isBetaOnly() {
-  const { AppConstants } = ChromeUtils.importESModule(
-    "resource://gre/modules/AppConstants.sys.mjs"
-  );
-  return !AppConstants.NIGHTLY_BUILD && AppConstants.EARLY_BETA_OR_EARLIER;
-}
-
-function isNightlyOrEalyBeta() {
-  const { AppConstants } = ChromeUtils.importESModule(
-    "resource://gre/modules/AppConstants.sys.mjs"
-  );
-  return AppConstants.NIGHTLY_BUILD || AppConstants.EARLY_BETA_OR_EARLIER;
-}

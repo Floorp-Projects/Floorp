@@ -262,7 +262,7 @@ function getExtraKey({ utilityPref, rddPref, allowNonUtility }) {
   }
   // TODO: This needs to be removed when getting rid of ability to decode on
   // non utility at all
-  if (allowNonUtility || !isNightlyOrEalyBeta()) {
+  if (allowNonUtility) {
     extraKey += ",allow-non-utility";
   }
   return extraKey;
