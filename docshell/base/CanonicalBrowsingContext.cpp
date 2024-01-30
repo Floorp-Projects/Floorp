@@ -818,8 +818,7 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::Print(
 }
 
 void CanonicalBrowsingContext::CallOnAllTopDescendants(
-    const std::function<mozilla::CallState(CanonicalBrowsingContext*)>&
-        aCallback) {
+    const FunctionRef<CallState(CanonicalBrowsingContext*)>& aCallback) {
   MOZ_ASSERT(IsChrome(), "Should only call in chrome BC");
   MOZ_ASSERT(!GetParentCrossChromeBoundary(),
              "Should only call on top chrome BC");
