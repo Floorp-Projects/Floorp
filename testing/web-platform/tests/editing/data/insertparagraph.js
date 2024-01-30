@@ -2558,4 +2558,19 @@ var browserTests = [
      "foo<br><p><br></p><p>bar<span>baz</span><br>qux</p>"],
     [true,true],
     {}],
+
+// Inserting paragraph before <br> followed by a blocked <span> should cause
+// inserting an empty paragraph to start of the editing host at least.
+["{}<br><span style=display:block>abc<br>def<br></span>",
+    [["defaultparagraphseparator","div"],["insertparagraph",""]],
+    ["<div><br></div><br><span style=\"display:block\">abc<br>def<br></span>",
+     "<div><br></div><div><br></div><span style=\"display:block\">abc<br>def<br></span>"],
+    [true,true],
+    {}],
+["{}<br><span style=display:block>abc<br>def<br></span>",
+    [["defaultparagraphseparator","p"],["insertparagraph",""]],
+    ["<p><br></p><br><span style=\"display:block\">abc<br>def<br></span>",
+     "<p><br></p><p><br></p><span style=\"display:block\">abc<br>def<br></span>"],
+    [true,true],
+    {}],
 ]
