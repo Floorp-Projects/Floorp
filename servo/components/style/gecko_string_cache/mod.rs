@@ -14,7 +14,6 @@ use crate::gecko_bindings::bindings::Gecko_Atomize;
 use crate::gecko_bindings::bindings::Gecko_Atomize16;
 use crate::gecko_bindings::bindings::Gecko_ReleaseAtom;
 use crate::gecko_bindings::structs::root::mozilla::detail::gGkAtoms;
-use crate::gecko_bindings::structs::root::mozilla::detail::kGkAtomsArrayOffset;
 use crate::gecko_bindings::structs::root::mozilla::detail::GkAtoms_Atoms_AtomsCount;
 use crate::gecko_bindings::structs::{nsAtom, nsDynamicAtom, nsStaticAtom};
 use nsstring::{nsAString, nsStr};
@@ -47,9 +46,8 @@ pub use self::namespace::{Namespace, WeakNamespace};
 ///  * A strong reference to a dynamic atom (an `nsAtom` pointer), in which case
 ///    the `usize` just holds the pointer value.
 ///
-///  * A byte offset from `gGkAtoms` to the `nsStaticAtom` object (shifted to
-///    the left one bit, and with the lower bit set to `1` to differentiate it
-///    from the above), so `(offset << 1 | 1)`.
+///  * An index from `gGkAtoms` to the `nsStaticAtom` object (shifted to the left one bit, and with
+///    the lower bit set to `1` to differentiate it from the above), so `(index << 1 | 1)`.
 ///
 #[derive(Eq, PartialEq)]
 #[repr(C)]
@@ -64,35 +62,6 @@ pub struct WeakAtom(nsAtom);
 /// The number of static atoms we have.
 const STATIC_ATOM_COUNT: usize = GkAtoms_Atoms_AtomsCount as usize;
 
-/// Returns the Gecko static atom array.
-///
-/// We have this rather than use rust-bindgen to generate
-/// mozilla::detail::gGkAtoms and then just reference gGkAtoms.mAtoms, so we
-/// avoid a problem with lld-link.exe on Windows.
-///
-/// https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
-#[inline]
-fn static_atoms() -> &'static [nsStaticAtom; STATIC_ATOM_COUNT] {
-    unsafe {
-        let addr = &gGkAtoms as *const _ as usize + kGkAtomsArrayOffset as usize;
-        &*(addr as *const _)
-    }
-}
-
-/// Returns whether the specified address points to one of the nsStaticAtom
-/// objects in the Gecko static atom array.
-#[inline]
-fn valid_static_atom_addr(addr: usize) -> bool {
-    unsafe {
-        let atoms = static_atoms();
-        let start = atoms.as_ptr();
-        let end = atoms.get_unchecked(STATIC_ATOM_COUNT) as *const _;
-        let in_range = addr >= start as usize && addr < end as usize;
-        let aligned = addr % mem::align_of::<nsStaticAtom>() == 0;
-        in_range && aligned
-    }
-}
-
 impl Deref for Atom {
     type Target = WeakAtom;
 
@@ -100,11 +69,11 @@ impl Deref for Atom {
     fn deref(&self) -> &WeakAtom {
         unsafe {
             let addr = if self.is_static() {
-                (&gGkAtoms as *const _ as usize) + (self.0.get() >> 1)
+                // This is really hot.
+                &gGkAtoms.mAtoms.get_unchecked(self.0.get() >> 1)._base as *const nsAtom
             } else {
-                self.0.get()
+                self.0.get() as *const nsAtom
             };
-            debug_assert!(!self.is_static() || valid_static_atom_addr(addr));
             WeakAtom::new(addr as *const nsAtom)
         }
     }
@@ -360,12 +329,13 @@ unsafe fn make_handle(ptr: *const nsAtom) -> NonZeroUsize {
 
 #[inline]
 unsafe fn make_static_handle(ptr: *const nsStaticAtom) -> NonZeroUsize {
-    // FIXME(heycam): Use offset_from once it's stabilized.
-    // https://github.com/rust-lang/rust/issues/41079
-    debug_assert!(valid_static_atom_addr(ptr as usize));
-    let base = &gGkAtoms as *const _;
-    let offset = ptr as usize - base as usize;
-    NonZeroUsize::new_unchecked((offset << 1) | 1)
+    let index = ptr.offset_from(&gGkAtoms.mAtoms[0] as *const _);
+    debug_assert!(index >= 0, "Should be a non-negative index");
+    debug_assert!(
+        (index as usize) < STATIC_ATOM_COUNT,
+        "Should be a valid static atom index"
+    );
+    NonZeroUsize::new_unchecked(((index as usize) << 1) | 1)
 }
 
 impl Atom {
@@ -389,14 +359,8 @@ impl Atom {
     /// checking.
     #[inline]
     pub const unsafe fn from_index_unchecked(index: u16) -> Self {
-        // FIXME(emilio): No support for debug_assert! in const fn for now. Note
-        // that violating this invariant will debug-assert in the `Deref` impl
-        // though.
-        //
-        // debug_assert!((index as usize) < STATIC_ATOM_COUNT);
-        let offset =
-            (index as usize) * std::mem::size_of::<nsStaticAtom>() + kGkAtomsArrayOffset as usize;
-        Atom(NonZeroUsize::new_unchecked((offset << 1) | 1))
+        debug_assert!((index as usize) < STATIC_ATOM_COUNT);
+        Atom(NonZeroUsize::new_unchecked(((index as usize) << 1) | 1))
     }
 
     /// Creates an atom from an atom pointer.

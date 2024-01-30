@@ -109,14 +109,6 @@ struct GkAtoms {
   const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
-// The offset from the start of the GkAtoms object to the start of the
-// nsStaticAtom array inside it.  This is used in Rust to avoid problems
-// with lld-link.exe on Windows when rust-bindgen generates a non-opaque
-// version of GkAtoms.
-//
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
-const ptrdiff_t kGkAtomsArrayOffset = offsetof(GkAtoms, mAtoms);
-
 // The GkAtoms instance is `extern const` so it can be defined in a .cpp file.
 //
 // XXX: The NS_EXTERNAL_VIS is necessary to work around an apparent GCC bug:

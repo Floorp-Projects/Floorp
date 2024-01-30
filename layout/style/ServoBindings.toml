@@ -199,7 +199,6 @@ allowlist-vars = [
     "GECKO_IS_NIGHTLY",
     "NS_SAME_AS_FOREGROUND_COLOR",
     "mozilla::detail::gGkAtoms",
-    "mozilla::detail::kGkAtomsArrayOffset",
     "mozilla::dom::SVGPathSeg_Binding::PATHSEG_.*",
 ]
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
@@ -420,7 +419,6 @@ opaque-types = [
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
     "mozilla::Widget.*Event", # As above
-    "mozilla::detail::GkAtoms", # https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
     "mozilla::detail::ThreadLocal.*",
     "std::make_signed_t",
     "mozilla::ProfileChunkedBuffer",
