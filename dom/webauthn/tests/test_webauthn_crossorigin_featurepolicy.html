@@ -63,6 +63,8 @@
     }
 
     function createCredential() {
+      this.content.document.notifyUserGestureActivation();
+
       const cose_alg_ECDSA_w_SHA256 = -7;
       let publicKey = {
         rp: {id: this.content.window.document.domain, name: "none"},
