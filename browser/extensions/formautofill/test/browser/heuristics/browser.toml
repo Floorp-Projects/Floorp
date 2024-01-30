@@ -20,8 +20,6 @@ skip-if = ["apple_silicon && !debug"]
 
 ["browser_fr_fields.js"]
 
-["browser_ignore_invisible_fields.js"]
-
 ["browser_ignore_unfocusable_fields.js"]
 
 ["browser_label_rules.js"]
