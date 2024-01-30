@@ -19,6 +19,7 @@ import {
   getJavascriptTracingLogMethod,
   getJavascriptTracingValues,
   getJavascriptTracingOnNextInteraction,
+  getJavascriptTracingOnNextLoad,
 } from "../../selectors/index";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions/index";
@@ -230,7 +231,7 @@ class CommandBar extends Component {
             this.props.logMethod
           ),
       onClick: event => {
-        this.props.toggleTracing(this.props.logMethod);
+        this.props.toggleTracing();
       },
       onContextMenu: event => {
         event.preventDefault();
@@ -261,21 +262,31 @@ class CommandBar extends Component {
           },
           { type: "separator" },
           {
-            id: "debugger-trace-menu-item-log-values",
-            label: L10N.getStr("traceValues"),
-            type: "checkbox",
-            checked: this.props.logValues,
-            click: () => {
-              this.props.toggleJavascriptTracingValues();
-            },
-          },
-          {
             id: "debugger-trace-menu-item-next-interaction",
             label: L10N.getStr("traceOnNextInteraction"),
             type: "checkbox",
             checked: this.props.traceOnNextInteraction,
             click: () => {
               this.props.toggleJavascriptTracingOnNextInteraction();
+            },
+          },
+          {
+            id: "debugger-trace-menu-item-next-load",
+            label: L10N.getStr("traceOnNextLoad"),
+            type: "checkbox",
+            checked: this.props.traceOnNextLoad,
+            click: () => {
+              this.props.toggleJavascriptTracingOnNextLoad();
+            },
+          },
+          { type: "separator" },
+          {
+            id: "debugger-trace-menu-item-log-values",
+            label: L10N.getStr("traceValues"),
+            type: "checkbox",
+            checked: this.props.logValues,
+            click: () => {
+              this.props.toggleJavascriptTracingValues();
             },
           },
         ];
@@ -452,6 +463,7 @@ const mapStateToProps = state => ({
   logMethod: getJavascriptTracingLogMethod(state),
   logValues: getJavascriptTracingValues(state),
   traceOnNextInteraction: getJavascriptTracingOnNextInteraction(state),
+  traceOnNextLoad: getJavascriptTracingOnNextLoad(state),
 });
 
 export default connect(mapStateToProps, {
@@ -460,6 +472,7 @@ export default connect(mapStateToProps, {
   toggleJavascriptTracingValues: actions.toggleJavascriptTracingValues,
   toggleJavascriptTracingOnNextInteraction:
     actions.toggleJavascriptTracingOnNextInteraction,
+  toggleJavascriptTracingOnNextLoad: actions.toggleJavascriptTracingOnNextLoad,
   resume: actions.resume,
   stepIn: actions.stepIn,
   stepOut: actions.stepOut,
