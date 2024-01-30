@@ -379,6 +379,47 @@ add_task(async function test_set_contile_tiles_to_dismissed() {
   sandbox.restore();
 });
 
+add_task(async function test_set_all_contile_tiles_to_dismissed() {
+  let sandbox = sinon.createSandbox();
+  let feed = getTopSitesFeedForTest(sandbox);
+
+  feed._telemetryUtility.setSponsoredTilesConfigured();
+  feed._telemetryUtility.setTiles([contileTile1, contileTile2, contileTile3]);
+
+  let mergedTiles = [];
+
+  feed._telemetryUtility.determineFilteredTilesAndSetToDismissed(mergedTiles);
+  feed._telemetryUtility.finalizeNewtabPingFields(mergedTiles);
+
+  let expectedResult = {
+    sponsoredTilesReceived: [
+      {
+        advertiser: "brand1",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+      {
+        advertiser: "brand2",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+      {
+        advertiser: "brand3",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+    ],
+  };
+  Assert.equal(
+    Glean.topsites.sponsoredTilesReceived.testGetValue(),
+    JSON.stringify(expectedResult)
+  );
+  sandbox.restore();
+});
+
 add_task(async function test_set_moz_sales_tiles_to_dismissed() {
   let sandbox = sinon.createSandbox();
   let feed = getTopSitesFeedForTest(sandbox);
@@ -423,6 +464,139 @@ add_task(async function test_set_moz_sales_tiles_to_dismissed() {
         provider: "moz-sales",
         display_position: null,
         display_fail_reason: "dismissed",
+      },
+    ],
+  };
+  Assert.equal(
+    Glean.topsites.sponsoredTilesReceived.testGetValue(),
+    JSON.stringify(expectedResult)
+  );
+  sandbox.restore();
+});
+
+add_task(async function test_set_tiles_to_dismissed_then_updated() {
+  let sandbox = sinon.createSandbox();
+  let feed = getTopSitesFeedForTest(sandbox);
+  feed._telemetryUtility.setSponsoredTilesConfigured();
+
+  // Step 1:  Set initial tiles
+  feed._telemetryUtility.setTiles([contileTile1, contileTile2, contileTile3]);
+
+  // Step 2:  Set all tiles to dismissed
+  feed._telemetryUtility.determineFilteredTilesAndSetToDismissed([]);
+
+  let updatedTiles = [
+    {
+      url: "https://www.brand1.com",
+      label: "brand1",
+      sponsored_position: 1,
+      partner: "amp",
+    },
+    {
+      url: "https://www.brand2.com",
+      label: "brand2",
+      sponsored_position: 2,
+      partner: "amp",
+    },
+  ];
+
+  // Step 3:  Finalize with the updated list of tiles.
+  feed._telemetryUtility.finalizeNewtabPingFields(updatedTiles);
+
+  Assert.equal(Glean.topsites.sponsoredTilesConfigured.testGetValue(), 2);
+
+  let expectedResult = {
+    sponsoredTilesReceived: [
+      {
+        advertiser: "brand1",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+      {
+        advertiser: "brand2",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+      {
+        advertiser: "brand3",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "dismissed",
+      },
+    ],
+  };
+  Assert.equal(
+    Glean.topsites.sponsoredTilesReceived.testGetValue(),
+    JSON.stringify(expectedResult)
+  );
+  sandbox.restore();
+});
+
+add_task(async function test_set_tile_positions_after_updated_list() {
+  let sandbox = sinon.createSandbox();
+  let feed = getTopSitesFeedForTest(sandbox);
+  feed._telemetryUtility.setSponsoredTilesConfigured();
+
+  // Step 1:  Set initial tiles
+  feed._telemetryUtility.setTiles([contileTile1, contileTile2, contileTile3]);
+
+  // Step 2:  Set 1 tiles to oversold (brand3)
+  let mergedTiles = [
+    {
+      url: "https://www.brand1.com",
+      label: "brand1",
+      sponsored_position: 1,
+      partner: "amp",
+    },
+    {
+      url: "https://www.brand2.com",
+      label: "brand2",
+      sponsored_position: 2,
+      partner: "amp",
+    },
+  ];
+  feed._telemetryUtility.determineFilteredTilesAndSetToOversold(mergedTiles);
+
+  // Step 3:  Finalize with the updated list of tiles.
+  let updatedTiles = [
+    {
+      url: "https://www.replacement.com",
+      label: "replacement",
+      sponsored_position: 1,
+      partner: "amp",
+    },
+    {
+      url: "https://www.brand2.com",
+      label: "brand2",
+      sponsored_position: 2,
+      partner: "amp",
+    },
+  ];
+  feed._telemetryUtility.finalizeNewtabPingFields(updatedTiles);
+
+  Assert.equal(Glean.topsites.sponsoredTilesConfigured.testGetValue(), 2);
+
+  let expectedResult = {
+    sponsoredTilesReceived: [
+      {
+        advertiser: "brand1",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: null,
+      },
+      {
+        advertiser: "brand2",
+        provider: "amp",
+        display_position: 2,
+        display_fail_reason: null,
+      },
+      {
+        advertiser: "brand3",
+        provider: "amp",
+        display_position: null,
+        display_fail_reason: "oversold",
       },
     ],
   };
