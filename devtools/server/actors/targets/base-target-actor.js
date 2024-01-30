@@ -5,6 +5,10 @@
 "use strict";
 
 const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  TYPES,
+  getResourceWatcher,
+} = require("resource://devtools/server/actors/resources/index.js");
 
 loader.lazyRequireGetter(
   this,
@@ -146,10 +150,45 @@ class BaseTargetActor extends Actor {
    *
    * This will be called by the watcher when the DevTools target-configuration
    * is updated, or when a target is created via JSWindowActors.
+   *
+   * @param {JSON} options
+   *        Configuration object provided by the client.
+   *        See target-configuration actor.
+   * @param {Boolean} calledFromDocumentCreate
+   *        True, when this is called with initial configuration when the related target
+   *        actor is instantiated.
    */
   updateTargetConfiguration(options = {}, calledFromDocumentCreation = false) {
     // If there is some tracer options, we should start tracing, otherwise we should stop (if we were)
     if (options.tracerOptions) {
+      // Ignore the SessionData update if the user requested to start the tracer on next page load and:
+      //   - we apply it to an already loaded WindowGlobal,
+      //   - the target isn't the top level one.
+      if (
+        options.tracerOptions.traceOnNextLoad &&
+        (!calledFromDocumentCreation || !this.isTopLevelTarget)
+      ) {
+        if (this.isTopLevelTarget) {
+          const consoleMessageWatcher = getResourceWatcher(
+            this,
+            TYPES.CONSOLE_MESSAGE
+          );
+          if (consoleMessageWatcher) {
+            consoleMessageWatcher.emitMessages([
+              {
+                arguments: [
+                  "Waiting for next navigation or page reload before starting tracing",
+                ],
+                styles: [],
+                level: "jstracer",
+                chromeContext: false,
+                timeStamp: ChromeUtils.dateNow(),
+              },
+            ]);
+          }
+        }
+        return;
+      }
       const tracerActor = this.getTargetScopedActor("tracer");
       tracerActor.startTracing(options.tracerOptions);
     } else if (this.hasTargetScopedActor("tracer")) {

@@ -59,6 +59,15 @@ class TracingStateWatcher {
   onTracingToggled(enabled, reason) {
     const tracerActor = this.targetActor.getTargetScopedActor("tracer");
     const logMethod = tracerActor?.getLogMethod();
+
+    // JavascriptTracer only supports recording once in the same process/thread.
+    // If we open another DevTools, on the same process, we would receive notification
+    // about a JavascriptTracer controlled by another toolbox's tracer actor.
+    // Ignore them as our current tracer actor didn't start tracing.
+    if (!logMethod) {
+      return;
+    }
+
     this.onAvailable([
       {
         resourceType: JSTRACER_STATE,

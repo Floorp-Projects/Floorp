@@ -11,7 +11,10 @@ const {
 } = require("resource://devtools/shared/protocol.js");
 
 types.addDictType("tracer.start.options", {
+  logMethod: "string",
   traceValues: "boolean",
+  traceOnNextInteraction: "boolean",
+  traceOnNextLoad: "boolean",
 });
 
 const tracerSpec = generateActorSpec({
@@ -20,8 +23,7 @@ const tracerSpec = generateActorSpec({
   methods: {
     startTracing: {
       request: {
-        logMethod: Arg(0, "string"),
-        options: Arg(1, "tracer.start.options"),
+        options: Arg(0, "tracer.start.options"),
       },
     },
     stopTracing: {

@@ -59,16 +59,17 @@ class TracerCommand {
         "devtools.debugger.javascript-tracing-on-next-interaction",
         false
       ),
+      traceOnNextLoad: Services.prefs.getBoolPref(
+        "devtools.debugger.javascript-tracing-on-next-load",
+        false
+      ),
     };
   }
 
   /**
    * Toggle JavaScript tracing for all targets.
-   *
-   * @param {String} logMethod (optional)
-   *        Where to log the traces. Can be console or stdout.
    */
-  async toggle(logMethod) {
+  async toggle() {
     this.#isTracing = !this.#isTracing;
 
     await this.#targetConfigurationCommand.updateConfiguration({
