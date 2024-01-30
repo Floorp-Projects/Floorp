@@ -17,11 +17,21 @@ add_task(async function test() {
       aWindow.gBrowser,
       testURI
     ));
+    let notificationBox = aWindow.gBrowser.getNotificationBox();
+    let notificationShownPromise;
+    if (!aIsPrivateMode) {
+      notificationShownPromise = BrowserTestUtils.waitForEvent(
+        notificationBox.stack,
+        "AlertActive",
+        false,
+        event => event.target.getAttribute("value") == notificationValue
+      );
+    }
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await notificationShownPromise;
 
     let promiseFinished = Promise.withResolvers();
     setTimeout(function () {
-      let notificationBox = aWindow.gBrowser.getNotificationBox();
       let notification =
         notificationBox.getNotificationWithValue(notificationValue);
 
