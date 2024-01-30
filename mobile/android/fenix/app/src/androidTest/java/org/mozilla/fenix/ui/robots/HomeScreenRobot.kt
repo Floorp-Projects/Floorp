@@ -290,10 +290,6 @@ class HomeScreenRobot {
     fun swipeToTop() =
         onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
 
-    fun verifySnackBarText(expectedText: String) {
-        mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
-    }
-
     fun clickFirefoxLogo() = homepageWordmark().click()
 
     fun verifyThoughtProvokingStories(enabled: Boolean) {

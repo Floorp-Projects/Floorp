@@ -169,9 +169,6 @@ class CollectionRobot {
         Log.i(TAG, "swipeTabRight: Waited for rule to be idle")
     }
 
-    fun verifySnackBarText(expectedText: String) =
-        itemContainingText(expectedText).waitForExists(waitingTime)
-
     fun goBackInCollectionFlow() {
         backButton().click()
         Log.i(TAG, "goBackInCollectionFlow: Clicked collection creation flow back button")

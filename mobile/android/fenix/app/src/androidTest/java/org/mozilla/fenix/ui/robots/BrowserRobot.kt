@@ -163,11 +163,6 @@ class BrowserRobot {
             ),
         )
 
-    fun verifySnackBarText(expectedText: String) {
-        mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains(expectedText)))
-        assertUIObjectExists(itemContainingText(expectedText))
-    }
-
     fun verifyContextMenuForLocalHostLinks(containsURL: Uri) {
         // If the link is directing to another local asset the "Download link" option is not available
         // If the link is not re-directing to an external app the "Open link in external app" option is not available

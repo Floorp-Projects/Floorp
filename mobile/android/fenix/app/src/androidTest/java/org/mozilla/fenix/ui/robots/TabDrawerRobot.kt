@@ -206,9 +206,6 @@ class TabDrawerRobot {
         }
     }
 
-    fun verifySnackBarText(expectedText: String) =
-        assertUIObjectExists(itemContainingText(expectedText))
-
     fun snackBarButtonClick(expectedText: String) {
         val snackBarButton =
             mDevice.findObject(

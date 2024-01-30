@@ -475,7 +475,7 @@ class ComposeCollectionTest {
             verifyTabsMultiSelectionCounter(2)
         }.clickSaveCollection {
             typeCollectionNameAndSave(collectionName)
-            verifySnackBarText("Tabs saved!")
+            verifySnackBarText("Collection saved!")
         }
 
         composeTabDrawer(composeTestRule) {

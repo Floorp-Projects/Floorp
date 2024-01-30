@@ -23,8 +23,6 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
-import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
-import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -100,11 +98,6 @@ class SettingsSubMenuHomepageRobot {
 
     fun selectWallpaper(wallpaperName: String) =
         mDevice.findObject(UiSelector().description(wallpaperName)).click()
-
-    fun verifySnackBarText(expectedText: String) =
-        assertUIObjectExists(
-            itemContainingText(expectedText),
-        )
 
     fun verifySponsoredShortcutsCheckBox(checked: Boolean) = assertSponsoredShortcutsCheckBox(checked)
 
