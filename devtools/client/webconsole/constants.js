@@ -176,6 +176,7 @@ const chromeRDPEnums = {
     NULL_MESSAGE: "nullMessage",
     NAVIGATION_MARKER: "navigationMarker",
     SIMPLE_TABLE: "simpleTable",
+    JSTRACER: "jstracer",
   },
   MESSAGE_LEVEL: {
     LOG: "log",

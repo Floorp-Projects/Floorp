@@ -12,6 +12,10 @@ const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-t
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const GripMessageBody = require("resource://devtools/client/webconsole/components/Output/GripMessageBody.js");
 
+const {
+  MESSAGE_TYPE,
+} = require("resource://devtools/client/webconsole/constants.js");
+
 const Message = createFactory(
   require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
@@ -95,7 +99,7 @@ function JSTracerTrace(props) {
   return Message({
     collapsible: false,
     source,
-    level: "jstracer",
+    level: MESSAGE_TYPE.JSTRACER,
     topLevelClasses,
     messageBody,
     repeat,

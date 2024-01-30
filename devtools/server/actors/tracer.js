@@ -220,7 +220,7 @@ class TracerActor extends Actor {
           {
             arguments: [NEXT_INTERACTION_MESSAGE],
             styles: [],
-            level: "log",
+            level: "jstracer",
             chromeContext: false,
             timeStamp: ChromeUtils.dateNow(),
           },
@@ -253,7 +253,7 @@ class TracerActor extends Actor {
       {
         arguments: [message],
         styles: [],
-        level: "error",
+        level: "jstracer",
         chromeContext: false,
         timeStamp: ChromeUtils.dateNow(),
       },
