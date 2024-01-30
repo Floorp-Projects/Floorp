@@ -1003,7 +1003,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose browser profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 600000
@@ -1282,7 +1284,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: fenix, chrome-m, geckoview
    * **expected**: pass
    * **expose browser profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 600000
@@ -1565,7 +1569,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **expected**: pass
    * **expose browser profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 600000
@@ -1854,7 +1860,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **apps**: fenix, chrome-m, geckoview
    * **expected**: pass
    * **expose browser profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 600000
@@ -2148,7 +2156,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 600000
@@ -2428,7 +2438,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 600000
@@ -2712,7 +2724,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 600000
@@ -3002,7 +3016,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
+   * **gecko profile features**: stackwalk,js,cpu,java,processcpu
    * **gecko profile interval**: 1
+   * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 600000
