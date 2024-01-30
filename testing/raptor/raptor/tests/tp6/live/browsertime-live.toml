@@ -16,17 +16,8 @@ use_live_sites = true
 ["booking-sf"]
 test_url = "https://www.booking.com/hotel/us/edwardian-san-francisco.html"
 
-["cnn"]
-test_url = "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html"
-
-["cnn-ampstories"]
-test_url = "https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other"
-
 ["discord"]
 test_url = "https://discordapp.com/"
-
-["expedia"]
-test_url = "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2" #noqa
 
 ["fashionbeans"]
 test_url = "https://fashionbeans.com/article/coolest-menswear-stores-in-the-world"
@@ -39,9 +30,6 @@ test_url = "https://m.imdb.com/title/tt0083943/"
 
 ["medium-article"]
 test_url = "https://medium.com/s/coincidences-are-a-lie/could-america-have-also-been-the-birthplace-of-impressionism-cb3d31a2e22d" #noqa
-
-["nytimes"]
-test_url = "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html"
 
 ["people-article"]
 test_url = "https://people.com/amp-stories/royal-a-to-z/"

@@ -14,14 +14,14 @@ playback_version = "8.1.1"
 type = "pageload"
 unit = "ms"
 
-["amazon"]
+["test-page-1"]
 test_url = "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
 
-["facebook"]
+["test-page-2"]
 test_url = "https://www.facebook.com"
 
-["google"]
+["test-page-3"]
 test_url = "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
 
-["youtube"]
+["test-page-4"]
 test_url = "https://www.youtube.com"
