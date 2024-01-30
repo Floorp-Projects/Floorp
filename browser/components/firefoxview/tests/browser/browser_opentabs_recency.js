@@ -46,33 +46,49 @@ async function restoreWindow(win) {
     win,
     "sizemodechange"
   );
+
+  // Check if we also need to wait for occlusion to be updated.
+  let promiseOcclusion;
+  let willWaitForOcclusion = win.isFullyOccluded;
+  if (willWaitForOcclusion) {
+    // Not only do we need to wait for the occlusionstatechange event,
+    // we also have to wait *one more event loop* to ensure that the
+    // other listeners to the occlusionstatechange events have fired.
+    // Otherwise, our browsing context might not have become active
+    // at the point where we receive the occlusionstatechange event.
+    promiseOcclusion = BrowserTestUtils.waitForEvent(
+      win,
+      "occlusionstatechange"
+    ).then(() => new Promise(resolve => SimpleTest.executeSoon(resolve)));
+  } else {
+    promiseOcclusion = Promise.resolve();
+  }
+
   info("Calling window.restore");
   win.restore();
   // From browser/base/content/test/general/browser_minimize.js:
   // On Ubuntu `window.restore` doesn't seem to work, use a timer to make the
   // test fail faster and more cleanly than with a test timeout.
-  info("Waiting for sizemodechange event");
+  info(
+    `Waiting for sizemodechange ${
+      willWaitForOcclusion ? "and occlusionstatechange " : ""
+    }event`
+  );
   let timer;
   await Promise.race([
-    promiseSizeModeChange,
+    Promise.all([promiseSizeModeChange, promiseOcclusion]),
     new Promise((resolve, reject) => {
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       timer = setTimeout(() => {
-        reject("timed out waiting for sizemodechange event");
+        reject(
+          `timed out waiting for sizemodechange sizemodechange ${
+            willWaitForOcclusion ? "and occlusionstatechange " : ""
+          }event`
+        );
       }, 5000);
     }),
   ]);
   clearTimeout(timer);
-  info(
-    "Waiting occlusionstatechange if win.isFullyOccluded: " +
-      win.isFullyOccluded
-  );
-  // From browser/base/content/test/general/browser_minimize.js:
-  // The sizemodechange event can sometimes be fired before the
-  // occlusionstatechange event, especially in chaos mode.
-  if (win.isFullyOccluded) {
-    await BrowserTestUtils.waitForEvent(win, "occlusionstatechange");
-  }
   ok(
     win.gBrowser.selectedTab.linkedBrowser.docShellIsActive,
     "Docshell should be active again"
