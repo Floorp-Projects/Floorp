@@ -55,6 +55,7 @@ namespace layers {
 class AndroidHardwareBufferTextureData;
 class BufferTextureData;
 class CompositableForwarder;
+class FwdTransactionTracker;
 class KnowsCompositor;
 class LayersIPCChannel;
 class CompositableClient;
@@ -330,7 +331,10 @@ class TextureData {
 
   virtual bool RequiresRefresh() const { return false; }
 
-  virtual void UseCompositableForwarder(CompositableForwarder* aForwarder) {}
+  virtual already_AddRefed<FwdTransactionTracker> UseCompositableForwarder(
+      CompositableForwarder* aForwarder) {
+    return nullptr;
+  }
 
  protected:
   MOZ_COUNTED_DEFAULT_CTOR(TextureData)

@@ -118,6 +118,10 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  mozilla::ipc::IPCResult RecvWaitForTxn(layers::RemoteTextureOwnerId aOwnerId,
+                                         layers::RemoteTextureTxnType aTxnType,
+                                         layers::RemoteTextureTxnId aTxnId);
+
   UniquePtr<HostWebGLContext> mHost;
 
   // Runnable that repeatedly processes our WebGL command queue

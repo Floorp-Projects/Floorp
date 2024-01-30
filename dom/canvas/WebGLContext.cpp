@@ -1082,6 +1082,17 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
   }
 }
 
+void WebGLContext::WaitForTxn(layers::RemoteTextureOwnerId ownerId,
+                              layers::RemoteTextureTxnType txnType,
+                              layers::RemoteTextureTxnId txnId) {
+  if (!ownerId.IsValid() || !txnType || !txnId) {
+    return;
+  }
+  if (mRemoteTextureOwner && mRemoteTextureOwner->IsRegistered(ownerId)) {
+    mRemoteTextureOwner->WaitForTxn(ownerId, txnType, txnId);
+  }
+}
+
 bool WebGLContext::CopyToSwapChain(
     WebGLFramebuffer* const srcFb, const layers::TextureType consumerType,
     const webgl::SwapChainOptions& options,

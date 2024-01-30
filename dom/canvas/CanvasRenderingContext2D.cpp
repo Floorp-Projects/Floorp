@@ -1786,6 +1786,15 @@ Maybe<SurfaceDescriptor> CanvasRenderingContext2D::GetFrontBuffer(
   return Nothing();
 }
 
+already_AddRefed<layers::FwdTransactionTracker>
+CanvasRenderingContext2D::UseCompositableForwarder(
+    layers::CompositableForwarder* aForwarder) {
+  if (mBufferProvider) {
+    return mBufferProvider->UseCompositableForwarder(aForwarder);
+  }
+  return nullptr;
+}
+
 PresShell* CanvasRenderingContext2D::GetPresShell() {
   if (mCanvasElement) {
     return mCanvasElement->OwnerDoc()->GetPresShell();

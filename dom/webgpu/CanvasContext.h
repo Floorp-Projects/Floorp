@@ -81,6 +81,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
                                                   const bool) override;
 
+  already_AddRefed<layers::FwdTransactionTracker> UseCompositableForwarder(
+      layers::CompositableForwarder* aForwarder) override;
+
  public:
   void GetCanvas(dom::OwningHTMLCanvasElementOrOffscreenCanvas&) const;
 
@@ -105,6 +108,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
 
   Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
+  RefPtr<layers::FwdTransactionTracker> mFwdTransactionTracker;
   bool mUseExternalTextureInSwapChain = false;
   bool mNewTextureRequested = false;
 };

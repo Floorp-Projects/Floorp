@@ -107,6 +107,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
       WebGLFramebufferJS*, const bool webvr = false) override;
 
+  already_AddRefed<layers::FwdTransactionTracker> UseCompositableForwarder(
+      layers::CompositableForwarder* aForwarder) override;
+
   void Save();
   void Restore();
 

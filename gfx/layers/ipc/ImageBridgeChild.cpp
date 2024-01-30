@@ -119,11 +119,10 @@ void ImageBridgeChild::UseTextures(
                                             OpUseTexture(textures)));
 }
 
-void ImageBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
-                                        const RemoteTextureId aTextureId,
-                                        const RemoteTextureOwnerId aOwnerId,
-                                        const gfx::IntSize aSize,
-                                        const TextureFlags aFlags) {
+void ImageBridgeChild::UseRemoteTexture(
+    CompositableClient* aCompositable, const RemoteTextureId aTextureId,
+    const RemoteTextureOwnerId aOwnerId, const gfx::IntSize aSize,
+    const TextureFlags aFlags, const RefPtr<FwdTransactionTracker>& aTracker) {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPCHandle());
   MOZ_ASSERT(aCompositable->IsConnected());
@@ -131,6 +130,7 @@ void ImageBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
   mTxn->AddNoSwapEdit(CompositableOperation(
       aCompositable->GetIPCHandle(),
       OpUseRemoteTexture(aTextureId, aOwnerId, aSize, aFlags)));
+  TrackFwdTransaction(aTracker);
 }
 
 void ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
@@ -322,7 +322,7 @@ void ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer) {
 void ImageBridgeChild::UpdateCompositable(
     const RefPtr<ImageContainer> aContainer, const RemoteTextureId aTextureId,
     const RemoteTextureOwnerId aOwnerId, const gfx::IntSize aSize,
-    const TextureFlags aFlags) {
+    const TextureFlags aFlags, const RefPtr<FwdTransactionTracker> aTracker) {
   if (!aContainer) {
     return;
   }
@@ -330,7 +330,7 @@ void ImageBridgeChild::UpdateCompositable(
   if (!InImageBridgeChildThread()) {
     RefPtr<Runnable> runnable = WrapRunnable(
         RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::UpdateCompositable,
-        aContainer, aTextureId, aOwnerId, aSize, aFlags);
+        aContainer, aTextureId, aOwnerId, aSize, aFlags, aTracker);
     GetThread()->Dispatch(runnable.forget());
     return;
   }
@@ -351,7 +351,7 @@ void ImageBridgeChild::UpdateCompositable(
   }
 
   BeginTransaction();
-  UseRemoteTexture(client, aTextureId, aOwnerId, aSize, aFlags);
+  UseRemoteTexture(client, aTextureId, aOwnerId, aSize, aFlags, aTracker);
   EndTransaction();
 }
 

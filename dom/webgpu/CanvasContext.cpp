@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/layers/CanvasRenderer.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -142,10 +143,14 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
 }
 
 void CanvasContext::Unconfigure() {
-  if (mBridge && mBridge->IsOpen() && mRemoteTextureOwnerId.isSome()) {
-    mBridge->SendSwapChainDrop(*mRemoteTextureOwnerId);
+  if (mBridge && mBridge->IsOpen() && mRemoteTextureOwnerId) {
+    mBridge->SendSwapChainDrop(
+        *mRemoteTextureOwnerId,
+        layers::ToRemoteTextureTxnType(mFwdTransactionTracker),
+        layers::ToRemoteTextureTxnId(mFwdTransactionTracker));
   }
   mRemoteTextureOwnerId = Nothing();
+  mFwdTransactionTracker = nullptr;
   mBridge = nullptr;
   mConfig = nullptr;
   mTexture = nullptr;
@@ -338,6 +343,12 @@ Maybe<layers::SurfaceDescriptor> CanvasContext::GetFrontBuffer(
     return desc;
   }
   return Nothing();
+}
+
+already_AddRefed<layers::FwdTransactionTracker>
+CanvasContext::UseCompositableForwarder(
+    layers::CompositableForwarder* aForwarder) {
+  return layers::FwdTransactionTracker::GetOrCreate(mFwdTransactionTracker);
 }
 
 void CanvasContext::ForceNewFrame() {

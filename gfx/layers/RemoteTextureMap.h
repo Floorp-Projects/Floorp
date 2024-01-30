@@ -204,6 +204,8 @@ class RemoteTextureOwnerClient final {
                             bool aSharedRecycling = false);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
   void UnregisterAllTextureOwners();
+  bool WaitForTxn(const RemoteTextureOwnerId aOwnerId,
+                  RemoteTextureTxnType aTxnType, RemoteTextureTxnId aTxnId);
   void ClearRecycledTextures();
   void NotifyContextLost(const RemoteTextureOwnerIdSet* aOwnerIds = nullptr);
   void NotifyContextRestored(
@@ -426,7 +428,7 @@ class RemoteTextureMap {
                      const RemoteTextureId aTextureId);
 
   UniquePtr<TextureOwner> UnregisterTextureOwner(
-      const MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
+      MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
       const base::ProcessId aForPid,
       std::vector<RefPtr<TextureHost>>& aReleasingTextures,
       std::vector<std::function<void(const RemoteTextureInfo&)>>&

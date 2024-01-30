@@ -9,6 +9,9 @@ include protocol PCanvasManager;
 include "mozilla/layers/LayersMessageUtils.h";
 
 [MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
+using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::RemoteTextureTxnType from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::RemoteTextureTxnId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
 using std::string from "string";
 using mozilla::uvec2 from "mozilla/dom/WebGLIpdl.h";
@@ -53,6 +56,8 @@ parent:
     returns (InitContextResult res);
 
   async __delete__();
+
+  async WaitForTxn(RemoteTextureOwnerId ownerId, RemoteTextureTxnType txnType, RemoteTextureTxnId txnId);
 
   // -
 

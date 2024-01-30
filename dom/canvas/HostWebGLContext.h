@@ -176,6 +176,11 @@ class HostWebGLContext final : public SupportsWeakPtr {
                        const webgl::SwapChainOptions& options) const {
     return (void)mContext->CopyToSwapChain(AutoResolve(fb), t, options);
   }
+  void WaitForTxn(const layers::RemoteTextureOwnerId aOwnerId,
+                  const layers::RemoteTextureTxnType txnType,
+                  const layers::RemoteTextureTxnId txnId) {
+    mContext->WaitForTxn(aOwnerId, txnType, txnId);
+  }
   void EndOfFrame() const { return (void)mContext->EndOfFrame(); }
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId xrFb,
                                                   const bool webvr) const;
