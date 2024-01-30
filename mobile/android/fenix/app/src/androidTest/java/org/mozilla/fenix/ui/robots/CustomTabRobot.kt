@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -14,6 +15,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -43,14 +45,16 @@ class CustomTabRobot {
             itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)),
         )
 
-    fun verifyMainMenuButton() = assertUIObjectExists(mainMenuButton)
+    fun verifyMainMenuButton() = assertUIObjectExists(mainMenuButton())
 
     fun verifyDesktopSiteButtonExists() {
         desktopSiteButton().check(matches(isDisplayed()))
+        Log.i(TAG, "verifyDesktopSiteButtonExists: Verified request desktop site button is displayed")
     }
 
     fun verifyFindInPageButtonExists() {
         findInPageButton().check(matches(isDisplayed()))
+        Log.i(TAG, "verifyFindInPageButtonExists: Verified find in page button is displayed")
     }
 
     fun verifyPoweredByTextIsDisplayed() =
@@ -58,6 +62,7 @@ class CustomTabRobot {
 
     fun verifyOpenInBrowserButtonExists() {
         openInBrowserButton().check(matches(isDisplayed()))
+        Log.i(TAG, "verifyOpenInBrowserButtonExists: Verified open in browser button is displayed")
     }
 
     fun verifyBackButtonExists() = assertUIObjectExists(itemWithDescription("Back"))
@@ -70,6 +75,7 @@ class CustomTabRobot {
 
     fun verifyCustomTabCloseButton() {
         closeButton().check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCustomTabCloseButton: Verified close custom tab button is displayed")
     }
 
     fun verifyCustomTabToolbarTitle(title: String) {
@@ -104,6 +110,7 @@ class CustomTabRobot {
             waitingTime,
         )
         customTabToolbar().click(LONG_CLICK_DURATION)
+        Log.i(TAG, "longCLickAndCopyToolbarUrl: Long clicked custom tab toolbar")
         clickContextMenuItem("Copy")
     }
 
@@ -118,9 +125,15 @@ class CustomTabRobot {
         )
     }
 
-    fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
+    fun waitForPageToLoad() {
+        progressBar().waitUntilGone(waitingTime)
+        Log.i(TAG, "waitForPageToLoad: Waited $waitingTime ms until progress bar was gone")
+    }
 
-    fun clickCustomTabCloseButton() = closeButton().click()
+    fun clickCustomTabCloseButton() {
+        closeButton().click()
+        Log.i(TAG, "clickCustomTabCloseButton: Clicked close custom tab button")
+    }
 
     fun verifyCustomTabActionButton(customTabActionButtonDescription: String) =
         assertUIObjectExists(itemWithDescription(customTabActionButtonDescription))
@@ -133,9 +146,11 @@ class CustomTabRobot {
 
     class Transition {
         fun openMainMenu(interact: CustomTabRobot.() -> Unit): Transition {
-            mainMenuButton.also {
+            mainMenuButton().also {
+                Log.i(TAG, "openMainMenu: Looking for main menu button")
                 it.waitForExists(waitingTime)
                 it.click()
+                Log.i(TAG, "openMainMenu: Clicked main menu button")
             }
 
             CustomTabRobot().interact()
@@ -144,6 +159,7 @@ class CustomTabRobot {
 
         fun clickOpenInBrowserButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             openInBrowserButton().perform(click())
+            Log.i(TAG, "clickOpenInBrowserButton: Clicked \"Open in Firefox\" button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -151,6 +167,7 @@ class CustomTabRobot {
 
         fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
             itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)).click()
+            Log.i(TAG, "clickShareButton: Clicked share button")
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
@@ -163,7 +180,7 @@ fun customTabScreen(interact: CustomTabRobot.() -> Unit): CustomTabRobot.Transit
     return CustomTabRobot.Transition()
 }
 
-private val mainMenuButton = itemWithResId("$packageName:id/mozac_browser_toolbar_menu")
+private fun mainMenuButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_menu")
 
 private fun desktopSiteButton() = onView(withId(R.id.switch_widget))
 
@@ -175,7 +192,7 @@ private fun closeButton() = onView(withContentDescription("Return to previous ap
 
 private fun customTabToolbar() = mDevice.findObject(By.res("$packageName:id/toolbar"))
 
-private val progressBar =
+private fun progressBar() =
     mDevice.findObject(
         UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_progress"),
     )
