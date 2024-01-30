@@ -50,7 +50,6 @@ menulist.website-status {
 
 #permissionsDisableDescription {
   color: var(--text-color-deemphasized);
-  line-height: 110%;
 }
 
 #permissionsDisableCheckbox {
