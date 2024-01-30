@@ -15,7 +15,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-const TAB_ATTRS_TO_WATCH = Object.freeze(["image", "label"]);
+const TAB_ATTRS_TO_WATCH = Object.freeze([
+  "attention",
+  "image",
+  "label",
+  "muted",
+  "soundplaying",
+  "titlechanged",
+]);
 const TAB_CHANGE_EVENTS = Object.freeze([
   "TabAttrModified",
   "TabClose",
@@ -30,6 +37,7 @@ const TAB_RECENCY_CHANGE_EVENTS = Object.freeze([
   "TabClose",
   "TabOpen",
   "TabSelect",
+  "TabAttrModified",
 ]);
 
 // Debounce tab/tab recency changes and dispatch max once per frame at 60fps

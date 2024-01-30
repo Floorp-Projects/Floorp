@@ -21,6 +21,8 @@ import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
   NonPrivateTabs: "resource:///modules/OpenTabs.sys.mjs",
   getTabsTargetForWindow: "resource:///modules/OpenTabs.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -476,6 +478,7 @@ class OpenTabsInViewCard extends ViewPageContent {
             .maxTabsLength=${this.getMaxTabsLength()}
             .tabItems=${this.searchResults || getTabListItems(this.tabs)}
             .searchQuery=${this.searchQuery}
+            .showTabIndicators=${true}
             ><view-opentabs-contextmenu slot="menu"></view-opentabs-contextmenu>
           </fxview-tab-list>
         </div>
@@ -716,6 +719,24 @@ class OpenTabsContextMenu extends MozLitElement {
 customElements.define("view-opentabs-contextmenu", OpenTabsContextMenu);
 
 /**
+ * Checks if a given tab is within a container (contextual identity)
+ *
+ * @param {MozTabbrowserTab[]} tab
+ *   Tab to fetch container info on.
+ * @returns {object[]}
+ *   Container object.
+ */
+function getContainerObj(tab) {
+  let userContextId = tab.getAttribute("usercontextid");
+  let containerObj = null;
+  if (userContextId) {
+    containerObj =
+      lazy.ContextualIdentityService.getPublicIdentityFromId(userContextId);
+  }
+  return containerObj;
+}
+
+/**
  * Convert a list of tabs into the format expected by the fxview-tab-list
  * component.
  *
@@ -725,19 +746,27 @@ customElements.define("view-opentabs-contextmenu", OpenTabsContextMenu);
  *   Formatted objects.
  */
 function getTabListItems(tabs) {
-  return tabs
-    ?.filter(tab => !tab.closing && !tab.hidden && !tab.pinned)
-    .map(tab => ({
-      icon: tab.getAttribute("image"),
-      primaryL10nId: "firefoxview-opentabs-tab-row",
-      primaryL10nArgs: JSON.stringify({
-        url: tab.linkedBrowser?.currentURI?.spec,
-      }),
-      secondaryL10nId: "fxviewtabrow-options-menu-button",
-      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
-      tabElement: tab,
-      time: tab.lastAccessed,
-      title: tab.label,
+  let filtered = tabs?.filter(
+    tab => !tab.closing && !tab.hidden && !tab.pinned
+  );
+
+  return filtered.map(tab => ({
+    attention: tab.hasAttribute("attention"),
+    containerObj: getContainerObj(tab),
+    icon: tab.getAttribute("image"),
+    muted: tab.hasAttribute("muted"),
+    pinned: tab.pinned,
+    primaryL10nId: "firefoxview-opentabs-tab-row",
+    primaryL10nArgs: JSON.stringify({
       url: tab.linkedBrowser?.currentURI?.spec,
-    }));
+    }),
+    secondaryL10nId: "fxviewtabrow-options-menu-button",
+    secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
+    soundPlaying: tab.hasAttribute("soundplaying"),
+    tabElement: tab,
+    time: tab.lastAccessed,
+    title: tab.label,
+    titleChanged: tab.hasAttribute("titlechanged"),
+    url: tab.linkedBrowser?.currentURI?.spec,
+  }));
 }

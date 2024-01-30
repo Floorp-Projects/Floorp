@@ -4,21 +4,21 @@
 
  .fxview-tab-list {
   display: grid;
-  grid-template-columns: min-content 3fr 2fr 1fr 1fr min-content;
+  grid-template-columns: min-content 3fr min-content 2fr 1fr 1fr min-content min-content;
   gap: 6px;
 }
 
 :host([compactRows]) .fxview-tab-list {
-  grid-template-columns: min-content 1fr min-content;
+  grid-template-columns: min-content 1fr min-content min-content min-content;
 }
 
 virtual-list {
   display: grid;
-  grid-column: span 7;
+  grid-column: span 9;
   grid-template-columns: subgrid;
 
   .top-padding,
   .bottom-padding {
-    grid-column: span 7;
+    grid-column: span 9;
   }
 }
