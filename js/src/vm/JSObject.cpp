@@ -2786,7 +2786,7 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
       v.toSymbol()->dump(out);
       break;
     case ValueType::BigInt:
-      v.toBigInt()->dump(out);
+      v.toBigInt()->dumpLiteral(out);
       break;
     case ValueType::Object:
       if (v.toObject().is<JSFunction>()) {

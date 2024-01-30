@@ -100,10 +100,12 @@
 #include "gc/GCEnum.h"
 #include "js/BigInt.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Printer.h"               // js::GenericPrinter
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
 #include "util/CheckedArithmetic.h"
 #include "util/DifferentialTesting.h"
+#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"
@@ -3783,6 +3785,28 @@ void BigInt::dump() const {
 }
 
 void BigInt::dump(js::GenericPrinter& out) const {
+  js::JSONPrinter json(out);
+  dump(json);
+  out.put("\n");
+}
+
+void BigInt::dump(js::JSONPrinter& json) const {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void BigInt::dumpFields(js::JSONPrinter& json) const {
+  json.formatProperty("address", "(JS::BigInt*)0x%p", this);
+
+  json.property("digitLength", digitLength());
+
+  js::GenericPrinter& out = json.beginStringProperty("value");
+  dumpLiteral(out);
+  json.endStringProperty();
+}
+
+void BigInt::dumpLiteral(js::GenericPrinter& out) const {
   if (isNegative()) {
     out.putChar('-');
   }
