@@ -42,7 +42,8 @@ class JS_PUBLIC_API AutoStableStringChars;
 namespace js {
 
 class ArrayObject;
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
 class PropertyName;
 class StringBuffer;
 
@@ -361,10 +362,17 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t DEPENDENT_BIT = js::Bit(5);
   static const uint32_t INLINE_CHARS_BIT = js::Bit(6);
 
-  static const uint32_t EXTENSIBLE_FLAGS = LINEAR_BIT | js::Bit(7);
-  static const uint32_t EXTERNAL_FLAGS = LINEAR_BIT | js::Bit(8);
+  static const uint32_t LINEAR_IS_EXTENSIBLE_BIT = js::Bit(7);
+  static const uint32_t INLINE_IS_FAT_BIT = js::Bit(7);
 
-  static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | js::Bit(7);
+  static const uint32_t LINEAR_IS_EXTERNAL_BIT = js::Bit(8);
+  static const uint32_t ATOM_IS_PERMANENT_BIT = js::Bit(8);
+
+  static const uint32_t EXTENSIBLE_FLAGS =
+      LINEAR_BIT | LINEAR_IS_EXTENSIBLE_BIT;
+  static const uint32_t EXTERNAL_FLAGS = LINEAR_BIT | LINEAR_IS_EXTERNAL_BIT;
+
+  static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | INLINE_IS_FAT_BIT;
 
   /* Initial flags for various types of strings. */
   static const uint32_t INIT_THIN_INLINE_FLAGS = LINEAR_BIT | INLINE_CHARS_BIT;
@@ -404,7 +412,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   static const uint32_t PINNED_ATOM_BIT = js::Bit(15);
   static const uint32_t PERMANENT_ATOM_MASK =
-      ATOM_BIT | PINNED_ATOM_BIT | js::Bit(8);
+      ATOM_BIT | PINNED_ATOM_BIT | ATOM_IS_PERMANENT_BIT;
 
   static const uint32_t MAX_LENGTH = JS::MaxStringLength;
 
@@ -732,21 +740,26 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dump();  // Debugger-friendly stderr dump.
-  void dump(js::GenericPrinter& out);
-  void dumpNoNewline(js::GenericPrinter& out);
-  void dumpCharsNoNewline(js::GenericPrinter& out);
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
-  void dumpRepresentationHeader(js::GenericPrinter& out,
-                                const char* subclass) const;
-  void dumpCharsNoQuote(js::GenericPrinter& out);
+  void dump() const;
+  void dump(js::GenericPrinter& out) const;
+  void dump(js::JSONPrinter& json) const;
 
-  template <typename CharT>
-  static void dumpChars(const CharT* s, size_t len, js::GenericPrinter& out);
+  void dumpCommonFields(js::JSONPrinter& json) const;
+  void dumpCharsFields(js::JSONPrinter& json) const;
+
+  void dumpFields(js::JSONPrinter& json) const;
+
+  void dumpChars(js::GenericPrinter& out) const;
+  void dumpCharsNoQuote(js::GenericPrinter& out) const;
 
   template <typename CharT>
   static void dumpCharsNoQuote(const CharT* s, size_t len,
                                js::GenericPrinter& out);
+
+  void dumpRepresentation() const;
+  void dumpRepresentation(js::GenericPrinter& out) const;
+  void dumpRepresentation(js::JSONPrinter& json) const;
+  void dumpRepresentationFields(js::JSONPrinter& json) const;
 
   bool equals(const char* s);
 #endif
@@ -872,7 +885,7 @@ class JSRope : public JSString {
   void traceChildren(JSTracer* trc);
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 
  private:
@@ -1061,8 +1074,7 @@ class JSLinearString : public JSString {
   inline size_t allocSize() const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentationChars(js::GenericPrinter& out, int indent) const;
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 
   // Make a partially-initialized string safe for finalization.
@@ -1112,7 +1124,7 @@ class JSDependentString : public JSLinearString {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 
  private:
@@ -1141,7 +1153,7 @@ class JSExtensibleString : public JSLinearString {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 };
 
@@ -1168,7 +1180,7 @@ class JSInlineString : public JSLinearString {
   static bool lengthFits(size_t length);
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 
  private:
@@ -1313,7 +1325,7 @@ class JSExternalString : public JSLinearString {
   inline void finalize(JS::GCContext* gcx);
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-  void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+  void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
 #endif
 };
 
