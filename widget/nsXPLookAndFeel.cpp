@@ -1495,6 +1495,11 @@ bool LookAndFeel::DrawInTitlebar() {
   return nsLookAndFeel::GetInstance()->GetDefaultDrawInTitlebar();
 }
 
+LookAndFeel::TitlebarAction LookAndFeel::GetTitlebarAction(
+    TitlebarEvent aEvent) {
+  return nsLookAndFeel::GetInstance()->GetTitlebarAction(aEvent);
+}
+
 void LookAndFeel::GetThemeInfo(nsACString& aOut) {
   nsLookAndFeel::GetInstance()->GetThemeInfo(aOut);
 }

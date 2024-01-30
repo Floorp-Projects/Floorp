@@ -57,6 +57,10 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual bool GetDefaultDrawInTitlebar() { return true; }
 
+  virtual TitlebarAction GetTitlebarAction(TitlebarEvent aEvent) {
+    return TitlebarAction::None;
+  }
+
   static bool LookAndFeelFontToStyle(const LookAndFeelFont&, nsString& aName,
                                      gfxFontStyle&);
   static LookAndFeelFont StyleToLookAndFeelFont(const nsAString& aName,

@@ -493,6 +493,28 @@ class LookAndFeel {
    */
   static bool DrawInTitlebar();
 
+  enum class TitlebarAction {
+    None,
+    WindowLower,
+    WindowMenu,
+    WindowMinimize,
+    WindowMaximize,
+    WindowMaximizeToggle,
+    // We don't support more actions (maximize-horizontal, maximize-vertical,..)
+    // as they're implemented as part of Wayland gtk_surface1 protocol
+    // which is not accessible to us.
+  };
+
+  enum class TitlebarEvent {
+    Double_Click,
+    Middle_Click,
+  };
+
+  /**
+   * Get system defined action for titlebar events.
+   */
+  static TitlebarAction GetTitlebarAction(TitlebarEvent aEvent);
+
   /**
    * The millisecond to mask password value.
    * This value is only valid when GetEchoPassword() returns true.
