@@ -13,12 +13,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
@@ -35,27 +32,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
-import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Banner
 import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.MenuItem
+import org.mozilla.fenix.compose.TabCounter
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.tabstray.ext.getMenuItems
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -232,7 +224,7 @@ private fun SingleSelectBanner(
                         selectedContentColor = selectedColor,
                         unselectedContentColor = inactiveColor,
                     ) {
-                        NormalTabsTabIcon(normalTabCount = normalTabCount)
+                        TabCounter(tabCount = normalTabCount)
                     }
 
                     Tab(
@@ -290,85 +282,6 @@ private fun SingleSelectBanner(
                 )
             }
         }
-    }
-}
-
-private const val MAX_VISIBLE_TABS = 99
-private const val SO_MANY_TABS_OPEN = "∞"
-private val NORMAL_TABS_BOTTOM_PADDING = 0.5.dp
-private const val ONE_DIGIT_SIZE_RATIO = 0.5f
-private const val TWO_DIGITS_SIZE_RATIO = 0.4f
-
-@Composable
-@Suppress("MagicNumber")
-private fun NormalTabsTabIcon(normalTabCount: Int) {
-    val normalTabCountText: String
-    val tabCountTextRatio: Float
-    val needsBottomPaddingForInfiniteTabs: Boolean
-
-    when (normalTabCount) {
-        in 0..9 -> {
-            normalTabCountText = normalTabCount.toString()
-            tabCountTextRatio = ONE_DIGIT_SIZE_RATIO
-            needsBottomPaddingForInfiniteTabs = false
-        }
-
-        in 10..MAX_VISIBLE_TABS -> {
-            normalTabCountText = normalTabCount.toString()
-            tabCountTextRatio = TWO_DIGITS_SIZE_RATIO
-            needsBottomPaddingForInfiniteTabs = false
-        }
-
-        else -> {
-            normalTabCountText = SO_MANY_TABS_OPEN
-            tabCountTextRatio = ONE_DIGIT_SIZE_RATIO
-            needsBottomPaddingForInfiniteTabs = true
-        }
-    }
-
-    val normalTabsContentDescription = if (normalTabCount == 1) {
-        stringResource(id = R.string.mozac_tab_counter_open_tab_tray_single)
-    } else {
-        stringResource(
-            id = R.string.mozac_tab_counter_open_tab_tray_plural,
-            normalTabCount.toString(),
-        )
-    }
-
-    val counterBoxWidthDp =
-        dimensionResource(id = mozilla.components.ui.tabcounter.R.dimen.mozac_tab_counter_box_width_height)
-    val counterBoxWidthPx = LocalDensity.current.run { counterBoxWidthDp.roundToPx() }
-    val counterTabsTextSize = (tabCountTextRatio * counterBoxWidthPx).toInt()
-
-    val normalTabsTextModifier = if (needsBottomPaddingForInfiniteTabs) {
-        val bottomPadding = with(LocalDensity.current) { counterTabsTextSize.toDp() / 4 }
-        Modifier.padding(bottom = bottomPadding)
-    } else {
-        Modifier.padding(bottom = NORMAL_TABS_BOTTOM_PADDING)
-    }
-
-    Box(
-        modifier = Modifier
-            .semantics(mergeDescendants = true) {
-                testTag = TabsTrayTestTag.normalTabsCounter
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(
-                id = mozilla.components.ui.tabcounter.R.drawable.mozac_ui_tabcounter_box,
-            ),
-            contentDescription = normalTabsContentDescription,
-        )
-
-        Text(
-            text = normalTabCountText,
-            modifier = normalTabsTextModifier,
-            color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
-            fontSize = with(LocalDensity.current) { counterTabsTextSize.toDp().toSp() },
-            fontWeight = FontWeight.W700,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
@@ -470,7 +383,7 @@ private fun TabsTrayBannerPreview() {
 @Composable
 private fun TabsTrayBannerInfinityPreview() {
     TabsTrayBannerPreviewRoot(
-        normalTabCount = TabCounter.MAX_VISIBLE_TABS + 1,
+        normalTabCount = 200,
     )
 }
 
