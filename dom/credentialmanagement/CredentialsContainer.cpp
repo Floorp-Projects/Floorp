@@ -80,6 +80,19 @@ static bool IsInActiveTab(nsPIDOMWindowInner* aParent) {
   return IsInActiveTab(doc);
 }
 
+static bool ConsumeUserActivation(nsPIDOMWindowInner* aParent) {
+  // Returns whether aParent has transient activation, and consumes the
+  // activation.
+  MOZ_ASSERT(aParent);
+
+  RefPtr<Document> doc = aParent->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return false;
+  }
+
+  return doc->ConsumeTransientUserGestureActivation();
+}
+
 static bool IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent) {
   // This method returns true if aParent is either not in a frame / iframe, or
   // is in a frame or iframe and all ancestors for aParent are the same origin.
@@ -235,9 +248,15 @@ already_AddRefed<Promise> CredentialsContainer::Create(
   if (aOptions.mPublicKey.WasPassed() &&
       StaticPrefs::security_webauth_webauthn()) {
     MOZ_ASSERT(mParent);
+    // In a cross-origin iframe this request consumes user activation, i.e.
+    // subsequent requests cannot be made without further user interaction.
+    // See step 2.2 of https://w3c.github.io/webauthn/#sctn-createCredential
+    bool hasRequiredActivation =
+        IsInActiveTab(mParent) &&
+        (IsSameOriginWithAncestors(mParent) || ConsumeUserActivation(mParent));
     if (!FeaturePolicyUtils::IsFeatureAllowed(
             mParent->GetExtantDoc(), u"publickey-credentials-create"_ns) ||
-        !IsInActiveTab(mParent)) {
+        !hasRequiredActivation) {
       return CreateAndRejectWithNotAllowed(mParent, aRv);
     }
 
