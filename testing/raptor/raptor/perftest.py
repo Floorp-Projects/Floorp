@@ -109,6 +109,7 @@ class Perftest(object):
         benchmark_repository=None,
         benchmark_revision=None,
         benchmark_branch=None,
+        clean=False,
         **kwargs
     ):
         self._remote_test_root = None
@@ -154,6 +155,7 @@ class Perftest(object):
             "benchmark_repository": benchmark_repository,
             "benchmark_revision": benchmark_revision,
             "benchmark_branch": benchmark_branch,
+            "clean": clean,
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
@@ -545,6 +547,12 @@ class Perftest(object):
     def check_for_crashes(self):
         pass
 
+    def clean_up_mitmproxy(self):
+        if not self.run_local or self.config["clean"]:
+            mitmproxy_dir = pathlib.Path("~/.mitmproxy").expanduser().resolve()
+            if mitmproxy_dir.exists():
+                shutil.rmtree(mitmproxy_dir, ignore_errors=True)
+
     def clean_up(self):
         # Cleanup all of our temporary directories
         for dir_to_rm in self._dirs_to_remove:
@@ -570,6 +578,8 @@ class Perftest(object):
                     except FileNotFoundError:
                         pass
 
+        self.clean_up_mitmproxy()
+
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
 
@@ -585,7 +595,6 @@ class Perftest(object):
 
     def start_playback(self, test):
         # creating the playback tool
-
         playback_dir = os.path.join(here, "tooltool-manifests", "playback")
         playback_manifest = test.get("playback_pageset_manifest")
         playback_manifests = playback_manifest.split(",")
@@ -603,6 +612,7 @@ class Perftest(object):
 
         LOG.info("test uses playback tool: %s " % self.config["playback_tool"])
 
+        self.clean_up_mitmproxy()
         self.playback = get_playback(self.config)
 
         # let's start it!
