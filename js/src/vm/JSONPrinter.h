@@ -21,6 +21,7 @@ namespace js {
 class JSONPrinter {
  protected:
   int indentLevel_ = 0;
+  int inlineLevel_ = 0;
   bool indent_;
   bool first_ = true;
   bool afterPropName_ = false;
@@ -40,6 +41,7 @@ class JSONPrinter {
   void beginList();
   void beginObjectProperty(const char* name);
   void beginListProperty(const char* name);
+  void beginInlineListProperty(const char* name);
 
   void value(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
   void value(int value);
@@ -87,6 +89,7 @@ class JSONPrinter {
 
   void endObject();
   void endList();
+  void endInlineList();
 
   // Notify the output that the caller has detected OOM and should transition
   // to its saw-OOM state.
@@ -94,6 +97,8 @@ class JSONPrinter {
 
  protected:
   void propertyNameImpl(const char* name);
+  void beginInline();
+  void endInline();
 };
 
 }  // namespace js
