@@ -190,6 +190,8 @@ linux64-android-gradle-dependencies:
     worker:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+            ANDROID_SDK_ROOT: "/builds/worker/fetches/android-sdk-linux"
+        max-run-time: 2700
     run:
         script: android-gradle-dependencies.sh
         sparse-profile: null
