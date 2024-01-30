@@ -21,6 +21,13 @@ const SHOW_GLOBAL_MUTE_TOGGLES = Services.prefs.getBoolPref(
   false
 );
 
+let IsIndicatorDisabled =
+  AppConstants.isPlatformAndVersionAtLeast("macosx", 14.0) &&
+  !Services.prefs.getBoolPref(
+    "privacy.webrtc.showIndicatorsOnMacos14AndAbove",
+    false
+  );
+
 const INDICATOR_PATH = "chrome://browser/content/webrtcIndicator.xhtml";
 
 const IS_MAC = AppConstants.platform == "macosx";
@@ -100,7 +107,7 @@ async function assertWebRTCIndicatorStatus(expected) {
   let expectVideo = false,
     expectAudio = false,
     expectScreen = "";
-  if (expected) {
+  if (expected && !IsIndicatorDisabled) {
     if (expected.video) {
       expectVideo = true;
     }
@@ -911,15 +918,15 @@ async function checkSharingUI(
   let webrtcSharingIcon = doc.getElementById("webrtc-sharing-icon");
   ok(webrtcSharingIcon.hasAttribute("sharing"), "sharing attribute is set");
   let sharing = webrtcSharingIcon.getAttribute("sharing");
-  if (aExpected.screen) {
+  if (aExpected.screen && !IsIndicatorDisabled) {
     is(sharing, "screen", "showing screen icon in the identity block");
-  } else if (aExpected.video == STATE_CAPTURE_ENABLED) {
+  } else if (aExpected.video == STATE_CAPTURE_ENABLED && !IsIndicatorDisabled) {
     is(sharing, "camera", "showing camera icon in the identity block");
-  } else if (aExpected.audio == STATE_CAPTURE_ENABLED) {
+  } else if (aExpected.audio == STATE_CAPTURE_ENABLED && !IsIndicatorDisabled) {
     is(sharing, "microphone", "showing mic icon in the identity block");
-  } else if (aExpected.video) {
+  } else if (aExpected.video && !IsIndicatorDisabled) {
     is(sharing, "camera", "showing camera icon in the identity block");
-  } else if (aExpected.audio) {
+  } else if (aExpected.audio && !IsIndicatorDisabled) {
     is(sharing, "microphone", "showing mic icon in the identity block");
   }
 
