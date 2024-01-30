@@ -313,6 +313,7 @@ async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
   if (targetType) {
     resourceTypes = getResourceTypesForTargetType(resourceTypes, targetType);
   }
+  const promises = [];
   for (const resourceType of resourceTypes) {
     const { watchers, WatcherClass } = getResourceTypeEntry(
       rootOrWatcherOrTargetActor,
@@ -335,22 +336,25 @@ async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
     }
 
     const watcher = new WatcherClass();
-    await watcher.watch(rootOrWatcherOrTargetActor, {
-      onAvailable: rootOrWatcherOrTargetActor.notifyResources.bind(
-        rootOrWatcherOrTargetActor,
-        "available"
-      ),
-      onUpdated: rootOrWatcherOrTargetActor.notifyResources.bind(
-        rootOrWatcherOrTargetActor,
-        "updated"
-      ),
-      onDestroyed: rootOrWatcherOrTargetActor.notifyResources.bind(
-        rootOrWatcherOrTargetActor,
-        "destroyed"
-      ),
-    });
+    promises.push(
+      watcher.watch(rootOrWatcherOrTargetActor, {
+        onAvailable: rootOrWatcherOrTargetActor.notifyResources.bind(
+          rootOrWatcherOrTargetActor,
+          "available"
+        ),
+        onUpdated: rootOrWatcherOrTargetActor.notifyResources.bind(
+          rootOrWatcherOrTargetActor,
+          "updated"
+        ),
+        onDestroyed: rootOrWatcherOrTargetActor.notifyResources.bind(
+          rootOrWatcherOrTargetActor,
+          "destroyed"
+        ),
+      })
+    );
     watchers.set(rootOrWatcherOrTargetActor, watcher);
   }
+  await Promise.all(promises);
 }
 exports.watchResources = watchResources;
 
