@@ -113,12 +113,12 @@ var check_use_counter_worker = async function (
   // this tests.
   Assert.greater(
     destructions_after,
-    destructions_before,
+    destructions_before ?? 0,
     `${worker_type} worker counts are correct`
   );
   Assert.greater(
     glean_destructions_after,
-    glean_destructions_before,
+    glean_destructions_before ?? 0,
     `Glean ${worker_type} worker counts are correct`
   );
 };
