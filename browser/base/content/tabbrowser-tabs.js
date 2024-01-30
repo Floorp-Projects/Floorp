@@ -294,8 +294,13 @@
               triggeringEvent: event,
             });
           }
-        } else if (event.originalTarget.closest("scrollbox")) {
-          // The user middleclicked on the tabstrip. Check whether the click
+        } else if (
+          event.originalTarget.closest("scrollbox") &&
+          !Services.prefs.getBoolPref(
+            "widget.gtk.titlebar-action-middle-click-enabled"
+          )
+        ) {
+          // Check whether the click
           // was dispatched on the open space of it.
           let visibleTabs = this._getVisibleTabs();
           let lastTab = visibleTabs[visibleTabs.length - 1];
