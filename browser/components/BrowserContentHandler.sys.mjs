@@ -663,7 +663,10 @@ nsBrowserContentHandler.prototype = {
     }
 
     if (cmdLine.handleFlag("first-startup", false)) {
-      lazy.FirstStartup.init();
+      let override = needHomepageOverride(Services.prefs);
+      if (override == OVERRIDE_NEW_PROFILE) {
+        lazy.FirstStartup.init();
+      }
     }
 
     var fileParam = cmdLine.handleFlagWithParam("file", false);
