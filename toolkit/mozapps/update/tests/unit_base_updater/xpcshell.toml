@@ -47,13 +47,8 @@ reason = "Windows only test"
 ["marAppApplyUpdateStageOldVersionFailure.js"]
 
 ["marAppApplyUpdateStageSuccess.js"]
-skip-if = [
-  "apple_silicon",  # bug 1707753
-  "apple_catalina", # Bug 1713329
-]
 
 ["marAppApplyUpdateSuccess.js"]
-skip-if = ["apple_silicon"]  # bug 1724579
 
 ["marAppInUseBackgroundTaskFailure_win.js"]
 run-if = ["os == 'win'"]
@@ -65,10 +60,6 @@ reason = "Windows only test"
 
 ["marAppInUseStageSuccessComplete_unix.js"]
 run-if = ["os != 'win'"] # not a Windows test
-skip-if = [
-  "apple_silicon",  # bug 1707753
-  "apple_catalina", # Bug 1713329
-]
 
 ["marAppInUseSuccessComplete.js"]
 
@@ -153,29 +144,19 @@ reason = "Windows only test"
 ["marStageFailurePartial.js"]
 
 ["marStageSuccessComplete.js"]
-skip-if = [
-  "apple_silicon",  # bug 1707753
-  "apple_catalina", # Bug 1713329
-]
 
 ["marStageSuccessPartial.js"]
-skip-if = [
-  "apple_silicon",  # bug 1707753
-  "apple_catalina", # Bug 1713329
-]
 
 ["marSuccessComplete.js"]
 
 ["marSuccessPartial.js"]
 
 ["marSuccessPartialWhileBackgroundTaskRunning.js"]
-skip-if = [
-  "apple_silicon",  # Bug 1754931
-  "apple_catalina", # Bug 1754931
-]
 
 ["marVersionDowngrade.js"]
 
 ["marWrongChannel.js"]
 
 ["marWrongChannelStage.js"]
+
+["utilCheckFilesInDirRecursive.js"]
