@@ -1328,6 +1328,36 @@ void Shape::dumpFields(js::JSONPrinter& json) const {
                         asWasmGC().recGroup());
   }
 }
+
+void Shape::dumpStringContent(js::GenericPrinter& out) const {
+  out.printf("<(js::Shape*)0x%p", this);
+
+  if (isDictionary()) {
+    out.put(", dictionary");
+  }
+
+  out.put(", objectFlags=[");
+  bool first = true;
+  ForEachObjectFlag(
+      objectFlags(),
+      [&](const char* name) {
+        if (!first) {
+          out.put(", ");
+        }
+        first = false;
+
+        out.put(name);
+      },
+      [&](uint16_t value) {
+        if (!first) {
+          out.put(", ");
+        }
+        first = false;
+
+        out.printf("Unknown(%04x)", value);
+      });
+  out.put("]>");
+}
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
 /* static */

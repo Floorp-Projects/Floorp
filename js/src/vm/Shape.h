@@ -444,6 +444,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   void dump(js::JSONPrinter& json) const;
 
   void dumpFields(js::JSONPrinter& json) const;
+  void dumpStringContent(js::GenericPrinter& out) const;
 #endif
 
   inline void purgeCache(JS::GCContext* gcx);
