@@ -34,7 +34,6 @@
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::IsWindow, js::ToWindowProxyIfWindow
 #include "js/MemoryMetrics.h"
-#include "js/Printer.h"             // js::GenericPrinter, js::Fprinter
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "js/PropertySpec.h"        // JSPropertySpec
 #include "js/Proxy.h"
@@ -46,8 +45,6 @@
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/ArrayBufferObject.h"
-#include "vm/ArrayBufferViewObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compartment.h"
 #include "vm/DateObject.h"
@@ -56,9 +53,7 @@
 #include "vm/JSAtomUtils.h"  // Atomize
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
-#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/JSScript.h"
-#include "vm/PromiseObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
@@ -2765,10 +2760,97 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 /*
- * Routines to print out values during debugging.  These are JS_PUBLIC_API to
- * help the debugger find them and to support temporarily hacking js::Dump*
- * calls into other code.
+ * Routines to print out values during debugging.  These are FRIEND_API to help
+ * the debugger find them and to support temporarily hacking js::Dump* calls
+ * into other code.
  */
+
+static void dumpValue(const Value& v, js::GenericPrinter& out) {
+  switch (v.type()) {
+    case ValueType::Null:
+      out.put("null");
+      break;
+    case ValueType::Undefined:
+      out.put("undefined");
+      break;
+    case ValueType::Int32:
+      out.printf("%d", v.toInt32());
+      break;
+    case ValueType::Double:
+      out.printf("%g", v.toDouble());
+      break;
+    case ValueType::String:
+      v.toString()->dumpNoNewline(out);
+      break;
+    case ValueType::Symbol:
+      v.toSymbol()->dump(out);
+      break;
+    case ValueType::BigInt:
+      v.toBigInt()->dump(out);
+      break;
+    case ValueType::Object:
+      if (v.toObject().is<JSFunction>()) {
+        JSFunction* fun = &v.toObject().as<JSFunction>();
+        if (fun->maybePartialDisplayAtom()) {
+          out.put("<function ");
+          EscapedStringPrinter(out, fun->maybePartialDisplayAtom(), 0);
+        } else {
+          out.put("<unnamed function");
+        }
+        if (fun->hasBaseScript()) {
+          BaseScript* script = fun->baseScript();
+          out.printf(" (%s:%u)", script->filename() ? script->filename() : "",
+                     script->lineno());
+        }
+        out.printf(" at %p>", (void*)fun);
+      } else {
+        JSObject* obj = &v.toObject();
+        const JSClass* clasp = obj->getClass();
+        out.printf("<%s%s at %p>", clasp->name,
+                   (clasp == &PlainObject::class_) ? "" : " object",
+                   (void*)obj);
+      }
+      break;
+#  ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive: {
+      JSObject* obj = &v.toExtendedPrimitive();
+      out.printf("<%s at %p>", obj->getClass()->name, (void*)obj);
+      break;
+    }
+#  endif
+    case ValueType::Boolean:
+      if (v.toBoolean()) {
+        out.put("true");
+      } else {
+        out.put("false");
+      }
+      break;
+    case ValueType::Magic:
+      out.put("<magic");
+      switch (v.whyMagic()) {
+        case JS_ELEMENTS_HOLE:
+          out.put(" elements hole");
+          break;
+        case JS_NO_ITER_VALUE:
+          out.put(" no iter value");
+          break;
+        case JS_GENERATOR_CLOSING:
+          out.put(" generator closing");
+          break;
+        case JS_OPTIMIZED_OUT:
+          out.put(" optimized out");
+          break;
+        default:
+          out.put(" ?!");
+          break;
+      }
+      out.putChar('>');
+      break;
+    case ValueType::PrivateGCThing:
+      out.printf("<PrivateGCThing %p>", v.toGCThing());
+      break;
+  }
+}
 
 namespace js {
 
@@ -2785,12 +2867,59 @@ JS_PUBLIC_API void DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out,
 }  // namespace js
 
 JS_PUBLIC_API void js::DumpValue(const Value& val, js::GenericPrinter& out) {
-  val.dump(out);
+  dumpValue(val, out);
+  out.putChar('\n');
 }
 
 JS_PUBLIC_API void js::DumpId(jsid id, js::GenericPrinter& out) {
   out.printf("jsid %p = ", (void*)id.asRawBits());
-  id.dump(out);
+  dumpValue(IdToValue(id), out);
+  out.putChar('\n');
+}
+
+static void DumpProperty(const NativeObject* obj, PropMap* map, uint32_t index,
+                         js::GenericPrinter& out) {
+  PropertyInfoWithKey prop = map->getPropertyInfoWithKey(index);
+  jsid id = prop.key();
+  if (id.isAtom()) {
+    id.toAtom()->dumpCharsNoNewline(out);
+  } else if (id.isInt()) {
+    out.printf("%d", id.toInt());
+  } else if (id.isSymbol()) {
+    id.toSymbol()->dump(out);
+  } else {
+    out.printf("id %p", reinterpret_cast<void*>(id.asRawBits()));
+  }
+
+  if (prop.isDataProperty()) {
+    out.printf(": ");
+    dumpValue(obj->getSlot(prop.slot()), out);
+  } else if (prop.isAccessorProperty()) {
+    out.printf(": getter %p setter %p", obj->getGetter(prop),
+               obj->getSetter(prop));
+  }
+
+  out.printf(" (map %p/%u", map, index);
+
+  if (prop.enumerable()) {
+    out.put(" enumerable");
+  }
+  if (prop.configurable()) {
+    out.put(" configurable");
+  }
+  if (prop.isDataDescriptor() && prop.writable()) {
+    out.put(" writable");
+  }
+
+  if (prop.isCustomDataProperty()) {
+    out.printf(" <custom-data-prop>");
+  }
+
+  if (prop.hasSlot()) {
+    out.printf(" slot %u", prop.slot());
+  }
+
+  out.printf(")\n");
 }
 
 bool JSObject::hasSameRealmAs(JSContext* cx) const {
@@ -2803,135 +2932,138 @@ bool JSObject::uninlinedNonProxyIsExtensible() const {
   return nonProxyIsExtensible();
 }
 
-void JSObject::dump() const {
-  js::Fprinter out(stderr);
-  dump(out);
-}
-
 void JSObject::dump(js::GenericPrinter& out) const {
-  js::JSONPrinter json(out);
-  dump(json);
-  out.put("\n");
-}
-
-void JSObject::dump(js::JSONPrinter& json) const {
-  json.beginObject();
-  dumpFields(json);
-  json.endObject();
-}
-
-#  define FOR_EACH_CLASS(M)  \
-    M(ArrayBufferViewObject) \
-    M(ArrayBufferObject)     \
-    M(JSFunction)            \
-    M(PromiseObject)         \
-    M(RegExpObject)
-
-static void DumpOwnFields(const JSObject* obj, js::JSONPrinter& json) {
-#  define CALL(CLASS)                       \
-    if (obj->is<CLASS>()) {                 \
-      obj->as<CLASS>().dumpOwnFields(json); \
-      return;                               \
-    }
-  FOR_EACH_CLASS(CALL)
-#  undef CALL
-}
-
-static void DumpOwnStringContent(const JSObject* obj, js::GenericPrinter& out) {
-#  define CALL(CLASS)                             \
-    if (obj->is<CLASS>()) {                       \
-      out.put(" ");                               \
-      obj->as<CLASS>().dumpOwnStringContent(out); \
-      return;                                     \
-    }
-  FOR_EACH_CLASS(CALL)
-#  undef CALL
-}
-
-#  undef FOR_EACH_CLASS
-
-void JSObject::dumpFields(js::JSONPrinter& json) const {
-  json.formatProperty("address", "(JSObject*)0x%p", this);
+  const JSObject* obj = this;
+  out.printf("object %p\n", obj);
 
   if (IsCrossCompartmentWrapper(this)) {
-    json.formatProperty("compartment", "(JS::Compartment*)0x%p", compartment());
+    out.printf("  compartment %p\n", compartment());
   } else {
     JSObject* globalObj = &nonCCWGlobal();
-    js::GenericPrinter& out = json.beginStringProperty("nonCCWGlobal");
-    globalObj->dumpStringContent(out);
-    json.endStringProperty();
+    out.printf("  global %p [%s]\n", globalObj, globalObj->getClass()->name);
   }
 
-  const JSClass* clasp = getClass();
-  json.formatProperty("clasp", "<%s @ (JSClass*)0x%p>", clasp->name, clasp);
+  const JSClass* clasp = obj->getClass();
+  out.printf("  class %p %s\n", clasp, clasp->name);
 
-  js::GenericPrinter& out = json.beginStringProperty("shape");
-  shape()->dumpStringContent(out);
-  json.endStringProperty();
-
-  json.beginObjectProperty("shape.base");
-  shape()->base()->dumpFields(json);
-  json.endObject();
-
-  if (IsProxy(this)) {
-    const js::BaseProxyHandler* handler = GetProxyHandler(this);
-    if (IsDeadProxyObject(this)) {
-      json.formatProperty("handler", "(js::DeadObjectProxy*)0x%p", handler);
-    } else if (IsCrossCompartmentWrapper(this)) {
-      json.formatProperty("handler", "(js::CrossCompartmentWrapper*)0x%p",
-                          handler);
-    } else {
-      json.formatProperty("handler", "(js::BaseProxyHandler*)0x%p", handler);
+  if (IsProxy(obj)) {
+    auto* handler = GetProxyHandler(obj);
+    out.printf("    handler %p", handler);
+    if (IsDeadProxyObject(obj)) {
+      out.printf(" (DeadObjectProxy)");
+    } else if (IsCrossCompartmentWrapper(obj)) {
+      out.printf(" (CCW)");
     }
+    out.putChar('\n');
 
-    Value priv = GetProxyPrivate(this);
+    Value priv = GetProxyPrivate(obj);
     if (!priv.isUndefined()) {
-      js::GenericPrinter& out = json.beginStringProperty("private");
-      priv.dumpStringContent(out);
-      json.endStringProperty();
+      out.printf("    private ");
+      dumpValue(priv, out);
+      out.putChar('\n');
     }
 
-    Value expando = GetProxyExpando(this);
+    Value expando = GetProxyExpando(obj);
     if (!expando.isNull()) {
-      js::GenericPrinter& out = json.beginStringProperty("expando");
-      expando.dumpStringContent(out);
-      json.endStringProperty();
-    }
-
-    if (is<DebugEnvironmentProxy>()) {
-      json.boolProperty("isQualifiedVarObj", isQualifiedVarObj());
-      json.boolProperty("isUnqualifiedVarObj", isUnqualifiedVarObj());
+      out.printf("    expando ");
+      dumpValue(expando, out);
+      out.putChar('\n');
     }
   }
 
-  DumpOwnFields(this, json);
+  const Shape* shape = obj->shape();
+  out.printf("  shape %p\n", shape);
 
-  if (is<NativeObject>()) {
-    auto* nobj = &as<NativeObject>();
+  out.put("  flags:");
+  if (obj->isUsedAsPrototype()) {
+    out.put(" used_as_prototype");
+  }
+  if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) {
+    out.put(" not_extensible");
+  }
+  if (obj->maybeHasInterestingSymbolProperty()) {
+    out.put(" maybe_has_interesting_symbol");
+  }
+  if (obj->isQualifiedVarObj()) {
+    out.put(" varobj");
+  }
+  if (obj->isUnqualifiedVarObj()) {
+    out.put(" unqualified_varobj");
+  }
+  if (obj->hasInvalidatedTeleporting()) {
+    out.put(" invalidated_teleporting");
+  }
+  if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable()) {
+    out.put(" immutable_prototype");
+  }
 
-    js::GenericPrinter& out = json.beginStringProperty("elementsHeader");
-    nobj->getElementsHeader()->dumpStringContent(out);
-    json.endStringProperty();
+  const NativeObject* nobj =
+      obj->is<NativeObject>() ? &obj->as<NativeObject>() : nullptr;
+  if (nobj) {
+    if (nobj->inDictionaryMode()) {
+      out.put(" inDictionaryMode");
+    }
+    if (nobj->hadGetterSetterChange()) {
+      out.put(" had_getter_setter_change");
+    }
+    if (nobj->isIndexed()) {
+      out.put(" indexed");
+    }
+    if (nobj->hasEnumerableProperty()) {
+      out.put(" has_enumerable");
+    }
+    if (nobj->is<PlainObject>() &&
+        nobj->as<PlainObject>().hasNonWritableOrAccessorPropExclProto()) {
+      out.put(" has_non_writable_or_accessor_prop_excl_proto");
+    }
+    if (!nobj->denseElementsArePacked()) {
+      out.put(" non_packed_elements");
+    }
+    if (nobj->getElementsHeader()->isNotExtensible()) {
+      out.put(" not_extensible");
+    }
+    if (nobj->getElementsHeader()->isSealed()) {
+      out.put(" sealed_elements");
+    }
+    if (nobj->getElementsHeader()->isFrozen()) {
+      out.put(" frozen_elements");
+    }
+    if (nobj->getElementsHeader()->maybeInIteration()) {
+      out.put(" elements_maybe_in_iteration");
+    }
+  } else {
+    out.put(" not_native");
+  }
+  out.putChar('\n');
 
+  out.put("  proto ");
+  TaggedProto proto = obj->taggedProto();
+  if (proto.isDynamic()) {
+    out.put("<dynamic>");
+  } else {
+    dumpValue(ObjectOrNullValue(proto.toObjectOrNull()), out);
+  }
+  out.putChar('\n');
+
+  if (nobj) {
     uint32_t reserved = JSCLASS_RESERVED_SLOTS(clasp);
     if (reserved) {
-      char name[256];
-      json.beginObjectProperty("reservedSlots");
+      out.printf("  reserved slots:\n");
       for (uint32_t i = 0; i < reserved; i++) {
-        SprintfLiteral(name, "%u", i);
-        js::GenericPrinter& out = json.beginStringProperty(name);
-        nobj->getSlot(i).dumpStringContent(out);
-        json.endStringProperty();
+        out.printf("    %3u ", i);
+        out.put(": ");
+        dumpValue(nobj->getSlot(i), out);
+        out.putChar('\n');
       }
-      json.endObject();
     }
 
-    json.beginObjectProperty("properties");
+    out.put("  properties:\n");
+
     if (PropMap* map = nobj->shape()->propMap()) {
       Vector<PropMap*, 8, SystemAllocPolicy> maps;
       while (true) {
         if (!maps.append(map)) {
-          json.property("error", "*oom in JSObject::dumpFields*");
+          out.printf("(OOM while appending maps)\n");
           break;
         }
         if (!map->hasPrevious()) {
@@ -2942,60 +3074,36 @@ void JSObject::dumpFields(js::JSONPrinter& json) const {
 
       for (size_t i = maps.length(); i > 0; i--) {
         size_t index = i - 1;
-        PropMap* map = maps[index];
-        uint32_t len = (index == 0) ? shape()->asNative().propMapLength()
-                                    : PropMap::Capacity;
+        uint32_t len =
+            (index == 0) ? nobj->shape()->propMapLength() : PropMap::Capacity;
         for (uint32_t j = 0; j < len; j++) {
+          PropMap* map = maps[index];
           if (!map->hasKey(j)) {
             MOZ_ASSERT(map->isDictionary());
             continue;
           }
-
-          map->dumpPropertyNameAt(json, j);
-
-          js::GenericPrinter& out = json.beginString();
-
-          PropertyInfoWithKey prop = map->getPropertyInfoWithKey(j);
-          if (prop.isDataProperty()) {
-            nobj->getSlot(prop.slot()).dumpStringContent(out);
-            out.put(" ");
-          } else if (prop.isAccessorProperty()) {
-            out.printf("getter=0x%p, setter=0x%p", nobj->getGetter(prop),
-                       nobj->getSetter(prop));
-            out.put(" ");
-          }
-
-          out.put("(");
-          map->dumpDescriptorStringContentAt(out, j);
-          out.put(")");
-
-          json.endString();
+          out.printf("    ");
+          DumpProperty(nobj, map, j, out);
         }
       }
     }
-    json.endObject();
 
     uint32_t slots = nobj->getDenseInitializedLength();
     if (slots) {
-      char name[64];
-      json.beginObjectProperty("elements");
+      out.put("  elements:\n");
       for (uint32_t i = 0; i < slots; i++) {
-        SprintfLiteral(name, "%u", i);
-        js::GenericPrinter& out = json.beginStringProperty(name);
-        nobj->getDenseElement(i).dumpStringContent(out);
-        json.endStringProperty();
+        out.printf("    %3u: ", i);
+        dumpValue(nobj->getDenseElement(i), out);
+        out.putChar('\n');
       }
-      json.endObject();
     }
   }
 }
 
-void JSObject::dumpStringContent(js::GenericPrinter& out) const {
-  out.printf("<%s", getClass()->name);
-
-  DumpOwnStringContent(this, out);
-
-  out.printf(" @ (JSObject*)0x%p>", this);
+// For debuggers.
+void JSObject::dump() const {
+  Fprinter out(stderr);
+  dump(out);
 }
 
 static void MaybeDumpScope(Scope* scope, js::GenericPrinter& out) {
@@ -3003,7 +3111,8 @@ static void MaybeDumpScope(Scope* scope, js::GenericPrinter& out) {
     out.printf("  scope: %s\n", ScopeKindString(scope->kind()));
     for (BindingIter bi(scope); bi; bi++) {
       out.put("    ");
-      StringValue(bi.name()).dump(out);
+      dumpValue(StringValue(bi.name()), out);
+      out.putChar('\n');
     }
   }
 }
@@ -3012,7 +3121,8 @@ static void MaybeDumpValue(const char* name, const Value& v,
                            js::GenericPrinter& out) {
   if (!v.isNull()) {
     out.printf("  %s: ", name);
-    v.dump(out);
+    dumpValue(v, out);
+    out.putChar('\n');
   }
 }
 
@@ -3049,10 +3159,11 @@ JS_PUBLIC_API void js::DumpInterpreterFrame(JSContext* cx,
       RootedValue v(cx);
       JSObject* fun = i.callee(cx);
       v.setObject(*fun);
-      v.get().dump(out);
+      dumpValue(v, out);
     } else {
-      out.put("global or eval frame, no callee\n");
+      out.put("global or eval frame, no callee");
     }
+    out.putChar('\n');
 
     out.printf("file %s line %u\n", i.script()->filename(),
                i.script()->lineno());
@@ -3067,7 +3178,8 @@ JS_PUBLIC_API void js::DumpInterpreterFrame(JSContext* cx,
     }
     if (!i.isJSJit()) {
       out.put("  rval: ");
-      i.interpFrame()->returnValue().get().dump(out);
+      dumpValue(i.interpFrame()->returnValue(), out);
+      out.putChar('\n');
     }
 
     out.put("  flags:");

@@ -33,7 +33,6 @@
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printer.h"               // js::GenericPrinter
 #include "js/PropertyAndElement.h"    // JS_DefineElement
 #include "js/SourceText.h"            // JS::SourceText
 #include "js/StableStringChars.h"
@@ -41,7 +40,6 @@
 #include "util/Identifier.h"  // js::IsIdentifierNameOrPrivateName
 #include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
-#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/StaticStrings.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 
@@ -268,23 +266,35 @@ mozilla::Maybe<std::tuple<size_t, size_t>> JSString::encodeUTF8Partial(
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
+
+template <typename CharT>
+/*static */
+void JSString::dumpChars(const CharT* s, size_t n, js::GenericPrinter& out) {
+  if (n == SIZE_MAX) {
+    n = 0;
+    while (s[n]) {
+      n++;
+    }
+  }
+
+  out.put("\"");
+  dumpCharsNoQuote(s, n, out);
+  out.putChar('"');
+}
+
+template void JSString::dumpChars(const Latin1Char* s, size_t n,
+                                  js::GenericPrinter& out);
+
+template void JSString::dumpChars(const char16_t* s, size_t n,
+                                  js::GenericPrinter& out);
+
 template <typename CharT>
 /*static */
 void JSString::dumpCharsNoQuote(const CharT* s, size_t n,
                                 js::GenericPrinter& out) {
   for (size_t i = 0; i < n; i++) {
     char16_t c = s[i];
-    if (c == '"') {
-      out.put("\\\"");
-    } else if (c == '\'') {
-      out.put("\\'");
-    } else if (c == '`') {
-      out.put("\\`");
-    } else if (c == '\\') {
-      out.put("\\\\");
-    } else if (c == '\r') {
-      out.put("\\r");
-    } else if (c == '\n') {
+    if (c == '\n') {
       out.put("\\n");
     } else if (c == '\t') {
       out.put("\\t");
@@ -298,279 +308,128 @@ void JSString::dumpCharsNoQuote(const CharT* s, size_t n,
   }
 }
 
-/* static */
 template void JSString::dumpCharsNoQuote(const Latin1Char* s, size_t n,
                                          js::GenericPrinter& out);
 
-/* static */
 template void JSString::dumpCharsNoQuote(const char16_t* s, size_t n,
                                          js::GenericPrinter& out);
 
-void JSString::dump() const {
-  js::Fprinter out(stderr);
-  dump(out);
-}
-
-void JSString::dump(js::GenericPrinter& out) const {
-  js::JSONPrinter json(out);
-  dump(json);
-  out.put("\n");
-}
-
-void JSString::dump(js::JSONPrinter& json) const {
-  json.beginObject();
-  dumpFields(json);
-  json.endObject();
-}
-
-const char* RepresentationToString(const JSString* s) {
-  if (s->isAtom()) {
-    return "JSAtom";
-  }
-
-  if (s->isLinear()) {
-    if (s->isDependent()) {
-      return "JSDependentString";
-    }
-    if (s->isExternal()) {
-      return "JSExternalString";
-    }
-    if (s->isExtensible()) {
-      return "JSExtensibleString";
-    }
-
-    if (s->isInline()) {
-      if (s->isFatInline()) {
-        return "JSFatInlineString";
-      }
-      return "JSThinInlineString";
-    }
-
-    return "JSLinearString";
-  }
-
-  if (s->isRope()) {
-    return "JSRope";
-  }
-
-  return "JSString";
-}
-
-template <typename KnownF, typename UnknownF>
-void ForEachStringFlag(const JSString* str, uint32_t flags, KnownF known,
-                       UnknownF unknown) {
-  for (uint32_t i = js::Bit(3); i < js::Bit(16); i = i << 1) {
-    if (!(flags & i)) {
-      continue;
-    }
-    switch (i) {
-      case JSString::ATOM_BIT:
-        known("ATOM_BIT");
-        break;
-      case JSString::LINEAR_BIT:
-        known("LINEAR_BIT");
-        break;
-      case JSString::DEPENDENT_BIT:
-        known("DEPENDENT_BIT");
-        break;
-      case JSString::INLINE_CHARS_BIT:
-        known("INLINE_BIT");
-        break;
-      case JSString::LINEAR_IS_EXTENSIBLE_BIT:
-        static_assert(JSString::LINEAR_IS_EXTENSIBLE_BIT ==
-                      JSString::INLINE_IS_FAT_BIT);
-        if (str->isLinear()) {
-          known("EXTENSIBLE");
-        } else if (str->isInline()) {
-          known("FAT");
-        } else {
-          unknown(i);
-        }
-        break;
-      case JSString::LINEAR_IS_EXTERNAL_BIT:
-        static_assert(JSString::LINEAR_IS_EXTERNAL_BIT ==
-                      JSString::ATOM_IS_PERMANENT_BIT);
-        if (str->isAtom()) {
-          known("PERMANENT");
-        } else if (str->isLinear()) {
-          known("EXTERNAL");
-        } else {
-          unknown(i);
-        }
-        break;
-      case JSString::LATIN1_CHARS_BIT:
-        known("LATIN1_CHARS_BIT");
-        break;
-      case JSString::ATOM_IS_INDEX_BIT:
-        known("ATOM_IS_INDEX_BIT");
-        break;
-      case JSString::INDEX_VALUE_BIT:
-        known("INDEX_VALUE_BIT");
-        break;
-      case JSString::NON_DEDUP_BIT:
-        known("NON_DEDUP_BIT");
-        break;
-      case JSString::IN_STRING_TO_ATOM_CACHE:
-        known("IN_STRING_TO_ATOM_CACHE");
-        break;
-      case JSString::FLATTEN_VISIT_RIGHT:
-        if (str->isRope()) {
-          known("FLATTEN_VISIT_RIGHT");
-        } else {
-          unknown(i);
-        }
-        break;
-      case JSString::FLATTEN_FINISH_NODE:
-        static_assert(JSString::FLATTEN_FINISH_NODE ==
-                      JSString::PINNED_ATOM_BIT);
-        if (str->isRope()) {
-          known("FLATTEN_FINISH_NODE");
-        } else if (str->isAtom()) {
-          known("PINNED_ATOM_BIT");
-        } else {
-          unknown(i);
-        }
-        break;
-      default:
-        unknown(i);
-        break;
-    }
-  }
-}
-
-void JSString::dumpFields(js::JSONPrinter& json) const {
-  dumpCommonFields(json);
-  dumpCharsFields(json);
-}
-
-void JSString::dumpCommonFields(js::JSONPrinter& json) const {
-  json.formatProperty("address", "(%s*)0x%p", RepresentationToString(this),
-                      this);
-
-  json.beginInlineListProperty("flags");
-  ForEachStringFlag(
-      this, flags(), [&](const char* name) { json.value("%s", name); },
-      [&](uint32_t value) { json.value("Unknown(%08x)", value); });
-  json.endInlineList();
-
-  if (hasIndexValue()) {
-    json.property("indexValue", getIndexValue());
-  }
-
-  json.boolProperty("isTenured", isTenured());
-
-  json.property("length", length());
-}
-
-void JSString::dumpCharsFields(js::JSONPrinter& json) const {
-  if (isLinear()) {
-    const JSLinearString* linear = &asLinear();
-
+void JSString::dumpCharsNoNewline(js::GenericPrinter& out) {
+  if (JSLinearString* linear = ensureLinear(nullptr)) {
     AutoCheckCannotGC nogc;
     if (hasLatin1Chars()) {
-      const Latin1Char* chars = linear->latin1Chars(nogc);
-
-      json.formatProperty("chars", "(JS::Latin1Char*)0x%p", chars);
-
-      js::GenericPrinter& out = json.beginStringProperty("value");
-      dumpCharsNoQuote(chars, length(), out);
-      json.endStringProperty();
+      out.put("[Latin 1]");
+      dumpChars(linear->latin1Chars(nogc), length(), out);
     } else {
-      const char16_t* chars = linear->twoByteChars(nogc);
-
-      json.formatProperty("chars", "(char16_t*)0x%p", chars);
-
-      js::GenericPrinter& out = json.beginStringProperty("value");
-      dumpCharsNoQuote(chars, length(), out);
-      json.endStringProperty();
+      out.put("[2 byte]");
+      dumpChars(linear->twoByteChars(nogc), length(), out);
     }
   } else {
-    js::GenericPrinter& out = json.beginStringProperty("value");
-    dumpCharsNoQuote(out);
-    json.endStringProperty();
+    out.put("(oom in JSString::dumpCharsNoNewline)");
   }
 }
 
-void JSString::dumpRepresentation() const {
-  js::Fprinter out(stderr);
-  dumpRepresentation(out);
-}
-
-void JSString::dumpRepresentation(js::GenericPrinter& out) const {
-  js::JSONPrinter json(out);
-  dumpRepresentation(json);
-  out.put("\n");
-}
-
-void JSString::dumpRepresentation(js::JSONPrinter& json) const {
-  json.beginObject();
-  dumpRepresentationFields(json);
-  json.endObject();
-}
-
-void JSString::dumpRepresentationFields(js::JSONPrinter& json) const {
-  dumpCommonFields(json);
-
-  if (isAtom()) {
-    asAtom().dumpOwnRepresentationFields(json);
-  } else if (isLinear()) {
-    asLinear().dumpOwnRepresentationFields(json);
-
-    if (isDependent()) {
-      asDependent().dumpOwnRepresentationFields(json);
-    } else if (isExternal()) {
-      asExternal().dumpOwnRepresentationFields(json);
-    } else if (isExtensible()) {
-      asExtensible().dumpOwnRepresentationFields(json);
-    } else if (isInline()) {
-      asInline().dumpOwnRepresentationFields(json);
-    }
-  } else if (isRope()) {
-    asRope().dumpOwnRepresentationFields(json);
-    // Rope already shows the chars.
-    return;
-  }
-
-  dumpCharsFields(json);
-}
-
-void JSString::dumpStringContent(js::GenericPrinter& out) const {
-  dumpCharsSingleQuote(out);
-
-  out.printf(" @ (%s*)0x%p", RepresentationToString(this), this);
-}
-
-void JSString::dumpPropertyName(js::GenericPrinter& out) const {
-  dumpCharsNoQuote(out);
-}
-
-void JSString::dumpChars(js::GenericPrinter& out) const {
-  out.putChar('"');
-  dumpCharsNoQuote(out);
-  out.putChar('"');
-}
-
-void JSString::dumpCharsSingleQuote(js::GenericPrinter& out) const {
-  out.putChar('\'');
-  dumpCharsNoQuote(out);
-  out.putChar('\'');
-}
-
-void JSString::dumpCharsNoQuote(js::GenericPrinter& out) const {
-  if (isLinear()) {
-    const JSLinearString* linear = &asLinear();
-
+void JSString::dumpCharsNoQuote(js::GenericPrinter& out) {
+  if (JSLinearString* linear = ensureLinear(nullptr)) {
     AutoCheckCannotGC nogc;
     if (hasLatin1Chars()) {
       dumpCharsNoQuote(linear->latin1Chars(nogc), length(), out);
     } else {
       dumpCharsNoQuote(linear->twoByteChars(nogc), length(), out);
     }
-  } else if (isRope()) {
-    JSRope* rope = &asRope();
-    rope->leftChild()->dumpCharsNoQuote(out);
-    rope->rightChild()->dumpCharsNoQuote(out);
+  } else {
+    out.put("(oom in JSString::dumpCharsNoNewline)");
   }
+}
+
+void JSString::dump() {
+  js::Fprinter out(stderr);
+  dump(out);
+}
+
+void JSString::dump(js::GenericPrinter& out) {
+  dumpNoNewline(out);
+  out.putChar('\n');
+}
+
+void JSString::dumpNoNewline(js::GenericPrinter& out) {
+  if (JSLinearString* linear = ensureLinear(nullptr)) {
+    AutoCheckCannotGC nogc;
+    if (hasLatin1Chars()) {
+      const Latin1Char* chars = linear->latin1Chars(nogc);
+      out.printf("JSString* (%p) = Latin1Char * (%p) = ", (void*)this,
+                 (void*)chars);
+      dumpChars(chars, length(), out);
+    } else {
+      const char16_t* chars = linear->twoByteChars(nogc);
+      out.printf("JSString* (%p) = char16_t * (%p) = ", (void*)this,
+                 (void*)chars);
+      dumpChars(chars, length(), out);
+    }
+  } else {
+    out.put("(oom in JSString::dump)");
+  }
+}
+
+void JSString::dumpRepresentation(js::GenericPrinter& out, int indent) const {
+  if (isRope()) {
+    asRope().dumpRepresentation(out, indent);
+  } else if (isDependent()) {
+    asDependent().dumpRepresentation(out, indent);
+  } else if (isExternal()) {
+    asExternal().dumpRepresentation(out, indent);
+  } else if (isExtensible()) {
+    asExtensible().dumpRepresentation(out, indent);
+  } else if (isInline()) {
+    asInline().dumpRepresentation(out, indent);
+  } else if (isLinear()) {
+    asLinear().dumpRepresentation(out, indent);
+  } else {
+    MOZ_CRASH("Unexpected JSString representation");
+  }
+}
+
+void JSString::dumpRepresentationHeader(js::GenericPrinter& out,
+                                        const char* subclass) const {
+  uint32_t flags = JSString::flags();
+  // Print the string's address as an actual C++ expression, to facilitate
+  // copy-and-paste into a debugger.
+  out.printf("((%s*) %p) length: %zu  flags: 0x%x", subclass, this, length(),
+             flags);
+  if (flags & LINEAR_BIT) out.put(" LINEAR");
+  if (flags & DEPENDENT_BIT) out.put(" DEPENDENT");
+  if (flags & INLINE_CHARS_BIT) out.put(" INLINE_CHARS");
+  if (flags & ATOM_BIT)
+    out.put(" ATOM");
+  else
+    out.put(" (NON ATOM)");
+  if (isPermanentAtom()) out.put(" PERMANENT");
+  if (flags & LATIN1_CHARS_BIT) out.put(" LATIN1");
+  if (!isAtom() && inStringToAtomCache()) out.put(" IN_STRING_TO_ATOM_CACHE");
+  if (flags & INDEX_VALUE_BIT) out.printf(" INDEX_VALUE(%u)", getIndexValue());
+  if (!isTenured()) out.put(" NURSERY");
+  out.putChar('\n');
+}
+
+void JSLinearString::dumpRepresentationChars(js::GenericPrinter& out,
+                                             int indent) const {
+  const char* where = "";
+  if (!isInline()) {
+    js::gc::StoreBuffer* sb = storeBuffer();
+    if (sb && sb->nursery().isInside(nonInlineCharsRaw())) {
+      where = "(NURSERY) ";
+    }
+  }
+  if (hasLatin1Chars()) {
+    out.printf("%*schars: %s((Latin1Char*) %p) ", indent, "", where,
+               rawLatin1Chars());
+    dumpChars(rawLatin1Chars(), length(), out);
+  } else {
+    out.printf("%*schars: %s((char16_t*) %p) ", indent, "", where,
+               rawTwoByteChars());
+    dumpChars(rawTwoByteChars(), length(), out);
+  }
+  out.putChar('\n');
 }
 
 bool JSString::equals(const char* s) {
@@ -739,14 +598,15 @@ bool JSRope::hash(uint32_t* outHash) const {
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-void JSRope::dumpOwnRepresentationFields(js::JSONPrinter& json) const {
-  json.beginObjectProperty("leftChild");
-  leftChild()->dumpRepresentationFields(json);
-  json.endObject();
+void JSRope::dumpRepresentation(js::GenericPrinter& out, int indent) const {
+  dumpRepresentationHeader(out, "JSRope");
+  indent += 2;
 
-  json.beginObjectProperty("rightChild");
-  rightChild()->dumpRepresentationFields(json);
-  json.endObject();
+  out.printf("%*sleft:  ", indent, "");
+  leftChild()->dumpRepresentation(out, indent);
+
+  out.printf("%*sright: ", indent, "");
+  rightChild()->dumpRepresentation(out, indent);
 }
 #endif
 
@@ -1181,12 +1041,13 @@ template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
                                            gc::Heap heap);
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-void JSDependentString::dumpOwnRepresentationFields(
-    js::JSONPrinter& json) const {
-  json.property("baseOffset", baseOffset());
-  json.beginObjectProperty("base");
-  base()->dumpRepresentationFields(json);
-  json.endObject();
+void JSDependentString::dumpRepresentation(js::GenericPrinter& out,
+                                           int indent) const {
+  dumpRepresentationHeader(out, "JSDependentString");
+  indent += 2;
+  out.printf("%*soffset: %zu\n", indent, "", baseOffset());
+  out.printf("%*sbase: ", indent, "");
+  base()->dumpRepresentation(out, indent);
 }
 #endif
 
@@ -1639,10 +1500,14 @@ void JSAtom::dump() {
   dump(out);
 }
 
-void JSExternalString::dumpOwnRepresentationFields(
-    js::JSONPrinter& json) const {
-  json.formatProperty("callbacks", "(JSExternalStringCallbacks*)0x%p",
-                      callbacks());
+void JSExternalString::dumpRepresentation(js::GenericPrinter& out,
+                                          int indent) const {
+  dumpRepresentationHeader(out, "JSExternalString");
+  indent += 2;
+
+  out.printf("%*sfinalizer: ((JSExternalStringCallbacks*) %p)\n", indent, "",
+             callbacks());
+  dumpRepresentationChars(out, indent);
 }
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW) */
 
@@ -2215,20 +2080,30 @@ template JSString* NewMaybeExternalString(
 } /* namespace js */
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
-void JSExtensibleString::dumpOwnRepresentationFields(
-    js::JSONPrinter& json) const {
-  json.property("capacity", capacity());
+void JSExtensibleString::dumpRepresentation(js::GenericPrinter& out,
+                                            int indent) const {
+  dumpRepresentationHeader(out, "JSExtensibleString");
+  indent += 2;
+
+  out.printf("%*scapacity: %zu\n", indent, "", capacity());
+  dumpRepresentationChars(out, indent);
 }
 
-void JSInlineString::dumpOwnRepresentationFields(js::JSONPrinter& json) const {}
+void JSInlineString::dumpRepresentation(js::GenericPrinter& out,
+                                        int indent) const {
+  dumpRepresentationHeader(
+      out, isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
+  indent += 2;
 
-void JSLinearString::dumpOwnRepresentationFields(js::JSONPrinter& json) const {
-  if (!isInline()) {
-    js::gc::StoreBuffer* sb = storeBuffer();
-    bool inNursery = sb && sb->nursery().isInside(nonInlineCharsRaw());
+  dumpRepresentationChars(out, indent);
+}
 
-    json.boolProperty("inNursery", inNursery);
-  }
+void JSLinearString::dumpRepresentation(js::GenericPrinter& out,
+                                        int indent) const {
+  dumpRepresentationHeader(out, "JSLinearString");
+  indent += 2;
+
+  dumpRepresentationChars(out, indent);
 }
 #endif
 

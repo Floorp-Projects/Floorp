@@ -30,7 +30,6 @@
 
 namespace js {
 
-class JS_PUBLIC_API GenericPrinter;
 class PropertyResult;
 
 namespace gc {
@@ -436,10 +435,6 @@ class ObjectElements {
   // This is enough slots to store an object of this class. See the static
   // assertion below.
   static const size_t VALUES_PER_HEADER = 2;
-
-#if defined(DEBUG) || defined(JS_JITSPEW)
-  void dumpStringContent(js::GenericPrinter& out) const;
-#endif
 };
 
 static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) ==

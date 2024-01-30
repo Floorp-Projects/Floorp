@@ -30,8 +30,6 @@ class JSJitInfo;
 namespace js {
 
 class FunctionExtended;
-class JS_PUBLIC_API GenericPrinter;
-class JSONPrinter;
 struct SelfHostedLazyScript;
 
 using Native = JSNative;
@@ -737,11 +735,6 @@ class JSFunction : public js::NativeObject {
   // allocKind.
   static bool getAllocKindForThis(JSContext* cx, js::HandleFunction func,
                                   js::gc::AllocKind& allocKind);
-
-#if defined(DEBUG) || defined(JS_JITSPEW)
-  void dumpOwnFields(js::JSONPrinter& json) const;
-  void dumpOwnStringContent(js::GenericPrinter& out) const;
-#endif
 };
 
 static_assert(sizeof(JSFunction) == sizeof(JS::shadow::Function),
