@@ -17,7 +17,7 @@ class WebGLMethodDispatcher
     : public EmptyMethodDispatcher<WebGLMethodDispatcher> {};
 
 template <typename MethodT, MethodT Method>
-size_t IdByMethod() = delete;
+size_t IdByMethod();
 
 #define DEFINE_METHOD_DISPATCHER(_ID, _METHOD)                  \
   template <>                                                   \
