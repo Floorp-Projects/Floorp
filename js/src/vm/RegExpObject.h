@@ -32,6 +32,9 @@
  */
 namespace js {
 
+class GenericPrinter;
+class JSONPrinter;
+
 extern RegExpObject* RegExpAlloc(JSContext* cx, NewObjectKind newKind,
                                  HandleObject proto = nullptr);
 
@@ -181,7 +184,10 @@ class RegExpObject : public NativeObject {
   void initAndZeroLastIndex(JSAtom* source, JS::RegExpFlags flags,
                             JSContext* cx);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpOwnFields(js::JSONPrinter& json) const;
+  void dumpOwnStringContent(js::GenericPrinter& out) const;
+
   [[nodiscard]] static bool dumpBytecode(JSContext* cx,
                                          Handle<RegExpObject*> regexp,
                                          Handle<JSLinearString*> input);
