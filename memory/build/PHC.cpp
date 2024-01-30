@@ -872,7 +872,14 @@ class GMut {
   }
 
   using PHCState = mozilla::phc::PHCState;
-  void SetState(PHCState aState) { mPhcState = aState; }
+  void SetState(PHCState aState) {
+    if (mPhcState != PHCState::Enabled && aState == PHCState::Enabled) {
+      MutexAutoLock lock(GMut::sMutex);
+      GAtomic::Init(Rnd64ToDelay<kAvgFirstAllocDelay>(Random64(lock)));
+    }
+
+    mPhcState = aState;
+  }
 
  private:
   template <int N>
@@ -1082,12 +1089,6 @@ static bool phc_init() {
 
   GTls::Init();
   gMut = InfallibleAllocPolicy::new_<GMut>();
-  {
-    MutexAutoLock lock(GMut::sMutex);
-    Delay firstAllocDelay =
-        Rnd64ToDelay<kAvgFirstAllocDelay>(gMut->Random64(lock));
-    GAtomic::Init(firstAllocDelay);
-  }
 
 #ifndef XP_WIN
   // Avoid deadlocks when forking by acquiring our state lock prior to forking
