@@ -381,11 +381,11 @@ bool BaseCompiler::beginFunction() {
   ArgTypeVector args(funcType());
   size_t inboundStackArgBytes = StackArgAreaSizeUnaligned(args);
   MOZ_ASSERT(inboundStackArgBytes % sizeof(void*) == 0);
-  stackMapGenerator_.numStackArgWords = inboundStackArgBytes / sizeof(void*);
+  stackMapGenerator_.numStackArgBytes = inboundStackArgBytes;
 
   MOZ_ASSERT(stackMapGenerator_.machineStackTracker.length() == 0);
   if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
-          stackMapGenerator_.numStackArgWords)) {
+          stackMapGenerator_.numStackArgBytes / sizeof(void*))) {
     return false;
   }
 
@@ -1389,18 +1389,15 @@ void BaseCompiler::startCallArgs(size_t stackArgAreaSizeUnaligned,
   MOZ_ASSERT(stackArgAreaSizeUnaligned <= stackArgAreaSizeAligned);
 
   // Record the masm.framePushed() value at this point, before we push args
-  // for the call, but including the alignment space placed above the args.
-  // This defines the lower limit of the stackmap that will be created for
-  // this call.
+  // for the call and any required alignment space. This defines the lower limit
+  // of the stackmap that will be created for this call.
   MOZ_ASSERT(
       stackMapGenerator_.framePushedExcludingOutboundCallArgs.isNothing());
   stackMapGenerator_.framePushedExcludingOutboundCallArgs.emplace(
       // However much we've pushed so far
       masm.framePushed() +
       // Extra space we'll push to get the frame aligned
-      call->frameAlignAdjustment +
-      // Extra space we'll push to get the outbound arg area aligned
-      (stackArgAreaSizeAligned - stackArgAreaSizeUnaligned));
+      call->frameAlignAdjustment);
 
   call->stackArgAreaSize = stackArgAreaSizeAligned;
 

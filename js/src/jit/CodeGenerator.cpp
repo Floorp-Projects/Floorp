@@ -8991,7 +8991,8 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   // Now that all the outbound in-memory args are on the stack, note the
   // required lower boundary point of the associated StackMap.
   uint32_t framePushedAtStackMapBase =
-      masm.framePushed() - callBase->stackArgAreaSizeUnaligned();
+      masm.framePushed() -
+      wasm::AlignStackArgAreaSize(callBase->stackArgAreaSizeUnaligned());
   lir->safepoint()->setFramePushedAtStackMapBase(framePushedAtStackMapBase);
   MOZ_ASSERT(lir->safepoint()->wasmSafepointKind() ==
              WasmSafepointKind::LirCall);
@@ -14697,10 +14698,14 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // This is the number of bytes in the general spill area, below the Frame.
   const size_t nBodyBytes = safepoint.framePushedAtStackMapBase();
 
+  // The stack map owns any alignment padding around inbound stack args.
+  const size_t nInboundStackArgBytesAligned =
+      wasm::AlignStackArgAreaSize(nInboundStackArgBytes);
+
   // This is the number of bytes in the general spill area, the Frame, and the
   // incoming args, but not including any register dump area.
   const size_t nNonRegisterBytes =
-      nBodyBytes + nFrameBytes + nInboundStackArgBytes;
+      nBodyBytes + nFrameBytes + nInboundStackArgBytesAligned;
   MOZ_ASSERT(nNonRegisterBytes % sizeof(void*) == 0);
 
   // This is the number of bytes in the register dump area, if any, below the
@@ -14826,7 +14831,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // Record in the map, how far down from the highest address the Frame* is.
   // Take the opportunity to check that we haven't marked any part of the
   // Frame itself as a pointer.
-  stackMap->setFrameOffsetFromTop((nInboundStackArgBytes + nFrameBytes) /
+  stackMap->setFrameOffsetFromTop((nInboundStackArgBytesAligned + nFrameBytes) /
                                   sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {

@@ -79,10 +79,14 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   // The size of the register dump (trap) area.
   const size_t trapExitLayoutBytes = trapExitLayoutWords * sizeof(void*);
 
+  // The stack map owns any alignment padding for incoming stack args.
+  const size_t nInboundStackArgBytesAligned =
+      AlignStackArgAreaSize(nInboundStackArgBytes);
+
   // This is the total number of bytes covered by the map.
   const DebugOnly<size_t> nTotalBytes = trapExitLayoutBytes +
                                         nBytesReservedBeforeTrap + nFrameBytes +
-                                        nInboundStackArgBytes;
+                                        nInboundStackArgBytesAligned;
 
   // Create the stackmap initially in this vector.  Since most frames will
   // contain 128 or fewer words, heap allocation is avoided in the majority of
@@ -121,8 +125,8 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   }
 
   // INBOUND ARG AREA
-  MOZ_ASSERT(nInboundStackArgBytes % sizeof(void*) == 0);
-  const size_t numStackArgWords = nInboundStackArgBytes / sizeof(void*);
+  MOZ_ASSERT(nInboundStackArgBytesAligned % sizeof(void*) == 0);
+  const size_t numStackArgWords = nInboundStackArgBytesAligned / sizeof(void*);
 
   const size_t wordsSoFar = vec.length();
   if (!vec.appendN(false, numStackArgWords)) {
