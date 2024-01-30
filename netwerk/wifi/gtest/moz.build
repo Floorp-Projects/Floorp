@@ -7,7 +7,7 @@
 LOCAL_INCLUDES += ["/netwerk/wifi"]
 
 UNIFIED_SOURCES += [
-    "TestWifiMonitor.cpp",
+    #    "TestWifiMonitor.cpp",  # see bug 1833020
 ]
 
 FINAL_LIBRARY = "xul-gtest"
