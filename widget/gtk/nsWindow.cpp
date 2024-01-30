@@ -4893,15 +4893,11 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   const bool defaultPrevented =
       eventStatus.mContentStatus == nsEventStatus_eConsumeNoDefault;
   // Check if mouse position in titlebar and doubleclick happened to
-  // trigger restore/maximize.
+  // trigger defined action.
   if (!defaultPrevented && mDrawInTitlebar &&
       event.mButton == MouseButton::ePrimary && event.mClickCount == 2 &&
       mDraggableRegion.Contains(pos)) {
-    if (mSizeMode == nsSizeMode_Maximized) {
-      SetSizeMode(nsSizeMode_Normal);
-    } else if (mSizeMode == nsSizeMode_Normal) {
-      SetSizeMode(nsSizeMode_Maximized);
-    }
+    DoTitlebarAction(nsXPLookAndFeel::TitlebarEvent::Double_Click, aEvent);
   }
   mLastMotionPressure = pressure;
 
