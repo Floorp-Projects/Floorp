@@ -427,8 +427,9 @@ TextPropertyEditor.prototype = {
         maxWidth: () => this.container.getBoundingClientRect().width,
         cssProperties: this.cssProperties,
         cssVariables:
-          this.rule.elementStyle.variablesMap.get(this.rule.pseudoElement) ||
-          [],
+          this.rule.elementStyle.getAllCustomProperties(
+            this.rule.pseudoElement
+          ) || new Map(),
         getGridLineNames: this.getGridlineNames,
         showSuggestCompletionOnEmpty: true,
         // (Shift+)Tab will move the focus to the previous/next editable field (so property name,

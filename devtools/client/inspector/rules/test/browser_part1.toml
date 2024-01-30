@@ -313,4 +313,7 @@ skip-if = ["debug"] # Bug 1250058 - Docshell leak on debug
 
 ["browser_rules_variables_04-valid-chars.js"]
 
+["browser_rules_variables_autocomplete.js"]
+skip-if = ["!fission"]
+
 ["browser_rules_variables_host.js"]
