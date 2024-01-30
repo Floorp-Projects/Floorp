@@ -26,11 +26,15 @@ void JSONPrinter::indent() {
   }
 }
 
-void JSONPrinter::propertyName(const char* name) {
+void JSONPrinter::beforeValue() {
   if (!first_) {
     out_.putChar(',');
   }
   indent();
+}
+
+void JSONPrinter::propertyName(const char* name) {
+  beforeValue();
   out_.printf("\"%s\":", name);
   if (indent_) {
     out_.put(" ");
@@ -39,20 +43,14 @@ void JSONPrinter::propertyName(const char* name) {
 }
 
 void JSONPrinter::beginObject() {
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.putChar('{');
   indentLevel_++;
   first_ = true;
 }
 
 void JSONPrinter::beginList() {
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.putChar('[');
   indentLevel_++;
   first_ = true;
@@ -84,10 +82,7 @@ void JSONPrinter::endStringProperty() {
 }
 
 GenericPrinter& JSONPrinter::beginString() {
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.putChar('"');
   return out_;
 }
@@ -159,10 +154,7 @@ void JSONPrinter::value(const char* format, ...) {
   va_list ap;
   va_start(ap, format);
 
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.putChar('"');
   out_.vprintf(format, ap);
   out_.putChar('"');
@@ -177,10 +169,7 @@ void JSONPrinter::property(const char* name, int32_t value) {
 }
 
 void JSONPrinter::value(int val) {
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.printf("%d", val);
   first_ = false;
 }
@@ -250,10 +239,7 @@ void JSONPrinter::nullProperty(const char* name) {
 }
 
 void JSONPrinter::nullValue() {
-  if (!first_) {
-    out_.putChar(',');
-  }
-  indent();
+  beforeValue();
   out_.put("null");
   first_ = false;
 }
