@@ -24,4 +24,9 @@ enum class TranslationOperation {
      * and localized name.
      */
     FETCH_LANGUAGES,
+
+    /**
+     * The page related settings the translation engine should fetch.
+     */
+    FETCH_PAGE_SETTINGS,
 }

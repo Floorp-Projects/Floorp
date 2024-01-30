@@ -12,10 +12,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettings
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import java.lang.Exception
@@ -239,5 +241,61 @@ class TranslationsActionTest {
         ).joinBlocking()
         assertEquals(null, tabState().translationsState.translationError)
         assertEquals(false, tabState().translationsState.isTranslated)
+    }
+
+    @Test
+    fun `WHEN a SetPageSettingsAction is dispatched THEN set pageSettings`() {
+        // Initial
+        assertNull(tabState().translationsState.pageSettings)
+
+        // Action started
+        val pageSettings = TranslationPageSettings(
+            alwaysOfferPopup = true,
+            alwaysTranslateLanguage = true,
+            neverTranslateLanguage = true,
+            neverTranslateSite = true,
+        )
+        store.dispatch(
+            TranslationsAction.SetPageSettingsAction(
+                tabId = tab.id,
+                pageSettings = pageSettings,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(pageSettings, tabState().translationsState.pageSettings)
+    }
+
+    @Test
+    fun `WHEN a OperationRequestedAction is dispatched THEN clear pageSettings`() {
+        // Setting first to have a more robust initial state
+        assertNull(tabState().translationsState.pageSettings)
+
+        val pageSettings = TranslationPageSettings(
+            alwaysOfferPopup = true,
+            alwaysTranslateLanguage = true,
+            neverTranslateLanguage = true,
+            neverTranslateSite = true,
+        )
+
+        store.dispatch(
+            TranslationsAction.SetPageSettingsAction(
+                tabId = tab.id,
+                pageSettings = pageSettings,
+            ),
+        ).joinBlocking()
+
+        assertEquals(pageSettings, tabState().translationsState.pageSettings)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertNull(tabState().translationsState.pageSettings)
     }
 }
