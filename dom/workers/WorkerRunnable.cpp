@@ -13,6 +13,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
@@ -205,6 +206,33 @@ NS_IMETHODIMP
 WorkerRunnable::Run() {
   LOG(("WorkerRunnable::Run [%p]", this));
   bool targetIsWorkerThread = mTarget == WorkerThread;
+
+  if (targetIsWorkerThread) {
+    // On a worker thread, a WorkerRunnable should only run when there is an
+    // underlying WorkerThreadPrimaryRunnable active, which means we should
+    // find a CycleCollectedJSContext.
+    if (!CycleCollectedJSContext::Get()) {
+#if (defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY) && defined(DEBUG))
+      // Temporarily set the LogLevel high enough to be certain the messages
+      // are visible.
+      LogModule* module = sWorkerRunnableLog;
+      LogLevel prevLevel = module->Level();
+      if (prevLevel < LogLevel::Error) {
+        module->SetLevel(LogLevel::Error);
+      }
+      MOZ_LOG(sWorkerRunnableLog, LogLevel::Error,
+              ("Runnable '%s' was executed after WorkerThreadPrimaryRunnable "
+               "ended.",
+               "WorkerRunnable"));
+      module->SetLevel(prevLevel);
+#endif
+      MOZ_DIAGNOSTIC_ASSERT(false,
+                            "A WorkerRunnable was executed after "
+                            "WorkerThreadPrimaryRunnable ended.");
+
+      return NS_OK;
+    }
+  }
 
 #ifdef DEBUG
   if (targetIsWorkerThread) {
