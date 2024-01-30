@@ -693,9 +693,9 @@ bool BrowsingContext::GetIsActiveBrowserWindow() {
   // chrome:// urls loaded in the parent won't receive
   // their own activation so we defer to the top chrome
   // Browsing Context when in the parent process.
-  RefPtr<CanonicalBrowsingContext> chromeTop =
-      Canonical()->TopCrossChromeBoundary();
-  return chromeTop->GetIsActiveBrowserWindowInternal();
+  return Canonical()
+      ->TopCrossChromeBoundary()
+      ->GetIsActiveBrowserWindowInternal();
 }
 
 void BrowsingContext::SetIsActiveBrowserWindow(bool aActive) {
@@ -2299,12 +2299,11 @@ std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
 
   bool isActive = false;
   if (XRE_IsParentProcess()) {
-    RefPtr<CanonicalBrowsingContext> chromeTop =
-        Canonical()->TopCrossChromeBoundary();
+    CanonicalBrowsingContext* chromeTop = Canonical()->TopCrossChromeBoundary();
     nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
-    isActive = (activeWindow == chromeTop->GetDOMWindow());
+    isActive = activeWindow == chromeTop->GetDOMWindow();
   } else {
-    isActive = (fm->GetActiveBrowsingContext() == Top());
+    isActive = fm->GetActiveBrowsingContext() == Top();
   }
 
   return {canFocus, isActive};

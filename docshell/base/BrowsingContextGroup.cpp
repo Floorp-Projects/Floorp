@@ -19,8 +19,7 @@
 #include "nsFocusManager.h"
 #include "nsTHashMap.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Maximum number of successive dialogs before we prompt users to disable
 // dialogs for this window.
@@ -568,5 +567,4 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
                                       mTimerEventQueue, mWorkerEventQueue,
                                       mDocGroups)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
