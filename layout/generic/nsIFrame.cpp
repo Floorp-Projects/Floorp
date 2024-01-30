@@ -7128,6 +7128,17 @@ bool nsIFrame::UpdateIsRelevantContent(
                       HasSelectionInSubtree());
   }
 
+  // If the proximity to the viewport has not been determined yet,
+  // and neither the element nor its contents are focused or selected,
+  // we should wait for the determination of the proximity. Otherwise,
+  // there might be a redundant contentvisibilityautostatechange event.
+  // See https://github.com/w3c/csswg-drafts/issues/9803
+  bool isProximityToViewportDetermined =
+      oldRelevancy ? true : element->GetVisibleForContentVisibility().isSome();
+  if (!isProximityToViewportDetermined && newRelevancy.isEmpty()) {
+    return false;
+  }
+
   bool overallRelevancyChanged =
       !oldRelevancy || oldRelevancy->isEmpty() != newRelevancy.isEmpty();
   if (!oldRelevancy || *oldRelevancy != newRelevancy) {
