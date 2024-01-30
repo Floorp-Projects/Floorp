@@ -84,16 +84,10 @@ var gSanitizePromptDialog = {
 
     let arg = window.arguments?.[0] || {};
 
-    // The updateUsageData variable allows callers of the dialog to indicate
-    // whether site usage data should be refreshed on init.
-    let updateUsageData = true;
-    if (!lazy.USE_OLD_DIALOG && arg.updateUsageData != undefined) {
-      updateUsageData = arg.updateUsageData || arg.inBrowserWindow;
-    }
-
     // These variables decide which context the dialog has been opened in
     this._inClearOnShutdownNewDialog = false;
     this._inClearSiteDataNewDialog = false;
+    this._inBrowserWindow = !!arg.inBrowserWindow;
     if (arg.mode && !lazy.USE_OLD_DIALOG) {
       this._inClearOnShutdownNewDialog = arg.mode == "clearOnShutdown";
       this._inClearSiteDataNewDialog = arg.mode == "clearSiteData";
@@ -126,9 +120,7 @@ var gSanitizePromptDialog = {
       // Begin collecting how long it takes to load from here
       let timerId = Glean.privacySanitize.loadTime.start();
 
-      this.dataSizesFinishedUpdatingPromise = this.getAndUpdateDataSizes(
-        updateUsageData
-      )
+      this.dataSizesFinishedUpdatingPromise = this.getAndUpdateDataSizes()
         .then(() => {
           // We're done loading, stop telemetry here
           Glean.privacySanitize.loadTime.stopAndAccumulate(timerId);
@@ -317,7 +309,16 @@ var gSanitizePromptDialog = {
       let itemsToClear = this.getItemsToClear();
       Sanitizer.sanitize(itemsToClear, options)
         .catch(console.error)
-        .then(() => window.close())
+        .then(() => {
+          // we don't need to update data sizes in settings when the dialog is opened
+          // in the browser context
+          if (!this._inBrowserWindow) {
+            // call update sites to ensure the data sizes displayed
+            // in settings is updated.
+            lazy.SiteDataManager.updateSites();
+          }
+          window.close();
+        })
         .catch(console.error);
       event.preventDefault();
     } catch (er) {
@@ -382,16 +383,18 @@ var gSanitizePromptDialog = {
   /**
    * Gets the latest usage data and then updates the UI
    *
-   * @param {boolean} doUpdateSites - if we need to trigger an
-   *        updateSites() to get the latest usage data
    * @returns {Promise} resolves when updating the UI is complete
    */
-  async getAndUpdateDataSizes(doUpdateSites) {
+  async getAndUpdateDataSizes() {
     if (lazy.USE_OLD_DIALOG) {
       return;
     }
 
-    if (doUpdateSites) {
+    // We have to update sites before displaying data sizes
+    // when the dialog is opened in the browser context, since users
+    // can open the dialog in this context without opening about:preferences.
+    // When a user opens about:preferences, updateSites is called on load.
+    if (this._inBrowserWindow) {
       await lazy.SiteDataManager.updateSites();
     }
     // Current timespans used in the dialog box
