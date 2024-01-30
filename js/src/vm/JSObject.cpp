@@ -2817,6 +2817,33 @@ void JSObject::dump(js::JSONPrinter& json) const {
   json.endObject();
 }
 
+#  define FOR_EACH_CLASS(M) \
+    M(JSFunction)           \
+    M(RegExpObject)
+
+static void DumpOwnFields(const JSObject* obj, js::JSONPrinter& json) {
+#  define CALL(CLASS)                       \
+    if (obj->is<CLASS>()) {                 \
+      obj->as<CLASS>().dumpOwnFields(json); \
+      return;                               \
+    }
+  FOR_EACH_CLASS(CALL)
+#  undef CALL
+}
+
+static void DumpOwnStringContent(const JSObject* obj, js::GenericPrinter& out) {
+#  define CALL(CLASS)                             \
+    if (obj->is<CLASS>()) {                       \
+      out.put(" ");                               \
+      obj->as<CLASS>().dumpOwnStringContent(out); \
+      return;                                     \
+    }
+  FOR_EACH_CLASS(CALL)
+#  undef CALL
+}
+
+#  undef FOR_EACH_CLASS
+
 void JSObject::dumpFields(js::JSONPrinter& json) const {
   json.formatProperty("address", "(JSObject*)0x%p", this);
 
@@ -2870,6 +2897,8 @@ void JSObject::dumpFields(js::JSONPrinter& json) const {
       json.boolProperty("isUnqualifiedVarObj", isUnqualifiedVarObj());
     }
   }
+
+  DumpOwnFields(this, json);
 
   if (is<NativeObject>()) {
     auto* nobj = &as<NativeObject>();
@@ -2956,7 +2985,11 @@ void JSObject::dumpFields(js::JSONPrinter& json) const {
 }
 
 void JSObject::dumpStringContent(js::GenericPrinter& out) const {
-  out.printf("<%s @ (JSObject*)0x%p>", getClass()->name, this);
+  out.printf("<%s", getClass()->name);
+
+  DumpOwnStringContent(this, out);
+
+  out.printf(" @ (JSObject*)0x%p>", this);
 }
 
 static void MaybeDumpScope(Scope* scope, js::GenericPrinter& out) {

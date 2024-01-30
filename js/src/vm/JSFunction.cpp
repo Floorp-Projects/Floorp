@@ -27,6 +27,7 @@
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompiler.h"  // frontend::{CompileStandaloneFunction, CompileStandaloneGenerator, CompileStandaloneAsyncFunction, CompileStandaloneAsyncGenerator, DelazifyCanonicalScriptedFunction}
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
+#include "frontend/Stencil.h"  // js::DumpFunctionFlagsItems
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
@@ -34,6 +35,7 @@
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
+#include "js/Printer.h"               // js::GenericPrinter
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
@@ -51,6 +53,7 @@
 #include "vm/JSAtomUtils.h"  // ToAtom
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/JSScript.h"
 #include "vm/NumberObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
@@ -1546,6 +1549,50 @@ bool JSFunction::needsCallObject() const {
 
   return nonLazyScript()->bodyScope()->hasEnvironment();
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void JSFunction::dumpOwnFields(js::JSONPrinter& json) const {
+  if (maybePartialDisplayAtom()) {
+    js::GenericPrinter& out =
+        json.beginStringProperty("maybePartialDisplayAtom");
+    maybePartialDisplayAtom()->dumpPropertyName(out);
+    json.endStringProperty();
+  }
+
+  if (hasBaseScript()) {
+    js::GenericPrinter& out = json.beginStringProperty("baseScript");
+    baseScript()->dumpStringContent(out);
+    json.endStringProperty();
+  }
+
+  json.property("nargs", nargs());
+
+  json.beginInlineListProperty("flags");
+  DumpFunctionFlagsItems(json, flags());
+  json.endInlineList();
+
+  if (isNativeFun()) {
+    json.formatProperty("native", "0x%p", native());
+    if (hasJitInfo()) {
+      json.formatProperty("jitInfo", "0x%p", jitInfo());
+    }
+  }
+}
+
+void JSFunction::dumpOwnStringContent(js::GenericPrinter& out) const {
+  if (maybePartialDisplayAtom() && maybePartialDisplayAtom()->length() > 0) {
+    maybePartialDisplayAtom()->dumpPropertyName(out);
+  } else {
+    out.put("(anonymous)");
+  }
+
+  if (hasBaseScript()) {
+    out.put(" (");
+    baseScript()->dumpStringContent(out);
+    out.put(")");
+  }
+}
+#endif
 
 #ifdef DEBUG
 static JSObject* SkipEnvironmentObjects(JSObject* env) {

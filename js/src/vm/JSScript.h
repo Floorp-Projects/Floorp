@@ -1664,6 +1664,10 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   static constexpr size_t offsetOfWarmUpData() {
     return offsetof(BaseScript, warmUpData_);
   }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpStringContent(js::GenericPrinter& out) const;
+#endif
 };
 
 extern void SweepScriptData(JSRuntime* rt);
