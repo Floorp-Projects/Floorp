@@ -40,6 +40,7 @@ android-components:
     run:
         pre-gradlew:
             - ["cd", "mobile/android/android-components"]
+        gradlew: ["--no-parallel"]
     treeherder:
         symbol: lint(AC)
 
