@@ -2024,12 +2024,16 @@ class RustTest(BaseConfigureTest):
         # Cases where the output of config.sub is different
         for autoconf, rust in (
             ("aarch64-unknown-linux-android", "aarch64-linux-android"),
+            ("aarch64-unknown-linux-android21", "aarch64-linux-android"),
+            ("aarch64-apple-darwin23.3.0", "aarch64-apple-darwin"),
             ("arm-unknown-linux-androideabi", "armv7-linux-androideabi"),
             ("armv7-unknown-linux-androideabi", "armv7-linux-androideabi"),
+            ("armv7-unknown-linux-androideabi21", "armv7-linux-androideabi"),
             ("i386-unknown-linux-android", "i686-linux-android"),
-            ("i686-unknown-linux-android", "i686-linux-android"),
+            ("i686-unknown-linux-android21", "i686-linux-android"),
             ("i686-pc-linux-gnu", "i686-unknown-linux-gnu"),
             ("x86_64-unknown-linux-android", "x86_64-linux-android"),
+            ("x86_64-unknown-linux-android21", "x86_64-linux-android"),
             ("x86_64-pc-linux-gnu", "x86_64-unknown-linux-gnu"),
             ("sparcv9-sun-solaris2", "sparcv9-sun-solaris"),
             (
@@ -2038,6 +2042,7 @@ class RustTest(BaseConfigureTest):
                 if Version(self.VERSION) < "1.76.0"
                 else "x86_64-pc-solaris",
             ),
+            ("x86_64-apple-darwin23.3.0", "x86_64-apple-darwin"),
         ):
             self.assertEqual(self.get_rust_target(autoconf), rust)
 
