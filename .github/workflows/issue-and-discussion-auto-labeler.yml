@@ -1,0 +1,25 @@
+name: Auto Label for Issues and Discussions
+
+on:
+  issues:
+    types: [opened]
+  discussion:
+    types: [created]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label new issue or discussion
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueOrDiscussionNumber = (context.payload.issue || context.payload.discussion).number;
+            const labels = ["P5", "unconfirmed"];
+
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueOrDiscussionNumber,
+              labels: labels
+            });
