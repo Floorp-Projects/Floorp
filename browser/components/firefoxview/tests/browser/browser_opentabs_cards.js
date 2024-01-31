@@ -344,12 +344,30 @@ add_task(async function styling_for_multiple_windows() {
 });
 
 add_task(async function toggle_show_more_link() {
+  const tabEntry = url => ({
+    entries: [{ url, triggeringPrincipal_base64 }],
+  });
   const NUMBER_OF_WINDOWS = 4;
   const NUMBER_OF_TABS = 42;
-  const windows = [];
-  for (let i = 0; i < NUMBER_OF_WINDOWS - 1; i++) {
-    windows.push(await BrowserTestUtils.openNewBrowserWindow());
+  const browserState = { windows: [] };
+  for (let windowIndex = 0; windowIndex < NUMBER_OF_WINDOWS; windowIndex++) {
+    const winData = { tabs: [] };
+    let tabCount = windowIndex == NUMBER_OF_WINDOWS - 1 ? NUMBER_OF_TABS : 1;
+    for (let i = 0; i < tabCount; i++) {
+      winData.tabs.push(tabEntry(`data:,Window${windowIndex}-Tab${i}`));
+    }
+    winData.selected = winData.tabs.length;
+    browserState.windows.push(winData);
   }
+  // use Session restore to batch-open windows and tabs
+  await SessionStoreTestUtils.promiseBrowserState(browserState);
+  // restoring this state requires an update to the initial tab globals
+  // so cleanup expects the right thing
+  gInitialTab = gBrowser.selectedTab;
+  gInitialTabURL = gBrowser.selectedBrowser.currentURI.spec;
+
+  const windows = Array.from(Services.wm.getEnumerator("navigator:browser"));
+  is(windows.length, NUMBER_OF_WINDOWS, "There are four browser windows.");
 
   const tab = (win = window) => {
     info("Tab");
@@ -361,7 +379,6 @@ add_task(async function toggle_show_more_link() {
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
   };
 
-  let lastWindow;
   let lastCard;
 
   SimpleTest.promiseFocus(window);
@@ -375,11 +392,6 @@ add_task(async function toggle_show_more_link() {
     const cards = getCards(browser);
     is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
     lastCard = cards[NUMBER_OF_WINDOWS - 1];
-    lastWindow = windows[NUMBER_OF_WINDOWS - 2];
-
-    for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
-      await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
-    }
   });
 
   await openFirefoxViewTab(window).then(async viewTab => {
