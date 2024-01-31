@@ -398,18 +398,11 @@ class PuppeteerRunner(MozbuildObject):
         """
         setup()
 
-        with_cdp = params.get("cdp", False)
         binary = params.get("binary") or self.get_binary_path()
+        headless = params.get("headless", False)
         product = params.get("product", "firefox")
+        with_cdp = params.get("cdp", False)
 
-        env = {
-            # Print browser process ouptut
-            "DUMPIO": "1",
-            # Checked by Puppeteer's custom mocha config
-            "CI": "1",
-            # Causes some tests to be skipped due to assumptions about install
-            "PUPPETEER_ALT_INSTALL": "1",
-        }
         extra_options = {}
         for k, v in params.get("extra_launcher_options", {}).items():
             extra_options[k] = json.loads(v)
@@ -426,8 +419,17 @@ class PuppeteerRunner(MozbuildObject):
             "--no-parallel",
             "--no-coverage",
         ]
-        env["HEADLESS"] = str(params.get("headless", False))
-        test_command = "test:" + product
+
+        env = {
+            # Checked by Puppeteer's custom mocha config
+            "CI": "1",
+            # Print browser process ouptut
+            "DUMPIO": "1",
+            # Run in headless mode if trueish, otherwise use headful
+            "HEADLESS": str(headless),
+            # Causes some tests to be skipped due to assumptions about install
+            "PUPPETEER_ALT_INSTALL": "1",
+        }
 
         if product == "firefox":
             env["BINARY"] = binary
@@ -443,12 +445,24 @@ class PuppeteerRunner(MozbuildObject):
                 ".cache",
             )
 
-        if not with_cdp:
-            test_command = test_command + ":bidi"
-        elif env["HEADLESS"] == "True":
-            test_command = test_command + ":headless"
+        test_command = "test:" + product
+
+        if with_cdp:
+            if headless:
+                test_command = test_command + ":headless"
+            else:
+                test_command = test_command + ":headful"
         else:
-            test_command = test_command + ":headful"
+            if headless:
+                test_command = test_command + ":bidi"
+            else:
+                if product == "chrome":
+                    raise Exception(
+                        "Chrome doesn't support headful mode with the WebDriver BiDi protocol"
+                    )
+
+                test_command = test_command + ":bidi:headful"
+
 
         command = ["run", test_command, "--"] + mocha_options
 
