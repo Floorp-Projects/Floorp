@@ -13,7 +13,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageCl
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDismissed
 
 /**
- * Handles default interactions with the ui of GleanPlumb messages.
+ * Handles default interactions with the ui of Nimbus Messaging messages.
  */
 class DefaultMessageController(
     private val appStore: AppStore,

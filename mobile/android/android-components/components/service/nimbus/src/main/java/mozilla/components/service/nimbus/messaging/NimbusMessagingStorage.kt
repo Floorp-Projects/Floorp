@@ -10,8 +10,8 @@ import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
-import org.mozilla.experiments.nimbus.GleanPlumbInterface
 import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
+import org.mozilla.experiments.nimbus.NimbusMessagingInterface
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
@@ -38,7 +38,7 @@ class NimbusMessagingStorage(
     private val onMalformedMessage: (String) -> Unit = {
         GleanMessaging.malformed.record(GleanMessaging.MalformedExtra(it))
     },
-    private val gleanPlumb: GleanPlumbInterface,
+    private val nimbus: NimbusMessagingInterface,
     private val messagingFeature: FeatureHolder<Messaging>,
     private val attributeProvider: JexlAttributeProvider? = null,
 ) {
@@ -60,7 +60,7 @@ class NimbusMessagingStorage(
      * Since it has a native peer, it should be [destroy]ed after finishing the set of evaluations.
      */
     fun createMessagingHelper(): NimbusMessagingHelperInterface =
-        gleanPlumb.createMessageHelper(customAttributes)
+        nimbus.createMessageHelper(customAttributes)
 
     /**
      * Returns the [Message] for the given [key] or returns null if none found.

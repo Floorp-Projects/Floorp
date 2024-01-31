@@ -30,8 +30,8 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mozilla.experiments.nimbus.FeaturesInterface
-import org.mozilla.experiments.nimbus.GleanPlumbInterface
-import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
+import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
+import org.mozilla.experiments.nimbus.NimbusMessagingInterface
 import org.mozilla.experiments.nimbus.NullVariables
 import org.mozilla.experiments.nimbus.Res
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
@@ -43,7 +43,7 @@ import org.robolectric.RobolectricTestRunner
 class NimbusMessagingStorageTest {
     @Mock private lateinit var metadataStorage: MessageMetadataStorage
 
-    @Mock private lateinit var gleanPlumb: GleanPlumbInterface
+    @Mock private lateinit var nimbus: NimbusMessagingInterface
 
     private lateinit var storage: NimbusMessagingStorage
     private lateinit var messagingFeature: FeatureHolder<Messaging>
@@ -80,11 +80,11 @@ class NimbusMessagingStorageTest {
             testContext,
             metadataStorage,
             reportMalformedMessage,
-            gleanPlumb,
+            nimbus,
             messagingFeature,
         )
 
-        `when`(gleanPlumb.createMessageHelper(any())).thenReturn(mock())
+        `when`(nimbus.createMessageHelper(any())).thenReturn(mock())
     }
 
     @After
@@ -132,7 +132,7 @@ class NimbusMessagingStorageTest {
                 testContext,
                 metadataStorage,
                 reportMalformedMessage,
-                gleanPlumb,
+                nimbus,
                 messagingFeature,
             )
 
@@ -169,7 +169,7 @@ class NimbusMessagingStorageTest {
                 testContext,
                 metadataStorage,
                 reportMalformedMessage,
-                gleanPlumb,
+                nimbus,
                 messagingFeature,
             )
 
@@ -205,7 +205,7 @@ class NimbusMessagingStorageTest {
                 testContext,
                 metadataStorage,
                 reportMalformedMessage,
-                gleanPlumb,
+                nimbus,
                 messagingFeature,
             )
 
@@ -253,7 +253,7 @@ class NimbusMessagingStorageTest {
                 testContext,
                 metadataStorage,
                 reportMalformedMessage,
-                gleanPlumb,
+                nimbus,
                 messagingFeature,
             )
 
@@ -388,7 +388,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN an eligible message WHEN calling isMessageEligible THEN return true`() {
-        val helper: GleanPlumbMessageHelper = mock()
+        val helper: NimbusMessagingHelperInterface = mock()
         val message = Message(
             "same-id",
             mock(),
@@ -416,7 +416,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN a malformed trigger WHEN calling isMessageEligible THEN return false`() {
-        val helper: GleanPlumbMessageHelper = mock()
+        val helper: NimbusMessagingHelperInterface = mock()
         val message = Message(
             "same-id",
             mock(),
@@ -435,7 +435,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN a previously malformed trigger WHEN calling isMessageEligible THEN return false and not evaluate`() {
-        val helper: GleanPlumbMessageHelper = mock()
+        val helper: NimbusMessagingHelperInterface = mock()
         val message = Message(
             "same-id",
             mock(),
@@ -458,7 +458,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN a non previously malformed trigger WHEN calling isMessageEligible THEN return false and not evaluate`() {
-        val helper: GleanPlumbMessageHelper = mock()
+        val helper: NimbusMessagingHelperInterface = mock()
         val message = Message(
             "same-id",
             mock(),
@@ -679,7 +679,7 @@ class NimbusMessagingStorageTest {
             testContext,
             metadataStorage,
             reportMalformedMessage,
-            gleanPlumb,
+            nimbus,
             messagingFeature,
         )
 
@@ -716,7 +716,7 @@ class NimbusMessagingStorageTest {
                 testContext,
                 metadataStorage,
                 reportMalformedMessage,
-                gleanPlumb,
+                nimbus,
                 messagingFeature,
             )
 
@@ -742,7 +742,7 @@ class NimbusMessagingStorageTest {
             testContext,
             metadataStorage,
             reportMalformedMessage,
-            gleanPlumb,
+            nimbus,
             feature,
         )
 

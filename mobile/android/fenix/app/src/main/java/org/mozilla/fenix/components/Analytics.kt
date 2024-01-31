@@ -168,7 +168,7 @@ class Analytics(
         NimbusMessagingStorage(
             context = context,
             metadataStorage = OnDiskMessageMetadataStorage(context),
-            gleanPlumb = experiments,
+            nimbus = experiments,
             messagingFeature = FxNimbusMessaging.features.messaging,
             attributeProvider = CustomAttributeProvider,
         )

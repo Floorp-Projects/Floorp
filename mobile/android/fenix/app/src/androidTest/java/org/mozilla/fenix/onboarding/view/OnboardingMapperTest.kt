@@ -11,7 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
+import org.mozilla.experiments.nimbus.NimbusMessagingHelperInterface
 import org.mozilla.experiments.nimbus.StringHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -28,7 +28,7 @@ class OnboardingMapperTest {
 
     private lateinit var junoOnboardingFeature: JunoOnboarding
     private lateinit var jexlConditions: Map<String, String>
-    private lateinit var jexlHelper: GleanPlumbMessageHelper
+    private lateinit var jexlHelper: NimbusMessagingHelperInterface
     private lateinit var evalFunction: (String) -> Boolean
 
     @Before
