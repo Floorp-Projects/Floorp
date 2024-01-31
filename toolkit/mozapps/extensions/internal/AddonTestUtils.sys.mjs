@@ -211,24 +211,24 @@ function resetXPIExports(XPIExports) {
   // The list of lazy getters should be in sync with XPIExports.sys.mjs.
   //
   // eslint-disable-next-line mozilla/lazy-getter-object-name
-  XPCOMUtils.defineLazyModuleGetters(XPIExports, {
-    // XPIDatabase.jsm
-    AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+  ChromeUtils.defineESModuleGetters(XPIExports, {
+    // XPIDatabase.sys.mjs
+    AddonInternal: "resource://gre/modules/addons/XPIDatabase.sys.mjs" + suffix,
     BuiltInThemesHelpers:
-      "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
-    XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+      "resource://gre/modules/addons/XPIDatabase.sys.mjs" + suffix,
+    XPIDatabase: "resource://gre/modules/addons/XPIDatabase.sys.mjs" + suffix,
     XPIDatabaseReconcile:
-      "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+      "resource://gre/modules/addons/XPIDatabase.sys.mjs" + suffix,
 
-    // XPIInstall.jsm
-    UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
-    XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
+    // XPIInstall.sys.mjs
+    UpdateChecker: "resource://gre/modules/addons/XPIInstall.sys.mjs" + suffix,
+    XPIInstall: "resource://gre/modules/addons/XPIInstall.sys.mjs" + suffix,
     verifyBundleSignedState:
-      "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
+      "resource://gre/modules/addons/XPIInstall.sys.mjs" + suffix,
 
-    // XPIProvider.jsm
-    XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm" + suffix,
-    XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm" + suffix,
+    // XPIProvider.sys.mjs
+    XPIProvider: "resource://gre/modules/addons/XPIProvider.sys.mjs" + suffix,
+    XPIInternal: "resource://gre/modules/addons/XPIProvider.sys.mjs" + suffix,
   });
 }
 

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This file contains most of the logic required to maintain the
  * extensions database, including querying and modifying extension
@@ -14,19 +12,9 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
-var EXPORTED_SYMBOLS = [
-  "AddonInternal",
-  "BuiltInThemesHelpers",
-  "XPIDatabase",
-  "XPIDatabaseReconcile",
-];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { XPIExports } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/XPIExports.sys.mjs"
-);
+import { XPIExports } from "resource://gre/modules/addons/XPIExports.sys.mjs";
 
 const lazy = {};
 
@@ -66,7 +54,7 @@ ChromeUtils.defineLazyGetter(lazy, "BuiltInThemes", () => {
 // (e.g. GeckoView and Thunderbird) the BuiltInThemes module may either
 // not be bundled at all or not be exposing the same methods provided
 // by the module as defined in Firefox Desktop.
-const BuiltInThemesHelpers = {
+export const BuiltInThemesHelpers = {
   getLocalizedColorwayGroupName(addonId) {
     return lazy.BuiltInThemes?.getLocalizedColorwayGroupName?.(addonId);
   },
@@ -87,8 +75,9 @@ const BuiltInThemesHelpers = {
     return lazy.BuiltInThemes?.themeIsExpired?.(addonId);
   },
 
-  // Helper function called form XPInstall.jsm to remove from the retained themes
-  // list the built-in colorways theme that have been migrated to a non built-in.
+  // Helper function called form XPInstall.sys.mjs to remove from the retained
+  // themes list the built-in colorways theme that have been migrated to a non
+  // built-in.
   unretainMigratedColorwayTheme(addonId) {
     lazy.BuiltInThemes?.unretainMigratedColorwayTheme?.(addonId);
   },
@@ -117,9 +106,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const { nsIBlocklistService } = Ci;
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const LOGGER_ID = "addons.xpi-utils";
 
 const nsIFile = Components.Constructor(
@@ -331,7 +319,7 @@ let AddonWrapper;
  * The AddonInternal is an internal only representation of add-ons. It
  * may have come from the database or an extension manifest.
  */
-class AddonInternal {
+export class AddonInternal {
   constructor(addonData) {
     this._wrapper = null;
     this._selectedLocale = null;
@@ -890,11 +878,12 @@ class AddonInternal {
       if (!isSystem && !this.location.isLinkedAddon(this.id)) {
         permissions |= lazy.AddonManager.PERM_CAN_UPGRADE;
       }
-      // Allow active and retained colorways builtin themes to be updated to the same theme hosted on AMO
-      // (the PERM_CAN_UPGRADE permission will ensure we will be asking AMO for an update,
-      // then the AMO addon xpi will be installed in the profile location, overridden in
-      // the `createUpdate` defined in `XPIInstall.jsm` and called from `UpdateChecker`
-      // `onUpdateCheckComplete` method).
+      // Allow active and retained colorways builtin themes to be updated to
+      // the same theme hosted on AMO (the PERM_CAN_UPGRADE permission will
+      // ensure we will be asking AMO for an update, then the AMO addon xpi
+      // will be installed in the profile location, overridden in the
+      // `createUpdate` defined in `XPIInstall.sys.mjs` and called from
+      // `UpdateChecker` `onUpdateCheckComplete` method).
       if (
         this.isBuiltinColorwayTheme &&
         BuiltInThemesHelpers.isColorwayMigrationEnabled &&
@@ -1788,7 +1777,7 @@ function _filterDB(addonDB, aFilter) {
   return Array.from(addonDB.values()).filter(aFilter);
 }
 
-const XPIDatabase = {
+export const XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
   // The database file
@@ -3014,7 +3003,7 @@ const XPIDatabase = {
   },
 };
 
-const XPIDatabaseReconcile = {
+export const XPIDatabaseReconcile = {
   /**
    * Returns a map of ID -> add-on. When the same add-on ID exists in multiple
    * install locations the highest priority location is chosen.
@@ -3533,7 +3522,8 @@ const XPIDatabaseReconcile = {
    * Compares the add-ons that are currently installed to those that were
    * known to be installed when the application last ran and applies any
    * changes found to the database.
-   * Always called after XPIDatabase.jsm and extensions.json have been loaded.
+   * Always called after XPIDatabase.sys.mjs and extensions.json have been
+   * loaded.
    *
    * @param {Object} aManifests
    *        A dictionary of cached AddonInstalls for add-ons that have been

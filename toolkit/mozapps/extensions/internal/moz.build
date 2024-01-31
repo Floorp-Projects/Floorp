@@ -11,10 +11,10 @@ EXTRA_JS_MODULES.addons += [
     "crypto-utils.sys.mjs",
     "ProductAddonChecker.sys.mjs",
     "siteperms-addon-utils.sys.mjs",
-    "XPIDatabase.jsm",
+    "XPIDatabase.sys.mjs",
     "XPIExports.sys.mjs",
-    "XPIInstall.jsm",
-    "XPIProvider.jsm",
+    "XPIInstall.sys.mjs",
+    "XPIProvider.sys.mjs",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
