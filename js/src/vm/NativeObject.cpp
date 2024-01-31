@@ -17,10 +17,12 @@
 #include "gc/StableCellHasher.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
+#include "js/Printer.h"               // js::GenericPrinter
 #include "js/Value.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/GetterSetter.h"        // js::GetterSetter
 #include "vm/Interpreter.h"         // js::CallGetter, js::CallSetter
+#include "vm/JSONPrinter.h"         // js::JSONPrinter
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/TypedArrayObject.h"
 #include "vm/Watchtower.h"
@@ -159,6 +161,80 @@ bool ObjectElements::FreezeOrSeal(JSContext* cx, Handle<NativeObject*> obj,
 
   return true;
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+
+template <typename KnownF, typename UnknownF>
+void ForEachObjectElementsFlag(uint16_t flags, KnownF known, UnknownF unknown) {
+  for (uint16_t i = 1; i; i = i << 1) {
+    if (!(flags & i)) {
+      continue;
+    }
+    switch (ObjectElements::Flags(flags & i)) {
+      case ObjectElements::Flags::FIXED:
+        known("FIXED");
+        break;
+      case ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH:
+        known("NONWRITABLE_ARRAY_LENGTH");
+        break;
+#  ifdef ENABLE_RECORD_TUPLE
+      case ObjectElements::Flags::TUPLE_IS_ATOMIZED:
+        known("TUPLE_IS_ATOMIZED");
+        break;
+#  endif
+      case ObjectElements::Flags::SHARED_MEMORY:
+        known("SHARED_MEMORY");
+        break;
+      case ObjectElements::Flags::NOT_EXTENSIBLE:
+        known("NOT_EXTENSIBLE");
+        break;
+      case ObjectElements::Flags::SEALED:
+        known("SEALED");
+        break;
+      case ObjectElements::Flags::FROZEN:
+        known("FROZEN");
+        break;
+      case ObjectElements::Flags::NON_PACKED:
+        known("NON_PACKED");
+        break;
+      case ObjectElements::Flags::MAYBE_IN_ITERATION:
+        known("MAYBE_IN_ITERATION");
+        break;
+      default:
+        unknown(i);
+        break;
+    }
+  }
+}
+
+void ObjectElements::dumpStringContent(js::GenericPrinter& out) const {
+  out.printf("<(js::ObjectElements*)0x%p, flags=[", this);
+
+  bool first = true;
+  ForEachObjectElementsFlag(
+      flags,
+      [&](const char* name) {
+        if (!first) {
+          out.put(", ");
+        }
+        first = false;
+
+        out.put(name);
+      },
+      [&](uint16_t value) {
+        if (!first) {
+          out.put(", ");
+        }
+        first = false;
+
+        out.printf("Unknown(%04x)", value);
+      });
+  out.put("]");
+
+  out.printf(", init=%u, capacity=%u, length=%u>", initializedLength, capacity,
+             length);
+}
+#endif
 
 #ifdef DEBUG
 static mozilla::Atomic<bool, mozilla::Relaxed> gShapeConsistencyChecksEnabled(
