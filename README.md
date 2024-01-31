@@ -120,6 +120,8 @@ You can download the latest version of Floorp Browser from the official website:
 
 ## 📖 Documentation
 
+For more detailed information and guidance, check out our [Floorp Documentation Wiki](https://docs.floorp.app).
+
 ### 📝 License
 
 [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
