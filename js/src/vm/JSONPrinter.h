@@ -20,9 +20,10 @@ namespace js {
 
 class JSONPrinter {
  protected:
-  int indentLevel_;
+  int indentLevel_ = 0;
   bool indent_;
-  bool first_;
+  bool first_ = true;
+  bool afterPropName_ = false;
   GenericPrinter& out_;
 
   void indent();
@@ -31,7 +32,7 @@ class JSONPrinter {
 
  public:
   explicit JSONPrinter(GenericPrinter& out, bool indent = true)
-      : indentLevel_(0), indent_(indent), first_(true), out_(out) {}
+      : indent_(indent), out_(out) {}
 
   void setIndentLevel(int indentLevel) { indentLevel_ = indentLevel; }
 
@@ -62,6 +63,8 @@ class JSONPrinter {
       MOZ_FORMAT_PRINTF(3, 4);
   void formatProperty(const char* name, const char* format, va_list ap);
 
+  void propertyName(const char* name);
+
   // JSON requires decimals to be separated by periods, but the LC_NUMERIC
   // setting may cause printf to use commas in some locales.
   enum TimePrecision { SECONDS, MILLISECONDS, MICROSECONDS };
@@ -87,7 +90,7 @@ class JSONPrinter {
   void outOfMemory() { out_.reportOutOfMemory(); }
 
  protected:
-  void propertyName(const char* name);
+  void propertyNameImpl(const char* name);
 };
 
 }  // namespace js
