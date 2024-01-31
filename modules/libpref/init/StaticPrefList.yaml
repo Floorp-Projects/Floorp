@@ -7719,7 +7719,7 @@
 
 -   name: javascript.options.spectre.jit_to_cxx_calls
     type: bool
-    value: true
+    value: false
     mirror: always  # LoadStartupJSPrefs
     do_not_use_directly: true
 #endif  // !defined(JS_CODEGEN_MIPSXX) && !defined(JS_CODEGEN_LOONG64)
