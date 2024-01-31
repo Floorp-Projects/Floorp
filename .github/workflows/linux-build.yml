@@ -6,7 +6,6 @@
 # © 2023 Floorp Projects & Contributors
 
 #! SELF HOST DOES NOT SUPPORTED
-#TODO! buildjet config not implemented
 #TODO: separate Publish to other workflow
 
 #? On linux x86_64 build, pgo build is enabled on default.
@@ -33,11 +32,6 @@ on:
       mar:
         type: boolean
         default: false
-      #? If you want to ALWAYS build with buildjet, do default to true
-      buildjet:
-        type: boolean
-        default: false
-      #? buildjet cache also is, but idk how to use on sccache
       MOZ_BUILD_DATE:
         type: string
         default: ""
@@ -59,7 +53,7 @@ on:
 
 jobs:
   linux-build:
-    runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
+    runs-on: ubuntu-latest
     outputs:
       mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
       mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
@@ -74,13 +68,6 @@ jobs:
       run: |
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
-
-    #! ON UBUNTU RUNNER
-    - name: Setup Disk & Swap Space 💿
-      if: ${{ !inputs.buildjet }}
-      run: |
-        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
-        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Prepare cross compiler (aarch64)⚒
       if: ${{ inputs.aarch64 }}

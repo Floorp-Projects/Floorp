@@ -6,7 +6,6 @@
 # © 2023 Floorp Projects & Contributors
 
 #! SELF HOST DOES NOT SUPPORTED
-#TODO! buildjet config not implemented
 #TODO: separate Publish to other workflow
 
 #! aarch64 PGO can maybe not comportable with pgo
@@ -51,11 +50,6 @@ on:
       MOZ_BUILD_DATE:
         type: string
         default: ""
-      #? If you want to ALWAYS build with buildjet, do default to true
-      buildjet:
-        type: boolean
-        default: false
-      #? buildjet cache also is, but idk how to use on sccache
       release-note-url:
         type: string
         required: false
@@ -72,7 +66,7 @@ on:
 
 jobs:
   win-build:
-    runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
+    runs-on: ubuntu-latest
     outputs:
       mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
       mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
@@ -123,13 +117,6 @@ jobs:
       name: Clone 🧬
       with:
         submodules: 'recursive'
-
-    #! ON UBUNTU RUNNER
-    - name: Setup Disk & Swap Space 💿
-      if: ${{!inputs.buildjet}}
-      run: |
-        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
-        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Configure sccache
       uses: actions/github-script@v6
