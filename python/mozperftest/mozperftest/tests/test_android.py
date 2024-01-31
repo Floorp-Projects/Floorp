@@ -116,7 +116,7 @@ class Device:
 
 def test_android_perf_tuning_all_calls():
     # Check without mocking PerformanceTuner functions
-    for name in ("Moto G (5)", "Pixel 2", "?"):
+    for name in ["?"]:
         device = Device(name)
         tuner = PerformanceTuner(device)
         tuner.tune_performance()

@@ -74,7 +74,7 @@ class Options:
             "type": str,
             "default": "linux",
             "help": "Platform to use on try",
-            "choices": ["g5", "pixel2", "linux", "mac", "win"],
+            "choices": ["linux", "mac", "win"],
         },
         "--on-try": {
             "action": "store_true",

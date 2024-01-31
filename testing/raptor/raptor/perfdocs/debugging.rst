@@ -112,11 +112,11 @@ Be sure to read the above section first on how to debug the Raptor web extension
 
 When running Raptor tests on Firefox on Android (i.e. geckoview), to see the console.log() output from the Raptor web extension, do the following:
 
-#. With your android device (i.e. Google Pixel 2) all set up and connected to USB, invoke the Raptor test normally via ``./mach raptor``
+#. With your android device all set up and connected to USB, invoke the Raptor test normally via ``./mach raptor``
 #. Start up a local copy of the Firefox Nightly Desktop browser
 #. In Firefox Desktop choose "Tools => Web Developer => WebIDE"
 #. In the Firefox WebIDE dialog that appears, look under "USB Devices" listed on the top right. If your device is not there, there may be a link to install remote device tools - if that link appears click it and let that install.
-#. Under "USB Devices" on the top right your android device should be listed (i.e. "Firefox Custom on Android Pixel 2" - click on your device.
+#. Under "USB Devices" on the top right your android device should be listed (i.e. "Firefox Custom on Android") - click on your device.
 #. The debugger opens. On the left side click on "Main Process", and click the "console" tab below - and the Raptor runner output will be included there.
 #. On the left side under "Tabs" you'll also see an option for the active tab/page; select that and the Raptor content console.log() output should be included there.
 

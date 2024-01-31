@@ -10,7 +10,6 @@ from mach.decorators import Command, CommandArgument, SubCommand
 from mozbuild.base import MachCommandConditions as conditions
 
 _TRY_PLATFORMS = {
-    "g5-browsertime": "perftest-android-hw-g5-browsertime",
     "linux-xpcshell": "perftest-linux-try-xpcshell",
     "mac-xpcshell": "perftest-macosx-try-xpcshell",
     "linux-browsertime": "perftest-linux-try-browsertime",
@@ -125,7 +124,7 @@ def run_perftest(command_context, **kwargs):
 
         for plat in platform:
             if plat not in _TRY_PLATFORMS:
-                # we can extend platform support here: linux, win, macOs, pixel2
+                # we can extend platform support here: linux, win, macOs
                 # by adding more jobs in taskcluster/ci/perftest/kind.yml
                 # then picking up the right one here
                 raise NotImplementedError(
