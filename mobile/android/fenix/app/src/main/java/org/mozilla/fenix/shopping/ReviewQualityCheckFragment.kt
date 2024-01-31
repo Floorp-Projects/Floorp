@@ -21,6 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.requireComponents
@@ -118,7 +119,10 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bottomSheetStateFeature.set(
-            feature = ReviewQualityCheckBottomSheetStateFeature(store) { bottomSheetState ->
+            feature = ReviewQualityCheckBottomSheetStateFeature(
+                store,
+                requireContext().isScreenReaderEnabled,
+            ) { bottomSheetState ->
                 if (bottomSheetState == BottomSheetViewState.FULL_VIEW) {
                     behavior?.state = BottomSheetBehavior.STATE_EXPANDED
                 }

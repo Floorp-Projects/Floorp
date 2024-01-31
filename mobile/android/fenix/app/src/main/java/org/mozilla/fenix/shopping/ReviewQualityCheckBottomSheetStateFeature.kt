@@ -18,25 +18,31 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
  * the store state changes from [ReviewQualityCheckState.Initial] to [ReviewQualityCheckState.NotOptedIn].
  *
  * @param store The store to observe.
+ * @param isScreenReaderEnabled Used to fully expand bottom sheet when a screen reader is on.
  * @param onRequestStateUpdate Callback to request the bottom sheet to be updated.
  */
 class ReviewQualityCheckBottomSheetStateFeature(
     store: ReviewQualityCheckStore,
+    private val isScreenReaderEnabled: Boolean,
     private val onRequestStateUpdate: (expanded: BottomSheetViewState) -> Unit,
 ) : AbstractBinding<ReviewQualityCheckState>(store) {
     override suspend fun onState(flow: Flow<ReviewQualityCheckState>) {
-        val initial = Pair<ReviewQualityCheckState?, ReviewQualityCheckState?>(null, null)
-        flow.scan(initial) { acc, value ->
-            Pair(acc.second, value)
-        }.filter {
-            it.first is ReviewQualityCheckState.Initial
-        }.map {
-            when (it.second) {
-                is ReviewQualityCheckState.NotOptedIn -> BottomSheetViewState.FULL_VIEW
-                else -> BottomSheetViewState.HALF_VIEW
+        if (isScreenReaderEnabled) {
+            onRequestStateUpdate(BottomSheetViewState.FULL_VIEW)
+        } else {
+            val initial = Pair<ReviewQualityCheckState?, ReviewQualityCheckState?>(null, null)
+            flow.scan(initial) { acc, value ->
+                Pair(acc.second, value)
+            }.filter {
+                it.first is ReviewQualityCheckState.Initial
+            }.map {
+                when (it.second) {
+                    is ReviewQualityCheckState.NotOptedIn -> BottomSheetViewState.FULL_VIEW
+                    else -> BottomSheetViewState.HALF_VIEW
+                }
+            }.collect {
+                onRequestStateUpdate(it)
             }
-        }.collect {
-            onRequestStateUpdate(it)
         }
     }
 }

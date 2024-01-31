@@ -28,6 +28,7 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
             onRequestStateUpdate = {
                 updatedState = it
             },
+            isScreenReaderEnabled = false,
         )
 
         tested.start()
@@ -55,11 +56,39 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
             onRequestStateUpdate = {
                 updatedState = it
             },
+            isScreenReaderEnabled = false,
         )
         assertEquals(ReviewQualityCheckState.Initial, store.state)
 
         tested.start()
         store.dispatch(ReviewQualityCheckAction.OptOutCompleted(emptyList())).joinBlocking()
+
+        assertEquals(BottomSheetViewState.FULL_VIEW, updatedState)
+    }
+
+    @Test
+    fun `GIVEN an accessibility screen reader is enabled WHEN user opens bottom sheet THEN it is opened fully`() {
+        val store = ReviewQualityCheckStore(middleware = emptyList())
+        var updatedState: BottomSheetViewState? = null
+        val tested = ReviewQualityCheckBottomSheetStateFeature(
+            store = store,
+            onRequestStateUpdate = {
+                updatedState = it
+            },
+            isScreenReaderEnabled = true,
+        )
+
+        tested.start()
+        store.dispatch(
+            ReviewQualityCheckAction.OptInCompleted(
+                isProductRecommendationsEnabled = true,
+                productRecommendationsExposure = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.WALMART,
+                isHighlightsExpanded = false,
+                isInfoExpanded = false,
+                isSettingsExpanded = false,
+            ),
+        ).joinBlocking()
 
         assertEquals(BottomSheetViewState.FULL_VIEW, updatedState)
     }
