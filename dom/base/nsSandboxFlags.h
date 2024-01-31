@@ -40,13 +40,6 @@ const unsigned long SANDBOXED_AUXILIARY_NAVIGATION = 0x2;
 const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION = 0x4;
 
 /**
- * This flag prevents content from instantiating plugins, whether using the
- * embed element, the object element, or through navigation of a nested browsing
- * context, unless those plugins can be secured.
- */
-const unsigned long SANDBOXED_PLUGINS = 0x8;
-
-/**
  * This flag forces content into a unique origin, thus preventing it from
  * accessing other content from the same origin.
  * This flag also prevents script from reading from or writing to the

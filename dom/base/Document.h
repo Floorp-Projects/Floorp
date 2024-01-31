@@ -1192,11 +1192,6 @@ class Document : public nsINode,
   }
 
   /**
-   * Are plugins allowed in this document ?
-   */
-  bool GetAllowPlugins();
-
-  /**
    * Set the sub document for aContent to aSubDoc.
    */
   nsresult SetSubDocumentFor(Element* aContent, Document* aSubDoc);

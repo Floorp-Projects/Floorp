@@ -51,7 +51,6 @@ export class BackgroundThumbnailsChild extends JSWindowActorChild {
           Ci.nsISupportsPriority.PRIORITY_LOWEST;
 
         docShell.allowMedia = false;
-        docShell.allowPlugins = false;
         docShell.allowContentRetargeting = false;
         let defaultFlags =
           Ci.nsIRequest.LOAD_ANONYMOUS |

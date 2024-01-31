@@ -69,7 +69,6 @@ nsCString ContentSessionStore::CollectDocShellCapabilities() {
   }                                             \
   PR_END_MACRO
 
-  TRY_ALLOWPROP(Plugins);
   // Bug 1328013 : Don't collect "AllowJavascript" property
   // TRY_ALLOWPROP(Javascript);
   TRY_ALLOWPROP(MetaRedirects);

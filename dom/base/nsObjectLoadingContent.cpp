@@ -650,13 +650,9 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
     case ObjectType::Document:
       objectType = nsIContentPolicy::TYPE_DOCUMENT;
       break;
-    case ObjectType::Fallback:
-      objectType = GetContentPolicyType();
-      break;
     default:
       MOZ_ASSERT_UNREACHABLE(
-          "Calling checkProcessPolicy with an unloadable "
-          "type");
+          "Calling checkProcessPolicy with an unexpected type");
       return false;
   }
 
