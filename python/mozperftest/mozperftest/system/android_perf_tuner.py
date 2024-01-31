@@ -90,43 +90,19 @@ class PerformanceTuner:
         self.log.info("setting cpu performance parameters")
         commands = {}
 
+        # Samsung A51 perf tuning: Bug 1876543
+        # Pixel 6 perf tuning: Bug 1876545
+        # Samsung S21 perf tuning: Bug 1876546
         if device_name is not None:
             device_name = self.device.shell_output(
                 "getprop ro.product.model", timeout=self.timeout
             )
 
-        if device_name == "Pixel 2":
-            # MSM8998 (4x 2.35GHz, 4x 1.9GHz)
-            # values obtained from:
-            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
-            #   /sys/devices/system/cpu/cpufreq/policy4/scaling_available_frequencies
-            commands.update(
-                {
-                    "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor": "performance",
-                    "/sys/devices/system/cpu/cpufreq/policy4/scaling_governor": "performance",
-                    "/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq": "1900800",
-                    "/sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq": "2457600",
-                }
+        self.log.info(
+            "CPU for device with ro.product.model '{}' unknown, not scaling_governor".format(
+                device_name
             )
-        elif device_name == "Moto G (5)":
-            # MSM8937(8x 1.4GHz)
-            # values obtained from:
-            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
-            for x in range(0, 8):
-                commands.update(
-                    {
-                        "/sys/devices/system/cpu/cpu{}/"
-                        "cpufreq/scaling_governor".format(x): "performance",
-                        "/sys/devices/system/cpu/cpu{}/"
-                        "cpufreq/scaling_min_freq".format(x): "1401000",
-                    }
-                )
-        else:
-            self.log.info(
-                "CPU for device with ro.product.model '{}' unknown, not scaling_governor".format(
-                    device_name
-                )
-            )
+        )
 
         for key, value in commands.items():
             self._set_value_and_check_exitcode(key, value)
@@ -147,36 +123,11 @@ class PerformanceTuner:
                 "getprop ro.product.model", timeout=self.timeout
             )
 
-        if device_name == "Pixel 2":
-            # Adreno 540 (710MHz)
-            # values obtained from:
-            #   /sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clk_mhz
-            commands.update(
-                {
-                    "/sys/devices/soc/5000000.qcom,kgsl-3d0/devfreq/"
-                    "5000000.qcom,kgsl-3d0/governor": "performance",
-                    "/sys/devices/soc/soc:qcom,kgsl-busmon/devfreq/"
-                    "soc:qcom,kgsl-busmon/governor": "performance",
-                    "/sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz": "710",
-                }
+        self.log.info(
+            "GPU for device with ro.product.model '{}' unknown, not setting devfreq".format(
+                device_name
             )
-        elif device_name == "Moto G (5)":
-            # Adreno 505 (450MHz)
-            # values obtained from:
-            #   /sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clock_mhz
-            commands.update(
-                {
-                    "/sys/devices/soc/1c00000.qcom,kgsl-3d0/devfreq/"
-                    "1c00000.qcom,kgsl-3d0/governor": "performance",
-                    "/sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz": "450",
-                }
-            )
-        else:
-            self.log.info(
-                "GPU for device with ro.product.model '{}' unknown, not setting devfreq".format(
-                    device_name
-                )
-            )
+        )
 
         for key, value in commands.items():
             self._set_value_and_check_exitcode(key, value)

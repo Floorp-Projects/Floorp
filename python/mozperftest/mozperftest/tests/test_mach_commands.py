@@ -162,7 +162,7 @@ def test_push_command(push_to_try, venv):
             tests=[EXAMPLE_TEST],
             flavor="desktop-browser",
             push_to_try=True,
-            try_platform="g5",
+            try_platform="linux",
         )
         push_to_try.assert_called()
         # XXX add assertions

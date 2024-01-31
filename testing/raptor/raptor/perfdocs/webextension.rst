@@ -146,7 +146,7 @@ Prerequisites
 ^^^^^^^^^^^^^
 
 
-#. rooted (i.e. superuser-capable), bootloader-unlocked Moto G5 or Google Pixel 2: internal (for now) `test-device setup doc. <https://docs.google.com/document/d/1XQLtvVM2U3h1jzzzpcGEDVOp4jMECsgLYJkhCfAwAnc/edit>`_
+#. rooted (i.e. superuser-capable), bootloader-unlocked Google Pixel 6 or Samsung A51: internal (for now) `test-device setup doc. <https://docs.google.com/document/d/1XQLtvVM2U3h1jzzzpcGEDVOp4jMECsgLYJkhCfAwAnc/edit>`_
 #. set up to run Raptor from a Firefox source tree (see `Running Locally <https://wiki.mozilla.org/Performance_sheriffing/Raptor#Running_Locally>`_)
 #. `GeckoView-bootstrapped <https://wiki.mozilla.org/Performance_sheriffing/Raptor#Running_on_the_Android_GeckoView_Example_App>`_ environment
 
@@ -322,7 +322,7 @@ Once your Android device is ready, and attached to local USB, from within your l
 
   $ ./mach raptor --test raptor-speedometer --app=geckoview --binary="org.mozilla.geckoview_example"
 
-Note: Speedometer on Android GeckoView is currently running on two devices in production - the Google Pixel 2 and the Moto G5 - therefore it is not guaranteed that it will run successfully on all/other untested android devices. There is an intermittent failure on the Moto G5 where speedometer just stalls (`Bug 1492222 <https://bugzilla.mozilla.org/show_bug.cgi?id=1492222>`_).
+Note: Speedometer on Android GeckoView is currently running on two devices in production - the Google Pixel 6 and the Samsung A51 - therefore it is not guaranteed that it will run successfully on all/other untested android devices.
 
 To run a Raptor page-load test (i.e. tp6m-1) on the GeckoView Example app, use this command line:
 

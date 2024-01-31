@@ -77,11 +77,10 @@ Build Platforms
    Android 7.0 x86-64 WebRender, Kris Taeleman, Build and test GeckoView with WebRender
    Android 7.0 x86-64 Beta, ,
    Android 7.0 x86-64 Release, ,
-   Android 7.0 MotoG5, ,
-   Android 8.0 Pixel2, ,
-   Android 8.0 Pixel2 WebRender, Kris Taeleman, Build and test GeckoView with WebRender
-   Android 8.0 Pixel2 AArch64, ,
-   Android 8.0 Pixel2 AArch64 WebRender, Kris Taeleman, Build and test GeckoView with WebRender
+   Android 11.0 Samsung A51 AArch64 WebRender, ,
+   Android 13.0 Pixel6 AArch64 WebRender, ,
+   Android 13.0 Pixel6 AArch64 WebRender, ,
+   Android 13.0 Samsung S21 AArch64 WebRender, ,
    Android, ,
 
 Testing configurations
