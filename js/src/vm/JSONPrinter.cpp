@@ -18,6 +18,12 @@ using namespace js;
 
 void JSONPrinter::indent() {
   MOZ_ASSERT(indentLevel_ >= 0);
+
+  if (inlineLevel_ > 0) {
+    out_.putChar(' ');
+    return;
+  }
+
   if (indent_) {
     out_.putChar('\n');
     for (int i = 0; i < indentLevel_; i++) {
@@ -93,6 +99,11 @@ void JSONPrinter::beginListProperty(const char* name) {
   out_.putChar('[');
   indentLevel_++;
   first_ = true;
+}
+
+void JSONPrinter::beginInlineListProperty(const char* name) {
+  beginListProperty(name);
+  beginInline();
 }
 
 GenericPrinter& JSONPrinter::beginStringProperty(const char* name) {
@@ -282,3 +293,12 @@ void JSONPrinter::endList() {
   out_.putChar(']');
   first_ = false;
 }
+
+void JSONPrinter::endInlineList() {
+  endList();
+  endInline();
+}
+
+void JSONPrinter::beginInline() { inlineLevel_++; }
+
+void JSONPrinter::endInline() { inlineLevel_--; }
