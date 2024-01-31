@@ -43,7 +43,6 @@ skip-if = ["true"] # Bug 1851453
 ["browser_firefoxview_paused.js"]
 
 ["browser_firefoxview_general_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1854625 clicked .fxview-tab-row-secondary-button may not be focusable
 
 ["browser_firefoxview_navigation.js"]
 
@@ -53,10 +52,9 @@ fail-if = ["a11y_checks"] # Bug 1854625 clicked .fxview-tab-row-secondary-button
 skip-if = ["true"] # Bug 1877594
 
 ["browser_opentabs_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bugs 1854625 and 1872285 clicked .fxview-tab-row-secondary-button may not be focusable
 
 ["browser_opentabs_cards.js"]
-fail-if = ["a11y_checks"] # Bug 1858041 clicked .fxview-tab-row-main and div may not be focusable
+fail-if = ["a11y_checks"] # Bugs 1858041, 1854625, and 1872174 clicked Show all link is not accessible because it is "hidden" when clicked
 
 ["browser_opentabs_recency.js"]
 skip-if = [
@@ -67,7 +65,6 @@ skip-if = [
 ["browser_opentabs_tab_indicators.js"]
 
 ["browser_recentlyclosed_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1854625 clicked button.fxview-tab-row-secondary-button and a.fxview-tab-row-main may not be focusable
 
 ["browser_syncedtabs_errors_firefoxview.js"]
 

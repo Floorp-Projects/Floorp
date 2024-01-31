@@ -259,6 +259,80 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if an accessible is a keyboard focusable control within a Firefox
+   * View list. The main landmark of the Firefox View has role="application" for
+   * users to expect a custom keyboard navigation pattern. Controls within this
+   * area aren't keyboard focusable in the usual way. Instead, focus is managed
+   * by JS code which sets tabindex on a single control within each list at a
+   * time. Thus, we need to special case the focusable check for these controls.
+   */
+  function isKeyboardFocusableFxviewControlInApplication(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    // Firefox View application rows currently include only buttons and links:
+    if (
+      !node.className.includes("fxview-tab-row-") ||
+      (accessible.role != Ci.nsIAccessibleRole.ROLE_PUSHBUTTON &&
+        accessible.role != Ci.nsIAccessibleRole.ROLE_LINK)
+    ) {
+      return false; // Not a button or a link in a Firefox View app.
+    }
+    // ToDo: We may eventually need to support intervening generics between
+    // a list and its listitem here and/or aria-owns lists.
+    const listitemAcc = accessible.parent;
+    const listAcc = listitemAcc.parent;
+    if (
+      (!listAcc || listAcc.role != Ci.nsIAccessibleRole.ROLE_LIST) &&
+      (!listitemAcc || listitemAcc.role != Ci.nsIAccessibleRole.ROLE_LISTITEM)
+    ) {
+      return false; // This button/link isn't inside a listitem within a list.
+    }
+    // All listitems should be not focusable while both a button and a link
+    // within each list item might have tabindex="-1".
+    if (
+      node.tabIndex &&
+      matchState(accessible, STATE_FOCUSABLE) &&
+      !matchState(listitemAcc, STATE_FOCUSABLE)
+    ) {
+      // ToDo: We may eventually need to support lists which use aria-owns here.
+      // Check that there is only one keyboard reachable control within the list.
+      const childCount = listAcc.childCount;
+      let foundFocusable = false;
+      for (let c = 0; c < childCount; c++) {
+        const listitem = listAcc.getChildAt(c);
+        const listitemChildCount = listitem.childCount;
+        for (let i = 0; i < listitemChildCount; i++) {
+          const listitemControl = listitem.getChildAt(i);
+          // Use tabIndex rather than a11y focusable state because all controls
+          // within the listitem might have tabindex="-1".
+          if (listitemControl.DOMNode.tabIndex == 0) {
+            if (foundFocusable) {
+              // Only one control within a list should be focusable.
+              // ToDo: Fine-tune the a11y-check error message generated in this case.
+              // Strictly speaking, it's not ideal that we're performing an action
+              // from an is function, which normally only queries something without
+              // any externally observable behaviour. That said, fixing that would
+              // involve different return values for different cases (not a list,
+              // too many focusable listitem controls, etc) so we could move the
+              // a11yFail call to the caller.
+              a11yFail(
+                "Only one control should be focusable in a list",
+                accessible
+              );
+              return false;
+            }
+            foundFocusable = true;
+          }
+        }
+      }
+      return foundFocusable;
+    }
+    return false;
+  }
+
+  /**
    * Determine if an accessible is a keyboard focusable option within a listbox.
    * We use it in the Url bar results - these controls are't keyboard focusable
    * in the usual way. Instead, focus is managed by JS code which sets tabindex
@@ -474,7 +548,8 @@ this.AccessibilityUtils = (function () {
       isKeyboardFocusablePanelMultiViewControl(accessible) ||
       isKeyboardFocusableUrlbarButton(accessible) ||
       isKeyboardFocusableXULTab(accessible) ||
-      isKeyboardFocusableTabInTablist(accessible)
+      isKeyboardFocusableTabInTablist(accessible) ||
+      isKeyboardFocusableFxviewControlInApplication(accessible)
     ) {
       return true;
     }
