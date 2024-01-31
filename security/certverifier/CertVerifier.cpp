@@ -784,8 +784,31 @@ static bool CertIsSelfSigned(const BackCert& backCert, void* pinarg) {
   return rv == Success;
 }
 
+class SkipInvalidSANsForNonBuiltInRootsPolicy : public NameMatchingPolicy {
+ public:
+  explicit SkipInvalidSANsForNonBuiltInRootsPolicy(bool rootIsBuiltIn)
+      : mRootIsBuiltIn(rootIsBuiltIn) {}
+
+  virtual Result FallBackToCommonName(
+      Time,
+      /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) override {
+    fallBackToCommonName = FallBackToSearchWithinSubject::No;
+    return Success;
+  }
+
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override {
+    return mRootIsBuiltIn ? HandleInvalidSubjectAlternativeNamesBy::Halting
+                          : HandleInvalidSubjectAlternativeNamesBy::Skipping;
+  }
+
+ private:
+  bool mRootIsBuiltIn;
+};
+
 static Result CheckCertHostnameHelper(Input peerCertInput,
-                                      const nsACString& hostname) {
+                                      const nsACString& hostname,
+                                      bool rootIsBuiltIn) {
   Input hostnameInput;
   Result rv = hostnameInput.Init(
       BitwiseCast<const uint8_t*, const char*>(hostname.BeginReading()),
@@ -794,7 +817,8 @@ static Result CheckCertHostnameHelper(Input peerCertInput,
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  rv = CheckCertHostname(peerCertInput, hostnameInput);
+  SkipInvalidSANsForNonBuiltInRootsPolicy nameMatchingPolicy(rootIsBuiltIn);
+  rv = CheckCertHostname(peerCertInput, hostnameInput, nameMatchingPolicy);
   // Treat malformed name information as a domain mismatch.
   if (rv == Result::ERROR_BAD_DER) {
     return Result::ERROR_BAD_CERT_DOMAIN;
@@ -897,7 +921,8 @@ Result CertVerifier::VerifySSLServerCert(
     if (rv == Result::ERROR_EXPIRED_CERTIFICATE ||
         rv == Result::ERROR_NOT_YET_VALID_CERTIFICATE ||
         rv == Result::ERROR_INVALID_DER_TIME) {
-      Result hostnameResult = CheckCertHostnameHelper(peerCertInput, hostname);
+      Result hostnameResult =
+          CheckCertHostnameHelper(peerCertInput, hostname, false);
       if (hostnameResult != Success) {
         return hostnameResult;
       }
@@ -931,7 +956,8 @@ Result CertVerifier::VerifySSLServerCert(
     }
   }
 
-  rv = CheckCertHostnameHelper(peerCertInput, hostname);
+  rv = CheckCertHostnameHelper(peerCertInput, hostname,
+                               isBuiltChainRootBuiltInRootLocal);
   if (rv != Success) {
     return rv;
   }
