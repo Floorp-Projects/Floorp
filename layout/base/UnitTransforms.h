@@ -174,7 +174,7 @@ template <class TargetMatrix, class SourceMatrixSourceUnits,
 TargetMatrix ViewAs(const gfx::Matrix4x4Typed<SourceMatrixSourceUnits,
                                               SourceMatrixTargetUnits>& aMatrix,
                     PixelCastJustification) {
-  return TargetMatrix::FromUnknownMatrix(aMatrix.ToUnknownMatrix());
+  return aMatrix.template Cast<TargetMatrix>();
 }
 template <class TargetMatrix, class SourceMatrixSourceUnits,
           class SourceMatrixTargetUnits>
@@ -183,7 +183,7 @@ Maybe<TargetMatrix> ViewAs(
                                     SourceMatrixTargetUnits>>& aMatrix,
     PixelCastJustification) {
   if (aMatrix.isSome()) {
-    return Some(TargetMatrix::FromUnknownMatrix(aMatrix->ToUnknownMatrix()));
+    return Some(aMatrix->template Cast<TargetMatrix>());
   }
   return Nothing();
 }

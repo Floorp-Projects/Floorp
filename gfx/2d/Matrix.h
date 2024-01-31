@@ -635,6 +635,15 @@ class Matrix4x4Typed {
                                                                    4 * aIndex);
   }
 
+  // External code should avoid calling this, and instead use
+  // ViewAs() from UnitTransforms.h, which requires providing
+  // a justification.
+  template <typename NewMatrix4x4Typed>
+  [[nodiscard]] NewMatrix4x4Typed Cast() const {
+    return NewMatrix4x4Typed(_11, _12, _13, _14, _21, _22, _23, _24, _31, _32,
+                             _33, _34, _41, _42, _43, _44);
+  }
+
   /**
    * Returns true if the matrix is isomorphic to a 2D affine transformation.
    */
@@ -1121,8 +1130,7 @@ class Matrix4x4Typed {
   template <typename NewSourceUnits>
   [[nodiscard]] Matrix4x4Typed<NewSourceUnits, TargetUnits> PreScale(
       const ScaleFactor<NewSourceUnits, SourceUnits>& aScale) const {
-    auto clone = Matrix4x4Typed<NewSourceUnits, TargetUnits>::FromUnknownMatrix(
-        ToUnknownMatrix());
+    auto clone = Cast<Matrix4x4Typed<NewSourceUnits, TargetUnits>>();
     clone.PreScale(aScale.scale, aScale.scale, 1);
     return clone;
   }
@@ -1130,8 +1138,7 @@ class Matrix4x4Typed {
   template <typename NewSourceUnits>
   [[nodiscard]] Matrix4x4Typed<NewSourceUnits, TargetUnits> PreScale(
       const BaseScaleFactors2D<NewSourceUnits, SourceUnits, T>& aScale) const {
-    auto clone = Matrix4x4Typed<NewSourceUnits, TargetUnits>::FromUnknownMatrix(
-        ToUnknownMatrix());
+    auto clone = Cast<Matrix4x4Typed<NewSourceUnits, TargetUnits>>();
     clone.PreScale(aScale.xScale, aScale.yScale, 1);
     return clone;
   }
@@ -1159,8 +1166,7 @@ class Matrix4x4Typed {
   template <typename NewTargetUnits>
   [[nodiscard]] Matrix4x4Typed<SourceUnits, NewTargetUnits> PostScale(
       const ScaleFactor<TargetUnits, NewTargetUnits>& aScale) const {
-    auto clone = Matrix4x4Typed<SourceUnits, NewTargetUnits>::FromUnknownMatrix(
-        ToUnknownMatrix());
+    auto clone = Cast<Matrix4x4Typed<SourceUnits, NewTargetUnits>>();
     clone.PostScale(aScale.scale, aScale.scale, 1);
     return clone;
   }
@@ -1168,8 +1174,7 @@ class Matrix4x4Typed {
   template <typename NewTargetUnits>
   [[nodiscard]] Matrix4x4Typed<SourceUnits, NewTargetUnits> PostScale(
       const BaseScaleFactors2D<TargetUnits, NewTargetUnits, T>& aScale) const {
-    auto clone = Matrix4x4Typed<SourceUnits, NewTargetUnits>::FromUnknownMatrix(
-        ToUnknownMatrix());
+    auto clone = Cast<Matrix4x4Typed<SourceUnits, NewTargetUnits>>();
     clone.PostScale(aScale.xScale, aScale.yScale, 1);
     return clone;
   }
@@ -1356,7 +1361,7 @@ class Matrix4x4Typed {
 
   Matrix4x4Typed<TargetUnits, SourceUnits, T> Inverse() const {
     typedef Matrix4x4Typed<TargetUnits, SourceUnits, T> InvertedMatrix;
-    InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
+    InvertedMatrix clone = Cast<InvertedMatrix>();
     DebugOnly<bool> inverted = clone.Invert();
     MOZ_ASSERT(inverted,
                "Attempted to get the inverse of a non-invertible matrix");
@@ -1365,7 +1370,7 @@ class Matrix4x4Typed {
 
   Maybe<Matrix4x4Typed<TargetUnits, SourceUnits, T>> MaybeInverse() const {
     typedef Matrix4x4Typed<TargetUnits, SourceUnits, T> InvertedMatrix;
-    InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
+    InvertedMatrix clone = Cast<InvertedMatrix>();
     if (clone.Invert()) {
       return Some(clone);
     }
@@ -1975,6 +1980,12 @@ class Matrix4x4TypedFlagged
     Analyze();
   }
 
+  template <typename NewMatrix4x4TypedFlagged>
+  [[nodiscard]] NewMatrix4x4TypedFlagged Cast() const {
+    return NewMatrix4x4TypedFlagged(_11, _12, _13, _14, _21, _22, _23, _24, _31,
+                                    _32, _33, _34, _41, _42, _43, _44, mType);
+  }
+
   template <class F>
   PointTyped<TargetUnits, F> TransformPoint(
       const PointTyped<SourceUnits, F>& aPoint) const {
@@ -2126,7 +2137,7 @@ class Matrix4x4TypedFlagged
 
   Matrix4x4TypedFlagged<TargetUnits, SourceUnits> Inverse() const {
     typedef Matrix4x4TypedFlagged<TargetUnits, SourceUnits> InvertedMatrix;
-    InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
+    InvertedMatrix clone = Cast<InvertedMatrix>();
     if (mType == MatrixType::Identity) {
       return clone;
     }
@@ -2201,8 +2212,7 @@ class Matrix4x4TypedFlagged
     }
 
     if (aMatrix.mType == MatrixType::Identity) {
-      return Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits>::
-          FromUnknownMatrix(this->ToUnknownMatrix());
+      return Cast<Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits>>();
     }
 
     if (mType == MatrixType::Simple && aMatrix.mType == MatrixType::Simple) {
