@@ -6,19 +6,19 @@ function testLatin1() {
     var sub8 = s.substring(0, 8);
     assertEq(sub8, "abcdefgh");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub8).startsWith("((JSThinInlineString"), true);
+      assertEq(stringRepresentation(sub8).includes("(JSThinInlineString*)"), true);
     }
 
     var sub24 = s.substring(0, 24);
     assertEq(sub24, "abcdefghijklmnopqrstuvwx");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub24).startsWith("((JSFatInlineString"), true);
+      assertEq(stringRepresentation(sub24).includes("(JSFatInlineString*)"), true);
     }
 
     var sub25 = s.substring(0, 25);
     assertEq(sub25, "abcdefghijklmnopqrstuvwxy");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub25).startsWith("((JSDependentString"), true);
+      assertEq(stringRepresentation(sub25).includes("(JSDependentString*)"), true);
     }
   }
 }
@@ -30,19 +30,19 @@ function testTwoByte() {
     var sub4 = s.substring(0, 4);
     assertEq(sub4, "\u1000bcd");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub4).startsWith("((JSThinInlineString"), true);
+      assertEq(stringRepresentation(sub4).includes("(JSThinInlineString*)"), true);
     }
 
     var sub12 = s.substring(0, 12);
     assertEq(sub12, "\u1000bcdefghijkl");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub12).startsWith("((JSFatInlineString"), true);
+      assertEq(stringRepresentation(sub12).includes("(JSFatInlineString*)"), true);
     }
 
     var sub13 = s.substring(0, 13);
     assertEq(sub13, "\u1000bcdefghijklm");
     if (hasStringRepresentation) {
-      assertEq(stringRepresentation(sub13).startsWith("((JSDependentString"), true);
+      assertEq(stringRepresentation(sub13).includes("(JSDependentString*)"), true);
     }
   }
 }

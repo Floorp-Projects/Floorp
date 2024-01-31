@@ -83,14 +83,14 @@ void Symbol::dump() {
 void Symbol::dump(js::GenericPrinter& out) {
   if (isWellKnownSymbol()) {
     // All the well-known symbol names are ASCII.
-    description()->dumpCharsNoNewline(out);
+    description()->dumpChars(out);
   } else if (code_ == SymbolCode::InSymbolRegistry ||
              code_ == SymbolCode::UniqueSymbol) {
     out.printf(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for("
                                                      : "Symbol(");
 
     if (description()) {
-      description()->dumpCharsNoNewline(out);
+      description()->dumpChars(out);
     } else {
       out.printf("undefined");
     }
@@ -103,7 +103,7 @@ void Symbol::dump(js::GenericPrinter& out) {
   } else if (code_ == SymbolCode::PrivateNameSymbol) {
     MOZ_ASSERT(description());
     out.putChar('#');
-    description()->dumpCharsNoNewline(out);
+    description()->dumpChars(out);
     out.printf("@%p", (void*)this);
   } else {
     out.printf("<Invalid Symbol code=%u>", unsigned(code_));
