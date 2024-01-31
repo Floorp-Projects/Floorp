@@ -21,7 +21,8 @@
 
 namespace js {
 class JS_PUBLIC_API GenericPrinter;
-}
+class JSONPrinter;
+} /* namespace js */
 
 namespace JS {
 
@@ -100,8 +101,11 @@ class Symbol
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();  // Debugger-friendly stderr dump.
-  void dump(js::GenericPrinter& out);
+  void dump() const;  // Debugger-friendly stderr dump.
+  void dump(js::GenericPrinter& out) const;
+  void dump(js::JSONPrinter& json) const;
+
+  void dumpFields(js::JSONPrinter& json) const;
 #endif
 
   static constexpr size_t offsetOfHash() { return offsetof(Symbol, hash_); }
