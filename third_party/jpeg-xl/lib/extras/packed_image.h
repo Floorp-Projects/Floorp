@@ -260,6 +260,8 @@ class PackedPixelFile {
   size_t num_frames() const {
     return chunked_frames.empty() ? frames.size() : chunked_frames.size();
   }
+  size_t xsize() const { return info.xsize; }
+  size_t ysize() const { return info.ysize; }
 };
 
 }  // namespace extras

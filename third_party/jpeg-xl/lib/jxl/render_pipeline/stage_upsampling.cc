@@ -5,6 +5,8 @@
 
 #include "lib/jxl/render_pipeline/stage_upsampling.h"
 
+#include "lib/jxl/base/status.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_upsampling.cc"
 #include <hwy/foreach_target.h>
@@ -109,7 +111,10 @@ class UpsamplingStage : public RenderPipelineStage {
     using V = hwy::HWY_NAMESPACE::Vec<HWY_FULL(float)>;
     V ups0, ups1, ups2, ups3, ups4, ups5, ups6, ups7;
     (void)ups2, (void)ups3, (void)ups4, (void)ups5, (void)ups6, (void)ups7;
-    V* ups[N];
+    // Once we have C++17 available, change this back to `V* ups[N]` and
+    // initialize using `if constexpr` below.
+    V* ups[8] = {};
+    static_assert(N == 2 || N == 4 || N == 8, "N must be 2, 4, or 8");
     if (N >= 2) {
       ups[0] = &ups0;
       ups[1] = &ups1;
@@ -124,6 +129,7 @@ class UpsamplingStage : public RenderPipelineStage {
       ups[6] = &ups6;
       ups[7] = &ups7;
     }
+
     for (size_t oy = 0; oy < N; oy++) {
       float* dst_row = GetOutputRow(output_rows, c_, oy);
       for (ssize_t x = x0; x < x1; x += Lanes(df)) {

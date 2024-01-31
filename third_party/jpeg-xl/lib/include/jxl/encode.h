@@ -15,14 +15,15 @@
 
 #include <jxl/cms_interface.h>
 #include <jxl/codestream_header.h>
+#include <jxl/color_encoding.h>
 #include <jxl/jxl_export.h>
 #include <jxl/memory_manager.h>
 #include <jxl/parallel_runner.h>
 #include <jxl/stats.h>
-#include <jxl/version.h>
+#include <jxl/types.h>
+#include <jxl/version.h>  // TODO(eustas): remove before v1.0
+#include <stddef.h>
 #include <stdint.h>
-
-#include "jxl/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -377,6 +378,14 @@ typedef enum {
    * (default).
    */
   JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF = 37,
+
+  /** If this mode is disabled, the encoder will not make any image quality
+   * decisions that are computed based on the full image, but stored only once
+   * (e.g. the X quant multiplier in the frame header). Used mainly for testing
+   * equivalence of streaming and non-streaming code.
+   * 0 = disabled, 1 = enabled (default)
+   */
+  JXL_ENC_FRAME_SETTING_USE_FULL_IMAGE_HEURISTICS = 38,
 
   /** Enum value not to be used as an option. This value is added to force the
    * C compiler to have the enum to take a known size.
@@ -1193,8 +1202,8 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
  * JXL_ENC_ERROR or JXL_ENC_NOT_SUPPORTED otherwise
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetUpsamplingMode(JxlEncoder* enc,
-                                                        const int64_t factor,
-                                                        const int64_t mode);
+                                                        int64_t factor,
+                                                        int64_t mode);
 
 /**
  * Initializes a JxlExtraChannelInfo struct to default values.

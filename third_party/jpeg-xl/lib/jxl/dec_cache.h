@@ -7,28 +7,36 @@
 #define LIB_JXL_DEC_CACHE_H_
 
 #include <jxl/decode.h>
+#include <jxl/types.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <hwy/base.h>  // HWY_ALIGN_MAX
+#include <memory>
+#include <vector>
 
+#include "hwy/aligned_allocator.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/common.h"  // kMaxNumPasses
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
-#include "lib/jxl/convolve.h"
+#include "lib/jxl/common.h"
+#include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_ans.h"
-#include "lib/jxl/dec_group_border.h"
-#include "lib/jxl/dec_noise.h"
+#include "lib/jxl/dec_xyb.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/passes_state.h"
-#include "lib/jxl/quant_weights.h"
 #include "lib/jxl/render_pipeline/render_pipeline.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 #include "lib/jxl/render_pipeline/stage_upsampling.h"
-#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 

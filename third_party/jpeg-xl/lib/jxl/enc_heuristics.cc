@@ -5,13 +5,31 @@
 
 #include "lib/jxl/enc_heuristics.h"
 
+#include <jxl/cms_interface.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <algorithm>
+#include <cstdlib>
+#include <limits>
+#include <memory>
 #include <numeric>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "lib/jxl/ac_context.h"
+#include "lib/jxl/ac_strategy.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/override.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/butteraugli/butteraugli.h"
+#include "lib/jxl/chroma_from_luma.h"
+#include "lib/jxl/coeff_order.h"
+#include "lib/jxl/coeff_order_fwd.h"
+#include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/enc_ac_strategy.h"
 #include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_ar_control_field.h"
@@ -20,11 +38,16 @@
 #include "lib/jxl/enc_gaborish.h"
 #include "lib/jxl/enc_modular.h"
 #include "lib/jxl/enc_noise.h"
+#include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_patch_dictionary.h"
-#include "lib/jxl/enc_photon_noise.h"
 #include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/enc_splines.h"
-#include "lib/jxl/enc_xyb.h"
+#include "lib/jxl/frame_dimensions.h"
+#include "lib/jxl/frame_header.h"
+#include "lib/jxl/image.h"
+#include "lib/jxl/image_ops.h"
+#include "lib/jxl/passes_state.h"
+#include "lib/jxl/quant_weights.h"
 
 namespace jxl {
 
@@ -735,14 +758,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     PatchDictionaryEncoder::SubtractFrom(image_features.patches, opsin);
   }
 
-  static const float kAcQuant = 0.79f;
   const float quant_dc = InitialQuantDC(cparams.butteraugli_distance);
-  // We don't know the quant field yet, but for computing the global scale
-  // assuming that it will be the same as for Falcon mode is good enough.
-  if (initialize_global_state) {
-    quantizer.ComputeGlobalScaleAndQuant(
-        quant_dc, kAcQuant / cparams.butteraugli_distance, 0);
-  }
 
   // TODO(veluca): we can now run all the code from here to FindBestQuantizer
   // (excluded) one rect at a time. Do that.
@@ -779,9 +795,10 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
         ImageF(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
     initial_quant_masking =
         ImageF(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-    float q = kAcQuant / cparams.butteraugli_distance;
+    float q = 0.79 / cparams.butteraugli_distance;
     FillImage(q, &initial_quant_field);
     FillImage(1.0f / (q + 0.001f), &initial_quant_masking);
+    quantizer.ComputeGlobalScaleAndQuant(quant_dc, q, 0);
   } else {
     // Call this here, as it relies on pre-gaborish values.
     float butteraugli_distance_for_iqf = cparams.butteraugli_distance;
@@ -791,9 +808,8 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     initial_quant_field = InitialQuantField(
         butteraugli_distance_for_iqf, *opsin, rect, pool, 1.0f,
         &initial_quant_masking, &initial_quant_masking1x1);
-    if (initialize_global_state) {
-      quantizer.SetQuantField(quant_dc, initial_quant_field, nullptr);
-    }
+    float q = 0.39 / cparams.butteraugli_distance;
+    quantizer.ComputeGlobalScaleAndQuant(quant_dc, q, 0);
   }
 
   // TODO(veluca): do something about animations.
@@ -875,10 +891,6 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
       process_tile, "Enc Heuristics"));
 
   acs_heuristics.Finalize(frame_dim, ac_strategy, aux_out);
-  if (cparams.speed_tier <= SpeedTier::kHare && initialize_global_state) {
-    cfl_heuristics.ComputeDC(/*fast=*/cparams.speed_tier >= SpeedTier::kWombat,
-                             &cmap);
-  }
 
   // Refine quantization levels.
   if (!streaming_mode) {

@@ -5,14 +5,19 @@
 
 #include "lib/threads/thread_parallel_runner_internal.h"
 
+#include <jxl/parallel_runner.h>
+
 #include <algorithm>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <mutex>
+#include <thread>
 
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
 #include "sanitizer/common_interface_defs.h"  // __sanitizer_print_stack_trace
 #endif                                        // defined(*_SANITIZER)
-
-#include <jxl/thread_parallel_runner.h>
 
 namespace {
 

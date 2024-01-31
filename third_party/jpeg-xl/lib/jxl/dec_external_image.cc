@@ -42,8 +42,8 @@ void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
   const hwy::HWY_NAMESPACE::Rebind<uint32_t, decltype(d)> du;
 
   // Unpoison accessing partially-uninitialized vectors with memory sanitizer.
-  // This is because we run NearestInt() on the vector, which triggers msan even
-  // it it safe to do so since the values are not mixed between lanes.
+  // This is because we run NearestInt() on the vector, which triggers MSAN even
+  // it is safe to do so since the values are not mixed between lanes.
   const size_t num_round_up = RoundUpTo(num, Lanes(d));
   msan::UnpoisonMemory(in + num, sizeof(in[0]) * (num_round_up - num));
 

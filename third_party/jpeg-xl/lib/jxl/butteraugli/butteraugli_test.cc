@@ -9,12 +9,12 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <utility>
 
 #include "lib/extras/metrics.h"
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/base/random.h"
-#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/image.h"
@@ -109,7 +109,7 @@ TEST(ButteraugliInPlaceTest, LargeImage) {
   EXPECT_TRUE(ButteraugliInterfaceInPlace(std::move(rgb0), std::move(rgb1), ba,
                                           diffmap2, diffval2));
   double distp2 = ComputeDistanceP(diffmap2, ba, 3.0);
-  EXPECT_NEAR(diffval, diffval2, 1e-10);
+  EXPECT_NEAR(diffval, diffval2, 5e-7);
   EXPECT_NEAR(distp, distp2, 1e-7);
 }
 

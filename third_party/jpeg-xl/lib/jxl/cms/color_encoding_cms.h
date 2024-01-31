@@ -13,11 +13,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <string>
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {

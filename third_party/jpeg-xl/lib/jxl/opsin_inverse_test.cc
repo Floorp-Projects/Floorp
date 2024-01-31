@@ -5,13 +5,15 @@
 
 #include <jxl/cms.h>
 
+#include <utility>
+
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/testing.h"
 

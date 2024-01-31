@@ -390,7 +390,7 @@ StatusOr<ChunkedPNMDecoder> ChunkedPNMDecoder::Init(const char* path) {
   if (header.ysize * row_size + dec.data_start_ < size) {
     return JXL_FAILURE("Invalid ppm");
   }
-  return std::move(dec);
+  return dec;
 }
 
 jxl::Status ChunkedPNMDecoder::InitializePPF(const ColorHints& color_hints,

@@ -192,19 +192,6 @@ void InitDCStorage(size_t num_blocks, ImageF* dc_values) {
   }
 }
 
-void ComputeDC(const ImageF& dc_values, bool fast, int32_t* dc_x,
-               int32_t* dc_b) {
-  constexpr float kDistanceMultiplierDC = 1e-5f;
-  const float* JXL_RESTRICT dc_values_yx = dc_values.Row(0);
-  const float* JXL_RESTRICT dc_values_x = dc_values.Row(1);
-  const float* JXL_RESTRICT dc_values_yb = dc_values.Row(2);
-  const float* JXL_RESTRICT dc_values_b = dc_values.Row(3);
-  *dc_x = FindBestMultiplier(dc_values_yx, dc_values_x, dc_values.xsize(), 0.0f,
-                             kDistanceMultiplierDC, fast);
-  *dc_b = FindBestMultiplier(dc_values_yb, dc_values_b, dc_values.xsize(),
-                             jxl::cms::kYToBRatio, kDistanceMultiplierDC, fast);
-}
-
 void ComputeTile(const Image3F& opsin, const Rect& opsin_rect,
                  const DequantMatrices& dequant,
                  const AcStrategyImage* ac_strategy,
@@ -363,7 +350,6 @@ HWY_AFTER_NAMESPACE();
 namespace jxl {
 
 HWY_EXPORT(InitDCStorage);
-HWY_EXPORT(ComputeDC);
 HWY_EXPORT(ComputeTile);
 
 void CfLHeuristics::Init(const Rect& rect) {
@@ -385,14 +371,6 @@ void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
   (opsin, opsin_rect, dequant, ac_strategy, raw_quant_field, quantizer, r, fast,
    use_dct8, &cmap->ytox_map, &cmap->ytob_map, &dc_values,
    mem.get() + thread * ItemsPerThread());
-}
-
-void CfLHeuristics::ComputeDC(bool fast, ColorCorrelationMap* cmap) {
-  int32_t ytob_dc = 0;
-  int32_t ytox_dc = 0;
-  HWY_DYNAMIC_DISPATCH(ComputeDC)(dc_values, fast, &ytox_dc, &ytob_dc);
-  cmap->SetYToBDC(ytob_dc);
-  cmap->SetYToXDC(ytox_dc);
 }
 
 void ColorCorrelationMapEncodeDC(const ColorCorrelationMap& map,

@@ -3,8 +3,10 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# This file is generated, do not modify by manually.
-# Run `tools/scripts/build_cleaner.py --update` to regenerate it.
+"""
+This file is generated, do not modify by manually.
+Run `tools/scripts/build_cleaner.py --update` to regenerate it.
+"""
 
 libjxl_base_sources = [
     "jxl/base/arch_macros.h",
@@ -145,7 +147,6 @@ libjxl_dec_sources = [
     "jxl/convolve-inl.h",
     "jxl/convolve.h",
     "jxl/convolve_separable5.cc",
-    "jxl/convolve_separable7.cc",
     "jxl/convolve_slow.cc",
     "jxl/convolve_symmetric3.cc",
     "jxl/convolve_symmetric5.cc",
@@ -201,8 +202,6 @@ libjxl_dec_sources = [
     "jxl/frame_dimensions.h",
     "jxl/frame_header.cc",
     "jxl/frame_header.h",
-    "jxl/gauss_blur.cc",
-    "jxl/gauss_blur.h",
     "jxl/headers.cc",
     "jxl/headers.h",
     "jxl/huffman_table.cc",
@@ -458,7 +457,6 @@ libjxl_gbench_sources = [
     "extras/tone_mapping_gbench.cc",
     "jxl/dec_external_image_gbench.cc",
     "jxl/enc_external_image_gbench.cc",
-    "jxl/gauss_blur_gbench.cc",
     "jxl/splines_gbench.cc",
     "jxl/tf_gbench.cc",
 ]
@@ -618,7 +616,6 @@ libjxl_tests = [
     "jxl/fast_math_test.cc",
     "jxl/fields_test.cc",
     "jxl/gamma_correct_test.cc",
-    "jxl/gauss_blur_test.cc",
     "jxl/gradient_test.cc",
     "jxl/iaca_test.cc",
     "jxl/icc_codec_test.cc",

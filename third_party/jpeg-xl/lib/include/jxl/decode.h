@@ -20,7 +20,7 @@
 #include <jxl/memory_manager.h>
 #include <jxl/parallel_runner.h>
 #include <jxl/types.h>
-#include <jxl/version.h>
+#include <jxl/version.h>  // TODO(eustas): remove before v1.0
 #include <stddef.h>
 #include <stdint.h>
 
@@ -1359,15 +1359,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderGetBoxType(JxlDecoder* dec,
 
 /**
  * Returns the size of a box as it appears in the container file, after the @ref
- * JXL_DEC_BOX event. For a non-compressed box, this is the size of the
- * contents, excluding the 4 bytes indicating the box type. For a compressed
- * "brob" box, this is the size of the compressed box contents plus the
- * additional 4 byte indicating the underlying box type, but excluding the 4
- * bytes indicating "brob". This function gives the size of the data that will
- * be written in the output buffer when getting boxes in the default raw
- * compressed mode. When @ref JxlDecoderSetDecompressBoxes is enabled, the
- * return value of function does not change, and the decompressed size is not
- * known before it has already been decompressed and output.
+ * JXL_DEC_BOX event. This includes all the box headers.
  *
  * @param dec decoder object
  * @param size raw size of the box in bytes

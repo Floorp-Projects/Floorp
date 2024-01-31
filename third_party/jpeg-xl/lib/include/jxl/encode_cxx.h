@@ -16,6 +16,7 @@
 #define JXL_ENCODE_CXX_H_
 
 #include <jxl/encode.h>
+#include <jxl/memory_manager.h>
 
 #include <memory>
 

@@ -7,7 +7,6 @@
 #define LIB_JXL_ENC_GROUP_H_
 
 #include <stddef.h>
-#include <stdint.h>
 
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_bit_writer.h"

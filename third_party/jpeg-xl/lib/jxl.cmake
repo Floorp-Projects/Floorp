@@ -43,9 +43,6 @@ else()
 endif ()
 
 set(OBJ_COMPILE_DEFINITIONS
-  JPEGXL_MAJOR_VERSION=${JPEGXL_MAJOR_VERSION}
-  JPEGXL_MINOR_VERSION=${JPEGXL_MINOR_VERSION}
-  JPEGXL_PATCH_VERSION=${JPEGXL_PATCH_VERSION}
   # Used to determine if we are building the library when defined or just
   # including the library when not defined. This is public so libjxl shared
   # library gets this define too.
@@ -54,6 +51,9 @@ set(OBJ_COMPILE_DEFINITIONS
 
 # Generate version.h
 configure_file("jxl/version.h.in" "include/jxl/version.h")
+
+list(APPEND JPEGXL_INTERNAL_PUBLIC_HEADERS
+  ${CMAKE_CURRENT_BINARY_DIR}/include/jxl/version.h)
 
 # Headers for exporting/importing public headers
 include(GenerateExportHeader)
@@ -87,6 +87,16 @@ target_include_directories(jxl_base INTERFACE
   ${PROJECT_SOURCE_DIR}
   ${JXL_HWY_INCLUDE_DIRS}
 )
+
+# On android, link with log to use android-related log functions.
+if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+  find_library(log-lib log)
+  if(log-lib)
+    target_link_libraries(jxl_base INTERFACE ${log-lib})
+    target_compile_definitions(jxl_base INTERFACE USE_ANDROID_LOGGER)
+  endif()
+endif()
+
 add_dependencies(jxl_base jxl_export)
 
 # Decoder-only object library

@@ -160,6 +160,8 @@ set(JPEGXL_ENABLE_AVX512_SPR false CACHE BOOL
     "Build with AVX-512FP16 support (faster on CPUs that support it, but larger binary size).")
 set(JPEGXL_ENABLE_AVX512_ZEN4 false CACHE BOOL
 "Build with Zen4-optimized AVX512 support (faster on CPUs that support it, but larger binary size).")
+set(JPEGXL_ENABLE_WASM_TRHEADS true CACHE BOOL
+    "Builds WASM modules with threads suppurt")
 
 # Force system dependencies.
 set(JPEGXL_FORCE_SYSTEM_BROTLI false CACHE BOOL
@@ -263,7 +265,7 @@ if(JPEGXL_STATIC)
   endif()
 endif()  # JPEGXL_STATIC
 
-if (EMSCRIPTEN)
+if (EMSCRIPTEN AND JPEGXL_ENABLE_WASM_TRHEADS)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")

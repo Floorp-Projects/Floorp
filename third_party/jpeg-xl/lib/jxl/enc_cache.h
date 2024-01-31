@@ -10,23 +10,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <memory>
 #include <vector>
 
-#include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/coeff_order.h"
-#include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_progressive_split.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_bundle.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
-#include "lib/jxl/quantizer.h"
 
 namespace jxl {
 

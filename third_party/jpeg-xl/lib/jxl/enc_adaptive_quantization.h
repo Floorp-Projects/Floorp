@@ -6,19 +6,14 @@
 #ifndef LIB_JXL_ENC_ADAPTIVE_QUANTIZATION_H_
 #define LIB_JXL_ENC_ADAPTIVE_QUANTIZATION_H_
 
+#include <jxl/cms_interface.h>
 #include <stddef.h>
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_params.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_bundle.h"
-#include "lib/jxl/loop_filter.h"
-#include "lib/jxl/quant_weights.h"
-#include "lib/jxl/quantizer.h"
-#include "lib/jxl/splines.h"
 
 // Heuristics to find a good quantizer for a given image. InitialQuantField
 // produces a quantization field (i.e. relative quantization amounts for each

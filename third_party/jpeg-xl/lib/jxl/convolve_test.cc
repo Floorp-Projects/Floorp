@@ -151,28 +151,6 @@ void VerifySeparable5(const size_t xsize, const size_t ysize, ThreadPool* pool,
   JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
 }
 
-void VerifySeparable7(const size_t xsize, const size_t ysize, ThreadPool* pool,
-                      Rng* rng) {
-  const Rect rect(0, 0, xsize, ysize);
-
-  ImageF in(xsize, ysize);
-  GenerateImage(*rng, &in, 0.0f, 1.0f);
-
-  ImageF out_expected(xsize, ysize);
-  ImageF out_actual(xsize, ysize);
-
-  // Gaussian sigma 1.0
-  const WeightsSeparable7 weights = {{HWY_REP4(0.383103f), HWY_REP4(0.241843f),
-                                      HWY_REP4(0.060626f), HWY_REP4(0.00598f)},
-                                     {HWY_REP4(0.383103f), HWY_REP4(0.241843f),
-                                      HWY_REP4(0.060626f), HWY_REP4(0.00598f)}};
-
-  SlowSeparable7(in, rect, weights, pool, &out_expected, rect);
-  Separable7(in, rect, weights, pool, &out_actual);
-
-  JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
-}
-
 // For all xsize/ysize and kernels:
 void TestConvolve() {
   TestNeighbors();
@@ -204,10 +182,6 @@ void TestConvolve() {
                     JXL_DEBUG(JXL_DEBUG_CONVOLVE, "Sep5------------------");
                     VerifySeparable5(xsize, ysize, null_pool, &rng);
                     VerifySeparable5(xsize, ysize, &pool3, &rng);
-
-                    JXL_DEBUG(JXL_DEBUG_CONVOLVE, "Sep7------------------");
-                    VerifySeparable7(xsize, ysize, null_pool, &rng);
-                    VerifySeparable7(xsize, ysize, &pool3, &rng);
                   }
                 },
                 "TestConvolve"));

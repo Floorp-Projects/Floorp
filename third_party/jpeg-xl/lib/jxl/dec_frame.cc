@@ -5,20 +5,19 @@
 
 #include "lib/jxl/dec_frame.h"
 
-#include <jxl/types.h>
+#include <jxl/decode.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <algorithm>
 #include <atomic>
-#include <hwy/aligned_allocator.h>
-#include <numeric>
+#include <cstdlib>
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
@@ -30,26 +29,29 @@
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/common.h"  // kMaxNumPasses
 #include "lib/jxl/compressed_dc.h"
+#include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_group.h"
 #include "lib/jxl/dec_modular.h"
+#include "lib/jxl/dec_noise.h"
 #include "lib/jxl/dec_patch_dictionary.h"
-#include "lib/jxl/dec_xyb.h"
+#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/epf.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 #include "lib/jxl/loop_filter.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer.h"
-#include "lib/jxl/sanitizers.h"
+#include "lib/jxl/render_pipeline/render_pipeline.h"
 #include "lib/jxl/splines.h"
 #include "lib/jxl/toc.h"
 

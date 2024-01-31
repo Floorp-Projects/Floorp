@@ -49,9 +49,12 @@ void GaborishInverse(Image3F* in_out, const Rect& rect, float mul[3],
   // image and reuse the existing planes of the in/out image.
   ImageF temp(in_out->Plane(2).xsize(), in_out->Plane(2).ysize());
   CopyImageTo(in_out->Plane(2), &temp);
-  Symmetric5(in_out->Plane(0), rect, weights[0], pool, &in_out->Plane(2), rect);
-  Symmetric5(in_out->Plane(1), rect, weights[1], pool, &in_out->Plane(0), rect);
-  Symmetric5(temp, rect, weights[2], pool, &in_out->Plane(1), rect);
+  Rect xrect = rect.Extend(3, Rect(*in_out));
+  Symmetric5(in_out->Plane(0), xrect, weights[0], pool, &in_out->Plane(2),
+             xrect);
+  Symmetric5(in_out->Plane(1), xrect, weights[1], pool, &in_out->Plane(0),
+             xrect);
+  Symmetric5(temp, xrect, weights[2], pool, &in_out->Plane(1), xrect);
   // Now planes are 1, 2, 0.
   in_out->Plane(0).Swap(in_out->Plane(1));
   // 2 1 0

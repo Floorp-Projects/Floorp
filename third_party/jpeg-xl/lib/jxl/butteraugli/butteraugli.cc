@@ -41,7 +41,6 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
-#include "lib/jxl/gauss_blur.h"
 #include "lib/jxl/image_ops.h"
 
 #ifndef JXL_BUTTERAUGLI_ONCE
