@@ -12,5 +12,3 @@ subsuite = "telemetry-python"
 ["test_parse_events.py"]
 
 ["test_parse_scalars.py"]
-
-["test_usecounters.py"]
