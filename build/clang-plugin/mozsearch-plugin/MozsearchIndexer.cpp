@@ -520,14 +520,20 @@ private:
         return std::string("V_") + mangleLocation(Decl->getLocation()) +
                std::string("_") + hash(std::string(Decl->getName()));
       }
-    } else if (isa<TagDecl>(Decl) || isa<TypedefNameDecl>(Decl) ||
-               isa<ObjCInterfaceDecl>(Decl)) {
+    } else if (isa<TagDecl>(Decl) || isa<ObjCInterfaceDecl>(Decl)) {
       if (!Decl->getIdentifier()) {
         // Anonymous.
         return std::string("T_") + mangleLocation(Decl->getLocation());
       }
 
       return std::string("T_") + mangleQualifiedName(getQualifiedName(Decl));
+    } else if (isa<TypedefNameDecl>(Decl)) {
+      if (!Decl->getIdentifier()) {
+        // Anonymous.
+        return std::string("TA_") + mangleLocation(Decl->getLocation());
+      }
+
+      return std::string("TA_") + mangleQualifiedName(getQualifiedName(Decl));
     } else if (isa<NamespaceDecl>(Decl) || isa<NamespaceAliasDecl>(Decl)) {
       if (!Decl->getIdentifier()) {
         // Anonymous.
@@ -1140,9 +1146,18 @@ public:
       J.attribute("pretty", getQualifiedName(&Field));
       J.attribute("sym", getMangledName(CurMangleContext, &Field));
       QualType FieldType = Field.getType();
-      J.attribute("type", FieldType.getAsString());
       QualType CanonicalFieldType = FieldType.getCanonicalType();
+      J.attribute("type", CanonicalFieldType.getAsString());
       const TagDecl *tagDecl = CanonicalFieldType->getAsTagDecl();
+      if (!tagDecl) {
+        // Try again piercing any pointers/references involved.  Note that our
+        // typesym semantics are dubious-ish and right now crossref just does
+        // some parsing of "type" itself until we improve this rep.
+        CanonicalFieldType = CanonicalFieldType->getPointeeType();
+        if (!CanonicalFieldType.isNull()) {
+          tagDecl = CanonicalFieldType->getAsTagDecl();
+        }
+      }
       if (tagDecl) {
         J.attribute("typesym", getMangledName(CurMangleContext, tagDecl));
       }
@@ -1201,6 +1216,38 @@ public:
     J.attribute("sym", getMangledName(CurMangleContext, decl));
 
     emitBindingAttributes(J, *decl);
+
+    J.attributeBegin("args");
+    J.arrayBegin();
+
+    for (auto param : decl->parameters()) {
+      J.objectBegin();
+
+      J.attribute("name", param->getName());
+      QualType ArgType = param->getOriginalType();
+      J.attribute("type", ArgType.getAsString());
+
+      QualType CanonicalArgType = ArgType.getCanonicalType();
+      const TagDecl *canonDecl = CanonicalArgType->getAsTagDecl();
+      if (!canonDecl) {
+        // Try again piercing any pointers/references involved.  Note that our
+        // typesym semantics are dubious-ish and right now crossref just does
+        // some parsing of "type" itself until we improve this rep.
+        CanonicalArgType = CanonicalArgType->getPointeeType();
+        if (!CanonicalArgType.isNull()) {
+          canonDecl = CanonicalArgType->getAsTagDecl();
+        }
+      }
+      if (canonDecl) {
+        J.attribute("typesym", getMangledName(CurMangleContext, canonDecl));
+      }
+
+      J.objectEnd();
+    }
+
+    J.arrayEnd();
+    J.attributeEnd();
+
 
     auto cxxDecl = dyn_cast<CXXMethodDecl>(decl);
 
@@ -1377,7 +1424,8 @@ public:
                        QualType MaybeType = QualType(),
                        Context TokenContext = Context(), int Flags = 0,
                        SourceRange PeekRange = SourceRange(),
-                       SourceRange NestingRange = SourceRange()) {
+                       SourceRange NestingRange = SourceRange(),
+                       std::vector<SourceRange> *ArgRanges = nullptr) {
     SourceLocation Loc = LocRange.getBegin();
     if (!shouldVisit(Loc)) {
       return;
@@ -1429,6 +1477,21 @@ public:
         }
       }
 
+      if (ArgRanges) {
+        J.attributeBegin("argRanges");
+        J.arrayBegin();
+
+        for (auto range : *ArgRanges) {
+          std::string ArgRangeStr = fullRangeToString(range);
+          if (!ArgRangeStr.empty()) {
+            J.value(ArgRangeStr);
+          }
+        }
+
+        J.arrayEnd();
+        J.attributeEnd();
+      }
+
       // End the top-level object.
       J.objectEnd();
       // we want a newline.
@@ -1468,6 +1531,15 @@ public:
       J.attribute("type", MaybeType.getAsString());
       QualType canonical = MaybeType.getCanonicalType();
       const TagDecl *decl = canonical->getAsTagDecl();
+      if (!decl) {
+        // Try again piercing any pointers/references involved.  Note that our
+        // typesym semantics are dubious-ish and right now crossref just does
+        // some parsing of "type" itself until we improve this rep.
+        canonical = canonical->getPointeeType();
+        if (!canonical.isNull()) {
+          decl = canonical->getAsTagDecl();
+        }
+      }
       if (decl) {
         std::string Mangled = getMangledName(CurMangleContext, decl);
         J.attribute("typesym", Mangled);
@@ -1483,6 +1555,21 @@ public:
 
     if (Flags & NoCrossref) {
       J.attribute("no_crossref", 1);
+    }
+
+    if (ArgRanges) {
+      J.attributeBegin("argRanges");
+      J.arrayBegin();
+
+      for (auto range : *ArgRanges) {
+          std::string ArgRangeStr = fullRangeToString(range);
+          if (!ArgRangeStr.empty()) {
+            J.value(ArgRangeStr);
+          }
+      }
+
+      J.arrayEnd();
+      J.attributeEnd();
     }
 
     // End the top-level object.
@@ -1655,6 +1742,7 @@ public:
     // The nesting range identifies the left brace and right brace, which
     // heavily depends on the AST node type.
     SourceRange NestingRange;
+    QualType qtype = QualType();
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
       if (D2->isTemplateInstantiation()) {
         wasTemplate = true;
@@ -1693,10 +1781,11 @@ public:
       } else {
         PeekRange = SourceRange();
       }
-    } else if (isa<TypedefNameDecl>(D)) {
-      Kind = "def";
+    } else if (TypedefNameDecl *D2 = dyn_cast<TypedefNameDecl>(D)) {
+      Kind = "alias";
       PrettyKind = "type";
       PeekRange = SourceRange(Loc, Loc);
+      qtype = D2->getUnderlyingType();
     } else if (VarDecl *D2 = dyn_cast<VarDecl>(D)) {
       if (D2->isLocalVarDeclOrParm()) {
         Flags = NoCrossref;
@@ -1727,7 +1816,6 @@ public:
       return true;
     }
 
-    QualType qtype = QualType();
     if (ValueDecl *D2 = dyn_cast<ValueDecl>(D)) {
       qtype = D2->getType();
     }
@@ -1888,8 +1976,14 @@ public:
       return true;
     }
 
+    std::vector<SourceRange> argRanges;
+    for (auto argExpr : E->arguments()) {
+      argRanges.push_back(argExpr->getSourceRange());
+    }
+
     visitIdentifier("use", "function", getQualifiedName(NamedCallee), Loc, Mangled,
-                    E->getCallReturnType(*AstContext), getContext(Loc), Flags);
+                    E->getCallReturnType(*AstContext), getContext(Loc), Flags,
+                    SourceRange(), SourceRange(), &argRanges);
 
     return true;
   }
