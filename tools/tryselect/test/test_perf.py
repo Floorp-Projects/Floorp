@@ -910,8 +910,8 @@ def test_category_expansion(
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
                 "here once the tests are complete (ensure you select the right framework): "
-                "https://beta--mozilla-perfcompare.netlify.app/#/compare-results?"
-                "revs=revision,revision&repos=try,try\n"
+                "https://beta--mozilla-perfcompare.netlify.app/compare-results?"
+                "baseRev=revision&newRev=revision&baseRepo=try&newRepo=try\n"
             ),
         ),
     ],

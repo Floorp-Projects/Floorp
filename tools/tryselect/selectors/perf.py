@@ -47,7 +47,7 @@ PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
     "compare?originalProject=try&originalRevision=%s&newProject=try&newRevision=%s"
 )
-PERFCOMPARE_BASE_URL = "https://beta--mozilla-perfcompare.netlify.app/#/compare-results?revs=%s,%s&repos=try,try"
+PERFCOMPARE_BASE_URL = "https://beta--mozilla-perfcompare.netlify.app/compare-results?baseRev=%s&newRev=%s&baseRepo=try&newRepo=try"
 TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision=%s"
 TREEHERDER_ALERT_TASKS_URL = (
     "https://treeherder.mozilla.org/api/performance/alertsummary-tasks/?id=%s"
