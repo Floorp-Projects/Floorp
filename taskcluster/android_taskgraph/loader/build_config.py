@@ -42,8 +42,6 @@ def _get_components_tasks(config, for_build_type=None):
             "attributes": {
                 "build-type": build_type,
                 "component": component["name"],
-                # Treeherder group are capped at 25 chars
-                "treeherder-group": component["name"][:25],
             }
         }
         for component in get_components()
@@ -61,11 +59,7 @@ def _get_components_tasks(config, for_build_type=None):
 def _get_apks_tasks(config):
     not_for_apks = config.get("not-for-apks", [])
     tasks = {
-        apk["name"]: {
-            "attributes": {
-                "treeherder-group": apk["name"],
-            }
-        }
+        apk["name"]: {}
         for apk in get_apk_based_projects()
         if apk["name"] not in not_for_apks
     }

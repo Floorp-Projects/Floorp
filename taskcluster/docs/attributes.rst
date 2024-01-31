@@ -483,10 +483,6 @@ component
 =========
 To do.
 
-treeherder-group
-================
-To do.
-
 aab
 ===
 To do.

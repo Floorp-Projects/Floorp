@@ -76,7 +76,7 @@ def interpolate_missing_values(config, tasks):
                 component=component,
                 nightlyVersion=nightly_version,
                 timestamp=timestamp,
-                treeherder_group=task["attributes"]["treeherder-group"],
+                treeherder_group=component[:25],
             )
 
         yield task
