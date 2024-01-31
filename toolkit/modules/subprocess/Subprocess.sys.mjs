@@ -20,9 +20,6 @@ if (AppConstants.platform == "win") {
     SubprocessImpl: "resource://gre/modules/subprocess/subprocess_win.sys.mjs",
   });
 } else {
-  // Ignore the "duplicate" definitions here as this are also defined
-  // in the "win" block above.
-  // eslint-disable-next-line mozilla/valid-lazy
   ChromeUtils.defineESModuleGetters(lazy, {
     SubprocessImpl: "resource://gre/modules/subprocess/subprocess_unix.sys.mjs",
   });

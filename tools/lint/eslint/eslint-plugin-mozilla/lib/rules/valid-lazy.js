@@ -67,8 +67,46 @@ module.exports = {
     let unknownProperties = [];
     let isLazyExported = false;
 
+    function getAncestorNodes(node) {
+      const ancestors = [];
+      node = node.parent;
+      while (node) {
+        ancestors.unshift(node);
+        node = node.parent;
+      }
+      return ancestors;
+    }
+
+    // Returns true if lazy getter definitions in prevNode and currNode are
+    // duplicate.
+    // This returns false if prevNode and currNode have the same IfStatement as
+    // ancestor and they're in different branches.
+    function isDuplicate(prevNode, currNode) {
+      const prevAncestors = getAncestorNodes(prevNode);
+      const currAncestors = getAncestorNodes(currNode);
+
+      for (
+        let i = 0;
+        i < prevAncestors.length && i < currAncestors.length;
+        i++
+      ) {
+        const prev = prevAncestors[i];
+        const curr = currAncestors[i];
+        if (prev === curr && prev.type === "IfStatement") {
+          if (prevAncestors[i + 1] !== currAncestors[i + 1]) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
     function addProp(node, name) {
-      if (lazyProperties.has(name)) {
+      if (
+        lazyProperties.has(name) &&
+        isDuplicate(lazyProperties.get(name).node, node)
+      ) {
         context.report({
           node,
           messageId: "duplicateSymbol",
@@ -135,7 +173,10 @@ module.exports = {
         for (let reg of callExpressionDefinitions) {
           let match = source.match(reg);
           if (match) {
-            if (lazyProperties.has(match[1])) {
+            if (
+              lazyProperties.has(match[1]) &&
+              isDuplicate(lazyProperties.get(match[1]).node, node)
+            ) {
               context.report({
                 node,
                 messageId: "duplicateSymbol",
