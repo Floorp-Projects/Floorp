@@ -136,7 +136,6 @@ jobs:
 
     focus-nightly:
         attributes:
-            nightly-task: true
             shipping-product: focus
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
@@ -154,7 +153,6 @@ jobs:
 
     fenix-nightly:
         attributes:
-            nightly-task: true
             shipping-product: fenix
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
