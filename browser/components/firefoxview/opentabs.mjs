@@ -750,23 +750,24 @@ function getTabListItems(tabs) {
     tab => !tab.closing && !tab.hidden && !tab.pinned
   );
 
-  return filtered.map(tab => ({
-    attention: tab.hasAttribute("attention"),
-    containerObj: getContainerObj(tab),
-    icon: tab.getAttribute("image"),
-    muted: tab.hasAttribute("muted"),
-    pinned: tab.pinned,
-    primaryL10nId: "firefoxview-opentabs-tab-row",
-    primaryL10nArgs: JSON.stringify({
-      url: tab.linkedBrowser?.currentURI?.spec,
-    }),
-    secondaryL10nId: "fxviewtabrow-options-menu-button",
-    secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
-    soundPlaying: tab.hasAttribute("soundplaying"),
-    tabElement: tab,
-    time: tab.lastAccessed,
-    title: tab.label,
-    titleChanged: tab.hasAttribute("titlechanged"),
-    url: tab.linkedBrowser?.currentURI?.spec,
-  }));
+  return filtered.map(tab => {
+    const url = tab.linkedBrowser?.currentURI?.spec || "";
+    return {
+      attention: tab.hasAttribute("attention"),
+      containerObj: getContainerObj(tab),
+      icon: tab.getAttribute("image"),
+      muted: tab.hasAttribute("muted"),
+      pinned: tab.pinned,
+      primaryL10nId: "firefoxview-opentabs-tab-row",
+      primaryL10nArgs: JSON.stringify({ url }),
+      secondaryL10nId: "fxviewtabrow-options-menu-button",
+      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
+      soundPlaying: tab.hasAttribute("soundplaying"),
+      tabElement: tab,
+      time: tab.lastAccessed,
+      title: tab.label,
+      titleChanged: tab.hasAttribute("titlechanged"),
+      url,
+    };
+  });
 }
