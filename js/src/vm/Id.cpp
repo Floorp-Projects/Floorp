@@ -101,4 +101,18 @@ void JS::PropertyKey::dumpPropertyName(js::GenericPrinter& out) const {
   }
 }
 
+void JS::PropertyKey::dumpStringContent(js::GenericPrinter& out) const {
+  if (isAtom()) {
+    toAtom()->dumpStringContent(out);
+  } else if (isInt()) {
+    out.printf("%d", toInt());
+  } else if (isSymbol()) {
+    toSymbol()->dumpStringContent(out);
+  } else if (isVoid()) {
+    out.put("(void)");
+  } else {
+    out.printf("Unknown(%zx)", size_t(asRawBits()));
+  }
+}
+
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
