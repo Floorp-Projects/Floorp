@@ -113,15 +113,15 @@ class nsEditingSession final : public nsIEditingSession,
                                      mozilla::HTMLEditor* aHTMLEditor);
 
   /**
-   * Disable scripts and plugins in aDocShell.
+   * Disable scripts in aDocShell.
    */
-  nsresult DisableJSAndPlugins(nsPIDOMWindowInner* aWindow);
+  nsresult DisableJS(nsPIDOMWindowInner* aWindow);
 
   /**
-   * Restore JS and plugins (enable/disable them) according to the state they
-   * were before the last call to disableJSAndPlugins.
+   * Restore JS (enable/disable) according to the state it
+   * was before the last call to DisableJS.
    */
-  nsresult RestoreJSAndPlugins(nsPIDOMWindowInner* aWindow);
+  nsresult RestoreJS(nsPIDOMWindowInner* aWindow);
 
  protected:
   bool mDoneSetup;  // have we prepared for editing yet?
@@ -135,15 +135,11 @@ class nsEditingSession final : public nsIEditingSession,
   bool mInteractive;
   bool mMakeWholeDocumentEditable;
 
-  bool mDisabledJSAndPlugins;
+  bool mDisabledJS;
 
   // True if scripts were enabled before the editor turned scripts
   // off, otherwise false.
   bool mScriptsEnabled;
-
-  // True if plugins were enabled before the editor turned plugins
-  // off, otherwise false.
-  bool mPluginsEnabled;
 
   bool mProgressListenerRegistered;
 

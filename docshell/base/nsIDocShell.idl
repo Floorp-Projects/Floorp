@@ -177,11 +177,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute boolean cssErrorReportingEnabled;
 
   /**
-   * Whether to allow plugin execution
-   */
-  attribute boolean allowPlugins;
-
-  /**
    * Attribute stating if refresh based redirects can be allowed
    */
   attribute boolean allowMetaRedirects;
@@ -559,14 +554,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * docshell.
    */
   readonly attribute bool asyncPanZoomEnabled;
-
-  /**
-   * Are plugins allowed in the current document loaded in this docshell ?
-   * (if there is one). This depends on whether plugins are allowed by this
-   * docshell itself or if the document is sandboxed and hence plugins should
-   * not be allowed.
-   */
-  [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
 
   /**
    * Indicates whether the UI may enable the character encoding menu. The UI
