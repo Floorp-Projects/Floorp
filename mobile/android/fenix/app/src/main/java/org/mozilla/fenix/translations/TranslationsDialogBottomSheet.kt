@@ -568,44 +568,8 @@ internal fun getTranslateFromLanguageList(): List<Language> {
     return mutableListOf<Language>().apply {
         add(
             Language(
-                code = Locale.CHINA.toLanguageTag(),
-                localizedDisplayName = Locale.CHINA.displayLanguage,
-            ),
-        )
-        add(
-            Language(
                 code = Locale.ENGLISH.toLanguageTag(),
                 localizedDisplayName = Locale.ENGLISH.displayLanguage,
-            ),
-        )
-        add(
-            Language(
-                code = Locale.GERMAN.toLanguageTag(),
-                localizedDisplayName = Locale.GERMAN.displayLanguage,
-            ),
-        )
-        add(
-            Language(
-                code = Locale.JAPANESE.toLanguageTag(),
-                localizedDisplayName = Locale.JAPANESE.displayLanguage,
-            ),
-        )
-    }
-}
-
-@Composable
-internal fun getTranslateToLanguageList(): List<Language> {
-    return mutableListOf<Language>().apply {
-        add(
-            Language(
-                code = Locale.KOREAN.toLanguageTag(),
-                localizedDisplayName = Locale.KOREAN.displayLanguage,
-            ),
-        )
-        add(
-            Language(
-                code = Locale.CANADA.toLanguageTag(),
-                localizedDisplayName = Locale.CANADA.displayLanguage,
             ),
         )
         add(
@@ -616,14 +580,44 @@ internal fun getTranslateToLanguageList(): List<Language> {
         )
         add(
             Language(
-                code = Locale.ITALY.toLanguageTag(),
-                localizedDisplayName = Locale.ITALY.displayLanguage,
+                code = Locale.GERMAN.toLanguageTag(),
+                localizedDisplayName = Locale.GERMAN.displayLanguage,
+            ),
+        )
+        add(
+            Language(
+                code = Locale.ITALIAN.toLanguageTag(),
+                localizedDisplayName = Locale.ITALIAN.displayLanguage,
+            ),
+        )
+    }
+}
+
+@Composable
+internal fun getTranslateToLanguageList(): List<Language> {
+    return mutableListOf<Language>().apply {
+        add(
+            Language(
+                code = Locale.ENGLISH.toLanguageTag(),
+                localizedDisplayName = Locale.ENGLISH.displayLanguage,
+            ),
+        )
+        add(
+            Language(
+                code = Locale.FRENCH.toLanguageTag(),
+                localizedDisplayName = Locale.FRENCH.displayLanguage,
             ),
         )
         add(
             Language(
                 code = Locale.GERMAN.toLanguageTag(),
                 localizedDisplayName = Locale.GERMAN.displayLanguage,
+            ),
+        )
+        add(
+            Language(
+                code = Locale.ITALIAN.toLanguageTag(),
+                localizedDisplayName = Locale.ITALIAN.displayLanguage,
             ),
         )
     }

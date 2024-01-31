@@ -386,11 +386,11 @@ internal fun getLanguageListPreference(): List<DownloadLanguageItemPreference> {
             DownloadLanguageItemPreference(
                 languageModel = TranslationsController.RuntimeTranslation.LanguageModel(
                     TranslationsController.Language(
-                        Locale.CHINA.toLanguageTag(),
-                        Locale.CHINA.displayLanguage,
+                        Locale.FRENCH.toLanguageTag(),
+                        Locale.FRENCH.displayLanguage,
                     ),
                     false,
-                    4000,
+                    30000000,
                 ),
                 state = DownloadLanguageItemStatePreference(
                     type = DownloadLanguageItemTypePreference.GeneralLanguage,
@@ -402,28 +402,11 @@ internal fun getLanguageListPreference(): List<DownloadLanguageItemPreference> {
             DownloadLanguageItemPreference(
                 languageModel = TranslationsController.RuntimeTranslation.LanguageModel(
                     TranslationsController.Language(
-                        Locale.KOREAN.toLanguageTag(),
-                        Locale.KOREAN.displayLanguage,
+                        Locale.GERMAN.toLanguageTag(),
+                        Locale.GERMAN.displayLanguage,
                     ),
                     false,
-                    3000,
-                ),
-                state = DownloadLanguageItemStatePreference(
-                    type = DownloadLanguageItemTypePreference.GeneralLanguage,
-                    status = DownloadLanguageItemStatusPreference.NotDownloaded,
-                ),
-            ),
-        )
-
-        add(
-            DownloadLanguageItemPreference(
-                languageModel = TranslationsController.RuntimeTranslation.LanguageModel(
-                    TranslationsController.Language(
-                        Locale.FRANCE.toLanguageTag(),
-                        Locale.FRANCE.displayLanguage,
-                    ),
-                    false,
-                    2000,
+                    30000000,
                 ),
                 state = DownloadLanguageItemStatePreference(
                     type = DownloadLanguageItemTypePreference.GeneralLanguage,
@@ -439,7 +422,7 @@ internal fun getLanguageListPreference(): List<DownloadLanguageItemPreference> {
                         Locale.ITALIAN.displayLanguage,
                     ),
                     false,
-                    1000,
+                    30000000,
                 ),
                 state = DownloadLanguageItemStatePreference(
                     type = DownloadLanguageItemTypePreference.GeneralLanguage,
@@ -455,7 +438,7 @@ internal fun getLanguageListPreference(): List<DownloadLanguageItemPreference> {
                         Locale.ENGLISH.displayLanguage,
                     ),
                     true,
-                    3000,
+                    30000000,
                 ),
                 state = DownloadLanguageItemStatePreference(
                     type = DownloadLanguageItemTypePreference.PivotLanguage,
@@ -467,27 +450,11 @@ internal fun getLanguageListPreference(): List<DownloadLanguageItemPreference> {
             DownloadLanguageItemPreference(
                 languageModel = TranslationsController.RuntimeTranslation.LanguageModel(
                     TranslationsController.Language(
-                        Locale.JAPANESE.toLanguageTag(),
-                        Locale.JAPANESE.displayLanguage,
-                    ),
-                    true,
-                    3000,
-                ),
-                state = DownloadLanguageItemStatePreference(
-                    type = DownloadLanguageItemTypePreference.GeneralLanguage,
-                    status = DownloadLanguageItemStatusPreference.NotDownloaded,
-                ),
-            ),
-        )
-        add(
-            DownloadLanguageItemPreference(
-                languageModel = TranslationsController.RuntimeTranslation.LanguageModel(
-                    TranslationsController.Language(
                         stringResource(id = R.string.download_language_all_languages_item_preference),
                         stringResource(id = R.string.download_language_all_languages_item_preference),
                     ),
                     true,
-                    300000,
+                    90000000,
                 ),
                 state = DownloadLanguageItemStatePreference(
                     type = DownloadLanguageItemTypePreference.AllLanguages,
