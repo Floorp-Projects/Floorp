@@ -42,6 +42,7 @@ class nsHttpHeaderArray {
     // Used only for request header.
     eVarietyRequestOverride,
     eVarietyRequestDefault,
+    eVarietyRequestEnforceDefault,
     // Used only for response header.
     eVarietyResponseNetOriginalAndResponse,
     eVarietyResponseNetOriginal,
