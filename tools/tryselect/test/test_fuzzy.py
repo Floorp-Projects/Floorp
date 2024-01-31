@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import os
 
 import mozunit
@@ -27,14 +28,14 @@ def test_query_paths(run_mach, capfd, show_chunk_numbers):
     output = capfd.readouterr().out
     print(output)
 
+    delim = "Calculated try_task_config.json:"
+    index = output.find(delim)
+    result = json.loads(output[index + len(delim) :])
+
     # If there are more than one tasks here, it means that something went wrong
     # with the path filtering.
-    expected = """
-    "tasks": [
-        "test-linux1804-64-qr/debug-mochitest-chrome-1proc-1"
-    ]""".lstrip()
-
-    assert expected in output
+    tasks = result["parameters"]["try_task_config"]["tasks"]
+    assert tasks == ["test-linux1804-64-qr/debug-mochitest-chrome-1proc-1"]
 
 
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
@@ -48,13 +49,13 @@ def test_query(run_mach, capfd, full):
     output = capfd.readouterr().out
     print(output)
 
-    # Should only ever mach one task exactly.
-    expected = """
-    "tasks": [
-        "source-test-python-taskgraph-tests-py3"
-    ]""".lstrip()
+    delim = "Calculated try_task_config.json:"
+    index = output.find(delim)
+    result = json.loads(output[index + len(delim) :])
 
-    assert expected in output
+    # Should only ever mach one task exactly.
+    tasks = result["parameters"]["try_task_config"]["tasks"]
+    assert tasks == ["source-test-python-taskgraph-tests-py3"]
 
 
 if __name__ == "__main__":

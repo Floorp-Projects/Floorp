@@ -10,16 +10,22 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
+
+
   $ ./mach try fuzzy $testargs -q "'bar"
   no tasks selected
   $ ./mach try fuzzy $testargs --full -q "'bar"
@@ -29,14 +35,18 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/bar-debug",
+                  "test/bar-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/bar-debug",
-          "test/bar-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
 
@@ -49,16 +59,20 @@ Test multiple selectors
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/bar-debug",
+                  "test/bar-opt",
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/bar-debug",
-          "test/bar-opt",
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
 
@@ -71,13 +85,17 @@ Test query intersection
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
 
@@ -93,14 +111,18 @@ Test intersection with preset containing multiple queries
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
   $ ./mach try $testargs --preset foo -xq "'test"
@@ -110,14 +132,18 @@ Test intersection with preset containing multiple queries
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
 
@@ -130,14 +156,18 @@ Test exact match
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
   $ ./mach try fuzzy $testargs --full --exact -q "testfoo | 'testbar"
@@ -147,17 +177,20 @@ Test exact match
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/bar-debug",
+                  "test/bar-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/bar-debug",
-          "test/bar-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   
-
 
 Test task config 
 
@@ -168,16 +201,20 @@ Test task config
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "disable-pgo": true,
-      "env": {
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "disable-pgo": true,
+              "env": {
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ],
+              "use-artifact-builds": true
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "use-artifact-builds": true,
-      "version": 1
+      "version": 2
   }
   
   $ ./mach try fuzzy $testargs --env FOO=1 --env BAR=baz -q "'foo"
@@ -187,15 +224,19 @@ Test task config
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-      "env": {
-          "BAR": "baz",
-          "FOO": "1",
-          "TRY_SELECTOR": "fuzzy"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "BAR": "baz",
+                  "FOO": "1",
+                  "TRY_SELECTOR": "fuzzy"
+              },
+              "tasks": [
+                  "test/foo-debug",
+                  "test/foo-opt"
+              ]
+          }
       },
-      "tasks": [
-          "test/foo-debug",
-          "test/foo-opt"
-      ],
-      "version": 1
+      "version": 2
   }
   

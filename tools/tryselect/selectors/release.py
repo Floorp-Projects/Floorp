@@ -81,7 +81,7 @@ def run(
     migrations,
     limit_locales,
     tasks,
-    try_config=None,
+    try_config_params=None,
     stage_changes=False,
     dry_run=False,
     message="{msg}",
@@ -116,16 +116,14 @@ def run(
         )
     elif release_type == "esr":
         release_type += str(version.major_number)
-    task_config = {
-        "version": 2,
-        "parameters": {
+    task_config = {"version": 2, "parameters": try_config_params or {}}
+    task_config["parameters"].update(
+        {
             "target_tasks_method": TARGET_TASKS[tasks],
             "optimize_target_tasks": True,
             "release_type": release_type,
-        },
-    }
-    if try_config:
-        task_config["parameters"]["try_task_config"] = try_config
+        }
+    )
 
     with open(os.path.join(vcs.path, "taskcluster/ci/config.yml")) as f:
         migration_configs = yaml.safe_load(f)

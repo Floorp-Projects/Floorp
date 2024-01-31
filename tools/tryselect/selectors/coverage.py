@@ -387,7 +387,7 @@ def is_opt_task(task):
 
 
 def run(
-    try_config={},
+    try_config_params={},
     full=False,
     parameters=None,
     stage_changes=False,
@@ -435,14 +435,16 @@ def run(
             json.dumps(resolve_tests_by_suite(test_files))
         )
     }
-    try_config.setdefault("env", {}).update(path_env)
+    try_config_params.setdefault("try_task_config", {}).setdefault("env", {}).update(
+        path_env
+    )
 
     # Build commit message.
     msg = "try coverage - " + test_count_message
     return push_to_try(
         "coverage",
         message.format(msg=msg),
-        try_task_config=generate_try_task_config("coverage", tasks, try_config),
+        try_task_config=generate_try_task_config("coverage", tasks, try_config_params),
         stage_changes=stage_changes,
         dry_run=dry_run,
         closed_tree=closed_tree,

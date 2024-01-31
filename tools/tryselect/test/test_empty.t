@@ -10,11 +10,15 @@ Test empty selector
   Pushed via `mach try empty`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "empty"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "empty"
+              },
+              "tasks": []
+          }
       },
-      "tasks": [],
-      "version": 1
+      "version": 2
   }
   
   $ ./mach try empty --no-push --closed-tree
@@ -24,11 +28,15 @@ Test empty selector
   Pushed via `mach try empty`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "empty"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "empty"
+              },
+              "tasks": []
+          }
       },
-      "tasks": [],
-      "version": 1
+      "version": 2
   }
   
   $ ./mach try empty --no-push --closed-tree -m "foo {msg} bar"
@@ -38,10 +46,14 @@ Test empty selector
   Pushed via `mach try empty`
   Calculated try_task_config.json:
   {
-      "env": {
-          "TRY_SELECTOR": "empty"
+      "parameters": {
+          "try_task_config": {
+              "env": {
+                  "TRY_SELECTOR": "empty"
+              },
+              "tasks": []
+          }
       },
-      "tasks": [],
-      "version": 1
+      "version": 2
   }
   

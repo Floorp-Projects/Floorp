@@ -40,6 +40,7 @@ schema.EXCEPTED_SCHEMA_IDENTIFIERS.extend(
         "video_location",
         "profile_name",
         "target_path",
+        "try_task_config",
     ]
 )
 

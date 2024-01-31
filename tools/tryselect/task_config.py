@@ -47,7 +47,7 @@ def try_config_commit(vcs: Repository, commit_message: str):
         vcs.remove_current_commit()
 
 
-class TryConfig:
+class ParameterConfig:
     __metaclass__ = ABCMeta
 
     def __init__(self):
@@ -63,11 +63,23 @@ class TryConfig:
         pass
 
     @abstractmethod
-    def try_config(self, **kwargs):
+    def get_parameters(self, **kwargs) -> dict:
         pass
 
     def validate(self, **kwargs):
         pass
+
+
+class TryConfig(ParameterConfig):
+    @abstractmethod
+    def try_config(self, **kwargs) -> dict:
+        pass
+
+    def get_parameters(self, **kwargs):
+        result = self.try_config(**kwargs)
+        if result is None:
+            return None
+        return {"try_task_config": result}
 
 
 class Artifact(TryConfig):
@@ -184,7 +196,8 @@ class Pernosco(TryConfig):
         }
 
     def validate(self, **kwargs):
-        if kwargs["try_config"].get("use-artifact-builds"):
+        try_config = kwargs["try_config_params"].get("try_task_config") or {}
+        if try_config.get("use-artifact-builds"):
             print(
                 "Pernosco does not support artifact builds at this time. "
                 "Please try again with '--no-artifact'."

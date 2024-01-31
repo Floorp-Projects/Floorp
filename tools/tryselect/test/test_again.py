@@ -24,7 +24,7 @@ def test_try_again(monkeypatch):
         try_task_config=push.generate_try_task_config(
             "fuzzy",
             ["foo", "bar"],
-            {"use-artifact-builds": True},
+            {"try_task_config": {"use-artifact-builds": True}},
         ),
     )
 
@@ -43,7 +43,7 @@ def test_try_again(monkeypatch):
     assert args[0] == "again"
     assert args[1] == "Fuzzy message"
 
-    try_task_config = kwargs.pop("try_task_config")
+    try_task_config = kwargs["try_task_config"]["parameters"].pop("try_task_config")
     assert sorted(try_task_config.get("tasks")) == sorted(["foo", "bar"])
     assert try_task_config.get("env") == {"TRY_SELECTOR": "fuzzy"}
     assert try_task_config.get("use-artifact-builds")
