@@ -463,7 +463,6 @@ class PuppeteerRunner(MozbuildObject):
 
                 test_command = test_command + ":bidi:headful"
 
-
         command = ["run", test_command, "--"] + mocha_options
 
         prefs = {}
