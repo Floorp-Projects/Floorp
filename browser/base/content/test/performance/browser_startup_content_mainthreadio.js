@@ -24,7 +24,6 @@ const kDumpAllStacks = false;
 const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
-const FORK_SERVER = Services.prefs.getBoolPref("dom.ipc.forkserver.enable");
 
 /* This is an object mapping string process types to lists of known cases
  * of IO happening on the main thread. Ideally, IO should not be on the main
@@ -71,17 +70,13 @@ const processes = {
   "Web Content": [
     {
       path: "GreD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
@@ -107,17 +102,13 @@ const processes = {
   "Privileged Content": [
     {
       path: "GreD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
@@ -130,17 +121,13 @@ const processes = {
   WebExtensions: [
     {
       path: "GreD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      // Visible on Windows with an open marker.
-      // The fork server preloads the omnijars.
-      condition: !WIN && !FORK_SERVER,
+      condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
     {
@@ -444,19 +431,12 @@ add_task(async function () {
   } else {
     const filename = "profile_startup_content_mainthreadio.json";
     let path = Services.env.get("MOZ_UPLOAD_DIR");
-    let helpString;
-    if (path) {
-      let profilePath = PathUtils.join(path, filename);
-      await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
-      helpString = `open the ${filename} artifact in the Firefox Profiler to see what happened`;
-    } else {
-      helpString =
-        "set the MOZ_UPLOAD_DIR environment variable to record a profile";
-    }
+    let profilePath = PathUtils.join(path, filename);
+    await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
     ok(
       false,
       "Unexpected main thread I/O behavior during child process startup; " +
-        helpString
+        `open the ${filename} artifact in the Firefox Profiler to see what happened`
     );
   }
 });
