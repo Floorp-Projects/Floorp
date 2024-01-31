@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const SEARCH_TELEMETRY_SHARED = {
   PROVIDER_INFO: "SearchTelemetry:ProviderInfo",
   LOAD_TIMEOUT: "SearchTelemetry:LoadTimeout",
+  SPA_LOAD_TIMEOUT: "SearchTelemetry:SPALoadTimeout",
 };
 
 /**
@@ -828,6 +829,8 @@ class SearchAdImpression {
     let url = document.documentURI;
     let callback = documentToEventCallbackMap.get(document);
 
+    let removeListenerCallbacks = [];
+
     for (let element of elements) {
       let clickCallback = () => {
         callback({
@@ -849,15 +852,27 @@ class SearchAdImpression {
       };
       element.addEventListener("keydown", keydownCallback);
 
-      document.ownerGlobal.addEventListener(
-        "pagehide",
-        () => {
-          element.removeEventListener("click", clickCallback);
-          element.removeEventListener("keydown", keydownCallback);
-        },
-        { once: true }
-      );
+      removeListenerCallbacks.push(() => {
+        element.removeEventListener("click", clickCallback);
+        element.removeEventListener("keydown", keydownCallback);
+      });
     }
+
+    document.ownerGlobal.addEventListener(
+      "pagehide",
+      () => {
+        let callbacks = documentToRemoveEventListenersMap.get(document);
+        if (callbacks) {
+          for (let removeEventListenerCallback of callbacks) {
+            removeEventListenerCallback();
+          }
+          documentToRemoveEventListenersMap.delete(document);
+        }
+      },
+      { once: true }
+    );
+
+    documentToRemoveEventListenersMap.set(document, removeListenerCallbacks);
   }
 }
 
@@ -1013,6 +1028,7 @@ const searchProviders = new SearchProviders();
 const searchAdImpression = new SearchAdImpression();
 
 const documentToEventCallbackMap = new WeakMap();
+const documentToRemoveEventListenersMap = new WeakMap();
 
 /**
  * SearchTelemetryChild monitors for pages that are partner searches, and
@@ -1190,6 +1206,16 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
     }
   }
 
+  #removeEventListeners() {
+    let callbacks = documentToRemoveEventListenersMap.get(this.document);
+    if (callbacks) {
+      for (let callback of callbacks) {
+        callback();
+      }
+      documentToRemoveEventListenersMap.delete(this.document);
+    }
+  }
+
   /**
    * Handles events received from the actor child notifications.
    *
@@ -1233,6 +1259,20 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         this.#cancelCheck();
         break;
       }
+    }
+  }
+
+  receiveMessage(message) {
+    switch (message.name) {
+      case "SearchSERPTelemetry:WaitForSPAPageLoad":
+        lazy.setTimeout(() => {
+          this.#checkForPageImpressionComponents();
+          this._checkForAdLink("load");
+        }, Services.cpmm.sharedData.get(SEARCH_TELEMETRY_SHARED.SPA_LOAD_TIMEOUT));
+        break;
+      case "SearchSERPTelemetry:RemoveEventListeners":
+        this.#removeEventListeners();
+        break;
     }
   }
 
