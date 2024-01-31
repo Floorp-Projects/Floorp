@@ -7,8 +7,6 @@
  * allow testing the shutdown+restart situation in AddonTestUtils.sys.mjs.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 // A shared `lazy` object for exports from XPIDatabase, XPIInternal, and
 // XPIProvider modules.
 //
@@ -18,21 +16,21 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 // The list of lazy getters should be in sync with resetXPIExports in
 // AddonTestUtils.sys.mjs.
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  // XPIDatabase.jsm
-  AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
-  BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.jsm",
-  XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
-  XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  // XPIDatabase.sys.mjs
+  AddonInternal: "resource://gre/modules/addons/XPIDatabase.sys.mjs",
+  BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.sys.mjs",
+  XPIDatabase: "resource://gre/modules/addons/XPIDatabase.sys.mjs",
+  XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.sys.mjs",
 
-  // XPIInstall.jsm
-  UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
-  XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
-  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
+  // XPIInstall.sys.mjs
+  UpdateChecker: "resource://gre/modules/addons/XPIInstall.sys.mjs",
+  XPIInstall: "resource://gre/modules/addons/XPIInstall.sys.mjs",
+  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.sys.mjs",
 
-  // XPIProvider.jsm
-  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
-  XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
+  // XPIProvider.sys.mjs
+  XPIProvider: "resource://gre/modules/addons/XPIProvider.sys.mjs",
+  XPIInternal: "resource://gre/modules/addons/XPIProvider.sys.mjs",
 });
 
 export { lazy as XPIExports };

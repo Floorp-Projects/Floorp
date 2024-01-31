@@ -265,7 +265,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/modules/tests/xpcshell/test_PermissionsUtils.js
         - toolkit/modules/third_party/jsesc/jsesc.mjs
         - toolkit/modules/Troubleshoot.sys.mjs
-        - toolkit/mozapps/extensions/internal/XPIInstall.jsm
+        - toolkit/mozapps/extensions/internal/XPIInstall.sys.mjs
         - toolkit/mozapps/extensions/test/browser/browser_html_discover_view.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_Device.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_DriverNew.js

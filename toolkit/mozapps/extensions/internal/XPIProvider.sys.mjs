@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This file contains most of the logic required to load and run
  * extensions at startup. Anything which is not required immediately at
- * startup should go in XPIInstall.jsm or XPIDatabase.jsm if at all
+ * startup should go in XPIInstall.sys.mjs or XPIDatabase.sys.mjs if at all
  * possible, in order to minimize the impact on startup performance.
  */
 
@@ -17,20 +15,14 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
-var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { XPIExports } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/XPIExports.sys.mjs"
-);
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPIExports } from "resource://gre/modules/addons/XPIExports.sys.mjs";
+import {
+  AddonManager,
+  AddonManagerPrivate,
+} from "resource://gre/modules/AddonManager.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -188,9 +180,8 @@ const ALL_XPI_TYPES = new Set([
 var gIDTest =
   /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module
@@ -222,7 +213,7 @@ function awaitPromise(promise) {
   );
 
   Services.tm.spinEventLoopUntil(
-    "XPIProvider.jsm:awaitPromise",
+    "XPIProvider.sys.mjs:awaitPromise",
     () => success !== undefined
   );
 
@@ -503,7 +494,7 @@ class XPIState {
     }
   }
 
-  // Compatibility shim getters for legacy callers in XPIDatabase.jsm.
+  // Compatibility shim getters for legacy callers in XPIDatabase.sys.mjs.
   get mtime() {
     return this.lastModifiedTime;
   }
@@ -2178,7 +2169,7 @@ let providerReadyPromise = new Promise(resolve => {
   resolveProviderReady = resolve;
 });
 
-var XPIProvider = {
+export var XPIProvider = {
   get name() {
     return "XPIProvider";
   },
@@ -3352,7 +3343,7 @@ for (let meth of [
   };
 }
 
-var XPIInternal = {
+export var XPIInternal = {
   BOOTSTRAP_REASONS,
   BootstrapScope,
   BuiltInLocation,

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This file contains most of the logic required to install extensions.
  * In general, we try to avoid loading it until extension installation
@@ -17,29 +15,18 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
-var EXPORTED_SYMBOLS = [
-  "UpdateChecker",
-  "XPIInstall",
-  "verifyBundleSignedState",
-];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { XPIExports } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/XPIExports.sys.mjs"
-);
-const { computeSha256HashAsString, getHashStringForCrypto } =
-  ChromeUtils.importESModule(
-    "resource://gre/modules/addons/crypto-utils.sys.mjs"
-  );
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
-);
+import { XPIExports } from "resource://gre/modules/addons/XPIExports.sys.mjs";
+import {
+  computeSha256HashAsString,
+  getHashStringForCrypto,
+} from "resource://gre/modules/addons/crypto-utils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import {
+  AddonManager,
+  AddonManagerPrivate,
+} from "resource://gre/modules/AddonManager.sys.mjs";
 
 const lazy = {};
 
@@ -176,9 +163,8 @@ const MSG_JAR_FLUSH = "Extension:FlushJarCache";
 var gIDTest =
   /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module
@@ -909,7 +895,7 @@ function shouldVerifySignedState(aAddonType, aLocation) {
  * @returns {Promise<number>}
  *        A Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
-var verifyBundleSignedState = async function (aBundle, aAddon) {
+export var verifyBundleSignedState = async function (aBundle, aAddon) {
   let pkg = Package.get(aBundle);
   try {
     let { signedState } = await pkg.verifySignedState(
@@ -2926,7 +2912,8 @@ AddonInstallWrapper.prototype = {
  * @throws if the aListener or aReason arguments are not valid
  */
 var AddonUpdateChecker;
-var UpdateChecker = function (
+
+export var UpdateChecker = function (
   aAddon,
   aListener,
   aReason,
@@ -3953,7 +3940,7 @@ var AppUpdate = {
   },
 };
 
-var XPIInstall = {
+export var XPIInstall = {
   // An array of currently active AddonInstalls
   installs: new Set(),
 
