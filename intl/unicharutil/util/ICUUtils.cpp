@@ -41,7 +41,10 @@ already_AddRefed<nsAtom> ICUUtils::LanguageTagIterForContent::GetNext() {
 
   if (mCurrentFallbackIndex < 2) {
     mCurrentFallbackIndex = 2;
-    // Else take the app's locale:
+    // Else take the app's locale (or en-US, if spoof English applies):
+    if (mContent->OwnerDoc()->ShouldResistFingerprinting(RFPTarget::JSLocale)) {
+      return NS_Atomize("en-US");
+    }
     nsAutoCString appLocale;
     LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocale);
     return NS_Atomize(appLocale);
