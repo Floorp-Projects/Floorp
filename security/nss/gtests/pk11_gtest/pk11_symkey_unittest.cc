@@ -131,6 +131,20 @@ TEST_F(Pkcs11SymKeyTest, NotExtractableConcatSymKeyTest) {
   CheckIsNotExtractable(key2.get());
 }
 
+// Test that keys can be concatenated on the key slot.
+TEST_F(Pkcs11SymKeyTest, KeySlotConcatSymKeyTest) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_NE(nullptr, slot);
+
+  ScopedPK11SymKey left(ImportSymKey(slot.get(), &kLeftHalf));
+
+  ScopedPK11SymKey right(ImportSymKey(slot.get(), &kRightHalf));
+
+  ScopedPK11SymKey key(
+      PK11_ConcatSymKeys(left.get(), right.get(), CKM_HKDF_DERIVE, CKA_DERIVE));
+  CheckKeyData(kFull, key.get());
+}
+
 // Test that keys in different slots are moved to the same slot for derivation.
 // The PK11SymKey.data fields are set in PK11_ImportSymKey, so this just
 // re-imports the key data.

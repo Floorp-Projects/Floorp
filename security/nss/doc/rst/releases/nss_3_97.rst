@@ -1,0 +1,68 @@
+.. _mozilla_projects_nss_nss_3_97_release_notes:
+
+NSS 3.97 release notes
+========================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.97 was released on *22nd January 2024**.
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_97_RTM. NSS 3.97 requires NSPR 4.35 or newer.
+
+   NSS 3.97 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_97_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.97:
+
+`Changes in NSS 3.97 <#changes_in_nss_3.97>`__
+------------------------------------------------------------------
+
+.. container::
+
+  - Bug 1875506 - make Xyber768d00 opt-in by policy.
+  - Bug 1871631 - add libssl support for xyber768d00.
+  - Bug 1871630 - add PK11_ConcatSymKeys.
+  - Bug 1775046 - add Kyber and a PKCS#11 KEM interface to softoken.
+  - Bug 1871152 - add a FreeBL API for Kyber.
+  - Bug 1826451 - part 2: vendor github.com/pq-crystals/kyber/commit/e0d1c6ff.
+  - Bug 1826451 - part 1: add a script for vendoring kyber from pq-crystals repo.
+  - Bug 1835828 - Removing the calls to RSA Blind from loader.*
+  - Bug 1874111 - fix worker type for level3 mac tasks.
+  - Bug 1835828 - RSA Blind implementation.
+  - Bug 1869642 - Remove DSA selftests.
+  - Bug 1873296 - read KWP testvectors from JSON.
+  - Bug 1822450 - Backed out changeset dcb174139e4f
+  - Bug 1822450 - Fix CKM_PBE_SHA1_DES2_EDE_CBC derivation.
+  - Bug 1871219 - Wrap CC shell commands in gyp expansions.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.97 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

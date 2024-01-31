@@ -1,7 +1,7 @@
-.. _mozilla_projects_nss_ssl_functions_sslerr:
+.. _mozilla_projects_nss_ssl_error_codes:
 
-sslerr
-======
+Error Codes
+===========
 
 .. container::
 

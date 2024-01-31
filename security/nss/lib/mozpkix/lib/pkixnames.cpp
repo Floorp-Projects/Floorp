@@ -127,6 +127,7 @@ Result SearchNames(const Input* subjectAltName, Input subject,
                    GeneralNameType referenceIDType,
                    Input referenceID,
                    FallBackToSearchWithinSubject fallBackToCommonName,
+                   HandleInvalidSubjectAlternativeNamesBy handleInvalidSANsBy,
                    /*out*/ MatchResult& match);
 Result SearchWithinRDN(Reader& rdn,
                        GeneralNameType referenceIDType,
@@ -239,6 +240,8 @@ CheckCertHostname(Input endEntityCertDER, Input hostname,
   if (rv != Success) {
     return rv;
   }
+  HandleInvalidSubjectAlternativeNamesBy handleInvalidSANsBy =
+    nameMatchingPolicy.HandleInvalidSubjectAlternativeNames();
 
   const Input* subjectAltName(cert.GetSubjectAltName());
   Input subject(cert.GetSubject());
@@ -257,13 +260,16 @@ CheckCertHostname(Input endEntityCertDER, Input hostname,
   uint8_t ipv4[4];
   if (IsValidReferenceDNSID(hostname)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::dNSName,
-                     hostname, fallBackToSearchWithinSubject, match);
+                     hostname, fallBackToSearchWithinSubject,
+                     handleInvalidSANsBy, match);
   } else if (ParseIPv6Address(hostname, ipv6)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
-                     Input(ipv6), FallBackToSearchWithinSubject::No, match);
+                     Input(ipv6), FallBackToSearchWithinSubject::No,
+                     HandleInvalidSubjectAlternativeNamesBy::Halting, match);
   } else if (ParseIPv4Address(hostname, ipv4)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
-                     Input(ipv4), fallBackToSearchWithinSubject, match);
+                     Input(ipv4), fallBackToSearchWithinSubject,
+                     HandleInvalidSubjectAlternativeNamesBy::Halting, match);
   } else {
     return Result::ERROR_BAD_CERT_DOMAIN;
   }
@@ -287,6 +293,13 @@ Result StrictNameMatchingPolicy::FallBackToCommonName(
     /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) {
   fallBackToCommonName = FallBackToSearchWithinSubject::No;
   return Success;
+}
+
+// A strict name matching policy for CheckCertHostname which halts with an
+// error upon encountering an invalid subject alternative name entry.
+HandleInvalidSubjectAlternativeNamesBy
+StrictNameMatchingPolicy::HandleInvalidSubjectAlternativeNames() {
+  return HandleInvalidSubjectAlternativeNamesBy::Halting;
 }
 
 Result
@@ -314,6 +327,7 @@ CheckNameConstraints(Input encodedNameConstraints,
     Result rv = SearchNames(child->GetSubjectAltName(), child->GetSubject(),
                             GeneralNameType::nameConstraints,
                             encodedNameConstraints, fallBackToCommonName,
+                            HandleInvalidSubjectAlternativeNamesBy::Halting,
                             match);
     if (rv != Success) {
       return rv;
@@ -353,6 +367,7 @@ SearchNames(/*optional*/ const Input* subjectAltName,
             GeneralNameType referenceIDType,
             Input referenceID,
             FallBackToSearchWithinSubject fallBackToCommonName,
+            HandleInvalidSubjectAlternativeNamesBy handleInvalidSANsBy,
             /*out*/ MatchResult& match)
 {
   Result rv;
@@ -399,6 +414,10 @@ SearchNames(/*optional*/ const Input* subjectAltName,
                                            referenceIDType, referenceID,
                                            match);
       if (rv != Success) {
+        if (!IsFatalError(rv) &&
+            handleInvalidSANsBy == HandleInvalidSubjectAlternativeNamesBy::Skipping) {
+          continue;
+        }
         return rv;
       }
       if (referenceIDType != GeneralNameType::nameConstraints &&

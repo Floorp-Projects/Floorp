@@ -234,6 +234,11 @@ class DefaultNameMatchingPolicy : public NameMatchingPolicy {
     fallBackToCommonName = FallBackToSearchWithinSubject::Yes;
     return Success;
   }
+
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override {
+    return HandleInvalidSubjectAlternativeNamesBy::Halting;
+  }
 };
 
 // python DottedOIDToCode.py --tlv id-kp-clientAuth 1.3.6.1.5.5.7.3.2

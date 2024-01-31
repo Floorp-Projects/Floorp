@@ -179,6 +179,11 @@ class CodeSigningNameMatchingPolicy : public NameMatchingPolicy {
     fallBackToCommonName = FallBackToSearchWithinSubject::No;
     return Success;
   }
+
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override {
+    return HandleInvalidSubjectAlternativeNamesBy::Halting;
+  }
 };
 
 bool VerifyCodeSigningCertificateChain(

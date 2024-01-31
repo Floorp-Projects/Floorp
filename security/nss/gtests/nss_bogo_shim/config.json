@@ -22,6 +22,13 @@
         "Resume-Server-UnofferedCipher-TLS13":"Bogo rejects resumption if client offers previously not used ciphersuites with equal hash algorithm (no 0Rtt).",
         "EarlyData-FirstTicket-Server-TLS13":"Bogo provides specific early data logging which is the only check in this test but not supported by NSS.",
 
+        "CheckLeafCurve":"NSS doesn't require ECDSA curve to match ECDH curve",
+        "UnsupportedCurve":"NSS doesn't require ECDSA curve to match ECDH curve",
+        "Client-VerifyDefault-ECDSA_P521_SHA512-*":"Boring expects a failure because it doesn't enable ECDSA_P521_SHA512 by default",
+        "Client-VerifyDefault-ECDSA_SHA1-TLS12":"Boring expects a failure because it doesn't enable ECDSA_SHA1 by default",
+
+        "CurveTest-*-P-224-*":"NSS does not support P-224",
+        "*-*-*ECDSA_P224_SHA256-TLS12": "NSS does not support P-224",
         "*Ed25519*":"Add Ed25519 support (Bug 1325335)",
         "*NoSSL3*":"Test passes but only because of handshake failure, NSS only rejects SSL3 immediately in TLS1.3 clients/servers.",
         "SendExtensionOnClientCertificate-TLS13":"Bug 1339392",
@@ -34,6 +41,7 @@
         "SkipEarlyData-Interleaved-TLS13":"NSS ignores invalid early data records by default since ssl_0rtt_ignore_trial is default. Bug 1336916",
         "ECDSAKeyUsage*":"NSS only checks KeyUsage on server setup and with delegated credential verification. Bug 1338194",
         "RSAKeyUsage-*-WantSignature-GotEncipherment-*":"NSS only checks KeyUsage on server setup and with delegated credential verification. See Bug 1338194",
+        "RSAKeyUsage-*-WantEncipherment-GotSignature-*":"NSS only checks KeyUsage on server setup and with delegated credential verification. See Bug 1338194",
         "TLS13-ExpectNoSessionTicketOnBadKEMode-Server":"NSS Server side bug. Don't send ticket when not permitted by KE modes (Bug 1317635)",
         "Resume-Server-OmitPSKsOnSecondClientHello":"NSS Server side bug. It does not detect ClientHello dropping of PSK extension (after HRR).",
         "Renegotiate-Client-Forbidden-1":"By default NSS allows renegotiation with extension contrary to bogo.",
@@ -48,6 +56,13 @@
         "CorruptTicket-TLS-TLS12":"NSS sends an alert on reception of a corrupted session ticket instead of falling back to full handshake. Bug 1783812",
 
         "FalseStart-ALPN*":"TODO - Implementing TLS 1.2 only FalseStart has low priority.",
+
+        "Server-Verify*":"Runner doesn't set the appropriate cert-file and key-file arguments",
+        "Client-Sign-Negotiate-*":"Runner doesn't set the appropriate cert-file and key-file arguments",
+
+        "NotJustKyberKeyShare":"Boring always sends a pre-quantum share with Xyber768 (if one is configured)",
+        "KyberKeyShareIncludedSecond":"Boring sends Xyber768 even if is not the client's first preference",
+        "KyberKeyShareIncludedThird":"Boring sends Xyber768 even if is not the client's first preference",
 
         "####################":"####################",
         "### TLS1/11 failures due to unsupported signature algorithms":"",
@@ -78,6 +93,14 @@
         "CorruptTicket*TLS11":"",
         "Resume-Server*TLS1-*":"",
         "Resume-Server*TLS11-*":"",
+        "Server-Sign-ECDSA-TLS1":"",
+        "Server-Sign-ECDSA-TLS11":"",
+        "Server-Sign-RSA-TLS1":"",
+        "Server-Sign-RSA-TLS11":"",
+        "CurveTest-Server-P-*-TLS1":"",
+        "CurveTest-Server-P-*-TLS11":"",
+        "CurveTest-Server-X25519-TLS1":"",
+        "CurveTest-Server-X25519-TLS11":"",
         "BadRSAClientKeyExchange-*":"This is a TLS11 only test.",
         "RSAKeyUsage-Server-WantSignature-GotSignature-TLS1":"Only Server side of TLS 1 fails",
         "RSAKeyUsage-Server-WantSignature-GotSignature-TLS11":"Only Server side of TLS 11 fails",
