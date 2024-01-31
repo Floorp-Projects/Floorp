@@ -10,13 +10,4 @@ def get_gradle_project(task):
         shipping_product = attributes.get("shipping-product", "")
         if shipping_product:
             return shipping_product
-
-        # TODO: Use only shipping-product attribute instead
-        treeherder_group = attributes.get("treeherder-group", "")
-        if "focus" in treeherder_group:
-            gradle_project = "focus"
-        elif "fenix" in treeherder_group:
-            gradle_project = "fenix"
-        else:
-            gradle_project = None
     return gradle_project

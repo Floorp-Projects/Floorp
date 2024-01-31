@@ -20,7 +20,6 @@ job-defaults:
         build-type: regular
         code-review: true
         component: samples-browser
-        treeherder-group: samples-browser
     dependencies:
         build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
     description: Execute Gradle tasks for component "{component}"
@@ -42,7 +41,7 @@ job-defaults:
         kind: build
         platform: AC-android-all/opt
         tier: 1
-        symbol: '{treeherder_group}(B)'
+        symbol: 'samples-browser(B)'
     worker-type: b-linux-large-gcp
     worker:
         chain-of-trust: true
@@ -60,7 +59,7 @@ jobs:
                 - ':samples-browser:lintGeckoDebug'
 
     system:
-        attributes:
-            treeherder-group: samples-browser-system
         run:
             gradlew: [':samples-browser:assembleSystem']
+        treeherder:
+            symbol: 'samples-browser-system(B)'
