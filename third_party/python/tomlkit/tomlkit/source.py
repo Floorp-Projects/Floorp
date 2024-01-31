@@ -50,7 +50,7 @@ class _StateHandler:
     def __call__(self, *args, **kwargs):
         return _State(self._source, *args, **kwargs)
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> _State:
         state = self()
         self._states.append(state)
         return state.__enter__()

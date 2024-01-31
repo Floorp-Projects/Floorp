@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: tomlkit
-Version: 0.11.8
+Version: 0.12.3
 Summary: Style preserving TOML library
 Home-page: https://github.com/sdispater/tomlkit
 License: MIT
@@ -14,6 +14,7 @@ Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
 Project-URL: Repository, https://github.com/sdispater/tomlkit
 Description-Content-Type: text/markdown
 
@@ -43,7 +44,7 @@ Part of the implementation has been adapted, improved and fixed from [Molten](ht
 
 ## Usage
 
-See the [documentation](https://github.com/sdispater/tomlkit/blob/master/docs/quickstart.rst) for more information.
+See the [documentation](https://tomlkit.readthedocs.io/) for more information.
 
 ## Installation
 

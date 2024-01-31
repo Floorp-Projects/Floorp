@@ -60,7 +60,7 @@ class Parser:
     Parser for TOML documents.
     """
 
-    def __init__(self, string: str) -> None:
+    def __init__(self, string: str | bytes) -> None:
         # Input to parse
         self._src = Source(decode(string))
 
@@ -1030,7 +1030,7 @@ class Parser:
                         InternalParserError,
                         "_parse_item() returned None on a non-bracket character.",
                     )
-
+        table.value._validate_out_of_order_table()
         if isinstance(result, Null):
             result = table
 
