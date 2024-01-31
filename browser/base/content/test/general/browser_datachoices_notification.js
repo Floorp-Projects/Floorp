@@ -104,11 +104,16 @@ var checkInfobarButton = async function (aNotification) {
   );
   let button = buttons[0];
 
+  let openPrefsPromise = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    "about:preferences#privacy"
+  );
+
   // Click on the button.
   button.click();
 
   // Wait for the preferences panel to open.
-  await promiseNextTick();
+  await openPrefsPromise;
 };
 
 add_setup(async function () {
