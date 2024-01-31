@@ -1101,6 +1101,7 @@ linux64-asan-fuzzing-nyx/opt:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             AFL_CC: /builds/worker/fetches/clang/bin/clang
             AFL_CXX: /builds/worker/fetches/clang/bin/clang++
+            AFL_LLVM_NO_RPATH: "1"
         max-run-time: 7200
     run:
         using: mozharness

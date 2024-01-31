@@ -11,6 +11,7 @@ patch -p1 -i "$scripts/afl-nyx.patch"
 make -f GNUmakefile afl-showmap \
     CC="$MOZ_FETCHES_DIR/clang/bin/clang"
 make -f GNUmakefile.llvm install \
+    CODE_COVERAGE=1 \
     CPPFLAGS="--sysroot $MOZ_FETCHES_DIR/sysroot" \
     DESTDIR="$dir" \
     LLVM_CONFIG="$MOZ_FETCHES_DIR/clang/bin/llvm-config" \

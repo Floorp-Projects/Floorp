@@ -1,37 +1,3 @@
-commit 5609c7644b5a6e400549b01510031eb8d4e27b1c
-Author: Jesse Schwartzentruber <truber@mozilla.com>
-Date:   Fri Jul 14 13:20:02 2023 -0400
-
-    Don't set rpath to mozfetch
-
-diff --git a/src/afl-cc.c b/src/afl-cc.c
-index 037a5c30..eef15fee 100644
---- a/src/afl-cc.c
-+++ b/src/afl-cc.c
-@@ -1144,22 +1144,6 @@ static void edit_params(u32 argc, char **argv, char **envp) {
- 
-   if (!have_pic) { cc_params[cc_par_cnt++] = "-fPIC"; }
- 
--  // in case LLVM is installed not via a package manager or "make install"
--  // e.g. compiled download or compiled from github then its ./lib directory
--  // might not be in the search path. Add it if so.
--  u8 *libdir = strdup(LLVM_LIBDIR);
--  if (plusplus_mode && strlen(libdir) && strncmp(libdir, "/usr", 4) &&
--      strncmp(libdir, "/lib", 4)) {
--
--    cc_params[cc_par_cnt++] = "-Wl,-rpath";
--    cc_params[cc_par_cnt++] = libdir;
--
--  } else {
--
--    free(libdir);
--
--  }
--
-   if (getenv("AFL_HARDEN")) {
- 
-     cc_params[cc_par_cnt++] = "-fstack-protector-all";
-
 commit 1e1e67d0a7d16db0a4331702af713a163c40b87f
 Author: Jesse Schwartzentruber <truber@mozilla.com>
 Date:   Fri Jul 14 11:04:04 2023 -0400
