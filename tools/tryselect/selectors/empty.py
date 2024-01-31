@@ -25,7 +25,7 @@ class EmptyParser(BaseTryParser):
 
 def run(
     message="{msg}",
-    try_config=None,
+    try_config_params=None,
     stage_changes=False,
     dry_run=False,
     closed_tree=False,
@@ -35,7 +35,7 @@ def run(
     return push_to_try(
         "empty",
         message.format(msg=msg),
-        try_task_config=generate_try_task_config("empty", [], try_config),
+        try_task_config=generate_try_task_config("empty", [], params=try_config_params),
         stage_changes=stage_changes,
         dry_run=dry_run,
         closed_tree=closed_tree,

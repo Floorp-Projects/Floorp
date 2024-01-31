@@ -428,7 +428,7 @@ def set_try_config(parameters, task_config_file):
             parameters["try_task_config"] = task_config
         elif task_config_version == 2:
             parameters.update(task_config["parameters"])
-            return
+            parameters["try_mode"] = "try_task_config"
         else:
             raise Exception(
                 f"Unknown `try_task_config.json` version: {task_config_version}"
@@ -444,11 +444,7 @@ def set_try_config(parameters, task_config_file):
         # The user has explicitly requested a set of jobs, so run them all
         # regardless of optimization.  Their dependencies can be optimized,
         # though.
-        parameters["optimize_target_tasks"] = False
-    else:
-        # For a try push with no task selection, apply the default optimization
-        # process to all of the tasks.
-        parameters["optimize_target_tasks"] = True
+        parameters.setdefault("optimize_target_tasks", False)
 
 
 def set_decision_indexes(decision_task_id, params, graph_config):

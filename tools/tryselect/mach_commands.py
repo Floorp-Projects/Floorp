@@ -139,16 +139,16 @@ def handle_presets(
     return kwargs
 
 
-def handle_try_config(command_context, **kwargs):
+def handle_try_params(command_context, **kwargs):
     from tryselect.util.dicttools import merge
 
     to_validate = []
-    kwargs.setdefault("try_config", {})
+    kwargs.setdefault("try_config_params", {})
     for cls in command_context._mach_context.handler.parser.task_configs.values():
-        try_config = cls.try_config(**kwargs)
-        if try_config is not None:
+        params = cls.get_parameters(**kwargs)
+        if params is not None:
             to_validate.append(cls)
-            kwargs["try_config"] = merge(kwargs["try_config"], try_config)
+            kwargs["try_config_params"] = merge(kwargs["try_config_params"], params)
 
         for name in cls.dests:
             del kwargs[name]
@@ -164,7 +164,7 @@ def run(command_context, **kwargs):
     kwargs = handle_presets(command_context, **kwargs)
 
     if command_context._mach_context.handler.parser.task_configs:
-        kwargs = handle_try_config(command_context, **kwargs)
+        kwargs = handle_try_params(command_context, **kwargs)
 
     mod = importlib.import_module(
         "tryselect.selectors.{}".format(

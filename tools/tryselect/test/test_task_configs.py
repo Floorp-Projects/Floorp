@@ -15,27 +15,39 @@ from tryselect.task_config import Pernosco, all_task_configs
 TASK_CONFIG_TESTS = {
     "artifact": [
         (["--no-artifact"], None),
-        (["--artifact"], {"use-artifact-builds": True, "disable-pgo": True}),
+        (
+            ["--artifact"],
+            {"try_task_config": {"use-artifact-builds": True, "disable-pgo": True}},
+        ),
     ],
     "chemspill-prio": [
         ([], None),
-        (["--chemspill-prio"], {"chemspill-prio": {}}),
+        (["--chemspill-prio"], {"try_task_config": {"chemspill-prio": {}}}),
     ],
     "env": [
         ([], None),
-        (["--env", "foo=bar", "--env", "num=10"], {"env": {"foo": "bar", "num": "10"}}),
+        (
+            ["--env", "foo=bar", "--env", "num=10"],
+            {"try_task_config": {"env": {"foo": "bar", "num": "10"}}},
+        ),
     ],
     "path": [
         ([], None),
         (
             ["dom/indexedDB"],
-            {"env": {"MOZHARNESS_TEST_PATHS": '{"xpcshell": ["dom/indexedDB"]}'}},
+            {
+                "try_task_config": {
+                    "env": {"MOZHARNESS_TEST_PATHS": '{"xpcshell": ["dom/indexedDB"]}'}
+                }
+            },
         ),
         (
             ["dom/indexedDB", "testing"],
             {
-                "env": {
-                    "MOZHARNESS_TEST_PATHS": '{"xpcshell": ["dom/indexedDB", "testing"]}'
+                "try_task_config": {
+                    "env": {
+                        "MOZHARNESS_TEST_PATHS": '{"xpcshell": ["dom/indexedDB", "testing"]}'
+                    }
                 }
             },
         ),
@@ -46,7 +58,7 @@ TASK_CONFIG_TESTS = {
     ],
     "rebuild": [
         ([], None),
-        (["--rebuild", "10"], {"rebuild": 10}),
+        (["--rebuild", "10"], {"try_task_config": {"rebuild": 10}}),
         (["--rebuild", "1"], SystemExit),
         (["--rebuild", "21"], SystemExit),
     ],
@@ -54,7 +66,7 @@ TASK_CONFIG_TESTS = {
         ([], None),
         (
             ["--worker-override", "alias=worker/pool"],
-            {"worker-overrides": {"alias": "worker/pool"}},
+            {"try_task_config": {"worker-overrides": {"alias": "worker/pool"}}},
         ),
         (
             [
@@ -67,7 +79,11 @@ TASK_CONFIG_TESTS = {
         ),
         (
             ["--worker-suffix", "b-linux=-dev"],
-            {"worker-overrides": {"b-linux": "gecko-1/b-linux-dev"}},
+            {
+                "try_task_config": {
+                    "worker-overrides": {"b-linux": "gecko-1/b-linux-dev"}
+                }
+            },
         ),
         (
             [
@@ -103,12 +119,14 @@ def test_task_configs(config_patch_resolver, task_config, args, expected):
             if task_config == "path":
                 config_patch_resolver(**vars(args))
 
-            cfg.try_config(**vars(args))
+            cfg.get_parameters(**vars(args))
     else:
         args = parser.parse_args(args)
         if task_config == "path":
             config_patch_resolver(**vars(args))
-        assert cfg.try_config(**vars(args)) == expected
+
+        params = cfg.get_parameters(**vars(args))
+        assert params == expected
 
 
 @pytest.fixture
@@ -137,7 +155,8 @@ def test_pernosco(patch_pernosco_email_check):
     cfg = Pernosco()
     cfg.add_arguments(parser)
     args = parser.parse_args(["--pernosco"])
-    assert cfg.try_config(**vars(args)) == {"env": {"PERNOSCO": "1"}}
+    params = cfg.get_parameters(**vars(args))
+    assert params == {"try_task_config": {"env": {"PERNOSCO": "1"}}}
 
 
 if __name__ == "__main__":
