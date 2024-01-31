@@ -25,6 +25,8 @@ namespace js {
 
 using PropertyDescriptorVector = JS::GCVector<JS::PropertyDescriptor>;
 class GCMarker;
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
 class Nursery;
 struct AutoEnterOOMUnsafeRegion;
 
@@ -548,8 +550,12 @@ class JSObject
   T* maybeUnwrapIf();
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump(js::GenericPrinter& fp) const;
   void dump() const;
+  void dump(js::GenericPrinter& out) const;
+  void dump(js::JSONPrinter& json) const;
+
+  void dumpFields(js::JSONPrinter& json) const;
+  void dumpStringContent(js::GenericPrinter& out) const;
 #endif
 
   // Maximum size in bytes of a JSObject.
