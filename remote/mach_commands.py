@@ -185,10 +185,9 @@ def run_npm(*args, **kwargs):
             "Timed out after {} seconds of no output".format(kwargs["output_timeout"])
         )
 
-    env = None
+    env = os.environ.copy()
     npm, _ = nodeutil.find_npm_executable()
     if kwargs.get("env"):
-        env = os.environ.copy()
         env.update(kwargs["env"])
 
     proc_kwargs = {"output_timeout_handler": output_timeout_handler}
