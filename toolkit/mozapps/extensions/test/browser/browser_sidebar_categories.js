@@ -27,7 +27,7 @@ add_task(async function testClickingSidebarEntriesChangesView() {
   assertListView(win, "theme");
 
   loaded = waitForViewLoad(win);
-  getAddonCard(win, THEME_ID).click();
+  getAddonCard(win, THEME_ID).querySelector(".addon-name-link").click();
   await loaded;
 
   ok(!doc.querySelector("addon-list"), "No more addon-list");
@@ -59,7 +59,7 @@ add_task(async function testClickingSidebarPaddingNoChange() {
 
   let loadDetailView = async () => {
     let loaded = waitForViewLoad(win);
-    getAddonCard(win, THEME_ID).click();
+    getAddonCard(win, THEME_ID).querySelector(".addon-name-link").click();
     await loaded;
 
     is(
