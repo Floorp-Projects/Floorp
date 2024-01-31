@@ -113,15 +113,15 @@ jobs:
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
 
-    - name: Setup Disk & Swap Space 💿
-      run: |
-        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
-        .github/workflows/src/disk_swap_for_github_runner.sh
-
     - uses: actions/checkout@v3
       name: Clone 🧬
       with:
         submodules: 'recursive'
+
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Configure sccache
       uses: actions/github-script@v6
