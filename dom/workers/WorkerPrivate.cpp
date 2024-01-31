@@ -4689,22 +4689,19 @@ void WorkerPrivate::ReportUseCounters() {
   }
   mReportedUseCounters = true;
 
-  if (Telemetry::HistogramUseCounterWorkerCount <= 0 || IsChromeWorker()) {
+  if (IsChromeWorker()) {
     return;
   }
 
   const size_t kind = Kind();
   switch (kind) {
     case WorkerKindDedicated:
-      Telemetry::Accumulate(Telemetry::DEDICATED_WORKER_DESTROYED, 1);
       glean::use_counter::dedicated_workers_destroyed.Add();
       break;
     case WorkerKindShared:
-      Telemetry::Accumulate(Telemetry::SHARED_WORKER_DESTROYED, 1);
       glean::use_counter::shared_workers_destroyed.Add();
       break;
     case WorkerKindService:
-      Telemetry::Accumulate(Telemetry::SERVICE_WORKER_DESTROYED, 1);
       glean::use_counter::service_workers_destroyed.Add();
       break;
     default:
@@ -4723,34 +4720,19 @@ void WorkerPrivate::ReportUseCounters() {
     workerPathForLogging.emplace(std::move(path));
   }
 
-  static_assert(
-      static_cast<size_t>(UseCounterWorker::Count) * 3 ==
-          static_cast<size_t>(Telemetry::HistogramUseCounterWorkerCount),
-      "There should be three histograms (dedicated and shared and "
-      "servie) for each worker use counter");
   const size_t count = static_cast<size_t>(UseCounterWorker::Count);
-  const size_t factor =
-      static_cast<size_t>(Telemetry::HistogramUseCounterWorkerCount) / count;
-  MOZ_ASSERT(factor > kind);
 
   const auto workerKind = Kind();
   for (size_t c = 0; c < count; ++c) {
-    // Histograms for worker use counters use the same order as the worker kinds
-    // , so we can use the worker kind to index to corresponding histogram.
-    auto id = static_cast<Telemetry::HistogramID>(
-        Telemetry::HistogramFirstUseCounterWorker + c * factor + kind);
-    MOZ_ASSERT(id <= Telemetry::HistogramLastUseCounterWorker);
-
     if (!GetUseCounter(static_cast<UseCounterWorker>(c))) {
       continue;
     }
+    const char* metricName =
+        IncrementWorkerUseCounter(static_cast<UseCounterWorker>(c), workerKind);
     if (dumpCounters) {
-      printf_stderr("USE_COUNTER_WORKER: %s - %s\n",
-                    Telemetry::GetHistogramName(id),
+      printf_stderr("USE_COUNTER_WORKER: %s - %s\n", metricName,
                     workerPathForLogging->get());
     }
-    Telemetry::Accumulate(id, 1);
-    IncrementWorkerUseCounter(static_cast<UseCounterWorker>(c), workerKind);
   }
 }
 
