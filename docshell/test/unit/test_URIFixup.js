@@ -69,6 +69,35 @@ var data = [
     wrong: "whatever://this/is/a/test.html",
     fixed: "whatever://this/is/a/test.html",
   },
+  {
+    // Spaces before @ are valid if it appears after the domain.
+    wrong: "example.com/ @test.com",
+    fixed: "http://example.com/%20@test.com",
+    noPrefValue: "http://example.com/%20@test.com",
+  },
+];
+
+var dontFixURIs = [
+  {
+    input: " leadingSpaceUsername@example.com/",
+    testInfo: "dont fix usernames with leading space",
+  },
+  {
+    input: "trailingSpacerUsername @example.com/",
+    testInfo: "dont fix usernames with trailing space",
+  },
+  {
+    input: "multiple words username@example.com/",
+    testInfo: "dont fix usernames with multiple spaces",
+  },
+  {
+    input: "one spaceTwo  SpacesThree   Spaces@example.com/",
+    testInfo: "dont match multiple consecutive spaces",
+  },
+  {
+    input: " dontMatchCredentialsWithSpaces: secret password @example.com/",
+    testInfo: "dont fix credentials with spaces",
+  },
 ];
 
 var len = data.length;
@@ -119,5 +148,22 @@ add_task(function test_true_pref_fixes_typos() {
       Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
     );
     Assert.equal(preferredURI.spec, item.fixed);
+  }
+});
+
+add_task(function test_dont_fix_uris() {
+  let dontFixLength = dontFixURIs.length;
+  for (let i = 0; i < dontFixLength; i++) {
+    let testCase = dontFixURIs[i];
+    Assert.throws(
+      () => {
+        Services.uriFixup.getFixupURIInfo(
+          testCase.input,
+          Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+        );
+      },
+      /NS_ERROR_MALFORMED_URI/,
+      testCase.testInfo
+    );
   }
 });

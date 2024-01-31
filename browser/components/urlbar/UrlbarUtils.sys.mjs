@@ -2167,10 +2167,7 @@ export class UrlbarQueryContext {
       }
 
       try {
-        let info = Services.uriFixup.getFixupURIInfo(
-          this.trimmedSearchString,
-          flags
-        );
+        let info = Services.uriFixup.getFixupURIInfo(this.searchString, flags);
 
         this._fixupInfo = {
           href: info.fixedURI.spec,
