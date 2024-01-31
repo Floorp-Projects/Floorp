@@ -177,6 +177,7 @@ struct EmbedderColorSchemes {
    * We use it exclusively to block navigation for both of these cases. */    \
   FIELD(IsPrinting, bool)                                                     \
   FIELD(AncestorLoading, bool)                                                \
+  FIELD(AllowPlugins, bool)                                                   \
   FIELD(AllowContentRetargeting, bool)                                        \
   FIELD(AllowContentRetargetingOnChildren, bool)                              \
   FIELD(ForceEnableTrackingProtection, bool)                                  \
@@ -1186,6 +1187,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                       ContentParent* aSource);
   CanSetResult CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
                       const bool& aAllowContentRetargetingOnChildren,
+                      ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
                       ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>, const bool&,
               ContentParent*);

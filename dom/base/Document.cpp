@@ -4352,6 +4352,25 @@ void Document::SetContentType(const nsACString& aContentType) {
   mContentType = aContentType;
 }
 
+bool Document::GetAllowPlugins() {
+  // First, we ask our docshell if it allows plugins.
+  auto* browsingContext = GetBrowsingContext();
+
+  if (browsingContext) {
+    if (!browsingContext->GetAllowPlugins()) {
+      return false;
+    }
+
+    // If the docshell allows plugins, we check whether
+    // we are sandboxed and plugins should not be allowed.
+    if (mSandboxFlags & SANDBOXED_PLUGINS) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool Document::HasPendingInitialTranslation() {
   return mDocumentL10n && mDocumentL10n->GetState() != DocumentL10nState::Ready;
 }
