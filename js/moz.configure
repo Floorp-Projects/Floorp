@@ -1010,10 +1010,9 @@ set_define("ENABLE_WASM_RELAXED_SIMD", wasm_relaxed_simd)
 # =====================================================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_moz_intgemm(is_nightly):
-    if is_nightly:
-        return True
+@depends(target)
+def default_wasm_moz_intgemm(target):
+    return target.cpu in ("x86", "x86_64", "aarch64")
 
 
 option(
@@ -1023,12 +1022,12 @@ option(
 )
 
 
-@depends("--enable-wasm-moz-intgemm", target, "--wasm-no-experimental")
-def wasm_moz_intgemm(value, target, no_experimental):
+@depends("--enable-wasm-moz-intgemm", "--wasm-no-experimental")
+def wasm_moz_intgemm(value, no_experimental):
     if no_experimental:
         return
 
-    if value and target.cpu in ("x86", "x86_64", "aarch64"):
+    if value:
         return True
 
 
