@@ -127,6 +127,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
@@ -16060,6 +16061,40 @@ bool Document::HasScriptsBlockedBySandbox() const {
   return mSandboxFlags & SANDBOXED_SCRIPTS;
 }
 
+// Some use-counter sanity-checking.
+static_assert(size_t(eUseCounter_EndCSSProperties) -
+                      size_t(eUseCounter_FirstCSSProperty) ==
+                  size_t(eCSSProperty_COUNT_with_aliases),
+              "We should have the right amount of CSS property use counters");
+static_assert(size_t(eUseCounter_Count) -
+                      size_t(eUseCounter_FirstCountedUnknownProperty) ==
+                  size_t(CountedUnknownProperty::Count),
+              "We should have the right amount of counted unknown properties"
+              " use counters");
+static_assert(size_t(eUseCounter_Count) * 2 ==
+                  size_t(Telemetry::HistogramUseCounterCount),
+              "There should be two histograms (document and page)"
+              " for each use counter");
+
+#define ASSERT_CSS_COUNTER(id_, method_)                        \
+  static_assert(size_t(eUseCounter_property_##method_) -        \
+                        size_t(eUseCounter_FirstCSSProperty) == \
+                    size_t(id_),                                \
+                "Order for CSS counters and CSS property id should match");
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
+#define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSProperty_##id_, method_)
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, ...) \
+  ASSERT_CSS_COUNTER(eCSSPropertyAlias_##aliasid_, method_)
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
+#undef ASSERT_CSS_COUNTER
+
 void Document::SetCssUseCounterBits() {
   if (StaticPrefs::layout_css_use_counters_enabled()) {
     for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
@@ -16088,6 +16123,8 @@ void Document::InitUseCounters() {
     return;
   }
   mUseCountersInitialized = true;
+
+  static_assert(Telemetry::HistogramUseCounterCount > 0);
 
   if (!ShouldIncludeInTelemetry()) {
     return;
@@ -16136,7 +16173,7 @@ void Document::InitUseCounters() {
 // page split, we can see that N documents would be affected, but
 // only a single web page would be affected.
 //
-// The difference between the values of these two counts and the
+// The difference between the values of these two histograms and the
 // related use counters below tell us how many pages did *not* use
 // the feature in question.  For instance, if we see that a given
 // session has destroyed 30 content documents, but a particular use
@@ -16144,7 +16181,7 @@ void Document::InitUseCounters() {
 // counter was *not* used in 25 of those 30 documents.
 //
 // We do things this way, rather than accumulating a boolean flag
-// for each use counter, to avoid sending data for features
+// for each use counter, to avoid sending histograms for features
 // that don't get widely used.  Doing things in this fashion means
 // smaller telemetry payloads and faster processing on the server
 // side.
@@ -16156,7 +16193,10 @@ void Document::ReportDocumentUseCounters() {
   mReportedDocumentUseCounters = true;
 
   // Note that a document is being destroyed.  See the comment above for how
-  // use counter data are interpreted relative to this measurement.
+  // use counter histograms are interpreted relative to this measurement.
+  // TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED is recorded in
+  // WindowGlobalParent::FinishAccumulatingPageUseCounters.
+  Telemetry::Accumulate(Telemetry::CONTENT_DOCUMENTS_DESTROYED, 1);
   glean::use_counter::content_documents_destroyed.Add();
 
   // Ask all of our resource documents to report their own document use
@@ -16183,11 +16223,14 @@ void Document::ReportDocumentUseCounters() {
       continue;
     }
 
-    const char* metricName = IncrementUseCounter(uc, /* aIsPage = */ false);
+    auto id = static_cast<Telemetry::HistogramID>(
+        Telemetry::HistogramFirstUseCounter + uc * 2);
     if (dumpCounters) {
-      printf_stderr("USE_COUNTER_DOCUMENT: %s - %s\n", metricName,
-                    urlForLogging->get());
+      printf_stderr("USE_COUNTER_DOCUMENT: %s - %s\n",
+                    Telemetry::GetHistogramName(id), urlForLogging->get());
     }
+    Telemetry::Accumulate(id, 1);
+    IncrementUseCounter(uc, /* aIsPage = */ false);
   }
 }
 
