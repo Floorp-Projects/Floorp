@@ -857,14 +857,16 @@ TEST_F(JsepTrackTest, VideoNegotationOffererAnswererFECPreferred) {
   ASSERT_NE(mAnswer->ToString().find("a=rtpmap:123 ulpfec"), std::string::npos);
 
   UniquePtr<JsepVideoCodecDescription> track;
+  // We should have 4 codecs, the first of which is VP8, because having a
+  // pseudo codec come first is silly.
   ASSERT_TRUE((track = GetVideoCodec(mSendOff, 4)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 4)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendAns, 4)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mRecvAns, 4)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
 }
 
 // Make sure we only put the right things in the fmtp:122 120/.... line
@@ -887,15 +889,17 @@ TEST_F(JsepTrackTest, VideoNegotationOffererAnswererFECMismatch) {
   ASSERT_NE(mAnswer->ToString().find("a=rtpmap:122 red"), std::string::npos);
   ASSERT_NE(mAnswer->ToString().find("a=rtpmap:123 ulpfec"), std::string::npos);
 
+  // We should have 3 codecs, the first of which is VP8, because having a
+  // pseudo codec come first is silly.
   UniquePtr<JsepVideoCodecDescription> track;
   ASSERT_TRUE((track = GetVideoCodec(mSendOff, 3)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 3)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendAns, 3)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mRecvAns, 3)));
-  ASSERT_EQ("122", track->mDefaultPt);
+  ASSERT_EQ("120", track->mDefaultPt);
 }
 
 TEST_F(JsepTrackTest, VideoNegotationOffererAnswererFECZeroVP9Codec) {
@@ -1610,29 +1614,29 @@ TEST_F(JsepTrackTest, VideoSdpFmtpLine) {
   // the corresponding remote codec.
   UniquePtr<JsepVideoCodecDescription> codec;
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 0)));
-  EXPECT_EQ("red", codec->mName);
-  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("VP8", codec->mName);
+  EXPECT_EQ("max-fs=12288;max-fr=60", codec->mSdpFmtpLine.valueOr("nothing"));
   EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 0)));
-  EXPECT_EQ("red", codec->mName);
-  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("VP8", codec->mName);
+  EXPECT_EQ("max-fs=12288;max-fr=60", codec->mSdpFmtpLine.valueOr("nothing"));
 
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 1)));
-  EXPECT_EQ("VP8", codec->mName);
-  EXPECT_EQ("max-fs=12288;max-fr=60", codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("H264", codec->mName);
+  EXPECT_EQ(
+      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
+      codec->mSdpFmtpLine.valueOr("nothing"));
   EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 1)));
-  EXPECT_EQ("VP8", codec->mName);
-  EXPECT_EQ("max-fs=12288;max-fr=60", codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("H264", codec->mName);
+  EXPECT_EQ(
+      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
+      codec->mSdpFmtpLine.valueOr("nothing"));
 
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 2)));
-  EXPECT_EQ("H264", codec->mName);
-  EXPECT_EQ(
-      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
-      codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("red", codec->mName);
+  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
   EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 2)));
-  EXPECT_EQ("H264", codec->mName);
-  EXPECT_EQ(
-      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
-      codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_EQ("red", codec->mName);
+  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
 
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 3)));
   EXPECT_EQ("ulpfec", codec->mName);
@@ -1686,31 +1690,31 @@ TEST_F(JsepTrackTest, NonDefaultVideoSdpFmtpLine) {
   // the corresponding remote codec.
   UniquePtr<JsepVideoCodecDescription> codec;
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 0)));
-  EXPECT_EQ("red", codec->mName);
-  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
-  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 0)));
-  EXPECT_EQ("red", codec->mName);
-  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
-
-  EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 1)));
   EXPECT_EQ("VP8", codec->mName);
   EXPECT_EQ("max-fs=32400;max-fr=60", codec->mSdpFmtpLine.valueOr("nothing"));
-  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 1)));
+  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 0)));
   EXPECT_EQ("VP8", codec->mName);
   EXPECT_EQ("max-fs=1200;max-fr=15", codec->mSdpFmtpLine.valueOr("nothing"));
 
-  EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 2)));
+  EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 1)));
   EXPECT_EQ("H264", codec->mName);
   EXPECT_EQ(
       "profile-level-id=42f00b;level-asymmetry-allowed=1;packetization-mode=1;"
       "max-mbps=1944000;max-fs=32400;max-cpb=800000;max-dpb=128000",
       codec->mSdpFmtpLine.valueOr("nothing"));
-  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 2)));
+  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 1)));
   EXPECT_EQ("H264", codec->mName);
   EXPECT_EQ(
       "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1;"
       "max-fs=1200;max-dpb=6400;max-br=1000",
       codec->mSdpFmtpLine.valueOr("nothing"));
+
+  EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 2)));
+  EXPECT_EQ("red", codec->mName);
+  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
+  EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 2)));
+  EXPECT_EQ("red", codec->mName);
+  EXPECT_EQ("nothing", codec->mSdpFmtpLine.valueOr("nothing"));
 
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 3)));
   EXPECT_EQ("ulpfec", codec->mName);

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1873801",
+    title: "Test that weird codec priorities don't trip us up",
+    visible: true
+  });
+
+  function makeCodecTopPriority(sdp, codec) {
+    const ptToMove = sdputils.findCodecId(sdp, codec);
+    return sdp.replace(
+        //           m=video port  type  pts ptToMove      more-pts?
+        new RegExp(`(m=video [^ ]+ [^ ]+)(.*)( ${ptToMove})( [^ ]+)?`, "g"),
+        '$1$3$2$4');
+  }
+
+  function isCodecFirst(sdp, codec) {
+    const pt = sdputils.findCodecId(sdp, codec);
+    return !!sdp.match(`m=video [^ ]+ [^ ]+ ${pt}\w`);
+  }
+
+  async function checkTopPriorityOffer(codec, isPseudoCodec) {
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    await pc1.setLocalDescription();
+    let mungedOffer = pc1.localDescription;
+    mungedOffer.sdp = makeCodecTopPriority(mungedOffer.sdp, codec);
+    await pc2.setRemoteDescription(mungedOffer);
+    await pc2.setLocalDescription();
+    await pc1.setRemoteDescription(pc2.localDescription);
+    is(isCodecFirst((await pc2.createOffer()).sdp, codec), !isPseudoCodec,
+      "Top-priority codecs should come first in reoffers, unless they are pseudo codecs (eg; ulpfec)");
+  }
+
+  async function checkTopPriorityAnswer(codec, isPseudoCodec) {
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    await pc1.setLocalDescription();
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription();
+    let mungedAnswer = pc2.localDescription;
+    mungedAnswer.sdp = makeCodecTopPriority(mungedAnswer.sdp, codec);
+    await pc1.setRemoteDescription(mungedAnswer);
+    is(isCodecFirst((await pc1.createOffer()).sdp, codec), !isPseudoCodec,
+      "Top-priority codecs should come first in reoffers, unless they are pseudo codecs (eg; ulpfec)");
+  }
+
+  const tests = [
+    async function checkTopPriorityUlpfecInOffer() {
+      await checkTopPriorityOffer("ulpfec", true);
+    },
+
+    async function checkTopPriorityUlpfecInAnswer() {
+      await checkTopPriorityAnswer("ulpfec", true);
+    },
+
+    async function checkTopPriorityUlpfecInOffer() {
+      await checkTopPriorityOffer("red", true);
+    },
+
+    async function checkTopPriorityUlpfecInAnswer() {
+      await checkTopPriorityAnswer("red", true);
+    },
+
+    async function checkTopPriorityUlpfecInOffer() {
+      await checkTopPriorityOffer("rtx", true);
+    },
+
+    async function checkTopPriorityUlpfecInAnswer() {
+      await checkTopPriorityAnswer("rtx", true);
+    },
+
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>
