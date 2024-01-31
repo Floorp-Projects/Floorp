@@ -1921,8 +1921,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
     case JSOp::BigInt:
 #if defined(DEBUG) || defined(JS_JITSPEW)
-      // BigInt::dump() only available in this configuration.
-      script->getBigInt(pc)->dump(sprinter);
+      // BigInt::dumpLiteral() only available in this configuration.
+      script->getBigInt(pc)->dumpLiteral(sprinter);
       return !sprinter.hadOutOfMemory();
 #else
       return write("[bigint]");
