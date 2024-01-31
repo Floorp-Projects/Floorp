@@ -100,12 +100,12 @@ add_task(async function test_wait_addons_startup_before_granting_quit() {
   await promiseShutdownManager();
 
   info("Test early shutdown while enabled addons are still being started");
-  const { XPIProvider } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm"
+  const { XPIExports } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/XPIExports.sys.mjs"
   );
   function listener(_evt, extension) {
     ok(
-      !XPIProvider._closing,
+      !XPIExports.XPIProvider._closing,
       `Unxpected addon startup for "${extension.id}" after XPIProvider have been closed and shutting down`
     );
   }
@@ -136,25 +136,22 @@ add_task(async function test_late_XPIDB_load_rejected() {
   await AddonTestUtils.promiseStartupManager();
 
   // Mock a late XPIDB load and expect to be rejected.
-  const { XPIProvider, XPIInternal } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm"
-  );
-  const { XPIDatabase } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIDatabase.jsm"
+  const { XPIExports } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/XPIExports.sys.mjs"
   );
 
-  const resolveDBReadySpy = sinon.spy(XPIInternal, "resolveDBReady");
-  XPIProvider._closing = true;
-  XPIDatabase._dbPromise = null;
+  const resolveDBReadySpy = sinon.spy(XPIExports.XPIInternal, "resolveDBReady");
+  XPIExports.XPIProvider._closing = true;
+  XPIExports.XPIDatabase._dbPromise = null;
 
   Assert.equal(
-    await XPIDatabase.getAddonByID("test@addon"),
+    await XPIExports.XPIDatabase.getAddonByID("test@addon"),
     null,
     "Expect a late getAddonByID call to be sucessfully resolved to null"
   );
 
   await Assert.rejects(
-    XPIDatabase._dbPromise,
+    XPIExports.XPIDatabase._dbPromise,
     /XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown/,
     "Expect XPIDatebase._dbPromise to be set to the expected rejected promise"
   );
@@ -167,14 +164,14 @@ add_task(async function test_late_XPIDB_load_rejected() {
 
   Assert.equal(
     resolveDBReadySpy.getCall(0).args[0],
-    XPIDatabase._dbPromise,
+    XPIExports.XPIDatabase._dbPromise,
     "Got the expected promise instance passed to the XPIProvider.resolveDBReady call"
   );
 
   // Cleanup sinon spy, AOM mocked status and shutdown AOM before exit test.
   sandbox.restore();
-  XPIProvider._closing = false;
-  XPIDatabase._dbPromise = null;
+  XPIExports.XPIProvider._closing = false;
+  XPIExports.XPIDatabase._dbPromise = null;
   await AddonTestUtils.promiseShutdownManager();
 });
 

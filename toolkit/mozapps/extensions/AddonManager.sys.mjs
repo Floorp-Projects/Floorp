@@ -698,10 +698,12 @@ var AddonManagerInternal = {
       Services.obs.addObserver(this, AMBrowserExtensionsImport.TOPIC_COMPLETE);
       Services.obs.addObserver(this, AMBrowserExtensionsImport.TOPIC_PENDING);
 
-      // Ensure all default providers have had a chance to register themselves
-      ({ XPIProvider: gXPIProvider } = ChromeUtils.import(
-        "resource://gre/modules/addons/XPIProvider.jsm"
-      ));
+      // Ensure all default providers have had a chance to register themselves.
+      const { XPIExports } = ChromeUtils.importESModule(
+        "resource://gre/modules/addons/XPIExports.sys.mjs"
+      );
+      gXPIProvider = XPIExports.XPIProvider;
+      gXPIProvider.registerProvider();
 
       // Load any providers registered in the category manager
       for (let { entry, value: url } of Services.catMan.enumerateCategory(

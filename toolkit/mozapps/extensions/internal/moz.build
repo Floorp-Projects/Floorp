@@ -12,6 +12,7 @@ EXTRA_JS_MODULES.addons += [
     "ProductAddonChecker.sys.mjs",
     "siteperms-addon-utils.sys.mjs",
     "XPIDatabase.jsm",
+    "XPIExports.sys.mjs",
     "XPIInstall.jsm",
     "XPIProvider.jsm",
 ]

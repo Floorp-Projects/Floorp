@@ -8,8 +8,8 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   UpdateListener: "resource://gre/modules/UpdateListener.sys.mjs",
 });
-const { XPIInstall } = ChromeUtils.import(
-  "resource://gre/modules/addons/XPIInstall.jsm"
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
 );
 
 const BIN_SUFFIX = AppConstants.platform == "win" ? ".exe" : "";
@@ -143,13 +143,16 @@ registerCleanupFunction(async () => {
  * or reject the install.
  */
 function mockLangpackInstall() {
-  let original = XPIInstall.stageLangpacksForAppUpdate;
+  let original = XPIExports.XPIInstall.stageLangpacksForAppUpdate;
   registerCleanupFunction(() => {
-    XPIInstall.stageLangpacksForAppUpdate = original;
+    XPIExports.XPIInstall.stageLangpacksForAppUpdate = original;
   });
 
   let stagingCall = Promise.withResolvers();
-  XPIInstall.stageLangpacksForAppUpdate = (appVersion, platformVersion) => {
+  XPIExports.XPIInstall.stageLangpacksForAppUpdate = (
+    appVersion,
+    platformVersion
+  ) => {
     let result = Promise.withResolvers();
     stagingCall.resolve({
       appVersion,

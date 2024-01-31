@@ -4,13 +4,13 @@
 
 // Test the cancellable doing/done/cancelAll API in XPIProvider
 
-const { XPIInstall } = ChromeUtils.import(
-  "resource://gre/modules/addons/XPIInstall.jsm"
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
 );
 
 function run_test() {
   // Check that cancelling with nothing in progress doesn't blow up
-  XPIInstall.cancelAll();
+  XPIExports.XPIInstall.cancelAll();
 
   // Check that a basic object gets cancelled
   let getsCancelled = {
@@ -22,17 +22,17 @@ function run_test() {
       this.isCancelled = true;
     },
   };
-  XPIInstall.doing(getsCancelled);
-  XPIInstall.cancelAll();
+  XPIExports.XPIInstall.doing(getsCancelled);
+  XPIExports.XPIInstall.cancelAll();
   Assert.ok(getsCancelled.isCancelled);
 
   // Check that if we complete a cancellable, it doesn't get cancelled
   let doesntGetCancelled = {
     cancel: () => do_throw("This should not have been cancelled"),
   };
-  XPIInstall.doing(doesntGetCancelled);
-  Assert.ok(XPIInstall.done(doesntGetCancelled));
-  XPIInstall.cancelAll();
+  XPIExports.XPIInstall.doing(doesntGetCancelled);
+  Assert.ok(XPIExports.XPIInstall.done(doesntGetCancelled));
+  XPIExports.XPIInstall.cancelAll();
 
   // A cancellable that adds a cancellable
   getsCancelled.isCancelled = false;
@@ -43,11 +43,11 @@ function run_test() {
         do_throw("Already cancelled");
       }
       this.isCancelled = true;
-      XPIInstall.doing(getsCancelled);
+      XPIExports.XPIInstall.doing(getsCancelled);
     },
   };
-  XPIInstall.doing(addsAnother);
-  XPIInstall.cancelAll();
+  XPIExports.XPIInstall.doing(addsAnother);
+  XPIExports.XPIInstall.cancelAll();
   Assert.ok(addsAnother.isCancelled);
   Assert.ok(getsCancelled.isCancelled);
 
@@ -60,11 +60,11 @@ function run_test() {
         do_throw("Already cancelled");
       }
       this.isCancelled = true;
-      XPIInstall.done(doesntGetCancelled);
+      XPIExports.XPIInstall.done(doesntGetCancelled);
     },
   };
-  XPIInstall.doing(removesAnother);
-  XPIInstall.doing(doesntGetCancelled);
-  XPIInstall.cancelAll();
+  XPIExports.XPIInstall.doing(removesAnother);
+  XPIExports.XPIInstall.doing(doesntGetCancelled);
+  XPIExports.XPIInstall.cancelAll();
   Assert.ok(removesAnother.isCancelled);
 }

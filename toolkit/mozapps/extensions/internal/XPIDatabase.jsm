@@ -24,6 +24,9 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
+);
 
 const lazy = {};
 
@@ -42,14 +45,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.sys.mjs",
   QuarantinedDomains: "resource://gre/modules/ExtensionPermissions.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
-  XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
-  XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
-  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
-  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
 // WARNING: BuiltInThemes.sys.mjs may be provided by the host application (e.g.
@@ -394,7 +389,10 @@ class AddonInternal {
   set sourceBundle(file) {
     this._sourceBundle = file;
     if (file) {
-      this.rootURI = lazy.XPIInternal.getURIForResourceInFile(file, "").spec;
+      this.rootURI = XPIExports.XPIInternal.getURIForResourceInFile(
+        file,
+        ""
+      ).spec;
     }
   }
 
@@ -406,7 +404,9 @@ class AddonInternal {
   }
 
   get resolvedRootURI() {
-    return lazy.XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
+    return XPIExports.XPIInternal.maybeResolveURI(
+      Services.io.newURI(this.rootURI)
+    );
   }
 
   get isBuiltinColorwayTheme() {
@@ -1298,7 +1298,7 @@ AddonWrapper = class {
     if (!Services.appinfo.inSafeMode) {
       return true;
     }
-    return lazy.XPIInternal.canRunInSafeMode(addon);
+    return XPIExports.XPIInternal.canRunInSafeMode(addon);
   }
 
   get startupPromise() {
@@ -1307,7 +1307,7 @@ AddonWrapper = class {
       return null;
     }
 
-    let activeAddon = lazy.XPIProvider.activeAddons.get(addon.id);
+    let activeAddon = XPIExports.XPIProvider.activeAddons.get(addon.id);
     if (activeAddon) {
       return activeAddon.startupPromise || null;
     }
@@ -1449,16 +1449,16 @@ AddonWrapper = class {
 
   async uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
-    return lazy.XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
+    return XPIExports.XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
   }
 
   cancelUninstall() {
     let addon = addonFor(this);
-    lazy.XPIInstall.cancelUninstallAddon(addon);
+    XPIExports.XPIInstall.cancelUninstallAddon(addon);
   }
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    new lazy.UpdateChecker(
+    new XPIExports.UpdateChecker(
       addonFor(this),
       aListener,
       aReason,
@@ -1829,9 +1829,12 @@ const XPIDatabase = {
         // successfully save the database.
         logger.debug(
           "XPI Database saved, setting schema version preference to " +
-            lazy.XPIInternal.DB_SCHEMA
+            XPIExports.XPIInternal.DB_SCHEMA
         );
-        Services.prefs.setIntPref(PREF_DB_SCHEMA, lazy.XPIInternal.DB_SCHEMA);
+        Services.prefs.setIntPref(
+          PREF_DB_SCHEMA,
+          XPIExports.XPIInternal.DB_SCHEMA
+        );
         this._schemaVersionSet = true;
 
         // Reading the DB worked once, so we don't need the load error
@@ -1855,7 +1858,7 @@ const XPIDatabase = {
       throw new Error("Attempt to use XPI database when it is not initialized");
     }
 
-    if (lazy.XPIProvider._closing) {
+    if (XPIExports.XPIProvider._closing) {
       // use an Error here so we get a stack trace.
       let err = new Error("XPI database modified after shutdown began");
       logger.warn(err);
@@ -1897,7 +1900,7 @@ const XPIDatabase = {
     }
 
     let toSave = {
-      schemaVersion: lazy.XPIInternal.DB_SCHEMA,
+      schemaVersion: XPIExports.XPIInternal.DB_SCHEMA,
       addons: Array.from(this.addonDB.values()).filter(
         addon => !addon.location.isTemporary
       ),
@@ -1924,7 +1927,7 @@ const XPIDatabase = {
     );
     try {
       this.syncLoadingDB = true;
-      lazy.XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
+      XPIExports.XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
     } finally {
       this.syncLoadingDB = false;
     }
@@ -1955,9 +1958,11 @@ const XPIDatabase = {
       if (aInputAddons.schemaVersion <= 27) {
         // Types were translated in bug 857456.
         for (let addon of aInputAddons.addons) {
-          lazy.XPIInternal.migrateAddonLoader(addon);
+          XPIExports.XPIInternal.migrateAddonLoader(addon);
         }
-      } else if (aInputAddons.schemaVersion != lazy.XPIInternal.DB_SCHEMA) {
+      } else if (
+        aInputAddons.schemaVersion != XPIExports.XPIInternal.DB_SCHEMA
+      ) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
@@ -1965,7 +1970,7 @@ const XPIDatabase = {
           `schemaMismatch-${aInputAddons.schemaVersion}`
         );
         logger.debug(
-          `JSON schema mismatch: expected ${lazy.XPIInternal.DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
+          `JSON schema mismatch: expected ${XPIExports.XPIInternal.DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
         );
       }
 
@@ -1987,7 +1992,7 @@ const XPIDatabase = {
             );
           }
         }
-        loadedAddon.location = lazy.XPIInternal.XPIStates.getLocation(
+        loadedAddon.location = XPIExports.XPIInternal.XPIStates.getLocation(
           loadedAddon.location
         );
 
@@ -2044,7 +2049,7 @@ const XPIDatabase = {
       return this._dbPromise;
     }
 
-    if (lazy.XPIProvider._closing) {
+    if (XPIExports.XPIProvider._closing) {
       // use an Error here so we get a stack trace.
       let err = new Error(
         "XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown."
@@ -2056,7 +2061,7 @@ const XPIDatabase = {
       );
       this._dbPromise = Promise.reject(err);
 
-      lazy.XPIInternal.resolveDBReady(this._dbPromise);
+      XPIExports.XPIInternal.resolveDBReady(this._dbPromise);
 
       return this._dbPromise;
     }
@@ -2089,7 +2094,7 @@ const XPIDatabase = {
       return this.addonDB;
     })();
 
-    lazy.XPIInternal.resolveDBReady(this._dbPromise);
+    XPIExports.XPIInternal.resolveDBReady(this._dbPromise);
 
     return this._dbPromise;
   },
@@ -2112,7 +2117,7 @@ const XPIDatabase = {
     this.addonDB = new Map();
     this.initialized = true;
 
-    if (lazy.XPIInternal.XPIStates.size == 0) {
+    if (XPIExports.XPIInternal.XPIStates.size == 0) {
       // No extensions installed, so we're done
       logger.debug("Rebuilding XPI database with no extensions");
       return;
@@ -2194,7 +2199,7 @@ const XPIDatabase = {
           continue;
         }
 
-        let signedState = await lazy.verifyBundleSignedState(
+        let signedState = await XPIExports.verifyBundleSignedState(
           addon._sourceBundle,
           addon
         );
@@ -2233,7 +2238,7 @@ const XPIDatabase = {
   importPermissions() {
     lazy.PermissionsUtils.importFromPrefs(
       PREF_XPI_PERMISSIONS_BRANCH,
-      lazy.XPIInternal.XPI_PERMISSION
+      XPIExports.XPIInternal.XPI_PERMISSION
     );
   },
 
@@ -2556,7 +2561,7 @@ const XPIDatabase = {
 
     if (aAddon.dependencies.length) {
       let isActive = id => {
-        let active = lazy.XPIProvider.activeAddons.get(id);
+        let active = XPIExports.XPIProvider.activeAddons.get(id);
         return active && !active._pendingDisable;
       };
 
@@ -2662,7 +2667,7 @@ const XPIDatabase = {
     let state = addon.location && addon.location.get(addon.id);
     if (state) {
       state.syncWithDB(addon);
-      lazy.XPIInternal.XPIStates.save();
+      XPIExports.XPIInternal.XPIStates.save();
     }
   },
 
@@ -2935,13 +2940,13 @@ const XPIDatabase = {
 
       this.updateAddonActive(aAddon, !isDisabled);
 
-      let bootstrap = lazy.XPIInternal.BootstrapScope.get(aAddon);
+      let bootstrap = XPIExports.XPIInternal.BootstrapScope.get(aAddon);
       if (isDisabled) {
         await bootstrap.disable();
         lazy.AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
         await bootstrap.startup(
-          lazy.XPIInternal.BOOTSTRAP_REASONS.ADDON_ENABLE
+          XPIExports.XPIInternal.BOOTSTRAP_REASONS.ADDON_ENABLE
         );
         lazy.AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
@@ -3002,7 +3007,7 @@ const XPIDatabase = {
    */
   recordAddonTelemetry(aAddon) {
     let locale = aAddon.defaultLocale;
-    lazy.XPIProvider.addTelemetry(aAddon.id, {
+    XPIExports.XPIProvider.addTelemetry(aAddon.id, {
       name: locale.name,
       creator: locale.creator,
     });
@@ -3023,7 +3028,7 @@ const XPIDatabaseReconcile = {
   flattenByID(addonMap, hideLocation) {
     let map = new Map();
 
-    for (let loc of lazy.XPIInternal.XPIStates.locations()) {
+    for (let loc of XPIExports.XPIInternal.XPIStates.locations()) {
       if (loc.name == hideLocation) {
         continue;
       }
@@ -3139,7 +3144,10 @@ const XPIDatabaseReconcile = {
 
       if (!aNewAddon) {
         // Load the manifest from the add-on.
-        aNewAddon = lazy.XPIInstall.syncLoadManifest(aAddonState, aLocation);
+        aNewAddon = XPIExports.XPIInstall.syncLoadManifest(
+          aAddonState,
+          aLocation
+        );
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
@@ -3252,7 +3260,7 @@ const XPIDatabaseReconcile = {
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
-        aNewAddon = lazy.XPIInstall.syncLoadManifest(
+        aNewAddon = XPIExports.XPIInstall.syncLoadManifest(
           aAddonState,
           aLocation,
           aOldAddon
@@ -3288,7 +3296,7 @@ const XPIDatabaseReconcile = {
     // Set the additional properties on the new AddonInternal
     aNewAddon.updateDate = aAddonState.mtime;
 
-    lazy.XPIProvider.persistStartupData(aNewAddon, aAddonState);
+    XPIExports.XPIProvider.persistStartupData(aNewAddon, aAddonState);
 
     // Update the database
     return XPIDatabase.updateAddonMetadata(
@@ -3315,7 +3323,7 @@ const XPIDatabaseReconcile = {
     logger.debug(`Add-on ${aOldAddon.id} moved to ${aAddonState.path}`);
     aOldAddon.path = aAddonState.path;
     aOldAddon._sourceBundle = new nsIFile(aAddonState.path);
-    aOldAddon.rootURI = lazy.XPIInternal.getURIForResourceInFile(
+    aOldAddon.rootURI = XPIExports.XPIInternal.getURIForResourceInFile(
       aOldAddon._sourceBundle,
       ""
     ).spec;
@@ -3365,7 +3373,10 @@ const XPIDatabaseReconcile = {
     let manifest = null;
     if (checkSigning || aReloadMetadata || signedDateMissing) {
       try {
-        manifest = lazy.XPIInstall.syncLoadManifest(aAddonState, aLocation);
+        manifest = XPIExports.XPIInstall.syncLoadManifest(
+          aAddonState,
+          aLocation
+        );
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
         aOldAddon.brokenManifest = true;
@@ -3569,7 +3580,7 @@ const XPIDatabaseReconcile = {
     // present we re-use the add-on objects from the database and update their
     // details directly
     let addonStates = new Map();
-    for (let location of lazy.XPIInternal.XPIStates.locations()) {
+    for (let location of XPIExports.XPIInternal.XPIStates.locations()) {
       let locationAddons = currentAddons.get(location.name);
 
       // Get all the on-disk XPI states for this location, and keep track of which
@@ -3629,7 +3640,7 @@ const XPIDatabaseReconcile = {
     // Validate the updated system add-ons
     let hideLocation;
     {
-      let systemAddonLocation = lazy.XPIInternal.XPIStates.getLocation(
+      let systemAddonLocation = XPIExports.XPIInternal.XPIStates.getLocation(
         KEY_APP_SYSTEM_ADDONS
       );
       let addons = currentAddons.get(systemAddonLocation.name);
@@ -3668,7 +3679,7 @@ const XPIDatabaseReconcile = {
     }
 
     if (promises.some(p => p)) {
-      lazy.XPIInternal.awaitPromise(Promise.all(promises));
+      XPIExports.XPIInternal.awaitPromise(Promise.all(promises));
     }
 
     for (let [id, addon] of previousVisible) {
@@ -3676,7 +3687,7 @@ const XPIDatabaseReconcile = {
         if (addon.location.name == KEY_APP_BUILTINS) {
           continue;
         }
-        lazy.XPIInternal.BootstrapScope.get(addon).uninstall();
+        XPIExports.XPIInternal.BootstrapScope.get(addon).uninstall();
         addon.location.removeAddon(id);
         addon.visible = false;
         addon.active = false;
@@ -3691,11 +3702,14 @@ const XPIDatabaseReconcile = {
     // Finally update XPIStates to match everything
     for (let [locationName, locationAddons] of currentAddons) {
       for (let [id, addon] of locationAddons) {
-        let xpiState = lazy.XPIInternal.XPIStates.getAddon(locationName, id);
+        let xpiState = XPIExports.XPIInternal.XPIStates.getAddon(
+          locationName,
+          id
+        );
         xpiState.syncWithDB(addon);
       }
     }
-    lazy.XPIInternal.XPIStates.save();
+    XPIExports.XPIInternal.XPIStates.save();
     XPIDatabase.saveChanges();
     XPIDatabase.rebuildingDatabase = false;
 
@@ -3775,16 +3789,16 @@ const XPIDatabaseReconcile = {
         // isActive alone is not sufficient as that changes the characteristics
         // of other updates and breaks many tests.
         let restart =
-          isActive && lazy.XPIInternal.BootstrapScope.get(currentAddon).started;
+          isActive &&
+          XPIExports.XPIInternal.BootstrapScope.get(currentAddon).started;
         if (restart) {
           logger.warn(
             `Updating and restart addon ${previousAddon.id} that changed on disk after being already started.`
           );
         }
-        promise = lazy.XPIInternal.BootstrapScope.get(previousAddon).update(
-          currentAddon,
-          restart
-        );
+        promise = XPIExports.XPIInternal.BootstrapScope.get(
+          previousAddon
+        ).update(currentAddon, restart);
       }
 
       if (isActive != wasActive) {
@@ -3817,7 +3831,7 @@ const XPIDatabaseReconcile = {
         lazy.AddonManager.STARTUP_CHANGE_INSTALLED,
         id
       );
-      let scope = lazy.XPIInternal.BootstrapScope.get(currentAddon);
+      let scope = XPIExports.XPIInternal.BootstrapScope.get(currentAddon);
       scope.install();
     }
 

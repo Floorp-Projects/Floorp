@@ -7,8 +7,12 @@
 
 // Load XPI Provider to get schema version ID
 const {
-  XPIInternal: { DB_SCHEMA },
-} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm");
+  XPIExports: {
+    XPIInternal: { DB_SCHEMA },
+  },
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
+);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 

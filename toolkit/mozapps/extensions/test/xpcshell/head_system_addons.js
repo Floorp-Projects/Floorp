@@ -43,11 +43,11 @@ async function installSystemAddons(xml, waitIDs = []) {
   await serveSystemUpdate(
     xml,
     async function () {
-      let { XPIProvider } = ChromeUtils.import(
-        "resource://gre/modules/addons/XPIProvider.jsm"
+      let { XPIExports } = ChromeUtils.importESModule(
+        "resource://gre/modules/addons/XPIExports.sys.mjs"
       );
       await Promise.all([
-        XPIProvider.updateSystemAddons(),
+        XPIExports.XPIProvider.updateSystemAddons(),
         ...waitIDs.map(id => promiseWebExtensionStartup(id)),
       ]);
     },

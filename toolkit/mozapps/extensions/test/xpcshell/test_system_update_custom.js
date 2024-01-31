@@ -474,18 +474,17 @@ function createInstallsEndedPromise(expectedCount) {
 }
 
 async function waitForSystemAddonStagingDirReleased() {
-  // Wait for the staging dir to be released, which prevents unexpected test failure due to
-  // AddonTestUtils.promiseShutdownManager being mocking an AddonManager shutdown by using
-  // Cu.unload to unload all XPIProvider jsm modules, which would hit unexpected failures
-  // if done while system addon updates are still running in the background (due to the
-  // fact that the jsm global to have been already nuked while AddonInstall startInstall
-  // method may still being executed asynchronously).
+  // Wait for the staging dir to be released, which prevents unexpected test
+  // failure due to AddonTestUtils.promiseShutdownManager being mocking an
+  // AddonManager shutdown by using testing functions to re-import XPIProvider,
+  // XPIDatabase, and XPIInstall modules, which would hit unexpected failures
+  // if done while system addon updates are still running in the background.
 
-  const { XPIInternal } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm"
+  const { XPIExports } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/XPIExports.sys.mjs"
   );
-  let systemAddonLocation = XPIInternal.XPIStates.getLocation(
-    XPIInternal.KEY_APP_SYSTEM_ADDONS
+  let systemAddonLocation = XPIExports.XPIInternal.XPIStates.getLocation(
+    XPIExports.XPIInternal.KEY_APP_SYSTEM_ADDONS
   );
   await TestUtils.waitForCondition(() => {
     return systemAddonLocation.installer._stagingDirLock == 0;

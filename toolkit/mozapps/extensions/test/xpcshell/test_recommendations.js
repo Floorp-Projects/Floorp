@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { XPIInstall } = ChromeUtils.import(
-  "resource://gre/modules/addons/XPIInstall.jsm"
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
@@ -260,7 +260,7 @@ add_task(async function test_temporary() {
     states: ["recommended"],
     validity: { not_before, not_after },
   });
-  let addon = await XPIInstall.installTemporaryAddon(xpi);
+  let addon = await XPIExports.XPIInstall.installTemporaryAddon(xpi);
 
   checkRecommended(addon, false);
 
@@ -289,7 +289,7 @@ add_task(async function test_temporary_directory() {
     true
   );
 
-  let addon = await XPIInstall.installTemporaryAddon(extDir);
+  let addon = await XPIExports.XPIInstall.installTemporaryAddon(extDir);
 
   checkRecommended(addon, false);
 

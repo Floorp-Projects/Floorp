@@ -54,10 +54,10 @@ function checkChange(XS, aPath, aChange) {
 
 // Get a reference to the XPIState (loaded by startupManager) so we can unit test it.
 function getXS() {
-  const { XPIInternal } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm"
+  const { XPIExports } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/XPIExports.sys.mjs"
   );
-  return XPIInternal.XPIStates;
+  return XPIExports.XPIInternal.XPIStates;
 }
 
 async function getXSJSON() {

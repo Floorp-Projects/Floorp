@@ -4,8 +4,8 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { getAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
-const { XPIInstall } = ChromeUtils.import(
-  "resource://gre/modules/addons/XPIInstall.jsm"
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
@@ -46,7 +46,10 @@ async function downloadUpdate() {
  */
 function mockLangpackUpdate() {
   let stagingCall = Promise.withResolvers();
-  XPIInstall.stageLangpacksForAppUpdate = (appVersion, platformVersion) => {
+  XPIExports.XPIInstall.stageLangpacksForAppUpdate = (
+    appVersion,
+    platformVersion
+  ) => {
     let result = Promise.withResolvers();
     stagingCall.resolve({
       appVersion,
@@ -233,7 +236,7 @@ add_task(async function testRedownload() {
   gIncrementalDownloadErrorType = 3;
 
   let stageCount = 0;
-  XPIInstall.stageLangpacksForAppUpdate = () => {
+  XPIExports.XPIInstall.stageLangpacksForAppUpdate = () => {
     stageCount++;
     return Promise.resolve();
   };
