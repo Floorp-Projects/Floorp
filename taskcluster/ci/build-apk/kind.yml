@@ -142,7 +142,6 @@ jobs:
         attributes:
             # any tasks that have this as a primary dependency will
             # inherit this attribute via the multi_dep loader
-            nightly-task: true
             shipping-product: focus
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
@@ -163,7 +162,6 @@ jobs:
         attributes:
             # any tasks that have this as a primary dependency will
             # inherit this attribute via the multi_dep loader
-            nightly-task: true
             shipping-product: fenix
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
