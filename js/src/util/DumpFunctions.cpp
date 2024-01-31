@@ -118,9 +118,16 @@ void js::DumpAtom(JSAtom* atom, GenericPrinter& out) {
 
 void js::DumpChars(const char16_t* s, size_t n, GenericPrinter& out) {
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  out.printf("char16_t * (%p) = ", (void*)s);
-  JSString::dumpChars(s, n, out);
-  out.putChar('\n');
+  if (n == SIZE_MAX) {
+    n = 0;
+    while (s[n]) {
+      n++;
+    }
+  }
+
+  out.printf("char16_t * (%p) = \"", (void*)s);
+  JSString::dumpCharsNoQuote(s, n, out);
+  out.put("\"\n");
 #endif
 }
 

@@ -7058,7 +7058,7 @@ static bool DumpStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Fprinter out(stderr);
-  str->dumpRepresentation(out, 0);
+  str->dumpRepresentation(out);
 
   args.rval().setUndefined();
   return true;
@@ -7076,7 +7076,7 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   if (!out.init()) {
     return false;
   }
-  str->dumpRepresentation(out, 0);
+  str->dumpRepresentation(out);
 
   JSString* rep = out.release(cx);
   if (!rep) {

@@ -426,7 +426,7 @@ static bool intrinsic_AssertionFailed(JSContext* cx, unsigned argc, Value* vp) {
     if (str) {
       js::Fprinter out(stderr);
       out.put("Self-hosted JavaScript assertion info: ");
-      str->dumpCharsNoNewline(out);
+      str->dumpCharsNoQuote(out);
       out.putChar('\n');
     }
   }
@@ -446,7 +446,7 @@ static bool intrinsic_DumpMessage(JSContext* cx, unsigned argc, Value* vp) {
     js::Fprinter out(stderr);
     JSString* str = ToString<CanGC>(cx, args[0]);
     if (str) {
-      str->dumpCharsNoNewline(out);
+      str->dumpCharsNoQuote(out);
       out.putChar('\n');
     } else {
       cx->recoverFromOutOfMemory();
