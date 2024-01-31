@@ -266,6 +266,7 @@ class GLLibraryEGL final {
     const bool CHECK_CONTEXT_OWNERSHIP = true;
     if (CHECK_CONTEXT_OWNERSHIP) {
       const MutexAutoLock lock(mMutex);
+
       const auto tid = PlatformThread::CurrentId();
       const auto prevCtx = fGetCurrentContext();
 
@@ -287,11 +288,6 @@ class GLLibraryEGL final {
         ctxOwnerThread = tid;
       }
     }
-
-    // Always reset the TLS current context.
-    // If we're called by TLS-caching MakeCurrent, after we return true,
-    // the caller will set the TLS correctly anyway.
-    GLContext::ResetTLSCurrentContext();
 
     WRAP(fMakeCurrent(dpy, draw, read, ctx));
   }
