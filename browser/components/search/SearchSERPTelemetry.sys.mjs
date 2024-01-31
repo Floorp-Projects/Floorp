@@ -27,6 +27,11 @@ const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 // Exported for tests.
 export const ADLINK_CHECK_TIMEOUT_MS = 1000;
+// Unlike the standard adlink check, the timeout for single page apps is not
+// based on a content event within the page, like DOMContentLoaded or load.
+// Thus, we aim for a longer timeout to account for when the server might be
+// slow to update the content on the page.
+export const SPA_ADLINK_CHECK_TIMEOUT_MS = 2500;
 export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
 export const TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
@@ -40,6 +45,7 @@ export const TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
 export const SEARCH_TELEMETRY_SHARED = {
   PROVIDER_INFO: "SearchTelemetry:ProviderInfo",
   LOAD_TIMEOUT: "SearchTelemetry:LoadTimeout",
+  SPA_LOAD_TIMEOUT: "SearchTelemetry:SPALoadTimeout",
 };
 
 const impressionIdsWithoutEngagementsSet = new Set();
@@ -167,6 +173,9 @@ class TelemetryHandler {
   // entry.
   _browserInfoByURL = new Map();
 
+  // Browser objects mapped to the info in _browserInfoByURL.
+  #browserToItemMap = new WeakMap();
+
   // _browserSourceMap is a map of the latest search source for a particular
   // browser - one of the KNOWN_SEARCH_SOURCES in BrowserSearchTelemetry.
   _browserSourceMap = new WeakMap();
@@ -204,6 +213,7 @@ class TelemetryHandler {
       browserInfoByURL: this._browserInfoByURL,
       findBrowserItemForURL: (...args) => this._findBrowserItemForURL(...args),
       checkURLForSerpMatch: (...args) => this._checkURLForSerpMatch(...args),
+      findItemForBrowser: (...args) => this.findItemForBrowser(...args),
     });
   }
 
@@ -496,7 +506,12 @@ class TelemetryHandler {
 
     this._reportSerpPage(info, source, url);
 
-    let item = this._browserInfoByURL.get(url);
+    // For single page apps, we store the page by its original URI so the
+    // network observers can recover the browser in a context when they only
+    // have access to the originURL.
+    let urlKey =
+      info.isSPA && browser.originalURI?.spec ? browser.originalURI.spec : url;
+    let item = this._browserInfoByURL.get(urlKey);
 
     let impressionInfo;
     if (lazy.serpEventsEnabled && info.hasComponents) {
@@ -525,12 +540,13 @@ class TelemetryHandler {
         categorizationInfo: null,
         adsClicked: 0,
         adsVisible: 0,
+        searchQuery: info.searchQuery,
       });
       item.count++;
       item.source = source;
       item.newtabSessionId = newtabSessionId;
     } else {
-      item = this._browserInfoByURL.set(url, {
+      item = {
         browserTelemetryStateMap: new WeakMap().set(browser, {
           adsReported: false,
           adImpressionsReported: false,
@@ -541,6 +557,7 @@ class TelemetryHandler {
           categorizationInfo: null,
           adsClicked: 0,
           adsVisible: 0,
+          searchQuery: info.searchQuery,
         }),
         info,
         count: 1,
@@ -549,7 +566,87 @@ class TelemetryHandler {
         majorVersion: parseInt(Services.appinfo.version),
         channel: lazy.SearchUtils.MODIFIED_APP_CHANNEL,
         region: lazy.Region.home,
+        isSPA: info.isSPA,
+      };
+      // For single page apps, we store the page by its original URI so that
+      // network observers can recover the browser in a context when they only
+      // have the originURL to work with.
+      this._browserInfoByURL.set(urlKey, item);
+    }
+    this.#browserToItemMap.set(browser, item);
+  }
+
+  /**
+   * Determines whether or not a browser should be untracked or tracked for
+   * SERPs who have single page app behaviour.
+   *
+   * The over-arching logic:
+   * 1. Only inspect the browser if the url matches a SERP that is a SPA.
+   * 2. Recording an engagement if we're tracking the browser and we're going
+   *    to another page.
+   * 3. Untrack the browser if we're tracking it and switching pages.
+   * 4. Track the browser if we're now on a default search page.
+   *
+   * @param {BrowserElement} browser
+   *   The browser element related to the request.
+   * @param {string} url
+   *   The url of the request.
+   * @param {number} loadType
+   *   The loadtype of a the request.
+   */
+  updateTrackingSinglePageApp(browser, url, loadType) {
+    let providerInfo = this._getProviderInfoForURL(url);
+    if (!providerInfo?.isSPA) {
+      return;
+    }
+
+    let item = this.findItemForBrowser(browser);
+    let telemetryState = item?.browserTelemetryStateMap.get(browser);
+
+    let searchTermChanged =
+      this.urlSearchTerms(url, providerInfo) != telemetryState?.searchQuery;
+    let isSerp = !!this._checkURLForSerpMatch(url, providerInfo);
+    let browserIsTracked = !!telemetryState;
+    let isTabHistory = loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY;
+
+    // Step 2: Maybe record engagement.
+    if (browserIsTracked && !isTabHistory && (searchTermChanged || !isSerp)) {
+      impressionIdsWithoutEngagementsSet.delete(telemetryState.impressionId);
+      Glean.serp.engagement.record({
+        impression_id: telemetryState.impressionId,
+        action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
       });
+      lazy.logConsole.debug("Counting click:", {
+        impressionId: telemetryState.impressionId,
+        type: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        URL: url,
+      });
+    }
+
+    // Step 3: Maybe untrack the browser.
+    if (browserIsTracked && (searchTermChanged || !isSerp)) {
+      let reason = "";
+      // If we have to untrack it, it might be due to the user using the
+      // back/forward button.
+      if (isTabHistory) {
+        reason = SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION;
+      }
+      let actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "SearchSERPTelemetry"
+      );
+      actor.sendAsyncMessage("SearchSERPTelemetry:RemoveEventListeners");
+      this.stopTrackingBrowser(browser, reason);
+      browserIsTracked = false;
+    }
+
+    // Step 4: Maybe track the browser.
+    if (isSerp && !browserIsTracked) {
+      this.updateTrackingStatus(browser, url, loadType);
+      let actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "SearchSERPTelemetry"
+      );
+      actor.sendAsyncMessage("SearchSERPTelemetry:WaitForSPAPageLoad");
     }
   }
 
@@ -588,6 +685,7 @@ class TelemetryHandler {
         this._browserInfoByURL.delete(url);
       }
     }
+    this.#browserToItemMap.delete(browser);
   }
 
   /**
@@ -653,6 +751,33 @@ class TelemetryHandler {
       }
     }
     return score;
+  }
+
+  /**
+   * Extracts the search terms from the URL based on the provider info.
+   *
+   * @param {string} url
+   *  The URL to inspect.
+   * @param {object} providerInfo
+   *  The providerInfo associated with the URL.
+   * @returns {string}
+   *   The search term or if none is found, a blank string.
+   */
+  urlSearchTerms(url, providerInfo) {
+    if (providerInfo?.queryParamNames?.length) {
+      let { searchParams } = new URL(url);
+      for (let queryParamName of providerInfo.queryParamNames) {
+        let value = searchParams.get(queryParamName);
+        if (value) {
+          return value;
+        }
+      }
+    }
+    return "";
+  }
+
+  findItemForBrowser(browser) {
+    return this.#browserToItemMap.get(browser);
   }
 
   /**
@@ -800,15 +925,31 @@ class TelemetryHandler {
     if (!searchProviderInfo) {
       return null;
     }
+
+    let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
+
+    let isSPA = !!searchProviderInfo.isSPA;
+    if (isSPA) {
+      // A URL may have a specific query parameter denoting a search page.
+      // If the key was expected but doesn't currently exist, it could be due to
+      // the initial url containing it until after a page load.
+      // In that case, ignore this check since most SERPs missing the query
+      // param will go to the default search page.
+      let { key, value } = searchProviderInfo.defaultPageQueryParam;
+      if (key && queries.has(key) && queries.get(key) != value) {
+        return null;
+      }
+    }
+
     // Some URLs can match provider info but also be the provider's homepage
     // instead of a SERP.
     // e.g. https://example.com/ vs. https://example.com/?foo=bar
-    // To check this, we look for the presence of the query parameter
-    // that contains a search term.
-    let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
+    // Look for the presence of the query parameter that contains a search term.
     let hasQuery = false;
+    let searchQuery = "";
     for (let queryParamName of searchProviderInfo.queryParamNames) {
-      if (queries.get(queryParamName)) {
+      searchQuery = queries.get(queryParamName);
+      if (searchQuery) {
         hasQuery = true;
         break;
       }
@@ -894,6 +1035,8 @@ class TelemetryHandler {
       code,
       isShoppingPage,
       hasComponents,
+      searchQuery,
+      isSPA,
     };
   }
 
@@ -937,6 +1080,7 @@ class ContentHandler {
     this._browserInfoByURL = options.browserInfoByURL;
     this._findBrowserItemForURL = options.findBrowserItemForURL;
     this._checkURLForSerpMatch = options.checkURLForSerpMatch;
+    this._findItemForBrowser = options.findItemForBrowser;
   }
 
   /**
@@ -954,6 +1098,10 @@ class ContentHandler {
     Services.ppmm.sharedData.set(
       SEARCH_TELEMETRY_SHARED.LOAD_TIMEOUT,
       ADLINK_CHECK_TIMEOUT_MS
+    );
+    Services.ppmm.sharedData.set(
+      SEARCH_TELEMETRY_SHARED.SPA_LOAD_TIMEOUT,
+      SPA_ADLINK_CHECK_TIMEOUT_MS
     );
 
     Services.obs.addObserver(this, "http-on-examine-response");
@@ -1360,7 +1508,7 @@ class ContentHandler {
    *     The browser associated with the page.
    */
   _reportPageWithAds(info, browser) {
-    let item = this._findBrowserItemForURL(info.url);
+    let item = this._findItemForBrowser(browser);
     if (!item) {
       lazy.logConsole.warn(
         "Expected to report URI for",
@@ -1391,6 +1539,7 @@ class ContentHandler {
       `${item.info.provider}:${item.info.type}`,
       1
     );
+    Services.obs.notifyObservers(null, "reported-page-with-ads");
 
     telemetryState.adsReported = true;
 
@@ -1425,7 +1574,7 @@ class ContentHandler {
    *     The browser associated with the page.
    */
   _reportPageWithAdImpressions(info, browser) {
-    let item = this._findBrowserItemForURL(info.url);
+    let item = this._findItemForBrowser(browser);
     if (!item) {
       return;
     }
@@ -1475,7 +1624,7 @@ class ContentHandler {
    *   The browser associated with the page.
    */
   _reportPageAction(info, browser) {
-    let item = this._findBrowserItemForURL(info.url);
+    let item = this._findItemForBrowser(browser);
     if (!item) {
       return;
     }
@@ -1517,7 +1666,7 @@ class ContentHandler {
   }
 
   _reportPageImpression(info, browser) {
-    let item = this._findBrowserItemForURL(info.url);
+    let item = this._findItemForBrowser(browser);
     let telemetryState = item.browserTelemetryStateMap.get(browser);
     if (!telemetryState?.impressionInfo) {
       lazy.logConsole.debug(
@@ -1563,7 +1712,7 @@ class ContentHandler {
    *   The browser associated with the page.
    */
   _reportPageDomains(info, browser) {
-    let item = this._findBrowserItemForURL(info.url);
+    let item = this._findItemForBrowser(browser);
     let telemetryState = item.browserTelemetryStateMap.get(browser);
     if (lazy.serpEventTelemetryCategorization && telemetryState) {
       let result = SearchSERPCategorization.maybeCategorizeSERP(

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<!--
+  This SERP loads content dynamically. When a search term is provided in the
+  query parameter, it'll populate results using it.
+
+  Clicking images will load a fake results page with some ad links to ensure
+  we aren't tracking them again.
+
+  Searching "no-ads" will load a results page with no ads. This is so that if
+  there are multiple tabs open with a SERP and we tell an actor to look for an
+  ad, there shouldn't be any results.
+-->
+<html>
+<head>
+  <title>Fake SERP</title>
+  <meta charset="utf-8">
+</head>
+<body>
+  <nav style="display: flex; gap: 10px;">
+    <a id="all" data-menu="all">All</a>
+    <a id="images" data-menu="images">Images</a>
+  </nav>
+  <div id="searchbox-container">
+    <input id="searchbox" type="text" placeholder="search" />
+    <div id="searchbox-suggestions">
+    </div>
+  </div>
+  <div style="margin: 10px 0;" id="results"></div>
+  <div id="related-searches"></div>
+  <script>
+    const allTab = document.querySelector("[data-menu='all']");
+    const imagesTab = document.querySelector("[data-menu='images']");
+    const results = document.getElementById("results");
+    const related = document.getElementById("related-searches");
+    const searchBox = document.getElementById("searchbox");
+    let searchKey = "s";
+
+    function getSearchTerm(){
+      let searchTerm = new URL(window.location.href).searchParams.get(searchKey);
+      if (!searchTerm) {
+        return "";
+      }
+      return {originalSearchTerm: searchTerm, searchTerm: searchTerm.replaceAll("+", " ") };
+    }
+
+    function replaceWithBasicResults(){
+      let {originalSearchTerm, searchTerm} = getSearchTerm();
+      let hasAds = !searchTerm.startsWith("no ads");
+      if (!searchTerm) {
+        return;
+      }
+      let result = `
+        <div>
+          <a id="organic" href="https://example.com/nonad+${originalSearchTerm}">
+            Non Ad Result - ${searchTerm}
+          </a>
+        </div>
+      `;
+      if (hasAds) {
+        result += `
+        <div>
+          <a id="ad" href="https://example.com/ad+${originalSearchTerm}">
+            Ad Result - ${searchTerm}
+          </a>
+        </div>
+        <div>
+          <a id="ad-redirect" href="https://example.org/browser/browser/components/search/test/browser/telemetry/redirect_ad.sjs">
+            Ad Result Redirect - ${searchTerm}
+          </a>
+        </div>
+      `;
+      }
+      results.innerHTML = result;
+    }
+
+    function replaceWithOtherResults() {
+      let { searchTerm } = getSearchTerm();
+      if (!searchTerm) {
+        return;
+      }
+      let result = `
+        <div style="width: 200px; height: 100px; background-color: #333;">
+          <a style="color: #FFF;"
+            href="https://example.com/otherpage">Non Ad Image - ${searchTerm}
+          </a>
+        </div>
+        <div style="width: 200px; height: 100px; background-color: #333;">
+          <a style="color: #FFF;"
+            href="https://example.com/ad">Ad Image - ${searchTerm}
+          </a>
+        </div>
+      `;
+      results.innerHTML = result;
+    }
+
+    function updateSearchbox(){
+      let {searchTerm} = getSearchTerm();
+      searchBox.value = searchTerm;
+    }
+
+    function updateNav() {
+      let baseUrl = new URL(window.location.href);
+
+      baseUrl.searchParams.set("page", "web");
+      allTab.href = baseUrl.href;
+
+      baseUrl.searchParams.set("page", "images");
+      imagesTab.href = baseUrl.href;
+    }
+
+    function updatePageState({page = "", query = "" }){
+      let url = new URL(window.location.href);
+      if (page) {
+        url.searchParams.set("page", page);
+      }
+      if (query) {
+        url.searchParams.set(searchKey, query);
+      }
+      history.pushState({}, "", url);
+    }
+
+    function updateRelatedSearches() {
+      let url = new URL(window.location.href);
+      let searchTerm = url.searchParams.get(searchKey);
+      let page = url.searchParams.get("page");
+
+      let innerResults = "";
+      if (searchTerm && page == "web") {
+        innerResults = `
+          <div>
+            <a id="related-search" data-search="how to ${searchTerm}" href="#">
+              how to ${searchTerm}
+            </a>
+          </div>
+          <div>
+            <a id="related-search-without-ads" data-search="no ads ${searchTerm}" href="#">
+              no ads related result for ${searchTerm}
+            </a>
+          </div>
+        `;
+      }
+      document.getElementById("related-searches").innerHTML = innerResults;
+    }
+
+    allTab.addEventListener("click", (event) => {
+      event.preventDefault();
+      updatePageState({ page: "web" });
+      replaceWithBasicResults();
+      updateRelatedSearches();
+      updateSearchbox();
+    });
+
+    imagesTab.addEventListener("click", (event) => {
+      event.preventDefault();
+      updatePageState({ page: "images" });
+      replaceWithOtherResults();
+      updateRelatedSearches();
+      updateSearchbox();
+    });
+
+    related.addEventListener("click", (event) => {
+      event.preventDefault();
+      let search = event.target.dataset.search;
+      if (search) {
+        updatePageState({ page: "web", query: search });
+        replaceWithBasicResults();
+        updateRelatedSearches();
+        updateNav();
+        updateSearchbox();
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", (event) => {
+      let url = new URL(window.location.href);
+      searchKey = url.searchParams.has("r") ? "r": "s";
+
+      // When the page is loaded, we add a query parameter denoting the type
+      // of SERP this belongs to, mimicking how some SERPs operate.
+      url.searchParams.set("page", "web");
+      history.replaceState({}, "", url);
+      replaceWithBasicResults();
+      updateNav();
+      updateRelatedSearches();
+      updateSearchbox();
+    });
+
+    window.addEventListener("popstate", (event) => {
+      let baseUrl = new URL(window.location.href);
+      let page = baseUrl.searchParams.get("page");
+      switch (page) {
+        case "web":
+          replaceWithBasicResults();
+          updateNav();
+          updateRelatedSearches();
+          updateSearchbox();
+          break;
+        case "images":
+          replaceWithOtherResults();
+          updateRelatedSearches();
+          updateSearchbox();
+          break;
+      }
+    });
+
+  </script>
+</body>
+</html>

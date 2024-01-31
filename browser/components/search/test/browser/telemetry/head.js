@@ -8,12 +8,15 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  SEARCH_TELEMETRY_SHARED: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   SERPCategorizationRecorder: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+  SPA_ADLINK_CHECK_TIMEOUT_MS:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
   TELEMETRY_CATEGORIZATION_KEY:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
@@ -539,5 +542,80 @@ async function syncCollection(record) {
       updated: [],
       deleted: [],
     },
+  });
+}
+
+async function initSinglePageAppTest() {
+  /* import-globals-from head-spa.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/search/test/browser/telemetry/head-spa.js",
+    this
+  );
+
+  const BASE_PROVIDER = {
+    telemetryId: "example1",
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetrySinglePageApp/,
+    queryParamNames: ["s"],
+    codeParamName: "abc",
+    taggedCodes: ["ff"],
+    adServerAttributes: ["mozAttr"],
+    extraAdServersRegexps: [
+      /^https:\/\/example\.com\/ad/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/redirect_ad/,
+    ],
+    components: [
+      {
+        included: {
+          parent: {
+            selector: "#searchbox-container",
+          },
+          related: {
+            selector: "#searchbox-suggestions",
+          },
+          children: [
+            {
+              selector: "#searchbox",
+            },
+          ],
+        },
+        topDown: true,
+        type: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+      },
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        default: true,
+      },
+    ],
+    isSPA: true,
+    defaultPageQueryParam: {
+      key: "page",
+      value: "web",
+    },
+  };
+
+  const SPA_PROVIDER_INFO = [
+    BASE_PROVIDER,
+    {
+      ...BASE_PROVIDER,
+      telemetryId: "example2",
+      // Use example.com instead of example.org so that we have two providers
+      // with different TLD's and won't share the same web process.
+      searchPageRegexp:
+        /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetrySinglePageApp/,
+    },
+  ];
+
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(SPA_PROVIDER_INFO);
+  await waitForIdle();
+
+  // Shorten delay to avoid potential TV timeouts.
+  Services.ppmm.sharedData.set(SEARCH_TELEMETRY_SHARED.SPA_LOAD_TIMEOUT, 100);
+
+  registerCleanupFunction(function () {
+    Services.ppmm.sharedData.set(
+      SEARCH_TELEMETRY_SHARED.SPA_LOAD_TIMEOUT,
+      SPA_ADLINK_CHECK_TIMEOUT_MS
+    );
   });
 }
