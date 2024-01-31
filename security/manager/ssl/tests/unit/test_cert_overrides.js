@@ -62,7 +62,7 @@ function check_telemetry() {
   );
   equal(
     histogram.values[9],
-    9,
+    gIsDebugBuild ? 9 : 8,
     "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN values should match"
   );
   equal(
@@ -126,7 +126,7 @@ function check_telemetry() {
   );
   equal(
     keySizeHistogram.values[1],
-    16,
+    gIsDebugBuild ? 17 : 15,
     "Actual and expected successful verifications of 2048-bit keys should match"
   );
   equal(
@@ -400,10 +400,36 @@ function add_simple_tests() {
     MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   );
 
-  add_cert_override_test(
+  // The test root is not a built-in (by default), so the invalid dNSName entry
+  // in the subject alternative name extension is skipped.
+  add_connection_test(
     "ipAddressAsDNSNameInSAN.example.com",
-    SSL_ERROR_BAD_CERT_DOMAIN
+    PRErrorCodeSuccess
   );
+
+  if (gIsDebugBuild) {
+    // Treat the test root like a built-in.
+    add_test(function () {
+      let rootCert = constructCertFromFile("bad_certs/test-ca.pem");
+      Services.prefs.setCharPref(
+        "security.test.built_in_root_hash",
+        rootCert.sha256Fingerprint
+      );
+      run_next_test();
+    });
+    // If the root is a built-in, the invalid dNSName entry in the subject
+    // alternative name extension is not skipped, and this result in an error.
+    add_cert_override_test(
+      "ipAddressAsDNSNameInSAN.example.com",
+      SSL_ERROR_BAD_CERT_DOMAIN
+    );
+    // Reset the test root's built-in status.
+    add_test(function () {
+      Services.prefs.clearUserPref("security.test.built_in_root_hash");
+      run_next_test();
+    });
+  }
+
   add_cert_override_test("noValidNames.example.com", SSL_ERROR_BAD_CERT_DOMAIN);
   add_cert_override_test(
     "badSubjectAltNames.example.com",

@@ -30,12 +30,12 @@ const { X509 } = ChromeUtils.importESModule(
   "resource://gre/modules/psm/X509.sys.mjs"
 );
 
-const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(
+const gIsDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(
   Ci.nsIDebug2
 ).isDebugBuild;
 
 // The test EV roots are only enabled in debug builds as a security measure.
-const gEVExpected = isDebugBuild;
+const gEVExpected = gIsDebugBuild;
 
 const CLIENT_AUTH_FILE_NAME = "ClientAuthRememberList.bin";
 const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.bin";
