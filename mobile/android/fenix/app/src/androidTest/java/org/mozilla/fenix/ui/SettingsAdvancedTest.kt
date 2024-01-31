@@ -158,11 +158,10 @@ class SettingsAdvancedTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickPageObject(youTubeFullLink)
+            clickPageObject(youTubeSchemaLink)
             verifyOpenLinkInAnotherAppPrompt()
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
-            waitForPageToLoad()
-            verifyUrl("youtube")
+            verifyUrl(externalLinksPage.url.toString())
         }
     }
 
@@ -225,14 +224,13 @@ class SettingsAdvancedTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickPageObject(youTubeFullLink)
+            clickPageObject(youTubeSchemaLink)
             verifyPrivateBrowsingOpenLinkInAnotherAppPrompt(
                 url = "youtube",
-                pageObject = youTubeFullLink,
+                pageObject = youTubeSchemaLink,
             )
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
-            waitForPageToLoad()
-            verifyUrl("youtube")
+            verifyUrl(externalLinksPage.url.toString())
         }
     }
 
