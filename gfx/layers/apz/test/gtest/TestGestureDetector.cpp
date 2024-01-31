@@ -748,14 +748,13 @@ TEST_F(APZCGestureDetectorTester, TapTimeoutInterruptedByWheel) {
   // insert the wheel event.
   MakeApzcZoomable();
 
-  uint64_t touchBlockId = 0;
-  Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(100),
-      nullptr, &touchBlockId);
+  APZEventResult result = Tap(apzc, ScreenIntPoint(10, 10),
+                              TimeDuration::FromMilliseconds(100), nullptr);
   mcc->AdvanceByMillis(10);
   uint64_t wheelBlockId =
       Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time())
           .mInputBlockId;
-  EXPECT_NE(touchBlockId, wheelBlockId);
+  EXPECT_NE(result.mInputBlockId, wheelBlockId);
   while (mcc->RunThroughDelayedTasks())
     ;
 }
