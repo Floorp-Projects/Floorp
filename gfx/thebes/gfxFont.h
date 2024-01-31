@@ -10,6 +10,7 @@
 #include <new>
 #include <utility>
 #include <functional>
+#include "FontPaletteCache.h"
 #include "PLDHashTable.h"
 #include "ThebesRLBoxTypes.h"
 #include "gfxFontVariations.h"
@@ -26,7 +27,6 @@
 #include "mozilla/RWLock.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/FontPaletteCache.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/2D.h"
@@ -2280,22 +2280,6 @@ class gfxFont {
                         const FontDrawParams& aFontParams,
                         const mozilla::gfx::Point& aPoint, uint32_t aGlyphId);
 
-  class ColorGlyphCache {
-   public:
-    ColorGlyphCache() = default;
-    ~ColorGlyphCache() = default;
-
-    void SetColors(mozilla::gfx::sRGBColor aCurrentColor,
-                   mozilla::gfx::FontPalette* aPalette);
-
-    mozilla::HashMap<uint32_t, RefPtr<mozilla::gfx::SourceSurface>> mCache;
-
-   private:
-    mozilla::gfx::sRGBColor mCurrentColor;
-    RefPtr<mozilla::gfx::FontPalette> mPalette;
-  };
-  mozilla::UniquePtr<ColorGlyphCache> mColorGlyphCache;
-
   // Subclasses can override to return true if the platform is able to render
   // COLR-font glyphs directly, instead of us painting the layers explicitly.
   // (Currently used only for COLR.v0 fonts on macOS.)
@@ -2354,7 +2338,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
   mozilla::gfx::DrawOptions drawOptions;
   gfxFloat advanceDirection;
   mozilla::gfx::sRGBColor currentColor;
-  RefPtr<mozilla::gfx::FontPalette> palette;
+  nsTArray<mozilla::gfx::sRGBColor>* palette;  // owned by TextRunDrawParams
   mozilla::gfx::Rect fontExtents;
   bool isVerticalFont;
   bool haveSVGGlyphs;
