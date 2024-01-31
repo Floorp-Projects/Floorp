@@ -21,7 +21,7 @@
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/toolbarbutton.css"/>
       <html:link rel="stylesheet" href="chrome://global/skin/arrowscrollbox.css"/>
-      <toolbarbutton id="scrollbutton-up" part="scrollbutton-up" keyNav="false" data-l10n-id="overflow-scroll-button-up"/>
+      <toolbarbutton id="scrollbutton-up" part="scrollbutton-up" keyNav="false"/>
       <spacer part="overflow-start-indicator"/>
       <box class="scrollbox-clip" part="scrollbox-clip" flex="1">
         <scrollbox part="scrollbox" flex="1">
@@ -29,7 +29,7 @@
         </scrollbox>
       </box>
       <spacer part="overflow-end-indicator"/>
-      <toolbarbutton id="scrollbutton-down" part="scrollbutton-down" keyNav="false" data-l10n-id="overflow-scroll-button-down"/>
+      <toolbarbutton id="scrollbutton-down" part="scrollbutton-down" keyNav="false"/>
     `;
     }
 
@@ -42,9 +42,6 @@
       this._scrollButtonUp = this.shadowRoot.getElementById("scrollbutton-up");
       this._scrollButtonDown =
         this.shadowRoot.getElementById("scrollbutton-down");
-
-      MozXULElement.insertFTLIfNeeded("toolkit/global/arrowscrollbox.ftl");
-      document.l10n.connectRoot(this.shadowRoot);
 
       this._arrowScrollAnim = {
         scrollbox: this,
