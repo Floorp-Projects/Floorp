@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "condprof"
+
+["test_client.py"]

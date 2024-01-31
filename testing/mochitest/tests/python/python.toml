@@ -1,0 +1,13 @@
+[DEFAULT]
+subsuite = "mochitest"
+
+["test_build_profile.py"]
+
+["test_create_directories.py"]
+
+["test_get_active_tests.py"]
+
+["test_message_logger.py"]
+
+["test_mochitest_integration.py"]
+sequential = true
