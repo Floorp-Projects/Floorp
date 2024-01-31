@@ -103,15 +103,18 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry> {
       case mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault:
         WriteParam(aWriter, (uint8_t)2);
         break;
-      case mozilla::net::nsHttpHeaderArray::
-          eVarietyResponseNetOriginalAndResponse:
+      case mozilla::net::nsHttpHeaderArray::eVarietyRequestEnforceDefault:
         WriteParam(aWriter, (uint8_t)3);
         break;
-      case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal:
+      case mozilla::net::nsHttpHeaderArray::
+          eVarietyResponseNetOriginalAndResponse:
         WriteParam(aWriter, (uint8_t)4);
         break;
-      case mozilla::net::nsHttpHeaderArray::eVarietyResponse:
+      case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal:
         WriteParam(aWriter, (uint8_t)5);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyResponse:
+        WriteParam(aWriter, (uint8_t)6);
     }
   }
 
@@ -141,14 +144,18 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry> {
             mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault;
         break;
       case 3:
+        aResult->variety =
+            mozilla::net::nsHttpHeaderArray::eVarietyRequestEnforceDefault;
+        break;
+      case 4:
         aResult->variety = mozilla::net::nsHttpHeaderArray::
             eVarietyResponseNetOriginalAndResponse;
         break;
-      case 4:
+      case 5:
         aResult->variety =
             mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal;
         break;
-      case 5:
+      case 6:
         aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponse;
         break;
       default:
