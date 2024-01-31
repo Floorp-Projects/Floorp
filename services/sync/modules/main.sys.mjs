@@ -8,7 +8,6 @@ const lazy = {};
 
 // We want these to be lazily loaded, which helps performance and also tests
 // to not have these loaded before they are ready.
-// eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineESModuleGetters(lazy, {
   Service: "resource://services-sync/service.sys.mjs",
   Status: "resource://services-sync/status.sys.mjs",
@@ -16,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-sync/util.sys.mjs",
 });
 
-// eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineLazyGetter(lazy, "Crypto", () => {
   let { WeaveCrypto } = ChromeUtils.importESModule(
     "resource://services-crypto/WeaveCrypto.sys.mjs"

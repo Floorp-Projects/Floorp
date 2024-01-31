@@ -102,6 +102,15 @@ ruleTester.run("valid-lazy", rule, {
        ChromeUtils.defineLazyGetter(lazy, "foo", () => {});
        export { lazy as Foo };
      `,
+    `
+       const lazy = {};
+       if (cond) {
+         ChromeUtils.defineLazyGetter(lazy, "foo", () => { return 1; });
+       } else {
+         ChromeUtils.defineLazyGetter(lazy, "foo", () => { return 2; });
+       }
+       if (x) { lazy.foo; }
+    `,
   ],
   invalid: [
     invalidCode("if (x) { lazy.bar; }", "bar", "unknownProperty"),

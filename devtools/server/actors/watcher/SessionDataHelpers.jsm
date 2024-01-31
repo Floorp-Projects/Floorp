@@ -31,15 +31,11 @@ if (typeof module == "object") {
     true
   );
 } else {
-  // Ignore the "duplicate" definitions here as this are also defined
-  // in the if block above.
-  // eslint-disable-next-line mozilla/valid-lazy
   ChromeUtils.defineLazyGetter(lazy, "validateBreakpointLocation", () => {
     return ChromeUtils.import(
       "resource://devtools/shared/validate-breakpoint.jsm"
     ).validateBreakpointLocation;
   });
-  // eslint-disable-next-line mozilla/valid-lazy
   ChromeUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
     const { loader } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
