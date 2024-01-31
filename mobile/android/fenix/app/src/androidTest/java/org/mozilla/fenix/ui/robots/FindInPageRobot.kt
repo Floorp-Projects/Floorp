@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.typeText
@@ -16,6 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
@@ -25,42 +27,39 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  * Implementation of Robot Pattern for the find in page UI.
  */
 class FindInPageRobot {
-    fun verifyFindInPageQuery() = assertFindInPageQuery()!!
-    fun verifyFindInPageNextButton() = assertFindInPageNextButton()!!
-    fun verifyFindInPagePrevButton() = assertFindInPagePrevButton()!!
-    fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
-    fun clickFindInPageNextButton() = findInPageNextButton().click()
-    fun clickFindInPagePrevButton() = findInPagePrevButton().click()
-
-    fun verifyFindInPageSearchBarItems() {
-        verifyFindInPageQuery()
-        verifyFindInPageNextButton()
-        verifyFindInPagePrevButton()
-        verifyFindInPageCloseButton()
+    fun verifyFindInPageNextButton() = assertFindInPageNextButton()
+    fun verifyFindInPagePrevButton() = assertFindInPagePrevButton()
+    fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()
+    fun clickFindInPageNextButton() {
+        findInPageNextButton().click()
+        Log.i(TAG, "clickFindInPageNextButton: Clicked next result button")
+    }
+    fun clickFindInPagePrevButton() {
+        findInPagePrevButton().click()
+        Log.i(TAG, "clickFindInPagePrevButton: Clicked previous result button")
     }
 
     fun enterFindInPageQuery(expectedText: String) {
         mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime)
         findInPageQuery().perform(clearText())
+        Log.i(TAG, "enterFindInPageQuery: Cleared find in page bar text")
         mDevice.waitNotNull(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
         findInPageQuery().perform(typeText(expectedText))
+        Log.i(TAG, "enterFindInPageQuery: Typed $expectedText to find in page bar")
         mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
     }
 
-    fun verifyFindNextInPageResult(ratioCounter: String) {
+    fun verifyFindInPageResult(ratioCounter: String) {
         mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
         findInPageResult().check(matches(withText((ratioCounter))))
-    }
-
-    fun verifyFindPrevInPageResult(ratioCounter: String) {
-        mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
-        findInPageResult().check(matches(withText((ratioCounter))))
+        Log.i(TAG, "verifyFindInPageResult: Verified $ratioCounter results")
     }
 
     class Transition {
         fun closeFindInPageWithCloseButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitForIdle()
             findInPageCloseButton().click()
+            Log.i(TAG, "closeFindInPageWithCloseButton: Clicked close find in page button")
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
@@ -70,7 +69,9 @@ class FindInPageRobot {
 
             // Will need to press back 2x, the first will only dismiss the keyboard
             mDevice.pressBack()
+            Log.i(TAG, "closeFindInPageWithBackButton: Pressed 1x the device back button")
             mDevice.pressBack()
+            Log.i(TAG, "closeFindInPageWithBackButton: Pressed 2x the device back button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -84,14 +85,20 @@ private fun findInPageNextButton() = onView(withId(R.id.find_in_page_next_btn))
 private fun findInPagePrevButton() = onView(withId(R.id.find_in_page_prev_btn))
 private fun findInPageCloseButton() = onView(withId(R.id.find_in_page_close_btn))
 
-private fun assertFindInPageQuery() = findInPageQuery()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun assertFindInPageNextButton() {
+    findInPageNextButton()
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    Log.i(TAG, "assertFindInPageNextButton: Verified find in page next result button is visible")
+}
 
-private fun assertFindInPageNextButton() = findInPageNextButton()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun assertFindInPagePrevButton() {
+    findInPagePrevButton()
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    Log.i(TAG, "assertFindInPagePrevButton: Verified find in page previous result button is visible")
+}
 
-private fun assertFindInPagePrevButton() = findInPagePrevButton()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertFindInPageCloseButton() = findInPageCloseButton()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun assertFindInPageCloseButton() {
+    findInPageCloseButton()
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    Log.i(TAG, "assertFindInPageCloseButton: Verified find in page close button is visible")
+}

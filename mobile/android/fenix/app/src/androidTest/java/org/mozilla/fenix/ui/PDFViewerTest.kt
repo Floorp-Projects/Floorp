@@ -117,17 +117,17 @@ class PDFViewerTest {
             verifyFindInPagePrevButton()
             verifyFindInPageCloseButton()
             enterFindInPageQuery("l")
-            verifyFindNextInPageResult("1/2")
+            verifyFindInPageResult("1/2")
             clickFindInPageNextButton()
-            verifyFindNextInPageResult("2/2")
+            verifyFindInPageResult("2/2")
             clickFindInPagePrevButton()
-            verifyFindPrevInPageResult("1/2")
+            verifyFindInPageResult("1/2")
         }.closeFindInPageWithCloseButton {
             verifyFindInPageBar(false)
         }.openThreeDotMenu {
         }.openFindInPage {
             enterFindInPageQuery("p")
-            verifyFindNextInPageResult("1/1")
+            verifyFindInPageResult("1/1")
         }.closeFindInPageWithBackButton {
             verifyFindInPageBar(false)
         }
