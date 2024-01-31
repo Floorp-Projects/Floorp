@@ -477,60 +477,52 @@ For Snap tests tasks, used to disambiguate task label
 
 build-type
 ==========
-To do.
+For android builds, the type of build: typically debug, nightly, beta, release.
 
 component
 =========
-To do.
-
-aab
-===
-To do.
+For android-components builds, the name of the component.
 
 apks
 ====
-To do.
+For android apk build tasks, the list of apk artifact names.
+
+aab
+===
+For android aab build tasks, the aab artifact names.
 
 release-type
 ============
-To do.
+For android builds, the type of release: typically debug, nightly, beta, release.
 
 shipping-product
 ================
-To do.
+For android tasks, the shipping product: Fenix, Focus, or an android-component name.
 
 artifacts
 =========
-To do.
-
-screenshots
-===========
-To do.
-
-legacy
-======
-To do.
+For android-components tasks, a dictionary mapping extensions to artifact names.
 
 is_final_chunked_task
 =====================
-To do.
+Used by taskcluster.android_taskgraph.transforms.chunk to mark the last task in a chunk group.
 
-run_on_tasks_for
-================
-XXX Should not be needed!
-
-primary-kind-dependency
-=======================
-https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind
+legacy
+======
+Used by Fenix UI tests to select UI tests on legacy Android devices and API levels.
 
 nightly-test
 ============
-To do.
+Used by Fenix browsertime tests to mark the task as part of the nightly-test graph.
+
+screenshots
+===========
+Used by Fenix UI tests to mark the task as part of the screenshots graph.
 
 abi
 ===
-To do.
+Used by android browsertime tasks to track the abi of the product under test.
 
 apk
 ===
-To do.
+Used by android browsertime tasks to track the path to the apk of the product under test.
