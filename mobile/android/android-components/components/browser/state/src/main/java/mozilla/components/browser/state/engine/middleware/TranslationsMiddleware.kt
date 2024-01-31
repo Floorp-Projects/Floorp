@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TranslationsAction
-import mozilla.components.browser.state.action.TranslationsAction.TranslateExpectedAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.Engine
@@ -40,16 +39,12 @@ class TranslationsMiddleware(
     ) {
         // Pre process actions
         when (action) {
-            is TranslateExpectedAction -> {
-                scope.launch {
-                    requestSupportedLanguages(context, action.tabId)
-                }
-            }
-
             is TranslationsAction.OperationRequestedAction -> {
                 when (action.operation) {
-                    TranslationOperation.FETCH_LANGUAGES -> {
-                        // Bug 1877205
+                    TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
+                        scope.launch {
+                            requestSupportedLanguages(context, action.tabId)
+                        }
                     }
                     TranslationOperation.FETCH_PAGE_SETTINGS -> {
                         scope.launch {
@@ -86,7 +81,7 @@ class TranslationsMiddleware(
 
             onSuccess = {
                 context.store.dispatch(
-                    TranslationsAction.TranslateSetLanguagesAction(
+                    TranslationsAction.SetSupportedLanguagesAction(
                         tabId = tabId,
                         supportedLanguages = it,
                     ),
@@ -98,7 +93,7 @@ class TranslationsMiddleware(
                 context.store.dispatch(
                     TranslationsAction.TranslateExceptionAction(
                         tabId = tabId,
-                        operation = TranslationOperation.FETCH_LANGUAGES,
+                        operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
                         translationError = TranslationError.CouldNotLoadLanguagesError(it),
                     ),
                 )

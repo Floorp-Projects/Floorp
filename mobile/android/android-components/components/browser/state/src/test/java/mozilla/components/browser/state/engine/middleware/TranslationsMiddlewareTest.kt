@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.engine.middleware
 
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TranslationsAction
@@ -17,6 +16,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.translate.DetectedLanguages
+import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -30,6 +30,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.spy
@@ -54,6 +55,13 @@ class TranslationsMiddlewareTest {
     private val tabs = spy(listOf(tab))
     private val state = spy(BrowserState(tabs = tabs))
     private val store = spy(BrowserStore(middleware = listOf(translationsMiddleware), initialState = state))
+    private val context = mock<MiddlewareContext<BrowserState, BrowserAction>>()
+
+    @Before
+    fun setup() {
+        whenever(context.store).thenReturn(store)
+        whenever(context.state).thenReturn(state)
+    }
 
     private fun waitForIdle() {
         scope.testScheduler.runCurrent()
@@ -63,43 +71,50 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN TranslateExpectedAction is dispatched AND fetching languages is successful THEN TranslateSetLanguagesAction is dispatched`() {
-        val supportedLanguages = TranslationSupport(null, null)
-        val callbackCaptor = argumentCaptor<((TranslationSupport) -> Unit)>()
-        val action = TranslationsAction.TranslateExpectedAction(tabId = tab.id)
-        val middlewareContext = mock<MiddlewareContext<BrowserState, BrowserAction>>()
+    fun `WHEN OperationRequestedAction is dispatched to fetch languages AND succeeds THEN SetSupportedLanguagesAction is dispatched`() = runTest {
+        val supportedLanguages = TranslationSupport(
+            fromLanguages = listOf(Language("en", "English")),
+            toLanguages = listOf(Language("en", "English")),
+        )
+        val languageCallback = argumentCaptor<((TranslationSupport) -> Unit)>()
 
-        // Important for ensuring that the tests verify on the same store
-        whenever(middlewareContext.store).thenReturn(store)
-        whenever(engine.getSupportedTranslationLanguages(callbackCaptor.capture(), any()))
-            .thenAnswer { callbackCaptor.value(supportedLanguages) }
+        val action =
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+            )
 
-        translationsMiddleware.invoke(middlewareContext, {}, action)
+        translationsMiddleware.invoke(context, {}, action)
+        verify(engine).getSupportedTranslationLanguages(onSuccess = languageCallback.capture(), onError = any())
+        languageCallback.value.invoke(supportedLanguages)
 
         waitForIdle()
 
-        scope.launch {
-            verify(store).dispatch(
-                TranslationsAction.TranslateSetLanguagesAction(
-                    tabId = tab.id,
-                    supportedLanguages = supportedLanguages,
-                ),
-            )
-        }
+        verify(context.store).dispatch(
+            TranslationsAction.SetSupportedLanguagesAction(
+                tabId = tab.id,
+                supportedLanguages = supportedLanguages,
+            ),
+        )
 
         waitForIdle()
     }
 
     @Test
-    fun `WHEN TranslateExpectedAction is dispatched AND fetching languages fails THEN TranslateExceptionAction is dispatched`() {
-        store.dispatch(TranslationsAction.TranslateExpectedAction(tabId = tab.id)).joinBlocking()
+    fun `WHEN OperationRequestedAction is dispatched with FETCH_SUPPORTED_LANGUAGES AND fails THEN TranslateExceptionAction is dispatched`() = runTest {
+        store.dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+            ),
+        ).joinBlocking()
 
         waitForIdle()
 
         verify(store).dispatch(
             TranslationsAction.TranslateExceptionAction(
                 tabId = tab.id,
-                operation = TranslationOperation.FETCH_LANGUAGES,
+                operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
                 translationError = TranslationError.CouldNotLoadLanguagesError(any()),
             ),
         )

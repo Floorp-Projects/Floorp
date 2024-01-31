@@ -23,7 +23,7 @@ enum class TranslationOperation {
      * the languages supported for translating both "to" and "from" with their BCP-47 language tag
      * and localized name.
      */
-    FETCH_LANGUAGES,
+    FETCH_SUPPORTED_LANGUAGES,
 
     /**
      * The page related settings the translation engine should fetch.

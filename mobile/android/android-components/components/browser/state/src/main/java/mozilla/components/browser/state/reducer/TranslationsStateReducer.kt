@@ -83,9 +83,9 @@ internal object TranslationsStateReducer {
                     }
                 }
 
-                TranslationOperation.FETCH_LANGUAGES -> {
+                TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
                     // Reset the error state, and then generally expect
-                    // [TranslationsAction.TranslateSetLanguagesAction] to update state in the
+                    // [TranslationsAction.SetSupportedLanguagesAction] to update state in the
                     // success case.
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
@@ -127,7 +127,7 @@ internal object TranslationsStateReducer {
                     }
                 }
 
-                TranslationOperation.FETCH_LANGUAGES -> {
+                TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
                             supportedLanguages = null,
@@ -147,7 +147,7 @@ internal object TranslationsStateReducer {
             }
         }
 
-        is TranslationsAction.TranslateSetLanguagesAction ->
+        is TranslationsAction.SetSupportedLanguagesAction ->
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(
                     supportedLanguages = action.supportedLanguages,
@@ -163,10 +163,25 @@ internal object TranslationsStateReducer {
             }
 
         is TranslationsAction.OperationRequestedAction ->
-            state.copyWithTranslationsState(action.tabId) {
-                it.copy(
-                    pageSettings = null,
-                )
+            when (action.operation) {
+                TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            supportedLanguages = null,
+                        )
+                    }
+                }
+                TranslationOperation.FETCH_PAGE_SETTINGS -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            pageSettings = null,
+                        )
+                    }
+                }
+                TranslationOperation.TRANSLATE, TranslationOperation.RESTORE -> {
+                    // No state change for these operations
+                    state
+                }
             }
     }
 

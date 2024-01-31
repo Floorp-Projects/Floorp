@@ -26,6 +26,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -69,8 +70,13 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
-        // Signalling user intention to translate
-        browserStore.dispatch(TranslationsAction.TranslateExpectedAction(args.sessionId))
+        // Signalling need to fetch languages
+        browserStore.dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = args.sessionId,
+                operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+            ),
+        )
 
         setContent {
             val translationsState = browserStore.observeAsComposableState {
