@@ -447,6 +447,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   // Subframes start with it false unless otherwise noted in SetEmbedderElement.
   fields.Get<IDX_FullscreenAllowedByOwner>() = !aParent;
 
+  fields.Get<IDX_AllowPlugins>() = inherit ? inherit->GetAllowPlugins() : true;
+
   fields.Get<IDX_DefaultLoadFlags>() =
       inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
 
@@ -3063,6 +3065,12 @@ auto BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,
 auto BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
                              const bool& aAllowContentRetargetingOnChildren,
                              ContentParent* aSource) -> CanSetResult {
+  return LegacyRevertIfNotOwningOrParentProcess(aSource);
+}
+
+auto BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
+                             const bool& aAllowPlugins, ContentParent* aSource)
+    -> CanSetResult {
   return LegacyRevertIfNotOwningOrParentProcess(aSource);
 }
 

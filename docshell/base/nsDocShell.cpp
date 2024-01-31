@@ -1779,6 +1779,20 @@ nsDocShell::GetHasTrackingContentBlocked(Promise** aPromise) {
 }
 
 NS_IMETHODIMP
+nsDocShell::GetAllowPlugins(bool* aAllowPlugins) {
+  NS_ENSURE_ARG_POINTER(aAllowPlugins);
+
+  *aAllowPlugins = mBrowsingContext->GetAllowPlugins();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAllowPlugins(bool aAllowPlugins) {
+  // XXX should enable or disable a plugin host
+  return mBrowsingContext->SetAllowPlugins(aAllowPlugins);
+}
+
+NS_IMETHODIMP
 nsDocShell::GetCssErrorReportingEnabled(bool* aEnabled) {
   MOZ_ASSERT(aEnabled);
   *aEnabled = mCSSErrorReportingEnabled;
@@ -13086,6 +13100,19 @@ bool nsDocShell::ShouldBlockLoadingForBackButton() {
   bool canGoForward = false;
   GetCanGoForward(&canGoForward);
   return canGoForward;
+}
+
+bool nsDocShell::PluginsAllowedInCurrentDoc() {
+  if (!mDocumentViewer) {
+    return false;
+  }
+
+  Document* doc = mDocumentViewer->GetDocument();
+  if (!doc) {
+    return false;
+  }
+
+  return doc->GetAllowPlugins();
 }
 
 //----------------------------------------------------------------------
