@@ -10,7 +10,9 @@
 var rule = require("../lib/rules/valid-lazy");
 var RuleTester = require("eslint").RuleTester;
 
-const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
+const ruleTester = new RuleTester({
+  parserOptions: { ecmaVersion: "latest", sourceType: "module" },
+});
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -94,6 +96,11 @@ ruleTester.run("valid-lazy", rule, {
        a ??= lazy.foo.bar();
        var { x = lazy.foo.bar() } = {};
        var [ y = lazy.foo.bar() ] = [];
+     `,
+    `
+       const lazy = {};
+       ChromeUtils.defineLazyGetter(lazy, "foo", () => {});
+       export { lazy as Foo };
      `,
   ],
   invalid: [

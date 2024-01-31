@@ -65,6 +65,7 @@ module.exports = {
   create(context) {
     let lazyProperties = new Map();
     let unknownProperties = [];
+    let isLazyExported = false;
 
     function addProp(node, name) {
       if (lazyProperties.has(name)) {
@@ -190,6 +191,16 @@ module.exports = {
         }
       },
 
+      ExportNamedDeclaration(node) {
+        for (const spec of node.specifiers) {
+          if (spec.local.name === "lazy") {
+            // If the lazy object is exported, do not check unused property.
+            isLazyExported = true;
+            break;
+          }
+        }
+      },
+
       "Program:exit": function () {
         for (let { name, node } of unknownProperties) {
           let property = lazyProperties.get(name);
@@ -203,13 +214,15 @@ module.exports = {
             property.used = true;
           }
         }
-        for (let [name, property] of lazyProperties.entries()) {
-          if (!property.used) {
-            context.report({
-              node: property.node,
-              messageId: "unusedProperty",
-              data: { name },
-            });
+        if (!isLazyExported) {
+          for (let [name, property] of lazyProperties.entries()) {
+            if (!property.used) {
+              context.report({
+                node: property.node,
+                messageId: "unusedProperty",
+                data: { name },
+              });
+            }
           }
         }
       },
