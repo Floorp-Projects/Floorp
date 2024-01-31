@@ -967,6 +967,20 @@ add_task(async function round_trip_invalid_ace_label() {
   }, /NS_ERROR_MALFORMED_URI/);
 });
 
+add_task(async function test_bug1875119() {
+  let uri1 = Services.io.newURI("file:///path");
+  let uri2 = Services.io.newURI("resource://test/bla");
+  // type of uri2 is still SubstitutingURL which overrides the implementation of EnsureFile,
+  // but it's scheme is now file.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1876483 to disallow this
+  uri2 = uri2.mutate().setSpec("file:///path2").finalize();
+  Assert.throws(
+    () => uri1.equals(uri2),
+    /(NS_NOINTERFACE)|(NS_ERROR_FILE_UNRECOGNIZED_PATH)/,
+    "uri2 is in an invalid state and should throw"
+  );
+});
+
 add_task(async function test_bug1843717() {
   // Make sure file path normalization on windows
   // doesn't affect the hash of the URL.
