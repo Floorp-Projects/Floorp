@@ -45,6 +45,15 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
+/**
+ * A reference to the handler for the default override allowlist.
+ *
+ * @type {SearchDefaultOverrideAllowlistHandler}
+ */
+ChromeUtils.defineLazyGetter(lazy, "defaultOverrideAllowlist", () => {
+  return new SearchDefaultOverrideAllowlistHandler();
+});
+
 // Exported to tests for not splitting ids when building webextension ids.
 export const NON_SPLIT_ENGINE_IDS = [
   "allegro-pl",
@@ -506,11 +515,6 @@ export class SearchService {
       };
     }
 
-    if (!this.#defaultOverrideAllowlist) {
-      this.#defaultOverrideAllowlist =
-        new SearchDefaultOverrideAllowlistHandler();
-    }
-
     if (
       extension.startupReason === "ADDON_INSTALL" ||
       extension.startupReason === "ADDON_ENABLE"
@@ -523,7 +527,7 @@ export class SearchService {
         };
       }
       if (
-        !(await this.#defaultOverrideAllowlist.canOverride(
+        !(await lazy.defaultOverrideAllowlist.canOverride(
           extension,
           engine._extensionID
         ))
@@ -553,7 +557,7 @@ export class SearchService {
 
     if (
       engine.getAttr("overriddenBy") == extension.id &&
-      (await this.#defaultOverrideAllowlist.canOverride(
+      (await lazy.defaultOverrideAllowlist.canOverride(
         extension,
         engine._extensionID
       ))
@@ -1100,13 +1104,6 @@ export class SearchService {
    * @type {Set<object>}
    */
   #startupRemovedExtensions = new Set();
-
-  /**
-   * A reference to the handler for the default override allow list.
-   *
-   * @type {SearchDefaultOverrideAllowlistHandler|null}
-   */
-  #defaultOverrideAllowlist = null;
 
   /**
    * This map is built lazily after the available search engines change.  It
