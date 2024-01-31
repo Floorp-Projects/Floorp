@@ -145,7 +145,7 @@ def pgo_flags(compiler, linker, profdata, orderfile, target_is_windows, pgo_temp
         use_ldflags = []
         if orderfile:
             if compiler.type == "clang-cl":
-                use_ldflags += ["-ORDERFILE:@" + orderfile]
+                use_ldflags += ["-ORDER:@" + orderfile]
             elif linker.KIND == "lld":
                 use_ldflags += [
                     "-Wl,--symbol-ordering-file",
