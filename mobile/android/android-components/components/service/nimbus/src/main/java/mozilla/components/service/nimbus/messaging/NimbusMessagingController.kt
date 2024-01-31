@@ -6,7 +6,6 @@ package mozilla.components.service.nimbus.messaging
 
 import android.content.Intent
 import android.net.Uri
-import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
@@ -25,35 +24,16 @@ open class NimbusMessagingController(
     private val httpActionToDeepLinkUriConverter: (String) -> Uri = { action ->
         "$deepLinkScheme://open?url=${Uri.encode(action)}".toUri()
     },
-    private val now: () -> Long = { System.currentTimeMillis() },
 ) : NimbusMessagingControllerInterface {
-    /**
-     * Called when a message is just about to be shown to the user.
-     *
-     * Update the display count, time shown and boot identifier metadata for the given [message].
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun updateMessageAsDisplayed(message: Message, bootIdentifier: String? = null): Message {
-        val updatedMetadata = message.metadata.copy(
-            displayCount = message.metadata.displayCount + 1,
-            lastTimeShown = now(),
-            latestBootIdentifier = bootIdentifier,
-        )
-        return message.copy(
-            metadata = updatedMetadata,
-        )
-    }
-
     /**
      * Records telemetry and metadata for a newly processed displayed message.
      */
     override suspend fun onMessageDisplayed(displayedMessage: Message, bootIdentifier: String?): Message {
         sendShownMessageTelemetry(displayedMessage.id)
-        val nextMessage = updateMessageAsDisplayed(displayedMessage, bootIdentifier)
+        val nextMessage = messagingStorage.onMessageDisplayed(displayedMessage, bootIdentifier)
         if (nextMessage.isExpired) {
             sendExpiredMessageTelemetry(nextMessage.id)
         }
-        messagingStorage.updateMetadata(nextMessage.metadata)
         return nextMessage
     }
 

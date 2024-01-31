@@ -7,10 +7,10 @@ package mozilla.components.service.nimbus.messaging
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
@@ -29,9 +29,6 @@ import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
-private const val MOCK_TIME_MILLIS = 1000L
-
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class NimbusMessagingControllerTest {
 
@@ -44,7 +41,7 @@ class NimbusMessagingControllerTest {
     private val coroutineScope = coroutinesTestRule.scope
 
     private val deepLinkScheme = "deepLinkScheme"
-    private val controller = NimbusMessagingController(storage, deepLinkScheme) { MOCK_TIME_MILLIS }
+    private val controller = NimbusMessagingController(storage, deepLinkScheme)
 
     @Before
     fun setup() {
@@ -52,52 +49,12 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling updateMessageAsDisplayed with message & no boot id THEN metadata for count and lastTimeShown is updated`() =
-        coroutineScope.runTest {
-            val message = createMessage("id-1")
-            assertEquals(0, message.metadata.displayCount)
-            assertEquals(0L, message.metadata.lastTimeShown)
-            assertNull(message.metadata.latestBootIdentifier)
-
-            val expectedMessage = with(message) {
-                copy(
-                    metadata = metadata.copy(
-                        displayCount = 1,
-                        lastTimeShown = MOCK_TIME_MILLIS,
-                        latestBootIdentifier = null,
-                    ),
-                )
-            }
-
-            assertEquals(expectedMessage, controller.updateMessageAsDisplayed(message))
-        }
-
-    @Test
-    fun `WHEN calling updateMessageAsDisplayed with message & boot id THEN metadata for count, lastTimeShown & latestBootIdentifier is updated`() =
-        coroutineScope.runTest {
-            val message = createMessage("id-1")
-            assertEquals(0, message.metadata.displayCount)
-            assertEquals(0L, message.metadata.lastTimeShown)
-            assertNull(message.metadata.latestBootIdentifier)
-
-            val bootId = "test boot id"
-            val expectedMessage = with(message) {
-                copy(
-                    metadata = metadata.copy(
-                        displayCount = 1,
-                        lastTimeShown = MOCK_TIME_MILLIS,
-                        latestBootIdentifier = bootId,
-                    ),
-                )
-            }
-
-            assertEquals(expectedMessage, controller.updateMessageAsDisplayed(message, bootId))
-        }
-
-    @Test
     fun `GIVEN message not expired WHEN calling onMessageDisplayed THEN record a messageShown event and update storage`() =
         coroutineScope.runTest {
             val message = createMessage("id-1", style = StyleData(maxDisplayCount = 2))
+            val displayedMessage = createMessage("id-1", style = StyleData(maxDisplayCount = 2), displayCount = 1)
+            `when`(storage.onMessageDisplayed(eq(message), any())).thenReturn(displayedMessage)
+
             // Assert telemetry is initially null
             assertNull(GleanMessaging.messageShown.testGetValue())
             assertNull(GleanMessaging.messageExpired.testGetValue())
@@ -113,7 +70,7 @@ class NimbusMessagingControllerTest {
             // Expired telemetry
             assertNull(GleanMessaging.messageExpired.testGetValue())
 
-            verify(storage).updateMetadata(message.metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
+            verify(storage).onMessageDisplayed(eq(message), any())
         }
 
     @Test
@@ -121,6 +78,8 @@ class NimbusMessagingControllerTest {
         coroutineScope.runTest {
             val message =
                 createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 0)
+            val displayedMessage = createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 1)
+            `when`(storage.onMessageDisplayed(any(), any())).thenReturn(displayedMessage)
             // Assert telemetry is initially null
             assertNull(GleanMessaging.messageShown.testGetValue())
             assertNull(GleanMessaging.messageExpired.testGetValue())
@@ -139,7 +98,7 @@ class NimbusMessagingControllerTest {
             assertEquals(1, expiredEvent.size)
             assertEquals(message.id, expiredEvent.single().extra!!["message_key"])
 
-            verify(storage).updateMetadata(message.metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
+            verify(storage).onMessageDisplayed(message)
         }
 
     @Test

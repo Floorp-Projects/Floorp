@@ -232,7 +232,7 @@ class MessagingMiddlewareTest {
         val message1 = createMessage()
         val message2 = message1.copy(id = "message2", action = "action2")
         // An updated message1 that has been displayed once.
-        val messageDisplayed1 = message1.copy(metadata = createMetadata(displayCount = 1))
+        val messageDisplayed1 = incrementDisplayCount(message1)
         val store = AppStore(
             AppState(
                 messaging = MessagingState(
@@ -253,6 +253,9 @@ class MessagingMiddlewareTest {
                 any(),
             )
         } returns message1
+        coEvery {
+            controller.onMessageDisplayed(message1, any())
+        } returns messageDisplayed1
 
         coEvery {
             controller.onMessageDisplayed(eq(message1), any())
@@ -269,7 +272,7 @@ class MessagingMiddlewareTest {
     fun `GIVEN a message has not surpassed the maxDisplayCount WHEN evaluate THEN update the message displayCount`() = runTestOnMain {
         val message = createMessage()
         // An updated message that has been displayed once.
-        val messageDisplayed = message.copy(metadata = createMetadata(displayCount = 1))
+        val messageDisplayed = incrementDisplayCount(message)
         val store = AppStore(
             AppState(
                 messaging = MessagingState(
@@ -289,6 +292,9 @@ class MessagingMiddlewareTest {
                 any(),
             )
         } returns message
+        coEvery {
+            controller.onMessageDisplayed(message, any())
+        } returns messageDisplayed
 
         coEvery {
             controller.onMessageDisplayed(eq(message), any())
@@ -327,6 +333,9 @@ class MessagingMiddlewareTest {
                 any(),
             )
         } returns message
+        coEvery {
+            controller.onMessageDisplayed(message, any())
+        } returns incrementDisplayCount(message)
 
         coEvery {
             controller.onMessageDisplayed(eq(message), any())
@@ -363,3 +372,10 @@ private fun createMetadata(
     lastTimeShown,
     latestBootIdentifier,
 )
+
+private fun incrementDisplayCount(message: Message) =
+    message.copy(
+        metadata = createMetadata(
+            displayCount = message.displayCount + 1,
+        ),
+    )

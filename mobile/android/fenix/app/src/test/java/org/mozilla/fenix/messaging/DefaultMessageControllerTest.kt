@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.messaging
 
+import android.content.Intent
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.service.nimbus.messaging.Message
@@ -44,6 +46,7 @@ class DefaultMessageControllerTest {
     @Test
     fun `WHEN calling onMessagePressed THEN process the action intent and update the app store`() {
         val message = mockMessage()
+        every { messagingController.getIntentForMessage(message) }.returns(Intent())
 
         defaultMessageController.onMessagePressed(message)
 
