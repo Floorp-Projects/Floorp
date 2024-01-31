@@ -156,13 +156,6 @@
 @BINPATH@/@DLL_PREFIX@mozavutil@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozavcodec@DLL_SUFFIX@
 #endif
-#ifdef XP_WIN
-#ifdef _AMD64_
-@BINPATH@/@DLL_PREFIX@qipcap64@DLL_SUFFIX@
-#else
-@BINPATH@/@DLL_PREFIX@qipcap@DLL_SUFFIX@
-#endif
-#endif
 
 ; [Components]
 #ifdef ACCESSIBILITY
