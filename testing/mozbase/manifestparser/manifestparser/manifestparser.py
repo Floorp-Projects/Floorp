@@ -167,7 +167,6 @@ class ManifestParser(object):
 
         def read_file(type):
             include_file = section.split(type, 1)[-1]
-            self.logger.debug_ci(f"INCLUDE: {include_file}")
             include_file = normalize_path(include_file)
             if not os.path.isabs(include_file):
                 include_file = os.path.join(here, include_file)
@@ -213,17 +212,12 @@ class ManifestParser(object):
                     if self.use_toml:
                         fp, filename = self._get_fp_filename(toml_name)
                         read_fn = read_toml
-                        self.logger.debug_ci(f"Reading TOML instead of INI: {filename}")
                     else:
                         self.logger.debug_ci(
                             f"NOTE TOML present, but not used: {toml_name}"
                         )
-                        self.logger.debug_ci(f"Reading INI: {filename}")
-                else:
-                    self.logger.debug_ci(f"Reading INI: {filename}")
             elif file_ext == ".toml":
                 read_fn = read_toml
-                self.logger.debug_ci(f"Reading TOML: {filename}")
             else:
                 raise IOError(f"manfestparser file extension not supported: {filename}")
         defaults["here"] = here
