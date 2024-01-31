@@ -3,3 +3,4 @@
 # which can be used by python-test's "requirements" feature.
 poetry==1.4
 poetry-core==1.5.1
+tomlkit==0.12.3

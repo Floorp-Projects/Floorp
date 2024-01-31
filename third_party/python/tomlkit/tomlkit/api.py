@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import contextlib
 import datetime as _datetime
 
 from collections.abc import Mapping
 from typing import IO
 from typing import Iterable
+from typing import TypeVar
 
 from tomlkit._utils import parse_rfc3339
 from tomlkit.container import Container
 from tomlkit.exceptions import UnexpectedCharError
+from tomlkit.items import CUSTOM_ENCODERS
 from tomlkit.items import AoT
 from tomlkit.items import Array
 from tomlkit.items import Bool
@@ -16,6 +19,7 @@ from tomlkit.items import Comment
 from tomlkit.items import Date
 from tomlkit.items import DateTime
 from tomlkit.items import DottedKey
+from tomlkit.items import Encoder
 from tomlkit.items import Float
 from tomlkit.items import InlineTable
 from tomlkit.items import Integer
@@ -284,3 +288,21 @@ def nl() -> Whitespace:
 def comment(string: str) -> Comment:
     """Create a comment item."""
     return Comment(Trivia(comment_ws="  ", comment="# " + string))
+
+
+E = TypeVar("E", bound=Encoder)
+
+
+def register_encoder(encoder: E) -> E:
+    """Add a custom encoder, which should be a function that will be called
+    if the value can't otherwise be converted. It should takes a single value
+    and return a TOMLKit item or raise a ``TypeError``.
+    """
+    CUSTOM_ENCODERS.append(encoder)
+    return encoder
+
+
+def unregister_encoder(encoder: Encoder) -> None:
+    """Unregister a custom encoder."""
+    with contextlib.suppress(ValueError):
+        CUSTOM_ENCODERS.remove(encoder)

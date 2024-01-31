@@ -133,9 +133,11 @@ def escape_string(s: str, escape_sequences: Collection[str] = _basic_escapes) ->
 
         return i + inc
 
+    found_sequences = {seq for seq in escape_sequences if seq in s}
+
     i = 0
     while i < len(s):
-        for seq in escape_sequences:
+        for seq in found_sequences:
             seq_len = len(seq)
             if s[i:].startswith(seq):
                 start = flush(seq_len)

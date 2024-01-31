@@ -55,7 +55,7 @@ taskcluster==44.2.2
 taskcluster-taskgraph==6.3.0
 taskcluster-urls==13.0.1
 toml==0.10.2
-tomlkit==0.11.8
+tomlkit==0.12.3
 tqdm==4.62.3
 urllib3==1.26.17
 voluptuous==0.12.1
