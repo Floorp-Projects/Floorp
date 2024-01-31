@@ -56,6 +56,13 @@
   fill: currentColor;
 }
 
+/* Ensure keywords and search engine names have the directionality of their
+   content, ignoring ancestors - otherwise directionality is wrong in RTL
+   locales for LTR keywords, with the "@" appearing in the wrong place.  */
+#engineList > treechildren::-moz-tree-cell(engineKeyword) {
+  unicode-bidi: plaintext;
+}
+
 #engineShown {
   min-width: 26px;
 }
