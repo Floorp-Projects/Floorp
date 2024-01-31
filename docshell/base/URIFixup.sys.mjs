@@ -161,6 +161,13 @@ ChromeUtils.defineLazyGetter(
     /^(?:[a-z+.-]+:\/*(?!\/))?\[(?:[0-9a-f]{0,4}:){0,7}[0-9a-f]{0,4}\]?(?::\d+|\/)?/i
 );
 
+// Regex used to detect spaces in URL credentials.
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "DetectSpaceInCredentialsRegex",
+  () => /^[^/]*\s[^/]*@/
+);
+
 // Cache of known domains.
 ChromeUtils.defineLazyGetter(lazy, "knownDomains", () => {
   const branch = "browser.fixup.domainwhitelist.";
@@ -277,6 +284,7 @@ URIFixup.prototype = {
 
   getFixupURIInfo(uriString, fixupFlags = FIXUP_FLAG_NONE) {
     let isPrivateContext = fixupFlags & FIXUP_FLAG_PRIVATE_CONTEXT;
+    let untrimmedURIString = uriString;
 
     // Eliminate embedded newlines, which single-line text fields now allow,
     // and cleanup the empty spaces and tabs that might be on each end.
@@ -379,7 +387,11 @@ URIFixup.prototype = {
     // Avoid fixing up content that looks like tab-separated values.
     // Assume that 1 tab is accidental, but more than 1 implies this is
     // supposed to be tab-separated content.
-    if (!isCommonProtocol && lazy.maxOneTabRegex.test(uriString)) {
+    if (
+      !isCommonProtocol &&
+      lazy.maxOneTabRegex.test(uriString) &&
+      !lazy.DetectSpaceInCredentialsRegex.test(untrimmedURIString)
+    ) {
       let uriWithProtocol = fixupURIProtocol(uriString);
       if (uriWithProtocol) {
         info.fixedURI = uriWithProtocol;

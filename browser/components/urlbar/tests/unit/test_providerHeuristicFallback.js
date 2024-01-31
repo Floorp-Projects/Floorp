@@ -702,6 +702,65 @@ add_task(async function () {
   await PlacesUtils.history.clear();
 });
 
+add_task(async function dont_fixup_urls_with_at_symbol() {
+  info("don't fixup search string if it contains no protocol and spaces.");
+  let query = "Lorem Ipsum @mozilla.org";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+    ],
+  });
+
+  query = "http://Lorem Ipsum @mozilla.org";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: `http://Lorem%20Ipsum%20@mozilla.org/`,
+        fallbackTitle: `${query}/`,
+        heuristic: true,
+      }),
+    ],
+  });
+  query = "https://Lorem Ipsum @mozilla.org";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: `https://Lorem%20Ipsum%20@mozilla.org/`,
+        fallbackTitle: `${query}/`,
+        heuristic: true,
+      }),
+    ],
+  });
+
+  query = "LoremIpsum@mozilla.org";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: `http://${query}/`,
+        fallbackTitle: `http://${query}/`,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+    ],
+  });
+});
+
 /**
  * Returns an array of code points in the given string.  Each code point is
  * returned as a hexidecimal string.
