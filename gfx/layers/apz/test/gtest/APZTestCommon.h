@@ -518,8 +518,7 @@ class APZCTesterBase : public ::testing::Test {
   template <class InputReceiver>
   APZEventResult Tap(const RefPtr<InputReceiver>& aTarget,
                      const ScreenIntPoint& aPoint, TimeDuration aTapLength,
-                     nsEventStatus (*aOutEventStatuses)[2] = nullptr,
-                     uint64_t* aOutInputBlockId = nullptr);
+                     nsEventStatus (*aOutEventStatuses)[2] = nullptr);
 
   template <class InputReceiver>
   void TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
@@ -619,14 +618,10 @@ template <class InputReceiver>
 APZEventResult APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
                                    const ScreenIntPoint& aPoint,
                                    TimeDuration aTapLength,
-                                   nsEventStatus (*aOutEventStatuses)[2],
-                                   uint64_t* aOutInputBlockId) {
+                                   nsEventStatus (*aOutEventStatuses)[2]) {
   APZEventResult touchDownResult = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = touchDownResult.GetStatus();
-  }
-  if (aOutInputBlockId) {
-    *aOutInputBlockId = touchDownResult.mInputBlockId;
   }
   mcc->AdvanceBy(aTapLength);
 

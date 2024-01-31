@@ -150,14 +150,14 @@ TEST_F(APZEventRegionsTesterMock, HitRegionImmediateResponse) {
   check.Call("Tapped on bottom again");
 
   // Now let's do that again, but simulate a main-thread response
-  uint64_t inputBlockId = 0;
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2,
                      {CompositorHitTestFlags::eVisibleToHitTest,
                       CompositorHitTestFlags::eIrregularArea});
-  Tap(manager, ScreenIntPoint(10, 110), tapDuration, nullptr, &inputBlockId);
+  APZEventResult result =
+      Tap(manager, ScreenIntPoint(10, 110), tapDuration, nullptr);
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(left->GetGuid());
-  manager->SetTargetAPZC(inputBlockId, targets);
+  manager->SetTargetAPZC(result.mInputBlockId, targets);
   while (mcc->RunThroughDelayedTasks())
     ;  // this runs the tap event
   check.Call("Tapped on left this time");
@@ -184,12 +184,11 @@ TEST_F(APZEventRegionsTesterMock, Bug1117712) {
 
   // These touch events should hit the dispatch-to-content region of layers[3]
   // and so get queued with that APZC as the tentative target.
-  uint64_t inputBlockId = 0;
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
                      {CompositorHitTestFlags::eVisibleToHitTest,
                       CompositorHitTestFlags::eIrregularArea});
-  Tap(manager, ScreenIntPoint(55, 5), TimeDuration::FromMilliseconds(100),
-      nullptr, &inputBlockId);
+  APZEventResult result = Tap(manager, ScreenIntPoint(55, 5),
+                              TimeDuration::FromMilliseconds(100), nullptr);
   // But now we tell the APZ that really it hit layers[2], and expect the tap
   // to be delivered at the correct coordinates.
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(55, 5), 0,
@@ -198,5 +197,5 @@ TEST_F(APZEventRegionsTesterMock, Bug1117712) {
 
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(apzc2->GetGuid());
-  manager->SetTargetAPZC(inputBlockId, targets);
+  manager->SetTargetAPZC(result.mInputBlockId, targets);
 }
