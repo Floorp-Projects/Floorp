@@ -20,19 +20,16 @@ enum WorkerKind : uint8_t;
  *
  * @param aUseCounter - The use counter for the feature that was used.
  * @param aIsPage - Whether we should record to the page or document metric.
- * @returns The name of the metric that was incremented, or "".
  */
-const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage);
+void IncrementUseCounter(UseCounter aUseCounter, bool aIsPage);
 
 /**
  * Increments the metric associated with the specific worker use counter.
  *
  * @param aUseCounter - The use counter for the feature that was used.
  * @param aKind - The kind of worker that triggered the use counter.
- * @returns The name of the metric that was incremented, or "".
  */
-const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter,
-                                      WorkerKind aKind);
+void IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind aKind);
 
 }  // namespace dom
 }  // namespace mozilla
