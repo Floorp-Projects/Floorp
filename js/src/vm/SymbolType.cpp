@@ -144,6 +144,31 @@ void Symbol::dumpFields(js::JSONPrinter& json) const {
     json.nullProperty("description");
   }
 }
+
+void Symbol::dumpPropertyName(js::GenericPrinter& out) const {
+  if (isWellKnownSymbol()) {
+    // All the well-known symbol names are ASCII.
+    description()->dumpCharsNoQuote(out);
+  } else if (code_ == SymbolCode::InSymbolRegistry ||
+             code_ == SymbolCode::UniqueSymbol) {
+    out.printf(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for("
+                                                     : "Symbol(");
+
+    if (description()) {
+      description()->dumpCharsSingleQuote(out);
+    } else {
+      out.printf("undefined");
+    }
+
+    out.putChar(')');
+  } else if (code_ == SymbolCode::PrivateNameSymbol) {
+    MOZ_ASSERT(description());
+    out.putChar('#');
+    description()->dumpCharsNoQuote(out);
+  } else {
+    out.printf("<Invalid Symbol code=%u>", unsigned(code_));
+  }
+}
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
 bool js::SymbolDescriptiveString(JSContext* cx, Symbol* sym,
