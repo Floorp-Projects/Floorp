@@ -2,7 +2,7 @@
  *    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Test of a search engine's identifier.
+ * Test of a search engine's telemetryId.
  */
 
 "use strict";
@@ -31,15 +31,17 @@ function checkIdentifier(engineName, expectedIdentifier, expectedTelemetryId) {
   );
 
   Assert.equal(
-    engine.identifier,
-    expectedIdentifier,
-    "Should have the correct identifier"
-  );
-
-  Assert.equal(
     engine.telemetryId,
     expectedTelemetryId,
     "Should have the correct telemetry Id"
+  );
+
+  // TODO: Bug 1877721 - We have 3 forms of identifiers which causes confusion,
+  // we can remove the identifier for nsISearchEngine.
+  Assert.equal(
+    engine.identifier,
+    expectedIdentifier,
+    "Should have the correct identifier"
   );
 }
 
@@ -50,7 +52,7 @@ add_task(async function test_from_profile() {
 });
 
 add_task(async function test_from_telemetry_id() {
-  checkIdentifier("basic", "telemetry", "telemetry");
+  checkIdentifier("basic", "basic-telemetry", "basic-telemetry");
 });
 
 add_task(async function test_from_webextension_id() {

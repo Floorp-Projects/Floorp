@@ -1,0 +1,66 @@
+{
+  "data": [
+    {
+      "identifier": "basic",
+      "recordType": "engine",
+      "base": {
+        "name": "basic",
+        "urls": {
+          "search": {
+            "base": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+            "params": [
+              {
+                "name": "sourceId",
+                "value": "Mozilla-search"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true },
+          "telemetrySuffix": "telemetry"
+        }
+      ]
+    },
+    {
+      "identifier": "simple",
+      "recordType": "engine",
+      "base": {
+        "name": "Simple Engine",
+        "urls": {
+          "search": {
+            "base": "https://example.com",
+            "params": [
+              {
+                "name": "sourceId",
+                "value": "Mozilla-search"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": { "base": "https://example.com?search={searchTerms}" }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "basic",
+      "specificDefaults": []
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": []
+    }
+  ]
+}

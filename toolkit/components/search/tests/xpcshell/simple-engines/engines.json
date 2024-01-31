@@ -17,7 +17,7 @@
         ],
         "suggest_url": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
       },
-      "telemetryId": "telemetry",
+      "telemetryId": "basic-telemetry",
       "appliesTo": [
         {
           "included": { "everywhere": true },
@@ -45,7 +45,7 @@
       "appliesTo": [
         {
           "included": { "everywhere": true },
-          "default": "yes"
+          "default": "no"
         }
       ]
     }
