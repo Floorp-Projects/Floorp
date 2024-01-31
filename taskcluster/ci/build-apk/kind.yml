@@ -18,7 +18,6 @@ job-defaults:
     apk-artifact-template:
         type: file
         name: 'public/build/target.{abi}.apk'
-        # github-name: '{gradle_build}-{version}-{abi}.apk'
         path: '/builds/worker/checkouts/gecko/mobile/android/{source_project_name}/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
 
 
@@ -484,8 +483,6 @@ jobs:
         description: 'Fenix Beta mozillaonline'
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
-        # apk-artifact-template:
-        #     github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
             release-type: beta
             shipping_phase: promote
@@ -508,8 +505,6 @@ jobs:
         description: 'Fenix Release mozillaonline'
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
-        # apk-artifact-template:
-        #     github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
             release-type: release
             shipping_phase: promote

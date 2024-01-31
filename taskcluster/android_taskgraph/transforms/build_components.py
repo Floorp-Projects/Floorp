@@ -145,7 +145,6 @@ def add_artifacts(config, tasks):
         for key in [
             "tests-artifact-template",
             "lint-artifact-template",
-            "text-artifact-template",
             "jacoco-coverage-template",
         ]:
             if key in task:
