@@ -342,7 +342,7 @@ class ChemspillPrio(TryConfig):
 
     def try_config(self, chemspill_prio, **kwargs):
         if chemspill_prio:
-            return {"chemspill-prio": {}}
+            return {"chemspill-prio": True}
 
 
 class GeckoProfile(TryConfig):
