@@ -235,7 +235,10 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
     /**
      * Closes a tab when there is only one tab open.
      */
+    @OptIn(ExperimentalTestApi::class)
     fun closeTab() {
+        composeTestRule.waitUntilAtLeastOneExists(hasTestTag(TabsTrayTestTag.tabItemClose))
+        composeTestRule.closeTabButton().assertExists()
         composeTestRule.closeTabButton().performClick()
         Log.i(TAG, "closeTab: Clicked close tab button")
     }
