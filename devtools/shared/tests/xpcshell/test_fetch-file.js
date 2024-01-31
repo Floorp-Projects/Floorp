@@ -18,12 +18,12 @@ const ISO_8859_1_BUFFER = new Uint8Array([0x61, 0xe9, 0x64]);
 
 /**
  * Tests that URLs with arrows pointing to an actual source are handled properly
- * (bug 808960). For example 'resource://gre/modules/XPIProvider.jsm ->
+ * (bug 808960). For example 'resource://gre/modules/XPIProvider.sys.mjs ->
  * file://l10n.js' should load 'file://l10n.js'.
  */
 add_task(async function test_arrow_urls() {
   const { path } = createTemporaryFile(".js");
-  const url = "resource://gre/modules/XPIProvider.jsm -> file://" + path;
+  const url = "resource://gre/modules/XPIProvider.sys.mjs -> file://" + path;
 
   await IOUtils.writeUTF8(path, TEST_CONTENT);
   const { content } = await DevToolsUtils.fetch(url);

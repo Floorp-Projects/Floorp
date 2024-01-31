@@ -415,7 +415,7 @@ class TestUrlFinder(unittest.TestCase):
             ),
             # Path which contains "->"
             (
-                "resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/osfile/osfile_async_worker.js",  # noqa
+                "resource://gre/modules/addons/XPIProvider.sys.mjs -> resource://gre/modules/osfile/osfile_async_worker.js",  # noqa
                 ("toolkit/components/osfile/modules/osfile_async_worker.js", None),
             ),
             # Path with pp_info

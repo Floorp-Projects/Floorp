@@ -377,8 +377,8 @@ export var AddonRepository = {
    * add-on is not found) is passed to the specified callback. If caching is
    * disabled, null is passed to the specified callback.
    *
-   * The callback variant exists only for existing code in XPIProvider.jsm
-   * and XPIDatabase.jsm that requires a synchronous callback, yuck.
+   * The callback variant exists only for existing code in XPIProvider.sys.mjs
+   * and XPIDatabase.sys.mjs that requires a synchronous callback, yuck.
    *
    * @param  aId
    *         The id of the add-on to get
