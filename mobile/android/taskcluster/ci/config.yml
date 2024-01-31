@@ -209,11 +209,6 @@ workers:
             implementation: scriptworker-signing
             os: scriptworker
             worker-type: mobile-t-signing
-        github:
-            provisioner: scriptworker-k8s
-            implementation: scriptworker-github
-            os: scriptworker
-            worker-type: 'mobile-{level}-github'
         images:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
