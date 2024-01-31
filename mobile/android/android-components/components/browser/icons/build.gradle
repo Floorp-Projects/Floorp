@@ -66,7 +66,7 @@ dependencies {
 
     implementation ComponentsDependencies.thirdparty_disklrucache
 
-    implementation ComponentsDependencies.thirdparty_coil_svg
+    implementation ComponentsDependencies.thirdparty_androidsvg
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')
