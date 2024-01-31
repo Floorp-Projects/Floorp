@@ -48,6 +48,12 @@
     "expectations": ["PASS"]
   },
   {
+    "testIdPattern": "[debugInfo.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["cdp"],
+    "expectations": ["SKIP"]
+  },
+  {
     "testIdPattern": "[device-request-prompt.spec] *",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox"],
@@ -1620,6 +1626,12 @@
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["FAIL", "PASS"]
+  },
+  {
+    "testIdPattern": "[defaultbrowsercontext.spec] DefaultBrowserContext page.cookies() should work",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["cdp", "firefox"],
+    "expectations": ["FAIL"]
   },
   {
     "testIdPattern": "[defaultbrowsercontext.spec] DefaultBrowserContext page.deleteCookie() should work",
@@ -3710,6 +3722,12 @@
     "platforms": ["darwin", "win32"],
     "parameters": ["firefox", "headless", "webDriverBiDi"],
     "expectations": ["FAIL"]
+  },
+  {
+    "testIdPattern": "[screenshot.spec] Screenshots Cdp should work in \"fromSurface: false\" mode",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["cdp", "headless"],
+    "expectations": ["SKIP"]
   },
   {
     "testIdPattern": "[screenshot.spec] Screenshots ElementHandle.screenshot should work for an element with an offset",
