@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 const {readdirSync} = require('fs');
 const {join} = require('path');
 
@@ -29,7 +35,7 @@ module.exports = {
 
   parser: '@typescript-eslint/parser',
 
-  plugins: ['mocha', '@typescript-eslint', 'import'],
+  plugins: ['mocha', '@typescript-eslint', 'import', 'rulesdir'],
 
   extends: ['plugin:prettier/recommended', 'plugin:import/typescript'],
 
@@ -138,6 +144,13 @@ module.exports = {
       // Don't allow underscored declarations on camelCased variables/properties.
       // ...RESTRICTED_UNDERSCORED_IDENTIFIERS,
     ],
+
+    // Keeps comments formatted.
+    'rulesdir/prettier-comments': 'error',
+    // Enforces consistent file extension
+    'rulesdir/extensions': 'error',
+    // Enforces license headers on files
+    'rulesdir/check-license': 'warn',
   },
   overrides: [
     {
@@ -151,14 +164,10 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
         'plugin:@typescript-eslint/stylistic',
       ],
-      plugins: ['eslint-plugin-tsdoc', 'rulesdir'],
+      plugins: ['eslint-plugin-tsdoc'],
       rules: {
-        // Keeps comments formatted.
-        'rulesdir/prettier-comments': 'error',
         // Enforces clean up of used resources.
         'rulesdir/use-using': 'error',
-        // Enforces consistent file extension
-        'rulesdir/extensions': 'error',
         // Brackets keep code readable.
         curly: ['error', 'all'],
         // Brackets keep code readable and `return` intentions clear.
@@ -185,6 +194,7 @@ module.exports = {
         '@typescript-eslint/explicit-function-return-type': 'off',
         // We allow non-null assertions if the value was asserted using `assert` API.
         '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-useless-template-literals': 'error',
         /**
          * This is the default options (as per
          * https://github.com/typescript-eslint/typescript-eslint/blob/HEAD/packages/eslint-plugin/docs/rules/ban-types.md),

@@ -1,17 +1,7 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import {homedir} from 'os';
@@ -37,7 +27,9 @@ function isSupportedProduct(product: unknown): product is Product {
  * @internal
  */
 export const getConfiguration = (): Configuration => {
-  const result = cosmiconfigSync('puppeteer').search();
+  const result = cosmiconfigSync('puppeteer', {
+    searchStrategy: 'global',
+  }).search();
   const configuration: Configuration = result ? result.config : {};
 
   configuration.logLevel = (process.env['PUPPETEER_LOGLEVEL'] ??
@@ -70,6 +62,24 @@ export const getConfiguration = (): Configuration => {
       process.env['npm_config_puppeteer_skip_download'] ??
       process.env['npm_package_config_puppeteer_skip_download'] ??
       configuration.skipDownload
+  );
+
+  // Set skipChromeDownload explicitly or from default
+  configuration.skipChromeDownload = Boolean(
+    process.env['PUPPETEER_SKIP_CHROME_DOWNLOAD'] ??
+      process.env['npm_config_puppeteer_skip_chrome_download'] ??
+      process.env['npm_package_config_puppeteer_skip_chrome_download'] ??
+      configuration.skipChromeDownload
+  );
+
+  // Set skipChromeDownload explicitly or from default
+  configuration.skipChromeHeadlessShellDownload = Boolean(
+    process.env['PUPPETEER_SKIP_CHROME_HEADLESS_SHELL_DOWNLOAD'] ??
+      process.env['npm_config_puppeteer_skip_chrome_headless_shell_download'] ??
+      process.env[
+        'npm_package_config_puppeteer_skip_chrome_headless_shell_download'
+      ] ??
+      configuration.skipChromeHeadlessShellDownload
   );
 
   // Prepare variables used in browser downloading

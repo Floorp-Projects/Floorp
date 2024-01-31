@@ -1,20 +1,11 @@
 /**
- * Copyright 2018 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2018 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import expect from 'expect';
+import type {Target} from 'puppeteer-core/internal/api/Target.js';
 import {isErrorLike} from 'puppeteer-core/internal/util/ErrorLike.js';
 
 import {getTestState, setupTestBrowserHooks} from '../mocha-utils.js';
@@ -41,7 +32,7 @@ describe('Target.createCDPSession', function () {
   it('should not report created targets for custom CDP sessions', async () => {
     const {browser} = await getTestState();
     let called = 0;
-    const handler = async (target: any) => {
+    const handler = async (target: Target) => {
       called++;
       if (called > 1) {
         throw new Error('Too many targets created');
@@ -125,6 +116,26 @@ describe('Target.createCDPSession', function () {
       // not TS.
       await client.send('ThisCommand.DoesNotExist');
     }
+  });
+
+  it('should respect custom timeout', async () => {
+    const {page} = await getTestState();
+
+    const client = await page.createCDPSession();
+    await expect(
+      client.send(
+        'Runtime.evaluate',
+        {
+          expression: 'new Promise(resolve => {})',
+          awaitPromise: true,
+        },
+        {
+          timeout: 50,
+        }
+      )
+    ).rejects.toThrowError(
+      `Runtime.evaluate timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.`
+    );
   });
 
   it('should expose the underlying connection', async () => {

@@ -10,9 +10,8 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/files/**/*"],
-  "references": [{"path": "./tsconfig.spec.json"}]
 }

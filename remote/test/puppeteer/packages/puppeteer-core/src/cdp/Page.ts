@@ -1,17 +1,7 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {Readable} from 'stream';
@@ -48,17 +38,13 @@ import {NetworkManagerEvent} from '../common/NetworkManagerEvents.js';
 import type {PDFOptions} from '../common/PDFOptions.js';
 import type {BindingPayload, HandleFor} from '../common/types.js';
 import {
-  createClientError,
   debugError,
   evaluationString,
   getReadableAsBuffer,
   getReadableFromProtocolStream,
-  NETWORK_IDLE_TIME,
-  pageBindingInitString,
+  parsePDFOptions,
   timeout,
   validateDialogType,
-  valueFromRemoteObject,
-  waitForHTTP,
 } from '../common/util.js';
 import type {Viewport} from '../common/Viewport.js';
 import {assert} from '../util/assert.js';
@@ -87,7 +73,12 @@ import type {CdpTarget} from './Target.js';
 import type {TargetManager} from './TargetManager.js';
 import {TargetManagerEvent} from './TargetManager.js';
 import {Tracing} from './Tracing.js';
-import {WebWorker} from './WebWorker.js';
+import {
+  createClientError,
+  pageBindingInitString,
+  valueFromRemoteObject,
+} from './utils.js';
+import {CdpWebWorker} from './WebWorker.js';
 
 /**
  * @internal
@@ -133,7 +124,7 @@ export class CdpPage extends Page {
   #exposedFunctions = new Map<string, string>();
   #coverage: Coverage;
   #viewport: Viewport | null;
-  #workers = new Map<string, WebWorker>();
+  #workers = new Map<string, CdpWebWorker>();
   #fileChooserDeferreds = new Set<Deferred<FileChooser>>();
   #sessionCloseDeferred = Deferred.create<never, TargetCloseError>();
   #serviceWorkerBypassed = false;
@@ -352,7 +343,7 @@ export class CdpPage extends Page {
     assert(session instanceof CdpCDPSession);
     this.#frameManager.onAttachedToTarget(session._target());
     if (session._target()._getTargetInfo().type === 'worker') {
-      const worker = new WebWorker(
+      const worker = new CdpWebWorker(
         session,
         session._target().url(),
         this.#addConsoleMessage.bind(this),
@@ -473,7 +464,7 @@ export class CdpPage extends Page {
     const {level, text, args, source, url, lineNumber} = event.entry;
     if (args) {
       args.map(arg => {
-        return releaseObject(this.#primaryTargetClient, arg);
+        void releaseObject(this.#primaryTargetClient, arg);
       });
     }
     if (source !== 'worker') {
@@ -512,7 +503,7 @@ export class CdpPage extends Page {
     return this.#frameManager.frames();
   }
 
-  override workers(): WebWorker[] {
+  override workers(): CdpWebWorker[] {
     return Array.from(this.#workers.values());
   }
 
@@ -673,6 +664,9 @@ export class CdpPage extends Page {
 
     const expression = pageBindingInitString('exposedFun', name);
     await this.#primaryTargetClient.send('Runtime.addBinding', {name});
+    // TODO: investigate this as it appears to only apply to the main frame and
+    // local subframes instead of the entire frame tree (including future
+    // frame).
     const {identifier} = await this.#primaryTargetClient.send(
       'Page.addScriptToEvaluateOnNewDocument',
       {
@@ -684,6 +678,11 @@ export class CdpPage extends Page {
 
     await Promise.all(
       this.frames().map(frame => {
+        // If a frame has not started loading, it might never start. Rely on
+        // addScriptToEvaluateOnNewDocument in that case.
+        if (frame !== this.mainFrame() && !frame._hasStartedLoading) {
+          return;
+        }
         return frame.evaluate(expression).catch(debugError);
       })
     );
@@ -702,6 +701,11 @@ export class CdpPage extends Page {
 
     await Promise.all(
       this.frames().map(frame => {
+        // If a frame has not started loading, it might never start. Rely on
+        // addScriptToEvaluateOnNewDocument in that case.
+        if (frame !== this.mainFrame() && !frame._hasStartedLoading) {
+          return;
+        }
         return frame
           .evaluate(name => {
             // Removes the dangling Puppeteer binding wrapper.
@@ -904,54 +908,6 @@ export class CdpPage extends Page {
     return await this.target().createCDPSession();
   }
 
-  override async waitForRequest(
-    urlOrPredicate: string | ((req: HTTPRequest) => boolean | Promise<boolean>),
-    options: {timeout?: number} = {}
-  ): Promise<HTTPRequest> {
-    const {timeout = this._timeoutSettings.timeout()} = options;
-    return await waitForHTTP(
-      this.#frameManager.networkManager,
-      NetworkManagerEvent.Request,
-      urlOrPredicate,
-      timeout,
-      this.#sessionCloseDeferred
-    );
-  }
-
-  override async waitForResponse(
-    urlOrPredicate:
-      | string
-      | ((res: HTTPResponse) => boolean | Promise<boolean>),
-    options: {timeout?: number} = {}
-  ): Promise<HTTPResponse> {
-    const {timeout = this._timeoutSettings.timeout()} = options;
-    return await waitForHTTP(
-      this.#frameManager.networkManager,
-      NetworkManagerEvent.Response,
-      urlOrPredicate,
-      timeout,
-      this.#sessionCloseDeferred
-    );
-  }
-
-  override async waitForNetworkIdle(
-    options: {idleTime?: number; timeout?: number} = {}
-  ): Promise<void> {
-    const {
-      idleTime = NETWORK_IDLE_TIME,
-      timeout: ms = this._timeoutSettings.timeout(),
-    } = options;
-
-    await firstValueFrom(
-      this._waitForNetworkIdle(
-        this.#frameManager.networkManager,
-        idleTime
-      ).pipe(
-        raceWith(timeout(ms), from(this.#sessionCloseDeferred.valueOrThrow()))
-      )
-    );
-  }
-
   override async goBack(
     options: WaitForOptions = {}
   ): Promise<HTTPResponse | null> {
@@ -1131,6 +1087,7 @@ export class CdpPage extends Page {
   }
 
   override async createPDFStream(options: PDFOptions = {}): Promise<Readable> {
+    const {timeout: ms = this._timeoutSettings.timeout()} = options;
     const {
       landscape,
       displayHeaderFooter,
@@ -1144,9 +1101,8 @@ export class CdpPage extends Page {
       pageRanges,
       preferCSSPageSize,
       omitBackground,
-      timeout: ms,
       tagged: generateTaggedPDF,
-    } = this._getPDFOptions(options);
+    } = parsePDFOptions(options);
 
     if (omitBackground) {
       await this.#emulationManager.setTransparentBackgroundColor();

@@ -1,17 +1,7 @@
 /**
- * Copyright 2018 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2018 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import assert from 'assert';
@@ -157,6 +147,9 @@ describe('Screenshots', function () {
     });
     it('should work with odd clip size on Retina displays', async () => {
       const {page} = await getTestState();
+
+      // Make sure documentElement height is at least 11px.
+      await page.setContent(`<div style="width: 11px; height: 11px;">`);
 
       const screenshot = await page.screenshot({
         clip: {
@@ -368,6 +361,42 @@ describe('Screenshots', function () {
       });
 
       expect(screenshot).toBeInstanceOf(Buffer);
+    });
+
+    it('should run in parallel in multiple pages', async () => {
+      const {browser, server} = await getTestState();
+
+      const context = await browser.createIncognitoBrowserContext();
+
+      const N = 2;
+      const pages = await Promise.all(
+        Array(N)
+          .fill(0)
+          .map(async () => {
+            const page = await context.newPage();
+            await page.goto(server.PREFIX + '/grid.html');
+            return page;
+          })
+      );
+      const promises = [];
+      for (let i = 0; i < N; ++i) {
+        promises.push(
+          pages[i]!.screenshot({
+            clip: {x: 50 * i, y: 0, width: 50, height: 50},
+          })
+        );
+      }
+      const screenshots = await Promise.all(promises);
+      for (let i = 0; i < N; ++i) {
+        expect(screenshots[i]).toBeGolden(`grid-cell-${i}.png`);
+      }
+      await Promise.all(
+        pages.map(page => {
+          return page.close();
+        })
+      );
+
+      await context.close();
     });
   });
 

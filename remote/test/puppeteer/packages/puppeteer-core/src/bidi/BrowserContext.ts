@@ -1,17 +1,7 @@
 /**
- * Copyright 2022 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2022 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
@@ -21,10 +11,12 @@ import {BrowserContext} from '../api/BrowserContext.js';
 import type {Page} from '../api/Page.js';
 import type {Target} from '../api/Target.js';
 import {UnsupportedOperation} from '../common/Errors.js';
+import {debugError} from '../common/util.js';
 import type {Viewport} from '../common/Viewport.js';
 
 import type {BidiBrowser} from './Browser.js';
 import type {BidiConnection} from './Connection.js';
+import {UserContext} from './core/UserContext.js';
 import type {BidiPage} from './Page.js';
 
 /**
@@ -32,7 +24,6 @@ import type {BidiPage} from './Page.js';
  */
 export interface BidiBrowserContextOptions {
   defaultViewport: Viewport | null;
-  isDefault: boolean;
 }
 
 /**
@@ -42,14 +33,18 @@ export class BidiBrowserContext extends BrowserContext {
   #browser: BidiBrowser;
   #connection: BidiConnection;
   #defaultViewport: Viewport | null;
-  #isDefault = false;
+  #userContext: UserContext;
 
-  constructor(browser: BidiBrowser, options: BidiBrowserContextOptions) {
+  constructor(
+    browser: BidiBrowser,
+    userContext: UserContext,
+    options: BidiBrowserContextOptions
+  ) {
     super();
     this.#browser = browser;
+    this.#userContext = userContext;
     this.#connection = this.#browser.connection;
     this.#defaultViewport = options.defaultViewport;
-    this.#isDefault = options.isDefault;
   }
 
   override targets(): Target[] {
@@ -100,11 +95,25 @@ export class BidiBrowserContext extends BrowserContext {
   }
 
   override async close(): Promise<void> {
-    if (this.#isDefault) {
+    if (!this.isIncognito()) {
       throw new Error('Default context cannot be closed!');
     }
 
-    await this.#browser._closeContext(this);
+    // TODO: Remove once we have adopted the new browsing contexts.
+    for (const target of this.targets()) {
+      const page = await target?.page();
+      try {
+        await page?.close();
+      } catch (error) {
+        debugError(error);
+      }
+    }
+
+    try {
+      await this.#userContext.remove();
+    } catch (error) {
+      debugError(error);
+    }
   }
 
   override browser(): BidiBrowser {
@@ -123,7 +132,7 @@ export class BidiBrowserContext extends BrowserContext {
   }
 
   override isIncognito(): boolean {
-    return !this.#isDefault;
+    return this.#userContext.id !== UserContext.DEFAULT;
   }
 
   override overridePermissions(): never {

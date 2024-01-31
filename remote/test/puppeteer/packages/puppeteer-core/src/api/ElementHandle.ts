@@ -1,17 +1,7 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {Protocol} from 'devtools-protocol';
@@ -27,10 +17,15 @@ import type {
   NodeFor,
 } from '../common/types.js';
 import type {KeyInput} from '../common/USKeyboardLayout.js';
-import {isString, withSourcePuppeteerURLIfNone} from '../common/util.js';
+import {
+  debugError,
+  isString,
+  withSourcePuppeteerURLIfNone,
+} from '../common/util.js';
 import {assert} from '../util/assert.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
 import {throwIfDisposed} from '../util/decorators.js';
+import {AsyncDisposableStack} from '../util/disposable.js';
 
 import {_isElementHandle} from './ElementHandleSymbol.js';
 import type {
@@ -1351,6 +1346,31 @@ export abstract class ElementHandle<
 
     const page = this.frame.page();
 
+    // If the element is larger than the viewport, `captureBeyondViewport` will
+    // _not_ affect element rendering, so we need to adjust the viewport to
+    // properly render the element.
+    const viewport = page.viewport() ?? {
+      width: clip.width,
+      height: clip.height,
+    };
+    await using stack = new AsyncDisposableStack();
+    if (clip.width > viewport.width || clip.height > viewport.height) {
+      await this.frame.page().setViewport({
+        ...viewport,
+        width: Math.max(viewport.width, Math.ceil(clip.width)),
+        height: Math.max(viewport.height, Math.ceil(clip.height)),
+      });
+
+      stack.defer(async () => {
+        try {
+          await this.frame.page().setViewport(viewport);
+        } catch (error) {
+          debugError(error);
+        }
+      });
+    }
+
+    // Only scroll the element into view if the user wants it.
     if (scrollIntoView) {
       await this.scrollIntoViewIfNeeded();
 

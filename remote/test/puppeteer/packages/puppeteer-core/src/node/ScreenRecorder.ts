@@ -1,17 +1,7 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {ChildProcessWithoutNullStreams} from 'child_process';
@@ -19,12 +9,8 @@ import {spawn, spawnSync} from 'child_process';
 import {PassThrough} from 'stream';
 
 import debug from 'debug';
-import type Protocol from 'devtools-protocol';
 
-import type {
-  Observable,
-  OperatorFunction,
-} from '../../third_party/rxjs/rxjs.js';
+import type {OperatorFunction} from '../../third_party/rxjs/rxjs.js';
 import {
   bufferCount,
   concatMap,
@@ -39,7 +25,7 @@ import {
 import {CDPSessionEvent} from '../api/CDPSession.js';
 import type {BoundingBox} from '../api/ElementHandle.js';
 import type {Page} from '../api/Page.js';
-import {debugError} from '../common/util.js';
+import {debugError, fromEmitterEvent} from '../common/util.js';
 import {guarded} from '../util/decorators.js';
 import {asyncDisposeSymbol} from '../util/disposable.js';
 
@@ -99,11 +85,11 @@ export class ScreenRecorder extends PassThrough {
         // Reduces initial buffering while analyzing input fps and other stats.
         [
           '-fpsprobesize',
-          `${0}`,
+          '0',
           '-probesize',
-          `${32}`,
+          '32',
           '-analyzeduration',
-          `${0}`,
+          '0',
           '-fflags',
           'nobuffer',
         ],
@@ -120,13 +106,13 @@ export class ScreenRecorder extends PassThrough {
         // Specifies the encoding and format we are using.
         this.#getFormatArgs(format ?? 'webm'),
         // Disable bitrate.
-        ['-b:v', `${0}`],
+        ['-b:v', '0'],
         // Filters to ensure the images are piped correctly.
         [
           '-vf',
           `${
             speed ? `setpts=${1 / speed}*PTS,` : ''
-          }crop='min(${width},iw):min(${height},ih):${0}:${0}',pad=${width}:${height}:${0}:${0}${
+          }crop='min(${width},iw):min(${height},ih):0:0',pad=${width}:${height}:0:0${
             crop ? `,crop=${crop.width}:${crop.height}:${crop.x}:${crop.y}` : ''
           }${scale ? `,scale=iw*${scale}:-1` : ''}`,
         ],
@@ -147,12 +133,7 @@ export class ScreenRecorder extends PassThrough {
     });
 
     this.#lastFrame = lastValueFrom(
-      (
-        fromEvent(
-          client,
-          'Page.screencastFrame'
-        ) as Observable<Protocol.Page.ScreencastFrameEvent>
-      ).pipe(
+      fromEmitterEvent(client, 'Page.screencastFrame').pipe(
         tap(event => {
           void client.send('Page.screencastFrameAck', {
             sessionId: event.sessionId,
@@ -204,7 +185,7 @@ export class ScreenRecorder extends PassThrough {
           // Sets the quality. Lower the better.
           ['-crf', `${CRF_VALUE}`],
           // Sets the quality and how efficient the compression will be.
-          ['-deadline', 'realtime', '-cpu-used', `${8}`],
+          ['-deadline', 'realtime', '-cpu-used', '8'],
         ].flat();
       case 'gif':
         return [

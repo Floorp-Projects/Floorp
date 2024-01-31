@@ -1,19 +1,9 @@
-#! /usr/bin/env node
+#! /usr/bin/env -S node
 
 /**
- * Copyright 2022 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2022 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import {randomUUID} from 'crypto';
@@ -56,6 +46,7 @@ const {
   minTests,
   shard,
   reporter,
+  printMemory,
 } = yargs(hideBin(process.argv))
   .parserConfiguration({'unknown-options-as-args': true})
   .scriptName('@puppeteer/mocha-runner')
@@ -91,6 +82,10 @@ const {
   .option('reporter', {
     string: true,
     requiresArg: true,
+  })
+  .option('print-memory', {
+    boolean: true,
+    default: false,
   })
   .parseSync();
 
@@ -207,6 +202,10 @@ async function main() {
         'trace-warnings',
       ];
 
+      if (printMemory) {
+        args.push('-n', 'expose-gc');
+      }
+
       const specPattern = 'test/build/**/*.spec.js';
       const specs = globSync(specPattern, {
         ignore: !includeCdpTests ? 'test/build/cdp/**/*.spec.js' : undefined,
@@ -215,7 +214,7 @@ async function main() {
       });
       if (shard) {
         // Shard ID is 1-based.
-        const [shardId, shards] = shard.split('/').map(s => {
+        const [shardId, shards] = shard.split('-').map(s => {
           return Number(s);
         }) as [number, number];
         const argsLength = args.length;
@@ -228,7 +227,7 @@ async function main() {
           throw new Error('Shard did not result in any test files');
         }
         console.log(
-          `Running shard ${shardId}/${shards}. Picked ${
+          `Running shard ${shardId}-${shards}. Picked ${
             args.length - argsLength
           } files out of ${specs.length}.`
         );

@@ -1,17 +1,7 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 import assert from 'assert';
 import fs from 'fs';
@@ -21,6 +11,7 @@ import path from 'path';
 import expect from 'expect';
 import {KnownDevices, TimeoutError} from 'puppeteer';
 import {CDPSession} from 'puppeteer-core/internal/api/CDPSession.js';
+import type {HTTPRequest} from 'puppeteer-core/internal/api/HTTPRequest.js';
 import type {Metrics, Page} from 'puppeteer-core/internal/api/Page.js';
 import type {CdpPage} from 'puppeteer-core/internal/cdp/Page.js';
 import type {ConsoleMessage} from 'puppeteer-core/internal/common/ConsoleMessage.js';
@@ -327,133 +318,6 @@ describe('Page', function () {
     });
   });
 
-  describe('BrowserContext.overridePermissions', function () {
-    function getPermission(page: Page, name: PermissionName) {
-      return page.evaluate(name => {
-        return navigator.permissions.query({name}).then(result => {
-          return result.state;
-        });
-      }, name);
-    }
-
-    it('should be prompt by default', async () => {
-      const {page, server} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      expect(await getPermission(page, 'geolocation')).toBe('prompt');
-    });
-    it('should deny permission when not listed', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      await context.overridePermissions(server.EMPTY_PAGE, []);
-      expect(await getPermission(page, 'geolocation')).toBe('denied');
-    });
-    it('should fail when bad permission is given', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      let error!: Error;
-      await context
-        // @ts-expect-error purposeful bad input for test
-        .overridePermissions(server.EMPTY_PAGE, ['foo'])
-        .catch(error_ => {
-          return (error = error_);
-        });
-      expect(error.message).toBe('Unknown permission: foo');
-    });
-    it('should grant permission when listed', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
-      expect(await getPermission(page, 'geolocation')).toBe('granted');
-    });
-    it('should reset permissions', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
-      expect(await getPermission(page, 'geolocation')).toBe('granted');
-      await context.clearPermissionOverrides();
-      expect(await getPermission(page, 'geolocation')).toBe('prompt');
-    });
-    it('should trigger permission onchange', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      await page.evaluate(() => {
-        (globalThis as any).events = [];
-        return navigator.permissions
-          .query({name: 'geolocation'})
-          .then(function (result) {
-            (globalThis as any).events.push(result.state);
-            result.onchange = function () {
-              (globalThis as any).events.push(result.state);
-            };
-          });
-      });
-      expect(
-        await page.evaluate(() => {
-          return (globalThis as any).events;
-        })
-      ).toEqual(['prompt']);
-      await context.overridePermissions(server.EMPTY_PAGE, []);
-      expect(
-        await page.evaluate(() => {
-          return (globalThis as any).events;
-        })
-      ).toEqual(['prompt', 'denied']);
-      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
-      expect(
-        await page.evaluate(() => {
-          return (globalThis as any).events;
-        })
-      ).toEqual(['prompt', 'denied', 'granted']);
-      await context.clearPermissionOverrides();
-      expect(
-        await page.evaluate(() => {
-          return (globalThis as any).events;
-        })
-      ).toEqual(['prompt', 'denied', 'granted', 'prompt']);
-    });
-    it('should isolate permissions between browser contexts', async () => {
-      const {page, server, context, browser} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      const otherContext = await browser.createIncognitoBrowserContext();
-      const otherPage = await otherContext.newPage();
-      await otherPage.goto(server.EMPTY_PAGE);
-      expect(await getPermission(page, 'geolocation')).toBe('prompt');
-      expect(await getPermission(otherPage, 'geolocation')).toBe('prompt');
-
-      await context.overridePermissions(server.EMPTY_PAGE, []);
-      await otherContext.overridePermissions(server.EMPTY_PAGE, [
-        'geolocation',
-      ]);
-      expect(await getPermission(page, 'geolocation')).toBe('denied');
-      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
-
-      await context.clearPermissionOverrides();
-      expect(await getPermission(page, 'geolocation')).toBe('prompt');
-      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
-
-      await otherContext.close();
-    });
-    it('should grant persistent-storage', async () => {
-      const {page, server, context} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      expect(await getPermission(page, 'persistent-storage')).not.toBe(
-        'granted'
-      );
-      await context.overridePermissions(server.EMPTY_PAGE, [
-        'persistent-storage',
-      ]);
-      expect(await getPermission(page, 'persistent-storage')).toBe('granted');
-    });
-  });
-
   describe('Page.setGeolocation', function () {
     it('should work', async () => {
       const {page, server, context} = await getTestState();
@@ -565,7 +429,7 @@ describe('Page', function () {
     it('should work for different console API calls with logging functions', async () => {
       const {page} = await getTestState();
 
-      const messages: any[] = [];
+      const messages: ConsoleMessage[] = [];
       page.on('console', msg => {
         return messages.push(msg);
       });
@@ -987,21 +851,16 @@ describe('Page', function () {
           return Date.now();
         }),
         page
-          .evaluate(() => {
-            return (async () => {
-              await Promise.all([
-                fetch('/digits/1.png'),
-                fetch('/digits/2.png'),
-              ]);
-              await new Promise(resolve => {
-                return setTimeout(resolve, 200);
-              });
-              await fetch('/digits/3.png');
-              await new Promise(resolve => {
-                return setTimeout(resolve, 200);
-              });
-              await fetch('/digits/4.png');
-            })();
+          .evaluate(async () => {
+            await Promise.all([fetch('/digits/1.png'), fetch('/digits/2.png')]);
+            await new Promise(resolve => {
+              return setTimeout(resolve, 200);
+            });
+            await fetch('/digits/3.png');
+            await new Promise(resolve => {
+              return setTimeout(resolve, 200);
+            });
+            await fetch('/digits/4.png');
           })
           .then(() => {
             return Date.now();
@@ -1073,6 +932,34 @@ describe('Page', function () {
       });
 
       expect(error).toBe(false);
+    });
+    it('should work with delayed response', async () => {
+      const {page, server} = await getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      let response!: ServerResponse;
+      server.setRoute('/fetch-request-b.js', (_req, res) => {
+        response = res;
+      });
+      const t0 = Date.now();
+      const [t1, t2] = await Promise.all([
+        page.waitForNetworkIdle({idleTime: 100}).then(() => {
+          return Date.now();
+        }),
+        new Promise<number>(res => {
+          setTimeout(() => {
+            response.end();
+            res(Date.now());
+          }, 300);
+        }),
+        page.evaluate(async () => {
+          await fetch('/fetch-request-b.js');
+        }),
+      ]);
+      expect(t1).toBeGreaterThan(t2);
+      // request finished + idle time.
+      expect(t1 - t0).toBeGreaterThan(400);
+      // request finished + idle time - request finished.
+      expect(t1 - t2).toBeGreaterThanOrEqual(100);
     });
   });
 
@@ -1163,6 +1050,19 @@ describe('Page', function () {
       });
       expect(result).toBe(15);
     });
+    it('should await returned if called from function', async () => {
+      const {page} = await getTestState();
+
+      await page.exposeFunction('compute', function (a: number, b: number) {
+        return Promise.resolve(a * b);
+      });
+
+      const result = await page.evaluate(async function () {
+        const result = await (globalThis as any).compute(3, 5);
+        return result;
+      });
+      expect(result).toBe(15);
+    });
     it('should work on frames', async () => {
       const {page, server} = await getTestState();
 
@@ -1171,6 +1071,50 @@ describe('Page', function () {
       });
 
       await page.goto(server.PREFIX + '/frames/nested-frames.html');
+      const frame = page.frames()[1]!;
+      const result = await frame.evaluate(async function () {
+        return (globalThis as any).compute(3, 5);
+      });
+      expect(result).toBe(15);
+    });
+    it('should work with loading frames', async () => {
+      // Tries to reproduce the scenario from
+      // https://github.com/puppeteer/puppeteer/issues/8106
+      const {page, server} = await getTestState();
+
+      await page.setRequestInterception(true);
+      let saveRequest: (value: HTTPRequest | PromiseLike<HTTPRequest>) => void;
+      const iframeRequest = new Promise<HTTPRequest>(resolve => {
+        saveRequest = resolve;
+      });
+      page.on('request', async req => {
+        if (req.url().endsWith('/frames/frame.html')) {
+          saveRequest(req);
+        } else {
+          await req.continue();
+        }
+      });
+
+      let error: Error | undefined;
+      const navPromise = page
+        .goto(server.PREFIX + '/frames/one-frame.html', {
+          waitUntil: 'networkidle0',
+        })
+        .catch(err => {
+          error = err;
+        });
+      const req = await iframeRequest;
+      // Expose function while the frame is being loaded. Loading process is
+      // controlled by interception.
+      const exposePromise = page.exposeFunction(
+        'compute',
+        function (a: number, b: number) {
+          return Promise.resolve(a * b);
+        }
+      );
+      await Promise.all([req.continue(), exposePromise]);
+      await navPromise;
+      expect(error).toBeUndefined();
       const frame = page.frames()[1]!;
       const result = await frame.evaluate(async function () {
         return (globalThis as any).compute(3, 5);
@@ -1212,7 +1156,7 @@ describe('Page', function () {
 
       await page.exposeFunction(
         'complexObject',
-        function (a: {x: any}, b: {x: any}) {
+        function (a: {x: number}, b: {x: number}) {
           return {x: a.x + b.x};
         }
       );
@@ -2303,6 +2247,41 @@ describe('Page', function () {
     it('should return the client instance', async () => {
       const {page} = await getTestState();
       expect((page as CdpPage)._client()).toBeInstanceOf(CDPSession);
+    });
+  });
+
+  describe('Page.bringToFront', function () {
+    it('should work', async () => {
+      const {browser} = await getTestState();
+      const page1 = await browser.newPage();
+      const page2 = await browser.newPage();
+
+      await page1.bringToFront();
+      expect(
+        await page1.evaluate(() => {
+          return document.visibilityState;
+        })
+      ).toBe('visible');
+      expect(
+        await page2.evaluate(() => {
+          return document.visibilityState;
+        })
+      ).toBe('hidden');
+
+      await page2.bringToFront();
+      expect(
+        await page1.evaluate(() => {
+          return document.visibilityState;
+        })
+      ).toBe('hidden');
+      expect(
+        await page2.evaluate(() => {
+          return document.visibilityState;
+        })
+      ).toBe('visible');
+
+      await page1.close();
+      await page2.close();
     });
   });
 });

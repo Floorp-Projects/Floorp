@@ -1,21 +1,13 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import expect from 'expect';
 import type {BrowserContext} from 'puppeteer-core/internal/api/BrowserContext.js';
+import type {CDPSession} from 'puppeteer-core/internal/api/CDPSession.js';
+import {CDPSessionEvent} from 'puppeteer-core/internal/api/CDPSession.js';
 import type {CdpTarget} from 'puppeteer-core/internal/cdp/Target.js';
 
 import {getTestState, launch} from './mocha-utils.js';
@@ -449,6 +441,82 @@ describe('OOPIF', function () {
         return frame.url().endsWith('/empty.html');
       });
     });
+  });
+
+  it('should report google.com frame', async () => {
+    const {server, page} = state;
+    await page.goto(server.EMPTY_PAGE);
+    await page.setRequestInterception(true);
+    page.on('request', r => {
+      return r.respond({body: 'YO, GOOGLE.COM'});
+    });
+    await page.evaluate(() => {
+      const frame = document.createElement('iframe');
+      frame.setAttribute('src', 'https://google.com/');
+      document.body.appendChild(frame);
+      return new Promise(x => {
+        return (frame.onload = x);
+      });
+    });
+    await page.waitForSelector('iframe[src="https://google.com/"]');
+    const urls = page
+      .frames()
+      .map(frame => {
+        return frame.url();
+      })
+      .sort();
+    expect(urls).toEqual([server.EMPTY_PAGE, 'https://google.com/']);
+  });
+
+  it('should expose events within OOPIFs', async () => {
+    const {server, page} = state;
+
+    // Setup our session listeners to observe OOPIF activity.
+    const session = await page.target().createCDPSession();
+    const networkEvents: string[] = [];
+    const otherSessions: CDPSession[] = [];
+    await session.send('Target.setAutoAttach', {
+      autoAttach: true,
+      flatten: true,
+      waitForDebuggerOnStart: true,
+    });
+    session.on(CDPSessionEvent.SessionAttached, async session => {
+      otherSessions.push(session);
+
+      session.on('Network.requestWillBeSent', params => {
+        return networkEvents.push(params.request.url);
+      });
+      await session.send('Network.enable');
+      await session.send('Runtime.runIfWaitingForDebugger');
+    });
+
+    // Navigate to the empty page and add an OOPIF iframe with at least one request.
+    await page.goto(server.EMPTY_PAGE);
+    await page.evaluate(
+      (frameUrl: string) => {
+        const frame = document.createElement('iframe');
+        frame.setAttribute('src', frameUrl);
+        document.body.appendChild(frame);
+        return new Promise((x, y) => {
+          frame.onload = x;
+          frame.onerror = y;
+        });
+      },
+      server.PREFIX.replace('localhost', 'oopifdomain') + '/one-style.html'
+    );
+    await page.waitForSelector('iframe');
+
+    // Ensure we found the iframe session.
+    expect(otherSessions).toHaveLength(1);
+
+    // Resume the iframe and trigger another request.
+    const iframeSession = otherSessions[0]!;
+    await iframeSession.send('Runtime.evaluate', {
+      expression: `fetch('/fetch')`,
+      awaitPromise: true,
+    });
+
+    expect(networkEvents).toContain(`http://oopifdomain:${server.PORT}/fetch`);
   });
 });
 

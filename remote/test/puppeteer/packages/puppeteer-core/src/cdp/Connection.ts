@@ -1,22 +1,13 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {Protocol} from 'devtools-protocol';
 import type {ProtocolMapping} from 'devtools-protocol/types/protocol-mapping.js';
 
+import type {CommandOptions} from '../api/CDPSession.js';
 import {
   CDPSessionEvent,
   type CDPSession,
@@ -104,7 +95,8 @@ export class Connection extends EventEmitter<CDPSessionEvents> {
 
   send<T extends keyof ProtocolMapping.Commands>(
     method: T,
-    ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
+    params?: ProtocolMapping.Commands[T]['paramsType'][0],
+    options?: CommandOptions
   ): Promise<ProtocolMapping.Commands[T]['returnType']> {
     // There is only ever 1 param arg passed, but the Protocol defines it as an
     // array of 0 or 1 items See this comment:
@@ -112,8 +104,7 @@ export class Connection extends EventEmitter<CDPSessionEvents> {
     // which explains why the protocol defines the params this way for better
     // type-inference.
     // So now we check if there are any params or not and deal with them accordingly.
-    const params = paramArgs.length ? paramArgs[0] : undefined;
-    return this._rawSend(this.#callbacks, method, params);
+    return this._rawSend(this.#callbacks, method, params, undefined, options);
   }
 
   /**
@@ -123,9 +114,10 @@ export class Connection extends EventEmitter<CDPSessionEvents> {
     callbacks: CallbackRegistry,
     method: T,
     params: ProtocolMapping.Commands[T]['paramsType'][0],
-    sessionId?: string
+    sessionId?: string,
+    options?: CommandOptions
   ): Promise<ProtocolMapping.Commands[T]['returnType']> {
-    return callbacks.create(method, this.#timeout, id => {
+    return callbacks.create(method, options?.timeout ?? this.#timeout, id => {
       const stringifiedMessage = JSON.stringify({
         method,
         params,
@@ -258,6 +250,18 @@ export class Connection extends EventEmitter<CDPSessionEvents> {
     targetInfo: Protocol.Target.TargetInfo
   ): Promise<CDPSession> {
     return await this._createSession(targetInfo, false);
+  }
+
+  /**
+   * @internal
+   */
+  getPendingProtocolErrors(): Error[] {
+    const result: Error[] = [];
+    result.push(...this.#callbacks.getPendingProtocolErrors());
+    for (const session of this.#sessions.values()) {
+      result.push(...session.getPendingProtocolErrors());
+    }
+    return result;
   }
 }
 

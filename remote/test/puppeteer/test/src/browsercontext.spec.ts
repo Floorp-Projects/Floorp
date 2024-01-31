@@ -1,21 +1,12 @@
 /**
- * Copyright 2018 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2018 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import expect from 'expect';
 import {TimeoutError} from 'puppeteer';
+import type {Page} from 'puppeteer-core/internal/api/Page.js';
 
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
 import {waitEvent} from './utils.js';
@@ -80,7 +71,7 @@ describe('BrowserContext', function () {
   it('should fire target events', async () => {
     const {server, context} = await getTestState();
 
-    const events: any[] = [];
+    const events: string[] = [];
     context.on('targetcreated', target => {
       events.push('CREATED: ' + target.url());
     });
@@ -246,5 +237,132 @@ describe('BrowserContext', function () {
     expect(browser.browserContexts()).toHaveLength(2);
     expect(browser.browserContexts()[1]!.id).toBeDefined();
     await context.close();
+  });
+
+  describe('BrowserContext.overridePermissions', function () {
+    function getPermission(page: Page, name: PermissionName) {
+      return page.evaluate(name => {
+        return navigator.permissions.query({name}).then(result => {
+          return result.state;
+        });
+      }, name);
+    }
+
+    it('should be prompt by default', async () => {
+      const {page, server} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+    });
+    it('should deny permission when not listed', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      await context.overridePermissions(server.EMPTY_PAGE, []);
+      expect(await getPermission(page, 'geolocation')).toBe('denied');
+    });
+    it('should fail when bad permission is given', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      let error!: Error;
+      await context
+        // @ts-expect-error purposeful bad input for test
+        .overridePermissions(server.EMPTY_PAGE, ['foo'])
+        .catch(error_ => {
+          return (error = error_);
+        });
+      expect(error.message).toBe('Unknown permission: foo');
+    });
+    it('should grant permission when listed', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
+      expect(await getPermission(page, 'geolocation')).toBe('granted');
+    });
+    it('should reset permissions', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
+      expect(await getPermission(page, 'geolocation')).toBe('granted');
+      await context.clearPermissionOverrides();
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+    });
+    it('should trigger permission onchange', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      await page.evaluate(() => {
+        (globalThis as any).events = [];
+        return navigator.permissions
+          .query({name: 'geolocation'})
+          .then(function (result) {
+            (globalThis as any).events.push(result.state);
+            result.onchange = function () {
+              (globalThis as any).events.push(result.state);
+            };
+          });
+      });
+      expect(
+        await page.evaluate(() => {
+          return (globalThis as any).events;
+        })
+      ).toEqual(['prompt']);
+      await context.overridePermissions(server.EMPTY_PAGE, []);
+      expect(
+        await page.evaluate(() => {
+          return (globalThis as any).events;
+        })
+      ).toEqual(['prompt', 'denied']);
+      await context.overridePermissions(server.EMPTY_PAGE, ['geolocation']);
+      expect(
+        await page.evaluate(() => {
+          return (globalThis as any).events;
+        })
+      ).toEqual(['prompt', 'denied', 'granted']);
+      await context.clearPermissionOverrides();
+      expect(
+        await page.evaluate(() => {
+          return (globalThis as any).events;
+        })
+      ).toEqual(['prompt', 'denied', 'granted', 'prompt']);
+    });
+    it('should isolate permissions between browser contexts', async () => {
+      const {page, server, context, browser} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      const otherContext = await browser.createIncognitoBrowserContext();
+      const otherPage = await otherContext.newPage();
+      await otherPage.goto(server.EMPTY_PAGE);
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('prompt');
+
+      await context.overridePermissions(server.EMPTY_PAGE, []);
+      await otherContext.overridePermissions(server.EMPTY_PAGE, [
+        'geolocation',
+      ]);
+      expect(await getPermission(page, 'geolocation')).toBe('denied');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
+
+      await context.clearPermissionOverrides();
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
+
+      await otherContext.close();
+    });
+    it('should grant persistent-storage', async () => {
+      const {page, server, context} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      expect(await getPermission(page, 'persistent-storage')).not.toBe(
+        'granted'
+      );
+      await context.overridePermissions(server.EMPTY_PAGE, [
+        'persistent-storage',
+      ]);
+      expect(await getPermission(page, 'persistent-storage')).toBe('granted');
+    });
   });
 });

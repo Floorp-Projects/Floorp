@@ -1,10 +1,11 @@
 {
   "name": "@puppeteer/browsers",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Download and launch browsers",
   "scripts": {
     "build:docs": "wireit",
     "build": "wireit",
+    "build:test": "wireit",
     "clean": "../../tools/clean.js",
     "test": "wireit"
   },
@@ -66,7 +67,7 @@
       ]
     },
     "test": {
-      "command": "node tools/downloadTestBrowsers.mjs && cross-env DEBUG=puppeteer:* mocha",
+      "command": "node tools/downloadTestBrowsers.mjs && mocha",
       "files": [
         ".mocharc.cjs"
       ],

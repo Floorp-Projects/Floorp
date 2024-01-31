@@ -1,25 +1,14 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {Browser} from '../api/Browser.js';
-import type {BrowserContext} from '../api/BrowserContext.js';
-import type {Page} from '../api/Page.js';
-import type {WebWorker} from '../cdp/WebWorker.js';
-
+import type {Browser} from './Browser.js';
+import type {BrowserContext} from './BrowserContext.js';
 import type {CDPSession} from './CDPSession.js';
+import type {Page} from './Page.js';
+import type {WebWorker} from './WebWorker.js';
 
 /**
  * @public
@@ -65,6 +54,13 @@ export abstract class Target {
   async page(): Promise<Page | null> {
     return null;
   }
+
+  /**
+   * Forcefully creates a page for a target of any type. It is useful if you
+   * want to handle a CDP target of type `other` as a page. If you deal with a
+   * regular page target, use {@link Target.page}.
+   */
+  abstract asPage(): Promise<Page>;
 
   abstract url(): string;
 

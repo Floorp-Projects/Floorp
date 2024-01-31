@@ -1,17 +1,7 @@
 /**
- * Copyright 2020 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2020 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 import type {Protocol} from 'devtools-protocol';
 
@@ -211,6 +201,19 @@ export abstract class HTTPRequest {
    * The request's post body, if any.
    */
   abstract postData(): string | undefined;
+
+  /**
+   * True when the request has POST data. Note that {@link HTTPRequest.postData}
+   * might still be undefined when this flag is true when the data is too long
+   * or not readily available in the decoded form. In that case, use
+   * {@link HTTPRequest.fetchPostData}.
+   */
+  abstract hasPostData(): boolean;
+
+  /**
+   * Fetches the POST data for the request from the browser.
+   */
+  abstract fetchPostData(): Promise<string | undefined>;
 
   /**
    * An object with HTTP headers associated with the request. All
