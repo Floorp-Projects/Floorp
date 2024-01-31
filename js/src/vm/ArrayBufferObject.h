@@ -23,6 +23,9 @@
 
 namespace js {
 
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
+
 class ArrayBufferViewObject;
 class AutoSetNewObjectMetadata;
 class WasmArrayRawBuffer;
@@ -586,6 +589,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setFirstView(nullptr);
     setDataPointer(contents);
   }
+
+ public:
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpOwnFields(js::JSONPrinter& json) const;
+  void dumpOwnStringContent(js::GenericPrinter& out) const;
+#endif
 };
 
 /**

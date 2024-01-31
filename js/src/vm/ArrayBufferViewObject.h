@@ -15,6 +15,9 @@
 
 namespace js {
 
+class JS_PUBLIC_API GenericPrinter;
+class JSONPrinter;
+
 /*
  * ArrayBufferViewObject
  *
@@ -197,6 +200,11 @@ class ArrayBufferViewObject : public NativeObject {
 
  public:
   static void trace(JSTracer* trc, JSObject* obj);
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpOwnFields(js::JSONPrinter& json) const;
+  void dumpOwnStringContent(js::GenericPrinter& out) const;
+#endif
 };
 
 }  // namespace js
