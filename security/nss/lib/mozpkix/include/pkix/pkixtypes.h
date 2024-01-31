@@ -380,6 +380,7 @@ class TrustDomain {
 };
 
 enum class FallBackToSearchWithinSubject { No = 0, Yes = 1 };
+enum class HandleInvalidSubjectAlternativeNamesBy { Halting = 0, Skipping = 1 };
 
 // Applications control the behavior of matching presented name information from
 // a certificate against a reference hostname by implementing the
@@ -395,6 +396,9 @@ class NameMatchingPolicy {
       Time notBefore,
       /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) = 0;
 
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() = 0;
+
  protected:
   NameMatchingPolicy() {}
 
@@ -407,6 +411,9 @@ class StrictNameMatchingPolicy : public NameMatchingPolicy {
   virtual Result FallBackToCommonName(
       Time notBefore,
       /*out*/ FallBackToSearchWithinSubject& fallBacktoCommonName) override;
+
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override;
 };
 }  // namespace pkix
 }  // namespace mozilla

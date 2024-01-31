@@ -1648,6 +1648,45 @@ TEST_F(pkixnames_CheckCertHostname, SANWithoutSequence)
             CheckCertHostname(certInput, Input(a), mNameMatchingPolicy));
 }
 
+class SkipInvalidSubjectAlternativeNamesNameMatchingPolicy : public NameMatchingPolicy {
+ public:
+  virtual Result FallBackToCommonName(
+      Time,
+      /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) override {
+    fallBackToCommonName = FallBackToSearchWithinSubject::No;
+    return Success;
+  }
+
+  virtual HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override {
+    return HandleInvalidSubjectAlternativeNamesBy::Skipping;
+  }
+};
+
+TEST_F(pkixnames_CheckCertHostname, SkipInvalidSubjectAlternativeNames)
+{
+  ByteString cert(CreateCert(RDN(CN("invalid SAN example")), DNSName("192.0.2.0")));
+  ASSERT_FALSE(ENCODING_FAILED(cert));
+  Input certInput;
+  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
+
+  const char* hostname = "example.com";
+  Input hostnameInput;
+  ASSERT_EQ(Success,
+            hostnameInput.Init(reinterpret_cast<const uint8_t*>(hostname),
+                               strlen(hostname)));
+
+  // The default name matching policy halts on invalid SAN entries.
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            CheckCertHostname(certInput, hostnameInput, mNameMatchingPolicy));
+
+  SkipInvalidSubjectAlternativeNamesNameMatchingPolicy nameMatchingPolicy;
+  // A policy that skips invalid SAN entries should result in a domain mismatch
+  // error.
+  ASSERT_EQ(Result::ERROR_BAD_CERT_DOMAIN,
+            CheckCertHostname(certInput, hostnameInput, nameMatchingPolicy));
+}
+
 class pkixnames_CheckCertHostname_PresentedMatchesReference
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>

@@ -15,11 +15,6 @@ const LINUX_BUILDS_IMAGE = {
   path: "automation/taskcluster/docker-builds"
 };
 
-const LINUX_INTEROP_IMAGE = {
-  name: "linux-interop",
-  path: "automation/taskcluster/docker-interop"
-};
-
 const ACVP_IMAGE = {
   name: "acvp",
   path: "automation/taskcluster/docker-acvp"
@@ -75,7 +70,7 @@ queue.filter(task => {
     }
   }
 
-  if (task.tests == "bogo" || task.tests == "interop" || task.tests == "tlsfuzzer") {
+  if (task.tests == "bogo" || task.tests == "tlsfuzzer") {
     // No windows
     if (task.platform == "windows2012-64" ||
         task.platform == "windows2012-32") {
@@ -1017,14 +1012,7 @@ function scheduleTests(task_build, task_cert, test_base) {
     symbol: "Bogo",
     tests: "bogo",
     cycle: "standard",
-    image: LINUX_INTEROP_IMAGE,
-  }));
-  queue.scheduleTask(merge(no_cert_base, {
-    name: "Interop tests",
-    symbol: "Interop",
-    tests: "interop",
-    cycle: "standard",
-    image: LINUX_INTEROP_IMAGE,
+    image: LINUX_BUILDS_IMAGE,
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "tlsfuzzer tests", symbol: "tlsfuzzer", tests: "tlsfuzzer", cycle: "standard"

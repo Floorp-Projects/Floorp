@@ -40,8 +40,6 @@
 #   policy.sh    - Crypto Policy tests
 #   bogo.sh      - Bogo interop tests (disabled by default)
 #                  https://boringssl.googlesource.com/boringssl/+/master/ssl/test/PORTING.md
-#   interop.sh   - Interoperability tests (disabled by default)
-#                  https://github.com/ekr/tls_interop
 #   tlsfuzzer.sh - tlsfuzzer interop tests (disabled by default)
 #                  https://github.com/tomato42/tlsfuzzer/
 #

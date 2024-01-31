@@ -112,7 +112,8 @@ ECL_HDRS = ecl-exp.h ecl.h ecp.h ecl-priv.h
 ECL_SRCS = ecl.c ecl_mult.c ecl_gf.c \
 	ecp_aff.c ecp_jac.c ecp_mont.c \
 	ec_naf.c ecp_jm.c ecp_256.c ecp_384.c ecp_521.c \
-	ecp_256_32.c ecp_25519.c ecp_secp256r1.c ecp_secp384r1.c ecp_secp521r1.c
+	ecp_256_32.c ecp_25519.c ecp_secp256r1.c ecp_secp384r1.c ecp_secp521r1.c \
+	ecp_secp384r1_wrap.c ecp_secp521r1_wrap.c
 SHA_SRCS = sha_fast.c
 MPCPU_SRCS = mpcpucache.c
 VERIFIED_SRCS = $(NULL)

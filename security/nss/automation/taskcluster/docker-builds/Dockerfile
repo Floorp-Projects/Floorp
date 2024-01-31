@@ -71,5 +71,9 @@ RUN chmod +x $HOME/bin/*
 
 USER $USER
 
+# Install golang for bogo tests
+RUN curl https://dl.google.com/go/go1.21.6.linux-amd64.tar.gz -sLf | tar xzf - -C $HOME
+ENV PATH "$PATH:$HOME/go/bin"
+
 # Set a default command for debugging.
 CMD ["/bin/bash", "--login"]

@@ -1467,7 +1467,7 @@ pkix_pl_Socket_CreateByName(
 
         if (isServer) {
 
-                netAddr.inet.ip = PR_INADDR_ANY;
+                netAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
 
         } else {
 
@@ -1607,7 +1607,7 @@ pkix_pl_Socket_CreateByHostAndPort(
 
         if (isServer) {
 
-                netAddr.inet.ip = PR_INADDR_ANY;
+                netAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
 
         } else {
 

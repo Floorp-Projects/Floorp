@@ -972,7 +972,7 @@ getBoundListenSocket(unsigned short port)
     PRSocketOptionData opt;
 
     addr.inet.family = PR_AF_INET;
-    addr.inet.ip = PR_INADDR_ANY;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(port);
 
     listen_sock = PR_NewTCPSocket();

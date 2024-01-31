@@ -1721,7 +1721,7 @@ getBoundListenSocket(unsigned short port)
     prStatus = PR_GetPrefLoopbackAddrInfo(&addr, port);
     if (prStatus == PR_FAILURE) {
         addr.inet.family = PR_AF_INET;
-        addr.inet.ip = PR_INADDR_ANY;
+        addr.inet.ip = PR_htonl(PR_INADDR_ANY);
         addr.inet.port = PR_htons(port);
     }
 
@@ -1937,7 +1937,7 @@ configureEchWithPublicName(PRFileDesc *model_sock, const char *public_name)
         goto loser;
     }
 
-    rv = SSL_EncodeEchConfigId(configId, echParamsStr, 100,
+    rv = SSL_EncodeEchConfigId(configId, public_name, 100,
                                HpkeDhKemX25519Sha256, pubKey,
                                &echCipherSuite, 1,
                                configBuf, &len, sizeof(configBuf));

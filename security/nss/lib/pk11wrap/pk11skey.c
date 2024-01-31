@@ -1860,8 +1860,8 @@ PK11_ConcatSymKeys(PK11SymKey *left, PK11SymKey *right, CK_MECHANISM_TYPE target
         return NULL;
     }
 
-    SECStatus rv = PK11_SymKeysToSameSlot(target, operation, operation,
-                                          left, right,
+    SECStatus rv = PK11_SymKeysToSameSlot(CKM_CONCATENATE_BASE_AND_KEY,
+                                          CKA_DERIVE, CKA_DERIVE, left, right,
                                           &copyOfLeft, &copyOfRight);
     if (rv != SECSuccess) {
         /* error code already set */

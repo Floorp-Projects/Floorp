@@ -366,4 +366,13 @@ SEC_END_PROTOS
 #define PORT_CT_TRUE (~0)
 #define PORT_CT_FALSE 0
 
+#ifdef CT_VERIF
+#include <valgrind/memcheck.h>
+#define NSS_CLASSIFY(buf, length) VALGRIND_MAKE_MEM_UNDEFINED(buf, length);
+#define NSS_DECLASSIFY(buf, length) VALGRIND_MAKE_MEM_DEFINED(buf, length);
+#else
+#define NSS_CLASSIFY(buf, length)
+#define NSS_DECLASSIFY(buf, length)
+#endif
+
 #endif /* _SECPORT_H_ */
