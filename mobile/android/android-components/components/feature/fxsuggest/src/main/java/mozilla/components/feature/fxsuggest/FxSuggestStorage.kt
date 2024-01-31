@@ -26,10 +26,7 @@ import java.io.File
  * @param crashReporter An optional [CrashReporting] instance for reporting unexpected caught
  * exceptions.
  */
-class FxSuggestStorage(
-    context: Context,
-    private val crashReporter: CrashReporting? = null,
-) {
+class FxSuggestStorage(context: Context) {
     // Lazily initializes the store on first use. `cacheDir` and using the `File` constructor
     // does I/O, so `store.value` should only be accessed from the read or write scope.
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -99,7 +96,6 @@ class FxSuggestStorage(
         return try {
             operation()
         } catch (e: SuggestApiException) {
-            crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring exception from `$name`", e)
             default
         }

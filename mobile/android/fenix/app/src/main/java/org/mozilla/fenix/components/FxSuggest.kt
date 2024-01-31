@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.feature.fxsuggest.FxSuggestIngestionScheduler
 import mozilla.components.feature.fxsuggest.FxSuggestStorage
 import org.mozilla.fenix.perf.lazyMonitored
@@ -14,12 +13,10 @@ import org.mozilla.fenix.perf.lazyMonitored
  * Component group for Firefox Suggest.
  *
  * @param context The Android application context.
- * @param crashReporter An optional [CrashReporting] instance for reporting unexpected caught
- * exceptions.
  */
-class FxSuggest(context: Context, crashReporter: CrashReporting? = null) {
+class FxSuggest(context: Context) {
     val storage by lazyMonitored {
-        FxSuggestStorage(context, crashReporter)
+        FxSuggestStorage(context)
     }
 
     val ingestionScheduler by lazyMonitored {
