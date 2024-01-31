@@ -2586,6 +2586,126 @@ bool ArrayBufferObject::addView(JSContext* cx, ArrayBufferViewObject* view) {
   return ObjectRealm::get(this).innerViews.get().addView(cx, this, view);
 }
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+
+template <typename KnownF, typename UnknownF>
+void BufferKindToString(ArrayBufferObject::BufferKind kind, KnownF known,
+                        UnknownF unknown) {
+  switch (kind) {
+    case ArrayBufferObject::BufferKind::INLINE_DATA:
+      known("INLINE_DATA");
+      break;
+    case ArrayBufferObject::BufferKind::MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+      known("MALLOCED_ARRAYBUFFER_CONTENTS_ARENA");
+      break;
+    case ArrayBufferObject::BufferKind::NO_DATA:
+      known("NO_DATA");
+      break;
+    case ArrayBufferObject::BufferKind::USER_OWNED:
+      known("USER_OWNED");
+      break;
+    case ArrayBufferObject::BufferKind::WASM:
+      known("WASM");
+      break;
+    case ArrayBufferObject::BufferKind::MAPPED:
+      known("MAPPED");
+      break;
+    case ArrayBufferObject::BufferKind::EXTERNAL:
+      known("EXTERNAL");
+      break;
+    case ArrayBufferObject::BufferKind::MALLOCED_UNKNOWN_ARENA:
+      known("MALLOCED_UNKNOWN_ARENA");
+      break;
+    default:
+      unknown(uint8_t(kind));
+      break;
+  }
+}
+
+template <typename KnownF, typename UnknownF>
+void ForEachArrayBufferFlag(uint32_t flags, KnownF known, UnknownF unknown) {
+  for (uint32_t i = ArrayBufferObject::ArrayBufferFlags::BUFFER_KIND_MASK + 1;
+       i; i = i << 1) {
+    if (!(flags & i)) {
+      continue;
+    }
+    switch (ArrayBufferObject::ArrayBufferFlags(flags & i)) {
+      case ArrayBufferObject::ArrayBufferFlags::DETACHED:
+        known("DETACHED");
+        break;
+      case ArrayBufferObject::ArrayBufferFlags::FOR_ASMJS:
+        known("FOR_ASMJS");
+        break;
+      default:
+        unknown(i);
+        break;
+    }
+  }
+}
+
+void ArrayBufferObject::dumpOwnFields(js::JSONPrinter& json) const {
+  json.formatProperty("byteLength", "%zu",
+                      size_t(getFixedSlot(BYTE_LENGTH_SLOT).toPrivate()));
+
+  BufferKindToString(
+      bufferKind(),
+      [&](const char* name) { json.property("bufferKind", name); },
+      [&](uint8_t value) {
+        json.formatProperty("bufferKind", "Unknown(%02x)", value);
+      });
+
+  json.beginInlineListProperty("flags");
+  ForEachArrayBufferFlag(
+      flags(), [&](const char* name) { json.value("%s", name); },
+      [&](uint32_t value) { json.value("Unknown(%08x)", value); });
+  json.endInlineList();
+
+  void* data = dataPointer();
+  if (data) {
+    json.formatProperty("data", "0x%p", data);
+  } else {
+    json.nullProperty("data");
+  }
+}
+
+void ArrayBufferObject::dumpOwnStringContent(js::GenericPrinter& out) const {
+  out.printf("byteLength=%zu, ",
+             size_t(getFixedSlot(BYTE_LENGTH_SLOT).toPrivate()));
+
+  BufferKindToString(
+      bufferKind(),
+      [&](const char* name) { out.printf("bufferKind=%s, ", name); },
+      [&](uint8_t value) { out.printf("bufferKind=Unknown(%02x), ", value); });
+
+  out.printf("flags=[");
+  bool first = true;
+  ForEachArrayBufferFlag(
+      flags(),
+      [&](const char* name) {
+        if (!first) {
+          out.put(",");
+        }
+        first = false;
+        out.put(name);
+      },
+      [&](uint32_t value) {
+        if (!first) {
+          out.put(",");
+        }
+        first = false;
+        out.printf("Unknown(%08x)", value);
+      });
+  out.put("], ");
+
+  void* data = dataPointer();
+  if (data) {
+    out.printf("data=0x%p", data);
+  } else {
+    out.put("data=null");
+  }
+}
+#endif
+
 /*
  * InnerViewTable
  */
