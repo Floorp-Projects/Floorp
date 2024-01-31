@@ -356,6 +356,8 @@ Register CacheRegisterAllocator::useRegister(MacroAssembler& masm,
         masm.movePtr(ImmGCPtr(v.toSymbol()), reg);
       } else if (v.isBigInt()) {
         masm.movePtr(ImmGCPtr(v.toBigInt()), reg);
+      } else if (v.isBoolean()) {
+        masm.movePtr(ImmWord(v.toBoolean() ? 1 : 0), reg);
       } else {
         MOZ_CRASH("Unexpected Value");
       }
