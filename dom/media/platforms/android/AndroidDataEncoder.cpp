@@ -12,6 +12,8 @@
 #include "ImageContainer.h"
 #include "libyuv/convert_from.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

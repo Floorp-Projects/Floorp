@@ -137,7 +137,11 @@ WebrtcMediaDataEncoder::WebrtcMediaDataEncoder(
   PodZero(&mCodecSpecific.codecSpecific);
 }
 
-WebrtcMediaDataEncoder::~WebrtcMediaDataEncoder() = default;
+WebrtcMediaDataEncoder::~WebrtcMediaDataEncoder() {
+  if (mEncoder) {
+    Shutdown();
+  }
+}
 
 static void InitCodecSpecficInfo(
     webrtc::CodecSpecificInfo& aInfo, const webrtc::VideoCodec* aCodecSettings,
