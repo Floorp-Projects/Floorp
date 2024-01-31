@@ -194,6 +194,44 @@ class AddonsList {
   }
 }
 
+// The number of resetXPIExports calls.
+//
+// This is added to the URL of the modules once resetXPIExports is called,
+// so that they become different module instances for each reset, and also the
+// suffix is not used outside of tests.
+let resetXPIExportsCount = 0;
+
+// Reset all properties of XPIExports to lazy getters, with new module URIs,
+// in order to simulate the shutdown+restart situation.
+function resetXPIExports(XPIExports) {
+  resetXPIExportsCount++;
+
+  const suffix = "?" + resetXPIExportsCount;
+
+  // The list of lazy getters should be in sync with XPIExports.sys.mjs.
+  //
+  // eslint-disable-next-line mozilla/lazy-getter-object-name
+  XPCOMUtils.defineLazyModuleGetters(XPIExports, {
+    // XPIDatabase.jsm
+    AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+    BuiltInThemesHelpers:
+      "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+    XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+    XPIDatabaseReconcile:
+      "resource://gre/modules/addons/XPIDatabase.jsm" + suffix,
+
+    // XPIInstall.jsm
+    UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
+    XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
+    verifyBundleSignedState:
+      "resource://gre/modules/addons/XPIInstall.jsm" + suffix,
+
+    // XPIProvider.jsm
+    XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm" + suffix,
+    XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm" + suffix,
+  });
+}
+
 export var AddonTestUtils = {
   addonIntegrationService: null,
   addonsList: null,
@@ -748,26 +786,23 @@ export var AddonTestUtils = {
     // promiseShutdown to allow re-initialization.
     lazy.ExtensionAddonObserver.init();
 
-    const { XPIInternal, XPIProvider } = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIProvider.jsm"
+    const { XPIExports } = ChromeUtils.importESModule(
+      "resource://gre/modules/addons/XPIExports.sys.mjs"
     );
-    XPIInternal.overrideAsyncShutdown(MockAsyncShutdown);
+    XPIExports.XPIInternal.overrideAsyncShutdown(MockAsyncShutdown);
 
-    XPIInternal.BootstrapScope.prototype._beforeCallBootstrapMethod = (
-      method,
-      params,
-      reason
-    ) => {
-      try {
-        this.emit("bootstrap-method", { method, params, reason });
-      } catch (e) {
+    XPIExports.XPIInternal.BootstrapScope.prototype._beforeCallBootstrapMethod =
+      (method, params, reason) => {
         try {
-          this.testScope.do_throw(e);
+          this.emit("bootstrap-method", { method, params, reason });
         } catch (e) {
-          // Le sigh.
+          try {
+            this.testScope.do_throw(e);
+          } catch (e) {
+            // Le sigh.
+          }
         }
-      }
-    };
+      };
 
     this.addonIntegrationService = Cc[
       "@mozilla.org/addons/integration;1"
@@ -777,7 +812,7 @@ export var AddonTestUtils = {
 
     this.emit("addon-manager-started");
 
-    await Promise.all(XPIProvider.startupPromises);
+    await Promise.all(XPIExports.XPIProvider.startupPromises);
 
     // Load the add-ons list as it was after extension registration
     await this.loadAddonsList(true);
@@ -785,7 +820,7 @@ export var AddonTestUtils = {
     // Wait for all add-ons to finish starting up before resolving.
     await Promise.all(
       Array.from(
-        XPIProvider.activeAddons.values(),
+        XPIExports.XPIProvider.activeAddons.values(),
         addon => addon.startupPromise
       )
     );
@@ -810,11 +845,8 @@ export var AddonTestUtils = {
       this.overrideEntry = null;
     }
 
-    const { XPIProvider } = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIProvider.jsm"
-    );
-    const { XPIDatabase } = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIDatabase.jsm"
+    const { XPIExports } = ChromeUtils.importESModule(
+      "resource://gre/modules/addons/XPIExports.sys.mjs"
     );
 
     // Ensure some startup observers in XPIProvider are released.
@@ -830,7 +862,7 @@ export var AddonTestUtils = {
     // a promise, potentially still pending. Wait for it to settle before
     // triggering profileBeforeChange, because the latter can trigger errors in
     // the pending asyncLoadDB() by an indirect call to XPIDatabase.shutdown().
-    await XPIDatabase._dbPromise;
+    await XPIExports.XPIDatabase._dbPromise;
 
     await MockAsyncShutdown.profileBeforeChange.trigger();
     await MockAsyncShutdown.profileChangeTeardown.trigger();
@@ -861,12 +893,11 @@ export var AddonTestUtils = {
 
     // This would be cleaner if I could get it as the rejection reason from
     // the AddonManagerInternal.shutdown() promise
-    let shutdownError = XPIDatabase._saveError;
+    let shutdownError = XPIExports.XPIDatabase._saveError;
 
-    AddonManagerPrivate.unregisterProvider(XPIProvider);
-    Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");
-    Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
-    Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
+    AddonManagerPrivate.unregisterProvider(XPIExports.XPIProvider);
+
+    resetXPIExports(XPIExports);
 
     lazy.ExtensionAddonObserver.uninit();
 
@@ -916,11 +947,11 @@ export var AddonTestUtils = {
 
   async loadAddonsList(flush = false) {
     if (flush) {
-      const { XPIInternal } = ChromeUtils.import(
-        "resource://gre/modules/addons/XPIProvider.jsm"
+      const { XPIExports } = ChromeUtils.importESModule(
+        "resource://gre/modules/addons/XPIExports.sys.mjs"
       );
-      XPIInternal.XPIStates.save();
-      await XPIInternal.XPIStates._jsonFile._save();
+      XPIExports.XPIInternal.XPIStates.save();
+      await XPIExports.XPIInternal.XPIStates._jsonFile._save();
     }
 
     this.addonsList = new AddonsList(this.addonStartup);

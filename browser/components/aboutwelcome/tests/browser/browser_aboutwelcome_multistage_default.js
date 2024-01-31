@@ -530,8 +530,8 @@ add_task(async function test_AWMultistage_Themes() {
 });
 
 add_task(async function test_AWMultistage_can_restore_theme() {
-  const { XPIProvider } = ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm"
+  const { XPIExports } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/XPIExports.sys.mjs"
   );
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(() => sandbox.restore());
@@ -558,9 +558,9 @@ add_task(async function test_AWMultistage_can_restore_theme() {
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
-  sandbox.stub(XPIProvider, "getAddonsByTypes").resolves(fakeAddons);
+  sandbox.stub(XPIExports.XPIProvider, "getAddonsByTypes").resolves(fakeAddons);
   sandbox
-    .stub(XPIProvider, "getAddonByID")
+    .stub(XPIExports.XPIProvider, "getAddonByID")
     .callsFake(id => fakeAddons.find(addon => addon.id === id));
   sandbox.spy(aboutWelcomeActor, "onContentMessage");
 
@@ -579,7 +579,7 @@ add_task(async function test_AWMultistage_can_restore_theme() {
     data: "AUTOMATIC",
   });
   Assert.equal(
-    XPIProvider.getAddonByID.lastCall.args[0],
+    XPIExports.XPIProvider.getAddonByID.lastCall.args[0],
     fakeAddons[0].id,
     `LIGHT_WEIGHT_THEMES.AUTOMATIC should be ${fakeAddons[0].id}`
   );
@@ -595,7 +595,7 @@ add_task(async function test_AWMultistage_can_restore_theme() {
     data: "AUTOMATIC",
   });
   Assert.equal(
-    XPIProvider.getAddonByID.lastCall.args[0],
+    XPIExports.XPIProvider.getAddonByID.lastCall.args[0],
     fakeAddons[1].id,
     `LIGHT_WEIGHT_THEMES.AUTOMATIC should be ${fakeAddons[1].id}`
   );

@@ -7,19 +7,17 @@
 
 /* import-globals-from head_addons.js */
 
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
+);
+
 const MANIFEST = "compat_manifest.json";
 
 AddonManager.addExternalExtensionLoader({
   name: "compat-test",
   manifestFile: MANIFEST,
   async loadManifest(pkg) {
-    // XPIDatabase.jsm gets unloaded in AddonTestUtils when the
-    // addon manager is restarted.  Work around that by just importing
-    // it every time we need to create an AddonInternal.
-    const { AddonInternal } = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIDatabase.jsm"
-    );
-    let addon = new AddonInternal();
+    let addon = new XPIExports.AddonInternal();
     let manifest = JSON.parse(await pkg.readString(MANIFEST));
     Object.assign(addon, manifest);
     return addon;

@@ -3,19 +3,18 @@
 
 "use strict";
 
-const { XPIInstall } = ChromeUtils.import(
-  "resource://gre/modules/addons/XPIInstall.jsm"
+const { XPIExports } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/XPIExports.sys.mjs"
 );
+
+// NOTE: Only constants can be extracted from XPIExports.
 const {
   XPIInternal: {
-    BuiltInLocation,
     KEY_APP_PROFILE,
     KEY_APP_SYSTEM_DEFAULTS,
     KEY_APP_SYSTEM_PROFILE,
-    TemporaryInstallLocation,
-    XPIStates,
   },
-} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm");
+} = XPIExports;
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -48,23 +47,27 @@ function getInstallLocation({
 }) {
   if (isTemporary) {
     // Temporary installation. Signatures will not be verified.
-    return TemporaryInstallLocation; // KEY_APP_TEMPORARY
+    return XPIExports.XPIInternal.TemporaryInstallLocation; // KEY_APP_TEMPORARY
   }
   let location;
   if (isSystem) {
     if (isBuiltin) {
       // System location. Signatures will not be verified.
-      location = XPIStates.getLocation(KEY_APP_SYSTEM_DEFAULTS);
+      location = XPIExports.XPIInternal.XPIStates.getLocation(
+        KEY_APP_SYSTEM_DEFAULTS
+      );
     } else {
       // Normandy installations. Signatures will be verified.
-      location = XPIStates.getLocation(KEY_APP_SYSTEM_PROFILE);
+      location = XPIExports.XPIInternal.XPIStates.getLocation(
+        KEY_APP_SYSTEM_PROFILE
+      );
     }
   } else if (isBuiltin) {
     // Packaged with the application. Signatures will not be verified.
-    location = BuiltInLocation; // KEY_APP_BUILTINS
+    location = XPIExports.XPIInternal.BuiltInLocation; // KEY_APP_BUILTINS
   } else {
     // By default - The profile directory. Signatures will be verified.
-    location = XPIStates.getLocation(KEY_APP_PROFILE);
+    location = XPIExports.XPIInternal.XPIStates.getLocation(KEY_APP_PROFILE);
   }
   // Sanity checks to make sure that the flags match the expected values.
   if (location.isSystem !== isSystem) {
@@ -89,14 +92,14 @@ async function testLoadManifest({ location, expectPrivileged }) {
     if (location.isTemporary && !expectPrivileged) {
       ExtensionTestUtils.failOnSchemaWarnings(false);
       await Assert.rejects(
-        XPIInstall.loadManifestFromFile(xpi, location),
+        XPIExports.XPIInstall.loadManifestFromFile(xpi, location),
         /Extension is invalid/,
         "load manifest failed with privileged permission"
       );
       ExtensionTestUtils.failOnSchemaWarnings(true);
       return;
     }
-    let addon = await XPIInstall.loadManifestFromFile(xpi, location);
+    let addon = await XPIExports.XPIInstall.loadManifestFromFile(xpi, location);
     actualPermissions = addon.userPermissions;
     equal(addon.isPrivileged, expectPrivileged, "addon.isPrivileged");
   });
