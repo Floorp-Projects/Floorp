@@ -7,6 +7,10 @@
 // prevents normandy from running updates during the tests
 user_pref("app.normandy.enabled", false);
 
+// Avoid the status panel indicating loading state which messes up
+// screenshots.
+user_pref("browser.tabs.hideStatusPanel", true);
+
 user_pref("dom.performance.time_to_non_blank_paint.enabled", true);
 user_pref("dom.performance.time_to_contentful_paint.enabled", true);
 user_pref("dom.performance.time_to_dom_content_flushed.enabled", true);
