@@ -428,6 +428,11 @@ menupopup::part(drop-indicator) {
       transition: opacity 200ms ease-out, visibility 200ms;
     }
   }
+
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media (-moz-bool-pref: "browser.tabs.hideStatusPanel") {
+    visibility: hidden;
+  }
 }
 
 #statuspanel-label {
