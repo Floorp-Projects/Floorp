@@ -607,7 +607,7 @@ afl-plus-plus-4.0:
     fetch:
         type: git
         repo: https://github.com/AFLplusplus/AFLplusplus
-        revision: d09950f4bb98431576b872436f0fbf773ab895db
+        revision: 0d164e4c1811c4d05f940f78e90fc56b661fb3b4
 
 cargo-vet:
     description: cargo-vet source
