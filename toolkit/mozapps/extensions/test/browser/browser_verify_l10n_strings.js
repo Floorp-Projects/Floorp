@@ -7,7 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 // Maps add-on descriptors to updated Fluent IDs. Keep it in sync
-// with the list in XPIDatabase.jsm.
+// with the list in XPIDatabase.sys.mjs.
 const updatedAddonFluentIds = new Map([
   ["extension-default-theme-name", "extension-default-theme-name-auto"],
 ]);

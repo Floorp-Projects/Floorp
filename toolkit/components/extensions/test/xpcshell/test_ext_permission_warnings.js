@@ -806,7 +806,7 @@ add_task(
       },
     });
 
-    // Verify that XPIInstall.jsm will not collect the warning for the
+    // Verify that XPIInstall.sys.mjs will not collect the warning for the
     // privileged permission as expected.
     async function getWarningsFromExtensionData({ isPrivileged }) {
       let extData;

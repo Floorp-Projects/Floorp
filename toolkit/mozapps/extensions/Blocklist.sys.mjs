@@ -66,7 +66,8 @@ const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 // See the uses of kXPIAddonTypes before introducing new addon types or
 // providers that differ from the existing types.
 ChromeUtils.defineLazyGetter(lazy, "kXPIAddonTypes", () => {
-  // In practice, this result is equivalent to ALL_XPI_TYPES in XPIProvider.jsm.
+  // In practice, this result is equivalent to ALL_XPI_TYPES in
+  // XPIProvider.sys.mjs.
   // "plugin" (from GMPProvider.sys.mjs) is intentionally omitted, as we decided to
   // not support blocklisting of GMP plugins in bug 1086668.
   return lazy.AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
