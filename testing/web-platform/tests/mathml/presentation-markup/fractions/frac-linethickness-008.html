@@ -2,12 +2,15 @@
 <html class="reftest-wait">
   <head>
     <title>mfrac linethickness</title>
+    <link rel="help" href="https://w3c.github.io/mathml-core/#fractions-mfrac">
+    <meta name="assert" content="Test dynamically setting the linethickness to a value smaller than 100%">
+    <link rel="match" href="frac-linethickness-008-ref.html">
     <script type="text/javascript">
       function doTest() {
         document.getElementById("testMfrac").setAttribute("linethickness","50%");
         document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate",doTest);
+      window.addEventListener("TestRendered",doTest);
     </script>
   </head>
   <body>

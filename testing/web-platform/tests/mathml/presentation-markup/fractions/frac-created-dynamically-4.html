@@ -2,6 +2,9 @@
 <html class="reftest-wait">
   <head>
     <title>mfrac childnode update</title>
+    <link rel="help" href="https://w3c.github.io/mathml-core/#fractions-mfrac">
+    <meta name="assert" content="A dynamically created mfrac should render like the equivalent markup.">
+    <link rel="match" href="frac-created-dynamically-4-ref.html">
     <script type="text/javascript">
       function doTest() {
         var x = document.getElementById("innerMfrac");
@@ -13,15 +16,15 @@
         x.appendChild(z);
         document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate",doTest);
+      window.addEventListener("TestRendered",doTest);
     </script>
   </head>
   <body>
     <math>
-      <mfrac style="font-size: 300%">  
+      <mfrac style="font-size: 300%">
         <mfrac>
-          <mi> a </mi>
-          <mi> b </mi>
+          <mi>a</mi>
+          <mi>b</mi>
         </mfrac>
         <mfrac id="innerMfrac">
         </mfrac>
