@@ -748,6 +748,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   void dumpCharsFields(js::JSONPrinter& json) const;
 
   void dumpFields(js::JSONPrinter& json) const;
+  void dumpPropertyName(js::GenericPrinter& out) const;
 
   void dumpChars(js::GenericPrinter& out) const;
   void dumpCharsSingleQuote(js::GenericPrinter& out) const;

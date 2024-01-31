@@ -534,6 +534,10 @@ void JSString::dumpRepresentationFields(js::JSONPrinter& json) const {
   dumpCharsFields(json);
 }
 
+void JSString::dumpPropertyName(js::GenericPrinter& out) const {
+  dumpCharsNoQuote(out);
+}
+
 void JSString::dumpChars(js::GenericPrinter& out) const {
   out.putChar('"');
   dumpCharsNoQuote(out);
