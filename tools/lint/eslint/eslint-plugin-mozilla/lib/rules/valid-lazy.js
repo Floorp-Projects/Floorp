@@ -102,40 +102,40 @@ module.exports = {
       return true;
     }
 
-    function addProp(node, name) {
+    function addProp(callNode, propNode, name) {
       if (
         lazyProperties.has(name) &&
-        isDuplicate(lazyProperties.get(name).node, node)
+        isDuplicate(lazyProperties.get(name).callNode, callNode)
       ) {
         context.report({
-          node,
+          node: propNode,
           messageId: "duplicateSymbol",
           data: { name },
         });
         return;
       }
-      lazyProperties.set(name, { used: false, node });
+      lazyProperties.set(name, { used: false, callNode, propNode });
     }
 
-    function setPropertiesFromArgument(node, arg) {
+    function setPropertiesFromArgument(callNode, arg) {
       if (arg.type === "ObjectExpression") {
-        for (let prop of arg.properties) {
-          if (prop.key.type == "Literal") {
+        for (let propNode of arg.properties) {
+          if (propNode.key.type == "Literal") {
             context.report({
-              node,
+              node: propNode,
               messageId: "incorrectType",
-              data: { name: prop.key.value },
+              data: { name: propNode.key.value },
             });
             continue;
           }
-          addProp(node, prop.key.name);
+          addProp(callNode, propNode, propNode.key.name);
         }
       } else if (arg.type === "ArrayExpression") {
-        for (let prop of arg.elements) {
-          if (prop.type != "Literal") {
+        for (let propNode of arg.elements) {
+          if (propNode.type != "Literal") {
             continue;
           }
-          addProp(node, prop.value);
+          addProp(callNode, propNode, propNode.value);
         }
       }
     }
@@ -148,7 +148,7 @@ module.exports = {
           node.init.type == "CallExpression" &&
           node.init.callee.name == "createLazyLoaders"
         ) {
-          setPropertiesFromArgument(node, node.init.arguments[0]);
+          setPropertiesFromArgument(node.init, node.init.arguments[0]);
         }
       },
 
@@ -175,7 +175,7 @@ module.exports = {
           if (match) {
             if (
               lazyProperties.has(match[1]) &&
-              isDuplicate(lazyProperties.get(match[1]).node, node)
+              isDuplicate(lazyProperties.get(match[1]).callNode, node)
             ) {
               context.report({
                 node,
@@ -184,7 +184,11 @@ module.exports = {
               });
               return;
             }
-            lazyProperties.set(match[1], { used: false, node });
+            lazyProperties.set(match[1], {
+              used: false,
+              callNode: node,
+              propNode: node,
+            });
             break;
           }
         }
@@ -259,7 +263,7 @@ module.exports = {
           for (let [name, property] of lazyProperties.entries()) {
             if (!property.used) {
               context.report({
-                node: property.node,
+                node: property.propNode,
                 messageId: "unusedProperty",
                 data: { name },
               });
