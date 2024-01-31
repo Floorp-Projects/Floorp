@@ -11,6 +11,7 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
@@ -80,6 +81,7 @@ class SessionUseCasesTest {
             assertEquals("mozilla", action.tabId)
             assertEquals("https://getpocket.com", action.url)
         }
+        assertEquals("https://getpocket.com", store.state.selectedTab?.content?.url)
 
         useCases.loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         store.waitUntilIdle()
@@ -93,6 +95,7 @@ class SessionUseCasesTest {
             assertEquals("https://www.mozilla.org", action.url)
             assertEquals(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL), action.flags)
         }
+        assertEquals("https://www.mozilla.org", store.state.selectedTab?.content?.url)
 
         useCases.loadUrl("https://firefox.com", store.state.selectedTabId)
         store.waitUntilIdle()
@@ -102,6 +105,7 @@ class SessionUseCasesTest {
             assertEquals("mozilla", action.tabId)
             assertEquals("https://firefox.com", action.url)
         }
+        assertEquals("https://firefox.com", store.state.selectedTab?.content?.url)
 
         useCases.loadUrl.invoke(
             "https://developer.mozilla.org",

@@ -85,7 +85,7 @@ class CrashReportingTest : TestSetup() {
             verifyPageContent(tabCrashMessage)
         }.openTabDrawer {
             verifyExistingOpenTabs(firstWebPage.title)
-            verifyExistingOpenTabs(secondWebPage.title)
+            verifyExistingOpenTabs("about:crashcontent")
         }.closeTabDrawer {
         }.goToHomescreen {
             verifyExistingTopSitesList()
