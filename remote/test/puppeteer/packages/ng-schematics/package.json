@@ -1,24 +1,21 @@
 {
   "name": "@puppeteer/ng-schematics",
-  "version": "0.5.4",
+  "version": "0.5.6",
   "description": "Puppeteer Angular schematics",
   "scripts": {
     "build": "wireit",
     "clean": "../../tools/clean.js",
     "dev:test": "npm run test --watch",
     "dev": "npm run build --watch",
-    "sandbox:test": "node tools/sandbox.js --test",
-    "sandbox": "node tools/sandbox.mjs",
-    "test": "wireit",
-    "test:smoke": "wireit"
+    "unit": "wireit"
   },
   "wireit": {
     "build": {
-      "command": "tsc -b && node tools/copySchemaFiles.js",
+      "command": "tsc -b && node tools/copySchemaFiles.mjs",
       "clean": "if-file-deleted",
       "files": [
         "tsconfig.json",
-        "tsconfig.spec.json",
+        "tsconfig.test.json",
         "src/**",
         "test/src/**"
       ],
@@ -28,16 +25,14 @@
         "*.tsbuildinfo"
       ]
     },
-    "test": {
-      "command": "mocha",
-      "dependencies": [
-        "build"
-      ]
+    "build:test": {
+      "command": "tsc -b test/tsconfig.json"
     },
-    "test:smoke": {
-      "command": "node ./tools/smoke.mjs",
+    "unit": {
+      "command": "node --test --test-reporter spec test/build",
       "dependencies": [
-        "build"
+        "build",
+        "build:test"
       ]
     }
   },
@@ -56,15 +51,13 @@
     "node": ">=16.13.2"
   },
   "dependencies": {
-    "@angular-devkit/architect": "^0.1700.6",
-    "@angular-devkit/core": "^17.0.6",
-    "@angular-devkit/schematics": "^17.0.6"
+    "@angular-devkit/architect": "^0.1701.1",
+    "@angular-devkit/core": "^17.0.7",
+    "@angular-devkit/schematics": "^17.0.7"
   },
   "devDependencies": {
-    "@types/node": "^16.18.61",
-    "@schematics/angular": "^17.0.6",
-    "@angular/cli": "^17.0.6",
-    "rxjs": "7.8.1"
+    "@schematics/angular": "^17.0.7",
+    "@angular/cli": "^17.0.7"
   },
   "files": [
     "lib",

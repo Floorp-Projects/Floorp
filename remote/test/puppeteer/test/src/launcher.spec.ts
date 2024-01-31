@@ -1,17 +1,7 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 import assert from 'assert';
 import fs from 'fs';
@@ -121,6 +111,35 @@ describe('Launcher specs', function () {
       it('can launch and close the browser', async () => {
         const {close} = await launch({});
         await close();
+      });
+      it('should have default url when launching browser', async function () {
+        const {browser, close} = await launch({}, {createContext: false});
+        try {
+          const pages = (await browser.pages()).map(
+            (page: {url: () => any}) => {
+              return page.url();
+            }
+          );
+          expect(pages).toEqual(['about:blank']);
+        } finally {
+          await close();
+        }
+      });
+      it('should close browser with beforeunload page', async () => {
+        const {browser, server, close} = await launch(
+          {},
+          {createContext: false}
+        );
+        try {
+          const page = await browser.newPage();
+
+          await page.goto(server.PREFIX + '/beforeunload.html');
+          // We have to interact with a page so that 'beforeunload' handlers
+          // fire.
+          await page.click('body');
+        } finally {
+          await close();
+        }
       });
       it('should reject all promises when browser is closed', async () => {
         const {page, close} = await launch({});

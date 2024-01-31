@@ -46,10 +46,10 @@ pnpm i puppeteer
 ```
 
 When you install Puppeteer, it automatically downloads a recent version of
-[Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) (~170MB macOS, ~282MB Linux, ~280MB Windows) that is [guaranteed to
+[Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) (~170MB macOS, ~282MB Linux, ~280MB Windows) and a `chrome-headless-shell` binary (starting with Puppeteer v21.6.0) that is [guaranteed to
 work](https://pptr.dev/faq#q-why-doesnt-puppeteer-vxxx-work-with-chromium-vyyy)
 with Puppeteer. The browser is downloaded to the `$HOME/.cache/puppeteer` folder
-by default (starting with Puppeteer v19.0.0).
+by default (starting with Puppeteer v19.0.0). See [configuration](https://pptr.dev/api/puppeteer.configuration) for configuration options and environmental variables to control the download behavor.
 
 If you deploy a project using Puppeteer to a hosting provider, such as Render or
 Heroku, you might need to reconfigure the location of the cache to be within
@@ -156,10 +156,10 @@ import puppeteer from 'puppeteer';
   await page.setViewport({width: 1080, height: 1024});
 
   // Type into search box
-  await page.type('.search-box__input', 'automate beyond recorder');
+  await page.type('.devsite-search-field', 'automate beyond recorder');
 
   // Wait and click on first result
-  const searchResultSelector = '.search-box__link';
+  const searchResultSelector = '.devsite-result-item-link';
   await page.waitForSelector(searchResultSelector);
   await page.click(searchResultSelector);
 

@@ -1,17 +1,7 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as BidiMapper from 'chromium-bidi/lib/cjs/bidiMapper/BidiMapper.js';
@@ -176,7 +166,7 @@ class CDPClientAdapter<T extends CDPSession | CdpConnection>
     this.#closed = true;
   }
 
-  isCloseError(error: any): boolean {
+  isCloseError(error: unknown): boolean {
     return error instanceof TargetCloseError;
   }
 }
@@ -187,7 +177,9 @@ class CDPClientAdapter<T extends CDPSession | CdpConnection>
  * @internal
  */
 class NoOpTransport
-  extends BidiMapper.EventEmitter<any>
+  extends BidiMapper.EventEmitter<{
+    bidiResponse: Bidi.ChromiumBidi.Message;
+  }>
   implements BidiMapper.BidiTransport
 {
   #onMessage: (message: Bidi.ChromiumBidi.Command) => Promise<void> | void =

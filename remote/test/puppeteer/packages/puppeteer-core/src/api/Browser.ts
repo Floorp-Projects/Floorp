@@ -1,17 +1,7 @@
 /**
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2017 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {ChildProcess} from 'child_process';
@@ -19,18 +9,15 @@ import type {ChildProcess} from 'child_process';
 import type {Protocol} from 'devtools-protocol';
 
 import {
+  filterAsync,
   firstValueFrom,
   from,
   merge,
   raceWith,
-  filterAsync,
-  fromEvent,
-  type Observable,
 } from '../../third_party/rxjs/rxjs.js';
 import type {ProtocolType} from '../common/ConnectOptions.js';
 import {EventEmitter, type EventType} from '../common/EventEmitter.js';
-import {debugError} from '../common/util.js';
-import {timeout} from '../common/util.js';
+import {debugError, fromEmitterEvent, timeout} from '../common/util.js';
 import {asyncDisposeSymbol, disposeSymbol} from '../util/disposable.js';
 
 import type {BrowserContext} from './BrowserContext.js';
@@ -200,6 +187,14 @@ export interface BrowserEvents extends Record<EventType, unknown> {
 }
 
 /**
+ * @public
+ * @experimental
+ */
+export interface DebugInfo {
+  pendingProtocolErrors: Error[];
+}
+
+/**
  * {@link Browser} represents a browser instance that is either:
  *
  * - connected to via {@link Puppeteer.connect} or
@@ -353,8 +348,8 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
     const {timeout: ms = 30000} = options;
     return await firstValueFrom(
       merge(
-        fromEvent(this, BrowserEvent.TargetCreated) as Observable<Target>,
-        fromEvent(this, BrowserEvent.TargetChanged) as Observable<Target>,
+        fromEmitterEvent(this, BrowserEvent.TargetCreated),
+        fromEmitterEvent(this, BrowserEvent.TargetChanged),
         from(this.targets())
       ).pipe(filterAsync(predicate), raceWith(timeout(ms)))
     );
@@ -419,7 +414,7 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
   /**
    * Whether Puppeteer is connected to this {@link Browser | browser}.
    *
-   * @deprecated Use {@link Browser.connected}.
+   * @deprecated Use {@link Browser | Browser.connected}.
    */
   isConnected(): boolean {
     return this.connected;
@@ -444,4 +439,16 @@ export abstract class Browser extends EventEmitter<BrowserEvents> {
    * @internal
    */
   abstract get protocol(): ProtocolType;
+
+  /**
+   * Get debug information from Puppeteer.
+   *
+   * @remarks
+   *
+   * Currently, includes pending protocol calls. In the future, we might add more info.
+   *
+   * @public
+   * @experimental
+   */
+  abstract get debugInfo(): DebugInfo;
 }

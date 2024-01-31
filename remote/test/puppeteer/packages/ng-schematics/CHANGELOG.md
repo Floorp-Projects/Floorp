@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.6](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.5...ng-schematics-v0.5.6) (2024-01-16)
+
+
+### Bug Fixes
+
+* jest config issue on Windows ([3711f86](https://github.com/puppeteer/puppeteer/commit/3711f86dca4140da9e830bd7a46f4eca43cd5f4b))
+
+## [0.5.5](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.4...ng-schematics-v0.5.5) (2023-12-19)
+
+
+### Bug Fixes
+
+* update documentation for ng-schematics ([#11533](https://github.com/puppeteer/puppeteer/issues/11533)) ([744e894](https://github.com/puppeteer/puppeteer/commit/744e8944ac62b9d7284fa260c5c796fa1b83b5ef))
+
 ## [0.5.4](https://github.com/puppeteer/puppeteer/compare/ng-schematics-v0.5.3...ng-schematics-v0.5.4) (2023-12-06)
 
 

@@ -1,17 +1,7 @@
 /**
- * Copyright 2018 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2018 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import fs from 'fs';
@@ -108,17 +98,16 @@ describe('network', function () {
   });
 
   describe('Request.headers', function () {
-    it('should define Chrome as user agent header', async () => {
-      const {page, server} = await getTestState();
+    it('should define Browser in user agent header', async () => {
+      const {page, server, isChrome} = await getTestState();
       const response = (await page.goto(server.EMPTY_PAGE))!;
-      expect(response.request().headers()['user-agent']).toContain('Chrome');
-    });
+      const userAgent = response.request().headers()['user-agent'];
 
-    it('should define Firefox as user agent header', async () => {
-      const {page, server} = await getTestState();
-
-      const response = (await page.goto(server.EMPTY_PAGE))!;
-      expect(response.request().headers()['user-agent']).toContain('Firefox');
+      if (isChrome) {
+        expect(userAgent).toContain('Chrome');
+      } else {
+        expect(userAgent).toContain('Firefox');
+      }
     });
   });
 
@@ -267,11 +256,40 @@ describe('network', function () {
       expect(request).toBeTruthy();
       expect(request.postData()).toBe('{"foo":"bar"}');
     });
+
     it('should be |undefined| when there is no post data', async () => {
       const {page, server} = await getTestState();
 
       const response = (await page.goto(server.EMPTY_PAGE))!;
       expect(response.request().postData()).toBe(undefined);
+    });
+
+    it('should work with blobs', async () => {
+      const {page, server} = await getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      server.setRoute('/post', (_req, res) => {
+        return res.end();
+      });
+
+      const [request] = await Promise.all([
+        waitEvent<HTTPRequest>(page, 'request', r => {
+          return !isFavicon(r);
+        }),
+        page.evaluate(() => {
+          return fetch('./post', {
+            method: 'POST',
+            body: new Blob([JSON.stringify({foo: 'bar'})], {
+              type: 'application/json',
+            }),
+          });
+        }),
+      ]);
+
+      expect(request).toBeTruthy();
+      expect(request.postData()).toBe(undefined);
+      expect(request.hasPostData()).toBe(true);
+      expect(await request.fetchPostData()).toBe('{"foo":"bar"}');
     });
   });
 

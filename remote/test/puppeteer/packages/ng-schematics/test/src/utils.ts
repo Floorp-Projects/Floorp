@@ -1,4 +1,5 @@
 import https from 'https';
+import {before, after} from 'node:test';
 import {join} from 'path';
 
 import type {JsonObject} from '@angular-devkit/core';
@@ -34,7 +35,7 @@ export function setupHttpHooks(): void {
   before(() => {
     const httpsGetStub = sinon.stub(https, 'get');
     httpsGetStub.returns({
-      on: (_: any, callback: () => void) => {
+      on: (_: string, callback: () => void) => {
         callback();
       },
     } as any);
@@ -82,7 +83,7 @@ export function getMultiLibraryFile(file: string): string {
 export async function buildTestingTree(
   command: 'ng-add' | 'e2e' | 'config',
   type: 'single' | 'multi' = 'single',
-  userOptions?: Record<string, any>
+  userOptions?: Record<string, unknown>
 ): Promise<UnitTestTree> {
   const runner = new SchematicTestRunner(
     'schematics',

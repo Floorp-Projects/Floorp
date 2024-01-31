@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "wireit",
+    "build:tools": "wireit",
     "check": "npm run check --workspaces --if-present && run-p check:*",
     "check:pinned-deps": "tsx tools/ensure-pinned-deps",
     "clean": "npm run clean --workspaces --if-present",
@@ -14,11 +15,11 @@
     "docs": "wireit",
     "doctest": "wireit",
     "format": "run-s format:*",
-    "format:eslint": "eslint --ext js --ext ts --fix .",
+    "format:eslint": "eslint --ext js --ext mjs --ext ts --fix .",
     "format:expectations": "node tools/sort-test-expectations.mjs",
     "format:prettier": "prettier --write .",
     "lint": "run-s lint:*",
-    "lint:eslint": "([ \"$CI\" = true ] && eslint --ext js --ext ts --quiet . || eslint --ext js --ext ts .)",
+    "lint:eslint": "eslint --ext js --ext mjs --ext ts .",
     "lint:prettier": "prettier --check .",
     "lint:expectations": "node tools/sort-test-expectations.mjs --lint",
     "postinstall": "npm run postinstall --workspaces --if-present",
@@ -34,6 +35,7 @@
     "test:chrome:new-headless": "wireit",
     "test:firefox": "wireit",
     "test:firefox:bidi": "wireit",
+    "test:firefox:bidi:headful": "wireit",
     "test:firefox:headful": "wireit",
     "test:firefox:headless": "wireit",
     "validate-licenses": "tsx tools/third_party/validate-licenses.ts",
@@ -49,6 +51,15 @@
         "./packages/testserver:build",
         "./test:build",
         "./test/installation:build"
+      ]
+    },
+    "build:tools": {
+      "dependencies": [
+        "./tools/docgen:build",
+        "./tools/doctest:build",
+        "./tools/mocha-runner:build",
+        "./tools/eslint:build",
+        "./packages/testserver:build"
       ]
     },
     "docs": {
@@ -93,6 +104,9 @@
     "test:firefox:bidi": {
       "command": "npm test -- --test-suite firefox-bidi"
     },
+    "test:firefox:bidi:headful": {
+      "command": "npm test -- --test-suite firefox-bidi-headful"
+    },
     "test:firefox:headful": {
       "command": "npm test -- --test-suite firefox-headful"
     },
@@ -102,12 +116,13 @@
     "test:firefox": {
       "dependencies": [
         "test:firefox:bidi",
+        "test:firefox:bidi:headful",
         "test:firefox:headful",
         "test:firefox:headless"
       ]
     },
     "test": {
-      "command": "cross-env PUPPETEER_DEFERRED_PROMISE_DEBUG_TIMEOUT=20000 npx ./tools/mocha-runner --min-tests 1003",
+      "command": "npx ./tools/mocha-runner --min-tests 1003",
       "dependencies": [
         "./test:build",
         "./tools/mocha-runner:build"
@@ -122,43 +137,38 @@
   },
   "devDependencies": {
     "@actions/core": "1.10.1",
-    "@microsoft/api-extractor": "7.38.5",
-    "@pptr/testserver": "file:packages/testserver",
-    "@puppeteer/docgen": "file:tools/docgen",
     "@types/mocha": "10.0.6",
     "@types/node": "20.8.4",
     "@types/semver": "7.5.6",
-    "@types/sinon": "17.0.2",
-    "@typescript-eslint/eslint-plugin": "6.14.0",
-    "@typescript-eslint/parser": "6.14.0",
-    "cross-env": "7.0.3",
-    "esbuild": "0.19.9",
+    "@types/sinon": "17.0.3",
+    "@typescript-eslint/eslint-plugin": "6.19.1",
+    "@typescript-eslint/parser": "6.19.1",
+    "esbuild": "0.20.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-import-resolver-typescript": "3.6.1",
-    "eslint-plugin-import": "2.29.0",
+    "eslint-plugin-import": "2.29.1",
     "eslint-plugin-mocha": "10.2.0",
-    "eslint-plugin-prettier": "5.0.1",
+    "eslint-plugin-prettier": "5.1.3",
     "eslint-plugin-rulesdir": "0.2.2",
     "eslint-plugin-tsdoc": "0.2.17",
     "eslint-plugin-unused-imports": "3.0.0",
-    "eslint": "8.55.0",
+    "eslint": "8.56.0",
     "execa": "8.0.1",
     "expect": "29.7.0",
     "gts": "5.2.0",
-    "hereby": "1.8.8",
+    "hereby": "1.8.9",
     "license-checker": "25.0.1",
     "mocha": "10.2.0",
     "npm-run-all": "4.1.5",
-    "prettier": "3.1.1",
-    "puppeteer": "file:packages/puppeteer",
+    "prettier": "3.2.4",
     "semver": "7.5.4",
     "sinon": "17.0.1",
     "source-map-support": "0.5.21",
     "spdx-satisfies": "5.0.1",
-    "tsd": "0.29.0",
-    "tsx": "4.6.2",
-    "typescript": "5.2.2",
-    "wireit": "0.14.1"
+    "tsd": "0.30.4",
+    "tsx": "4.7.0",
+    "typescript": "5.3.3",
+    "wireit": "0.14.4"
   },
   "overrides": {
     "@microsoft/api-extractor": {

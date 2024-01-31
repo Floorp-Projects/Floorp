@@ -1,17 +1,7 @@
 /**
- * Copyright 2019 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2019 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import type {Protocol} from 'devtools-protocol';
@@ -28,7 +18,7 @@ import {Deferred} from '../util/Deferred.js';
 import {CdpCDPSession} from './CDPSession.js';
 import {CdpPage} from './Page.js';
 import type {TargetManager} from './TargetManager.js';
-import {WebWorker} from './WebWorker.js';
+import {CdpWebWorker} from './WebWorker.js';
 
 /**
  * @internal
@@ -78,6 +68,16 @@ export class CdpTarget extends Target {
     if (this.#session && this.#session instanceof CdpCDPSession) {
       this.#session._setTarget(this);
     }
+  }
+
+  override async asPage(): Promise<Page> {
+    const session = this._session();
+    if (!session) {
+      return await this.createCDPSession().then(client => {
+        return CdpPage._create(client, this, false, null);
+      });
+    }
+    return await CdpPage._create(session, this, false, null);
   }
 
   _subtype(): string | undefined {
@@ -146,14 +146,14 @@ export class CdpTarget extends Target {
 
   override browser(): Browser {
     if (!this.#browserContext) {
-      throw new Error('browserContext is not initialised');
+      throw new Error('browserContext is not initialized');
     }
     return this.#browserContext.browser();
   }
 
   override browserContext(): BrowserContext {
     if (!this.#browserContext) {
-      throw new Error('browserContext is not initialised');
+      throw new Error('browserContext is not initialized');
     }
     return this.#browserContext;
   }
@@ -276,9 +276,9 @@ export class DevToolsTarget extends PageTarget {}
  * @internal
  */
 export class WorkerTarget extends CdpTarget {
-  #workerPromise?: Promise<WebWorker>;
+  #workerPromise?: Promise<CdpWebWorker>;
 
-  override async worker(): Promise<WebWorker | null> {
+  override async worker(): Promise<CdpWebWorker | null> {
     if (!this.#workerPromise) {
       const session = this._session();
       // TODO(einbinder): Make workers send their console logs.
@@ -287,7 +287,7 @@ export class WorkerTarget extends CdpTarget {
           ? Promise.resolve(session)
           : this._sessionFactory()(/* isAutoAttachEmulated=*/ false)
       ).then(client => {
-        return new WebWorker(
+        return new CdpWebWorker(
           client,
           this._getTargetInfo().url,
           () => {} /* consoleAPICalled */,

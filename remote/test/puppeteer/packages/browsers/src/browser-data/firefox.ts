@@ -1,17 +1,7 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import fs from 'fs';
@@ -222,20 +212,29 @@ function defaultProfilePreferences(
 
     // Allow the application to have focus even it runs in the background
     'focusmanager.testmode': true,
+
     // Disable useragent updates
     'general.useragent.updates.enabled': false,
+
     // Always use network provider for geolocation tests so we bypass the
     // macOS dialog raised by the corelocation provider
     'geo.provider.testing': true,
+
     // Do not scan Wifi
     'geo.wifi.scan': false,
+
     // No hang monitor
     'hangmonitor.timeout': 0,
+
     // Show chrome errors and warnings in the error console
     'javascript.options.showInConsole': true,
 
     // Disable download and usage of OpenH264: and Widevine plugins
     'media.gmp-manager.updateEnabled': false,
+
+    // Disable the GFX sanity window
+    'media.sanity-test.disabled': true,
+
     // Prevent various error message on the console
     // jest-puppeteer asserts that no error message is emitted by the console
     'network.cookie.cookieBehavior': 0,
@@ -267,9 +266,11 @@ function defaultProfilePreferences(
 
     // Don't do network connections for mitm priming
     'security.certerrors.mitm.priming.enabled': false,
+
     // Local documents have access to all other local documents,
     // including directory listings
     'security.fileuri.strict_origin_policy': false,
+
     // Do not wait for the notification button security delay
     'security.notification_enable_delay': 0,
 
@@ -279,6 +280,7 @@ function defaultProfilePreferences(
     // Do not automatically fill sign-in forms with known usernames and
     // passwords
     'signon.autofillForms': false,
+
     // Disable password capture, so that tests that include forms are not
     // influenced by the presence of the persistent doorhanger notification
     'signon.rememberSignons': false,
