@@ -259,8 +259,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">سکین کرو</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">کھوج انجݨ</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">کھوج انجݨ دیاں ترجیحاں</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -312,23 +310,28 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">اطلاعواں تہانوں %s نال ہور کرن دی مدد کردے ہن</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">اطلاعواں تہانوں %s نال ہور کرن دی مدد کردے ہن</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">ڈوائیساں وچالے آپݨیاں ٹیباں نوں ہم وقت کرو، ڈاؤن‌لوڈ دا انتظام کرو، %s  ایپ دی پردہ داری سرکھیا دا پورا فائدہ لیݨ لئی گر لوو تے ہور۔</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">ڈوائیساں وچالے آپݨیاں ٹیباں نوں ہم وقت کرو، ڈاؤن‌لوڈ دا انتظام کرو، %s  ایپ دی پردہ داری سرکھیا دا پورا فائدہ لیݨ لئی گر لوو تے ہور۔</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">جاری رکھو</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">جاری رکھو</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">ہݨے نہیں</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">ہݨے نہیں</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">فائرفاکس پردے داری سوچنا</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">اسیں تہانوں سرکھیت رکھݨا چاہندے آں</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">ساڈا غیر منافع سمرتھ براؤزر کمپنیاں نوں ویب اُتے چوری بھِپے پِچھا کرن توں روکݨ لئی مدد کردا اے۔ \n\n ساڈے پردے داری نوٹس بارے ہور سکھو۔</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_3">کمپنیاں نوں چوری چوری ویب اُتے تہاڈا پچھا کرن توں ساڈا غیر فائدہ سمرتھ براؤزر آپݨے آپ ہی روکدا اے۔</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">ساڈا غیر منافع سمرتھ براؤزر کمپنیاں نوں ویب اُتے چوری بھِپے پِچھا کرن توں روکݨ لئی مدد کردا اے۔ \n\n ساڈے پردے داری نوٹس بارے ہور سکھو۔</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">پردے داری دا بیان</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">پردے داری دا بیان</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">مول براؤزر تے طور تے بݨاؤ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -354,6 +357,22 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ہݨے نہیں</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">فائرفاکس کھوج وجیٹ ازماؤ</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">تہاڈی مکھ سکرین اُتے فائرفاکس نال تسیں پرائیویسی ادھارت براؤزر نوں سوکھی طرح ورت سکدے او، جو کہ انتر سائیٹ ٹریکراں اُتے پابندی لاوندا اے۔</string>
+
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">فائرفاکس وجیٹ جوڑو</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ہݨے نہیں</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">%1$s نال نویں ٹیب کھولھو</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">کھوج</string>
     <!-- Text preview for larger sized widgets -->
@@ -369,34 +388,115 @@
     <string name="preferences_category_general">عام</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">بارے</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">اک چݨو</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">بدلویں کھوج انجݨاں دا انتئام کرو</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">کھوج مینو وچ دسݨ والے انجݨاں نوں سودھو</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">کھوج مینو وچ دسݨ والے انجݨ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">مول کھوج والا</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">کھوج</string>
 
 
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">کھوجݨ والے انجݨ</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">کھوجݨ والیاں انجݨاں توں سجھاؤ</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">سرناواں پٹی لئی ترجیحاں</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">سرناواں پٹی – فائرفاکس سجھاؤ</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">فائرفاکس سجھاؤ بارے پور جاݨو</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ایپ دکان تے درجہ دیو</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s بارے</string>
 
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">مول براؤزر تے طور تے بݨاؤ</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">اضافی</string>
 
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">بند</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">چالو</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">پردے داری تے سرکھیا</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">سائیٹ دیاں اجازتاں</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">نجی براؤز کرن</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">لنک نجی ٹیب وچ کھولھو</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">نجی براؤز وچ سکرین‌شاٹ منظور کرو</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">جے اجازت دتی تاں نجی ٹیباں اودوں وی دکھائی دیݨ‌گیاں، جدوں کئی ایپاں کھلھیاں ہندیاں ہن</string>
+
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut"> نجی براؤز کرن شارٹ‌کٹ جوڑو</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">سرف HTTPS ڈھنگ</string>
+
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">کوکی جھنڈا روکو</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">نجی براؤز کرن وچ کوکی جھنڈا روکو</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ایس سائیٹ لئی بند اے</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">رد کرو</string>
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">اجازت دیو</string>
 
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">بینتی بھیجیں</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">ایس سائیٹ لئی سہایتا دی بینتی کرنی اے؟</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">ںینتی بھیجی ہوئی</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ایس سائیٹ لئی چالو</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">سہایتا بینتی بھیجی</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">سائیٹ ایس ویلے سہایک نہیں اے</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">کیہہ %1$s لئی کوکی جھنڈا روکو چالو کرنا اے؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">کیہہ %1$s لئی کوکی جھنڈا روکو بند کرنا اے؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ایس سائیٹ لئی آپݨے آپ کوکی بینتیاں نوں بند نہیں کر سکدا اے۔ تسیں مستقبل وچ ایس سائیٹ واسطے سہایتا لئی بینتی کر سکدے او۔</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">بند کرن نال %1$s ایس سائیٹ لئی کوکیاں مٹا کے ایس نوں مڑ لوڈ کرےگا۔ ایہہ تہانوں لاگ آؤٹ جاں تہاڈی خرید داری کارٹاں نوں خالی کرےگا۔</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">چاکو کرو تے %1$s ایس سائیٹ واسطے کوکی جھنڈے نوں آپݨے آپ انکار کرن دی کوشش کرےگا۔</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s نے ہݨے تہاڈے لئی کوکیاں توں انکار کیتا اے</string>
+
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">ایس سائیٹ لئی تہاڈے لئی گھٹ دھیان بھٹکݨا، گھٹ کوکیاں ٹریک کرن اے۔</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">وادھا کیتی سرکھیا لئی HTTPS انکرپشن پروٹوکال ورت کے سائیٹاں نال کنیکٹ کرن دی آپݨے آپ کوشش کرو۔</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">بند</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">سبھناں ٹیباں وچ چالو اے</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">نجی ٹیباں وچ چالو ہی اے</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ہور جاݨو</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">ساریاں ٹیباں وچ چالو کرو</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">صرف نجی ٹیباں وچ چالو کرو</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">سرکھیت سائیٹ دستیاب نہیں اے</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">رسائیت</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">کھاتہ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -416,16 +516,31 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">ڈیٹا چوݨاں</string>
 
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">اتے پتے دی کھوج</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">ہمیشہ</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">کدے نہیں</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">وادھے والے</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اطلاع نامے</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">اجازت دتے</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">اجازت نہیں دتے</string>
+
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ٹھیک اے</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">رد کرو</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">والپیپر</string>
 
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ویکھو</string>
@@ -437,6 +552,18 @@
 
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">تریخ</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">اتے پتے</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">لاگ ان</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">پاس‌ورڈ</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">ساریاں کھولھو</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">لاگ آؤٹ</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">ڈوائیس دا ناں</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">پتے</string>
 
@@ -810,6 +937,9 @@
 
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ہور جاݨو</string>
+
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">سیٹنگاں نوں جاؤ</string>
 
     <!-- Translations feature-->
 
