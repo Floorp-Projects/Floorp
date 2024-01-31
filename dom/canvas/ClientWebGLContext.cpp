@@ -2405,12 +2405,15 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
   if (asString) {
     const auto maybe = GetString(pname);
     if (maybe) {
-      auto str = *maybe;
+      auto str = std::string{};
       if (pname == dom::MOZ_debug_Binding::WSI_INFO) {
-        nsPrintfCString more("\nIsWebglOutOfProcessEnabled: %i",
-                             int(IsWebglOutOfProcessEnabled()));
-        str += more.BeginReading();
+        const auto& outOfProcess = mNotLost->outOfProcess;
+        const auto& inProcess = mNotLost->inProcess;
+        str += PrintfStdString("outOfProcess: %s\ninProcess: %s\n",
+                               ToChars(bool(outOfProcess)),
+                               ToChars(bool(inProcess)));
       }
+      str += *maybe;
       retval.set(StringValue(cx, str.c_str(), rv));
     }
   } else {

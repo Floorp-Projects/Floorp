@@ -1273,6 +1273,20 @@ struct IndexedBufferBinding final {
   uint64_t ByteCount() const;
 };
 
+// -
+
+template <class... Args>
+inline std::string PrintfStdString(const char* const format,
+                                   const Args&... args) {
+  const auto nsStr = nsPrintfCString(format, args...);
+  return ToString(nsStr);
+}
+
+inline const char* ToChars(const bool val) {
+  if (val) return "true";
+  return "false";
+}
+
 }  // namespace mozilla
 
 #endif
