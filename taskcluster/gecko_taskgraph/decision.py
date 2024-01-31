@@ -26,11 +26,9 @@ from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
-from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.vcs import get_repository
 from taskgraph.util.yaml import load_yaml
-from voluptuous import Any, Optional, Required
 
 from . import GECKO
 from .actions import render_actions_json
@@ -112,51 +110,6 @@ PER_PROJECT_PARAMETERS = {
         "target_tasks_method": "default",
     },
 }
-
-try_task_config_schema = Schema(
-    {
-        Required("tasks"): [str],
-        Optional("browsertime"): bool,
-        Optional("chemspill-prio"): bool,
-        Optional("disable-pgo"): bool,
-        Optional("env"): {str: str},
-        Optional("gecko-profile"): bool,
-        Optional("gecko-profile-interval"): float,
-        Optional("gecko-profile-entries"): int,
-        Optional("gecko-profile-features"): str,
-        Optional("gecko-profile-threads"): str,
-        Optional(
-            "perftest-options",
-            description="Options passed from `mach perftest` to try.",
-        ): object,
-        Optional(
-            "optimize-strategies",
-            description="Alternative optimization strategies to use instead of the default. "
-            "A module path pointing to a dict to be use as the `strategy_override` "
-            "argument in `taskgraph.optimize.base.optimize_task_graph`.",
-        ): str,
-        Optional("rebuild"): int,
-        Optional("tasks-regex"): {
-            "include": Any(None, [str]),
-            "exclude": Any(None, [str]),
-        },
-        Optional("use-artifact-builds"): bool,
-        Optional(
-            "worker-overrides",
-            description="Mapping of worker alias to worker pools to use for those aliases.",
-        ): {str: str},
-        Optional("routes"): [str],
-    }
-)
-"""
-Schema for try_task_config.json files.
-"""
-
-try_task_config_schema_v2 = Schema(
-    {
-        Optional("parameters"): {str: object},
-    }
-)
 
 
 def full_task_graph_to_runnable_jobs(full_task_json):
@@ -471,19 +424,9 @@ def set_try_config(parameters, task_config_file):
             task_config = json.load(fh)
         task_config_version = task_config.pop("version", 1)
         if task_config_version == 1:
-            validate_schema(
-                try_task_config_schema,
-                task_config,
-                "Invalid v1 `try_task_config.json`.",
-            )
             parameters["try_mode"] = "try_task_config"
             parameters["try_task_config"] = task_config
         elif task_config_version == 2:
-            validate_schema(
-                try_task_config_schema_v2,
-                task_config,
-                "Invalid v2 `try_task_config.json`.",
-            )
             parameters.update(task_config["parameters"])
             return
         else:

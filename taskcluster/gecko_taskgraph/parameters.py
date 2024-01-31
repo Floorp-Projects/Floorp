@@ -6,7 +6,7 @@ import logging
 import os
 
 from taskgraph.parameters import extend_parameters_schema
-from voluptuous import Any, Required
+from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph import GECKO
 
@@ -38,7 +38,39 @@ gecko_parameters_schema = {
     Required("test_manifest_loader"): str,
     Required("try_mode"): Any(None, str),
     Required("try_options"): Any(None, dict),
-    Required("try_task_config"): dict,
+    Required("try_task_config"): {
+        Optional("tasks"): [str],
+        Optional("browsertime"): bool,
+        Optional("chemspill-prio"): bool,
+        Optional("disable-pgo"): bool,
+        Optional("env"): {str: str},
+        Optional("gecko-profile"): bool,
+        Optional("gecko-profile-interval"): float,
+        Optional("gecko-profile-entries"): int,
+        Optional("gecko-profile-features"): str,
+        Optional("gecko-profile-threads"): str,
+        Optional(
+            "perftest-options",
+            description="Options passed from `mach perftest` to try.",
+        ): object,
+        Optional(
+            "optimize-strategies",
+            description="Alternative optimization strategies to use instead of the default. "
+            "A module path pointing to a dict to be use as the `strategy_override` "
+            "argument in `taskgraph.optimize.base.optimize_task_graph`.",
+        ): str,
+        Optional("rebuild"): int,
+        Optional("tasks-regex"): {
+            "include": Any(None, [str]),
+            "exclude": Any(None, [str]),
+        },
+        Optional("use-artifact-builds"): bool,
+        Optional(
+            "worker-overrides",
+            description="Mapping of worker alias to worker pools to use for those aliases.",
+        ): {str: str},
+        Optional("routes"): [str],
+    },
     Required("version"): str,
 }
 
