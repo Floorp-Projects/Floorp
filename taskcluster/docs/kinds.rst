@@ -802,3 +802,8 @@ Perform a Firefox Snap build using upstream tooling
 snap-upstream-test
 -------------------
 Test a Firefox Snap built using upstream tooling
+
+trigger-comm-central
+--------------------
+Trigger a CI decision task on comm-central when conditions are met. Currently
+used for verifying third party Rust code is consistent.
