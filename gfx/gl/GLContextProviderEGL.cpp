@@ -1219,7 +1219,6 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
 /*static*/
 void GLContextEGL::DestroySurface(EglDisplay& aEgl, const EGLSurface aSurface) {
   if (aSurface != EGL_NO_SURFACE) {
-    // TODO: This breaks TLS MakeCurrent caching.
     if (!aEgl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
       const EGLint err = aEgl.mLib->fGetError();
       gfxCriticalNote << "Error in eglMakeCurrent: " << gfx::hexa(err);
