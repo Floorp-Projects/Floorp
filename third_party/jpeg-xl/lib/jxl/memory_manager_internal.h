@@ -10,11 +10,9 @@
 
 #include <jxl/memory_manager.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>  // memcpy
 
-#include <atomic>
 #include <memory>
 
 #include "lib/jxl/base/compiler_specific.h"

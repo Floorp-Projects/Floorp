@@ -74,7 +74,7 @@ if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
         COMMAND
           ${XVFB_PROGRAM_PREFIX} $<TARGET_FILE:pixbufloader_test>
           "${CMAKE_CURRENT_SOURCE_DIR}/loaders_test.cache"
-          "${CMAKE_SOURCE_DIR}/testdata/jxl/blending/cropped_traffic_light.jxl"
+          "${JPEGXL_TEST_DATA_PATH}/jxl/blending/cropped_traffic_light.jxl"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       )
       set_tests_properties(pixbufloader_test_jxl PROPERTIES SKIP_RETURN_CODE 254)

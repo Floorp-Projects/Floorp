@@ -9,17 +9,20 @@
 #include <cstddef>
 #include <vector>
 
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_ans.h"
 #include "lib/jxl/enc_bit_writer.h"
-#include "lib/jxl/image.h"
 #include "lib/jxl/modular/encoding/dec_ma.h"
 #include "lib/jxl/modular/encoding/enc_ma.h"
+#include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 
 namespace jxl {
 
 struct AuxOut;
 struct GroupHeader;
+
+Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels);
 
 Tree LearnTree(TreeSamples &&tree_samples, size_t total_pixels,
                const ModularOptions &options,

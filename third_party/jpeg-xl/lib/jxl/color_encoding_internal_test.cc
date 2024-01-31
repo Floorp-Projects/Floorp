@@ -10,7 +10,6 @@
 #include <cstdlib>  // rand
 
 #include "lib/jxl/cms/color_encoding_cms.h"
-#include "lib/jxl/encode_internal.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

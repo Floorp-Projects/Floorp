@@ -10,6 +10,7 @@
 #include <stddef.h>
 
 #include <memory>
+#include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"

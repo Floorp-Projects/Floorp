@@ -20,6 +20,8 @@
 
 #include <jxl/color_encoding.h>
 #include <jxl/types.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

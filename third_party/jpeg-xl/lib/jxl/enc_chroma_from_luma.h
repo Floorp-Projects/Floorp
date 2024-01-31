@@ -41,8 +41,6 @@ struct CfLHeuristics {
                    const ImageI* raw_quant_field, const Quantizer* quantizer,
                    bool fast, size_t thread, ColorCorrelationMap* cmap);
 
-  void ComputeDC(bool fast, ColorCorrelationMap* cmap);
-
   ImageF dc_values;
   hwy::AlignedFreeUniquePtr<float[]> mem;
 

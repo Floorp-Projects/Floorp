@@ -186,14 +186,6 @@ Status SetJpegProgression(int progressive_id,
   return true;
 }
 
-bool IsSRGBEncoding(const JxlColorEncoding& c) {
-  return ((c.color_space == JXL_COLOR_SPACE_RGB ||
-           c.color_space == JXL_COLOR_SPACE_GRAY) &&
-          c.primaries == JXL_PRIMARIES_SRGB &&
-          c.white_point == JXL_WHITE_POINT_D65 &&
-          c.transfer_function == JXL_TRANSFER_FUNCTION_SRGB);
-}
-
 void WriteICCProfile(jpeg_compress_struct* const cinfo,
                      const std::vector<uint8_t>& icc) {
   constexpr size_t kMaxIccBytesInMarker =
@@ -598,18 +590,14 @@ class JPEGEncoder : public Encoder {
       }
     }
     params.is_xyb = (ppf.color_encoding.color_space == JXL_COLOR_SPACE_XYB);
-    std::vector<uint8_t> icc;
-    if (!IsSRGBEncoding(ppf.color_encoding)) {
-      icc = ppf.icc;
-    }
     encoded_image->bitstreams.clear();
     encoded_image->bitstreams.reserve(ppf.frames.size());
     for (const auto& frame : ppf.frames) {
       JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(EncodeImageJPG(
-          frame.color, ppf.info, icc, ppf.metadata.exif, jpeg_encoder, params,
-          pool, &encoded_image->bitstreams.back()));
+          frame.color, ppf.info, ppf.icc, ppf.metadata.exif, jpeg_encoder,
+          params, pool, &encoded_image->bitstreams.back()));
     }
     return true;
   }

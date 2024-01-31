@@ -3867,8 +3867,8 @@ void LLProcess(JxlFastLosslessFrameState* frame_state, bool is_last,
   bool streaming = !onegroup && output_processor;
   size_t total_groups = frame_state->num_groups_x * frame_state->num_groups_y;
   size_t max_groups = streaming ? kMaxLocalGroups : total_groups;
-  size_t start_pos = 0;
 #if !FJXL_STANDALONE
+  size_t start_pos = 0;
   if (streaming) {
     start_pos = output_processor->CurrentPosition();
     output_processor->Seek(start_pos + frame_state->ac_group_data_offset);

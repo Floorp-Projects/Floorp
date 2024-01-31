@@ -4,36 +4,50 @@
 // license that can be found in the LICENSE file.
 
 #include <jxl/cms.h>
+#include <jxl/encode.h>
+#include <jxl/types.h>
 
-#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "lib/extras/codec.h"
 #include "lib/extras/dec/jxl.h"
+#include "lib/extras/enc/jxl.h"
 #include "lib/extras/metrics.h"
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/override.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
+#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
-#include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_toc.h"
+#include "lib/jxl/fields.h"
+#include "lib/jxl/frame_header.h"
+#include "lib/jxl/headers.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/modular/encoding/enc_encoding.h"
 #include "lib/jxl/modular/encoding/encoding.h"
-#include "lib/jxl/modular/encoding/ma_common.h"
+#include "lib/jxl/modular/modular_image.h"
+#include "lib/jxl/modular/options.h"
+#include "lib/jxl/modular/transform/transform.h"
 #include "lib/jxl/padded_bytes.h"
+#include "lib/jxl/test_image.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -42,23 +56,25 @@ namespace {
 
 using test::ReadTestData;
 using test::Roundtrip;
+using test::TestImage;
 
 void TestLosslessGroups(size_t group_size_shift) {
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CompressParams cparams;
-  cparams.SetLossless();
-  cparams.modular_group_size_shift = group_size_shift;
+  TestImage t;
+  t.DecodeFromBytes(orig).ClearMetadata();
+  t.SetDimensions(t.ppf().xsize() / 4, t.ppf().ysize() / 4);
 
-  CodecInOut io_out;
+  extras::JXLCompressParams cparams;
+  cparams.distance = 0.0f;
+  cparams.AddOption(JXL_ENC_FRAME_SETTING_MODULAR_GROUP_SIZE, group_size_shift);
+  extras::JXLDecompressParams dparams;
+  dparams.accepted_formats = {{3, JXL_TYPE_UINT16, JXL_LITTLE_ENDIAN, 0}};
 
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
-  io.ShrinkTo(io.xsize() / 4, io.ysize() / 4);
-
-  size_t compressed_size;
-  JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
+  extras::PackedPixelFile ppf_out;
+  size_t compressed_size =
+      Roundtrip(t.ppf(), cparams, dparams, nullptr, &ppf_out);
   EXPECT_LE(compressed_size, 280000u);
-  JXL_EXPECT_OK(SamePixels(*io.Main().color(), *io_out.Main().color(), _));
+  EXPECT_EQ(0.0f, test::ComputeDistance2(t.ppf(), ppf_out));
 }
 
 TEST(ModularTest, RoundtripLosslessGroups128) { TestLosslessGroups(0); }
@@ -74,24 +90,26 @@ TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups1024)) {
 TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CompressParams cparams;
-  cparams.SetLossless();
+  TestImage t;
+  t.DecodeFromBytes(orig).ClearMetadata();
+  t.SetDimensions(100, 100);
+
+  extras::JXLCompressParams cparams;
+  cparams.distance = 0.0f;
   // 9 = permute to GBR, to test the special case of permutation-only
-  cparams.colorspace = 9;
+  cparams.AddOption(JXL_ENC_FRAME_SETTING_MODULAR_COLOR_SPACE, 9);
+  cparams.AddOption(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR,
+                    static_cast<int64_t>(Predictor::Weighted));
   // slowest speed so different WP modes are tried
-  cparams.speed_tier = SpeedTier::kTortoise;
-  cparams.options.predictor = {Predictor::Weighted};
+  cparams.AddOption(JXL_ENC_FRAME_SETTING_EFFORT, 9);
+  extras::JXLDecompressParams dparams;
+  dparams.accepted_formats = {{3, JXL_TYPE_UINT16, JXL_LITTLE_ENDIAN, 0}};
 
-  CodecInOut io_out;
-
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
-  io.ShrinkTo(100, 100);
-
-  size_t compressed_size;
-  JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
+  extras::PackedPixelFile ppf_out;
+  size_t compressed_size =
+      Roundtrip(t.ppf(), cparams, dparams, nullptr, &ppf_out);
   EXPECT_LE(compressed_size, 10169u);
-  JXL_EXPECT_OK(SamePixels(*io.Main().color(), *io_out.Main().color(), _));
+  EXPECT_EQ(0.0f, test::ComputeDistance2(t.ppf(), ppf_out));
 }
 
 TEST(ModularTest, RoundtripLossyDeltaPalette) {
@@ -229,38 +247,6 @@ TEST(ModularTest, RoundtripExtraProperties) {
       }
     }
   }
-}
-
-TEST(ModularTest, RoundtripLosslessCustomSqueeze) {
-  const std::vector<uint8_t> orig =
-      ReadTestData("external/wesaturate/500px/tmshre_riaphotographs_srgb8.png");
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
-
-  CompressParams cparams;
-  cparams.modular_mode = true;
-  cparams.color_transform = jxl::ColorTransform::kNone;
-  cparams.butteraugli_distance = 0.f;
-  cparams.options.predictor = {Predictor::Zero};
-  cparams.speed_tier = SpeedTier::kThunder;
-  cparams.responsive = 1;
-  // Custom squeeze params, atm just for testing
-  SqueezeParams p;
-  p.horizontal = true;
-  p.in_place = false;
-  p.begin_c = 0;
-  p.num_c = 3;
-  cparams.squeezes.push_back(p);
-  p.begin_c = 1;
-  p.in_place = true;
-  p.horizontal = false;
-  cparams.squeezes.push_back(p);
-
-  CodecInOut io2;
-  size_t compressed_size;
-  JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &compressed_size));
-  EXPECT_LE(compressed_size, 265000u);
-  JXL_EXPECT_OK(SamePixels(*io.Main().color(), *io2.Main().color(), _));
 }
 
 struct RoundtripLosslessConfig {

@@ -10,28 +10,25 @@
 
 #include <jxl/cms_interface.h>
 
+#include <cstddef>
+
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/enc_bit_writer.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
 
-// Converts any color space to XYB. If `linear` is not null, fills it with a
-// linear sRGB copy of `in`.
-void ToXYB(const Image3F& color, const ColorEncoding& c_current,
-           float intensity_target, const ImageF* black, ThreadPool* pool,
-           Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
-           Image3F* const JXL_RESTRICT linear);
+// Converts any color space to XYB in-place. If `linear` is not null, fills it
+// with a linear sRGB copy of `image`.
+void ToXYB(const ColorEncoding& c_current, float intensity_target,
+           const ImageF* black, ThreadPool* pool, Image3F* JXL_RESTRICT image,
+           const JxlCmsInterface& cms, Image3F* JXL_RESTRICT linear);
 
 void ToXYB(const ImageBundle& in, ThreadPool* pool, Image3F* JXL_RESTRICT xyb,
            const JxlCmsInterface& cms, Image3F* JXL_RESTRICT linear = nullptr);
-
-void Image3FToXYB(const Image3F& in, const ColorEncoding& color_encoding,
-                  float intensity_target, ThreadPool* pool,
-                  Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms);
 
 void LinearRGBRowToXYB(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
                        float* JXL_RESTRICT row2,

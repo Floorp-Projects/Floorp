@@ -12,10 +12,12 @@
 #endif
 
 #include <inttypes.h>
+#include <jxl/codestream_header.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
 #include <jxl/resizable_parallel_runner.h>
 #include <jxl/resizable_parallel_runner_cxx.h>
+#include <jxl/types.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>

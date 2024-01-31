@@ -344,13 +344,11 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
                  PNG_FILTER_TYPE_BASE);
     if (count == 0) {
-      if (!MaybeAddSRGB(ppf.color_encoding, png_ptr, info_ptr)) {
+      if (!ppf.icc.empty()) {
+        png_set_benign_errors(png_ptr, 1);
+        png_set_iCCP(png_ptr, info_ptr, "1", 0, ppf.icc.data(), ppf.icc.size());
+      } else if (!MaybeAddSRGB(ppf.color_encoding, png_ptr, info_ptr)) {
         MaybeAddCICP(ppf.color_encoding, png_ptr, info_ptr);
-        if (!ppf.icc.empty()) {
-          png_set_benign_errors(png_ptr, 1);
-          png_set_iCCP(png_ptr, info_ptr, "1", 0, ppf.icc.data(),
-                       ppf.icc.size());
-        }
         MaybeAddCHRM(ppf.color_encoding, png_ptr, info_ptr);
         MaybeAddGAMA(ppf.color_encoding, png_ptr, info_ptr);
       }

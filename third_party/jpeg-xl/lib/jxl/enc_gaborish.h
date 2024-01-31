@@ -8,9 +8,6 @@
 
 // Linear smoothing (3x3 convolution) for deblocking without too much blur.
 
-#include <stdint.h>
-
-#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/image.h"
 

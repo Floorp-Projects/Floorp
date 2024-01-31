@@ -748,8 +748,8 @@ void RoundtripPatchFrame(Image3F* reference_frame,
   cparams.modular_mode = true;
   cparams.responsive = 0;
   cparams.progressive_dc = 0;
-  cparams.progressive_mode = false;
-  cparams.qprogressive_mode = false;
+  cparams.progressive_mode = Override::kOff;
+  cparams.qprogressive_mode = Override::kOff;
   // Use gradient predictor and not Predictor::Best.
   cparams.options.predictor = Predictor::Gradient;
   patch_frame_info.save_as_reference = idx;  // always saved.

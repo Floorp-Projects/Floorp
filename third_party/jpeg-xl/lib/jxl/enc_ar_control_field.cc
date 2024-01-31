@@ -45,6 +45,10 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
                  const ImageF& quant_field, const AcStrategyImage& ac_strategy,
                  ImageB* epf_sharpness, const Rect& rect,
                  ArControlFieldHeuristics::TempImages* temp_image) {
+  JXL_ASSERT(opsin_rect.x0() % 8 == 0);
+  JXL_ASSERT(opsin_rect.y0() % 8 == 0);
+  JXL_ASSERT(opsin_rect.xsize() % 8 == 0);
+  JXL_ASSERT(opsin_rect.ysize() % 8 == 0);
   constexpr size_t N = kBlockDim;
   if (cparams.butteraugli_distance < kMinButteraugliForDynamicAR ||
       cparams.speed_tier > SpeedTier::kWombat ||
@@ -62,73 +66,65 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
   const size_t sharpness_stride =
       static_cast<size_t>(epf_sharpness->PixelsPerRow());
 
-  size_t by0 = rect.y0();
-  size_t by1 = rect.y0() + rect.ysize();
-  size_t bx0 = rect.x0();
-  size_t bx1 = rect.x0() + rect.xsize();
+  size_t by0 = opsin_rect.y0() / 8 + rect.y0();
+  size_t by1 = by0 + rect.ysize();
+  size_t bx0 = opsin_rect.x0() / 8 + rect.x0();
+  size_t bx1 = bx0 + rect.xsize();
   temp_image->InitOnce();
   ImageF& laplacian_sqrsum = temp_image->laplacian_sqrsum;
   // Calculate the L2 of the 3x3 Laplacian in an integral transform
   // (for example 32x32 dct). This relates to transforms ability
   // to propagate artefacts.
-  size_t y0 = by0 == 0 ? 2 : 0;
-  size_t y1 = by1 * N + 4 <= opsin_rect.ysize() + 2
-                  ? (by1 - by0) * N + 4
-                  : opsin_rect.ysize() + 2 - by0 * N;
-  size_t x0 = bx0 == 0 ? 2 : 0;
-  size_t x1 = bx1 * N + 4 <= opsin_rect.xsize() + 2
-                  ? (bx1 - bx0) * N + 4
-                  : opsin_rect.xsize() + 2 - bx0 * N;
+  size_t y0 = by0 == 0 ? 0 : by0 * N - 2;
+  size_t y1 = by1 * N == opsin.ysize() ? by1 * N : by1 * N + 2;
+  size_t x0 = bx0 == 0 ? 0 : bx0 * N - 2;
+  size_t x1 = bx1 * N == opsin.xsize() ? bx1 * N : bx1 * N + 2;
   HWY_FULL(float) df;
   for (size_t y = y0; y < y1; y++) {
-    float* JXL_RESTRICT laplacian_sqrsum_row = laplacian_sqrsum.Row(y);
-    size_t cy = y + by0 * N - 2;
+    float* JXL_RESTRICT laplacian_sqrsum_row =
+        laplacian_sqrsum.Row(y + 2 - by0 * N);
     const float* JXL_RESTRICT in_row_t[3];
     const float* JXL_RESTRICT in_row[3];
     const float* JXL_RESTRICT in_row_b[3];
     for (size_t c = 0; c < 3; c++) {
-      in_row_t[c] = opsin_rect.ConstPlaneRow(opsin, c, cy > 0 ? cy - 1 : cy);
-      in_row[c] = opsin_rect.ConstPlaneRow(opsin, c, cy);
-      in_row_b[c] = opsin_rect.ConstPlaneRow(
-          opsin, c, cy + 1 < opsin_rect.ysize() ? cy + 1 : cy);
+      in_row_t[c] = opsin.ConstPlaneRow(c, y > 0 ? y - 1 : y);
+      in_row[c] = opsin.ConstPlaneRow(c, y);
+      in_row_b[c] = opsin.ConstPlaneRow(c, y + 1 < opsin.ysize() ? y + 1 : y);
     }
     auto compute_laplacian_scalar = [&](size_t x) {
-      size_t cx = x + bx0 * N - 2;
-      const size_t prevX = cx >= 1 ? cx - 1 : cx;
-      const size_t nextX = cx + 1 < opsin_rect.xsize() ? cx + 1 : cx;
+      const size_t prevX = x >= 1 ? x - 1 : x;
+      const size_t nextX = x + 1 < opsin.xsize() ? x + 1 : x;
       float sumsqr = 0;
       for (size_t c = 0; c < 3; c++) {
         float laplacian =
-            kChannelWeights[c] * in_row[c][cx] +
+            kChannelWeights[c] * in_row[c][x] +
             kChannelWeightsLapNeg[c] *
                 (in_row[c][prevX] + in_row[c][nextX] + in_row_b[c][prevX] +
-                 in_row_b[c][cx] + in_row_b[c][nextX] + in_row_t[c][prevX] +
-                 in_row_t[c][cx] + in_row_t[c][nextX]);
+                 in_row_b[c][x] + in_row_b[c][nextX] + in_row_t[c][prevX] +
+                 in_row_t[c][x] + in_row_t[c][nextX]);
         sumsqr += laplacian * laplacian;
       }
-      laplacian_sqrsum_row[x] = sumsqr;
+      laplacian_sqrsum_row[x + 2 - bx0 * N] = sumsqr;
     };
     size_t x = x0;
-    for (; x + bx0 * N < 3; x++) {
+    for (; x < 1; x++) {
       compute_laplacian_scalar(x);
     }
     // Interior. One extra pixel of border as the last pixel is special.
-    for (; x + Lanes(df) <= x1 &&
-           x + Lanes(df) + bx0 * N - 1 <= opsin_rect.xsize();
+    for (; x + Lanes(df) <= x1 && x + Lanes(df) + 1 <= opsin.xsize();
          x += Lanes(df)) {
-      size_t cx = x + bx0 * N - 2;
       auto sumsqr = Zero(df);
       for (size_t c = 0; c < 3; c++) {
         auto laplacian =
-            Mul(LoadU(df, in_row[c] + cx), Set(df, kChannelWeights[c]));
-        auto sum_oth0 = LoadU(df, in_row[c] + cx - 1);
-        auto sum_oth1 = LoadU(df, in_row[c] + cx + 1);
-        auto sum_oth2 = LoadU(df, in_row_t[c] + cx - 1);
-        auto sum_oth3 = LoadU(df, in_row_t[c] + cx);
-        sum_oth0 = Add(sum_oth0, LoadU(df, in_row_t[c] + cx + 1));
-        sum_oth1 = Add(sum_oth1, LoadU(df, in_row_b[c] + cx - 1));
-        sum_oth2 = Add(sum_oth2, LoadU(df, in_row_b[c] + cx));
-        sum_oth3 = Add(sum_oth3, LoadU(df, in_row_b[c] + cx + 1));
+            Mul(LoadU(df, in_row[c] + x), Set(df, kChannelWeights[c]));
+        auto sum_oth0 = LoadU(df, in_row[c] + x - 1);
+        auto sum_oth1 = LoadU(df, in_row[c] + x + 1);
+        auto sum_oth2 = LoadU(df, in_row_t[c] + x - 1);
+        auto sum_oth3 = LoadU(df, in_row_t[c] + x);
+        sum_oth0 = Add(sum_oth0, LoadU(df, in_row_t[c] + x + 1));
+        sum_oth1 = Add(sum_oth1, LoadU(df, in_row_b[c] + x - 1));
+        sum_oth2 = Add(sum_oth2, LoadU(df, in_row_b[c] + x));
+        sum_oth3 = Add(sum_oth3, LoadU(df, in_row_b[c] + x + 1));
         sum_oth0 = Add(sum_oth0, sum_oth1);
         sum_oth2 = Add(sum_oth2, sum_oth3);
         sum_oth0 = Add(sum_oth0, sum_oth2);
@@ -136,7 +132,7 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
             MulAdd(Set(df, kChannelWeightsLapNeg[c]), sum_oth0, laplacian);
         sumsqr = MulAdd(laplacian, laplacian, sumsqr);
       }
-      StoreU(sumsqr, df, laplacian_sqrsum_row + x);
+      StoreU(sumsqr, df, laplacian_sqrsum_row + x + 2 - bx0 * N);
     }
     for (; x < x1; x++) {
       compute_laplacian_scalar(x);
@@ -150,13 +146,13 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
   ImageF& sqrsum_00 = temp_image->sqrsum_00;
   size_t sqrsum_00_stride = sqrsum_00.PixelsPerRow();
   float* JXL_RESTRICT sqrsum_00_row = sqrsum_00.Row(0);
-  for (size_t y = 0; y < (by1 - by0) * 2; y++) {
+  for (size_t y = 0; y < rect.ysize() * 2; y++) {
     const float* JXL_RESTRICT rows_in[4];
     for (size_t iy = 0; iy < 4; iy++) {
       rows_in[iy] = laplacian_sqrsum.ConstRow(y * 4 + iy + 2);
     }
     float* JXL_RESTRICT row_out = sqrsum_00_row + y * sqrsum_00_stride;
-    for (size_t x = 0; x < (bx1 - bx0) * 2; x++) {
+    for (size_t x = 0; x < rect.xsize() * 2; x++) {
       auto sum = Zero(df4);
       for (size_t iy = 0; iy < 4; iy++) {
         for (size_t ix = 0; ix < 4; ix += Lanes(df4)) {
@@ -173,7 +169,7 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
   ImageF& sqrsum_22 = temp_image->sqrsum_22;
   size_t sqrsum_22_stride = sqrsum_22.PixelsPerRow();
   float* JXL_RESTRICT sqrsum_22_row = sqrsum_22.Row(0);
-  for (size_t y = 0; y < (by1 - by0) * 2 + 1; y++) {
+  for (size_t y = 0; y < rect.ysize() * 2 + 1; y++) {
     const float* JXL_RESTRICT rows_in[4];
     for (size_t iy = 0; iy < 4; iy++) {
       rows_in[iy] = laplacian_sqrsum.ConstRow(y * 4 + iy);
@@ -182,21 +178,21 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
     // ignore pixels outside the image.
     // Y coordinates are relative to by0*8+y*4.
     size_t sy = y * 4 + by0 * 8 > 0 ? 0 : 2;
-    size_t ey = y * 4 + by0 * 8 + 4 <= opsin_rect.ysize() + 2
+    size_t ey = y * 4 + by0 * 8 + 2 <= opsin.ysize()
                     ? 4
-                    : opsin_rect.ysize() - y * 4 - by0 * 8 + 2;
-    for (size_t x = 0; x < (bx1 - bx0) * 2 + 1; x++) {
+                    : opsin.ysize() - y * 4 - by0 * 8 + 2;
+    for (size_t x = 0; x < rect.xsize() * 2 + 1; x++) {
       // ignore pixels outside the image.
       // X coordinates are relative to bx0*8.
       size_t sx = x * 4 + bx0 * 8 > 0 ? x * 4 : x * 4 + 2;
-      size_t ex = x * 4 + bx0 * 8 + 4 <= opsin_rect.xsize() + 2
+      size_t ex = x * 4 + bx0 * 8 + 2 <= opsin.xsize()
                       ? x * 4 + 4
-                      : opsin_rect.xsize() - bx0 * 8 + 2;
+                      : opsin.xsize() - bx0 * 8 + 2;
       if (ex - sx == 4 && ey - sy == 4) {
         auto sum = Zero(df4);
-        for (size_t iy = 0; iy < 4; iy++) {
-          for (size_t ix = 0; ix < 4; ix += Lanes(df4)) {
-            sum = Add(sum, Load(df4, rows_in[iy] + sx + ix));
+        for (size_t iy = sy; iy < ey; iy++) {
+          for (size_t ix = sx; ix < ex; ix += Lanes(df4)) {
+            sum = Add(sum, Load(df4, rows_in[iy] + ix));
           }
         }
         row_out[x] = GetLane(Sqrt(SumOfLanes(df4, sum))) * (1.0f / 4.0f);
@@ -211,11 +207,11 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
       }
     }
   }
-  for (size_t by = by0; by < by1; by++) {
+  for (size_t by = rect.y0(); by < rect.y1(); by++) {
     AcStrategyRow acs_row = ac_strategy.ConstRow(by);
     uint8_t* JXL_RESTRICT out_row = epf_sharpness->Row(by);
     const float* JXL_RESTRICT quant_row = quant_field.Row(by);
-    for (size_t bx = bx0; bx < bx1; bx++) {
+    for (size_t bx = rect.x0(); bx < rect.x1(); bx++) {
       AcStrategy acs = acs_row[bx];
       if (!acs.IsFirstBlock()) continue;
       // The errors are going to be linear to the quantization value in this
@@ -223,12 +219,12 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
       float quant_val = 1.0f / quant_row[bx];
 
       const auto sq00 = [&](size_t y, size_t x) {
-        return sqrsum_00_row[((by - by0) * 2 + y) * sqrsum_00_stride +
-                             (bx - bx0) * 2 + x];
+        return sqrsum_00_row[((by - rect.y0()) * 2 + y) * sqrsum_00_stride +
+                             (bx - rect.x0()) * 2 + x];
       };
       const auto sq22 = [&](size_t y, size_t x) {
-        return sqrsum_22_row[((by - by0) * 2 + y) * sqrsum_22_stride +
-                             (bx - bx0) * 2 + x];
+        return sqrsum_22_row[((by - rect.y0()) * 2 + y) * sqrsum_22_stride +
+                             (bx - rect.x0()) * 2 + x];
       };
       float sqrsum_integral_transform = 0;
       for (size_t iy = 0; iy < acs.covered_blocks_y() * 2; iy++) {

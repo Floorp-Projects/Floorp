@@ -5,12 +5,17 @@
 
 #include <jxl/cms.h>
 
+#include <cstddef>
+#include <utility>
+
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/matrix_ops.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/testing.h"
 

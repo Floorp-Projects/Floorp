@@ -8,11 +8,18 @@
 #include "lib/extras/dec/jpegli.h"
 
 #include <jxl/color_encoding.h>
+#include <jxl/types.h>
 #include <stdint.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <memory>
+#include <ostream>
+#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lib/extras/dec/color_hints.h"

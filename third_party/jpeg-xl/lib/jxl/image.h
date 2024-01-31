@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <string>
 #include <utility>  // std::move
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -328,7 +329,7 @@ class RectT {
     return CeilShiftRight(shift, shift);
   }
 
-  RectT<T> Extend(T border, RectT<T> parent) {
+  RectT<T> Extend(T border, RectT<T> parent) const {
     T new_x0 = x0() > parent.x0() + border ? x0() - border : parent.x0();
     T new_y0 = y0() > parent.y0() + border ? y0() - border : parent.y0();
     T new_x1 = x1() + border > parent.x1() ? parent.x1() : x1() + border;

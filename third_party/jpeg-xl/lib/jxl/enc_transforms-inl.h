@@ -402,7 +402,7 @@ void AFVTransformFromPixels(const float* JXL_RESTRICT pixels,
   HWY_ALIGN float scratch_space[4 * 8 * 5];
   size_t afv_x = afv_kind & 1;
   size_t afv_y = afv_kind / 2;
-  HWY_ALIGN float block[4 * 8];
+  HWY_ALIGN float block[4 * 8] = {};
   for (size_t iy = 0; iy < 4; iy++) {
     for (size_t ix = 0; ix < 4; ix++) {
       block[(afv_y == 1 ? 3 - iy : iy) * 4 + (afv_x == 1 ? 3 - ix : ix)] =

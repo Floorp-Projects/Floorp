@@ -145,7 +145,6 @@ Status CopyColorChannels(JxlChunkedFrameInputSource input, Rect rect,
                        " color channels, received only %u channels",
                        color_channels, format.num_channels);
   }
-  *color = Image3F(rect.xsize(), rect.ysize());
   const uint8_t* data = reinterpret_cast<const uint8_t*>(buffer.get());
   for (size_t c = 0; c < color_channels; ++c) {
     JXL_RETURN_IF_ERROR(ConvertFromExternalNoSizeCheck(
@@ -221,12 +220,14 @@ void SetProgressiveMode(const CompressParams& cparams,
       {/*num_coefficients=*/8, /*shift=*/0,
        /*suitable_for_downsampling_of_at_least=*/0},
   };
+  bool progressive_mode = ApplyOverride(cparams.progressive_mode, false);
+  bool qprogressive_mode = ApplyOverride(cparams.qprogressive_mode, false);
   if (cparams.custom_progressive_mode) {
     progressive_splitter->SetProgressiveMode(*cparams.custom_progressive_mode);
-  } else if (cparams.qprogressive_mode) {
+  } else if (qprogressive_mode) {
     progressive_splitter->SetProgressiveMode(
         ProgressiveMode{progressive_passes_dc_quant_ac_full_ac});
-  } else if (cparams.progressive_mode) {
+  } else if (progressive_mode) {
     progressive_splitter->SetProgressiveMode(
         ProgressiveMode{progressive_passes_dc_vlf_lf_full_ac});
   }
@@ -630,7 +631,7 @@ void ComputeChromacityAdjustments(const CompressParams& cparams,
   // look at the individual pixels and make a guess how difficult
   // the image would be based on the worst case pixel.
   PixelStatsForChromacityAdjustment pixel_stats;
-  if (cparams.speed_tier <= SpeedTier::kWombat) {
+  if (cparams.speed_tier <= SpeedTier::kSquirrel) {
     pixel_stats.Calc(&opsin, rect);
   }
   // For X take the most severe adjustment.
@@ -640,8 +641,9 @@ void ComputeChromacityAdjustments(const CompressParams& cparams,
   frame_header->b_qm_scale = 2 + pixel_stats.HowMuchIsBChannelPixelized();
 }
 
-void ComputeNoiseParams(const CompressParams& cparams, bool color_is_jpeg,
-                        const Image3F& opsin, const FrameDimensions& frame_dim,
+void ComputeNoiseParams(const CompressParams& cparams, bool streaming_mode,
+                        bool color_is_jpeg, const Image3F& opsin,
+                        const FrameDimensions& frame_dim,
                         FrameHeader* frame_header, NoiseParams* noise_params) {
   if (cparams.photon_noise_iso > 0) {
     *noise_params = SimulatePhotonNoise(frame_dim.xsize, frame_dim.ysize,
@@ -651,7 +653,8 @@ void ComputeNoiseParams(const CompressParams& cparams, bool color_is_jpeg,
       noise_params->lut[i] = cparams.manual_noise[i];
     }
   } else if (frame_header->encoding == FrameEncoding::kVarDCT &&
-             frame_header->flags & FrameHeader::kNoise && !color_is_jpeg) {
+             frame_header->flags & FrameHeader::kNoise && !color_is_jpeg &&
+             !streaming_mode) {
     // Don't start at zero amplitude since adding noise is expensive -- it
     // significantly slows down decoding, and this is unlikely to
     // completely go away even with advanced optimizations. After the
@@ -1397,10 +1400,13 @@ Status ComputeEncodingData(
   Rect patch_rect = Rect(x0, y0, xsize, ysize).Extend(max_border, frame_rect);
   JXL_ASSERT(patch_rect.IsInside(frame_rect));
 
-  Image3F color;
+  // Allocating a large enough image avoids a copy when padding.
+  Image3F color(RoundUpToBlockDim(patch_rect.xsize()),
+                RoundUpToBlockDim(patch_rect.ysize()));
+  color.ShrinkTo(patch_rect.xsize(), patch_rect.ysize());
   std::vector<ImageF> extra_channels(num_extra_channels);
   for (auto& extra_channel : extra_channels) {
-    extra_channel = jxl::ImageF(xsize, ysize);
+    extra_channel = jxl::ImageF(patch_rect.xsize(), patch_rect.ysize());
   }
   ImageF* alpha = alpha_eci ? &extra_channels[alpha_idx] : nullptr;
   ImageF* black = black_eci ? &extra_channels[black_idx] : nullptr;
@@ -1421,27 +1427,21 @@ Status ComputeEncodingData(
   Image3F linear_storage;
   Image3F* linear = nullptr;
 
-  Image3F opsin;
   if (!jpeg_data) {
-    // Allocating a large enough image avoids a copy when padding.
-    opsin = Image3F(RoundUpToBlockDim(color.xsize()),
-                    RoundUpToBlockDim(color.ysize()));
-    opsin.ShrinkTo(color.xsize(), color.ysize());
     if (frame_header.color_transform == ColorTransform::kXYB &&
         frame_info.ib_needs_color_transform) {
       if (frame_header.encoding == FrameEncoding::kVarDCT &&
           cparams.speed_tier <= SpeedTier::kKitten) {
-        linear_storage = Image3F(color.xsize(), color.ysize());
+        linear_storage = Image3F(patch_rect.xsize(), patch_rect.ysize());
         linear = &linear_storage;
       }
-      ToXYB(color, c_enc, metadata->m.IntensityTarget(), black, pool, &opsin,
-            cms, linear);
-    } else {  // RGB or YCbCr: don't do anything (forward YCbCr is not
-              // implemented, this is only used when the input is already in
-              // YCbCr)
-              // If encoding a special DC or reference frame, don't do anything:
-              // input is already in XYB.
-      CopyImageTo(color, &opsin);
+      ToXYB(c_enc, metadata->m.IntensityTarget(), black, pool, &color, cms,
+            linear);
+    } else {
+      // Nothing to do.
+      // RGB or YCbCr: forward YCbCr is not implemented, this is only used when
+      // the input is already in YCbCr
+      // If encoding a special DC or reference frame: input is already in XYB.
     }
     bool lossless = cparams.IsLossless();
     if (alpha && !alpha_eci->alpha_associated &&
@@ -1449,32 +1449,29 @@ Status ComputeEncodingData(
         !ApplyOverride(cparams.keep_invisible, lossless) &&
         cparams.ec_resampling == cparams.resampling) {
       // simplify invisible pixels
-      SimplifyInvisible(&opsin, *alpha, lossless);
+      SimplifyInvisible(&color, *alpha, lossless);
       if (linear) {
         SimplifyInvisible(linear, *alpha, lossless);
       }
     }
-    PadImageToBlockMultipleInPlace(&opsin);
+    PadImageToBlockMultipleInPlace(&color);
   }
-  color = Image3F();
 
-  // Rectangle within opsin that corresponds to the currently processed group in
+  // Rectangle within color that corresponds to the currently processed group in
   // streaming mode.
-  Rect opsin_rect(x0 - patch_rect.x0(), y0 - patch_rect.y0(),
+  Rect group_rect(x0 - patch_rect.x0(), y0 - patch_rect.y0(),
                   RoundUpToBlockDim(xsize), RoundUpToBlockDim(ysize));
 
   if (enc_state.initialize_global_state && !jpeg_data) {
-    ComputeChromacityAdjustments(cparams, opsin, opsin_rect,
+    ComputeChromacityAdjustments(cparams, color, group_rect,
                                  &mutable_frame_header);
   }
 
-  if (!enc_state.streaming_mode) {
-    ComputeNoiseParams(cparams, !!jpeg_data, opsin, frame_dim,
-                       &mutable_frame_header,
-                       &shared.image_features.noise_params);
-  }
+  ComputeNoiseParams(cparams, enc_state.streaming_mode, !!jpeg_data, color,
+                     frame_dim, &mutable_frame_header,
+                     &shared.image_features.noise_params);
 
-  DownsampleColorChannels(cparams, frame_header, !!jpeg_data, &opsin);
+  DownsampleColorChannels(cparams, frame_header, !!jpeg_data, &color);
 
   if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
     for (ImageF& ec : extra_channels) {
@@ -1483,7 +1480,7 @@ Status ComputeEncodingData(
   }
 
   if (!enc_state.streaming_mode) {
-    opsin_rect = Rect(opsin);
+    group_rect = Rect(color);
   }
 
   if (frame_header.encoding == FrameEncoding::kVarDCT) {
@@ -1496,7 +1493,7 @@ Status ComputeEncodingData(
           *jpeg_data, frame_header, pool, &enc_modular, &enc_state));
     } else {
       JXL_RETURN_IF_ERROR(ComputeVarDCTEncodingData(
-          frame_header, linear, &opsin, opsin_rect, cms, pool, &enc_modular,
+          frame_header, linear, &color, group_rect, cms, pool, &enc_modular,
           &enc_state, aux_out));
     }
     ComputeAllCoeffOrders(enc_state, frame_dim);
@@ -1508,16 +1505,15 @@ Status ComputeEncodingData(
         TokenizeAllCoefficients(frame_header, pool, &enc_state));
   }
 
-  JXL_RETURN_IF_ERROR(enc_modular.ComputeEncodingData(
-      frame_header, metadata->m, &opsin, extra_channels, &enc_state, cms, pool,
-      aux_out,
-      /* do_color=*/frame_header.encoding == FrameEncoding::kModular));
-  if (enc_state.initialize_global_state) {
-    JXL_RETURN_IF_ERROR(enc_modular.ComputeTree(pool));
-  }
-  JXL_RETURN_IF_ERROR(enc_modular.ComputeTokens(pool));
-
   if (!enc_state.streaming_mode) {
+    if (cparams.modular_mode || !extra_channels.empty()) {
+      JXL_RETURN_IF_ERROR(enc_modular.ComputeEncodingData(
+          frame_header, metadata->m, &color, extra_channels, &enc_state, cms,
+          pool, aux_out, /*do_color=*/cparams.modular_mode));
+    }
+    JXL_RETURN_IF_ERROR(enc_modular.ComputeTree(pool));
+    JXL_RETURN_IF_ERROR(enc_modular.ComputeTokens(pool));
+
     mutable_frame_header.UpdateFlag(shared.image_features.patches.HasAny(),
                                     FrameHeader::kPatches);
     mutable_frame_header.UpdateFlag(shared.image_features.splines.HasAny(),
@@ -1683,10 +1679,10 @@ void ComputePermutationForStreaming(size_t xsize, size_t ysize,
       size_t ac_x0 = dc_x * kBlockDim;
       size_t ac_y1 = std::min<size_t>(group_ysize, ac_y0 + kBlockDim);
       size_t ac_x1 = std::min<size_t>(group_xsize, ac_x0 + kBlockDim);
-      for (size_t ac_y = ac_y0; ac_y < ac_y1; ++ac_y) {
-        for (size_t ac_x = ac_x0; ac_x < ac_x1; ++ac_x) {
-          size_t group_ix = ac_y * group_xsize + ac_x;
-          for (size_t pass = 0; pass < num_passes; ++pass) {
+      for (size_t pass = 0; pass < num_passes; ++pass) {
+        for (size_t ac_y = ac_y0; ac_y < ac_y1; ++ac_y) {
+          for (size_t ac_x = ac_x0; ac_x < ac_x1; ++ac_x) {
+            size_t group_ix = ac_y * group_xsize + ac_x;
             size_t old_ix =
                 AcGroupIndex(pass, group_ix, num_groups, num_dc_groups);
             permutation[old_ix] = new_ix++;

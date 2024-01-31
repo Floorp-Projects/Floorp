@@ -5,6 +5,7 @@
 
 #include <jxl/decode.h>
 #include <jxl/types.h>
+#include <jxl/version.h>
 
 #include <algorithm>
 #include <array>

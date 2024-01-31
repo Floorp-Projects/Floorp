@@ -16,10 +16,8 @@
 #pragma pop_macro("PRIuS")
 #pragma pop_macro("PRIdS")
 
-#include <sstream>
-
-// JPEGXL_ENABLE_BOXES, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "gtest/gtest.h"
+// JPEGXL_ENABLE_BOXES, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/common.h"
 
 #ifdef JXL_DISABLE_SLOW_TESTS
@@ -45,6 +43,12 @@
 #else
 #define JXL_TSAN_SLOW_TEST(X) X
 #endif  // THREAD_SANITIZER
+
+#if defined(__x86_64__)
+#define JXL_X86_64_TEST(X) X
+#else
+#define JXL_X86_64_TEST(X) DISABLED_##X
+#endif  // defined(__x86_64__)
 
 // googletest before 1.10 didn't define INSTANTIATE_TEST_SUITE_P() but instead
 // used INSTANTIATE_TEST_CASE_P which is now deprecated.

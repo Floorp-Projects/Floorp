@@ -39,7 +39,7 @@ static float WeightedSumBorder(const ImageF& in, const WrapY wrap_y,
   const float sum_2 = wx2 * (in_m2 + in_p2);
   const float sum_1 = wx1 * (in_m1 + in_p1);
   const float sum_0 = wx0 * in_00;
-  return sum_2 + sum_1 + sum_0;
+  return sum_2 + (sum_1 + sum_0);
 }
 
 template <class WrapY, class V>

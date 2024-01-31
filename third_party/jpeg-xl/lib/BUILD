@@ -200,9 +200,6 @@ cc_library(
     compatible_with = DEFAULT_COMPATIBILITY,
     defines = [
         "JPEGXL_ENABLE_SKCMS=1",
-        "JPEGXL_MAJOR_VERSION=" + str(libjxl_major_version),
-        "JPEGXL_MINOR_VERSION=" + str(libjxl_minor_version),
-        "JPEGXL_PATCH_VERSION=" + str(libjxl_patch_version),
     ],
     deps = [
         ":base",

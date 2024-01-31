@@ -16,6 +16,7 @@
 #ifndef JXL_RESIZABLE_PARALLEL_RUNNER_CXX_H_
 #define JXL_RESIZABLE_PARALLEL_RUNNER_CXX_H_
 
+#include <jxl/memory_manager.h>
 #include <jxl/resizable_parallel_runner.h>
 
 #include <memory>

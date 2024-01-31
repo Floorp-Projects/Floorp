@@ -16,6 +16,11 @@ if(benchmark_FOUND)
       INTERFACE_LINK_LIBRARIES "Threads::Threads;-lrt")
   endif()
 
+  list(APPEND JPEGXL_INTERNAL_TESTS
+    # TODO(eustas): Move this to tools/
+    ../tools/gauss_blur_gbench.cc
+  )
+
   # Compiles all the benchmark files into a single binary. Individual benchmarks
   # can be run with --benchmark_filter.
   add_executable(jxl_gbench "${JPEGXL_INTERNAL_GBENCH_SOURCES}" gbench_main.cc)

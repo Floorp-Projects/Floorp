@@ -163,11 +163,10 @@ if (JPEGXL_ENABLE_JPEGLI)
   include(jpegli.cmake)
 endif()
 
-# Install all the library headers from the source and the generated ones. There
-# is no distinction on which libraries use which header since it is expected
-# that all developer libraries are available together at build time.
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/jxl
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+# For simplicity all the library headers, both source and generated ones, are
+# gathered in the binary folder. There is no distinction on which libraries use
+# which header since it is expected that all developer libraries are available
+# together at build time.
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/jxl
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 

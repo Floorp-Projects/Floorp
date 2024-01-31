@@ -67,6 +67,38 @@ inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
   };
 }
 
+// `cutoffs` must be sorted.
+Tree MakeFixedTree(int property, const std::vector<int32_t> &cutoffs,
+                   Predictor pred, size_t num_pixels) {
+  size_t log_px = CeilLog2Nonzero(num_pixels);
+  size_t min_gap = 0;
+  // Reduce fixed tree height when encoding small images.
+  if (log_px < 14) {
+    min_gap = 8 * (14 - log_px);
+  }
+  Tree tree;
+  struct NodeInfo {
+    size_t begin, end, pos;
+  };
+  std::queue<NodeInfo> q;
+  // Leaf IDs will be set by roundtrip decoding the tree.
+  tree.push_back(PropertyDecisionNode::Leaf(pred));
+  q.push(NodeInfo{0, cutoffs.size(), 0});
+  while (!q.empty()) {
+    NodeInfo info = q.front();
+    q.pop();
+    if (info.begin + min_gap >= info.end) continue;
+    uint32_t split = (info.begin + info.end) / 2;
+    tree[info.pos] =
+        PropertyDecisionNode::Split(property, cutoffs[split], tree.size());
+    q.push(NodeInfo{split + 1, info.end, tree.size()});
+    tree.push_back(PropertyDecisionNode::Leaf(pred));
+    q.push(NodeInfo{info.begin, split, tree.size()});
+    tree.push_back(PropertyDecisionNode::Leaf(pred));
+  }
+  return tree;
+}
+
 }  // namespace
 
 void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
@@ -166,6 +198,83 @@ void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
       }
     }
   }
+}
+
+Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels) {
+  if (tree_kind == ModularOptions::TreeKind::kJpegTranscodeACMeta ||
+      tree_kind == ModularOptions::TreeKind::kTrivialTreeNoPredictor) {
+    // All the data is 0, so no need for a fancy tree.
+    return {PropertyDecisionNode::Leaf(Predictor::Zero)};
+  }
+  if (tree_kind == ModularOptions::TreeKind::kFalconACMeta) {
+    // All the data is 0 except the quant field. TODO(veluca): make that 0 too.
+    return {PropertyDecisionNode::Leaf(Predictor::Left)};
+  }
+  if (tree_kind == ModularOptions::TreeKind::kACMeta) {
+    // Small image.
+    if (total_pixels < 1024) {
+      return {PropertyDecisionNode::Leaf(Predictor::Left)};
+    }
+    Tree tree;
+    // 0: c > 1
+    tree.push_back(PropertyDecisionNode::Split(0, 1, 1));
+    // 1: c > 2
+    tree.push_back(PropertyDecisionNode::Split(0, 2, 3));
+    // 2: c > 0
+    tree.push_back(PropertyDecisionNode::Split(0, 0, 5));
+    // 3: EPF control field (all 0 or 4), top > 0
+    tree.push_back(PropertyDecisionNode::Split(6, 0, 21));
+    // 4: ACS+QF, y > 0
+    tree.push_back(PropertyDecisionNode::Split(2, 0, 7));
+    // 5: CfL x
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Gradient));
+    // 6: CfL b
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Gradient));
+    // 7: QF: split according to the left quant value.
+    tree.push_back(PropertyDecisionNode::Split(7, 5, 9));
+    // 8: ACS: split in 4 segments (8x8 from 0 to 3, large square 4-5, large
+    // rectangular 6-11, 8x8 12+), according to previous ACS value.
+    tree.push_back(PropertyDecisionNode::Split(7, 5, 15));
+    // QF
+    tree.push_back(PropertyDecisionNode::Split(7, 11, 11));
+    tree.push_back(PropertyDecisionNode::Split(7, 3, 13));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Left));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Left));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Left));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Left));
+    // ACS
+    tree.push_back(PropertyDecisionNode::Split(7, 11, 17));
+    tree.push_back(PropertyDecisionNode::Split(7, 3, 19));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    // EPF, left > 0
+    tree.push_back(PropertyDecisionNode::Split(7, 0, 23));
+    tree.push_back(PropertyDecisionNode::Split(7, 0, 25));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
+    return tree;
+  }
+  if (tree_kind == ModularOptions::TreeKind::kWPFixedDC) {
+    std::vector<int32_t> cutoffs = {
+        -500, -392, -255, -191, -127, -95, -63, -47, -31, -23, -15,
+        -11,  -7,   -4,   -3,   -1,   0,   1,   3,   5,   7,   11,
+        15,   23,   31,   47,   63,   95,  127, 191, 255, 392, 500};
+    return MakeFixedTree(kWPProp, cutoffs, Predictor::Weighted, total_pixels);
+  }
+  if (tree_kind == ModularOptions::TreeKind::kGradientFixedDC) {
+    std::vector<int32_t> cutoffs = {
+        -500, -392, -255, -191, -127, -95, -63, -47, -31, -23, -15,
+        -11,  -7,   -4,   -3,   -1,   0,   1,   3,   5,   7,   11,
+        15,   23,   31,   47,   63,   95,  127, 191, 255, 392, 500};
+    return MakeFixedTree(kGradientProp, cutoffs, Predictor::Gradient,
+                         total_pixels);
+  }
+  JXL_UNREACHABLE("Unreachable");
+  return {};
 }
 
 Tree LearnTree(TreeSamples &&tree_samples, size_t total_pixels,
@@ -494,8 +603,11 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
     std::vector<uint8_t> context_map;
 
     std::vector<std::vector<Token>> tree_tokens(1);
+
     tree_storage =
-        LearnTree(std::move(tree_samples_storage), *total_pixels, options);
+        options.tree_kind == ModularOptions::TreeKind::kLearn
+            ? LearnTree(std::move(tree_samples_storage), *total_pixels, options)
+            : PredefinedTree(options.tree_kind, *total_pixels);
     tree = &tree_storage;
     tokens = &tokens_storage[0];
 

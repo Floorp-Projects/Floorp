@@ -368,8 +368,7 @@ Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
       JXL_QUIET_RETURN_IF_ERROR(visitor->VisitNested(&animation_frame));
     }
     JXL_QUIET_RETURN_IF_ERROR(visitor->Bool(true, &is_last));
-  }
-  if (frame_type != FrameType::kRegularFrame) {
+  } else {
     is_last = false;
   }
 

@@ -7,17 +7,21 @@
 #ifndef LIB_JXL_ENCODE_INTERNAL_H_
 #define LIB_JXL_ENCODE_INTERNAL_H_
 
+#include <jxl/cms_interface.h>
+#include <jxl/codestream_header.h>
 #include <jxl/encode.h>
 #include <jxl/memory_manager.h>
-#include <jxl/parallel_runner.h>
 #include <jxl/types.h>
-#include <sys/types.h>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -29,6 +33,7 @@
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_fast_lossless.h"
 #include "lib/jxl/enc_params.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 #include "lib/jxl/memory_manager_internal.h"
 #include "lib/jxl/padded_bytes.h"

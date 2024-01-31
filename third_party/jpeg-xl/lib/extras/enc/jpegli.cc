@@ -7,12 +7,33 @@
 
 #include <jxl/cms.h>
 #include <jxl/codestream_header.h>
+#include <jxl/types.h>
 #include <setjmp.h>
 #include <stdint.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <hwy/aligned_allocator.h>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "lib/extras/enc/encode.h"
+#include "lib/extras/packed_image.h"
+#include "lib/jpegli/common.h"
 #include "lib/jpegli/encode.h"
+#include "lib/jpegli/types.h"
+#include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_xyb.h"
+#include "lib/jxl/image.h"
 
 namespace jxl {
 namespace extras {

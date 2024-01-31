@@ -41,7 +41,6 @@
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/epf.h"
 #include "lib/jxl/frame_dimensions.h"
-#include "lib/jxl/gauss_blur.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
@@ -408,8 +407,10 @@ struct AdaptiveQuantizationImpl {
   void ComputeTile(float butteraugli_target, float scale, const Image3F& xyb,
                    const Rect& rect_in, const Rect& rect_out, const int thread,
                    ImageF* mask, ImageF* mask1x1) {
-    const size_t xsize = rect_in.xsize();
-    const size_t ysize = rect_in.ysize();
+    JXL_ASSERT(rect_in.x0() % 8 == 0);
+    JXL_ASSERT(rect_in.y0() % 8 == 0);
+    const size_t xsize = xyb.xsize();
+    const size_t ysize = xyb.ysize();
 
     // The XYB gamma is 3.0 to be able to decode faster with two muls.
     // Butteraugli's gamma is matching the gamma of human eye, around 2.6.
@@ -420,21 +421,30 @@ struct AdaptiveQuantizationImpl {
 
     const HWY_FULL(float) df;
 
-    size_t y_start = rect_out.y0() * 8;
-    size_t y_end = y_start + rect_out.ysize() * 8;
+    size_t y_start_1x1 = rect_in.y0() + rect_out.y0() * 8;
+    size_t y_end_1x1 = y_start_1x1 + rect_out.ysize() * 8;
 
-    size_t x_start = rect_out.x0() * 8;
-    size_t x_end = x_start + rect_out.xsize() * 8;
+    size_t x_start_1x1 = rect_in.x0() + rect_out.x0() * 8;
+    size_t x_end_1x1 = x_start_1x1 + rect_out.xsize() * 8;
+
+    if (rect_in.x0() != 0 && rect_out.x0() == 0) x_start_1x1 -= 2;
+    if (rect_in.x1() < xsize && rect_out.x1() * 8 == rect_in.xsize()) {
+      x_end_1x1 += 2;
+    }
+    if (rect_in.y0() != 0 && rect_out.y0() == 0) y_start_1x1 -= 2;
+    if (rect_in.y1() < ysize && rect_out.y1() * 8 == rect_in.ysize()) {
+      y_end_1x1 += 2;
+    }
 
     // Computes image (padded to multiple of 8x8) of local pixel differences.
     // Subsample both directions by 4.
     // 1x1 Laplacian of intensity.
-    for (size_t y = y_start; y < y_end; ++y) {
+    for (size_t y = y_start_1x1; y < y_end_1x1; ++y) {
       const size_t y2 = y + 1 < ysize ? y + 1 : y;
       const size_t y1 = y > 0 ? y - 1 : y;
-      const float* row_in = rect_in.ConstPlaneRow(xyb, 1, y);
-      const float* row_in1 = rect_in.ConstPlaneRow(xyb, 1, y1);
-      const float* row_in2 = rect_in.ConstPlaneRow(xyb, 1, y2);
+      const float* row_in = xyb.ConstPlaneRow(1, y);
+      const float* row_in1 = xyb.ConstPlaneRow(1, y1);
+      const float* row_in2 = xyb.ConstPlaneRow(1, y2);
       float* mask1x1_out = mask1x1->Row(y);
       auto scalar_pixel1x1 = [&](size_t x) {
         const size_t x2 = x + 1 < xsize ? x + 1 : x;
@@ -451,15 +461,21 @@ struct AdaptiveQuantizationImpl {
         static const float kOffset = 0.01;
         mask1x1_out[x] = kMul / (diff + kOffset);
       };
-      for (size_t x = x_start; x < x_end; ++x) {
+      for (size_t x = x_start_1x1; x < x_end_1x1; ++x) {
         scalar_pixel1x1(x);
       }
     }
 
+    size_t y_start = rect_in.y0() + rect_out.y0() * 8;
+    size_t y_end = y_start + rect_out.ysize() * 8;
+
+    size_t x_start = rect_in.x0() + rect_out.x0() * 8;
+    size_t x_end = x_start + rect_out.xsize() * 8;
+
     if (x_start != 0) x_start -= 4;
-    if (x_end != rect_in.xsize()) x_end += 4;
+    if (x_end != xsize) x_end += 4;
     if (y_start != 0) y_start -= 4;
-    if (y_end != rect_in.ysize()) y_end += 4;
+    if (y_end != ysize) y_end += 4;
     pre_erosion[thread].ShrinkTo((x_end - x_start) / 4, (y_end - y_start) / 4);
 
     static const float limit = 0.2f;
@@ -467,9 +483,9 @@ struct AdaptiveQuantizationImpl {
       size_t y2 = y + 1 < ysize ? y + 1 : y;
       size_t y1 = y > 0 ? y - 1 : y;
 
-      const float* row_in = rect_in.ConstPlaneRow(xyb, 1, y);
-      const float* row_in1 = rect_in.ConstPlaneRow(xyb, 1, y1);
-      const float* row_in2 = rect_in.ConstPlaneRow(xyb, 1, y2);
+      const float* row_in = xyb.ConstPlaneRow(1, y);
+      const float* row_in1 = xyb.ConstPlaneRow(1, y1);
+      const float* row_in2 = xyb.ConstPlaneRow(1, y2);
       float* JXL_RESTRICT row_out = diff_buffer.Row(thread);
 
       auto scalar_pixel = [&](size_t x) {
@@ -552,7 +568,8 @@ struct AdaptiveQuantizationImpl {
   ImageF diff_buffer;
 };
 
-static void Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1) {
+static void Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1,
+                           const Rect& rect) {
   // Blur the mask1x1 to obtain the masking image.
   // Before blurring it contains an image of absolute value of the
   // Laplacian of the intensity channel.
@@ -578,10 +595,9 @@ static void Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1) {
                         {HWY_REP4(normalize_mul * kFilterMask1x1[1])},
                         {HWY_REP4(normalize_mul * kFilterMask1x1[4])},
                         {HWY_REP4(normalize_mul * kFilterMask1x1[3])}};
-  Rect from_rect(0, 0, mask1x1->xsize(), mask1x1->ysize());
-  ImageF temp(mask1x1->xsize(), mask1x1->ysize());
-  Symmetric5(*mask1x1, from_rect, weights, pool, &temp);
-  CopyImageTo(temp, mask1x1);  // TODO: make it a swap
+  ImageF temp(rect.xsize(), rect.ysize());
+  Symmetric5(*mask1x1, rect, weights, pool, &temp);
+  *mask1x1 = std::move(temp);
 }
 
 ImageF AdaptiveQuantizationMap(const float butteraugli_target,
@@ -595,7 +611,7 @@ ImageF AdaptiveQuantizationMap(const float butteraugli_target,
   const size_t ysize_blocks = rect.ysize() / kBlockDim;
   impl.aq_map = ImageF(xsize_blocks, ysize_blocks);
   *mask = ImageF(xsize_blocks, ysize_blocks);
-  *mask1x1 = ImageF(rect.xsize(), rect.ysize());
+  *mask1x1 = ImageF(xyb.xsize(), xyb.ysize());
   JXL_CHECK(RunOnPool(
       pool, 0,
       DivCeil(xsize_blocks, kEncTileDimInBlocks) *
@@ -618,7 +634,7 @@ ImageF AdaptiveQuantizationMap(const float butteraugli_target,
       },
       "AQ DiffPrecompute"));
 
-  Blur1x1Masking(pool, mask1x1);
+  Blur1x1Masking(pool, mask1x1, rect);
   return std::move(impl).aq_map;
 }
 

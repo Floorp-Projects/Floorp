@@ -5,27 +5,32 @@
 
 #include <jxl/cms.h>
 #include <jxl/codestream_header.h>
+#include <jxl/color_encoding.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
 #include <jxl/types.h>
 
-#include <cmath>  // std::abs
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "lib/extras/codec.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/butteraugli/butteraugli.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
-#include "lib/jxl/enc_comparator.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/encode_internal.h"
-#include "lib/jxl/icc_codec.h"
+#include "lib/jxl/image.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"

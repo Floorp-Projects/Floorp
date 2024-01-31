@@ -14,13 +14,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <algorithm>
+#include <cstring>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
+#include "lib/jxl/common.h"
 #include "lib/jxl/image_bundle.h"
-#include "lib/jxl/jpeg/dec_jpeg_data.h"
+#include "lib/jxl/jpeg/jpeg_data.h"
 #if JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/jpeg/dec_jpeg_data_writer.h"
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
@@ -109,7 +112,7 @@ class JxlToJpegDecoder {
                                     jpeg_data_.get())) {
         return false;
       }
-      ib->jpeg_data.reset(jpeg_data_.release());
+      ib->jpeg_data = std::move(jpeg_data_);
     }
     return true;
   }

@@ -195,10 +195,4 @@ void SlowSeparable5(const ImageF& in, const Rect& in_rect,
   SlowSeparable<2>(in, in_rect, weights, pool, out, out_rect);
 }
 
-void SlowSeparable7(const ImageF& in, const Rect& in_rect,
-                    const WeightsSeparable7& weights, ThreadPool* pool,
-                    ImageF* out, const Rect& out_rect) {
-  SlowSeparable<3>(in, in_rect, weights, pool, out, out_rect);
-}
-
 }  // namespace jxl

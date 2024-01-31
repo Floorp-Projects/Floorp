@@ -10,11 +10,7 @@
 // FJXL_STANDALONE=1 for a stand-alone jxl encoder
 // FJXL_STANDALONE=0 for use in libjxl to encode frames (but no image header)
 #ifndef FJXL_STANDALONE
-#ifdef JPEGXL_MAJOR_VERSION
 #define FJXL_STANDALONE 0
-#else
-#define FJXL_STANDALONE 1
-#endif
 #endif
 
 #if !FJXL_STANDALONE

@@ -3,28 +3,45 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include "lib/extras/dec/decode.h"
+
 #include <jxl/cms.h>
+#include <jxl/codestream_header.h>
 #include <jxl/color_encoding.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/resizable_parallel_runner.h>
 #include <jxl/resizable_parallel_runner_cxx.h>
+#include <jxl/thread_parallel_runner.h>
 #include <jxl/thread_parallel_runner_cxx.h>
 #include <jxl/types.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <ostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include "lib/extras/codec.h"
 #include "lib/extras/dec/color_description.h"
+#include "lib/extras/enc/encode.h"
+#include "lib/extras/enc/jpg.h"
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/override.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_bit_reader.h"
@@ -35,14 +52,17 @@
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_icc_codec.h"
+#include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_progressive_split.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
-#include "lib/jxl/icc_codec.h"
+#include "lib/jxl/image.h"
+#include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_metadata.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/padded_bytes.h"
 #include "lib/jxl/test_image.h"
@@ -275,9 +295,20 @@ std::vector<uint8_t> CreateTestJXLCodestream(
   if (params.jpeg_codestream != nullptr) {
     if (jxl::extras::CanDecode(jxl::extras::Codec::kJPG)) {
       std::vector<uint8_t> jpeg_bytes;
-      io.jpeg_quality = 70;
-      EXPECT_TRUE(Encode(io, extras::Codec::kJPG, io.metadata.m.color_encoding,
-                         /*bits_per_sample=*/8, &jpeg_bytes));
+      extras::PackedPixelFile ppf;
+      extras::PackedFrame frame(xsize, ysize, format);
+      JXL_ASSERT(frame.color.pixels_size == pixels.size());
+      memcpy(frame.color.pixels(0, 0, 0), pixels.data(), pixels.size());
+      ppf.frames.emplace_back(std::move(frame));
+      ppf.info.xsize = xsize;
+      ppf.info.ysize = ysize;
+      ppf.info.num_color_channels = grayscale ? 1 : 3;
+      ppf.info.bits_per_sample = 16;
+      auto encoder = extras::GetJPEGEncoder();
+      encoder->SetOption("quality", "70");
+      extras::EncodedImage encoded;
+      EXPECT_TRUE(encoder->Encode(ppf, &encoded));
+      jpeg_bytes = encoded.bitstreams[0];
       Bytes(jpeg_bytes).AppendTo(params.jpeg_codestream);
       EXPECT_TRUE(jxl::jpeg::DecodeImageJPG(
           jxl::Bytes(jpeg_bytes.data(), jpeg_bytes.size()), &io));
@@ -1660,7 +1691,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   EXPECT_THAT(
       ButteraugliDistance(io0.frames, io1.frames, ba, *JxlGetDefaultCms(),
                           /*distmap=*/nullptr, nullptr),
-      IsSlightlyBelow(0.55f));
+      IsSlightlyBelow(0.56f));
 
   JxlDecoderDestroy(dec);
 }
@@ -2104,7 +2135,7 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
     EXPECT_THAT(
         ButteraugliDistance(io0.frames, io1.frames, ba, *JxlGetDefaultCms(),
                             /*distmap=*/nullptr, nullptr),
-        IsSlightlyBelow(1.2222f));
+        IsSlightlyBelow(1.3f));
 
     JxlDecoderDestroy(dec);
   }
