@@ -1643,7 +1643,7 @@ void nsLookAndFeel::InitializeGlobalSettings() {
       return TitlebarAction::None;
     }
     auto free = mozilla::MakeScopeExit([&] { g_free(action); });
-    for (auto const mapping : ActionMapping) {
+    for (auto const& mapping : ActionMapping) {
       if (!strncmp(action, mapping.name, strlen(mapping.name))) {
         return mapping.action;
       }
