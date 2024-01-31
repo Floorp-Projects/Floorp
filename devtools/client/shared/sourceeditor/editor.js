@@ -159,6 +159,11 @@ class Editor extends EventEmitter {
   config = null;
   Doc = null;
 
+  #lastDirty;
+  #loadedKeyMaps;
+  #ownerDoc;
+  #prefObserver;
+
   constructor(config) {
     super();
 
@@ -211,7 +216,7 @@ class Editor extends EventEmitter {
       specialCharPlaceholder: char => {
         // Use the doc provided to the setup function if we don't have a reference to a codeMirror
         // editor yet (this can happen when an Editor is being created with existing content)
-        const doc = this._ownerDoc;
+        const doc = this.#ownerDoc;
         const el = doc.createElement("span");
         el.classList.add("cm-non-printable-char");
         el.append(doc.createTextNode(`\\u${char.codePointAt(0).toString(16)}`));
@@ -375,7 +380,7 @@ class Editor extends EventEmitter {
         env.style.visibility = "";
         const win = env.contentWindow.wrappedJSObject;
         this.container = env;
-        this._setup(win.document.body, el.ownerDocument);
+        this.#setup(win.document.body, el.ownerDocument);
         resolve();
       };
 
@@ -389,7 +394,7 @@ class Editor extends EventEmitter {
   }
 
   appendToLocalElement(el) {
-    this._setup(el);
+    this.#setup(el);
   }
 
   /**
@@ -397,8 +402,8 @@ class Editor extends EventEmitter {
    * used by both append functions above, and does all the hard work to
    * configure CodeMirror with all the right options/modes/etc.
    */
-  _setup(el, doc) {
-    this._ownerDoc = doc || el.ownerDocument;
+  #setup(el, doc) {
+    this.#ownerDoc = doc || el.ownerDocument;
     const win = el.ownerDocument.defaultView;
 
     Services.scriptloader.loadSubScript(CM_BUNDLE, win);
@@ -466,7 +471,7 @@ class Editor extends EventEmitter {
 
       let popup = this.config.contextMenu;
       if (typeof popup == "string") {
-        popup = this._ownerDoc.getElementById(this.config.contextMenu);
+        popup = this.#ownerDoc.getElementById(this.config.contextMenu);
       }
 
       this.emit("popupOpen", ev, popup);
@@ -488,8 +493,8 @@ class Editor extends EventEmitter {
 
     cm.on("change", () => {
       this.emit("change");
-      if (!this._lastDirty) {
-        this._lastDirty = true;
+      if (!this.#lastDirty) {
+        this.#lastDirty = true;
         this.emit("dirty-change");
       }
     });
@@ -504,7 +509,7 @@ class Editor extends EventEmitter {
     });
 
     if (!this.config.disableSearchAddon) {
-      this._initSearchShortcuts(win);
+      this.#initSearchShortcuts(win);
     } else {
       // Hotfix for Bug 1527898. We should remove those overrides as part of Bug 1527903.
       Object.assign(win.CodeMirror.commands, {
@@ -542,19 +547,19 @@ class Editor extends EventEmitter {
     this.reloadPreferences = this.reloadPreferences.bind(this);
     this.setKeyMap = this.setKeyMap.bind(this, win);
 
-    this._prefObserver = new PrefObserver("devtools.editor.");
-    this._prefObserver.on(TAB_SIZE, this.reloadPreferences);
-    this._prefObserver.on(EXPAND_TAB, this.reloadPreferences);
-    this._prefObserver.on(AUTO_CLOSE, this.reloadPreferences);
-    this._prefObserver.on(AUTOCOMPLETE, this.reloadPreferences);
-    this._prefObserver.on(DETECT_INDENT, this.reloadPreferences);
-    this._prefObserver.on(ENABLE_CODE_FOLDING, this.reloadPreferences);
+    this.#prefObserver = new PrefObserver("devtools.editor.");
+    this.#prefObserver.on(TAB_SIZE, this.reloadPreferences);
+    this.#prefObserver.on(EXPAND_TAB, this.reloadPreferences);
+    this.#prefObserver.on(AUTO_CLOSE, this.reloadPreferences);
+    this.#prefObserver.on(AUTOCOMPLETE, this.reloadPreferences);
+    this.#prefObserver.on(DETECT_INDENT, this.reloadPreferences);
+    this.#prefObserver.on(ENABLE_CODE_FOLDING, this.reloadPreferences);
 
     this.reloadPreferences();
 
     // Init a map of the loaded keymap files. Should be of the form Map<String->Boolean>.
-    this._loadedKeyMaps = new Set();
-    this._prefObserver.on(KEYMAP_PREF, this.setKeyMap);
+    this.#loadedKeyMaps = new Set();
+    this.#prefObserver.on(KEYMAP_PREF, this.setKeyMap);
     this.setKeyMap();
 
     win.editor = this;
@@ -752,9 +757,9 @@ class Editor extends EventEmitter {
 
     // If alternative keymap is provided, use it.
     if (VALID_KEYMAPS.has(keyMap)) {
-      if (!this._loadedKeyMaps.has(keyMap)) {
+      if (!this.#loadedKeyMaps.has(keyMap)) {
         Services.scriptloader.loadSubScript(VALID_KEYMAPS.get(keyMap), win);
-        this._loadedKeyMaps.add(keyMap);
+        this.#loadedKeyMaps.add(keyMap);
       }
       this.setOption("keyMap", keyMap);
     } else {
@@ -1140,7 +1145,7 @@ class Editor extends EventEmitter {
   setClean() {
     const cm = editors.get(this);
     this.version = cm.changeGeneration();
-    this._lastDirty = false;
+    this.#lastDirty = false;
     this.emit("dirty-change");
     return this.version;
   }
@@ -1483,17 +1488,17 @@ class Editor extends EventEmitter {
     this.container = null;
     this.config = null;
     this.version = null;
-    this._ownerDoc = null;
+    this.#ownerDoc = null;
 
-    if (this._prefObserver) {
-      this._prefObserver.off(KEYMAP_PREF, this.setKeyMap);
-      this._prefObserver.off(TAB_SIZE, this.reloadPreferences);
-      this._prefObserver.off(EXPAND_TAB, this.reloadPreferences);
-      this._prefObserver.off(AUTO_CLOSE, this.reloadPreferences);
-      this._prefObserver.off(AUTOCOMPLETE, this.reloadPreferences);
-      this._prefObserver.off(DETECT_INDENT, this.reloadPreferences);
-      this._prefObserver.off(ENABLE_CODE_FOLDING, this.reloadPreferences);
-      this._prefObserver.destroy();
+    if (this.#prefObserver) {
+      this.#prefObserver.off(KEYMAP_PREF, this.setKeyMap);
+      this.#prefObserver.off(TAB_SIZE, this.reloadPreferences);
+      this.#prefObserver.off(EXPAND_TAB, this.reloadPreferences);
+      this.#prefObserver.off(AUTO_CLOSE, this.reloadPreferences);
+      this.#prefObserver.off(AUTOCOMPLETE, this.reloadPreferences);
+      this.#prefObserver.off(DETECT_INDENT, this.reloadPreferences);
+      this.#prefObserver.off(ENABLE_CODE_FOLDING, this.reloadPreferences);
+      this.#prefObserver.destroy();
     }
 
     // Remove the link between the document and code-mirror.
@@ -1545,11 +1550,10 @@ class Editor extends EventEmitter {
   /**
    * Register all key shortcuts.
    */
-  _initSearchShortcuts(win) {
+  #initSearchShortcuts(win) {
     const shortcuts = new KeyShortcuts({
       window: win,
     });
-    this._onSearchShortcut = this._onSearchShortcut.bind(this);
     const keys = ["find.key", "findNext.key", "findPrev.key"];
 
     if (OS === "Darwin") {
@@ -1560,14 +1564,14 @@ class Editor extends EventEmitter {
     // Process generic keys:
     keys.forEach(name => {
       const key = L10N.getStr(name);
-      shortcuts.on(key, event => this._onSearchShortcut(name, event));
+      shortcuts.on(key, event => this.#onSearchShortcut(name, event));
     });
   }
   /**
    * Key shortcut listener.
    */
-  _onSearchShortcut(name, event) {
-    if (!this._isInputOrTextarea(event.target)) {
+  #onSearchShortcut = (name, event) => {
+    if (!this.#isInputOrTextarea(event.target)) {
       return;
     }
     const node = event.originalTarget;
@@ -1598,12 +1602,12 @@ class Editor extends EventEmitter {
     // Prevent default for this action
     event.stopPropagation();
     event.preventDefault();
-  }
+  };
 
   /**
    * Check if a node is an input or textarea
    */
-  _isInputOrTextarea(element) {
+  #isInputOrTextarea(element) {
     const name = element.tagName.toLowerCase();
     return name === "input" || name === "textarea";
   }
