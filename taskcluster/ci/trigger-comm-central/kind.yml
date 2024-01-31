@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.trigger_comm_central:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects: ['mozilla-central']
+    treeherder:
+        kind: other
+        platform: other/opt
+        tier: 2
+    worker-type: b-linux-gcp
+    worker:
+        docker-image: {in-tree: debian12-amd64-build}
+        max-run-time: 600
+        taskcluster-proxy: true
+    run:
+        using: run-task
+        checkout: false
+
+jobs:
+    tb-rust:
+        description: 'Schedule job to verify the comm-central copy of third_party/rust'
+        treeherder:
+            symbol: tb-rust
+        run:
+            command: '/usr/bin/curl --fail --verbose -X POST -d "{}" -H "Content-Type: application/json" ${TASKCLUSTER_PROXY_URL}/api/hooks/v1/hooks/project-releng/cron-task-comm-central%2ftb-rust-vendor-check/trigger'
+        when:
+            files-changed:
+                - Cargo.lock
+                - Cargo.toml
+                - toolkit/library/rust/shared/Cargo.toml
+        scopes:
+            by-level:
+                '3':
+                    - 'hooks:trigger-hook:project-releng/cron-task-comm-central/tb-rust-vendor-check'
+                default: []
