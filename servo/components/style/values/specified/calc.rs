@@ -179,11 +179,17 @@ impl generic::CalcNodeLeaf for Leaf {
             return None;
         }
 
+        if matches!(self, Percentage(..)) && matches!(basis, PositivePercentageBasis::Unknown) {
+            return None;
+        }
+
+        let self_negative = self.is_negative();
+        if self_negative != other.is_negative() {
+            return Some(if self_negative { cmp::Ordering::Less } else { cmp::Ordering::Greater });
+        }
+
         match (self, other) {
-            (&Percentage(ref one), &Percentage(ref other)) => match basis {
-                PositivePercentageBasis::Yes => one.partial_cmp(other),
-                PositivePercentageBasis::Unknown => None,
-            },
+            (&Percentage(ref one), &Percentage(ref other)) => one.partial_cmp(other),
             (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
             (&Angle(ref one), &Angle(ref other)) => one.degrees().partial_cmp(&other.degrees()),
             (&Time(ref one), &Time(ref other)) => one.seconds().partial_cmp(&other.seconds()),

@@ -671,12 +671,19 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
         if std::mem::discriminant(self) != std::mem::discriminant(other) {
             return None;
         }
+
+        if matches!(self, Percentage(..)) && matches!(basis, PositivePercentageBasis::Unknown) {
+            return None;
+        }
+
+        let self_negative = self.is_negative();
+        if self_negative != other.is_negative() {
+            return Some(if self_negative { std::cmp::Ordering::Less } else { std::cmp::Ordering::Greater });
+        }
+
         match (self, other) {
             (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
-            (&Percentage(ref one), &Percentage(ref other)) => match basis {
-                PositivePercentageBasis::Yes => one.partial_cmp(other),
-                PositivePercentageBasis::Unknown => None,
-            },
+            (&Percentage(ref one), &Percentage(ref other)) => one.partial_cmp(other),
             (&Number(ref one), &Number(ref other)) => one.partial_cmp(other),
             _ => unsafe {
                 match *self {
