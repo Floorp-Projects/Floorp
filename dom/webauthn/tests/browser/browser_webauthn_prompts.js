@@ -73,19 +73,6 @@ add_task(test_register_direct_proceed);
 add_task(test_register_direct_proceed_anon);
 add_task(test_select_sign_result);
 
-function promiseNotification(id) {
-  return new Promise(resolve => {
-    PopupNotifications.panel.addEventListener("popupshown", function shown() {
-      let notification = PopupNotifications.getNotification(id);
-      if (notification) {
-        ok(true, `${id} prompt visible`);
-        PopupNotifications.panel.removeEventListener("popupshown", shown);
-        resolve();
-      }
-    });
-  });
-}
-
 function promiseNavToolboxStatus(aExpectedStatus) {
   let navToolboxStatus;
   return TestUtils.topicObserved("fullscreen-nav-toolbox", (subject, data) => {
