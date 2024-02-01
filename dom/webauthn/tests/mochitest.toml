@@ -92,9 +92,6 @@ skip-if = [
   "os == 'android'", # Test disables all tokens, which is an unsupported configuration on android.
 ]
 
-["test_webauthn_override_request.html"]
-skip-if = ["os == 'android'"] # Test sets security.webauth.webauthn_enable_usbtoken to true, which isn't applicable to android
-
 ["test_webauthn_sameorigin.html"]
 fail-if = ["xorigin"] # NotAllowedError
 skip-if = [

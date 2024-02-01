@@ -243,4 +243,17 @@ function checkRpIdHash(rpIdHash, hostname) {
       }
     });
 }
+
+function promiseNotification(id) {
+  return new Promise(resolve => {
+    PopupNotifications.panel.addEventListener("popupshown", function shown() {
+      let notification = PopupNotifications.getNotification(id);
+      if (notification) {
+        ok(true, `${id} prompt visible`);
+        PopupNotifications.panel.removeEventListener("popupshown", shown);
+        resolve();
+      }
+    });
+  });
+}
 /* eslint-enable no-shadow */
