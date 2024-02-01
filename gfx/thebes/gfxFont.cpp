@@ -2668,29 +2668,94 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     return true;
   }
 
-  if (const auto* paintGraph =
-          COLRFonts::GetGlyphPaintGraph(GetFontEntry()->GetCOLR(), aGlyphId)) {
+  auto* colr = GetFontEntry()->GetCOLR();
+  if (const auto* paintGraph = COLRFonts::GetGlyphPaintGraph(colr, aGlyphId)) {
     const auto* hbShaper = GetHarfBuzzShaper();
     if (hbShaper && hbShaper->IsInitialized()) {
+      if (aTextDrawer) {
+        aTextDrawer->FoundUnsupportedFeature();
+        return true;
+      }
+
+      // For reasonable font sizes, use a cache of rasterized glyphs.
+      if (GetAdjustedSize() <= 256.0) {
+        AutoWriteLock lock(mLock);
+        if (!mColorGlyphCache) {
+          mColorGlyphCache = MakeUnique<ColorGlyphCache>();
+        }
+
+        // Tell the cache what colors we're using; if they have changed, it will
+        // discard any currently-cached entries.
+        mColorGlyphCache->SetColors(aFontParams.currentColor,
+                                    aFontParams.palette);
+
+        bool ok = false;
+        auto cached = mColorGlyphCache->mCache.lookupForAdd(aGlyphId);
+        Rect bounds = COLRFonts::GetColorGlyphBounds(
+            colr, hbShaper->GetHBFont(), aGlyphId, aDrawTarget,
+            aFontParams.scaledFont, mFUnitsConvFactor);
+        bounds.RoundOut();
+
+        if (cached) {
+          ok = true;
+        } else {
+          // Create a temporary DrawTarget, render the glyph, and save a
+          // snapshot of the rendering in the cache.
+          IntSize size(int(bounds.width), int(bounds.height));
+          SurfaceFormat format = SurfaceFormat::B8G8R8A8;
+          RefPtr target =
+              Factory::CreateDrawTarget(BackendType::SKIA, size, format);
+          if (target) {
+            ok = COLRFonts::PaintGlyphGraph(
+                GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
+                target, nullptr, aFontParams.scaledFont,
+                aFontParams.drawOptions, -bounds.TopLeft(),
+                aFontParams.currentColor, aFontParams.palette, aGlyphId,
+                mFUnitsConvFactor);
+            if (ok) {
+              RefPtr snapshot = target->Snapshot();
+              ok = mColorGlyphCache->mCache.add(cached, aGlyphId, snapshot);
+            }
+          }
+        }
+        if (ok) {
+          // Paint the snapshot from cached->value(), and return.
+          aDrawTarget->DrawSurface(
+              cached->value(), Rect(aPoint + bounds.TopLeft(), bounds.Size()),
+              Rect(Point(), bounds.Size()));
+          return true;
+        }
+      }
+
+      // If we failed to cache the glyph, or it was too large to even try,
+      // just paint directly to the target.
       return COLRFonts::PaintGlyphGraph(
-          GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
-          aDrawTarget, aTextDrawer, aFontParams.scaledFont,
-          aFontParams.drawOptions, aPoint, aFontParams.currentColor,
-          aFontParams.palette, aGlyphId, mFUnitsConvFactor);
+          colr, hbShaper->GetHBFont(), paintGraph, aDrawTarget, aTextDrawer,
+          aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
+          aFontParams.currentColor, aFontParams.palette, aGlyphId,
+          mFUnitsConvFactor);
     }
   }
 
-  if (const auto* layers =
-          COLRFonts::GetGlyphLayers(GetFontEntry()->GetCOLR(), aGlyphId)) {
+  if (const auto* layers = COLRFonts::GetGlyphLayers(colr, aGlyphId)) {
     auto face(GetFontEntry()->GetHBFace());
     bool ok = COLRFonts::PaintGlyphLayers(
-        GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
-        aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
-        aFontParams.currentColor, aFontParams.palette);
+        colr, face, layers, aDrawTarget, aTextDrawer, aFontParams.scaledFont,
+        aFontParams.drawOptions, aPoint, aFontParams.currentColor,
+        aFontParams.palette);
     return ok;
   }
 
   return false;
+}
+
+void gfxFont::ColorGlyphCache::SetColors(sRGBColor aCurrentColor,
+                                         FontPalette* aPalette) {
+  if (aCurrentColor != mCurrentColor || aPalette != mPalette) {
+    mCache.clear();
+    mCurrentColor = aCurrentColor;
+    mPalette = aPalette;
+  }
 }
 
 bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
