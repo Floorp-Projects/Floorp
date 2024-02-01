@@ -902,16 +902,30 @@
       var eX = event.screenX;
       var eY = event.screenY;
       var wX = window.screenX;
-      // check if the drop point is horizontally within the window
-      if (eX > wX && eX < wX + window.outerWidth) {
-        // also avoid detaching if the the tab was dropped too close to
-        // the tabbar (half a tab)
-        let rect = window.windowUtils.getBoundsWithoutFlushing(
-          this.arrowScrollbox
-        );
-        let detachTabThresholdY = window.screenY + rect.top + 1.5 * rect.height;
-        if (eY < detachTabThresholdY && eY > window.screenY) {
-          return;
+      var wY = window.screenY;
+      let rect = window.windowUtils.getBoundsWithoutFlushing(
+        this.arrowScrollbox
+      );
+      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+      if(VertitalEnabled) {
+        // check if the drop point is vertically within the window
+        if (eY > wY && eY < wY + window.outerHeight) {
+          // also avoid detaching if the the tab was dropped too close to
+          // the tabbar (half a tab)
+          let detachTabThresholdX = wX + rect.left + 1.5 * rect.width;
+          if (eX < detachTabThresholdX && eX > wX) {
+            return;
+          }
+        }
+      } else {
+        // check if the drop point is horizontally within the window
+        if (eX > wX && eX < wX + window.outerWidth) {
+          // also avoid detaching if the the tab was dropped too close to
+          // the tabbar (half a tab)
+          let detachTabThresholdY = wY + rect.top + 1.5 * rect.height;
+          if (eY < detachTabThresholdY && eY > wY) {
+            return;
+          }
         }
       }
 
