@@ -81,7 +81,7 @@ class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable {
  */
 class ImageBitmapShutdownObserver final : public nsIObserver {
  public:
-  explicit ImageBitmapShutdownObserver() {
+  void Init() {
     sShutdownMutex.AssertCurrentThreadOwns();
     if (NS_IsMainThread()) {
       RegisterObserver();
@@ -649,6 +649,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
   if (!sShutdownObserver &&
       !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
     sShutdownObserver = new ImageBitmapShutdownObserver();
+    sShutdownObserver->Init();
   }
   if (sShutdownObserver) {
     mShutdownRunnable = sShutdownObserver->Track(this);
