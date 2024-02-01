@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_WebAuthnManagerBase_h
 #define mozilla_dom_WebAuthnManagerBase_h
 
-#include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
@@ -24,10 +23,8 @@ class WebAuthnTransactionChild;
 class WebAuthnMakeCredentialResult;
 class WebAuthnGetAssertionResult;
 
-class WebAuthnManagerBase : public nsIDOMEventListener {
+class WebAuthnManagerBase : public nsISupports {
  public:
-  NS_DECL_NSIDOMEVENTLISTENER
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(WebAuthnManagerBase)
 
@@ -51,13 +48,6 @@ class WebAuthnManagerBase : public nsIDOMEventListener {
 
  protected:
   MOZ_CAN_RUN_SCRIPT virtual ~WebAuthnManagerBase();
-
-  // Needed by HandleEvent() to track visibilty changes.
-  MOZ_CAN_RUN_SCRIPT virtual void HandleVisibilityChange() = 0;
-
-  // Visibility event handling.
-  void ListenForVisibilityEvents();
-  void StopListeningForVisibilityEvents();
 
   bool MaybeCreateBackgroundActor();
 

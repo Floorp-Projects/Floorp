@@ -51,7 +51,7 @@ class Credential;
 class WebAuthnTransaction {
  public:
   explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise)
-      : mPromise(aPromise), mId(NextId()), mVisibilityChanged(false) {
+      : mPromise(aPromise), mId(NextId()) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -60,10 +60,6 @@ class WebAuthnTransaction {
 
   // Unique transaction id.
   uint64_t mId;
-
-  // Whether or not visibility has changed for the window during this
-  // transaction
-  bool mVisibilityChanged;
 
  private:
   // Generates a probabilistically unique ID for the new transaction. IDs are 53
@@ -116,10 +112,6 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
   // AbortFollower
 
   void RunAbortAlgorithm() override;
-
- protected:
-  // Upon a visibility change, makes note of it in the current transaction.
-  void HandleVisibilityChange() override;
 
  private:
   virtual ~WebAuthnManager();

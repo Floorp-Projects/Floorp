@@ -8,16 +8,65 @@ const TEST_URL = "https://example.com";
 
 let gAuthenticatorId = add_virtual_authenticator();
 let gExpectNotAllowedError = expectError("NotAllowed");
+let gExpectAbortError = expectError("Abort");
 let gPendingConditionalGetSubject = "webauthn:conditional-get-pending";
 let gWebAuthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
   Ci.nsIWebAuthnService
 );
 
+add_task(async function test_webauthn_modal_request_cancels_conditional_get() {
+  // Open a new tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  let browser = tab.linkedBrowser.browsingContext.embedderElement;
+  let browsingContextId = browser.browsingContext.id;
+
+  let transactionId = gWebAuthnService.hasPendingConditionalGet(
+    browsingContextId,
+    TEST_URL
+  );
+  Assert.equal(transactionId, 0, "should not have a pending conditional get");
+
+  let requestStarted = TestUtils.topicObserved(gPendingConditionalGetSubject);
+
+  let active = true;
+  let condPromise = promiseWebAuthnGetAssertionDiscoverable(tab, "conditional")
+    .then(arrivingHereIsBad)
+    .catch(gExpectAbortError)
+    .then(() => (active = false));
+
+  await requestStarted;
+
+  transactionId = gWebAuthnService.hasPendingConditionalGet(
+    browsingContextId,
+    TEST_URL
+  );
+  Assert.notEqual(transactionId, 0, "should have a pending conditional get");
+
+  ok(active, "conditional request should still be active");
+
+  let promptPromise = promiseNotification("webauthn-prompt-register-direct");
+  let modalPromise = promiseWebAuthnMakeCredential(tab, "direct")
+    .then(arrivingHereIsBad)
+    .catch(gExpectNotAllowedError);
+
+  await condPromise;
+
+  ok(!active, "conditional request should not be active");
+
+  // Cancel the modal request with the button.
+  await promptPromise;
+  PopupNotifications.panel.firstElementChild.secondaryButton.click();
+  await modalPromise;
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function test_webauthn_resume_conditional_get() {
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
-  // TODO: Is there a better way to get the browsing context id?
   let browser = tab.linkedBrowser.browsingContext.embedderElement;
   let browsingContextId = browser.browsingContext.id;
 
@@ -74,7 +123,6 @@ add_task(async function test_webauthn_select_autofill_entry() {
   let cred1 = await addCredential(gAuthenticatorId, "example.com");
   let cred2 = await addCredential(gAuthenticatorId, "example.com");
 
-  // TODO: Is there a better way to get the browsing context id?
   let browser = tab.linkedBrowser.browsingContext.embedderElement;
   let browsingContextId = browser.browsingContext.id;
 
