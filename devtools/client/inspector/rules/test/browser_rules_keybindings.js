@@ -7,17 +7,11 @@
 
 add_task(async function () {
   await pushPref("devtools.inspector.rule-view.focusNextOnEnter", false);
-  await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", true);
   const tab = await addTab(`data:text/html;charset=utf-8,
     <style>h1 {}</style>
     <h1>Some header text</h1>`);
   let { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
-
-  let kbdNoticeEl = view.styleDocument.getElementById(
-    "ruleview-kbd-enter-notice"
-  );
-  ok(kbdNoticeEl.hasAttribute("hidden"), "Notice is not displayed by default");
 
   info("Getting the ruleclose brace element for the `h1` rule");
   const brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
@@ -73,18 +67,6 @@ add_task(async function () {
       "h1",
       "background-color"
     )?.valueSpan?.querySelector(".ruleview-colorswatch")
-  );
-
-  ok(
-    !kbdNoticeEl.hasAttribute("hidden"),
-    "Notice is displayed after hitting Enter"
-  );
-
-  info("Click on dismiss button");
-  kbdNoticeEl.querySelector("button").click();
-  ok(
-    kbdNoticeEl.hasAttribute("hidden"),
-    "Notice was hidden after clicking on dismiss button"
   );
 
   is(
@@ -148,22 +130,6 @@ add_task(async function () {
   info("Re-start the toolbox");
   await gDevTools.closeToolboxForTab(tab);
   ({ view } = await openRuleView());
-
-  kbdNoticeEl = view.styleDocument.getElementById("ruleview-kbd-enter-notice");
-  ok(
-    kbdNoticeEl.hasAttribute("hidden"),
-    "Notice isn't displayed on init when it was dismissed before"
-  );
-  is(
-    Services.prefs.getBoolPref(
-      "devtools.inspector.showRulesViewEnterKeyNotice"
-    ),
-    false,
-    "The preference driving the UI is set to false, as expected"
-  );
-  Services.prefs.clearUserPref(
-    "devtools.inspector.showRulesViewEnterKeyNotice"
-  );
 });
 
 // The `element` have specific behavior, so we want to test that keyboard navigation
@@ -264,18 +230,12 @@ add_task(async function testKeyboardNavigationInElementRule() {
 // devtools.inspector.rule-view.focusNextOnEnter is set to true
 
 add_task(async function () {
-  await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", true);
   await pushPref("devtools.inspector.rule-view.focusNextOnEnter", true);
   await addTab(`data:text/html;charset=utf-8,
     <style>h1 {}</style>
     <h1>Some header text</h1>`);
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
-
-  const kbdNoticeEl = view.styleDocument.getElementById(
-    "ruleview-kbd-enter-notice"
-  );
-  ok(kbdNoticeEl.hasAttribute("hidden"), "Notice is not displayed by default");
 
   info("Getting the ruleclose brace element for the `h1` rule");
   const brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
@@ -312,11 +272,6 @@ add_task(async function () {
       .join("")}`,
     "input.styleinspector-propertyeditor",
     "The new property name field was focused"
-  );
-
-  ok(
-    kbdNoticeEl.hasAttribute("hidden"),
-    "Notice isn't displayed after hitting Enter"
   );
 });
 
