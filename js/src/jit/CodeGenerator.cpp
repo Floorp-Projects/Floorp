@@ -1269,7 +1269,7 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Label* ifDoesntEmulateUndefined,
                                       Register scratch) {
   saveVolatile(scratch);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
   masm.loadPtr(AbsoluteAddress(
                    gen->runtime->addressOfHasSeenObjectEmulateUndefinedFuse()),
                scratch);
@@ -1535,7 +1535,7 @@ void CodeGenerator::visitTestBIAndBranch(LTestBIAndBranch* lir) {
 
 void CodeGenerator::assertObjectDoesNotEmulateUndefined(
     Register input, Register temp, const MInstruction* mir) {
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
   // Validate that the object indeed doesn't have the emulates undefined flag.
   auto* ool = new (alloc()) OutOfLineTestObjectWithLabels();
   addOutOfLineCode(ool, mir);
@@ -11196,7 +11196,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
     masm.bind(&done);
   } else {
     Label nullOrUndefined, notNullOrLikeUndefined;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
     Register objreg = Register::Invalid();
 #endif
     {
@@ -11206,7 +11206,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
       masm.branchTestNull(Assembler::Equal, tag, &nullOrUndefined);
       masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
       // Check whether it's a truthy object or a falsy object that emulates
       // undefined.
       masm.branchTestObject(Assembler::NotEqual, tag, &notNullOrLikeUndefined);
@@ -11214,7 +11214,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
 #endif
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
     assertObjectDoesNotEmulateUndefined(objreg, output, lir->mir());
     masm.bind(&notNullOrLikeUndefined);
 #endif
@@ -11269,7 +11269,7 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
   }
 
   bool extractObject = !intact;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
   // always extract objreg if we're in debug and
   // assertObjectDoesNotEmulateUndefined;
   extractObject = true;
