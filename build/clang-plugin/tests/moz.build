@@ -46,6 +46,7 @@ SOURCES += [
     "TestOverrideBaseCallAnnotation.cpp",
     "TestParamTraitsEnum.cpp",
     "TestRefCountedCopyConstructor.cpp",
+    "TestRefCountedThisInsideConstructor.cpp",
     "TestSprintfLiteral.cpp",
     "TestStackClass.cpp",
     "TestStaticLocalClass.cpp",

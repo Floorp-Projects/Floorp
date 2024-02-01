@@ -42,6 +42,7 @@ HOST_SOURCES += [
     "ParamTraitsEnumChecker.cpp",
     "RefCountedCopyConstructorChecker.cpp",
     "RefCountedInsideLambdaChecker.cpp",
+    "RefCountedThisInsideConstructorChecker.cpp",
     "ScopeChecker.cpp",
     "SprintfLiteralChecker.cpp",
     "TemporaryLifetimeBoundChecker.cpp",

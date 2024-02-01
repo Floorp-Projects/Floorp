@@ -38,6 +38,7 @@
 #include "ParamTraitsEnumChecker.h"
 #include "RefCountedCopyConstructorChecker.h"
 #include "RefCountedInsideLambdaChecker.h"
+#include "RefCountedThisInsideConstructorChecker.h"
 #include "ScopeChecker.h"
 #include "SprintfLiteralChecker.h"
 #include "TemporaryLifetimeBoundChecker.h"
