@@ -5,9 +5,7 @@
 package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.action.TranslationsAction.TranslateExpectedAction
@@ -80,35 +78,33 @@ class TranslationsMiddleware(
      * @param context Context to use to dispatch to the store.
      * @param tabId Tab ID associated with the request.
      */
-    private suspend fun requestSupportedLanguages(
+    private fun requestSupportedLanguages(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         tabId: String,
-    ) = withContext(Dispatchers.IO) {
-        scope.launch {
-            engine.getSupportedTranslationLanguages(
+    ) {
+        engine.getSupportedTranslationLanguages(
 
-                onSuccess = {
-                    context.store.dispatch(
-                        TranslationsAction.TranslateSetLanguagesAction(
-                            tabId = tabId,
-                            supportedLanguages = it,
-                        ),
-                    )
-                    logger.info("Success requesting supported languages.")
-                },
+            onSuccess = {
+                context.store.dispatch(
+                    TranslationsAction.TranslateSetLanguagesAction(
+                        tabId = tabId,
+                        supportedLanguages = it,
+                    ),
+                )
+                logger.info("Success requesting supported languages.")
+            },
 
-                onError = {
-                    context.store.dispatch(
-                        TranslationsAction.TranslateExceptionAction(
-                            tabId = tabId,
-                            operation = TranslationOperation.FETCH_LANGUAGES,
-                            translationError = TranslationError.CouldNotLoadLanguagesError(it),
-                        ),
-                    )
-                    logger.error("Error requesting supported languages: ", it)
-                },
-            )
-        }
+            onError = {
+                context.store.dispatch(
+                    TranslationsAction.TranslateExceptionAction(
+                        tabId = tabId,
+                        operation = TranslationOperation.FETCH_LANGUAGES,
+                        translationError = TranslationError.CouldNotLoadLanguagesError(it),
+                    ),
+                )
+                logger.error("Error requesting supported languages: ", it)
+            },
+        )
     }
 
     /**
@@ -122,7 +118,7 @@ class TranslationsMiddleware(
     private suspend fun requestTranslationPageSettings(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         tabId: String,
-    ) = withContext(Dispatchers.IO) {
+    ) {
         // Always offer setting
         val alwaysOfferPopup: Boolean = engine.getTranslationsOfferPopup()
 
