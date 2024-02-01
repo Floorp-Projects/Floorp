@@ -31,6 +31,13 @@ any specification:
    element, which is not in the initial version of MathML Core.
    See [issue 216](https://github.com/w3c/mathml/issues/216).
 
+- `mo-accent`: Tests for the
+   [mo@accent attribute](https://www.w3.org/TR/MathML3/chapter3.html#presm.mo.dict.attrs),
+   and the corresponding accent property from the dictionary,
+   which are removed from MathML Core.
+   See [bug 1790548](https://bugzilla.mozilla.org/1790548)
+   and [bug 1636428](https://bugzilla.mozilla.org/1636428).
+
 - `tables`: Tests for
    [table features](https://www.w3.org/TR/MathML3/chapter3.html#presm.tabmat)
    that are in the initial version of MathML Core.
