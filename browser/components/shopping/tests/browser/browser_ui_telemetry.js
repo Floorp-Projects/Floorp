@@ -17,6 +17,10 @@ function assertEventMatches(gleanEvent, requiredValues) {
 }
 
 add_task(async function test_shopping_reanalysis_event() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.shopping.experience2023.active", true]],
+  });
+
   // testFlushAllChildren() is necessary to deal with the event being
   // recorded in content, but calling testGetValue() in parent.
   await Services.fog.testFlushAllChildren();
@@ -48,28 +52,8 @@ add_task(async function test_shopping_reanalysis_event() {
     category: "shopping",
     name: "surface_reanalyze_clicked",
   });
-});
 
-add_task(async function test_shopping_UI_chevron_clicks() {
-  await Services.fog.testFlushAllChildren();
-  Services.fog.testResetFOG();
-
-  await BrowserTestUtils.withNewTab(
-    {
-      url: "about:shoppingsidebar",
-      gBrowser,
-    },
-    async browser => {
-      await clickSettingsChevronButton(browser, MOCK_ANALYZED_PRODUCT_RESPONSE);
-    }
-  );
-
-  await Services.fog.testFlushAllChildren();
-  var events = Glean.shopping.surfaceSettingsExpandClicked.testGetValue();
-
-  Assert.greater(events.length, 0);
-  Assert.equal(events[0].category, "shopping");
-  Assert.equal(events[0].name, "surface_settings_expand_clicked");
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_reactivated_product_button_click() {
@@ -124,12 +108,22 @@ add_task(async function test_no_reliability_available_request_click() {
 });
 
 add_task(async function test_shopping_sidebar_displayed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.shopping.experience2023.active", true]],
+  });
+
   Services.fog.testResetFOG();
 
   await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+    let shoppingButton = document.getElementById("shopping-sidebar-button");
+    await BrowserTestUtils.waitForMutationCondition(
+      shoppingButton,
+      {
+        attributeFilter: ["shoppingsidebaropen"],
+      },
+      () => shoppingButton.getAttribute("shoppingsidebaropen") == "true"
+    );
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
-    await sidebar.complete;
-
     Assert.ok(
       BrowserTestUtils.isVisible(sidebar),
       "Sidebar should be visible."
@@ -150,7 +144,7 @@ add_task(async function test_shopping_sidebar_displayed() {
     BrowserTestUtils.removeTab(contentTab);
   });
 
-  Services.fog.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
 
   var displayedEvents = Glean.shopping.surfaceDisplayed.testGetValue();
   Assert.equal(1, displayedEvents.length);
@@ -184,7 +178,7 @@ add_task(async function test_shopping_sidebar_displayed() {
 
   // Open a product page in a background tab, verify telemetry is not recorded.
   let backgroundTab = await BrowserTestUtils.addTab(gBrowser, PRODUCT_PAGE);
-  Services.fog.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
   let tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
   Assert.equal(tabSwitchEvents, null);
   Services.fog.testResetFOG();
@@ -192,7 +186,7 @@ add_task(async function test_shopping_sidebar_displayed() {
   // Next, switch tabs to the backgrounded product tab and verify telemetry is
   // recorded.
   await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
-  Services.fog.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
   tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
   Assert.equal(1, tabSwitchEvents.length);
   assertEventMatches(tabSwitchEvents[0], {
@@ -205,11 +199,12 @@ add_task(async function test_shopping_sidebar_displayed() {
   // background tab after it has been foregrounded once.
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
   await BrowserTestUtils.switchTab(gBrowser, backgroundTab);
-  Services.fog.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
   tabSwitchEvents = Glean.shopping.surfaceDisplayed.testGetValue();
   Assert.equal(tabSwitchEvents, null);
   Services.fog.testResetFOG();
   BrowserTestUtils.removeTab(backgroundTab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_shopping_card_clicks() {
@@ -469,37 +464,6 @@ function clickReAnalyzeLink(browser, data) {
 
     await shoppingMessageBar.onClickAnalysisButton();
 
-    return "clicked";
-  });
-}
-
-function clickSettingsChevronButton(browser, data) {
-  // waitForCondition relies on setTimeout, can cause intermittent test
-  // failures. Unfortunately, there is not yet a DOM Mutation observer
-  // equivalent in a utility that's available in the content process.
-
-  return SpecialPowers.spawn(browser, [data], async mockData => {
-    let shoppingContainer =
-      content.document.querySelector("shopping-container").wrappedJSObject;
-    shoppingContainer.data = Cu.cloneInto(mockData, content);
-
-    await shoppingContainer.updateComplete;
-    let shoppingSettings = shoppingContainer.settingsEl;
-    await shoppingSettings.updateComplete;
-    let shoppingCard =
-      shoppingSettings.shadowRoot.querySelector("shopping-card");
-    await shoppingCard.updateComplete;
-
-    let detailsEl = shoppingCard.detailsEl;
-    await detailsEl.updateComplete;
-
-    await ContentTaskUtils.waitForCondition(() =>
-      detailsEl.querySelector(".chevron-icon")
-    );
-
-    let chevron = detailsEl.querySelector(".chevron-icon");
-
-    chevron.click();
     return "clicked";
   });
 }

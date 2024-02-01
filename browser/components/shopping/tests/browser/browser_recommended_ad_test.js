@@ -8,6 +8,7 @@ add_task(async function test_ads_requested_after_enabled() {
     set: [
       ["browser.shopping.experience2023.ads.enabled", true],
       ["browser.shopping.experience2023.ads.userEnabled", false],
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
       ["toolkit.shopping.ohttpRelayURL", ""],
       ["toolkit.shopping.ohttpConfigURL", ""],
     ],
@@ -46,7 +47,6 @@ add_task(async function test_ads_requested_after_enabled() {
 
           let shoppingSettings = shoppingContainer.settingsEl;
           await shoppingSettings.updateComplete;
-          shoppingSettings.shoppingCardEl.detailsEl.open = true;
 
           let recommendationsToggle = shoppingSettings.recommendationsToggleEl;
           recommendationsToggle.click();
