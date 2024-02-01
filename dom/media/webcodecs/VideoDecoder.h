@@ -50,7 +50,7 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
                RefPtr<VideoFrameOutputCallback>&& aOutputCallback);
 
  protected:
-  virtual ~VideoDecoder() = default;
+  ~VideoDecoder();
 
  public:
   JSObject* WrapObject(JSContext* aCx,
