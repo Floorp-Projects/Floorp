@@ -168,8 +168,8 @@ add_task(async function test_sound_playing_muted_indicator() {
     );
 
     await TestUtils.waitForCondition(
-      () => soundTab.hasAttribute("soundplaying"),
-      "The tab doesn't have the soundplaying attribute."
+      () => soundTab.hasAttribute("muted"),
+      "The tab doesn't have the muted attribute."
     );
     await tabChangeRaised;
     await openTabs.updateComplete;
