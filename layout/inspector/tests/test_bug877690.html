@@ -35,11 +35,23 @@ function testValues(values, expected) {
 }
 
 function do_test() {
-  var allColors = [ "COLOR", "currentColor", "transparent", "rgb", "rgba", "hsl", "hsla", "hwb", "color-mix"];
+  var allColors = [
+    "COLOR",
+    "currentColor",
+    "transparent",
+    "rgb",
+    "rgba",
+    "hsl",
+    "hsla",
+    "hwb",
+    "color-mix",
+    "color",
+    "lab",
+    "lch",
+    "oklab",
+    "oklch"
+  ];
 
-  if (SpecialPowers.getBoolPref("layout.css.more_color_4.enabled", true)) {
-    allColors.push("color", "lab", "lch", "oklab", "oklch");
-  }
   var allGradients = [
     "linear-gradient",
     "-webkit-linear-gradient",
