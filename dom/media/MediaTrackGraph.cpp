@@ -3383,29 +3383,23 @@ void ProcessedMediaTrack::DestroyImpl() {
   // SetTrackOrderDirty(), for other reasons.
 }
 
-MediaTrackGraphImpl::MediaTrackGraphImpl(
-    GraphDriverType aDriverRequested, GraphRunType aRunTypeRequested,
-    uint64_t aWindowID, TrackRate aSampleRate, uint32_t aChannelCount,
-    AudioDeviceID aPrimaryOutputDeviceID, nsISerialEventTarget* aMainThread)
+MediaTrackGraphImpl::MediaTrackGraphImpl(uint64_t aWindowID,
+                                         TrackRate aSampleRate,
+                                         AudioDeviceID aPrimaryOutputDeviceID,
+                                         nsISerialEventTarget* aMainThread)
     : MediaTrackGraph(aSampleRate, aPrimaryOutputDeviceID),
       mWindowID(aWindowID),
-      mGraphRunner(aRunTypeRequested == SINGLE_THREAD
-                       ? GraphRunner::Create(this)
-                       : already_AddRefed<GraphRunner>(nullptr)),
       mFirstCycleBreaker(0)
       // An offline graph is not initially processing.
       ,
-      mEndTime(aDriverRequested == OFFLINE_THREAD_DRIVER ? 0 : GRAPH_TIME_MAX),
       mPortCount(0),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
       mPostedRunInStableStateEvent(false),
       mGraphDriverRunning(false),
       mPostedRunInStableState(false),
-      mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER),
       mTrackOrderDirty(false),
       mMainThread(aMainThread),
-      mSelfRef(this),
       mGlobalVolume(CubebUtils::GetVolumeScale())
 #ifdef DEBUG
       ,
@@ -3415,20 +3409,33 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       mMainThreadGraphTime(0, "MediaTrackGraphImpl::mMainThreadGraphTime"),
       mAudioOutputLatency(0.0),
       mMaxOutputChannelCount(std::min(8u, CubebUtils::MaxNumberOfChannels())) {
+}
+
+void MediaTrackGraphImpl::Init(GraphDriverType aDriverRequested,
+                               GraphRunType aRunTypeRequested,
+                               uint32_t aChannelCount) {
+  mSelfRef = this;
+  mEndTime = aDriverRequested == OFFLINE_THREAD_DRIVER ? 0 : GRAPH_TIME_MAX;
+  mRealtime = aDriverRequested != OFFLINE_THREAD_DRIVER;
   // The primary output device always exists because an AudioCallbackDriver
   // may exist, and want to be fed data, even when no tracks have audio
   // outputs.
   mOutputDeviceRefCnts.EmplaceBack(
-      DeviceReceiverAndCount{aPrimaryOutputDeviceID, nullptr, 0});
-  mOutputDevices.EmplaceBack(OutputDeviceEntry{aPrimaryOutputDeviceID});
+      DeviceReceiverAndCount{mPrimaryOutputDeviceID, nullptr, 0});
+  mOutputDevices.EmplaceBack(OutputDeviceEntry{mPrimaryOutputDeviceID});
 
   bool failedToGetShutdownBlocker = false;
   if (!IsNonRealtime()) {
     failedToGetShutdownBlocker = !AddShutdownBlocker();
   }
 
+  mGraphRunner = aRunTypeRequested == SINGLE_THREAD
+                     ? GraphRunner::Create(this)
+                     : already_AddRefed<GraphRunner>(nullptr);
+
   if ((aRunTypeRequested == SINGLE_THREAD && !mGraphRunner) ||
       failedToGetShutdownBlocker) {
+    MonitorAutoLock lock(mMonitor);
     // At least one of the following happened
     // - Failed to create thread.
     // - Failed to install a shutdown blocker when one is needed.
@@ -3450,7 +3457,7 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
     } else {
       mDriver = new SystemClockDriver(this, nullptr, mSampleRate);
     }
-    nsCString streamName = GetDocumentTitle(aWindowID);
+    nsCString streamName = GetDocumentTitle(mWindowID);
     LOG(LogLevel::Debug, ("%p: document title: %s", this, streamName.get()));
     mDriver->SetStreamName(streamName);
   } else {
@@ -3536,8 +3543,8 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
   uint32_t channelCount =
       std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
   MediaTrackGraphImpl* graph = new MediaTrackGraphImpl(
-      aGraphDriverRequested, runType, aWindowID, aSampleRate, channelCount,
-      aPrimaryOutputDeviceID, aMainThread);
+      aWindowID, aSampleRate, aPrimaryOutputDeviceID, aMainThread);
+  graph->Init(aGraphDriverRequested, runType, channelCount);
   MOZ_ALWAYS_TRUE(graphs->add(addPtr, graph));
 
   LOG(LogLevel::Debug, ("Starting up MediaTrackGraph %p for window 0x%" PRIx64,
@@ -3560,7 +3567,7 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
       aPrimaryOutputDeviceID, GetMainThreadSerialEventTarget());
 }
 
-MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
+MediaTrackGraph* MediaTrackGraphImpl::CreateNonRealtimeInstance(
     TrackRate aSampleRate) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
@@ -3568,12 +3575,17 @@ MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
   // Offline graphs have 0 output channel count: they write the output to a
   // buffer, not an audio output track.
   MediaTrackGraphImpl* graph = new MediaTrackGraphImpl(
-      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, 0, aSampleRate, 0,
-      DEFAULT_OUTPUT_DEVICE, mainThread);
+      0, aSampleRate, DEFAULT_OUTPUT_DEVICE, mainThread);
+  graph->Init(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, 0);
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaTrackGraph %p", graph));
 
   return graph;
+}
+
+MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
+    TrackRate aSampleRate) {
+  return MediaTrackGraphImpl::CreateNonRealtimeInstance(aSampleRate);
 }
 
 void MediaTrackGraph::ForceShutDown() {
