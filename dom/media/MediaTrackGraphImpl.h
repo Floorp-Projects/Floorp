@@ -129,12 +129,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * output.  Those objects currently only support audio, and are used to
    * implement OfflineAudioContext.  They do not support MediaTrack inputs.
    */
-  explicit MediaTrackGraphImpl(GraphDriverType aGraphDriverRequested,
-                               GraphRunType aRunTypeRequested,
-                               uint64_t aWindowID, TrackRate aSampleRate,
-                               uint32_t aChannelCount,
+  explicit MediaTrackGraphImpl(uint64_t aWindowID, TrackRate aSampleRate,
                                CubebUtils::AudioDeviceID aOutputDeviceID,
                                nsISerialEventTarget* aMainThread);
+
   static MediaTrackGraphImpl* GetInstance(
       GraphDriverType aGraphDriverRequested, uint64_t aWindowID,
       TrackRate aSampleRate, CubebUtils::AudioDeviceID aPrimaryOutputDeviceID,
@@ -142,6 +140,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   static MediaTrackGraphImpl* GetInstanceIfExists(
       uint64_t aWindowID, TrackRate aSampleRate,
       CubebUtils::AudioDeviceID aPrimaryOutputDeviceID);
+  static MediaTrackGraph* CreateNonRealtimeInstance(TrackRate aSampleRate);
   // For GraphHashSet:
   struct Lookup;
   operator Lookup() const;
@@ -265,7 +264,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * Called before the thread runs.
    */
-  void Init();
+  void Init(GraphDriverType aDriverRequested, GraphRunType aRunTypeRequested,
+            uint32_t aChannelCount);
 
   /**
    * Respond to CollectReports with sizes collected on the graph thread.
@@ -704,7 +704,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * If set, the GraphRunner class handles handing over data from audio
    * callbacks to a common single thread, shared across GraphDrivers.
    */
-  const RefPtr<GraphRunner> mGraphRunner;
+  RefPtr<GraphRunner> mGraphRunner;
 
   /**
    * Main-thread view of the number of tracks in this graph, for lifetime
@@ -989,7 +989,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * True when processing real-time audio/video.  False when processing
    * non-realtime audio.
    */
-  const bool mRealtime;
+  bool mRealtime;
   /**
    * True when a change has happened which requires us to recompute the track
    * blocking order.

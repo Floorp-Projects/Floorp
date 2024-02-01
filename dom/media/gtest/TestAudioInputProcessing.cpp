@@ -23,10 +23,13 @@ using testing::Return;
 
 class MockGraph : public MediaTrackGraphImpl {
  public:
-  MockGraph(TrackRate aRate, uint32_t aChannels)
-      : MediaTrackGraphImpl(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, 0, aRate,
-                            aChannels, nullptr, AbstractThread::MainThread()) {
+  explicit MockGraph(TrackRate aRate)
+      : MediaTrackGraphImpl(0, aRate, nullptr, AbstractThread::MainThread()) {
     ON_CALL(*this, OnGraphThread).WillByDefault(Return(true));
+  }
+
+  void Init(uint32_t aChannels) {
+    MediaTrackGraphImpl::Init(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aChannels);
     // Remove this graph's driver since it holds a ref. If no AppendMessage
     // takes place, the driver never starts. This will also make sure no-one
     // tries to use it. We are still kept alive by the self-ref. Destroy() must
@@ -48,7 +51,9 @@ TEST(TestAudioInputProcessing, Buffering)
 {
   const TrackRate rate = 8000;  // So packet size is 80
   const uint32_t channels = 1;
-  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
   auto aip = MakeRefPtr<AudioInputProcessing>(channels);
 
   const size_t frames = 72;
@@ -205,7 +210,9 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
 {
   const TrackRate rate = 48000;  // so # of output frames from packetizer is 480
   const uint32_t channels = 2;
-  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
   auto aip = MakeRefPtr<AudioInputProcessing>(channels);
   AudioGenerator<AudioDataValue> generator(channels, rate);
 
@@ -309,7 +316,9 @@ TEST(TestAudioInputProcessing, Downmixing)
 {
   const TrackRate rate = 44100;
   const uint32_t channels = 4;
-  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
   auto aip = MakeRefPtr<AudioInputProcessing>(channels);
 
   const size_t frames = 44100;
