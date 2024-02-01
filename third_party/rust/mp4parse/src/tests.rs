@@ -424,6 +424,25 @@ fn read_mvhd_unknown_duration() {
 }
 
 #[test]
+fn read_mvhd_v0_trailing_data() {
+    let mut stream = make_fullbox(BoxSize::Short(110), b"mvhd", 0, |s| {
+        s.B32(0)
+            .B32(0)
+            .B32(1234)
+            .B32(5678)
+            .append_repeated(0, 80)
+            .B16(0)
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::MovieHeaderBox);
+    assert_eq!(stream.head.size, 110);
+    let parsed = super::read_mvhd(&mut stream).unwrap();
+    assert_eq!(parsed.timescale, 1234);
+    assert_eq!(parsed.duration, 5678);
+}
+
+#[test]
 fn read_vpcc_version_0() {
     let data_length = 12u16;
     let mut stream = make_fullbox(BoxSize::Auto, b"vpcC", 0, |s| {
