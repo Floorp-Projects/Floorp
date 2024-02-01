@@ -87,22 +87,25 @@
 }
 
 #screenshots-cancel-button {
-  background-color: transparent;
-  margin-top: 40px;
-  width: fit-content;
+  margin-top: 20px;
   border-color: #fff;
   color: #fff;
+
+  @media (prefers-contrast) {
+    background-color: var(--in-content-button-background);
+    color: var(--in-content-button-text-color);
+    border-color: var(--in-content-button-border-color);
+  }
 }
 
 #screenshots-cancel-button:hover {
   background-color: #fff;
   color: #000;
-}
 
-@media (forced-colors: active), (prefers-contrast) {
-  #screenshots-cancel-button {
-    border-color: ButtonBorder;
-    color: CanvasText;
+  @media (prefers-contrast) {
+    background-color: var(--in-content-button-background-hover);
+    color: var(--in-content-button-text-color-hover);
+    border-color: var(--in-content-button-border-color-hover);
   }
 }
 
@@ -183,13 +186,12 @@
   font-size: 24px;
   line-height: 32px;
   text-align: center;
-  padding-top: 20px;
+  padding: 20px;
   width: 400px;
-}
 
-@media (forced-colors: active), (prefers-contrast) {
-  .preview-instructions {
+  @media (prefers-contrast) {
     color: CanvasText;
+    background-color: Canvas;
   }
 }
 

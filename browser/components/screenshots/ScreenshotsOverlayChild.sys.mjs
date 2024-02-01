@@ -97,7 +97,7 @@ export class ScreenshotsOverlay {
               <div class="face"></div>
             </div>
             <div class="preview-instructions">${instructions.value}</div>
-            <button class="screenshots-button" id="screenshots-cancel-button">${cancel.value}</button>
+            <button class="screenshots-button ghost-button" id="screenshots-cancel-button">${cancel.value}</button>
           </div>
           <div id="hover-highlight" hidden></div>
           <div id="selection-container" hidden>
