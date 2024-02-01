@@ -240,6 +240,20 @@ function getProfilerKeyShortcuts() {
       shortcut: getLocalizedKeyShortcut("devtools-commandkey-profiler-capture"),
       modifiers: "control,shift",
     },
+    // Because it's not uncommon for content or extension to bind this
+    // shortcut, allow using alt as well for starting and stopping the profiler
+    {
+      id: "profilerStartStopAlternate",
+      shortcut: getLocalizedKeyShortcut(
+        "devtools-commandkey-profiler-start-stop"
+      ),
+      modifiers: "control,shift,alt",
+    },
+    {
+      id: "profilerCaptureAlternate",
+      shortcut: getLocalizedKeyShortcut("devtools-commandkey-profiler-capture"),
+      modifiers: "control,shift,alt",
+    },
   ];
 }
 
@@ -862,11 +876,13 @@ DevToolsStartup.prototype = {
       // The profiler doesn't care if DevTools is loaded, so provide a quick check
       // first to bail out of checking if DevTools is available.
       switch (key.id) {
-        case "profilerStartStop": {
+        case "profilerStartStop":
+        case "profilerStartStopAlternate": {
           lazy.ProfilerPopupBackground.toggleProfiler("aboutprofiling");
           return;
         }
-        case "profilerCapture": {
+        case "profilerCapture":
+        case "profilerCaptureAlternate": {
           lazy.ProfilerPopupBackground.captureProfile("aboutprofiling");
           return;
         }
