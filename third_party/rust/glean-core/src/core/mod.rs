@@ -381,6 +381,16 @@ impl Glean {
                 .size
                 .accumulate_sync(self, size.get() as i64)
         }
+
+        if let Some(rkv_load_state) = self
+            .data_store
+            .as_ref()
+            .and_then(|database| database.rkv_load_state())
+        {
+            self.database_metrics
+                .rkv_load_error
+                .set_sync(self, rkv_load_state)
+        }
     }
 
     /// Signals that the environment is ready to submit pings.

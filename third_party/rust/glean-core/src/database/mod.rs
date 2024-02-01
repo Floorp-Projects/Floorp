@@ -38,7 +38,13 @@ pub type SingleStore = rkv::SingleStore<rkv::backend::SafeModeDatabase>;
 /// cbindgen:ignore
 pub type Writer<'t> = rkv::Writer<rkv::backend::SafeModeRwTransaction<'t>>;
 
-pub fn rkv_new(path: &Path) -> std::result::Result<Rkv, rkv::StoreError> {
+#[derive(Debug)]
+pub enum RkvLoadState {
+    Ok,
+    Err(rkv::StoreError),
+}
+
+pub fn rkv_new(path: &Path) -> std::result::Result<(Rkv, RkvLoadState), rkv::StoreError> {
     match Rkv::new::<rkv::backend::SafeMode>(path) {
         // An invalid file can mean:
         // 1. An empty file.
@@ -50,15 +56,20 @@ pub fn rkv_new(path: &Path) -> std::result::Result<Rkv, rkv::StoreError> {
             let safebin = path.join("data.safe.bin");
             fs::remove_file(safebin).map_err(|_| rkv::StoreError::FileInvalid)?;
             // Now try again, we only handle that error once.
-            Rkv::new::<rkv::backend::SafeMode>(path)
+            let rkv = Rkv::new::<rkv::backend::SafeMode>(path)?;
+            Ok((rkv, RkvLoadState::Err(rkv::StoreError::FileInvalid)))
         }
         Err(rkv::StoreError::DatabaseCorrupted) => {
             let safebin = path.join("data.safe.bin");
             fs::remove_file(safebin).map_err(|_| rkv::StoreError::DatabaseCorrupted)?;
             // Try again, only allowing the error once.
-            Rkv::new::<rkv::backend::SafeMode>(path)
+            let rkv = Rkv::new::<rkv::backend::SafeMode>(path)?;
+            Ok((rkv, RkvLoadState::Err(rkv::StoreError::DatabaseCorrupted)))
         }
-        other => other,
+        other => {
+            let rkv = other?;
+            Ok((rkv, RkvLoadState::Ok))
+        }
     }
 }
 
@@ -173,8 +184,11 @@ pub struct Database {
     /// so as to persist them to disk using rkv in bulk on demand.
     ping_lifetime_data: Option<RwLock<BTreeMap<String, Metric>>>,
 
-    // Initial file size when opening the database.
+    /// Initial file size when opening the database.
     file_size: Option<NonZeroU64>,
+
+    /// RKV load state
+    rkv_load_state: RkvLoadState,
 }
 
 impl std::fmt::Debug for Database {
@@ -232,7 +246,7 @@ impl Database {
         log::debug!("Database path: {:?}", path.display());
         let file_size = database_size(&path);
 
-        let rkv = Self::open_rkv(&path)?;
+        let (rkv, rkv_load_state) = Self::open_rkv(&path)?;
         let user_store = rkv.open_single(Lifetime::User.as_str(), StoreOptions::create())?;
         let ping_store = rkv.open_single(Lifetime::Ping.as_str(), StoreOptions::create())?;
         let application_store =
@@ -250,6 +264,7 @@ impl Database {
             application_store,
             ping_lifetime_data,
             file_size,
+            rkv_load_state,
         };
 
         db.load_ping_lifetime_data();
@@ -262,6 +277,15 @@ impl Database {
         self.file_size
     }
 
+    /// Get the rkv load state.
+    pub fn rkv_load_state(&self) -> Option<String> {
+        if let RkvLoadState::Err(e) = &self.rkv_load_state {
+            Some(e.to_string())
+        } else {
+            None
+        }
+    }
+
     fn get_store(&self, lifetime: Lifetime) -> &SingleStore {
         match lifetime {
             Lifetime::User => &self.user_store,
@@ -271,14 +295,14 @@ impl Database {
     }
 
     /// Creates the storage directories and inits rkv.
-    fn open_rkv(path: &Path) -> Result<Rkv> {
+    fn open_rkv(path: &Path) -> Result<(Rkv, RkvLoadState)> {
         fs::create_dir_all(path)?;
 
-        let rkv = rkv_new(path)?;
+        let (rkv, load_state) = rkv_new(path)?;
         migrate(path, &rkv);
 
         log::info!("Database initialized");
-        Ok(rkv)
+        Ok((rkv, load_state))
     }
 
     /// Build the key of the final location of the data in the database.
@@ -1484,9 +1508,13 @@ mod test {
             let f = File::create(safebin).expect("create database file");
             drop(f);
 
-            Database::new(dir.path(), false).unwrap();
+            let db = Database::new(dir.path(), false).unwrap();
 
             assert!(dir.path().exists());
+            assert!(
+                matches!(db.rkv_load_state, RkvLoadState::Err(_)),
+                "Load error recorded"
+            );
         }
 
         #[test]
@@ -1501,9 +1529,13 @@ mod test {
             let safebin = database_dir.join("data.safe.bin");
             fs::write(safebin, "<broken>").expect("write to database file");
 
-            Database::new(dir.path(), false).unwrap();
+            let db = Database::new(dir.path(), false).unwrap();
 
             assert!(dir.path().exists());
+            assert!(
+                matches!(db.rkv_load_state, RkvLoadState::Err(_)),
+                "Load error recorded"
+            );
         }
 
         #[test]

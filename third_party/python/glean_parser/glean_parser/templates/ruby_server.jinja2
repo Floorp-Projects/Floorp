@@ -12,31 +12,9 @@ Jinja2 template is not. Please file bugs! #}
 require 'json'
 require 'securerandom'
 require 'logger'
-require 'rbconfig'
 
 # this will be used for identifying logs that need to forward to Moz Data Pipeline
 GLEAN_EVENT_MOZLOG_TYPE = 'glean-server-event'
-
-# helper module to get OS level info for logs
-module OS
-  def self.name
-    case RbConfig::CONFIG['host_os']
-
-    when /linux/
-      'Linux'
-    when /darwin/
-      'OS X'
-    when /mswin|mingw32|windows/
-      'Windows'
-    when /solaris/
-      'Solaris'
-    when /bsd/
-      'BSD'
-    else
-      RbConfig::CONFIG['host_os']
-    end
-  end
-end
 
 module Glean
 {% for ping, metrics_by_type in pings.items() %}
@@ -105,7 +83,7 @@ module Glean
         'client_info' => {
           'telemetry_sdk_build' => 'glean_parser v{{ parser_version }}',
           'first_run_date' => 'Unknown',
-          'os' => OS.name,
+          'os' => 'Unknown',
           'os_version' => 'Unknown',
           'architecture' => 'Unknown',
           'app_build' => 'Unknown',
