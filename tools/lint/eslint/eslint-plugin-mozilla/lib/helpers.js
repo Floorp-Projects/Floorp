@@ -12,7 +12,6 @@ const { KEYS: defaultVisitorKeys } = require("eslint-visitor-keys");
 const estraverse = require("estraverse");
 const path = require("path");
 const fs = require("fs");
-const ini = require("multi-ini");
 const toml = require("toml-eslint-parser");
 const recommendedConfig = require("./configs/recommended");
 
@@ -22,13 +21,6 @@ var directoryManifests = new Map();
 let xpidlData;
 
 module.exports = {
-  get iniParser() {
-    if (!this._iniParser) {
-      this._iniParser = new ini.Parser();
-    }
-    return this._iniParser;
-  },
-
   get servicesData() {
     return require("./services.json");
   },
@@ -517,17 +509,7 @@ module.exports = {
     }
 
     for (let name of names) {
-      if (name.endsWith(".ini")) {
-        try {
-          let manifest = this.iniParser.parse(
-            fs.readFileSync(path.join(dir, name), "utf8").split("\n")
-          );
-          manifests.push({
-            file: path.join(dir, name),
-            manifest,
-          });
-        } catch (e) {}
-      } else if (name.endsWith(".toml")) {
+      if (name.endsWith(".toml")) {
         try {
           const ast = toml.parseTOML(
             fs.readFileSync(path.join(dir, name), "utf8")
