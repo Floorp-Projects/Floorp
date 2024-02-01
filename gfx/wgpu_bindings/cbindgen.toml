@@ -30,6 +30,26 @@ typedef uint64_t WGPUOption_SamplerId;
 typedef uint64_t WGPUOption_SurfaceId;
 typedef uint64_t WGPUOption_TextureViewId;
 typedef uint64_t WGPUOption_QuerySetId;
+
+typedef uint64_t WGPUAdapterId;
+typedef uint64_t WGPUBindGroupId;
+typedef uint64_t WGPUBindGroupLayoutId;
+typedef uint64_t WGPUBufferId;
+typedef uint64_t WGPUCommandBufferId;
+typedef uint64_t WGPUCommandEncoderId;
+typedef uint64_t WGPUComputePipelineId;
+typedef uint64_t WGPUDeviceId;
+typedef uint64_t WGPUPipelineLayoutId;
+typedef uint64_t WGPUQuerySetId;
+typedef uint64_t WGPUQueueId;
+typedef uint64_t WGPURenderBundleId;
+typedef uint64_t WGPURenderPipelineId;
+typedef uint64_t WGPUSamplerId;
+typedef uint64_t WGPUShaderModuleId;
+typedef uint64_t WGPUStagingBufferId;
+typedef uint64_t WGPUSurfaceId;
+typedef uint64_t WGPUTextureId;
+typedef uint64_t WGPUTextureViewId;
 """
 include_version = true
 braces = "SameLine"
