@@ -30,6 +30,7 @@ jobs:
                 (release|beta|nightly):
                     type: signing
                 default: {}
+        run-on-projects: []
         treeherder:
             symbol:
                 by-build-type:

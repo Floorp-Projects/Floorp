@@ -28,23 +28,11 @@ jobs:
                 fenix-(beta|release)-mozillaonline: autograph_apk_mozillaonline
                 default: autograph_apk
         index:
-            by-tasks-for:
-                (action|cron|github-release):
-                    by-build-type:
-                        (focus-nightly|focus-release|klar-release|focus-beta|fenix-nightly|fenix-debug|fenix-nightly-simulation|fenix-beta|fenix-beta-mozillaonline|fenix-release|fenix-release-mozillaonline):
-                            type: signing
-                        default: {}
-                default: {}
-        run-on-projects:
             by-build-type:
-                (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [all]
-                # No test job runs on push against this build type. Although we do want nightly-simulation
-                # signed to use it in the gecko trees.
-                # We want beta on push so that we detect problem before shipping it
-                (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-nightly-firebase|fenix-android-test-nightly): [all]
-                # bug 1851826
-                (fenix-android-test-mozillaonline): []
-                default: []
+                (focus-nightly|focus-release|klar-release|focus-beta|fenix-nightly|fenix-debug|fenix-nightly-simulation|fenix-beta|fenix-beta-mozillaonline|fenix-release|fenix-release-mozillaonline):
+                    type: signing
+                default: {}
+        run-on-projects: []
         treeherder:
             symbol:
                 by-build-type:

@@ -26,6 +26,7 @@ jobs:
             by-build-type:
                 (focus-.*|klar-.*): autograph_focus
                 default: autograph_apk
+        run-on-projects: []
         treeherder:
             symbol:
                 by-build-type:
