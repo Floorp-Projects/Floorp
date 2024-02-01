@@ -10,6 +10,7 @@
   z-index: 3;
   padding: 12px;
   background-color: var(--arrowpanel-background);
+  color: var(--arrowpanel-color);
   border-radius: var(--arrowpanel-border-radius);
 }
 
