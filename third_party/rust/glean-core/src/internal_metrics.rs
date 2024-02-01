@@ -261,6 +261,9 @@ impl UploadMetrics {
 #[derive(Debug)]
 pub struct DatabaseMetrics {
     pub size: MemoryDistributionMetric,
+
+    /// RKV's load result, indicating success or relaying the detected error.
+    pub rkv_load_error: StringMetric,
 }
 
 impl DatabaseMetrics {
@@ -277,6 +280,15 @@ impl DatabaseMetrics {
                 },
                 MemoryUnit::Byte,
             ),
+
+            rkv_load_error: StringMetric::new(CommonMetricData {
+                name: "rkv_load_error".into(),
+                category: "glean.error".into(),
+                send_in_pings: vec!["metrics".into()],
+                lifetime: Lifetime::Ping,
+                disabled: false,
+                dynamic_label: None,
+            }),
         }
     }
 }
