@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const HIST_ID = "USE_COUNTER2_JS_LATE_WEEKDAY_PAGE";
-
 const triggers = [
   "Sep 26 Tues 1995",
   "Sep 26 1995 Tues",
@@ -32,7 +30,7 @@ const nonTriggers = [
 ];
 
 function getCount() {
-  return Services.telemetry.getHistogramById(HIST_ID).snapshot().sum;
+  return Glean.useCounterPage.jsLateWeekday.testGetValue() ?? 0;
 }
 
 /**
