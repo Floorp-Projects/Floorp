@@ -207,7 +207,7 @@ private fun parseFingerprints(app: JSONObject): List<WebAppManifest.ExternalAppl
 
 @Suppress("MagicNumber")
 private fun serializeColor(color: Int?): String? = color?.let {
-    String.format("#%06X", 0xFFFFFF and color)
+    String.format("#%06X", 0xFFFFFF and it)
 }
 
 private fun serializeRelatedApplications(

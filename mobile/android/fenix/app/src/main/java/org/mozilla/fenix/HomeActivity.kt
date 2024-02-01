@@ -233,8 +233,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
         components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            // Theme setup should always be called before super.onCreate
-            setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
+            // Browsing mode & theme setup should always be called before super.onCreate.
+            setupBrowsingMode(getModeFromIntentOrLastKnown(intent))
+            setupTheme()
+
             super.onCreate(savedInstanceState)
         }
 
@@ -870,12 +872,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         return false
     }
 
-    private fun setupThemeAndBrowsingMode(mode: BrowsingMode) {
+    private fun setupBrowsingMode(mode: BrowsingMode) {
         settings().lastKnownMode = mode
         browsingModeManager = createBrowsingModeManager(mode)
+    }
+
+    private fun setupTheme() {
         themeManager = createThemeManager()
-        themeManager.setActivityTheme(this)
-        themeManager.applyStatusBarTheme(this)
+        // ExternalAppBrowserActivity handles it's own theming as it can be customized.
+        if (this !is ExternalAppBrowserActivity) {
+            themeManager.setActivityTheme(this)
+            themeManager.applyStatusBarTheme(this)
+        }
     }
 
     // Stop active media when activity is destroyed.
