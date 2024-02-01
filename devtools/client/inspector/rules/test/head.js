@@ -379,6 +379,20 @@ var renameProperty = async function (view, textProp, name) {
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   info("Wait for property name.");
   await onNameDone;
+
+  if (
+    !Services.prefs.getBoolPref("devtools.inspector.rule-view.focusNextOnEnter")
+  ) {
+    return;
+  }
+
+  // Renaming the property auto-advances the focus to the value input. Exiting without
+  // committing will still fire a change event. @see TextPropertyEditor._onValueDone().
+  // Wait for that event too before proceeding.
+  const onValueDone = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  info("Wait for property value.");
+  await onValueDone;
 };
 
 /**
