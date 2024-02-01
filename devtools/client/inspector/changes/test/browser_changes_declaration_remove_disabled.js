@@ -18,6 +18,7 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
+  await pushPref("devtools.inspector.rule-view.focusNextOnEnter", false);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView } = await openRuleView();
   const { document: doc, store } = selectChangesView(inspector);
