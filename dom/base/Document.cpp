@@ -9277,12 +9277,8 @@ class Document::TitleChangeEvent final : public Runnable {
  public:
   explicit TitleChangeEvent(Document* aDoc)
       : Runnable("Document::TitleChangeEvent"),
-        mDoc(aDoc)
-#ifndef ANDROID
-        ,
-        mBlockOnload(aDoc->IsInChromeDocShell())
-#endif
-  {
+        mDoc(aDoc),
+        mBlockOnload(aDoc->IsInChromeDocShell()) {
     if (mBlockOnload) {
       mDoc->BlockOnload();
     }
