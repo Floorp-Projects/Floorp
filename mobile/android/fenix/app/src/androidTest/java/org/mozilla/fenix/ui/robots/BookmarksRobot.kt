@@ -79,8 +79,6 @@ class BookmarksRobot {
         Log.i(TAG, "verifyCloseButton: Verified close bookmarks section button is visible")
     }
 
-    fun verifyDeleteMultipleBookmarksSnackBar() = assertSnackBarText("Bookmarks deleted")
-
     fun verifyBookmarkFavicon(forUrl: Uri) {
         bookmarkFavicon(forUrl.toString()).check(
             matches(
@@ -137,8 +135,6 @@ class BookmarksRobot {
         )
     }
 
-    fun verifyDeleteSnackBarText() = assertSnackBarText("Deleted")
-
     fun verifyUndoDeleteSnackBarButton() {
         snackBarUndoButton().check(matches(withText("UNDO")))
         Log.i(TAG, "verifyUndoDeleteSnackBarButton: Verified bookmark deletion undo snack bar button")
@@ -154,8 +150,6 @@ class BookmarksRobot {
         Log.i(TAG, "verifySnackBarHidden: Verified bookmark snack bar does not exist")
     }
 
-    fun verifyCopySnackBarText() = assertSnackBarText("URL copied")
-
     fun verifyEditBookmarksView() =
         assertUIObjectExists(
             itemWithDescription("Navigate up"),
@@ -167,7 +161,15 @@ class BookmarksRobot {
             itemWithResId("$packageName:id/bookmarkParentFolderSelector"),
         )
 
-    fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
+    fun verifyKeyboardHidden(isExpectedToBeVisible: Boolean) {
+        assertEquals(
+            isExpectedToBeVisible,
+            mDevice
+                .executeShellCommand("dumpsys input_method | grep mInputShown")
+                .contains("mInputShown=true"),
+        )
+        Log.i(TAG, "assertKeyboardVisibility: Verified that the keyboard is visible: $isExpectedToBeVisible")
+    }
 
     fun verifyShareOverlay() {
         onView(withId(R.id.shareWrapper)).check(matches(isDisplayed()))
@@ -188,8 +190,6 @@ class BookmarksRobot {
         onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
         Log.i(TAG, "verifyShareBookmarkUrl: Verified shared bookmarks url is displayed")
     }
-
-    fun verifySelectDefaultFolderSnackBarText() = assertSnackBarText("Can’t edit default folders")
 
     fun verifyCurrentFolderTitle(title: String) {
         Log.i(TAG, "verifyCurrentFolderTitle: Looking for bookmark with title: $title")
@@ -468,21 +468,3 @@ private fun saveBookmarkButton() = onView(withId(R.id.save_bookmark_button))
 private fun deleteInEditModeButton() = onView(withId(R.id.delete_bookmark_button))
 
 private fun syncSignInButton() = onView(withId(R.id.bookmark_folders_sign_in))
-
-private fun assertEmptyBookmarksList() =
-    onView(withId(R.id.bookmarks_empty_view)).check(matches(withText("No bookmarks here")))
-
-private fun assertSnackBarText(text: String) {
-    snackBarText().check(matches(withText(containsString(text))))
-    Log.i(TAG, "assertSnackBarText: Verified $text snack bar")
-}
-
-private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) {
-    assertEquals(
-        isExpectedToBeVisible,
-        mDevice
-            .executeShellCommand("dumpsys input_method | grep mInputShown")
-            .contains("mInputShown=true"),
-    )
-    Log.i(TAG, "assertKeyboardVisibility: Verified that the keyboard is visible: $isExpectedToBeVisible")
-}
