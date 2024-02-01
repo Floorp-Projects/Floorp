@@ -57,10 +57,13 @@ add_task(async function () {
     view.styleDocument.querySelector("#registered-properties-container")
   );
 
+  const topLevelVariables = ["--css", "--js", "--not-registered"];
+  await checkNewPropertyCssVariableAutocomplete(view, topLevelVariables);
+
   await checkCssVariableAutocomplete(
     view,
     getTextProperty(view, 1, { color: "gold" }).editor.valueSpan,
-    ["--css", "--js", "--not-registered"]
+    topLevelVariables
   );
 
   info(
@@ -68,12 +71,37 @@ add_task(async function () {
   );
   await selectNodeInFrames(["iframe", "h1"], inspector);
 
+  const iframeVariables = ["--iframe", "--iframe-not-registered"];
+  await checkNewPropertyCssVariableAutocomplete(view, iframeVariables);
+
   await checkCssVariableAutocomplete(
     view,
     getTextProperty(view, 1, { color: "tomato" }).editor.valueSpan,
-    ["--iframe", "--iframe-not-registered"]
+    iframeVariables
   );
 });
+
+async function checkNewPropertyCssVariableAutocomplete(
+  view,
+  expectedPopupItems
+) {
+  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const editor = await focusNewRuleViewProperty(ruleEditor);
+  const onPopupOpen = editor.popup.once("popup-opened");
+  EventUtils.sendString("--");
+  await onPopupOpen;
+
+  Assert.deepEqual(
+    editor.popup.getItems().map(item => item.label),
+    expectedPopupItems,
+    "Got expected items in autopopup"
+  );
+
+  info("Close the popup");
+  const onPopupClosed = once(editor.popup, "popup-closed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  await onPopupClosed;
+}
 
 async function checkCssVariableAutocomplete(
   view,

@@ -1562,7 +1562,7 @@ class InplaceEditor extends EventEmitter {
       let postLabelValues = [];
 
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
-        list = this.#getCSSPropertyList();
+        list = this.#getCSSVariableNames().concat(this.#getCSSPropertyList());
       } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
         // Get the last query to be completed before the caret.
         const match = /([^\s,.\/]+$)/.exec(query);
@@ -1629,7 +1629,9 @@ class InplaceEditor extends EventEmitter {
             }
           } else if (match[1]) {
             // We are in CSS property name completion
-            list = this.#getCSSPropertyList();
+            list = this.#getCSSVariableNames().concat(
+              this.#getCSSPropertyList()
+            );
             startCheckQuery = match[2];
           }
           if (startCheckQuery == null) {
