@@ -684,11 +684,11 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
       ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d",
        aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  NS_ASSERTION(aReflowInput.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-               "Shouldn't have unconstrained stuff here "
+  NS_ASSERTION(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+               "Shouldn't have unconstrained inline-size here "
                "thanks to the rules of reflow");
-  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedHeight(),
-               "Shouldn't have unconstrained stuff here "
+  NS_ASSERTION(aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE,
+               "Shouldn't have unconstrained block-size here "
                "thanks to ComputeAutoSize");
 
   NS_ASSERTION(mContent->GetPrimaryFrame() == this, "Shouldn't happen");

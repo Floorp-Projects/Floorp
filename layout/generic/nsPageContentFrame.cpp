@@ -51,8 +51,7 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
   // Set our size up front, since some parts of reflow depend on it
   // being already set.  Note that the computed height may be
   // unconstrained; that's ok.  Consumers should watch out for that.
-  const nsSize maxSize(aReflowInput.ComputedWidth(),
-                       aReflowInput.ComputedHeight());
+  const nsSize maxSize = aReflowInput.ComputedPhysicalSize();
   SetSize(maxSize);
 
   // Writing mode for the page content frame.

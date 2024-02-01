@@ -1540,15 +1540,10 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     RemoveStateBits(IMAGE_SIZECONSTRAINED);
   }
 
-  mComputedSize =
-      nsSize(aReflowInput.ComputedWidth(), aReflowInput.ComputedHeight());
+  mComputedSize = aReflowInput.ComputedPhysicalSize();
 
-  aMetrics.Width() = mComputedSize.width;
-  aMetrics.Height() = mComputedSize.height;
-
-  // add borders and padding
-  aMetrics.Width() += aReflowInput.ComputedPhysicalBorderPadding().LeftRight();
-  aMetrics.Height() += aReflowInput.ComputedPhysicalBorderPadding().TopBottom();
+  const auto wm = GetWritingMode();
+  aMetrics.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   if (GetPrevInFlow()) {
     aMetrics.Width() = GetPrevInFlow()->GetSize().width;

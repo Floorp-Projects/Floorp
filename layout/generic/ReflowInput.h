@@ -399,7 +399,7 @@ struct ReflowInput : public SizeComputationInput {
   }
 
   nsSize ComputedPhysicalSize() const {
-    return nsSize(ComputedWidth(), ComputedHeight());
+    return mComputedSize.GetPhysicalSize(mWritingMode);
   }
 
   nsMargin ComputedPhysicalOffsets() const {
