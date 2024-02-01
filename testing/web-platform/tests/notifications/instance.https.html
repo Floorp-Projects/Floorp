@@ -5,13 +5,13 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/custom-data.js"></script>
 <script>
-var n = new Notification("Radio check",
+const n = new Notification("Radio check",
     {
         dir: "ltr",
         lang: "aa",
         body: "This is a radio check.",
         tag: "radio_check999",
-        icon: "http://example.com/icon.png",
+        icon: `${location.origin}/icon.png`,
         data: fakeCustomData,
     }
 )
@@ -37,22 +37,22 @@ test(function() {
     assert_true("onclose" in n)
 },"Attribute exists: onclose")
 test(function() {
-    assert_equals("Radio check", n.title)
+    assert_equals(n.title, "Radio check")
 },"Attribute exists with expected value: title")
 test(function() {
-    assert_equals("ltr", n.dir)
+    assert_equals(n.dir, "ltr")
 },"Attribute exists with expected value: dir")
 test(function() {
-    assert_equals("aa", n.lang)
+    assert_equals(n.lang, "aa")
 },"Attribute exists with expected value: lang")
 test(function() {
-    assert_equals("This is a radio check.", n.body)
+    assert_equals(n.body, "This is a radio check.")
 },"Attribute exists with expected value: body")
 test(function() {
-    assert_equals("radio_check999", n.tag)
+    assert_equals(n.tag, "radio_check999")
 },"Attribute exists with expected value: tag")
 test(function() {
-    assert_equals("http://example.com/icon.png", n.icon)
+    assert_equals(n.icon, `${location.origin}/icon.png`)
 },"Attribute exists with expected value: icon")
 test(function() {
     assert_custom_data(n.data);
