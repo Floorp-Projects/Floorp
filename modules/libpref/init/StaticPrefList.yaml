@@ -15483,6 +15483,11 @@
   value: false
   mirror: always
 
+- name: widget.disable_file_pickers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false

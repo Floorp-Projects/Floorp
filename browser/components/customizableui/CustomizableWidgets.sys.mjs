@@ -223,9 +223,8 @@ export const CustomizableWidgets = [
     id: "save-page-button",
     l10nId: "toolbar-button-save-page",
     shortcutId: "key_savePage",
-    onCommand(aEvent) {
-      let win = aEvent.target.ownerGlobal;
-      win.saveBrowser(win.gBrowser.selectedBrowser);
+    onCreated(aNode) {
+      aNode.setAttribute("command", "Browser:SavePage");
     },
   },
   {
@@ -252,9 +251,8 @@ export const CustomizableWidgets = [
     id: "open-file-button",
     l10nId: "toolbar-button-open-file",
     shortcutId: "openFileKb",
-    onCommand(aEvent) {
-      let win = aEvent.target.ownerGlobal;
-      win.BrowserOpenFileWindow();
+    onCreated(aNode) {
+      aNode.setAttribute("command", "Browser:OpenFile");
     },
   },
   {
