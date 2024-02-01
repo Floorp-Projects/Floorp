@@ -91,7 +91,10 @@ run-sequentially = "node server exceptions dont replay well"
 
 ["test_altsvc_http3.js"]
 skip-if = [
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
+  "true", # Bug 1675008
+  "asan",
+  "tsan",
+  "os == 'android'",
 ]
 run-sequentially = "http3server"
 
