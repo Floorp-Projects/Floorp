@@ -2575,6 +2575,100 @@ main section {
   text-decoration: none;
 }
 
+.activity-stream.modal-open {
+  overflow: hidden;
+}
+
+.modalOverlayOuter {
+  background: var(--newtab-overlay-color);
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: none;
+  z-index: 1100;
+  overflow: auto;
+}
+.modalOverlayOuter.active {
+  display: flex;
+}
+
+.modalOverlayInner {
+  min-width: min-content;
+  width: 100%;
+  max-width: 960px;
+  position: relative;
+  margin: auto;
+  background: var(--newtab-background-color-secondary);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  display: none;
+  z-index: 1100;
+}
+@media (width <= 960px) {
+  .modalOverlayInner {
+    height: 100%;
+    top: 0;
+    left: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+.modalOverlayInner.active {
+  display: block;
+}
+.modalOverlayInner h2 {
+  color: var(--newtab-text-primary-color);
+  text-align: center;
+  font-weight: 200;
+  margin-top: 30px;
+  font-size: 28px;
+  line-height: 37px;
+  letter-spacing: -0.13px;
+}
+@media (width <= 960px) {
+  .modalOverlayInner h2 {
+    margin-top: 100px;
+  }
+}
+@media (width <= 850px) {
+  .modalOverlayInner h2 {
+    margin-top: 30px;
+  }
+}
+.modalOverlayInner .footer {
+  border-top: 1px solid var(--newtab-border-color);
+  border-radius: 4px;
+  height: 70px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  background-color: #FFF;
+}
+@media (width <= 850px) and (height <= 730px) {
+  .modalOverlayInner .footer {
+    position: sticky;
+  }
+}
+@media (width <= 650px) and (height <= 600px) {
+  .modalOverlayInner .footer {
+    position: sticky;
+  }
+}
+.modalOverlayInner .footer .modalButton {
+  margin-top: 20px;
+  min-width: 150px;
+  height: 30px;
+  padding: 4px 30px 6px;
+  font-size: 15px;
+}
+.modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
+  transition: box-shadow 150ms;
+}
+
 .ds-onboarding-container,
 .ds-card-grid .ds-card {
   background: #FFF;
@@ -4107,100 +4201,6 @@ main section {
   padding: 6px 12px;
 }
 .ASRouterButton.slim:hover, .ASRouterButton.slim:focus {
-  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
-  transition: box-shadow 150ms;
-}
-
-.activity-stream.modal-open {
-  overflow: hidden;
-}
-
-.modalOverlayOuter {
-  background: var(--newtab-overlay-color);
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: none;
-  z-index: 1100;
-  overflow: auto;
-}
-.modalOverlayOuter.active {
-  display: flex;
-}
-
-.modalOverlayInner {
-  min-width: min-content;
-  width: 100%;
-  max-width: 960px;
-  position: relative;
-  margin: auto;
-  background: var(--newtab-background-color-secondary);
-  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  display: none;
-  z-index: 1100;
-}
-@media (width <= 960px) {
-  .modalOverlayInner {
-    height: 100%;
-    top: 0;
-    left: 0;
-    box-shadow: none;
-    border-radius: 0;
-  }
-}
-.modalOverlayInner.active {
-  display: block;
-}
-.modalOverlayInner h2 {
-  color: var(--newtab-text-primary-color);
-  text-align: center;
-  font-weight: 200;
-  margin-top: 30px;
-  font-size: 28px;
-  line-height: 37px;
-  letter-spacing: -0.13px;
-}
-@media (width <= 960px) {
-  .modalOverlayInner h2 {
-    margin-top: 100px;
-  }
-}
-@media (width <= 850px) {
-  .modalOverlayInner h2 {
-    margin-top: 30px;
-  }
-}
-.modalOverlayInner .footer {
-  border-top: 1px solid var(--newtab-border-color);
-  border-radius: 4px;
-  height: 70px;
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  text-align: center;
-  background-color: #FFF;
-}
-@media (width <= 850px) and (height <= 730px) {
-  .modalOverlayInner .footer {
-    position: sticky;
-  }
-}
-@media (width <= 650px) and (height <= 600px) {
-  .modalOverlayInner .footer {
-    position: sticky;
-  }
-}
-.modalOverlayInner .footer .modalButton {
-  margin-top: 20px;
-  min-width: 150px;
-  height: 30px;
-  padding: 4px 30px 6px;
-  font-size: 15px;
-}
-.modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
   box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
