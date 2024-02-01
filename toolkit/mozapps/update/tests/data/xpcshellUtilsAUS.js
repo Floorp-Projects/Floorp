@@ -2471,7 +2471,7 @@ function isBinarySigned(aBinPath) {
  * This may be required to launch the updated application and have non-trivial
  * functionality available.
  */
-async function setupAppFiles({ requiresOmnijar = false } = {}) {
+function setupAppFiles({ requiresOmnijar = false } = {}) {
   debugDump(
     "start - copying or creating symlinks to application files " +
       "for the test"
@@ -2545,26 +2545,6 @@ async function setupAppFiles({ requiresOmnijar = false } = {}) {
   });
 
   copyTestUpdaterToBinDir();
-
-  if (AppConstants.platform == "macosx") {
-    // Newer versions of macOS mark copied applications as quarantined and will
-    // refuse to run them with exit code -9.  There is no console logging but
-    // the UI pops an "Allow ..." dialog.  Work around this by manually removing
-    // quarantine xattrs.
-    let promises = [];
-    let delMacXAttr = e => {
-      promises.push(
-        IOUtils.delMacXAttr(e.path, "com.apple.quarantine").catch(() => {})
-      );
-    };
-
-    checkFilesInDirRecursive(destDir, delMacXAttr, {
-      includeDirectories: true,
-    });
-
-    // `delMacXAttr` throws if the attribute doesn't exist, which is fine.
-    await Promise.all(promises);
-  }
 
   debugDump(
     "finish - copying or creating symlinks to application files " +
@@ -3250,9 +3230,9 @@ async function setupUpdaterTest(
     createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
-  await TestUtils.waitForCondition(async () => {
+  await TestUtils.waitForCondition(() => {
     try {
-      await setupAppFiles({ requiresOmnijar });
+      setupAppFiles({ requiresOmnijar });
       return true;
     } catch (e) {
       logTestInfo("exception when calling setupAppFiles, Exception: " + e);
@@ -4170,47 +4150,27 @@ function checkForBackupFiles(aFile) {
  * each file found.
  *
  * @param   aDir
- *          A nsIFile for the directory to be enumerated
+ *          A nsIFile for the directory to be deleted
  * @param   aCallback
  *          A callback function that will be called with the file as a
  *          parameter for each file found.
- * @param   options.includeDirectories
- *          When true, also invoke callback function with the directory as a
- *          parameter for each directory found.  Directories are enumerated
- *          after their children, to allow callers to conveniently recursively
- *          remove.
  */
-function checkFilesInDirRecursive(
-  aDir,
-  aCallback,
-  { includeDirectories = false } = {}
-) {
+function checkFilesInDirRecursive(aDir, aCallback) {
   if (!aDir.exists()) {
     do_throw("Directory must exist!");
   }
 
   let dirEntries = aDir.directoryEntries;
-  let entries = [];
   while (dirEntries.hasMoreElements()) {
     let entry = dirEntries.nextFile;
-    entries.push([entry.path, entry]);
-  }
 
-  entries.sort(([a], [b]) => b > a);
-
-  for (let pair of entries) {
-    let entry = pair[1];
     if (entry.exists()) {
       if (entry.isDirectory()) {
-        checkFilesInDirRecursive(entry, aCallback, { includeDirectories });
+        checkFilesInDirRecursive(entry, aCallback);
       } else {
         aCallback(entry);
       }
     }
-  }
-
-  if (includeDirectories) {
-    aCallback(aDir);
   }
 }
 
