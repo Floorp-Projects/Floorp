@@ -45,17 +45,10 @@
   --border-radius-small: 4px;
   --border-radius-medium: 8px;
   --border-width: 1px;
-  --border-interactive-color: unset;
 
   /** Box **/
   --box-background-color: light-dark(var(--color-white), var(--color-gray-80));
   --box-shadow-10: 0 1px 4px var(--color-black-a10);
-
-  /** Color **/
-  --color-accent-primary: unset;
-  --color-accent-primary-hover: unset;
-  --color-accent-primary-active: unset;
-  --color-canvas: unset;
 
   /** Font weight **/
   --font-weight-default: normal;
@@ -70,9 +63,6 @@
 
   /** Input **/
   /*** Button ***/
-  --button-background-color: unset;
-  --button-background-color-hover: unset;
-  --button-background-color-active: unset;
   --button-border-radius: var(--border-radius-small);
   --button-font-weight: var(--font-weight-bold);
   --button-line-height: var(--line-height-small);
