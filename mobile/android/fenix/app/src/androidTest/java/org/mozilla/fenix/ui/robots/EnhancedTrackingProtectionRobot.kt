@@ -38,10 +38,29 @@ import org.mozilla.fenix.helpers.isChecked
  * Implementation of Robot Pattern for Enhanced Tracking Protection UI.
  */
 class EnhancedTrackingProtectionRobot {
-    fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) =
-        assertEnhancedTrackingProtectionSheetStatus(status, state)
+    fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) {
+        mDevice.waitNotNull(Until.findObjects(By.text("Protections are $status for this site")))
+        onView(ViewMatchers.withResourceName("switch_widget")).check(
+            matches(
+                isChecked(
+                    state,
+                ),
+            ),
+        )
+        Log.i(TAG, "verifyEnhancedTrackingProtectionSheetStatus: Verified ETP toggle is checked: $state")
+    }
 
-    fun verifyETPSwitchVisibility(visible: Boolean) = assertETPSwitchVisibility(visible)
+    fun verifyETPSwitchVisibility(visible: Boolean) {
+        if (visible) {
+            enhancedTrackingProtectionSwitch()
+                .check(matches(isDisplayed()))
+            Log.i(TAG, "verifyETPSwitchVisibility: Verified ETP toggle is displayed")
+        } else {
+            enhancedTrackingProtectionSwitch()
+                .check(matches(not(isDisplayed())))
+            Log.i(TAG, "verifyETPSwitchVisibility: Verified ETP toggle is not displayed")
+        }
+    }
 
     fun verifyCrossSiteCookiesBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithResId("$packageName:id/cross_site_tracking"))
@@ -184,7 +203,10 @@ class EnhancedTrackingProtectionRobot {
             pageSecurityIndicator().waitForExists(waitingTime)
             pageSecurityIndicator().click()
             Log.i(TAG, "openEnhancedTrackingProtectionSheet: Clicked site security button")
-            assertSecuritySheetIsCompletelyDisplayed()
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Looking for quick actions sheet")
+            mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
+                .waitForExists(waitingTime)
+            assertUIObjectExists(itemWithResId("$packageName:id/quick_action_sheet"))
 
             EnhancedTrackingProtectionRobot().interact()
             return Transition()
@@ -234,30 +256,6 @@ class EnhancedTrackingProtectionRobot {
 fun enhancedTrackingProtection(interact: EnhancedTrackingProtectionRobot.() -> Unit): EnhancedTrackingProtectionRobot.Transition {
     EnhancedTrackingProtectionRobot().interact()
     return EnhancedTrackingProtectionRobot.Transition()
-}
-
-private fun assertETPSwitchVisibility(visible: Boolean) {
-    if (visible) {
-        enhancedTrackingProtectionSwitch()
-            .check(matches(isDisplayed()))
-        Log.i(TAG, "assertETPSwitchVisibility: Verified ETP toggle is displayed")
-    } else {
-        enhancedTrackingProtectionSwitch()
-            .check(matches(not(isDisplayed())))
-        Log.i(TAG, "assertETPSwitchVisibility: Verified ETP toggle is not displayed")
-    }
-}
-
-private fun assertEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) {
-    mDevice.waitNotNull(Until.findObjects(By.text("Protections are $status for this site")))
-    onView(ViewMatchers.withResourceName("switch_widget")).check(
-        matches(
-            isChecked(
-                state,
-            ),
-        ),
-    )
-    Log.i(TAG, "assertEnhancedTrackingProtectionSheetStatus: Verified ETP toggle is checked: $state")
 }
 
 private fun pageSecurityIndicator() =
@@ -315,10 +313,3 @@ private fun fingerprintersBlockListButton() =
             withText("Fingerprinters"),
         ),
     )
-
-private fun assertSecuritySheetIsCompletelyDisplayed() {
-    Log.i(TAG, "assertSecuritySheetIsCompletelyDisplayed: Looking for quick actions sheet")
-    mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
-        .waitForExists(waitingTime)
-    assertUIObjectExists(itemWithResId("$packageName:id/quick_action_sheet"))
-}
