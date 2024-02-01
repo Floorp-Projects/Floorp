@@ -2091,6 +2091,7 @@ class NoDists:
     >>> list(NoDists()('anything'))
     []
     """
+
     def __bool__(self):
         return False
     if six.PY2:
@@ -2161,7 +2162,8 @@ def resolve_egg_link(path):
     return next(dist_groups, ())
 
 
-register_finder(pkgutil.ImpImporter, find_on_path)
+if hasattr(pkgutil, 'ImpImporter'):
+    register_finder(pkgutil.ImpImporter, find_on_path)
 
 if hasattr(importlib_machinery, 'FileFinder'):
     register_finder(importlib_machinery.FileFinder, find_on_path)
@@ -2312,7 +2314,8 @@ def file_ns_handler(importer, path_item, packageName, module):
         return subpath
 
 
-register_namespace_handler(pkgutil.ImpImporter, file_ns_handler)
+if hasattr(pkgutil, 'ImpImporter'):
+    register_namespace_handler(pkgutil.ImpImporter, file_ns_handler)
 register_namespace_handler(zipimport.zipimporter, file_ns_handler)
 
 if hasattr(importlib_machinery, 'FileFinder'):
@@ -3286,6 +3289,7 @@ def _initialize_master_working_set():
     # match order
     list(map(working_set.add_entry, sys.path))
     globals().update(locals())
+
 
 class PkgResourcesDeprecationWarning(Warning):
     """
