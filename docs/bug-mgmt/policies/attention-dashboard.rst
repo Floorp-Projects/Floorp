@@ -21,7 +21,16 @@ The dashboard is a collection of some (sometimes non-obvious) Bugzilla searches.
 Rules of thumb
 --------------
 
-Here are some rules of thumb about our priorities when it comes to bug fixing.
+Here are some rules of thumb about our priorities when it comes to bug fixing. Specific requests from a manager take precedence over these instructions.
+
+
+Code review requests are not visible on this dashboard; please visit `Phabricator`_ to view those. In general it’s reasonable and important to prioritize Review Requests to unblock others.
+
+
+Follow these general principles and use your best judgment with the help of a manager when necessary.
+
+
+.. _Phabricator: https://phabricator.services.mozilla.com/
 
 
 Highest priority tasks
@@ -37,9 +46,6 @@ These are the things you should drop everything else for. Generally, work where 
 
 	* Bugs that are needinfo? you and are marked as a security issue without rating. These bugs are potentially sec-critical or sec-high once they are triaged and important.
 
-#. Review requests for bugs that are marked as Severity = S1 defects or with the “sec-critical” keyword.
-
-	* Code review requests are not visible on this dashboard, please visit Phabricator to view those. In general it’s reasonable and important to prioritize Review Requests to unblock others.
 
 #. Critical bugs assigned to you
 
@@ -55,9 +61,6 @@ High priority tasks are also “drop everything”, except that in this case “
 
 	* Bugs that are needinfo? you and are marked as Severity = S2 defects or with the “sec-high” keyword.
 
-#. Review requests for bugs that are marked as Severity = S2 defects or with the “sec-high” keyword.
-
-	* Code review requests are not visible on this dashboard, please visit Phabricator to view those. In general it’s reasonable and important to prioritize Review Requests to unblock others.
 
 #. Important bugs assigned to you
 
