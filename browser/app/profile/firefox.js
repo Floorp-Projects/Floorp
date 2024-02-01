@@ -785,7 +785,7 @@ pref("browser.shopping.experience2023.survey.pdpVisits", 0);
 // Enables the auto-open feature for the shopping sidebar,
 // including new callouts and settings UI changes
 // (this is just the feature flag).
-pref("browser.shopping.experience2023.autoOpen.enabled", true);
+pref("browser.shopping.experience2023.autoOpen.enabled", false);
 
 // Opens the shopping sidebar automatically when viewing a PDP.
 pref("browser.shopping.experience2023.autoOpen.userEnabled", true);
