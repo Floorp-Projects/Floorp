@@ -64,6 +64,7 @@ class nsBaseFilePicker : public nsIFilePicker {
   virtual nsresult Show(nsIFilePicker::ResultCode* _retval) = 0;
 
   virtual nsresult ResolveSpecialDirectory(const nsAString& aSpecialDirectory);
+  bool MaybeBlockFilePicker(nsIFilePickerShownCallback* aCallback);
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;

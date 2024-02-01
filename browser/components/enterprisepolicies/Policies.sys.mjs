@@ -121,6 +121,16 @@ export var Policies = {
     },
   },
 
+  AllowFileSelectionDialogs: {
+    onBeforeUIStartup(manager, param) {
+      if (!param) {
+        setAndLockPref("widget.disable_file_pickers", true);
+        setAndLockPref("browser.download.useDownloadDir", true);
+        manager.disallowFeature("filepickers");
+      }
+    },
+  },
+
   AppAutoUpdate: {
     onBeforeUIStartup(manager, param) {
       // Logic feels a bit reversed here, but it's correct. If AppAutoUpdate is
