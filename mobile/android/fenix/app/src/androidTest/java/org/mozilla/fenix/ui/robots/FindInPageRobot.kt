@@ -27,9 +27,21 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  * Implementation of Robot Pattern for the find in page UI.
  */
 class FindInPageRobot {
-    fun verifyFindInPageNextButton() = assertFindInPageNextButton()
-    fun verifyFindInPagePrevButton() = assertFindInPagePrevButton()
-    fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()
+    fun verifyFindInPageNextButton() {
+        findInPageNextButton()
+            .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyFindInPageNextButton: Verified find in page next result button is visible")
+    }
+    fun verifyFindInPagePrevButton() {
+        findInPagePrevButton()
+            .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyFindInPagePrevButton: Verified find in page previous result button is visible")
+    }
+    fun verifyFindInPageCloseButton() {
+        findInPageCloseButton()
+            .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyFindInPageCloseButton: Verified find in page close button is visible")
+    }
     fun clickFindInPageNextButton() {
         findInPageNextButton().click()
         Log.i(TAG, "clickFindInPageNextButton: Clicked next result button")
@@ -84,21 +96,3 @@ private fun findInPageResult() = onView(withId(R.id.find_in_page_result_text))
 private fun findInPageNextButton() = onView(withId(R.id.find_in_page_next_btn))
 private fun findInPagePrevButton() = onView(withId(R.id.find_in_page_prev_btn))
 private fun findInPageCloseButton() = onView(withId(R.id.find_in_page_close_btn))
-
-private fun assertFindInPageNextButton() {
-    findInPageNextButton()
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    Log.i(TAG, "assertFindInPageNextButton: Verified find in page next result button is visible")
-}
-
-private fun assertFindInPagePrevButton() {
-    findInPagePrevButton()
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    Log.i(TAG, "assertFindInPagePrevButton: Verified find in page previous result button is visible")
-}
-
-private fun assertFindInPageCloseButton() {
-    findInPageCloseButton()
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    Log.i(TAG, "assertFindInPageCloseButton: Verified find in page close button is visible")
-}
