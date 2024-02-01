@@ -1800,6 +1800,11 @@ shopping2023:
       description: True if showing survey is enabled
       type: boolean
       fallbackPref: browser.shopping.experience2023.survey.enabled
+    autoOpenEnabled:
+      description: True if auto-open behavior for the sidebar is enabled
+      type: boolean
+      setPref: browser.shopping.experience2023.autoOpen.enabled
+
 shoppingOHTTP:
   description: Prefs to control the OHTTP URLs used for shopping.
   owner: gijs@mozilla.com
