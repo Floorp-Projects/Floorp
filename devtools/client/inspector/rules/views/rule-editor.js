@@ -39,12 +39,6 @@ loader.lazyRequireGetter(
   "resource://devtools/client/definitions.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "KeyCodes",
-  "resource://devtools/client/shared/keycodes.js",
-  true
-);
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
@@ -912,10 +906,6 @@ RuleEditor.prototype = {
    *        The event keyCode that trigger the editor to close
    */
   async _onSelectorDone(value, commit, direction, key) {
-    if (value && commit && !direction && key === KeyCodes.DOM_VK_RETURN) {
-      this.ruleView.maybeShowEnterKeyNotice();
-    }
-
     if (
       !commit ||
       this.isEditing ||
