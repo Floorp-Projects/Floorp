@@ -6140,14 +6140,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   // Note that we don't recalculate the header if it has been modified since the
   // channel was created because we want to preserve the modified header.
   if (!LoadIsUserAgentHeaderModified()) {
-    rv = mRequestHead.ClearHeader(nsHttp::User_Agent);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
     rv = mRequestHead.SetHeader(
         nsHttp::User_Agent,
         gHttpHandler->UserAgent(nsContentUtils::ShouldResistFingerprinting(
             this, RFPTarget::HttpUserAgent)),
-        false, nsHttpHeaderArray::eVarietyRequestDefault);
+        false, nsHttpHeaderArray::eVarietyRequestEnforceDefault);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 

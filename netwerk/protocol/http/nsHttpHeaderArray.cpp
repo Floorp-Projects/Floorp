@@ -42,7 +42,8 @@ nsresult nsHttpHeaderArray::SetHeader(
     nsHttpHeaderArray::HeaderVariety variety) {
   MOZ_ASSERT(
       (variety == eVarietyResponse) || (variety == eVarietyRequestDefault) ||
-          (variety == eVarietyRequestOverride),
+          (variety == eVarietyRequestOverride) ||
+          (variety == eVarietyRequestEnforceDefault),
       "Net original headers can only be set using SetHeader_internal().");
 
   nsEntry* entry = nullptr;
@@ -61,8 +62,14 @@ nsresult nsHttpHeaderArray::SetHeader(
     return NS_OK;
   }
 
-  MOZ_ASSERT(!entry || variety != eVarietyRequestDefault,
+  MOZ_ASSERT((variety == eVarietyRequestEnforceDefault) ||
+                 (!entry || variety != eVarietyRequestDefault),
              "Cannot set default entry which overrides existing entry!");
+
+  // Set the variety to default if we are enforcing it.
+  if (variety == eVarietyRequestEnforceDefault) {
+    variety = eVarietyRequestDefault;
+  }
   if (!entry) {
     return SetHeader_internal(header, headerName, value, variety);
   }
