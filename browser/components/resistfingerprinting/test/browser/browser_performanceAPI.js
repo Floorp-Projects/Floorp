@@ -95,6 +95,43 @@ add_task(async function runRFPandRTPTests() {
     content.performance.clearMarks();
     content.performance.clearMeasures();
     content.performance.clearResourceTimings();
+
+    // Get all LCP candidates
+    let lcpEntryList = await new Promise(resolve => {
+      const paintObserver = new content.PerformanceObserver(entryList => {
+        resolve(entryList);
+      });
+      paintObserver.observe({
+        type: "largest-contentful-paint",
+        buffered: true,
+      });
+    });
+
+    for (const entry of lcpEntryList.getEntries()) {
+      ok(
+        isRounded(entry.startTime, expectedPrecision),
+        `For ${labelType}(` +
+          expectedPrecision +
+          "), LargestContentfulPaint.startTime is not rounded: " +
+          entry.startTime
+      );
+
+      ok(
+        isRounded(entry.renderTime, expectedPrecision),
+        `For ${labelType}(` +
+          expectedPrecision +
+          "), LargestContentfulPaint.renderTime is not rounded: " +
+          entry.renderTime
+      );
+
+      ok(
+        isRounded(entry.loadTime, expectedPrecision),
+        `For ${labelType}(` +
+          expectedPrecision +
+          "), LargestContentfulPaint.loadTime is not rounded: " +
+          entry.loadTime
+      );
+    }
   };
 
   await setupPerformanceAPISpoofAndDisableTest(
