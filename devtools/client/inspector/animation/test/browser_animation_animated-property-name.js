@@ -101,6 +101,9 @@ async function test_element(className, data) {
 add_task(async function compositor_notall() {
   await test_element(".compositor-notall", [
     {
+      property: "--ball-color",
+    },
+    {
       property: "opacity",
       isOnCompositor: true,
     },

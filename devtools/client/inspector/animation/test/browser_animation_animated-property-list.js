@@ -14,7 +14,7 @@ const TEST_DATA = [
   },
   {
     targetClass: "compositor-notall",
-    expectedNumber: 3,
+    expectedNumber: 4,
   },
 ];
 
