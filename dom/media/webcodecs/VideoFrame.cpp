@@ -51,6 +51,11 @@ namespace mozilla::dom {
 #define LOG_INTERNAL(level, msg, ...) \
   MOZ_LOG(gWebCodecsLog, LogLevel::level, (msg, ##__VA_ARGS__))
 
+#ifdef LOG
+#  undef LOG
+#endif  // LOG
+#define LOG(msg, ...) LOG_INTERNAL(Debug, msg, ##__VA_ARGS__)
+
 #ifdef LOGW
 #  undef LOGW
 #endif  // LOGW
@@ -1113,6 +1118,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
       mTimestamp(aTimestamp),
       mColorSpace(aColorSpace) {
   MOZ_ASSERT(mParent);
+  LOG("VideoFrame %p ctor", this);
   mResource.emplace(
       Resource(aImage, aFormat.map([](const VideoPixelFormat& aPixelFormat) {
         return VideoFrame::Format(aPixelFormat);
@@ -1132,6 +1138,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
       mTimestamp(aData.mTimestamp),
       mColorSpace(aData.mColorSpace) {
   MOZ_ASSERT(mParent);
+  LOG("VideoFrame %p ctor", this);
   mResource.emplace(Resource(
       aData.mImage, aData.mFormat.map([](const VideoPixelFormat& aPixelFormat) {
         return VideoFrame::Format(aPixelFormat);
@@ -1151,6 +1158,11 @@ VideoFrame::VideoFrame(const VideoFrame& aOther)
       mTimestamp(aOther.mTimestamp),
       mColorSpace(aOther.mColorSpace) {
   MOZ_ASSERT(mParent);
+  LOG("VideoFrame %p ctor", this);
+}
+
+VideoFrame::~VideoFrame() {
+  LOG("VideoFrame %p dtor, (%sclosed)", this, IsClosed() ? "" : "not ");
 }
 
 nsIGlobalObject* VideoFrame::GetParentObject() const {

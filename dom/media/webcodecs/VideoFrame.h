@@ -92,7 +92,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   VideoFrame(const VideoFrame& aOther);
 
  protected:
-  ~VideoFrame() = default;
+  ~VideoFrame();
 
  public:
   nsIGlobalObject* GetParentObject() const;
