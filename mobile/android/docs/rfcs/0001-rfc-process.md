@@ -35,6 +35,7 @@ The high-level process of creating an RFC is:
 * Create an RFC document (like this one) using the template.
 * Open a pull request for the RFC document.
 * Ask for feedback on the pull request, via the [mailing list]() or in [chat](https://chat.mozilla.org/#/room/#android-components:mozilla.org).
+* Assign or receive volunteers to act as stakeholders for the RFC. They will be responsible for a final decision on the proposal. This should include at least 2 internal team members, and at least 1 external team member if the proposal has been suggested from an external team.
 
 During the lifetime of an RFC:
 
