@@ -3124,8 +3124,8 @@ inline static Element* FindMatchingElementWithId(
 
 Element* nsINode::QuerySelector(const nsACString& aSelector,
                                 ErrorResult& aResult) {
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsINode::QuerySelector",
-                                        LAYOUT_SelectorQuery, aSelector);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
+      "querySelector", LAYOUT_SelectorQuery, aSelector);
 
   const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
@@ -3138,8 +3138,8 @@ Element* nsINode::QuerySelector(const nsACString& aSelector,
 
 already_AddRefed<nsINodeList> nsINode::QuerySelectorAll(
     const nsACString& aSelector, ErrorResult& aResult) {
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsINode::QuerySelectorAll",
-                                        LAYOUT_SelectorQuery, aSelector);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
+      "querySelectorAll", LAYOUT_SelectorQuery, aSelector);
 
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
   const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
