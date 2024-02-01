@@ -73,8 +73,11 @@ uint32_t CPU::GetCacheType() {
   // Copy the content of the cache type register to a core register.
   __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
                         : [ctr] "=r" (cache_type_register));
-  VIXL_ASSERT(IsUint32(cache_type_register));
-  return static_cast<uint32_t>(cache_type_register);
+  // The top bits are reserved, or report information about MTE which currently
+  // we discard. This will likely need to be changed to just return
+  // cache_type_register when we update VIXL next.
+  uint64_t mask = 0xffffffffull;
+  return static_cast<uint32_t>(cache_type_register & mask);
 #else
   // This will lead to a cache with 1 byte long lines, which is fine since
   // neither EnsureIAndDCacheCoherency nor the simulator will need this
