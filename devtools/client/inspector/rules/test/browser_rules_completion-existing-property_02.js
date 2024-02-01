@@ -119,7 +119,10 @@ async function testCompletion(
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
 
-  if (key === "VK_RETURN") {
+  if (
+    key === "VK_RETURN" &&
+    !Services.prefs.getBoolPref("devtools.inspector.rule-view.focusNextOnEnter")
+  ) {
     ok(!editor, "Enter does not move focus to next element");
     return;
   }
