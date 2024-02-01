@@ -84,6 +84,7 @@ jobs:
         description: 'Focus release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
+        run-on-projects: ["mozilla-release"]
         run:
             gradle-build-type: release
             gradle-build-name: focusRelease
@@ -104,6 +105,7 @@ jobs:
         description: 'Klar release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
+        run-on-projects: ["mozilla-release"]
         run:
             gradle-build-type: release
             gradle-build-name: klarRelease
@@ -124,6 +126,7 @@ jobs:
         description: 'Fenix release AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
+        run-on-projects: ["mozilla-release"]
         run:
             gradle-build-type: release
             gradle-build-name: fenixRelease
@@ -142,6 +145,7 @@ jobs:
         description: 'Focus nightly AAB build from source code'
         include-shippable-secrets: true
         include-nightly-version: true
+        run-on-projects: ["mozilla-central"]
         run:
             gradle-build-type: nightly
             gradle-build-name: focusNightly
@@ -159,6 +163,7 @@ jobs:
         description: 'Fenix nightly AAB build from source code'
         include-shippable-secrets: true
         include-nightly-version: true
+        run-on-projects: ["mozilla-central"]
         run:
             gradle-build-type: nightly
             gradle-build-name: fenixNightly
@@ -178,6 +183,7 @@ jobs:
         description: 'Focus beta AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
+        run-on-projects: ["mozilla-beta"]
         run:
             gradle-build-type: beta
             gradle-build-name: focusBeta
@@ -198,6 +204,7 @@ jobs:
         description: 'Fenix beta AAB build from source code'
         include-shippable-secrets: true
         include-release-version: true
+        run-on-projects: ["mozilla-beta"]
         run:
             gradle-build-type: beta
             gradle-build-name: fenixBeta
