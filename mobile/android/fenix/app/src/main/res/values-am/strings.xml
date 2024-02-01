@@ -238,6 +238,7 @@
     <string name="browser_menu_edit">አርትዕ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">መነሻ ገጽ አብጅ</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">የመነሻ ማያ ገጽ</string>
@@ -245,6 +246,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">የአሰሳ ታሪክን አጥፋ</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">ገጽ ተርጉም</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">የተመረጠ ቋንቋ</string>
@@ -1992,12 +1996,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">የይለፍ ቃል አማራጮች</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">ለመግቢያው የድር አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">የይለፍ ቃል የድርጣቢያ አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">ለድር ጣቢያው አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">ለመግቢያው የተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">የይለፍ ቃል የተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">ለተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">ለመግቢያው የይለፍ ቃል ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's password. -->
@@ -2374,6 +2378,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">በመተርጎም ሂደት ላይ</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">ቋንቋ ይምረጡ</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">የመተርጎም ችግር ነበር። እባክዎ እንደገና ይሞክሩ።</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

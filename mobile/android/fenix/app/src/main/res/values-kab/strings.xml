@@ -216,6 +216,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="resync_button_content_description">Ales amtawi</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Nadi deg usebter</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Suqel asebter</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Sekles ɣer tegrumma</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -246,6 +248,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Sagen asebter agejdan</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Agilal agejdan</string>
@@ -253,6 +256,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Sfeḍ azray n tunigin</string>
+
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Suqel asebter</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Fren tutlayt</string>
@@ -264,8 +271,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Snirem</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Amsedday unadi</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Iɣewwaṛen n umsedday n unadi</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -320,19 +325,24 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Ilɣa ttɛawanen ad tgeḍ ugar akked %s</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Ilɣa ttɛawanen ad tgeḍ ugar akked %s</string>
 
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Mtawi iccaren-ik•im gar yibenkan, sefrek isadaren, awi iwellihen akken ad tfarseḍ deg ummesten n tbaḍnit n %s, d wugar.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Mtawi iccaren-ik•im gar yibenkan, sefrek isadaren, awi iwellihen akken ad tfarseḍ deg ummesten n tbaḍnit n %s, d wugar.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Kemmel</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Kemmel</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Mačči tura</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Mačči tura</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Tasertit tabaḍnit n Firefox</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nḥemmel ad teqqimeḍ d aɣellsan</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.\n\nIssin ugar ɣef tsertit-nneɣ n tbaḍnit.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -436,21 +446,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Askar HTTPS-Only</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Asenqes n yiɣarracen n yinagan n tuqqna</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Amsewḥel n yiɣarracen n yinagan n tuqqna</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Amsewḥal n uɣerrac n yinagan n tuqqna deg tunigin tusligt</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Senqes iɣarracen n yinagan n tuqqna</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Yensa</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Yermed</string>
 
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s iɛerreḍ s wudem awurman ad yagi isuturen n yinagan n tuqqna deg yiɣarracen n yinagan n tuqqna. </string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Sens i usmel-a</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -468,34 +468,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Asmel-a ur yettusefrak ara akka tura</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Rmed amsewḥel n yiɣerracen n yinagan n tuqqna i %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Sens amsewḥel n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ur yezmir ara ad yagi issutar n trusi n yinagan n tuqqna s wudem awurman ɣef usmel-a. Tzemreḍ ad tazneḍ assuter i tallalt n usmel-a ɣer sdat.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Sens ma d %1$s ad yesfeḍ inagan n tuqqna sakin ad yales asali n usmel-a. Atagi ad ak-isuffeɣ neɣ ad isilem tikarḍiwin-ik n tiɣin.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s yettaɛraḍ s wudem awurman ad yagi issutar n yinagan n tuqqna deg yismal i ten-yessefraken.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Sireg %1$s ad yagi iɣarracen n yinagan n tuqqna?</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s yezmer ad yagi aṭas yissutar n yiɣarracen n yinagan n tuqqna s wudem awurman.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Mačči tura</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Ad twaliḍ drus n yissutar n yinagan n tuqqna</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Sireg</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s yugi inagan n tuqqna i kečč</string>
@@ -602,6 +583,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Izegrar</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Sebded azegrir seg ufaylu</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ilɣa</string>
 
@@ -711,6 +694,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_sync_bookmarks">Ticraḍ n yisebtar</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Inekcam</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Awalen uffiren</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Accaren yeldin</string>
     <!-- Preference for signing out -->
@@ -738,6 +723,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Tikarḍiwin n usmad</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Tarrayin n uxelleṣ</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Tansiwin</string>
 
@@ -1283,8 +1270,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Zgel</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Ur yizmir ara ad issigez</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">D awezɣi ad yettwasiggez usebtar-a</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Siggez</string>
@@ -1329,6 +1314,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Mdel iccaren usligen</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">Mdel iccaren usligen?</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Talzuzit</string>
@@ -1687,8 +1675,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inekcam d wawalen uffiren</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Awalen uffiren</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Sekles inekcam d wawalen uffiren</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Sekles awalen uffiren</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Suter asekles</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1706,16 +1698,25 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Rnu anekcum</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Rnu awal uffir</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Mtawi inekcam</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Mtawi awalen uffiren</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Mtawi inekcam gqr yibenkan</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Inekcam yettwakelsen</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Awalen uffiren yettwakelsen</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Anekcum i tḥerzeḍ ɣer %s ad d-ittwasken da.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Issin ugar ɣef umtawi.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Issin ugar ɣef umtawi</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Tisuraf</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1726,6 +1727,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_passwords_exceptions_remove_all">Kkes akk tisuraf</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Nadi inekcam</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Nadi awalen uffiren</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Asmel web</string>
     <!-- The header for the username for a login -->
@@ -1785,6 +1788,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_addresses">Tansiwin</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Tikarḍiwin n usmad</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Tarrayin n uxelleṣ</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Asekles d taččart tawurmant n tkarḍiwin</string>
     <!-- Preference summary for saving and autofilling credit card data -->
@@ -1795,14 +1800,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_credit_cards_sync_cards">Mtawi tikarḍiwin</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Rnu takarḍa</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Sefrek tikerḍiwin yettwaskelsen</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Sefrek tikarḍiwin</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Rnu tansa</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Sefrek tansiwin</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Asekles d taččart tawurmant n tansiwin</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Sekles; teččareḍ tansiwin</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Seddu talɣut am wuṭṭunen, imayl akked tansiwin n usiweḍ</string>
 
@@ -1826,6 +1837,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="credit_cards_delete_card_button">Kkes takarḍa</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Tebɣiḍ s tidet ad tekkseḍ takarḍa-a n usmad?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Kkes takarḍa?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Kkes</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1840,8 +1853,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ma ulac aɣilif sekcem uṭṭun ameɣtu n tkarḍa n usmad</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Sekcem uṭṭun n tkarḍa ameɣtu</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Ttxil-k·m ččar urti-a</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Rnu isem</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kkes asekkeṛ i wakken ad twaliḍ tikerḍiwin-ik·im yettwaskelsen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1894,6 +1911,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">D tidet tebɣiḍ ad tekkseḍ tansa-a?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Kkes tansa-a?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Kkes</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2008,14 +2027,24 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="saved_login_password_description">Urti n uḍris yettusenfal i wawal uffir n unekcum.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Sekles isenfaln unekcum.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Sekles isenfal.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Ẓreg</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Ẓreg awal uffir</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Rnu anekcum amaynut</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Rnu awal uffir</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Awal uffir yettusra</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Sekcem awal uffir</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Isem n useqdac yettwasra</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Sekcem isem n useqdac</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Asenneftaɣ yettwasra</string>
     <!-- Voice search button content description  -->
@@ -2317,6 +2346,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Suqqel</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Fren tutlayt</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Yella wugur deg usuqqel. Ttxil-k ɛreḍ tikkelt niḍen.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
@@ -2332,6 +2363,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="translation_settings_toolbar_title">Tisuqilin</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Ismenyifen n tsuqilt</string>
+
+    <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
+    <string name="translation_settings_download_language">Sader tutlayin</string>
 
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">Werǧin attsuqleḍ</string>
@@ -2356,6 +2390,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="download_languages_available_languages_preference">Tutlayin yellan</string>
     <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
     <string name="download_languages_default_system_language_require_preference">iţusra</string>
+    <!-- A text for download language preference item.
+    The first parameter is the language name, for example, "Spanish".
+    The second parameter is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, "(required)". -->
+    <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Sader tutlayin</string>
     <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
@@ -2369,6 +2407,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Yettwafran</string>
 
+    <!-- Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_file_dialog_title">Kkes %1$s (%2$s)?</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Kkes</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->

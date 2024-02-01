@@ -172,10 +172,16 @@
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">یئنی تاخیلان‌لار الده وار</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">باشاریلی قورولدو %1$s</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s قورماسی قیریلدی</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">بو تاخیلانین قورماسی قیریلدی</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s باشاریلی گوجلندی.</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_disabled">%1$s باشاریلی گوجدن سالیندی.</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s گوجدن سالماسی قیریلدی</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_uninstalled">%1$s باشاریلی قالدیریلدی</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->

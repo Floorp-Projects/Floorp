@@ -92,6 +92,11 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Inekcam yettwasumren</string>
 
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">SuƔer awal uffir iǧehden</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Sumer awal uffir iǧehden</string>
+
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Ales tuzna n yisefka ɣer usmel-a?</string>
     <string name="mozac_feature_prompt_repost_message">Asmiren n usebter-a yezmer ad d-yerr tigawin n melmi kan, am tuzna n lexlaṣ neɣ asuffeɣ n uwennit snat tikkal.</string>
@@ -131,8 +136,6 @@
     <string name="mozac_feature_prompts_account_picture">Tugna n umiḍan</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Fren asaǧǧăw n unekcum</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Fren amiḍan</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Qqen s umidan %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->

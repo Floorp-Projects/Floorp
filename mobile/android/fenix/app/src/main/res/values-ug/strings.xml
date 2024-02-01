@@ -240,6 +240,7 @@
     <string name="browser_menu_edit">تەھرىرلەش</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">باش بەتنى خاسلاشتۇر</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">باش ئېكران</string>
@@ -247,6 +248,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">توركۆرگۈ تارىخىنى ئۆچۈر</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">بەت تەرجىمىسى</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">تاللانغان تىل</string>
@@ -1864,7 +1868,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان ئىناۋەتلىك كارتىڭىزنى زىيارەت قىلالمايدۇ.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان كارتىلىرىڭىزنى زىيارەت قىلالمايدۇ.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان چىقىم قىلىش ئۇسۇلىڭىزنى زىيارەت قىلالمايدۇ.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ھازىر تەڭشە</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2023,13 +2027,13 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">ئىم تاللانمىسى</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">كىرىشنىڭ تور ئادرېسىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">ئىمنىڭ تور بېكەت ئادرېسىدىكى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">تور بېكەت ئادرېسىنىڭ تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">كىرىشنىڭ ئىشلەتكۈچى ئىسمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
 
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">ئىمنىڭ ئىشلەتكۈچى ئىسمىدىكى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">ئىشلەتكۈچى ئاتىنىڭ تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">كىرىشنىڭ ئىمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
     <!--  The editable text field for a login's password. -->
@@ -2413,6 +2417,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">تەرجىمە قىلىنىۋاتىدۇ</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">تىل تاللىنىدۇ</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">تەرجىمە قىلىشتا مەسىلە كۆرۈلدى. قايتا سىناڭ.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

@@ -246,6 +246,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalizar inicio</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Pantalla de inicio</string>
@@ -253,6 +254,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Borrar historial de navegación</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Traducir página</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Idioma seleccionado</string>
@@ -1899,7 +1903,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Configurá un patrón de bloqueo del dispositivo, PIN o contraseña para proteger el acceso a tus tarjetas de crédito guardadas si alguien más tiene tu dispositivo.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Configurá un patrón de bloqueo del dispositivo, PIN o contraseña para proteger el acceso a tus tarjetas guardadas si alguien más tiene tu dispositivo.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Configurá un patrón de bloqueo del dispositivo, un PIN o una contraseña para proteger el acceso a tus métodos de pago guardados por si otra persona accede a tu dispositivo.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configurar ahora</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2063,12 +2067,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Opciones de contraseña</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">El campo de texto editable para la dirección web del inicio de sesión.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">El campo de texto editable para la dirección del sitio web de la contraseña.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">El campo de texto editable para la dirección del sitio web.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">El campo de texto editable para el nombre de usuario del inicio de sesión.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">El campo de texto editable para el nombre de usuario de la contraseña.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">El campo de texto editable para el nombre de usuario.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">El campo de texto editable para la contraseña del inicio de sesión.</string>
     <!--  The editable text field for a login's password. -->
@@ -2450,6 +2454,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Traducción en proceso</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Seleccionar un idioma</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Hubo un problema al traducir. Probá de nuevo.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

@@ -236,6 +236,7 @@
     <string name="browser_menu_edit">සංස්කරණය</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">මුල්පිටුව අභිරුචිකරණය</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">මුල් තිරය</string>
@@ -243,6 +244,7 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">පිරික්සුම් ඉතිහාසය මකන්න</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">තෝරාගත් භාෂාව</string>
@@ -1742,8 +1744,13 @@
     <string name="preferences_addresses_manage_addresses">ලිපින කළමනාකරණය</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">ලිපින සුරැකීම හා ස්වයං පිරවීම</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">ලිපින සුරැකීම හා පිරවීම</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">අංක, වි-තැපැල් සහ බාර දීමේ ලිපින වැනි තොරතුරු ඇතුළත් කරන්න</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">දුරකථන අංක සහ වි-තැපැල් ලිපින ඇතුළත් වේ</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">පත එක් කරන්න</string>
