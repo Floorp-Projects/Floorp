@@ -6,7 +6,7 @@ Build a command to run `mach release push-scriptworker-canaries`.
 """
 
 
-from pipes import quote as shell_quote
+from shlex import quote as shell_quote
 
 from mozrelease.scriptworker_canary import TASK_TYPES
 from taskgraph.transforms.base import TransformSequence
