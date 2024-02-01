@@ -46,15 +46,24 @@ static double GetAreaInDoublePixelsFromAppUnits(const nsRect& aRect) {
          NSAppUnitsToDoublePixels(aRect.Height(), AppUnitsPerCSSPixel());
 }
 
+static DOMHighResTimeStamp GetReducedTimePrecisionDOMHighRes(
+    Performance* aPerformance, const TimeStamp& aRawTimeStamp) {
+  MOZ_ASSERT(aPerformance);
+  DOMHighResTimeStamp rawValue =
+      aPerformance->GetDOMTiming()->TimeStampToDOMHighRes(aRawTimeStamp);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(
+      rawValue, aPerformance->GetRandomTimelineSeed(),
+      aPerformance->GetRTPCallerType());
+}
+
 ImagePendingRendering::ImagePendingRendering(
-    const LCPImageEntryKey& aLCPImageEntryKey, DOMHighResTimeStamp aLoadTime)
+    const LCPImageEntryKey& aLCPImageEntryKey, const TimeStamp& aLoadTime)
     : mLCPImageEntryKey(aLCPImageEntryKey), mLoadTime(aLoadTime) {}
 
 LargestContentfulPaint::LargestContentfulPaint(
-    PerformanceMainThread* aPerformance, const DOMHighResTimeStamp aRenderTime,
-    const DOMHighResTimeStamp aLoadTime, const unsigned long aSize,
-    nsIURI* aURI, Element* aElement,
-    const Maybe<const LCPImageEntryKey>& aLCPImageEntryKey,
+    PerformanceMainThread* aPerformance, const TimeStamp& aRenderTime,
+    const Maybe<TimeStamp>& aLoadTime, const unsigned long aSize, nsIURI* aURI,
+    Element* aElement, const Maybe<const LCPImageEntryKey>& aLCPImageEntryKey,
     bool aShouldExposeRenderTime)
     : PerformanceEntry(aPerformance->GetParentObject(), u""_ns,
                        kLargestContentfulPaintName),
@@ -183,22 +192,19 @@ void LargestContentfulPaint::MaybeProcessImageForElementTiming(
   MOZ_ASSERT(status & imgIRequest::STATUS_LOAD_COMPLETE);
 #endif
 
+  // At this point, the loadTime of the image is known, but
+  // the renderTime is unknown, so it's added to ImagesPendingRendering
+  // as a placeholder, and the corresponding LCP entry will be created
+  // when the renderTime is known.
   // Here we are exposing the load time of the image which could be
   // a privacy concern. The spec talks about it at
   // https://wicg.github.io/element-timing/#sec-security
   // TLDR: The similar metric can be obtained by ResourceTiming
   // API and onload handlers already, so this is not exposing anything
   // new.
-  DOMHighResTimeStamp nowTime =
-      performance->TimeStampToDOMHighResForRendering(TimeStamp::Now());
-
-  // At this point, the loadTime of the image is known, but
-  // the renderTime is unknown, so it's added to ImagesPendingRendering
-  // as a placeholder, and the corresponding LCP entry will be created
-  // when the renderTime is known.
   LOG("  Added a pending image rendering");
   performance->AddImagesPendingRendering(
-      ImagePendingRendering{entryKey, nowTime});
+      ImagePendingRendering{entryKey, TimeStamp::Now()});
 }
 
 bool LCPHelpers::CanFinalizeLCPEntry(const nsIFrame* aFrame) {
@@ -265,23 +271,27 @@ DOMHighResTimeStamp LargestContentfulPaint::RenderTime() const {
   if (!mShouldExposeRenderTime) {
     return 0;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-      mRenderTime, mPerformance->GetRandomTimelineSeed(),
-      mPerformance->GetRTPCallerType());
+  return GetReducedTimePrecisionDOMHighRes(mPerformance, mRenderTime);
 }
 
 DOMHighResTimeStamp LargestContentfulPaint::LoadTime() const {
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-      mLoadTime, mPerformance->GetRandomTimelineSeed(),
-      mPerformance->GetRTPCallerType());
+  if (mLoadTime.isNothing()) {
+    return 0;
+  }
+
+  return GetReducedTimePrecisionDOMHighRes(mPerformance, mLoadTime.ref());
 }
 
 DOMHighResTimeStamp LargestContentfulPaint::StartTime() const {
-  DOMHighResTimeStamp startTime =
-      mShouldExposeRenderTime ? mRenderTime : mLoadTime;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-      startTime, mPerformance->GetRandomTimelineSeed(),
-      mPerformance->GetRTPCallerType());
+  if (mShouldExposeRenderTime) {
+    return GetReducedTimePrecisionDOMHighRes(mPerformance, mRenderTime);
+  }
+
+  if (mLoadTime.isNothing()) {
+    return 0;
+  }
+
+  return GetReducedTimePrecisionDOMHighRes(mPerformance, mLoadTime.ref());
 }
 
 /* static */
@@ -441,22 +451,21 @@ void LCPTextFrameHelper::MaybeUnionTextFrame(
 
 void LCPHelpers::CreateLCPEntryForImage(
     PerformanceMainThread* aPerformance, Element* aElement,
-    imgRequestProxy* aRequestProxy, const DOMHighResTimeStamp aLoadTime,
-    const DOMHighResTimeStamp aRenderTime,
-    const LCPImageEntryKey& aImageEntryKey) {
+    imgRequestProxy* aRequestProxy, const TimeStamp& aLoadTime,
+    const TimeStamp& aRenderTime, const LCPImageEntryKey& aImageEntryKey) {
   MOZ_ASSERT(StaticPrefs::dom_enable_largest_contentful_paint());
   MOZ_ASSERT(aRequestProxy);
+  MOZ_ASSERT(aPerformance);
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gLCPLogging, LogLevel::Debug))) {
     nsCOMPtr<nsIURI> uri;
     aRequestProxy->GetURI(getter_AddRefs(uri));
     LOG("CreateLCPEntryForImage "
         "Element=%p, aRequestProxy=%p, URI=%s loadTime=%f, "
         "aRenderTime=%f\n",
-        aElement, aRequestProxy, uri->GetSpecOrDefault().get(), aLoadTime,
-        aRenderTime);
+        aElement, aRequestProxy, uri->GetSpecOrDefault().get(),
+        GetReducedTimePrecisionDOMHighRes(aPerformance, aLoadTime),
+        GetReducedTimePrecisionDOMHighRes(aPerformance, aRenderTime));
   }
-  MOZ_ASSERT(aPerformance);
-  MOZ_ASSERT_IF(aRenderTime < aLoadTime, aRenderTime == 0);
   if (aPerformance->HasDispatchedInputEvent() ||
       aPerformance->HasDispatchedScrollEvent()) {
     return;
@@ -479,7 +488,7 @@ void LCPHelpers::CreateLCPEntryForImage(
   // At this point, we have all the information about the entry
   // except the size.
   RefPtr<LargestContentfulPaint> entry = new LargestContentfulPaint(
-      aPerformance, aRenderTime, aLoadTime, 0, requestURI, aElement,
+      aPerformance, aRenderTime, Some(aLoadTime), 0, requestURI, aElement,
       Some(aImageEntryKey), taoPassed);
 
   LOG("  Upsert a LargestContentfulPaint entry=%p to LCPEntryMap.",
@@ -488,7 +497,7 @@ void LCPHelpers::CreateLCPEntryForImage(
 }
 
 void LCPHelpers::FinalizeLCPEntryForText(
-    PerformanceMainThread* aPerformance, const DOMHighResTimeStamp aRenderTime,
+    PerformanceMainThread* aPerformance, const TimeStamp& aRenderTime,
     Element* aContainingBlock, const nsRect& aTargetRectRelativeToSelf,
     const nsPresContext* aPresContext) {
   MOZ_ASSERT(aPerformance);
@@ -504,8 +513,8 @@ void LCPHelpers::FinalizeLCPEntryForText(
   aContainingBlock->SetFlags(ELEMENT_PROCESSED_BY_LCP_FOR_TEXT);
 
   RefPtr<LargestContentfulPaint> entry =
-      new LargestContentfulPaint(aPerformance, aRenderTime, 0, 0, nullptr,
-                                 aContainingBlock, Nothing(), true);
+      new LargestContentfulPaint(aPerformance, aRenderTime, Nothing(), 0,
+                                 nullptr, aContainingBlock, Nothing(), true);
 
   entry->UpdateSize(aContainingBlock, aTargetRectRelativeToSelf, aPerformance,
                     false);
@@ -550,6 +559,7 @@ void LargestContentfulPaint::ReportLCPToNavigationTimings() {
   if (!document->IsTopLevelContentDocument()) {
     return;
   }
-  timing->NotifyLargestContentfulRenderForRootContentDocument(mRenderTime);
+  timing->NotifyLargestContentfulRenderForRootContentDocument(
+      GetReducedTimePrecisionDOMHighRes(mPerformance, mRenderTime));
 }
 }  // namespace mozilla::dom

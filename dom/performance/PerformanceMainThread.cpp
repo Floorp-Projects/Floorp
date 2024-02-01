@@ -646,8 +646,7 @@ void PerformanceMainThread::ProcessElementTiming() {
   // as to what https://w3c.github.io/paint-timing/#mark-paint-timing step 2
   // defines.
   // TODO(sefeng): Check the timestamp after this issue is resolved.
-  DOMHighResTimeStamp rawNowTime =
-      TimeStampToDOMHighResForRendering(presContext->GetMarkPaintTimingStart());
+  TimeStamp rawNowTime = presContext->GetMarkPaintTimingStart();
 
   MOZ_ASSERT(GetOwnerGlobal());
   Document* document = GetOwnerGlobal()->GetAsInnerWindow()->GetExtantDoc();
@@ -680,9 +679,6 @@ void PerformanceMainThread::FinalizeLCPEntriesForText() {
   nsPresContext* presContext = GetPresShell()->GetPresContext();
   MOZ_ASSERT(presContext);
 
-  DOMHighResTimeStamp renderTime =
-      TimeStampToDOMHighResForRendering(presContext->GetMarkPaintTimingStart());
-
   bool canFinalize = StaticPrefs::dom_enable_largest_contentful_paint() &&
                      !presContext->HasStoppedGeneratingLCP();
   nsTHashMap<nsRefPtrHashKey<Element>, nsRect> textFrameUnion =
@@ -690,8 +686,8 @@ void PerformanceMainThread::FinalizeLCPEntriesForText() {
   if (canFinalize) {
     for (const auto& textFrameUnion : textFrameUnion) {
       LCPHelpers::FinalizeLCPEntryForText(
-          this, renderTime, textFrameUnion.GetKey(), textFrameUnion.GetData(),
-          presContext);
+          this, presContext->GetMarkPaintTimingStart(), textFrameUnion.GetKey(),
+          textFrameUnion.GetData(), presContext);
     }
   }
   MOZ_ASSERT(GetTextFrameUnions().IsEmpty());
