@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -14,6 +16,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "truncateLog",
+  "remote.log.truncate",
+  false
+);
 
 const MAX_LOG_LENGTH = 2500;
 
@@ -36,7 +45,7 @@ export class WebSocketConnection {
     lazy.logger.debug(`${this.constructor.name} ${this.id} accepted`);
   }
 
-  _log(direction, data) {
+  #log(direction, data) {
     if (lazy.Log.isDebugLevelOrMore) {
       function replacer(key, value) {
         if (typeof value === "string") {
@@ -51,7 +60,7 @@ export class WebSocketConnection {
         lazy.Log.verbose ? "\t" : null
       );
 
-      if (payload.length > MAX_LOG_LENGTH) {
+      if (lazy.truncateLog && payload.length > MAX_LOG_LENGTH) {
         // Even if we truncate individual values, the resulting message might be
         // huge if we are serializing big objects with many properties or items.
         // Truncate the overall message to avoid issues in logs.
@@ -91,7 +100,7 @@ export class WebSocketConnection {
    *     The object to be sent.
    */
   send(data) {
-    this._log("<-", data);
+    this.#log("<-", data);
     this.transport.send(data);
   }
 
@@ -157,6 +166,6 @@ export class WebSocketConnection {
    *     JSON-serializable object sent by the client.
    */
   async onPacket(packet) {
-    this._log("->", packet);
+    this.#log("->", packet);
   }
 }
