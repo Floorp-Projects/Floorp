@@ -203,10 +203,6 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
  **********************************************************************/
 
 void WebAuthnManager::ClearTransaction() {
-  if (mTransaction.isSome()) {
-    StopListeningForVisibilityEvents();
-  }
-
   mTransaction.reset();
   Unfollow();
 }
@@ -214,12 +210,6 @@ void WebAuthnManager::ClearTransaction() {
 void WebAuthnManager::CancelParent() {
   if (!NS_WARN_IF(!mChild || mTransaction.isNothing())) {
     mChild->SendRequestCancel(mTransaction.ref().mId);
-  }
-}
-
-void WebAuthnManager::HandleVisibilityChange() {
-  if (mTransaction.isSome()) {
-    mTransaction.ref().mVisibilityChanged = true;
   }
 }
 
@@ -250,15 +240,6 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   }
 
   if (mTransaction.isSome()) {
-    // If there hasn't been a visibility change during the current
-    // transaction, then let's let that one complete rather than
-    // cancelling it on a subsequent call.
-    if (!mTransaction.ref().mVisibilityChanged) {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return promise.forget();
-    }
-
-    // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
     CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -484,19 +465,11 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       adjustedTimeout, excludeList, rpInfo, userInfo, coseAlgos, extensions,
       authSelection, attestation, context->Top()->Id());
 
-  // Set up the transaction state (including event listeners, etc). Fallible
-  // operations should not be performed below this line, as we must not leave
-  // the transaction state partially initialized. Once the transaction state is
-  // initialized the only valid ways to end the transaction are
-  // CancelTransaction, RejectTransaction, and FinishMakeCredential.
-#ifdef XP_WIN
-  if (!WinWebAuthnService::AreWebAuthNApisAvailable()) {
-    ListenForVisibilityEvents();
-  }
-#else
-  ListenForVisibilityEvents();
-#endif
-
+  // Set up the transaction state. Fallible operations should not be performed
+  // below this line, as we must not leave the transaction state partially
+  // initialized. Once the transaction state is initialized the only valid ways
+  // to end the transaction are CancelTransaction, RejectTransaction, and
+  // FinishMakeCredential.
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {
     signal = &aSignal.Value();
@@ -526,15 +499,6 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   }
 
   if (mTransaction.isSome()) {
-    // If there hasn't been a visibility change during the current
-    // transaction, then let's let that one complete rather than
-    // cancelling it on a subsequent call.
-    if (!mTransaction.ref().mVisibilityChanged) {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return promise.forget();
-    }
-
-    // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
     CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -679,19 +643,11 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
                                 extensions, aOptions.mUserVerification,
                                 aConditionallyMediated, context->Top()->Id());
 
-  // Set up the transaction state (including event listeners, etc). Fallible
-  // operations should not be performed below this line, as we must not leave
-  // the transaction state partially initialized. Once the transaction state is
-  // initialized the only valid ways to end the transaction are
-  // CancelTransaction, RejectTransaction, and FinishGetAssertion.
-#ifdef XP_WIN
-  if (!WinWebAuthnService::AreWebAuthNApisAvailable()) {
-    ListenForVisibilityEvents();
-  }
-#else
-  ListenForVisibilityEvents();
-#endif
-
+  // Set up the transaction state. Fallible operations should not be performed
+  // below this line, as we must not leave the transaction state partially
+  // initialized. Once the transaction state is initialized the only valid ways
+  // to end the transaction are CancelTransaction, RejectTransaction, and
+  // FinishGetAssertion.
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {
     signal = &aSignal.Value();
@@ -717,15 +673,6 @@ already_AddRefed<Promise> WebAuthnManager::Store(const Credential& aCredential,
   }
 
   if (mTransaction.isSome()) {
-    // If there hasn't been a visibility change during the current
-    // transaction, then let's let that one complete rather than
-    // cancelling it on a subsequent call.
-    if (!mTransaction.ref().mVisibilityChanged) {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return promise.forget();
-    }
-
-    // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
     CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
