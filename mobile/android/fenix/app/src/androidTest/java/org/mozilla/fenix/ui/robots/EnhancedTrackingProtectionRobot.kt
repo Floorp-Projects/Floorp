@@ -40,6 +40,7 @@ import org.mozilla.fenix.helpers.isChecked
 class EnhancedTrackingProtectionRobot {
     fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) {
         mDevice.waitNotNull(Until.findObjects(By.text("Protections are $status for this site")))
+        Log.i(TAG, "verifyEnhancedTrackingProtectionSheetStatus: Trying to check ETP toggle is checked: $state")
         onView(ViewMatchers.withResourceName("switch_widget")).check(
             matches(
                 isChecked(
@@ -52,10 +53,12 @@ class EnhancedTrackingProtectionRobot {
 
     fun verifyETPSwitchVisibility(visible: Boolean) {
         if (visible) {
+            Log.i(TAG, "verifyETPSwitchVisibility: Trying to verify ETP toggle is displayed")
             enhancedTrackingProtectionSwitch()
                 .check(matches(isDisplayed()))
             Log.i(TAG, "verifyETPSwitchVisibility: Verified ETP toggle is displayed")
         } else {
+            Log.i(TAG, "verifyETPSwitchVisibility: Trying to verify ETP toggle is not displayed")
             enhancedTrackingProtectionSwitch()
                 .check(matches(not(isDisplayed())))
             Log.i(TAG, "verifyETPSwitchVisibility: Verified ETP toggle is not displayed")
@@ -64,9 +67,11 @@ class EnhancedTrackingProtectionRobot {
 
     fun verifyCrossSiteCookiesBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithResId("$packageName:id/cross_site_tracking"))
+        Log.i(TAG, "verifyCrossSiteCookiesBlocked: Trying to click cross site cookies block list button")
         crossSiteCookiesBlockListButton().click()
         Log.i(TAG, "verifyCrossSiteCookiesBlocked: Clicked cross site cookies block list button")
         // Verifies the trackers block/allow list
+        Log.i(TAG, "verifyCrossSiteCookiesBlocked: Trying to verify cross site cookies are blocked: $isBlocked")
         onView(withId(R.id.details_blocking_header))
             .check(
                 matches(
@@ -84,9 +89,11 @@ class EnhancedTrackingProtectionRobot {
 
     fun verifySocialMediaTrackersBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithResId("$packageName:id/social_media_trackers"))
+        Log.i(TAG, "verifySocialMediaTrackersBlocked: Trying to click social trackers block list button")
         socialTrackersBlockListButton().click()
         Log.i(TAG, "verifySocialMediaTrackersBlocked: Clicked social trackers block list button")
         // Verifies the trackers block/allow list
+        Log.i(TAG, "verifySocialMediaTrackersBlocked: Trying to verify social trackers are blocked: $isBlocked")
         onView(withId(R.id.details_blocking_header))
             .check(
                 matches(
@@ -100,15 +107,18 @@ class EnhancedTrackingProtectionRobot {
                 ),
             )
         Log.i(TAG, "verifySocialMediaTrackersBlocked: Verified social trackers are blocked: $isBlocked")
+        Log.i(TAG, "verifySocialMediaTrackersBlocked: Trying to verify blocked social trackers list is displayed")
         onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
         Log.i(TAG, "verifySocialMediaTrackersBlocked: Verified blocked social trackers list is displayed")
     }
 
     fun verifyFingerprintersBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithResId("$packageName:id/fingerprinters"))
+        Log.i(TAG, "verifyFingerprintersBlocked: Trying to click fingerprinters block list button")
         fingerprintersBlockListButton().click()
         Log.i(TAG, "verifyFingerprintersBlocked: Clicked fingerprinters block list button")
         // Verifies the trackers block/allow list
+        Log.i(TAG, "verifyFingerprintersBlocked: Trying to verify fingerprinters are blocked: $isBlocked")
         onView(withId(R.id.details_blocking_header))
             .check(
                 matches(
@@ -122,15 +132,18 @@ class EnhancedTrackingProtectionRobot {
                 ),
             )
         Log.i(TAG, "verifyFingerprintersBlocked: Verified fingerprinters are blocked: $isBlocked")
+        Log.i(TAG, "verifyFingerprintersBlocked: Trying to verify blocked fingerprinter trackers list is displayed")
         onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
         Log.i(TAG, "verifyFingerprintersBlocked: Verified blocked fingerprinter trackers list is displayed")
     }
 
     fun verifyCryptominersBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithResId("$packageName:id/cryptominers"))
+        Log.i(TAG, "verifyCryptominersBlocked: Trying to click cryptominers block list button")
         cryptominersBlockListButton().click()
         Log.i(TAG, "verifyCryptominersBlocked: Clicked cryptominers block list button")
         // Verifies the trackers block/allow list
+        Log.i(TAG, "verifyCryptominersBlocked: Trying to verify cryptominers are blocked: $isBlocked")
         onView(withId(R.id.details_blocking_header))
             .check(
                 matches(
@@ -144,15 +157,18 @@ class EnhancedTrackingProtectionRobot {
                 ),
             )
         Log.i(TAG, "verifyCryptominersBlocked: Verified cryptominers are blocked: $isBlocked")
+        Log.i(TAG, "verifyCryptominersBlocked: Trying to verify blocked cryptominers trackers list is displayed")
         onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
         Log.i(TAG, "verifyCryptominersBlocked: Verified blocked cryptominers trackers list is displayed")
     }
 
     fun verifyTrackingContentBlocked(isBlocked: Boolean) {
         assertUIObjectExists(itemWithText("Tracking Content"))
+        Log.i(TAG, "verifyTrackingContentBlocked: Trying to click tracking content block list button")
         trackingContentBlockListButton().click()
         Log.i(TAG, "verifyTrackingContentBlocked: Clicked tracking content block list button")
         // Verifies the trackers block/allow list
+        Log.i(TAG, "verifyTrackingContentBlocked: Trying to verify tracking content is blocked: $isBlocked")
         onView(withId(R.id.details_blocking_header))
             .check(
                 matches(
@@ -166,11 +182,13 @@ class EnhancedTrackingProtectionRobot {
                 ),
             )
         Log.i(TAG, "verifyTrackingContentBlocked: Verified tracking content is blocked: $isBlocked")
+        Log.i(TAG, "verifyTrackingContentBlocked: Trying to verify blocked tracking content trackers list is displayed")
         onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
         Log.i(TAG, "verifyTrackingContentBlocked: Verified blocked tracking content trackers list is displayed")
     }
 
     fun viewTrackingContentBlockList() {
+        Log.i(TAG, "viewTrackingContentBlockList: Trying to verify blocked tracking content trackers")
         onView(withId(R.id.blocking_text_list))
             .check(
                 matches(
@@ -193,19 +211,23 @@ class EnhancedTrackingProtectionRobot {
         )
 
     fun navigateBackToDetails() {
+        Log.i(TAG, "navigateBackToDetails: Trying to click details list back button")
         onView(withId(R.id.details_back)).click()
         Log.i(TAG, "navigateBackToDetails: Clicked details list back button")
     }
 
     class Transition {
         fun openEnhancedTrackingProtectionSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
-            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Looking for site security button")
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Waiting for $waitingTime ms for site security button to exist")
             pageSecurityIndicator().waitForExists(waitingTime)
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Waited for $waitingTime ms for site security button to exist")
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Trying to click site security button")
             pageSecurityIndicator().click()
             Log.i(TAG, "openEnhancedTrackingProtectionSheet: Clicked site security button")
-            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Looking for quick actions sheet")
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Waiting for $waitingTime ms for quick actions sheet to exits")
             mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
                 .waitForExists(waitingTime)
+            Log.i(TAG, "openEnhancedTrackingProtectionSheet: Waited for $waitingTime ms for quick actions sheet to exits")
             assertUIObjectExists(itemWithResId("$packageName:id/quick_action_sheet"))
 
             EnhancedTrackingProtectionRobot().interact()
@@ -214,6 +236,7 @@ class EnhancedTrackingProtectionRobot {
 
         fun closeEnhancedTrackingProtectionSheet(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             // Back out of the Enhanced Tracking Protection sheet
+            Log.i(TAG, "closeEnhancedTrackingProtectionSheet: Trying to click device back button")
             mDevice.pressBack()
             Log.i(TAG, "closeEnhancedTrackingProtectionSheet: Clicked device back button")
 
@@ -222,6 +245,7 @@ class EnhancedTrackingProtectionRobot {
         }
 
         fun toggleEnhancedTrackingProtectionFromSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
+            Log.i(TAG, "toggleEnhancedTrackingProtectionFromSheet: Trying to click ETP switch")
             enhancedTrackingProtectionSwitch().click()
             Log.i(TAG, "toggleEnhancedTrackingProtectionFromSheet: Clicked ETP switch")
 
@@ -230,10 +254,13 @@ class EnhancedTrackingProtectionRobot {
         }
 
         fun openProtectionSettings(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
-            Log.i(TAG, "openProtectionSettings: Looking for ETP sheet \"Details\" button")
+            Log.i(TAG, "openProtectionSettings: Waiting for $waitingTime ms for ETP sheet \"Details\" button to exist")
             openEnhancedTrackingProtectionDetails().waitForExists(waitingTime)
+            Log.i(TAG, "openProtectionSettings: Waited for $waitingTime ms for ETP sheet \"Details\" button to exist")
+            Log.i(TAG, "openProtectionSettings: Trying to click ETP sheet \"Details\" button")
             openEnhancedTrackingProtectionDetails().click()
             Log.i(TAG, "openProtectionSettings: Clicked ETP sheet \"Details\" button")
+            Log.i(TAG, "openProtectionSettings: Trying to click \"Protection Settings\" button")
             trackingProtectionSettingsButton().click()
             Log.i(TAG, "openProtectionSettings: Clicked \"Protection Settings\" button")
 
@@ -242,8 +269,10 @@ class EnhancedTrackingProtectionRobot {
         }
 
         fun openDetails(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
-            Log.i(TAG, "openDetails: Looking for ETP sheet \"Details\" button")
+            Log.i(TAG, "openDetails: Waiting for $waitingTime ms for ETP sheet \"Details\" button to exist")
             openEnhancedTrackingProtectionDetails().waitForExists(waitingTime)
+            Log.i(TAG, "openDetails: Waited for $waitingTime ms for ETP sheet \"Details\" button to exist")
+            Log.i(TAG, "openDetails: Trying to click ETP sheet \"Details\" button")
             openEnhancedTrackingProtectionDetails().click()
             Log.i(TAG, "openDetails: Clicked ETP sheet \"Details\" button")
 
