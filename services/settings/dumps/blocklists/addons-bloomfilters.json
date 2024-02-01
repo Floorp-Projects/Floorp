@@ -3,6 +3,26 @@
     {
       "stash": {
         "blocked": [
+          "@windscribeffcustom:9.4.11.1",
+          "softphone.service@five9.com:11.5.0",
+          "softphone.service@five9.com:13.0.0",
+          "softphone.service@five9.com:10.0.0",
+          "{7f7ac8a6-57ec-4d91-99dc-8674cf1e367b}:1.0.1",
+          "softphone.service@five9.com:11.5.1",
+          "extension@skye.sh:1.83",
+          "softphone.service@five9.com:13.1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1706196941217,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1706272504279,
+      "id": "737f77b0-2066-458d-ad65-108184b66e2e",
+      "last_modified": 1706272559513
+    },
+    {
+      "stash": {
+        "blocked": [
           "LightspeedHelper@lightspeedsystems.com:1.4.2203.16197",
           "LightspeedHelper@lightspeedsystems.com:1.2.2108.10069",
           "LightspeedHelper@lightspeedsystems.com:1.9.2307.6082",
@@ -3418,5 +3438,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1705343757476
+  "timestamp": 1706272559513
 }
