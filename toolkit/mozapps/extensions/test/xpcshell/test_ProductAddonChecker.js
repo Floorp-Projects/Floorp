@@ -250,6 +250,24 @@ add_task(async function test_download_badhashfn() {
   }
 });
 
+add_task(async function test_download_sha1_unsupported() {
+  try {
+    let path = await ProductAddonChecker.downloadAddon({
+      URL: root + "unsigned.xpi",
+      hashFunction: "sha1",
+      hashValue: "3d0dc22e1f394e159b08aaf5f0f97de4d5c65f4f",
+    });
+
+    await IOUtils.remove(path);
+    do_throw("Should not have downloaded a file with a bad hash function");
+  } catch (e) {
+    Assert.ok(
+      true,
+      "Should have thrown when downloading a file with a bad hash function."
+    );
+  }
+});
+
 add_task(async function test_download_badhash() {
   try {
     let path = await ProductAddonChecker.downloadAddon({

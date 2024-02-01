@@ -470,7 +470,7 @@ function do_check_not_in_crash_annotation(aId, aVersion) {
 
 function do_get_file_hash(aFile, aAlgorithm) {
   if (!aAlgorithm) {
-    aAlgorithm = "sha1";
+    aAlgorithm = "sha256";
   }
 
   let crypto = Cc["@mozilla.org/security/hash;1"].createInstance(
