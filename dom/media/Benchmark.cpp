@@ -130,6 +130,7 @@ Benchmark::Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters)
           TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                             "Benchmark::QueueObject")),
       mParameters(aParameters),
+      mKeepAliveUntilComplete(this),
       mPlaybackState(this, aDemuxer) {
   MOZ_COUNT_CTOR(Benchmark);
 }
@@ -138,7 +139,6 @@ Benchmark::~Benchmark() { MOZ_COUNT_DTOR(Benchmark); }
 
 RefPtr<Benchmark::BenchmarkPromise> Benchmark::Run() {
   RefPtr<Benchmark> self = this;
-  mKeepAliveUntilComplete = this;
   return InvokeAsync(Thread(), __func__, [self] {
     RefPtr<BenchmarkPromise> p = self->mPromise.Ensure(__func__);
     self->mPlaybackState.Dispatch(NS_NewRunnableFunction(
