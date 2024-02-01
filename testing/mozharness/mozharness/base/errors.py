@@ -91,7 +91,7 @@ VirtualenvErrorList = [
 
 RustErrorList = [
     {"regex": re.compile(r"""error\[E\d+\]:"""), "level": ERROR},
-    {"substr": r"""error: Could not compile""", "level": ERROR},
+    {"substr": r"""error: could not compile""", "level": ERROR},
     {"substr": r"""error: aborting due to previous error""", "level": ERROR},
     {"substr": r"""thread 'main' panicked at""", "level": ERROR},
 ]
