@@ -41,12 +41,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/inspector/css-logic.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "KeyCodes",
-  "resource://devtools/client/shared/keycodes.js",
-  true
-);
 loader.lazyGetter(this, "PROPERTY_NAME_INPUT_LABEL", function () {
   return l10n("rule.propertyName.label");
 });
@@ -1154,10 +1148,6 @@ TextPropertyEditor.prototype = {
    *        The event keyCode that trigger the editor to close
    */
   _onNameDone(value, commit, direction, key) {
-    if (value && commit && !direction && key === KeyCodes.DOM_VK_RETURN) {
-      this.ruleView.maybeShowEnterKeyNotice();
-    }
-
     const isNameUnchanged =
       (!commit && !this.ruleEditor.isEditing) || this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
@@ -1245,10 +1235,6 @@ TextPropertyEditor.prototype = {
    *        The event keyCode that trigger the editor to close
    */
   _onValueDone(value = "", commit, direction, key) {
-    if (value && commit && !direction && key === KeyCodes.DOM_VK_RETURN) {
-      this.ruleView.maybeShowEnterKeyNotice();
-    }
-
     const parsedProperties = this._getValueAndExtraProperties(value);
     const val = parseSingleValue(
       this.cssProperties.isKnown,
