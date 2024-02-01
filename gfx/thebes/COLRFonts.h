@@ -7,7 +7,7 @@
 #define COLR_FONTS_H
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/FontPaletteCache.h"
 #include "nsAtom.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -23,6 +23,8 @@ class TextDrawTarget;
 }
 
 namespace gfx {
+
+class FontPalette;
 
 class FontPaletteValueSet {
  public:
@@ -102,7 +104,7 @@ class COLRFonts {
       hb_blob_t* aCOLR, hb_face_t* aFace, const GlyphLayers* aLayers,
       DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
       ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
-      const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors);
+      const sRGBColor& aCurrentColor, FontPalette* aPalette);
 
   // COLRv1 support: color glyph is represented by a directed acyclic graph of
   // paint records.
@@ -116,8 +118,8 @@ class COLRFonts {
       hb_blob_t* aCOLR, hb_font_t* aFont, const GlyphPaintGraph* aPaintGraph,
       DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
       ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
-      const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors,
-      uint32_t aGlyphId, float aFontUnitsToPixels);
+      const sRGBColor& aCurrentColor, FontPalette* aPalette, uint32_t aGlyphId,
+      float aFontUnitsToPixels);
 
   static Rect GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
                                   uint32_t aGlyphId, DrawTarget* aDrawTarget,
@@ -126,7 +128,7 @@ class COLRFonts {
 
   static uint16_t GetColrTableVersion(hb_blob_t* aCOLR);
 
-  static UniquePtr<nsTArray<sRGBColor>> SetupColorPalette(
+  static already_AddRefed<FontPalette> SetupColorPalette(
       hb_face_t* aFace, const FontPaletteValueSet* aPaletteValueSet,
       nsAtom* aFontPalette, const nsACString& aFamilyName);
 };
