@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-01-28T14:50:15.474360'
+updated_at: '2024-02-01T12:38:02.925216'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3456,11 +3456,13 @@ modules:
         includes:
           - toolkit/components/pictureinpicture
           - browser/extensions/pictureinpicture
+        meta:
+          owners_emeritus:
+            - *micah
+            - *mhowell
         excludes: []
         owners:
-          - *mhowell
           - *mconley
-          - *micah
         peers:
           - *niklas
           - *kpatenio
@@ -4203,5 +4205,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 40b9a7ee05e463fa260f24f217af11652df147cd
-  export: 32abed7d90a5cb2a9baf904d3b4b41aa30712d23
+  config: 20071dad375ef746dbb699318486585c63c88104
+  export: 105b6db6b3204743b6b1eca90e11a0875e40f2c8
