@@ -98,6 +98,8 @@ int64_t TimeUnit::ToTicksAtRate(int64_t aRate) const {
   return mTicks.value() * aRate / mBase;
 }
 
+bool TimeUnit::IsBase(int64_t aBase) const { return aBase == mBase; }
+
 double TimeUnit::ToSeconds() const {
   if (IsPosInf()) {
     return PositiveInfinity<double>();

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<video id=a src=small-timebase.mp4 controls autoplay></video>
+<script>
+a.onplaying = function() {
+  dump("OK");
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</html>

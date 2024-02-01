@@ -118,6 +118,9 @@ class TimeUnit final {
   int64_t ToMicroseconds() const;
   int64_t ToNanoseconds() const;
   int64_t ToTicksAtRate(int64_t aRate) const;
+  // Only to be used in release assertions or unit testing, returns true if this
+  // TimeUnit has base aBase
+  bool IsBase(int64_t aBase) const;
   double ToSeconds() const;
   nsCString ToString() const;
   TimeDuration ToTimeDuration() const;

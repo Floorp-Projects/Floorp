@@ -107,9 +107,16 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
   mDataOffset = frameOffset * mChannels;
   MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
                         "Data offset outside original buffer");
-  mFrames = (trimAfter - trimBefore).ToTicksAtRate(mRate);
-  MOZ_DIAGNOSTIC_ASSERT(mFrames <= mAudioData.Length() / mChannels,
-                        "More frames than found in container");
+  int64_t frameCountAfterTrim = (trimAfter - trimBefore).ToTicksAtRate(mRate);
+  if (frameCountAfterTrim >
+      AssertedCast<int64_t>(mAudioData.Length() / mChannels)) {
+    // Accept rounding error caused by an imprecise time_base in the container,
+    // that can cause a mismatch but not other kind of unexpected frame count.
+    MOZ_RELEASE_ASSERT(!trimBefore.IsBase(mRate));
+    mFrames = 0;
+  } else {
+    mFrames = frameCountAfterTrim;
+  }
   mTime = mOriginalTime + trimBefore;
   mDuration = TimeUnit(mFrames, mRate);
 
@@ -449,21 +456,21 @@ already_AddRefed<VideoData> VideoData::CreateFromImage(
 
 nsCString VideoData::ToString() const {
   std::array ImageFormatStrings = {
-    "PLANAR_YCBCR",
-    "NV_IMAGE",
-    "SHARED_RGB",
-    "MOZ2D_SURFACE",
-    "MAC_IOSURFACE",
-    "SURFACE_TEXTURE",
-    "D3D9_RGB32_TEXTURE",
-    "OVERLAY_IMAGE",
-    "D3D11_SHARE_HANDLE_TEXTURE",
-    "D3D11_TEXTURE_IMF_SAMPLE",
-    "TEXTURE_WRAPPER",
-    "D3D11_YCBCR_IMAGE",
-    "GPU_VIDEO",
-    "DMABUF",
-    "DCOMP_SURFACE",
+      "PLANAR_YCBCR",
+      "NV_IMAGE",
+      "SHARED_RGB",
+      "MOZ2D_SURFACE",
+      "MAC_IOSURFACE",
+      "SURFACE_TEXTURE",
+      "D3D9_RGB32_TEXTURE",
+      "OVERLAY_IMAGE",
+      "D3D11_SHARE_HANDLE_TEXTURE",
+      "D3D11_TEXTURE_IMF_SAMPLE",
+      "TEXTURE_WRAPPER",
+      "D3D11_YCBCR_IMAGE",
+      "GPU_VIDEO",
+      "DMABUF",
+      "DCOMP_SURFACE",
   };
 
   nsCString rv;
