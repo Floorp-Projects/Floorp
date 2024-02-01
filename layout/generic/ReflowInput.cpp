@@ -294,6 +294,21 @@ nscoord SizeComputationInput::ComputeBSizeValue(
   return nsLayoutUtils::ComputeBSizeValue(aContainingBlockBSize, inside, aSize);
 }
 
+nsSize ReflowInput::ComputedSizeAsContainerIfConstrained() const {
+  LogicalSize size = ComputedSize();
+  if (size.ISize(mWritingMode) == NS_UNCONSTRAINEDSIZE) {
+    size.ISize(mWritingMode) = 0;
+  } else {
+    size.ISize(mWritingMode) += mComputedBorderPadding.IStartEnd(mWritingMode);
+  }
+  if (size.BSize(mWritingMode) == NS_UNCONSTRAINEDSIZE) {
+    size.BSize(mWritingMode) = 0;
+  } else {
+    size.BSize(mWritingMode) += mComputedBorderPadding.BStartEnd(mWritingMode);
+  }
+  return size.GetPhysicalSize(mWritingMode);
+}
+
 bool ReflowInput::ShouldReflowAllKids() const {
   // Note that we could make a stronger optimization for IsBResize if
   // we use it in a ShouldReflowChild test that replaces the current

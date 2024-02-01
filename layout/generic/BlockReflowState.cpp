@@ -37,6 +37,7 @@ BlockReflowState::BlockReflowState(
       mReflowInput(aReflowInput),
       mContentArea(aReflowInput.GetWritingMode()),
       mInsetForBalance(aInset),
+      mContainerSize(aReflowInput.ComputedSizeAsContainerIfConstrained()),
       mPushedFloats(nullptr),
       mOverflowTracker(nullptr),
       mBorderPadding(
@@ -51,28 +52,6 @@ BlockReflowState::BlockReflowState(
                "The consumed block-size should be constrained!");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-
-  // Note that mContainerSize is the physical size, needed to
-  // convert logical block-coordinates in vertical-rl writing mode
-  // (measured from a RHS origin) to physical coordinates within the
-  // containing block.
-  // If aReflowInput doesn't have a constrained ComputedWidth(), we set
-  // mContainerSize.width to zero, which means lines will be positioned
-  // (physically) incorrectly; we will fix them up at the end of
-  // nsBlockFrame::Reflow, after we know the total block-size of the
-  // frame.
-  mContainerSize.width = aReflowInput.ComputedWidth();
-  if (mContainerSize.width == NS_UNCONSTRAINEDSIZE) {
-    mContainerSize.width = 0;
-  }
-
-  mContainerSize.width += mBorderPadding.LeftRight(wm);
-
-  // For now at least, we don't do that fix-up for mContainerHeight.
-  // It's only used in nsBidiUtils::ReorderFrames for vertical rtl
-  // writing modes, which aren't fully supported for the time being.
-  mContainerSize.height =
-      aReflowInput.ComputedHeight() + mBorderPadding.TopBottom(wm);
 
   if (aBStartMarginRoot || 0 != mBorderPadding.BStart(wm)) {
     mFlags.mIsBStartMarginRoot = true;
