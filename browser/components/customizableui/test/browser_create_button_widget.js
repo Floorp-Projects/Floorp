@@ -14,6 +14,7 @@ add_task(async function () {
   let widgetSpec = {
     id: kButton,
     type: "button",
+    tooltiptext: "I am an accessible name",
     onClick() {
       gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:addons");
     },

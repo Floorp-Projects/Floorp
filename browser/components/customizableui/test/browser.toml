@@ -186,7 +186,6 @@ skip-if = ["verify"]
 ["browser_981305_separator_insertion.js"]
 
 ["browser_981418-widget-onbeforecreated-handler.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked chromeclass-toolbar-additional toolbarbutton may not be labeled
 skip-if = ["verify"]
 
 ["browser_982656_restore_defaults_builtin_widgets.js"]
@@ -244,7 +243,6 @@ skip-if = ["verify"]
 ["browser_check_tooltips_in_navbar.js"]
 
 ["browser_create_button_widget.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked chromeclass-toolbar-additional toolbarbutton may not be labeled
 
 ["browser_ctrl_click_panel_opening.js"]
 

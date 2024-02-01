@@ -13,6 +13,7 @@ add_task(async function testAddOnBeforeCreatedWidget() {
     id: kWidgetId,
     type: "view",
     viewId: kWidgetId + "idontexistyet",
+    tooltiptext: "I am an accessible name",
     onBeforeCreated(doc) {
       let view = doc.createXULElement("panelview");
       view.id = kWidgetId + "idontexistyet";
