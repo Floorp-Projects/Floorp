@@ -8,16 +8,6 @@ description: toString() works as expected
 features: [Temporal]
 ---*/
 
-
-// serializing balance doesn't trip out-of-range
-var d = Temporal.Duration.from({
-  seconds: Number.MAX_VALUE,
-  milliseconds: Number.MAX_VALUE
-});
-var str = d.toString();
-assert(str.startsWith("PT"));
-assert(str.endsWith("S"));
-
 // serializing balance doesn't lose precision when values are precise
 var d = Temporal.Duration.from({
   milliseconds: Number.MAX_SAFE_INTEGER,
