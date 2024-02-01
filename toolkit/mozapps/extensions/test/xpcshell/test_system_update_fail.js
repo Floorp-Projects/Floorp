@@ -138,7 +138,7 @@ const TESTS = {
         id: "system3@tests.mozilla.org",
         version: "3.0",
         path: "system3_3.xpi",
-        hashFunction: "sha1",
+        hashFunction: "sha256",
         hashValue: "205a4c49bd513ebd30594e380c19e86bba1f83e2",
       },
     ],
