@@ -34,6 +34,10 @@ EXCLUDED_PACKAGES = {
     # modified 'dummy' version of it so that the dependency checks still succeed, but
     # if it ever is attempted to be used, it will fail gracefully.
     "ansicon",
+    # Non-permanent exclusion of pip to avoid vendoring removing a solution to
+    # pkgutil's deprecation. See https://bugzilla.mozilla.org/show_bug.cgi?id=1857470
+    # for more information.
+    "pip",
 }
 
 
