@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head><title>Test dir=rtl</title></head>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Verify dir attribute on various containers</title>
+    <link rel="help" href="https://w3c.github.io/mathml-core/#attributes-common-to-html-and-mathml-elements">
+    <link rel="help" href="https://w3c.github.io/mathml-core/#css-styling">
+    <meta name="assert" content="Verify dir attribute on various elements.">
+    <link rel="match" href="direction-overall-002-ref.html">
+    <link rel="stylesheet" type="text/css" href="/fonts/ahem.css" />
+    <style>
+      math {
+          font: 25px/1 Ahem;
+      }
+    </style>
+  </head>
+
+  </head>
   <body style="background: white;">
 
     <!-- The visible part of the formulas below should be covered by the
@@ -97,8 +112,8 @@
       </math>
     </div>
 
-    <div style="position: absolute; top: 5px; left: 5px;">
-      <div style="width: 30px; height: 500px; background: black;"></div>
+    <div style="position: absolute; top: 0px; left: 0px;">
+      <div style="width: 40px; height: 3000px; background: black"></div>
     </div>
 
   </body>

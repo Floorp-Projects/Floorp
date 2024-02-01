@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html>
-  <head><title>Test dir=rtl</title></head>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Verify dir attribute on various containers</title>
+    <link rel="help" href="https://w3c.github.io/mathml-core/#attributes-common-to-html-and-mathml-elements">
+    <link rel="help" href="https://w3c.github.io/mathml-core/#css-styling">
+    <meta name="assert" content="Verify dir attribute on various mmultiscripts.">
+    <link rel="match" href="direction-overall-003-ref.html">
+    <link rel="stylesheet" type="text/css" href="/fonts/ahem.css" />
+    <style>
+      math {
+          /* Ensure the space after script is 30px */
+          font: 10px spaceafterscript3000;
+      }
+      @font-face {
+          font-family: spaceafterscript3000;
+          src: url("/fonts/math/scripts-spaceafterscript3000.woff");
+      }
+    </style>
+  </head>
   <body>
 
     <!-- mmultiscripts. The formulas
@@ -15,16 +33,16 @@
     <!-- five vertical bands: red, green, magenta, blue and yellow -->
     <div style="position: absolute;
                 top: 5px; left: 5px; width: 200px; height: 200px;">
-      <div style="position: absolute; width: 40px; height: 200px;
+      <div style="position: absolute; width: 70px; height: 200px;
                   left: 0px; background: red;"></div>
-      <div style="position: absolute; width: 40px; height: 200px;
-                  left: 40px; background: green;"></div>
-      <div style="position: absolute; width: 40px; height: 200px;
-                  left: 80px; background: magenta;"></div>
-      <div style="position: absolute; width: 40px; height: 200px;
-                  left: 120px; background: blue;"></div>
-      <div style="position: absolute; width: 40px; height: 200px;
-                  left: 160px; background: yellow;"></div>
+      <div style="position: absolute; width: 70px; height: 200px;
+                  left: 70px; background: green;"></div>
+      <div style="position: absolute; width: 70px; height: 200px;
+                  left: 140px; background: magenta;"></div>
+      <div style="position: absolute; width: 70px; height: 200px;
+                  left: 210px; background: blue;"></div>
+      <div style="position: absolute; width: 70px; height: 200px;
+                  left: 280px; background: yellow;"></div>-->
     </div>
 
     <!-- a mmultiscripts element whose children are squares of different
@@ -61,15 +79,15 @@
       <div style="position: absolute; width: 10px; height: 200px;
                   left: -5px; background: black;"></div>
       <div style="position: absolute; width: 10px; height: 200px;
-                  left: 35px; background: black;"></div>
+                  left: 65px; background: black;"></div>
       <div style="position: absolute; width: 10px; height: 200px;
-                  left: 75px; background: black;"></div>
+                  left: 135px; background: black;"></div>
       <div style="position: absolute; width: 10px; height: 200px;
-                  left: 115px; background: black;"></div>
+                  left: 205px; background: black;"></div>
       <div style="position: absolute; width: 10px; height: 200px;
-                  left: 155px; background: black;"></div>
+                  left: 275px; background: black;"></div>
       <div style="position: absolute; width: 10px; height: 200px;
-                  left: 195px; background: black;"></div>
+                  left: 345px; background: black;"></div>
     </div>
 
   </body>
