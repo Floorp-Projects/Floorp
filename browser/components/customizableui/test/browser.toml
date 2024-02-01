@@ -108,7 +108,6 @@ skip-if = ["os == 'mac'"]
 ["browser_940013_registerToolbarNode_calls_registerArea.js"]
 
 ["browser_940307_panel_click_closure_handling.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked toolbarbutton may not be focusable
 skip-if = ["verify && debug && os == 'linux'"]
 
 ["browser_940946_removable_from_navbar_customizemode.js"]

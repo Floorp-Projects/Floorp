@@ -108,7 +108,14 @@ add_task(async function disabled_button_in_panel() {
   await waitForOverflowButtonShown();
 
   await document.getElementById("nav-bar").overflowable.show();
+  // We intentionally turn off a11y_checks, because the following click
+  // is targeting a disabled control to confirm the click event won't come through.
+  // It is not meant to be interactive and is not expected to be accessible:
+  AccessibilityUtils.setEnv({
+    mustBeEnabled: false,
+  });
   EventUtils.synthesizeMouseAtCenter(button, {});
+  AccessibilityUtils.resetEnv();
   is(PanelUI.overflowPanel.state, "open", "Popup stays open");
   button.removeAttribute("disabled");
   let hiddenAgain = promiseOverflowHidden(window);
