@@ -143,6 +143,7 @@ input {
 @import '../components/PocketLoggedInCta/PocketLoggedInCta';
 @import '../components/MoreRecommendations/MoreRecommendations';
 @import '../components/DiscoveryStreamBase/DiscoveryStreamBase';
+@import '../components/ModalOverlay/ModalOverlay';
 
 // Discovery Stream Components
 @import '../components/DiscoveryStreamComponents/CardGrid/CardGrid';
@@ -168,5 +169,4 @@ input {
 
 // AS Router
 @import '../../../asrouter/content-src/components/Button/Button';
-@import '../../../asrouter/content-src/components/ModalOverlay/ModalOverlay';
 // stylelint-enable no-invalid-position-at-import-rule

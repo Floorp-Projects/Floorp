@@ -3914,7 +3914,7 @@ class DSMessage extends (external_React_default()).PureComponent {
     }))));
   }
 }
-;// CONCATENATED MODULE: ../asrouter/content-src/components/ModalOverlay/ModalOverlay.jsx
+;// CONCATENATED MODULE: ./content-src/components/ModalOverlay/ModalOverlay.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
