@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Deno",
+      "schema": 1706659507818,
+      "status": "current",
+      "version": "1.40",
+      "browserid": "deno",
+      "id": "15c381ea-e194-48f1-99dc-3d8cd2ffdcfb",
+      "last_modified": 1706695152746
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1706659508024,
+      "status": "beta",
+      "version": "17.4",
+      "browserid": "safari_ios",
+      "id": "b99772c5-e366-42c6-b2db-330aca62dba5",
+      "last_modified": 1706695152744
+    },
+    {
+      "name": "Edge",
+      "schema": 1706659507960,
+      "status": "current",
+      "version": "121",
+      "browserid": "edge",
+      "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
+      "last_modified": 1706695152735
+    },
+    {
       "name": "Firefox",
       "schema": 1706313907801,
       "status": "planned",
@@ -182,15 +209,6 @@
     },
     {
       "name": "Edge",
-      "schema": 1704903174781,
-      "status": "beta",
-      "version": "121",
-      "browserid": "edge",
-      "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
-      "last_modified": 1705307946108
-    },
-    {
-      "name": "Edge",
       "schema": 1705104306922,
       "status": "nightly",
       "version": "122",
@@ -206,15 +224,6 @@
       "browserid": "nodejs",
       "id": "0d78585f-e9e0-41e8-816a-22461158e36d",
       "last_modified": 1702890886929
-    },
-    {
-      "name": "Edge",
-      "schema": 1702166707858,
-      "status": "current",
-      "version": "120",
-      "browserid": "edge",
-      "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
-      "last_modified": 1702283211298
     },
     {
       "name": "Node.js",
@@ -253,15 +262,6 @@
       "last_modified": 1699453952078
     },
     {
-      "name": "Deno",
-      "schema": 1699401908655,
-      "status": "current",
-      "version": "1.38",
-      "browserid": "deno",
-      "id": "40834129-97c0-45cc-9449-b2448bad1d2b",
-      "last_modified": 1699453952057
-    },
-    {
       "name": "Node.js",
       "schema": 1695216243625,
       "status": "esr",
@@ -289,5 +289,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1706515991128
+  "timestamp": 1706695152746
 }
