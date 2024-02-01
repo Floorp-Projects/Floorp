@@ -42,12 +42,9 @@ fuzzy(0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,0-255,0-136) sk
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
-== mo-accent-dynamic.html mo-accent-dynamic-ref.html
 == mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
 == munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
 == munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html
-== op-dict-10.html op-dict-10-ref.html
-!= op-dict-11.html op-dict-11-ref.html
 
 # radicalbar*.html tests rely on reftest-zoom to verify the visibility of the
 # radical bar at different zoom levels. There does not seem to be any equivalent

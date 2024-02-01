@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>mo@accent</title>
+    <meta charset="utf-8"/>
+    <link rel="match" href="mo-accent-dynamic-ref.html"/>
+    <script type="text/javascript">
+      function doTest() {
+        document.getElementById('mathOperator').setAttribute('accent', 'true');
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("TestRendered",doTest);
+    </script>
+  </head>
+  <body>
+    <math>
+      <munderover><mtext>X</mtext><mo id="mathOperator">O</mo><mo>O</mo></munderover>
+    </math>
+  </body>
+</html>
