@@ -25,7 +25,7 @@ export class GenericAutocompleteItem {
  * Show confirmation tooltip
  *
  * @param {object} browser - An object representing the browser.
- * @param {string} messageId - Message ID from browser/browser.properties.
+ * @param {string} messageId - Message ID from browser/confirmationHints.ftl
  * @param {string} [anchorId="identity-icon"] - ID of the element to anchor the hint to.
  */
 export function showConfirmation(

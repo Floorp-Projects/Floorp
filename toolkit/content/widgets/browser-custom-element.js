@@ -277,8 +277,6 @@
 
       this.mPrefs = Services.prefs;
 
-      this._mStrBundle = null;
-
       this._audioMuted = false;
 
       this._hasAnyPlayingMediaBeenBlocked = false;
@@ -685,17 +683,6 @@
 
     get hasContentOpener() {
       return !!this.browsingContext.opener;
-    }
-
-    get mStrBundle() {
-      if (!this._mStrBundle) {
-        // need to create string bundle manually instead of using <xul:stringbundle/>
-        // see bug 63370 for details
-        this._mStrBundle = Services.strings.createBundle(
-          "chrome://global/locale/browser.properties"
-        );
-      }
-      return this._mStrBundle;
     }
 
     get audioMuted() {
