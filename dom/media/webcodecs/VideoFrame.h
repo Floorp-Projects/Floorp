@@ -15,8 +15,10 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/media/MediaUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -217,6 +219,12 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
 
   VideoFrameData GetVideoFrameData() const;
 
+  // Below helpers are used to automatically release the holding Resource if
+  // VideoFrame is never Close()d by the users.
+  void StartAutoClose();
+  void StopAutoClose();
+  void CloseIfNeeded();
+
   // A class representing the VideoFrame's data.
   class Resource final {
    public:
@@ -247,6 +255,10 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   Maybe<uint64_t> mDuration;
   int64_t mTimestamp;
   VideoColorSpaceInit mColorSpace;
+
+  // The following are used to help monitoring mResource release.
+  UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker = nullptr;
+  RefPtr<WeakWorkerRef> mWorkerRef = nullptr;
 };
 
 }  // namespace mozilla::dom

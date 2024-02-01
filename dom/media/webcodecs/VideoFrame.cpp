@@ -61,10 +61,21 @@ namespace mozilla::dom {
 #endif  // LOGW
 #define LOGW(msg, ...) LOG_INTERNAL(Warning, msg, ##__VA_ARGS__)
 
-// Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VideoFrame, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(VideoFrame)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(VideoFrame)
+  tmp->CloseIfNeeded();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(VideoFrame)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(VideoFrame)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(VideoFrame)
+// VideoFrame should be released as soon as its refcount drops to zero,
+// without waiting for async deletion by the cycle collector, since it may hold
+// a large-size image.
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(VideoFrame, CloseIfNeeded())
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoFrame)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -1126,6 +1137,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
   if (!mResource->mFormat) {
     LOGW("Create a VideoFrame with an unrecognized image format");
   }
+  StartAutoClose();
 }
 
 VideoFrame::VideoFrame(nsIGlobalObject* aParent,
@@ -1146,6 +1158,7 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
   if (!mResource->mFormat) {
     LOGW("Create a VideoFrame with an unrecognized image format");
   }
+  StartAutoClose();
 }
 
 VideoFrame::VideoFrame(const VideoFrame& aOther)
@@ -1159,10 +1172,12 @@ VideoFrame::VideoFrame(const VideoFrame& aOther)
       mColorSpace(aOther.mColorSpace) {
   MOZ_ASSERT(mParent);
   LOG("VideoFrame %p ctor", this);
+  StartAutoClose();
 }
 
 VideoFrame::~VideoFrame() {
-  LOG("VideoFrame %p dtor, (%sclosed)", this, IsClosed() ? "" : "not ");
+  MOZ_ASSERT(IsClosed());
+  LOG("VideoFrame %p dtor", this);
 }
 
 nsIGlobalObject* VideoFrame::GetParentObject() const {
@@ -1753,6 +1768,8 @@ void VideoFrame::Close() {
   mVisibleRect = gfx::IntRect();
   mDisplaySize = gfx::IntSize();
   mColorSpace = VideoColorSpaceInit();
+
+  StopAutoClose();
 }
 
 bool VideoFrame::IsClosed() const { return !mResource; }
@@ -1854,6 +1871,58 @@ VideoFrameData VideoFrame::GetVideoFrameData() const {
   return VideoFrameData(mResource->mImage.get(), mResource->TryPixelFormat(),
                         mVisibleRect, mDisplaySize, mDuration, mTimestamp,
                         mColorSpace);
+}
+
+void VideoFrame::StartAutoClose() {
+  AssertIsOnOwningThread();
+
+  LOG("VideoFrame %p, start monitoring resource release", this);
+
+  if (NS_IsMainThread()) {
+    mShutdownBlocker = media::ShutdownBlockingTicket::Create(
+        u"VideoFrame::mShutdownBlocker"_ns,
+        NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__);
+    if (mShutdownBlocker) {
+      mShutdownBlocker->ShutdownPromise()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}](bool /* aUnUsed*/) {
+            LOG("VideoFrame %p gets shutdown notification", self.get());
+            self->CloseIfNeeded();
+          },
+          [self = RefPtr{this}](bool /* aUnUsed*/) {
+            LOG("VideoFrame %p removes shutdown-blocker before getting "
+                "shutdown "
+                "notification",
+                self.get());
+          });
+    }
+  } else if (WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate()) {
+    // Clean up all the resources when the worker is going away.
+    mWorkerRef = WeakWorkerRef::Create(workerPrivate, [self = RefPtr{this}]() {
+      LOG("VideoFrame %p, worker is going away", self.get());
+      self->CloseIfNeeded();
+    });
+  }
+}
+
+void VideoFrame::StopAutoClose() {
+  AssertIsOnOwningThread();
+
+  LOG("VideoFrame %p, stop monitoring resource release", this);
+
+  mShutdownBlocker = nullptr;
+  mWorkerRef = nullptr;
+}
+
+void VideoFrame::CloseIfNeeded() {
+  AssertIsOnOwningThread();
+
+  LOG("VideoFrame %p, needs to close itself? %s", this,
+      IsClosed() ? "no" : "yes");
+  if (!IsClosed()) {
+    LOG("Close VideoFrame %p obligatorily", this);
+    Close();
+  }
 }
 
 /*
