@@ -179,3 +179,4 @@ test-pref(media.wmf.hevc.enabled,1) load 1859600.mp4
 test-pref(media.wmf.hevc.enabled,1) load 1860840.mp4
 load 1864450.html
 load 1872787.html
+load small-timebase.html
