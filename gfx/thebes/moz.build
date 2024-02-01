@@ -19,7 +19,6 @@ XPIDL_MODULE = "gfx"
 EXPORTS += [
     "COLRFonts.h",
     "DrawMode.h",
-    "FontPaletteCache.h",
     "gfx2DGlue.h",
     "gfxAlphaRecovery.h",
     "gfxASurface.h",
@@ -71,6 +70,7 @@ EXPORTS.mozilla.gfx += [
     "D3D11Checks.h",
     "DeviceManagerDx.h",
     "DisplayConfigWindows.h",
+    "FontPaletteCache.h",
     "PrintPromise.h",
     "PrintTarget.h",
     "PrintTargetThebes.h",
