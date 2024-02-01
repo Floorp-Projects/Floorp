@@ -1342,3 +1342,25 @@ skip script test262/intl402/Temporal/TimeZone/from/iana-legacy-names.js
 skip script test262/intl402/Temporal/TimeZone/from/etc-timezone.js
 skip script test262/intl402/Temporal/TimeZone/from/argument-valid.js
 skip script test262/intl402/Temporal/TimeZone/from/timezone-case-insensitive.js
+
+# Failures with --enable-iterator-helpers, see bug 1877831.
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/constructor/prop-desc.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/constructor/weird-setter.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js
+
+# Failures in AsyncFromSyncIteratorPrototype, see bug 1877862.
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-object.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-not-object.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-null.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/iterator-result-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-get-return-undefined.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/next-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-iterator-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/iterator-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-next-rejected-promise-close.js
