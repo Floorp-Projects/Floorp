@@ -16,8 +16,14 @@ SourceSurfaceWebgl::SourceSurfaceWebgl(DrawTargetWebgl* aDT)
       mSharedContext(aDT->mSharedContext) {}
 
 SourceSurfaceWebgl::SourceSurfaceWebgl(
+    const RefPtr<TextureHandle>& aHandle,
     const RefPtr<SharedContextWebgl>& aSharedContext)
-    : mSharedContext(aSharedContext) {}
+    : mFormat(aHandle->GetFormat()),
+      mSize(aHandle->GetSize()),
+      mSharedContext(aSharedContext),
+      mHandle(aHandle) {
+  mHandle->SetSurface(this);
+}
 
 SourceSurfaceWebgl::~SourceSurfaceWebgl() {
   if (mHandle) {
@@ -109,14 +115,6 @@ void SourceSurfaceWebgl::GiveTexture(RefPtr<TextureHandle> aHandle) {
   mDT = nullptr;
 }
 
-void SourceSurfaceWebgl::SetHandle(TextureHandle* aHandle) {
-  MOZ_ASSERT(!mHandle);
-  mFormat = aHandle->GetFormat();
-  mSize = aHandle->GetSize();
-  mHandle = aHandle;
-  mHandle->SetSurface(this);
-}
-
 // Handler for when the owner DrawTargetWebgl is destroying the cached texture
 // handle that has been allocated for this snapshot.
 void SourceSurfaceWebgl::OnUnlinkTexture(SharedContextWebgl* aContext) {
@@ -165,8 +163,8 @@ already_AddRefed<SourceSurface> SourceSurfaceWebgl::ExtractSubrect(
       return nullptr;
     }
   }
-  RefPtr<SourceSurfaceWebgl> surface = new SourceSurfaceWebgl(sharedContext);
-  surface->SetHandle(subHandle);
+  RefPtr<SourceSurface> surface =
+      new SourceSurfaceWebgl(subHandle, sharedContext);
   return surface.forget();
 }
 

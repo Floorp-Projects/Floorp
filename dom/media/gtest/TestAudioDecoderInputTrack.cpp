@@ -29,13 +29,10 @@ constexpr uint32_t kChannels = 2;
 
 class MockTestGraph : public MediaTrackGraphImpl {
  public:
-  explicit MockTestGraph(TrackRate aRate)
-      : MediaTrackGraphImpl(0, aRate, nullptr, NS_GetCurrentThread()) {
+  MockTestGraph(TrackRate aRate, uint32_t aChannels)
+      : MediaTrackGraphImpl(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, 0, aRate,
+                            aChannels, nullptr, NS_GetCurrentThread()) {
     ON_CALL(*this, OnGraphThread).WillByDefault(Return(true));
-  }
-
-  void Init(uint32_t aChannels) {
-    MediaTrackGraphImpl::Init(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aChannels);
     // We have to call `Destroy()` manually in order to break the reference.
     // The reason we don't assign a null driver is because we would add a track
     // to the graph, then it would trigger graph's `EnsureNextIteration()` that
@@ -90,8 +87,7 @@ AudioDecoderInputTrack* CreateTrack(MediaTrackGraph* aGraph,
 class TestAudioDecoderInputTrack : public testing::Test {
  protected:
   void SetUp() override {
-    mGraph = MakeRefPtr<NiceMock<MockTestGraph>>(kRate);
-    mGraph->Init(kChannels);
+    mGraph = MakeRefPtr<NiceMock<MockTestGraph>>(kRate, kChannels);
 
     mInfo.mRate = kRate;
     mInfo.mChannels = kChannels;

@@ -24,6 +24,8 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceWebgl, override)
 
   explicit SourceSurfaceWebgl(DrawTargetWebgl* aDT);
+  SourceSurfaceWebgl(const RefPtr<TextureHandle>& aHandle,
+                     const RefPtr<SharedContextWebgl>& aSharedContext);
   virtual ~SourceSurfaceWebgl();
 
   SurfaceType GetType() const override { return SurfaceType::WEBGL; }
@@ -44,15 +46,11 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   friend class DrawTargetWebgl;
   friend class SharedContextWebgl;
 
-  explicit SourceSurfaceWebgl(const RefPtr<SharedContextWebgl>& aSharedContext);
-
   bool EnsureData();
 
   void DrawTargetWillChange(bool aNeedHandle);
 
   void GiveTexture(RefPtr<TextureHandle> aHandle);
-
-  void SetHandle(TextureHandle* aHandle);
 
   void OnUnlinkTexture(SharedContextWebgl* aContext);
 
