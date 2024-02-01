@@ -8,7 +8,7 @@ use super::AllowQuirks;
 use crate::color::parsing::{
     self, AngleOrNumber, Color as CSSParserColor, FromParsedColor, NumberOrPercentage,
 };
-use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorFlags, ColorSpace};
+use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
@@ -607,21 +607,6 @@ impl Color {
         match input.try_parse(|i| parsing::parse_color_with(&color_parser, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
-                    let enabled = {
-                        let is_legacy_color = matches!(
-                            absolute.color.color_space,
-                            ColorSpace::Srgb | ColorSpace::Hsl
-                        );
-                        let is_color_function =
-                            !absolute.color.flags.contains(ColorFlags::IS_LEGACY_SRGB);
-                        let pref_enabled = static_prefs::pref!("layout.css.more_color_4.enabled");
-
-                        (is_legacy_color && !is_color_function) || pref_enabled
-                    };
-                    if !enabled {
-                        return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                    }
-
                     // Because we can't set the `authored` value at construction time, we have to set it
                     // here.
                     absolute.authored = authored.map(|s| s.to_ascii_lowercase().into_boxed_str());
@@ -948,10 +933,12 @@ impl SpecifiedValueInfo for Color {
             "currentColor",
             "transparent",
             "color-mix",
+            "color",
+            "lab",
+            "lch",
+            "oklab",
+            "oklch",
         ]);
-        if static_prefs::pref!("layout.css.more_color_4.enabled") {
-            f(&["color", "lab", "lch", "oklab", "oklch"]);
-        }
     }
 }
 
