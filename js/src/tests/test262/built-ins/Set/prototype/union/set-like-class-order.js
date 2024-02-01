@@ -8,10 +8,29 @@ features: [set-methods]
 includes: [compareArray.js]
 ---*/
 
-let observedOrder = [];
+const observedOrder = [];
+const expectedOrder = [
+  "getting size",
+  "ToNumber(size)",
+  "getting has",
+  "getting keys",
+  "calling keys",
+  "getting next",
+  // first iteration, has value
+  "calling next",
+  "getting done",
+  "getting value",
+  // second iteration, has value
+  "calling next",
+  "getting done",
+  "getting value",
+  // third iteration, no value; ends
+  "calling next",
+  "getting done",
+];
 
 function observableIterator() {
-  let values = ["a", "b", "c"];
+  let values = ["a", "b"];
   let index = 0;
   return {
     get next() {
@@ -58,64 +77,10 @@ class MySetLike {
   }
 }
 
-const expectedOrder = [
-  "getting size",
-  "ToNumber(size)",
-  "getting has",
-  "getting keys",
-  "calling keys",
-  "getting next",
-  // first iteration, has value
-  "calling next",
-  "getting done",
-  "getting value",
-  // second iteration, has value
-  "calling next",
-  "getting done",
-  "getting value",
-  // third iteration, has value
-  "calling next",
-  "getting done",
-  "getting value",
-  // fourth iteration, no value; ends
-  "calling next",
-  "getting done",
-];
+const s1 = new Set([1, 2]);
+const s2 = new MySetLike();
+const combined = s1.union(s2);
 
-// this is smaller than argument
-{
-  observedOrder = [];
-
-  const s1 = new Set(["a", "d"]);
-  const s2 = new MySetLike();
-  const combined = s1.union(s2);
-
-  assert.compareArray([...combined], ["a", "d", "b", "c"]);
-  assert.compareArray(observedOrder, expectedOrder);
-}
-
-// this is same size as argument
-{
-  observedOrder = [];
-
-  const s1 = new Set(["a", "b", "d"]);
-  const s2 = new MySetLike();
-  const combined = s1.union(s2);
-
-  assert.compareArray([...combined], ["a", "b", "d", "c"]);
-  assert.compareArray(observedOrder, expectedOrder);
-}
-
-// this is larger than argument
-{
-  observedOrder = [];
-
-  const s1 = new Set(["a", "b", "d", "e"]);
-  const s2 = new MySetLike();
-  const combined = s1.union(s2);
-
-  assert.compareArray([...combined], ["a", "b", "d", "e", "c"]);
-  assert.compareArray(observedOrder, expectedOrder);
-}
+assert.compareArray(observedOrder, expectedOrder);
 
 reportCompare(0, 0);

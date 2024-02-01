@@ -37,11 +37,11 @@ features: [Temporal]
 ---*/
 
 var duration = Temporal.Duration.from({
-  seconds: Number.MAX_SAFE_INTEGER,
-  milliseconds: 999,
+  seconds: Number.MAX_VALUE,
+  milliseconds: Number.MAX_VALUE,
 });
 
-var options = {smallestUnit: "seconds", roundingMode: "ceil"};
+var options = {smallestUnit: "seconds"};
 
 assert.throws(RangeError, () => duration.toString(options));
 

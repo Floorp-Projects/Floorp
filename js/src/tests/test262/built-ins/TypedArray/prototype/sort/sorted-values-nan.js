@@ -35,6 +35,6 @@ testWithTypedArrayConstructors(function(TA) {
   assert.sameValue(sample[4], Infinity, "#2 [4]");
   assert.sameValue(sample[5], NaN, "#2 [5]");
   assert.sameValue(sample[6], NaN, "#2 [6]");
-}, floatArrayConstructors);
+}, [Float64Array, Float32Array]);
 
 reportCompare(0, 0);

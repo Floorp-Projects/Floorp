@@ -2,18 +2,22 @@
 // Copyright (C) 2023 Michael Ficarra. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
-esid: sec-iteratorprototype-@@tostringtag
+es6id: 25.1.2.1
 description: Property descriptor
 info: |
-  `Iterator.prototype[@@toStringTag]` is an accessor property with attributes { [[Enumerable]]: *false*, [[Configurable]]: *true* }
+    ES6 Section 17
+
+    Every other data property described in clauses 18 through 26 and in Annex
+    B.2 has the attributes { [[Writable]]: true, [[Enumerable]]: false,
+    [[Configurable]]: true } unless otherwise specified.
 features: [iterator-helpers]
+includes: [propertyHelper.js]
 ---*/
-let desc = Object.getOwnPropertyDescriptor(Iterator.prototype, Symbol.toStringTag);
-assert.sameValue(typeof desc.get, 'function');
-assert.sameValue(typeof desc.set, 'function');
-assert.sameValue(desc.configurable, true);
-assert.sameValue(desc.enumerable, false);
-assert.sameValue(desc.value, undefined);
-assert.sameValue(desc.writable, undefined);
+verifyProperty(Iterator.prototype, Symbol.toStringTag, {
+  value: 'Iterator',
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);
