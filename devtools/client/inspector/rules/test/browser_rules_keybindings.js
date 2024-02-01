@@ -258,6 +258,66 @@ add_task(async function testKeyboardNavigationInElementRule() {
   );
 });
 
+// Test keyboard navigation in the rule view when
+// devtools.inspector.rule-view.focusNextOnEnter is set to true
+
+add_task(async function () {
+  await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", true);
+  await pushPref("devtools.inspector.rule-view.focusNextOnEnter", true);
+  await addTab(`data:text/html;charset=utf-8,
+    <style>h1 {}</style>
+    <h1>Some header text</h1>`);
+  const { inspector, view } = await openRuleView();
+  await selectNode("h1", inspector);
+
+  const kbdNoticeEl = view.styleDocument.getElementById(
+    "ruleview-kbd-enter-notice"
+  );
+  ok(kbdNoticeEl.hasAttribute("hidden"), "Notice is not displayed by default");
+
+  info("Getting the ruleclose brace element for the `h1` rule");
+  const brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
+
+  info("Focus the new property editable field to create a color property");
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  await focusNewRuleViewProperty(ruleEditor);
+  EventUtils.sendString("color");
+
+  info("Typing ENTER to focus the next field: property value");
+  let onFocus = once(brace.parentNode, "focus", true);
+  let onRuleViewChanged = view.once("ruleview-changed");
+
+  EventUtils.sendKey("Return");
+
+  await onFocus;
+  await onRuleViewChanged;
+  ok(true, "The value field was focused");
+
+  info("Entering a property value");
+  EventUtils.sendString("tomato");
+
+  info("Typing Enter again should focus a new property name");
+  onFocus = once(brace.parentNode, "focus", true);
+  onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.sendKey("Return");
+  await onFocus;
+  await onRuleViewChanged;
+
+  const activeElement = view.styleDocument.activeElement;
+  is(
+    `${activeElement.tagName}${[...activeElement.classList]
+      .map(cls => `.${cls}`)
+      .join("")}`,
+    "input.styleinspector-propertyeditor",
+    "The new property name field was focused"
+  );
+
+  ok(
+    kbdNoticeEl.hasAttribute("hidden"),
+    "Notice isn't displayed after hitting Enter"
+  );
+});
+
 function waitForStyleAttributeMutation(view, expectedAttributeValue) {
   return new Promise(r => {
     view.inspector.walker.on(
