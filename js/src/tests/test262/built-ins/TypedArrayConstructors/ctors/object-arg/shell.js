@@ -358,49 +358,6 @@ var byteConversionValues = {
       0,          // -Infinity
       0
     ],
-    Float16: [
-      127,                  // 127
-      128,                  // 128
-      32768,                // 32767
-      32768,                // 32768
-      Infinity,             // 2147483647
-      Infinity,             // 2147483648
-      255,                  // 255
-      256,                  // 256
-      Infinity,             // 65535
-      Infinity,             // 65536
-      Infinity,             // 4294967295
-      Infinity,             // 4294967296
-      Infinity,             // 9007199254740991
-      Infinity,             // 9007199254740992
-      1.099609375,          // 1.1
-      0.0999755859375,      // 0.1
-      0.5,                  // 0.5
-      0.5,                  // 0.50000001,
-      0.60009765625,        // 0.6
-      0.7001953125,         // 0.7
-      NaN,                  // undefined
-      -1,                   // -1
-      -0,                   // -0
-      -0.0999755859375,     // -0.1
-      -1.099609375,         // -1.1
-      NaN,                  // NaN
-      -127,                 // -127
-      -128,                 // -128
-      -32768,               // -32767
-      -32768,               // -32768
-      -Infinity,            // -2147483647
-      -Infinity,            // -2147483648
-      -255,                 // -255
-      -256,                 // -256
-      -Infinity,            // -65535
-      -Infinity,            // -65536
-      -Infinity,            // -4294967295
-      -Infinity,            // -4294967296
-      Infinity,             // Infinity
-      -Infinity,            // -Infinity
-      0
-    ],
     Float32: [
       127,                  // 127
       128,                  // 128
@@ -521,45 +478,33 @@ var NaNs = [
 description: |
     Collection of functions used to assert the correctness of TypedArray objects.
 defines:
-  - floatArrayConstructors
-  - nonClampedIntArrayConstructors
-  - intArrayConstructors
   - typedArrayConstructors
+  - floatArrayConstructors
+  - intArrayConstructors
   - TypedArray
   - testWithTypedArrayConstructors
-  - nonAtomicsFriendlyTypedArrayConstructors
   - testWithAtomicsFriendlyTypedArrayConstructors
   - testWithNonAtomicsFriendlyTypedArrayConstructors
   - testTypedArrayConversions
 ---*/
 
-var floatArrayConstructors = [
+/**
+ * Array containing every typed array constructor.
+ */
+var typedArrayConstructors = [
   Float64Array,
-  Float32Array
-];
-
-var nonClampedIntArrayConstructors = [
+  Float32Array,
   Int32Array,
   Int16Array,
   Int8Array,
   Uint32Array,
   Uint16Array,
-  Uint8Array
+  Uint8Array,
+  Uint8ClampedArray
 ];
 
-var intArrayConstructors = nonClampedIntArrayConstructors.concat([Uint8ClampedArray]);
-
-// Float16Array is a newer feature
-// adding it to this list unconditionally would cause implementations lacking it to fail every test which uses it
-if (typeof Float16Array !== 'undefined') {
-  floatArrayConstructors.push(Float16Array);
-}
-
-/**
- * Array containing every non-bigint typed array constructor.
- */
-
-var typedArrayConstructors = floatArrayConstructors.concat(intArrayConstructors);
+var floatArrayConstructors = typedArrayConstructors.slice(0, 2);
+var intArrayConstructors = typedArrayConstructors.slice(2, 7);
 
 /**
  * The %TypedArray% intrinsic constructor function.
@@ -592,7 +537,6 @@ function testWithTypedArrayConstructors(f, selected) {
   }
 }
 
-var nonAtomicsFriendlyTypedArrayConstructors = floatArrayConstructors.concat([Uint8ClampedArray]);
 /**
  * Calls the provided function for every non-"Atomics Friendly" typed array constructor.
  *
@@ -600,7 +544,11 @@ var nonAtomicsFriendlyTypedArrayConstructors = floatArrayConstructors.concat([Ui
  * @param {Array} selected - An optional Array with filtered typed arrays
  */
 function testWithNonAtomicsFriendlyTypedArrayConstructors(f) {
-  testWithTypedArrayConstructors(f, nonAtomicsFriendlyTypedArrayConstructors);
+  testWithTypedArrayConstructors(f, [
+    Float64Array,
+    Float32Array,
+    Uint8ClampedArray
+  ]);
 }
 
 /**
@@ -645,32 +593,4 @@ function testTypedArrayConversions(byteConversionValues, fn) {
       fn(TA, value, exp, initial);
     });
   });
-}
-
-/**
- * Checks if the given argument is one of the float-based TypedArray constructors.
- *
- * @param {constructor} ctor - the value to check
- * @returns {boolean}
- */
-function isFloatTypedArrayConstructor(arg) {
-  return floatArrayConstructors.indexOf(arg) !== -1;
-}
-
-/**
- * Determines the precision of the given float-based TypedArray constructor.
- *
- * @param {constructor} ctor - the value to check
- * @returns {string} "half", "single", or "double" for Float16Array, Float32Array, and Float64Array respectively.
- */
-function floatTypedArrayConstructorPrecision(FA) {
-  if (typeof Float16Array !== "undefined" && FA === Float16Array) {
-    return "half";
-  } else if (FA === Float32Array) {
-    return "single";
-  } else if (FA === Float64Array) {
-    return "double";
-  } else {
-    throw new Error("Malformed test - floatTypedArrayConstructorPrecision called with non-float TypedArray");
-  }
 }

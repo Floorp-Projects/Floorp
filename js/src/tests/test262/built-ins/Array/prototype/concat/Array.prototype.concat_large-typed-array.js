@@ -37,7 +37,6 @@ function concatTypedArray(type, elems, modulo) {
   assert.compareArray([].concat(ta), expected);
 }
 
-// Float16Array cannot be included in this because it cannot precisely represent integers above 2048
 var max = [Math.pow(2, 8), Math.pow(2, 16), Math.pow(2, 32), false, false];
 [
   Uint8Array,

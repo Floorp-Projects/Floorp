@@ -73,7 +73,7 @@ features: [TypedArray]
 ---*/
 
 testWithTypedArrayConstructors(function(FA) {
-  var precision = floatTypedArrayConstructorPrecision(FA);
+  var precision = FA === Float32Array ? "single" : "double";
   var samples = new FA(3);
   var controls, idx, aNaN;
 
@@ -98,6 +98,6 @@ testWithTypedArrayConstructors(function(FA) {
       );
     }
   }
-}, floatArrayConstructors);
+}, [Float32Array, Float64Array]);
 
 reportCompare(0, 0);

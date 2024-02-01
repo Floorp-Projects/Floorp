@@ -11,7 +11,7 @@ features: [ArrayBuffer, Atomics, DataView, SharedArrayBuffer, Symbol, TypedArray
 ---*/
 
 const buffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 2);
-const views = nonClampedIntArrayConstructors.slice();
+const views = intArrayConstructors.slice();
 
 testWithTypedArrayConstructors(function(TA) {
   let view = new TA(buffer);

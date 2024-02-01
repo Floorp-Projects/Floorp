@@ -11,7 +11,7 @@ features: [ArrayBuffer, Atomics, DataView, SharedArrayBuffer, Symbol, TypedArray
 
 var sab = new SharedArrayBuffer(1024);
 var ab = new ArrayBuffer(16);
-var views = nonClampedIntArrayConstructors.slice();
+var views = intArrayConstructors.slice();
 
 testWithTypedArrayConstructors(function(TA) {
   // Make it interesting - use non-zero byteOffsets and non-zero indexes.

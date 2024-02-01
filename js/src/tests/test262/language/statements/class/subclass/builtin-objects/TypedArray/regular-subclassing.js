@@ -14,11 +14,19 @@ info: |
   call to the TypedArray constructor to create and initialize the subclass
   instance with the internal state necessary to support the
   %TypedArray%.prototype built-in methods.
-includes: [testTypedArray.js]
-features: [TypedArray]
 ---*/
 
-testWithTypedArrayConstructors(function(Constructor) {
+[
+  Int8Array,
+  Uint8Array,
+  Uint8ClampedArray,
+  Int16Array,
+  Uint16Array,
+  Int32Array,
+  Uint32Array,
+  Float32Array,
+  Float64Array
+].forEach(function(Constructor) {
   class Typed extends Constructor {}
 
   var arr = new Typed(2);

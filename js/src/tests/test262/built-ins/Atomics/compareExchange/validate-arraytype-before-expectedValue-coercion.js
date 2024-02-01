@@ -20,8 +20,7 @@ info: |
       a. If typeName is not "Int8Array", "Uint8Array", "Int16Array", "Uint16Array", "Int32Array",
          or "Uint32Array", throw a TypeError exception.
     ...
-includes: [testTypedArray.js]
-features: [Atomics, TypedArray]
+features: [Atomics]
 ---*/
 
 var expectedValue = {
@@ -30,7 +29,11 @@ var expectedValue = {
   }
 };
 
-for (var badArrayType of nonAtomicsFriendlyTypedArrayConstructors) {
+var badArrayTypes = [
+  Uint8ClampedArray, Float32Array, Float64Array
+];
+
+for (var badArrayType of badArrayTypes) {
   var typedArray = new badArrayType(new SharedArrayBuffer(8));
   assert.throws(TypeError, function() {
     Atomics.compareExchange(typedArray, 0, expectedValue, 0);
