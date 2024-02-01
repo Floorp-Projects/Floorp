@@ -1121,7 +1121,83 @@ const BASE_MESSAGES = () => [
       lifetime: 2,
     },
     targeting:
-      "source == 'startup' && !isMajorUpgrade && !activeNotifications && !isDefaultBrowser && !willShowDefaultPrompt && (currentDate|date - profileAgeCreated|date) / 86400000 >= 28",
+      "source == 'startup' && !isMajorUpgrade && !activeNotifications && !isDefaultBrowser && !willShowDefaultPrompt && (currentDate|date - profileAgeCreated|date) / 86400000 >= 28 && userPrefs.cfrFeatures == true",
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+  },
+  {
+    id: "TAIL_FOX_SET_DEFAULT",
+    template: "spotlight",
+    groups: ["eco"],
+    skip_in_tests: "it fails unrelated tests",
+    content: {
+      backdrop: "transparent",
+      id: "TAIL_FOX_SET_DEFAULT_CONTENT",
+      screens: [
+        {
+          id: "TAIL_FOX_SET_DEFAULT_SCREEN",
+          content: {
+            logo: {
+              height: "140px",
+              imageURL:
+                "chrome://activity-stream/content/data/content/assets/fox-doodle-tail.png",
+              reducedMotionImageURL:
+                "chrome://activity-stream/content/data/content/assets/fox-doodle-tail.png",
+            },
+            title: {
+              fontSize: "22px",
+              fontWeight: 590,
+              letterSpacing: 0,
+              paddingInline: "24px",
+              paddingBlock: "4px 0",
+              string_id: "tail-fox-spotlight-title",
+            },
+            subtitle: {
+              fontSize: "15px",
+              letterSpacing: 0,
+              lineHeight: "1.4",
+              marginBlock: "8px 16px",
+              paddingInline: "24px",
+              string_id: "tail-fox-spotlight-subtitle",
+            },
+            primary_button: {
+              action: {
+                navigate: true,
+                type: "SET_DEFAULT_BROWSER",
+              },
+              label: {
+                paddingBlock: "0",
+                paddingInline: "16px",
+                marginBlock: "4px 0",
+                string_id: "tail-fox-spotlight-primary-button",
+              },
+            },
+            secondary_button: {
+              action: {
+                navigate: true,
+              },
+              label: {
+                marginBlock: "0 -20px",
+                string_id: "tail-fox-spotlight-secondary-button",
+              },
+            },
+            dismiss_button: {
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ],
+      template: "multistage",
+      transitions: true,
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "source == 'startup' && !isMajorUpgrade && !activeNotifications && !isDefaultBrowser && !willShowDefaultPrompt && (currentDate|date - profileAgeCreated|date) / 86400000 <= 28 && (currentDate|date - profileAgeCreated|date) / 86400000 >= 7 && userPrefs.cfrFeatures == true",
     trigger: {
       id: "defaultBrowserCheck",
     },
