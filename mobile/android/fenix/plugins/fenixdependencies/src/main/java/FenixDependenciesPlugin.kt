@@ -28,7 +28,7 @@ object FenixVersions {
     const val androidx_datastore = "1.0.0"
     const val google_accompanist = "0.30.1"
 
-    const val adjust = "4.38.1"
+    const val adjust = "4.35.1"
     const val installreferrer = "2.2"
 
     const val junit = "5.9.3"
