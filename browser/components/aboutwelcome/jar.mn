@@ -13,6 +13,7 @@ browser.jar:
 # backwards compability is tracked in bug 1866935.
   content/activity-stream/data/content/assets/confetti.svg                                  (./assets/confetti.svg)
   content/activity-stream/data/content/assets/device-migration.svg                          (./assets/device-migration.svg)
+  content/activity-stream/data/content/assets/fox-doodle-tail.png                           (./assets/fox-doodle-tail.png)
   content/activity-stream/data/content/assets/fox-doodle-waving.gif                         (./assets/fox-doodle-waving.gif)
   content/activity-stream/data/content/assets/fox-doodle-waving-static.png                  (./assets/fox-doodle-waving-static.png)
   content/activity-stream/data/content/assets/heart.webp                                    (./assets/heart.webp)
