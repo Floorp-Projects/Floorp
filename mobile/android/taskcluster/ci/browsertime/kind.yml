@@ -128,7 +128,8 @@ tasks:
             - [amazon-search, amazon-s]
             - [microsoft-support, micros-sup]
             - espn
-            - facebook
+            # Bug 1682027 - Disabled due to high failure rate
+            # - facebook
             - [youtube-watch, youtube-w]
             - allrecipes
 
