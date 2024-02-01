@@ -1146,5 +1146,13 @@ async function setProperty(
 
   info("Waiting for another ruleview-changed after setting property");
   await onValueDone;
+
+  const focusNextOnEnter = Services.prefs.getBoolPref(
+    "devtools.inspector.rule-view.focusNextOnEnter"
+  );
+  if (blurNewProperty && !focusNextOnEnter) {
+    info("Force blur on the active element");
+    ruleView.styleDocument.activeElement.blur();
+  }
   await onPopupClosed;
 }
