@@ -52,7 +52,7 @@ struct ParamTraits<mozilla::camera::CaptureEngine>
 
 template <>
 struct ParamTraits<mozilla::camera::CamerasAccessStatus>
-    : public ContiguousEnumSerializer<
+    : public ContiguousEnumSerializerInclusive<
           mozilla::camera::CamerasAccessStatus,
           mozilla::camera::CamerasAccessStatus::Granted,
           mozilla::camera::CamerasAccessStatus::Error> {};
