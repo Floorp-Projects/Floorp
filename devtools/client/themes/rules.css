@@ -965,38 +965,3 @@
 .ruleview-propertyvalue-break-spaces {
   white-space: break-spaces;
 }
-
-/* Rule view notice about "Enter" key behavior */
-#ruleview-kbd-enter-notice {
-  display: grid;
-  grid-template-columns: 22px 1fr auto;
-  align-items: start;
-  border-top: 1px solid var(--theme-splitter-color);
-  padding: 8px;
-  background-color: var(--theme-body-alternate-emphasized-background);
-  column-gap: 1em;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-
-  &[hidden] {
-    display: none;
-  }
-
-  /* fox icon */
-  img {
-    max-width: 100%;
-  }
-
-  p {
-    margin: 0;
-    align-self: center;
-  }
-
-  kbd {
-    font-weight: bold;
-  }
-
-  #ruleview-kbd-enter-notice-dismiss-button::before {
-    background-image: url("chrome://devtools/skin/images/close.svg");
-  }
-}
