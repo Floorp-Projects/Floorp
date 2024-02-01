@@ -38,7 +38,7 @@ object Versions {
 
     const val sentry = "7.3.0"
 
-    const val zxing = "3.5.2"
+    const val zxing = "3.5.3"
 
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.13"
