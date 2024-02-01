@@ -11,6 +11,7 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "empty"
@@ -29,6 +30,7 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "empty"
@@ -47,6 +49,7 @@ Test empty selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "empty"

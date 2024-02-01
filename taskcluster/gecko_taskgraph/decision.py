@@ -440,12 +440,6 @@ def set_try_config(parameters, task_config_file):
     else:
         parameters["try_options"] = None
 
-    if parameters["try_mode"] == "try_task_config":
-        # The user has explicitly requested a set of jobs, so run them all
-        # regardless of optimization.  Their dependencies can be optimized,
-        # though.
-        parameters.setdefault("optimize_target_tasks", False)
-
 
 def set_decision_indexes(decision_task_id, params, graph_config):
     index_paths = []

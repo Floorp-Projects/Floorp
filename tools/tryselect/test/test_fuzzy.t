@@ -11,6 +11,7 @@ Test fuzzy selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -36,6 +37,7 @@ Test fuzzy selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -60,6 +62,7 @@ Test multiple selectors
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -86,6 +89,7 @@ Test query intersection
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -112,6 +116,7 @@ Test intersection with preset containing multiple queries
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -133,6 +138,7 @@ Test intersection with preset containing multiple queries
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -157,6 +163,7 @@ Test exact match
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -178,6 +185,7 @@ Test exact match
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -202,6 +210,7 @@ Test task config
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "disable-pgo": true,
               "env": {
@@ -225,6 +234,7 @@ Test task config
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "BAR": "baz",
