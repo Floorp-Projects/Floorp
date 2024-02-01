@@ -4517,8 +4517,11 @@ fn read_mvhd<T: Read>(src: &mut BMFFBox<T>) -> Result<MovieHeaderBox> {
         }
         _ => unreachable!("Should have returned Status::MvhdBadVersion"),
     };
-    // Skip remaining fields.
+    // Skip remaining valid fields.
     skip(src, 80)?;
+
+    // Padding could be added in some contents.
+    skip_box_remain(src)?;
     Ok(MovieHeaderBox {
         timescale,
         duration,
