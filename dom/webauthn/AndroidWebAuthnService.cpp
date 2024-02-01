@@ -186,6 +186,12 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
                 GetCurrentSerialEventTarget(), __func__,
                 [aPromise, credPropsResponse = std::move(credPropsResponse)](
                     RefPtr<WebAuthnRegisterResult>&& aValue) {
+                  // We don't have a way for the user to consent to attestation
+                  // on Android, so always anonymize the result.
+                  nsresult rv = aValue->Anonymize();
+                  if (NS_FAILED(rv)) {
+                    aPromise->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                  }
                   if (credPropsResponse.isSome()) {
                     Unused << aValue->SetCredPropsRk(credPropsResponse.ref());
                   }
