@@ -2973,6 +2973,8 @@ pref("ui.new-webcompat-reporter.send-more-info-link", false);
 # 0 = disabled, 1 = reason optional, 2 = reason required.
 pref("ui.new-webcompat-reporter.reason-dropdown", 0);
 
+pref("ui.new-webcompat-reporter.reason-dropdown.randomized", true);
+
 // Reset Private Browsing Session feature
 #if defined(NIGHTLY_BUILD)
   pref("browser.privatebrowsing.resetPBM.enabled", true);
