@@ -79,7 +79,7 @@ class SessionHistoryInfo {
     mResultPrincipalURI = aResultPrincipalURI;
   }
 
-  nsIReferrerInfo* GetReferrerInfo() { return mReferrerInfo; }
+  nsCOMPtr<nsIReferrerInfo> GetReferrerInfo() { return mReferrerInfo; }
   void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
     mReferrerInfo = aReferrerInfo;
   }

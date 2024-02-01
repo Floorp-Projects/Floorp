@@ -8800,6 +8800,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       newURIPartitionedPrincipalToInherit, newCsp, true, true);
 
   nsCOMPtr<nsIInputStream> postData;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   uint32_t cacheKey = 0;
 
   bool scrollRestorationIsManual = false;
@@ -8808,15 +8809,15 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       /* save current position of scroller(s) (bug 59774) */
       mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
-      // Get the postdata and page ident from the current page, if
-      // the new load is being done via normal means.  Note that
-      // "normal means" can be checked for just by checking for
-      // LOAD_CMD_NORMAL, given the loadType and allowScroll check
-      // above -- it filters out some LOAD_CMD_NORMAL cases that we
-      // wouldn't want here.
+      // Get the postdata, page ident and referrer info from the current page,
+      // if the new load is being done via normal means.  Note that "normal
+      // means" can be checked for just by checking for LOAD_CMD_NORMAL, given
+      // the loadType and allowScroll check above -- it filters out some
+      // LOAD_CMD_NORMAL cases that we wouldn't want here.
       if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
         postData = mOSHE->GetPostData();
         cacheKey = mOSHE->GetCacheKey();
+        referrerInfo = mOSHE->GetReferrerInfo();
       }
 
       // Link our new SHEntry to the old SHEntry's back/forward
@@ -8894,6 +8895,12 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       if (cacheKey != 0) {
         mOSHE->SetCacheKey(cacheKey);
       }
+
+      // As the document has not changed, the referrer info hasn't changed too,
+      // so we can just copy it over.
+      if (referrerInfo) {
+        mOSHE->SetReferrerInfo(referrerInfo);
+      }
     }
 
     /* Set the title for the SH entry for this target url so that
@@ -8951,14 +8958,15 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
         scrollRestorationIsManual.emplace(
             mActiveEntry->GetScrollRestorationIsManual());
 
-        // Get the postdata and page ident from the current page, if the new
-        // load is being done via normal means.  Note that "normal means" can be
-        // checked for just by checking for LOAD_CMD_NORMAL, given the loadType
-        // and allowScroll check above -- it filters out some LOAD_CMD_NORMAL
-        // cases that we wouldn't want here.
+        // Get the postdata, page ident and referrer info from the current page,
+        // if the new load is being done via normal means.  Note that "normal
+        // means" can be checked for just by checking for LOAD_CMD_NORMAL, given
+        // the loadType and allowScroll check above -- it filters out some
+        // LOAD_CMD_NORMAL cases that we wouldn't want here.
         if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
           postData = mActiveEntry->GetPostData();
           cacheKey = mActiveEntry->GetCacheKey();
+          referrerInfo = mActiveEntry->GetReferrerInfo();
         }
       }
 
@@ -8984,6 +8992,12 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // cache first
       if (cacheKey != 0) {
         mActiveEntry->SetCacheKey(cacheKey);
+      }
+
+      // As the document has not changed, the referrer info hasn't changed too,
+      // so we can just copy it over.
+      if (referrerInfo) {
+        mActiveEntry->SetReferrerInfo(referrerInfo);
       }
 
       // Set the title for the SH entry for this target url so that
