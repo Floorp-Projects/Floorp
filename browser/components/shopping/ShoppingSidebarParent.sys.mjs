@@ -317,7 +317,7 @@ class ShoppingSidebarManagerClass {
       return;
     }
 
-    lazy.ShoppingUtils.maybeRecordExposure(aLocationURI, aFlags);
+    lazy.ShoppingUtils.onLocationChange(aLocationURI, aFlags);
 
     this._maybeToggleButton(aBrowser.getTabBrowser());
     this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags, true);

@@ -164,7 +164,7 @@ class ShoppingCard extends MozLitElement {
   }
 
   disconnectedCallback() {
-    this.contentResizeObserver.disconnect();
+    this.contentResizeObserver?.disconnect();
   }
 
   handleContentSlotResize(entries) {
