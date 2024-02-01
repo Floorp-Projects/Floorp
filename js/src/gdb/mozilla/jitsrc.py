@@ -28,27 +28,27 @@ import gdb
 # is normally to add a new pattern here.
 patterns = [
     (
-        "__memmove_(avx|evex)_unaligned_erms",
+        "__memmove",
         1,
         "js::jit::X86Encoding::BaseAssembler::executableCopy",
         "src",
         "dst",
     ),
     (
-        "__memcpy_(avx|evex)_unaligned",
+        "__memcpy",
         1,
         "js::jit::X86Encoding::BaseAssembler::executableCopy",
         "src",
         "dst",
     ),
     (
-        "__memmove_(avx|evex)_unaligned_erms",
+        "__memmove",
         1,
         "arena_t::RallocSmallOrLarge",
         "aPtr",
         "ret",
     ),
-    ("__memcpy_(avx|evex)_unaligned", 1, "arena_t::RallocSmallOrLarge", "aPtr", "ret"),
+    ("__memcpy", 1, "arena_t::RallocSmallOrLarge", "aPtr", "ret"),
     (
         "mozilla::detail::VectorImpl<.*>::new_<.*>",
         3,
@@ -57,27 +57,27 @@ patterns = [
         "newBuf",
     ),
     (
-        "__memmove_(avx|evex)_unaligned_erms",
+        "__memmove",
         1,
         "js::jit::AssemblerBufferWithConstantPools",
         "&cur->instructions[0]",
         "dest",
     ),
     (
-        "__memcpy_sse2_unaligned",
+        "__memcpy",
         1,
         "js::jit::AssemblerBufferWithConstantPools",
         "&cur->instructions[0]",
         "dest",
     ),
     (
-        "__memcpy_sse2_unaligned",
+        "__memcpy",
         2,
         "js::jit::AssemblerX86Shared::executableCopy",
         "masm.m_formatter.m_buffer.m_buffer.mBegin",
         "buffer",
     ),
-    ("__memcpy_sse2_unaligned", 1, "arena_t::RallocSmallOrLarge", "aPtr", "ret"),
+    ("__memcpy", 1, "arena_t::RallocSmallOrLarge", "aPtr", "ret"),
     ("js::jit::X86Encoding::SetInt32", 0, "js::jit::X86Encoding::SetInt32", "0", "0"),
     (
         "js::jit::X86Encoding::SetPointer",
