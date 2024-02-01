@@ -26,7 +26,7 @@
   z-index:2;
   caret-color:CanvasText;
 
-  &.drawing{
+  &.highlighting{
     touch-action:none;
   }
 
@@ -48,7 +48,9 @@
       --highlight-bg-color:transparent;
       --highlight-selected-bg-color:transparent;
       --highlight-backdrop-filter:var(--hcm-highlight-filter);
-      --highlight-selected-backdrop-filter:var(--hcm-highlight-selected-filter);
+      --highlight-selected-backdrop-filter:var(
+        --hcm-highlight-selected-filter
+      );
     }
 
     margin:-1px;
@@ -796,22 +798,45 @@
       fill-rule:evenodd;
       fill:none;
 
-      &.hovered{
-        stroke:var(--hover-outline-color);
-        stroke-width:var(--outline-width);
-      }
-
-      &.selected{
-        .mainOutline{
-          stroke:var(--outline-around-color);
-          stroke-width:calc(
-            var(--outline-width) + 2 * var(--outline-around-width)
-          );
+      &:not(.free){
+        &.hovered:not(.selected){
+          stroke:var(--hover-outline-color);
+          stroke-width:var(--outline-width);
         }
 
-        .secondaryOutline{
-          stroke:var(--outline-color);
-          stroke-width:var(--outline-width);
+        &.selected{
+          .mainOutline{
+            stroke:var(--outline-around-color);
+            stroke-width:calc(
+              var(--outline-width) + 2 * var(--outline-around-width)
+            );
+          }
+
+          .secondaryOutline{
+            stroke:var(--outline-color);
+            stroke-width:var(--outline-width);
+          }
+        }
+      }
+
+      &.free{
+        &.hovered:not(.selected){
+          stroke:var(--hover-outline-color);
+          stroke-width:calc(2 * var(--outline-width));
+        }
+
+        &.selected{
+          .mainOutline{
+            stroke:var(--outline-around-color);
+            stroke-width:calc(
+              2 * (var(--outline-width) + var(--outline-around-width))
+            );
+          }
+
+          .secondaryOutline{
+            stroke:var(--outline-color);
+            stroke-width:calc(2 * var(--outline-width));
+          }
         }
       }
     }
@@ -840,6 +865,20 @@
   );
   --editorFreeText-editing-cursor:text;
   --editorInk-editing-cursor:url(images/cursor-editorInk.svg) 0 16, pointer;
+  --editorHighlight-editing-cursor:url(images/cursor-editorTextHighlight.svg) 24 24, text;
+  --editorFreeHighlight-editing-cursor:url(images/cursor-editorFreeHighlight.svg) 1 18, pointer;
+}
+
+.textLayer.highlighting{
+  cursor:var(--editorFreeHighlight-editing-cursor);
+
+  &:not(.free) span{
+    cursor:var(--editorHighlight-editing-cursor);
+  }
+
+  &.free span{
+    cursor:var(--editorFreeHighlight-editing-cursor);
+  }
 }
 
 @media (min-resolution: 1.1dppx){

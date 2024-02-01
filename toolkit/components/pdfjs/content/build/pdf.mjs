@@ -8665,7 +8665,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.86",
+    apiVersion: "4.1.121",
     data,
     password,
     disableAutoFetch,
@@ -10302,8 +10302,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.86";
-const build = "bf9236009";
+const version = "4.1.121";
+const build = "eb5c1d441";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -14028,8 +14028,6 @@ class FreeHighlightOutline extends Outline {
       y = minY - this.#innerMargin,
       width = maxX - minX + 2 * this.#innerMargin,
       height = maxY - minY + 2 * this.#innerMargin;
-    lastPointX = (lastPointX - x) / width;
-    lastPointY = (lastPointY - y) / height;
     this.#bbox = {
       x,
       y,
@@ -14350,10 +14348,8 @@ class HighlightEditor extends AnnotationEditor {
       x,
       y,
       width,
-      height,
-      lastPoint
+      height
     } = highlightOutlines.box;
-    this.#lastPoint = lastPoint;
     switch (this.rotation) {
       case 0:
         this.x = x;
@@ -14386,6 +14382,10 @@ class HighlightEditor extends AnnotationEditor {
           break;
         }
     }
+    const {
+      lastPoint
+    } = this.#focusOutlines.box;
+    this.#lastPoint = [(lastPoint[0] - this.x) / this.width, (lastPoint[1] - this.y) / this.height];
   }
   static initialize(l10n, uiManager) {
     AnnotationEditor.initialize(l10n, uiManager);
@@ -16173,14 +16173,14 @@ class AnnotationEditorLayer {
     if (this.#textLayer?.div) {
       document.addEventListener("selectstart", this.#boundSelectionStart);
       this.#textLayer.div.addEventListener("pointerdown", this.#boundTextLayerPointerDown);
-      this.#textLayer.div.classList.add("drawing");
+      this.#textLayer.div.classList.add("highlighting");
     }
   }
   disableTextSelection() {
     if (this.#textLayer?.div) {
       document.removeEventListener("selectstart", this.#boundSelectionStart);
       this.#textLayer.div.removeEventListener("pointerdown", this.#boundTextLayerPointerDown);
-      this.#textLayer.div.classList.remove("drawing");
+      this.#textLayer.div.classList.remove("highlighting");
     }
   }
   #textLayerPointerDown(event) {
@@ -16192,7 +16192,13 @@ class AnnotationEditorLayer {
       if (event.button !== 0 || event.ctrlKey && isMac) {
         return;
       }
+      this.#textLayer.div.classList.add("free");
       HighlightEditor.startHighlighting(this, this.#uiManager.direction === "ltr", event);
+      this.#textLayer.div.addEventListener("pointerup", () => {
+        this.#textLayer.div.classList.remove("free");
+      }, {
+        once: true
+      });
       event.preventDefault();
     }
   }
@@ -16692,9 +16698,32 @@ class DrawLayer {
     path.setAttribute("id", pathId);
     path.setAttribute("d", outlines.toSVGPath());
     path.setAttribute("vector-effect", "non-scaling-stroke");
+    let maskId;
+    if (outlines.free) {
+      root.classList.add("free");
+      const mask = DrawLayer._svgFactory.createElement("mask");
+      defs.append(mask);
+      maskId = `mask_p${this.pageIndex}_${id}`;
+      mask.setAttribute("id", maskId);
+      mask.setAttribute("maskUnits", "objectBoundingBox");
+      const rect = DrawLayer._svgFactory.createElement("rect");
+      mask.append(rect);
+      rect.setAttribute("width", "1");
+      rect.setAttribute("height", "1");
+      rect.setAttribute("fill", "white");
+      const use = DrawLayer._svgFactory.createElement("use");
+      mask.append(use);
+      use.setAttribute("href", `#${pathId}`);
+      use.setAttribute("stroke", "none");
+      use.setAttribute("fill", "black");
+      use.setAttribute("fill-rule", "nonzero");
+    }
     const use1 = DrawLayer._svgFactory.createElement("use");
     root.append(use1);
     use1.setAttribute("href", `#${pathId}`);
+    if (maskId) {
+      use1.setAttribute("mask", `url(#${maskId})`);
+    }
     const use2 = use1.cloneNode();
     root.append(use2);
     use1.classList.add("mainOutline");
@@ -16769,8 +16798,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.86";
-const pdfjsBuild = "bf9236009";
+const pdfjsVersion = "4.1.121";
+const pdfjsBuild = "eb5c1d441";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

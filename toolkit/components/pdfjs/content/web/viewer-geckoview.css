@@ -26,7 +26,7 @@
   z-index:2;
   caret-color:CanvasText;
 
-  &.drawing{
+  &.highlighting{
     touch-action:none;
   }
 
@@ -48,7 +48,9 @@
       --highlight-bg-color:transparent;
       --highlight-selected-bg-color:transparent;
       --highlight-backdrop-filter:var(--hcm-highlight-filter);
-      --highlight-selected-backdrop-filter:var(--hcm-highlight-selected-filter);
+      --highlight-selected-backdrop-filter:var(
+        --hcm-highlight-selected-filter
+      );
     }
 
     margin:-1px;
