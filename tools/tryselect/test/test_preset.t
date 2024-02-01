@@ -132,6 +132,7 @@ Test preset with fuzzy subcommand
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -155,6 +156,7 @@ Test preset with fuzzy subcommand
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -180,6 +182,7 @@ Queries can be appended to presets
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -204,6 +207,7 @@ Queries can be appended to presets
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -294,6 +298,7 @@ Test gecko-profile argument handling. Add in profiling to a preset.
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -325,6 +330,7 @@ settings; everything else uses dashes.)
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
