@@ -218,10 +218,6 @@ function init_all() {
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
 
-  var { FloorpAppConstants } = ChromeUtils.importESModule(
-    "resource:///modules/FloorpAppConstants.sys.mjs"
-  );
-
   register_module("paneDesign", gDesign);
   register_module("paneLepton", gLeptonPane);
   register_module("paneCSK", gCSKPane)
@@ -229,6 +225,7 @@ function init_all() {
   register_module("paneBSB", gBSBPane);
   register_module("paneDownloads", gDownloads);
   register_module("paneWorkspaces", gWorkspacesPane);
+  register_module("paneSsb", gSsbPane);
   register_module("paneUserjs", gUserjsPane);
 
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {

@@ -39,6 +39,8 @@
     <a href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">Blog & Release Notes</a>
     ・
     <a href="https://support.ablaze.one">Official Support Site & Send feedback</a>
+    ・
+    <a href="https://docs.floorp.app">Documentation</a>
   </p>
 </div>
 
@@ -117,6 +119,8 @@ You can download the latest version of Floorp Browser from the official website:
 ---
 
 ## 📖 Documentation
+
+For more detailed information and guidance, check out our [Floorp Documentation Wiki](https://docs.floorp.app).
 
 ### 📝 License
 

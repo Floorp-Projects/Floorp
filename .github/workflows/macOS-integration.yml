@@ -6,7 +6,6 @@
 # © 2023 Floorp Projects & Contributors
 
 #! SELF HOST DOES NOT SUPPORTED
-#TODO! buildjet config not implemented
 #TODO: separate Publish to other workflow
 
 on:

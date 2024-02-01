@@ -6,7 +6,6 @@
 # © 2023 Floorp Projects & Contributors
 
 #! SELF HOST DOES NOT SUPPORTED
-#TODO! buildjet config not implemented
 #TODO: separate Publish to other workflow
 
 name: "(A) ⚒ macOS Universal Build"
@@ -31,11 +30,6 @@ on:
       MOZ_BUILD_DATE:
         type: string
         default: ""
-      #? If you want to ALWAYS build with buildjet, do default to true
-      buildjet:
-        type: boolean
-        default: false
-      #? buildjet cache also is, but idk how to use on sccache
       release-note-url:
         type: string
         required: false
@@ -65,18 +59,13 @@ on:
       MOZ_BUILD_DATE:
         type: string
         default: ""
-      #? If you want to ALWAYS build with buildjet, do default to true
-      buildjet:
-        type: boolean
-        default: false
-      #? buildjet cache also is, but idk how to use on sccache
 
 jobs:
   mac-build:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ${{ fromJson('[["ubuntu-latest"], ["buildjet-16vcpu-ubuntu-2204"]]')[inputs.buildjet] }}
+        runs-on: ["ubuntu-latest"]
         arch: [x86_64, aarch64]
     steps:
     - name: Use Node.js
@@ -106,16 +95,8 @@ jobs:
       name: Clone 🧬
       with:
         submodules: 'recursive'
-    
-    - name: Clone l10n-central 🧬
-      uses: actions/checkout@v3
-      with:
-        repository: Floorp-Projects/l10n-central
-        path: l10n-central
 
-    #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh

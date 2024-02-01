@@ -3159,7 +3159,7 @@
         let tabWasReused = false;
 
         let { WorkspacesService } = ChromeUtils.importESModule(
-          "resource:///modules/WorkspacesService.sys.mjs"
+          "resource://floorp/modules/WorkspacesService.sys.mjs"
         );
         let floorpWorkspaceId = tabData.floorpWorkspaceId;
         let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
