@@ -28,6 +28,7 @@ import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
+import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.historyMenu
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -128,7 +129,7 @@ class ComposeHistoryTest {
             ) {
                 clickDeleteHistoryButton(firstWebPage.url.toString())
             }
-            verifyDeleteSnackbarText("Deleted")
+            verifySnackBarText(expectedText = "Deleted")
             verifyEmptyHistoryView()
         }
     }
@@ -153,7 +154,7 @@ class ComposeHistoryTest {
             verifyDeleteConfirmationMessage()
             selectEverythingOption()
             confirmDeleteAllHistory()
-            verifyDeleteSnackbarText("Browsing data deleted")
+            verifySnackBarText(expectedText = "Browsing data deleted")
             verifyEmptyHistoryView()
         }
     }

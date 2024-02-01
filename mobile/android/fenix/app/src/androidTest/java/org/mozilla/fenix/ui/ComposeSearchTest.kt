@@ -31,6 +31,7 @@ import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -472,7 +473,7 @@ class ComposeSearchTest {
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             clickDeleteAllHistoryButton()
             confirmDeleteAllHistory()
-            verifyDeleteSnackbarText("Group deleted")
+            verifySnackBarText(expectedText = "Group deleted")
             verifyHistoryItemExists(shouldExist = false, firstPageUrl.toString())
         }.goBack {}
         homeScreen {

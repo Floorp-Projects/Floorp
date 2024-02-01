@@ -44,6 +44,7 @@ import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -487,7 +488,7 @@ class SearchTest {
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             clickDeleteAllHistoryButton()
             confirmDeleteAllHistory()
-            verifyDeleteSnackbarText("Group deleted")
+            verifySnackBarText("Group deleted")
             verifyHistoryItemExists(shouldExist = false, firstPageUrl.toString())
         }.goBack {}
         homeScreen {
