@@ -18,6 +18,7 @@ use crate::{
     hal_api::HalApi,
     hal_label, id,
     id::DeviceId,
+    identity::GlobalIdentityHandlerFactory,
     init_tracker::MemoryInitKind,
     pipeline,
     resource::{self},
@@ -28,9 +29,9 @@ use crate::{
 };
 
 use hal::CommandEncoder as _;
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serial-pass", feature = "replay"))]
 use serde::Deserialize;
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serial-pass", feature = "trace"))]
 use serde::Serialize;
 
 use thiserror::Error;
@@ -39,7 +40,14 @@ use std::{fmt, mem, str};
 
 #[doc(hidden)]
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    any(feature = "serial-pass", feature = "trace"),
+    derive(serde::Serialize)
+)]
+#[cfg_attr(
+    any(feature = "serial-pass", feature = "replay"),
+    derive(serde::Deserialize)
+)]
 pub enum ComputeCommand {
     SetBindGroup {
         index: u32,
@@ -90,16 +98,16 @@ pub enum ComputeCommand {
     EndPipelineStatisticsQuery,
 }
 
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serial-pass", derive(serde::Deserialize, serde::Serialize))]
 pub struct ComputePass {
     base: BasePass<ComputeCommand>,
     parent_id: id::CommandEncoderId,
     timestamp_writes: Option<ComputePassTimestampWrites>,
 
     // Resource binding dedupe state.
-    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "serial-pass", serde(skip))]
     current_bind_groups: BindGroupStateChange,
-    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "serial-pass", serde(skip))]
     current_pipeline: StateChange<id::ComputePipelineId>,
 }
 
@@ -143,7 +151,8 @@ impl fmt::Debug for ComputePass {
 /// Describes the writing of timestamp values in a compute pass.
 #[repr(C)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(any(feature = "serial-pass", feature = "trace"), derive(Serialize))]
+#[cfg_attr(any(feature = "serial-pass", feature = "replay"), derive(Deserialize))]
 pub struct ComputePassTimestampWrites {
     /// The query set to write the timestamps to.
     pub query_set: id::QuerySetId,
@@ -304,7 +313,7 @@ impl<A: HalApi> State<A> {
         &mut self,
         raw_encoder: &mut A::CommandEncoder,
         base_trackers: &mut Tracker<A>,
-        bind_group_guard: &Storage<BindGroup<A>>,
+        bind_group_guard: &Storage<BindGroup<A>, id::BindGroupId>,
         indirect_buffer: Option<id::BufferId>,
         snatch_guard: &SnatchGuard,
     ) -> Result<(), UsageConflict> {
@@ -339,7 +348,7 @@ impl<A: HalApi> State<A> {
 
 // Common routines between render/compute
 
-impl Global {
+impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn command_encoder_run_compute_pass<A: HalApi>(
         &self,
         encoder_id: id::CommandEncoderId,

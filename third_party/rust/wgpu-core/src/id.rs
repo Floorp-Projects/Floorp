@@ -1,5 +1,6 @@
 use crate::{Epoch, Index};
 use std::{
+    any::Any,
     cmp::Ordering,
     fmt::{self, Debug},
     hash::Hash,
@@ -8,80 +9,15 @@ use std::{
 use wgt::{Backend, WasmNotSendSync};
 
 type IdType = u64;
-type ZippedIndex = Index;
 type NonZeroId = std::num::NonZeroU64;
+type ZippedIndex = Index;
 
 const INDEX_BITS: usize = std::mem::size_of::<ZippedIndex>() * 8;
 const EPOCH_BITS: usize = INDEX_BITS - BACKEND_BITS;
 const BACKEND_BITS: usize = 3;
 const BACKEND_SHIFT: usize = INDEX_BITS * 2 - BACKEND_BITS;
 pub const EPOCH_MASK: u32 = (1 << (EPOCH_BITS)) - 1;
-
-/// The raw underlying representation of an identifier.
-#[repr(transparent)]
-#[cfg_attr(any(feature = "serde", feature = "trace"), derive(serde::Serialize))]
-#[cfg_attr(any(feature = "serde", feature = "replay"), derive(serde::Deserialize))]
-#[cfg_attr(feature = "trace", serde(into = "SerialId"))]
-#[cfg_attr(feature = "replay", serde(from = "SerialId"))]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct RawId(NonZeroId);
-
-impl RawId {
-    #[doc(hidden)]
-    #[inline]
-    pub fn from_non_zero(non_zero: NonZeroId) -> Self {
-        Self(non_zero)
-    }
-
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_non_zero(self) -> NonZeroId {
-        self.0
-    }
-
-    /// Zip together an identifier and return its raw underlying representation.
-    pub fn zip(index: Index, epoch: Epoch, backend: Backend) -> RawId {
-        assert_eq!(0, epoch >> EPOCH_BITS);
-        assert_eq!(0, (index as IdType) >> INDEX_BITS);
-        let v = index as IdType
-            | ((epoch as IdType) << INDEX_BITS)
-            | ((backend as IdType) << BACKEND_SHIFT);
-        Self(NonZeroId::new(v).unwrap())
-    }
-
-    /// Unzip a raw identifier into its components.
-    #[allow(trivial_numeric_casts)]
-    pub fn unzip(self) -> (Index, Epoch, Backend) {
-        (
-            (self.0.get() as ZippedIndex) as Index,
-            (((self.0.get() >> INDEX_BITS) as ZippedIndex) & (EPOCH_MASK as ZippedIndex)) as Index,
-            self.backend(),
-        )
-    }
-
-    pub fn backend(self) -> Backend {
-        match self.0.get() >> (BACKEND_SHIFT) as u8 {
-            0 => Backend::Empty,
-            1 => Backend::Vulkan,
-            2 => Backend::Metal,
-            3 => Backend::Dx12,
-            4 => Backend::Gl,
-            _ => unreachable!(),
-        }
-    }
-}
-
-/// Coerce a slice of identifiers into a slice of optional raw identifiers.
-///
-/// There's two reasons why we know this is correct:
-/// * `Option<T>` is guarnateed to be niche-filled to 0's.
-/// * The `T` in `Option<T>` can inhabit any representation except 0's, since
-///   its underlying representation is `NonZero*`.
-pub fn as_option_slice<T: Marker>(ids: &[Id<T>]) -> &[Option<Id<T>>] {
-    // SAFETY: Any Id<T> is repr(transparent) over `Option<RawId>`, since both
-    // are backed by non-zero types.
-    unsafe { std::slice::from_raw_parts(ids.as_ptr().cast(), ids.len()) }
-}
+type Dummy = hal::api::Empty;
 
 /// An identifier for a wgpu object.
 ///
@@ -113,53 +49,61 @@ pub fn as_option_slice<T: Marker>(ids: &[Id<T>]) -> &[Option<Id<T>>] {
 /// [`Registry`]: crate::hub::Registry
 /// [`Empty`]: hal::api::Empty
 #[repr(transparent)]
-#[cfg_attr(any(feature = "serde", feature = "trace"), derive(serde::Serialize))]
-#[cfg_attr(any(feature = "serde", feature = "replay"), derive(serde::Deserialize))]
+#[cfg_attr(feature = "trace", derive(serde::Serialize), serde(into = "SerialId"))]
 #[cfg_attr(
-    any(feature = "serde", feature = "trace", feature = "replay"),
-    serde(transparent)
+    feature = "replay",
+    derive(serde::Deserialize),
+    serde(from = "SerialId")
 )]
-pub struct Id<T: Marker>(RawId, PhantomData<T>);
+#[cfg_attr(
+    all(feature = "serde", not(feature = "trace")),
+    derive(serde::Serialize)
+)]
+#[cfg_attr(
+    all(feature = "serde", not(feature = "replay")),
+    derive(serde::Deserialize)
+)]
+pub struct Id<T: 'static + WasmNotSendSync>(NonZeroId, PhantomData<T>);
 
 // This type represents Id in a more readable (and editable) way.
 #[allow(dead_code)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "trace", derive(serde::Serialize))]
+#[cfg_attr(feature = "replay", derive(serde::Deserialize))]
 enum SerialId {
     // The only variant forces RON to not ignore "Id"
     Id(Index, Epoch, Backend),
 }
-
 #[cfg(feature = "trace")]
-impl From<RawId> for SerialId {
-    fn from(id: RawId) -> Self {
+impl<T> From<Id<T>> for SerialId
+where
+    T: 'static + WasmNotSendSync,
+{
+    fn from(id: Id<T>) -> Self {
         let (index, epoch, backend) = id.unzip();
         Self::Id(index, epoch, backend)
     }
 }
-
 #[cfg(feature = "replay")]
-impl From<SerialId> for RawId {
+impl<T> From<SerialId> for Id<T>
+where
+    T: 'static + WasmNotSendSync,
+{
     fn from(id: SerialId) -> Self {
         match id {
-            SerialId::Id(index, epoch, backend) => RawId::zip(index, epoch, backend),
+            SerialId::Id(index, epoch, backend) => TypedId::zip(index, epoch, backend),
         }
     }
 }
 
 impl<T> Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
     /// # Safety
     ///
     /// The raw id must be valid for the type.
-    pub unsafe fn from_raw(raw: RawId) -> Self {
+    pub unsafe fn from_raw(raw: NonZeroId) -> Self {
         Self(raw, PhantomData)
-    }
-
-    /// Coerce the identifiers into its raw underlying representation.
-    pub fn into_raw(self) -> RawId {
-        self.0
     }
 
     #[allow(dead_code)]
@@ -172,53 +116,24 @@ where
         self.backend() != Backend::Empty
     }
 
-    /// Get the backend this identifier corresponds to.
-    #[inline]
     pub fn backend(self) -> Backend {
-        self.0.backend()
-    }
-
-    /// Transmute this identifier to one with a different marker trait.
-    ///
-    /// Legal use is governed through a sealed trait, however it's correctness
-    /// depends on the current implementation of `wgpu-core`.
-    #[inline]
-    pub const fn transmute<U: self::transmute::Transmute<T>>(self) -> Id<U> {
-        Id(self.0, PhantomData)
-    }
-
-    #[inline]
-    pub fn zip(index: Index, epoch: Epoch, backend: Backend) -> Self {
-        Id(RawId::zip(index, epoch, backend), PhantomData)
-    }
-
-    #[inline]
-    pub fn unzip(self) -> (Index, Epoch, Backend) {
-        self.0.unzip()
+        match self.0.get() >> (BACKEND_SHIFT) as u8 {
+            0 => Backend::Empty,
+            1 => Backend::Vulkan,
+            2 => Backend::Metal,
+            3 => Backend::Dx12,
+            4 => Backend::Gl,
+            _ => unreachable!(),
+        }
     }
 }
 
-pub(crate) mod transmute {
-    // This trait is effectively sealed to prevent illegal transmutes.
-    pub trait Transmute<U>: super::Marker {}
-
-    // Self-transmute is always legal.
-    impl<T> Transmute<T> for T where T: super::Marker {}
-
-    // TODO: Remove these once queues have their own identifiers.
-    impl Transmute<super::markers::Queue> for super::markers::Device {}
-    impl Transmute<super::markers::Device> for super::markers::Queue {}
-    impl Transmute<super::markers::CommandBuffer> for super::markers::CommandEncoder {}
-    impl Transmute<super::markers::CommandEncoder> for super::markers::CommandBuffer {}
-}
-
-impl<T> Copy for Id<T> where T: Marker {}
+impl<T> Copy for Id<T> where T: 'static + WasmNotSendSync {}
 
 impl<T> Clone for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
-    #[inline]
     fn clone(&self) -> Self {
         *self
     }
@@ -226,7 +141,7 @@ where
 
 impl<T> Debug for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let (index, epoch, backend) = self.unzip();
@@ -245,9 +160,8 @@ where
 
 impl<T> Hash for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
-    #[inline]
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state);
     }
@@ -255,21 +169,19 @@ where
 
 impl<T> PartialEq for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
-    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
 
-impl<T> Eq for Id<T> where T: Marker {}
+impl<T> Eq for Id<T> where T: 'static + WasmNotSendSync {}
 
 impl<T> PartialOrd for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
-    #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.0.partial_cmp(&other.0)
     }
@@ -277,73 +189,78 @@ where
 
 impl<T> Ord for Id<T>
 where
-    T: Marker,
+    T: 'static + WasmNotSendSync,
 {
-    #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
     }
 }
 
-/// Marker trait used to determine which types uniquely identify a resource.
+/// Trait carrying methods for direct `Id` access.
 ///
-/// For example, `Device<A>` will have the same type of identifier as
-/// `Device<B>` because `Device<T>` for any `T` defines the same maker type.
-pub trait Marker: 'static + WasmNotSendSync {}
+/// Most `wgpu-core` clients should not use this trait. Unusual clients that
+/// need to construct `Id` values directly, or access their components, like the
+/// WGPU recording player, may use this trait to do so.
+pub trait TypedId: Copy + Debug + Any + 'static + WasmNotSendSync + Eq + Hash {
+    fn zip(index: Index, epoch: Epoch, backend: Backend) -> Self;
+    fn unzip(self) -> (Index, Epoch, Backend);
+    fn into_raw(self) -> NonZeroId;
+}
 
-// This allows `()` to be used as a marker type for tests.
-//
-// We don't want these in production code, since they essentially remove type
-// safety, like how identifiers across different types can be compared.
-#[cfg(test)]
-impl Marker for () {}
+#[allow(trivial_numeric_casts)]
+impl<T> TypedId for Id<T>
+where
+    T: 'static + WasmNotSendSync,
+{
+    fn zip(index: Index, epoch: Epoch, backend: Backend) -> Self {
+        assert_eq!(0, epoch >> EPOCH_BITS);
+        assert_eq!(0, (index as IdType) >> INDEX_BITS);
+        let v = index as IdType
+            | ((epoch as IdType) << INDEX_BITS)
+            | ((backend as IdType) << BACKEND_SHIFT);
+        Id(NonZeroId::new(v).unwrap(), PhantomData)
+    }
 
-/// Define identifiers for each resource.
-macro_rules! ids {
-    ($(
-        $(#[$($meta:meta)*])*
-        pub type $name:ident $marker:ident;
-    )*) => {
-        /// Marker types for each resource.
-        pub mod markers {
-            $(
-                #[derive(Debug)]
-                pub enum $marker {}
-                impl super::Marker for $marker {}
-            )*
-        }
+    fn unzip(self) -> (Index, Epoch, Backend) {
+        (
+            (self.0.get() as ZippedIndex) as Index,
+            (((self.0.get() >> INDEX_BITS) as ZippedIndex) & (EPOCH_MASK as ZippedIndex)) as Index,
+            self.backend(),
+        )
+    }
 
-        $(
-            $(#[$($meta)*])*
-            pub type $name = Id<self::markers::$marker>;
-        )*
+    fn into_raw(self) -> NonZeroId {
+        self.0
     }
 }
 
-ids! {
-    pub type AdapterId Adapter;
-    pub type SurfaceId Surface;
-    pub type DeviceId Device;
-    pub type QueueId Queue;
-    pub type BufferId Buffer;
-    pub type StagingBufferId StagingBuffer;
-    pub type TextureViewId TextureView;
-    pub type TextureId Texture;
-    pub type SamplerId Sampler;
-    pub type BindGroupLayoutId BindGroupLayout;
-    pub type PipelineLayoutId PipelineLayout;
-    pub type BindGroupId BindGroup;
-    pub type ShaderModuleId ShaderModule;
-    pub type RenderPipelineId RenderPipeline;
-    pub type ComputePipelineId ComputePipeline;
-    pub type CommandEncoderId CommandEncoder;
-    pub type CommandBufferId CommandBuffer;
-    pub type RenderPassEncoderId RenderPassEncoder;
-    pub type ComputePassEncoderId ComputePassEncoder;
-    pub type RenderBundleEncoderId RenderBundleEncoder;
-    pub type RenderBundleId RenderBundle;
-    pub type QuerySetId QuerySet;
-}
+pub type AdapterId = Id<crate::instance::Adapter<Dummy>>;
+pub type SurfaceId = Id<crate::instance::Surface>;
+// Device
+pub type DeviceId = Id<crate::device::Device<Dummy>>;
+pub type QueueId = DeviceId;
+// Resource
+pub type BufferId = Id<crate::resource::Buffer<Dummy>>;
+pub type StagingBufferId = Id<crate::resource::StagingBuffer<Dummy>>;
+pub type TextureViewId = Id<crate::resource::TextureView<Dummy>>;
+pub type TextureId = Id<crate::resource::Texture<Dummy>>;
+pub type SamplerId = Id<crate::resource::Sampler<Dummy>>;
+// Binding model
+pub type BindGroupLayoutId = Id<crate::binding_model::BindGroupLayout<Dummy>>;
+pub type PipelineLayoutId = Id<crate::binding_model::PipelineLayout<Dummy>>;
+pub type BindGroupId = Id<crate::binding_model::BindGroup<Dummy>>;
+// Pipeline
+pub type ShaderModuleId = Id<crate::pipeline::ShaderModule<Dummy>>;
+pub type RenderPipelineId = Id<crate::pipeline::RenderPipeline<Dummy>>;
+pub type ComputePipelineId = Id<crate::pipeline::ComputePipeline<Dummy>>;
+// Command
+pub type CommandEncoderId = CommandBufferId;
+pub type CommandBufferId = Id<crate::command::CommandBuffer<Dummy>>;
+pub type RenderPassEncoderId = *mut crate::command::RenderPass;
+pub type ComputePassEncoderId = *mut crate::command::ComputePass;
+pub type RenderBundleEncoderId = *mut crate::command::RenderBundleEncoder;
+pub type RenderBundleId = Id<crate::command::RenderBundle<Dummy>>;
+pub type QuerySetId = Id<crate::resource::QuerySet<Dummy>>;
 
 #[test]
 fn test_id_backend() {
@@ -354,7 +271,7 @@ fn test_id_backend() {
         Backend::Dx12,
         Backend::Gl,
     ] {
-        let id = crate::id::Id::<()>::zip(1, 0, b);
+        let id: Id<()> = Id::zip(1, 0, b);
         let (_id, _epoch, backend) = id.unzip();
         assert_eq!(id.backend(), b);
         assert_eq!(backend, b);
@@ -376,7 +293,7 @@ fn test_id() {
     for &i in &indexes {
         for &e in &epochs {
             for &b in &backends {
-                let id = crate::id::Id::<()>::zip(i, e, b);
+                let id: Id<()> = Id::zip(i, e, b);
                 let (index, epoch, backend) = id.unzip();
                 assert_eq!(index, i);
                 assert_eq!(epoch, e);

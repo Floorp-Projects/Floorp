@@ -7,9 +7,7 @@ use std::{mem, sync::Arc};
 
 impl Drop for super::Instance {
     fn drop(&mut self) {
-        if self.flags.contains(wgt::InstanceFlags::VALIDATION) {
-            crate::auxil::dxgi::exception::unregister_exception_handler();
-        }
+        crate::auxil::dxgi::exception::unregister_exception_handler();
     }
 }
 
@@ -20,26 +18,12 @@ impl crate::Instance<super::Api> for super::Instance {
             crate::InstanceError::with_source(String::from("failed to load d3d12.dll"), e)
         })?;
 
-        if desc
-            .flags
-            .intersects(wgt::InstanceFlags::VALIDATION | wgt::InstanceFlags::GPU_BASED_VALIDATION)
-        {
+        if desc.flags.contains(wgt::InstanceFlags::VALIDATION) {
             // Enable debug layer
             match lib_main.get_debug_interface() {
                 Ok(pair) => match pair.into_result() {
                     Ok(debug_controller) => {
-                        if desc.flags.intersects(wgt::InstanceFlags::VALIDATION) {
-                            debug_controller.enable_layer();
-                        }
-                        if desc
-                            .flags
-                            .intersects(wgt::InstanceFlags::GPU_BASED_VALIDATION)
-                        {
-                            #[allow(clippy::collapsible_if)]
-                            if !debug_controller.enable_gpu_based_validation() {
-                                log::warn!("Failed to enable GPU-based validation");
-                            }
-                        }
+                        debug_controller.enable_layer();
                     }
                     Err(err) => {
                         log::warn!("Unable to enable D3D12 debug interface: {}", err);

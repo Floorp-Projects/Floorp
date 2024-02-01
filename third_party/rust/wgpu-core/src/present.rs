@@ -22,7 +22,9 @@ use crate::{
     device::{DeviceError, MissingDownlevelFlags, WaitIdleError},
     global::Global,
     hal_api::HalApi,
-    hal_label, id,
+    hal_label,
+    id::{SurfaceId, TextureId},
+    identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::TextureInitTracker,
     resource::{self, ResourceInfo},
     snatch::Snatchable,
@@ -30,7 +32,7 @@ use crate::{
 };
 
 use hal::{Queue as _, Surface as _};
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use thiserror::Error;
 use wgt::SurfaceStatus as Status;
 
@@ -40,7 +42,7 @@ const FRAME_TIMEOUT_MS: u32 = 1000;
 pub(crate) struct Presentation {
     pub(crate) device: AnyDevice,
     pub(crate) config: wgt::SurfaceConfiguration<Vec<wgt::TextureFormat>>,
-    pub(crate) acquired_texture: Option<id::TextureId>,
+    pub(crate) acquired_texture: Option<TextureId>,
 }
 
 #[derive(Clone, Debug, Error)]
@@ -116,20 +118,20 @@ impl From<WaitIdleError> for ConfigureSurfaceError {
 #[derive(Debug)]
 pub struct SurfaceOutput {
     pub status: Status,
-    pub texture_id: Option<id::TextureId>,
+    pub texture_id: Option<TextureId>,
 }
 
-impl Global {
+impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn surface_get_current_texture<A: HalApi>(
         &self,
-        surface_id: id::SurfaceId,
-        texture_id_in: Option<id::TextureId>,
+        surface_id: SurfaceId,
+        texture_id_in: Input<G, TextureId>,
     ) -> Result<SurfaceOutput, SurfaceError> {
         profiling::scope!("SwapChain::get_next_texture");
 
         let hub = A::hub(self);
 
-        let fid = hub.textures.prepare(texture_id_in);
+        let fid = hub.textures.prepare::<G>(texture_id_in);
 
         let surface = self
             .surfaces
@@ -229,8 +231,6 @@ impl Global {
                     clear_mode: RwLock::new(resource::TextureClearMode::Surface {
                         clear_view: Some(clear_view),
                     }),
-                    views: Mutex::new(Vec::new()),
-                    bind_groups: Mutex::new(Vec::new()),
                 };
 
                 let (id, resource) = fid.assign(texture);
@@ -278,7 +278,7 @@ impl Global {
 
     pub fn surface_present<A: HalApi>(
         &self,
-        surface_id: id::SurfaceId,
+        surface_id: SurfaceId,
     ) -> Result<Status, SurfaceError> {
         profiling::scope!("SwapChain::present");
 
@@ -376,7 +376,7 @@ impl Global {
 
     pub fn surface_texture_discard<A: HalApi>(
         &self,
-        surface_id: id::SurfaceId,
+        surface_id: SurfaceId,
     ) -> Result<(), SurfaceError> {
         profiling::scope!("SwapChain::discard");
 

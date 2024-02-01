@@ -9,6 +9,7 @@ use crate::{
     global::Global,
     hal_api::HalApi,
     id::{self, AdapterId, DeviceId, QueueId, SurfaceId},
+    identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::TextureInitTracker,
     instance::{self, Adapter, Surface},
     pipeline, present,
@@ -34,7 +35,7 @@ use std::{
 
 use super::{ImplicitPipelineIds, InvalidDevice, UserClosures};
 
-impl Global {
+impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn adapter_is_surface_supported<A: HalApi>(
         &self,
         adapter_id: AdapterId,
@@ -145,12 +146,12 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &resource::BufferDescriptor,
-        id_in: Option<id::BufferId>,
+        id_in: Input<G, id::BufferId>,
     ) -> (id::BufferId, Option<CreateBufferError>) {
         profiling::scope!("Device::create_buffer");
 
         let hub = A::hub(self);
-        let fid = hub.buffers.prepare(id_in);
+        let fid = hub.buffers.prepare::<G>(id_in);
 
         let mut to_destroy: ArrayVec<resource::Buffer<A>, 2> = ArrayVec::new();
         let error = loop {
@@ -308,20 +309,20 @@ impl Global {
     /// [`device_create_buffer`]: Global::device_create_buffer
     /// [`usage`]: https://www.w3.org/TR/webgpu/#dom-gputexturedescriptor-usage
     /// [`wgpu_types::BufferUsages`]: wgt::BufferUsages
-    pub fn create_buffer_error<A: HalApi>(&self, id_in: Option<id::BufferId>, label: Label) {
+    pub fn create_buffer_error<A: HalApi>(&self, id_in: Input<G, id::BufferId>, label: Label) {
         let hub = A::hub(self);
-        let fid = hub.buffers.prepare(id_in);
+        let fid = hub.buffers.prepare::<G>(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
 
     pub fn create_render_bundle_error<A: HalApi>(
         &self,
-        id_in: Option<id::RenderBundleId>,
+        id_in: Input<G, id::RenderBundleId>,
         label: Label,
     ) {
         let hub = A::hub(self);
-        let fid = hub.render_bundles.prepare(id_in);
+        let fid = hub.render_bundles.prepare::<G>(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
@@ -329,9 +330,9 @@ impl Global {
     /// Assign `id_in` an error with the given `label`.
     ///
     /// See `create_buffer_error` for more context and explaination.
-    pub fn create_texture_error<A: HalApi>(&self, id_in: Option<id::TextureId>, label: Label) {
+    pub fn create_texture_error<A: HalApi>(&self, id_in: Input<G, id::TextureId>, label: Label) {
         let hub = A::hub(self);
-        let fid = hub.textures.prepare(id_in);
+        let fid = hub.textures.prepare::<G>(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
@@ -544,13 +545,13 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &resource::TextureDescriptor,
-        id_in: Option<id::TextureId>,
+        id_in: Input<G, id::TextureId>,
     ) -> (id::TextureId, Option<resource::CreateTextureError>) {
         profiling::scope!("Device::create_texture");
 
         let hub = A::hub(self);
 
-        let fid = hub.textures.prepare(id_in);
+        let fid = hub.textures.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -598,13 +599,13 @@ impl Global {
         hal_texture: A::Texture,
         device_id: DeviceId,
         desc: &resource::TextureDescriptor,
-        id_in: Option<id::TextureId>,
+        id_in: Input<G, id::TextureId>,
     ) -> (id::TextureId, Option<resource::CreateTextureError>) {
         profiling::scope!("Device::create_texture_from_hal");
 
         let hub = A::hub(self);
 
-        let fid = hub.textures.prepare(id_in);
+        let fid = hub.textures.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -645,7 +646,7 @@ impl Global {
                 RwLock::new(TextureInitTracker::new(desc.mip_level_count, 0));
 
             let (id, resource) = fid.assign(texture);
-            api_log!("Device::create_texture({desc:?}) -> {id:?}");
+            api_log!("Device::create_texture -> {id:?}");
 
             device.trackers.lock().textures.insert_single(
                 id,
@@ -672,12 +673,12 @@ impl Global {
         hal_buffer: A::Buffer,
         device_id: DeviceId,
         desc: &resource::BufferDescriptor,
-        id_in: Option<id::BufferId>,
+        id_in: Input<G, id::BufferId>,
     ) -> (id::BufferId, Option<CreateBufferError>) {
         profiling::scope!("Device::create_buffer");
 
         let hub = A::hub(self);
-        let fid = hub.buffers.prepare(id_in);
+        let fid = hub.buffers.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -782,13 +783,13 @@ impl Global {
         &self,
         texture_id: id::TextureId,
         desc: &resource::TextureViewDescriptor,
-        id_in: Option<id::TextureViewId>,
+        id_in: Input<G, id::TextureViewId>,
     ) -> (id::TextureViewId, Option<resource::CreateTextureViewError>) {
         profiling::scope!("Texture::create_view");
 
         let hub = A::hub(self);
 
-        let fid = hub.texture_views.prepare(id_in);
+        let fid = hub.texture_views.prepare::<G>(id_in);
 
         let error = loop {
             let texture = match hub.textures.get(texture_id) {
@@ -817,12 +818,6 @@ impl Global {
             };
 
             let (id, resource) = fid.assign(view);
-
-            {
-                let mut views = texture.views.lock();
-                views.push(Arc::downgrade(&resource));
-            }
-
             api_log!("Texture::create_view({texture_id:?}) -> {id:?}");
             device.trackers.lock().views.insert_single(id, resource);
             return (id, None);
@@ -872,12 +867,12 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &resource::SamplerDescriptor,
-        id_in: Option<id::SamplerId>,
+        id_in: Input<G, id::SamplerId>,
     ) -> (id::SamplerId, Option<resource::CreateSamplerError>) {
         profiling::scope!("Device::create_sampler");
 
         let hub = A::hub(self);
-        let fid = hub.samplers.prepare(id_in);
+        let fid = hub.samplers.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -933,7 +928,7 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &binding_model::BindGroupLayoutDescriptor,
-        id_in: Option<id::BindGroupLayoutId>,
+        id_in: Input<G, id::BindGroupLayoutId>,
     ) -> (
         id::BindGroupLayoutId,
         Option<binding_model::CreateBindGroupLayoutError>,
@@ -941,7 +936,7 @@ impl Global {
         profiling::scope!("Device::create_bind_group_layout");
 
         let hub = A::hub(self);
-        let fid = hub.bind_group_layouts.prepare(id_in);
+        let fid = hub.bind_group_layouts.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1003,7 +998,7 @@ impl Global {
             return (id.unwrap(), None);
         };
 
-        let fid = hub.bind_group_layouts.prepare(id_in);
+        let fid = hub.bind_group_layouts.prepare::<G>(id_in);
         let id = fid.assign_error(desc.label.borrow_or_default());
         (id, Some(error))
     }
@@ -1032,7 +1027,7 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &binding_model::PipelineLayoutDescriptor,
-        id_in: Option<id::PipelineLayoutId>,
+        id_in: Input<G, id::PipelineLayoutId>,
     ) -> (
         id::PipelineLayoutId,
         Option<binding_model::CreatePipelineLayoutError>,
@@ -1040,7 +1035,7 @@ impl Global {
         profiling::scope!("Device::create_pipeline_layout");
 
         let hub = A::hub(self);
-        let fid = hub.pipeline_layouts.prepare(id_in);
+        let fid = hub.pipeline_layouts.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1093,12 +1088,12 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &binding_model::BindGroupDescriptor,
-        id_in: Option<id::BindGroupId>,
+        id_in: Input<G, id::BindGroupId>,
     ) -> (id::BindGroupId, Option<binding_model::CreateBindGroupError>) {
         profiling::scope!("Device::create_bind_group");
 
         let hub = A::hub(self);
-        let fid = hub.bind_groups.prepare(id_in);
+        let fid = hub.bind_groups.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1129,15 +1124,6 @@ impl Global {
             };
 
             let (id, resource) = fid.assign(bind_group);
-
-            let weak_ref = Arc::downgrade(&resource);
-            for range in &resource.used_texture_ranges {
-                range.texture.bind_groups.lock().push(weak_ref.clone());
-            }
-            for range in &resource.used_buffer_ranges {
-                range.buffer.bind_groups.lock().push(weak_ref.clone());
-            }
-
             api_log!("Device::create_bind_group -> {id:?}");
 
             device
@@ -1177,7 +1163,7 @@ impl Global {
         device_id: DeviceId,
         desc: &pipeline::ShaderModuleDescriptor,
         source: pipeline::ShaderModuleSource,
-        id_in: Option<id::ShaderModuleId>,
+        id_in: Input<G, id::ShaderModuleId>,
     ) -> (
         id::ShaderModuleId,
         Option<pipeline::CreateShaderModuleError>,
@@ -1185,7 +1171,7 @@ impl Global {
         profiling::scope!("Device::create_shader_module");
 
         let hub = A::hub(self);
-        let fid = hub.shader_modules.prepare(id_in);
+        let fid = hub.shader_modules.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1202,14 +1188,6 @@ impl Global {
                     #[cfg(feature = "wgsl")]
                     pipeline::ShaderModuleSource::Wgsl(ref code) => {
                         trace.make_binary("wgsl", code.as_bytes())
-                    }
-                    #[cfg(feature = "glsl")]
-                    pipeline::ShaderModuleSource::Glsl(ref code, _) => {
-                        trace.make_binary("glsl", code.as_bytes())
-                    }
-                    #[cfg(feature = "spirv")]
-                    pipeline::ShaderModuleSource::SpirV(ref code, _) => {
-                        trace.make_binary("spirv", bytemuck::cast_slice::<u32, u8>(code))
                     }
                     pipeline::ShaderModuleSource::Naga(ref module) => {
                         let string =
@@ -1255,7 +1233,7 @@ impl Global {
         device_id: DeviceId,
         desc: &pipeline::ShaderModuleDescriptor,
         source: Cow<[u32]>,
-        id_in: Option<id::ShaderModuleId>,
+        id_in: Input<G, id::ShaderModuleId>,
     ) -> (
         id::ShaderModuleId,
         Option<pipeline::CreateShaderModuleError>,
@@ -1263,7 +1241,7 @@ impl Global {
         profiling::scope!("Device::create_shader_module");
 
         let hub = A::hub(self);
-        let fid = hub.shader_modules.prepare(id_in);
+        let fid = hub.shader_modules.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1317,12 +1295,12 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &wgt::CommandEncoderDescriptor<Label>,
-        id_in: Option<id::CommandEncoderId>,
+        id_in: Input<G, id::CommandEncoderId>,
     ) -> (id::CommandEncoderId, Option<DeviceError>) {
         profiling::scope!("Device::create_command_encoder");
 
         let hub = A::hub(self);
-        let fid = hub.command_buffers.prepare(id_in.map(|id| id.transmute()));
+        let fid = hub.command_buffers.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1358,11 +1336,11 @@ impl Global {
 
             let (id, _) = fid.assign(command_buffer);
             api_log!("Device::create_command_encoder -> {id:?}");
-            return (id.transmute(), None);
+            return (id, None);
         };
 
         let id = fid.assign_error(desc.label.borrow_or_default());
-        (id.transmute(), Some(error))
+        (id, Some(error))
     }
 
     pub fn command_buffer_label<A: HalApi>(&self, id: id::CommandBufferId) -> String {
@@ -1375,10 +1353,7 @@ impl Global {
 
         let hub = A::hub(self);
 
-        if let Some(cmd_buf) = hub
-            .command_buffers
-            .unregister(command_encoder_id.transmute())
-        {
+        if let Some(cmd_buf) = hub.command_buffers.unregister(command_encoder_id) {
             cmd_buf
                 .device
                 .untrack(&cmd_buf.data.lock().as_ref().unwrap().trackers);
@@ -1388,7 +1363,7 @@ impl Global {
     pub fn command_buffer_drop<A: HalApi>(&self, command_buffer_id: id::CommandBufferId) {
         profiling::scope!("CommandBuffer::drop");
         api_log!("CommandBuffer::drop {command_buffer_id:?}");
-        self.command_encoder_drop::<A>(command_buffer_id.transmute())
+        self.command_encoder_drop::<A>(command_buffer_id)
     }
 
     pub fn device_create_render_bundle_encoder(
@@ -1396,7 +1371,7 @@ impl Global {
         device_id: DeviceId,
         desc: &command::RenderBundleEncoderDescriptor,
     ) -> (
-        *mut command::RenderBundleEncoder,
+        id::RenderBundleEncoderId,
         Option<command::CreateRenderBundleError>,
     ) {
         profiling::scope!("Device::create_render_bundle_encoder");
@@ -1412,13 +1387,13 @@ impl Global {
         &self,
         bundle_encoder: command::RenderBundleEncoder,
         desc: &command::RenderBundleDescriptor,
-        id_in: Option<id::RenderBundleId>,
+        id_in: Input<G, id::RenderBundleId>,
     ) -> (id::RenderBundleId, Option<command::RenderBundleError>) {
         profiling::scope!("RenderBundleEncoder::finish");
 
         let hub = A::hub(self);
 
-        let fid = hub.render_bundles.prepare(id_in);
+        let fid = hub.render_bundles.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(bundle_encoder.parent()) {
@@ -1482,12 +1457,12 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &resource::QuerySetDescriptor,
-        id_in: Option<id::QuerySetId>,
+        id_in: Input<G, id::QuerySetId>,
     ) -> (id::QuerySetId, Option<resource::CreateQuerySetError>) {
         profiling::scope!("Device::create_query_set");
 
         let hub = A::hub(self);
-        let fid = hub.query_sets.prepare(id_in);
+        let fid = hub.query_sets.prepare::<G>(id_in);
 
         let error = loop {
             let device = match hub.devices.get(device_id) {
@@ -1556,8 +1531,8 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &pipeline::RenderPipelineDescriptor,
-        id_in: Option<id::RenderPipelineId>,
-        implicit_pipeline_ids: Option<ImplicitPipelineIds<'_>>,
+        id_in: Input<G, id::RenderPipelineId>,
+        implicit_pipeline_ids: Option<ImplicitPipelineIds<G>>,
     ) -> (
         id::RenderPipelineId,
         Option<pipeline::CreateRenderPipelineError>,
@@ -1566,7 +1541,7 @@ impl Global {
 
         let hub = A::hub(self);
 
-        let fid = hub.render_pipelines.prepare(id_in);
+        let fid = hub.render_pipelines.prepare::<G>(id_in);
         let implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         let implicit_error_context = implicit_context.clone();
 
@@ -1635,7 +1610,7 @@ impl Global {
         &self,
         pipeline_id: id::RenderPipelineId,
         index: u32,
-        id_in: Option<id::BindGroupLayoutId>,
+        id_in: Input<G, id::BindGroupLayoutId>,
     ) -> (
         id::BindGroupLayoutId,
         Option<binding_model::GetBindGroupLayoutError>,
@@ -1648,7 +1623,10 @@ impl Global {
                 Err(_) => break binding_model::GetBindGroupLayoutError::InvalidPipeline,
             };
             let id = match pipeline.layout.bind_group_layouts.get(index as usize) {
-                Some(bg) => hub.bind_group_layouts.prepare(id_in).assign_existing(bg),
+                Some(bg) => hub
+                    .bind_group_layouts
+                    .prepare::<G>(id_in)
+                    .assign_existing(bg),
                 None => break binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
             };
             return (id, None);
@@ -1656,7 +1634,7 @@ impl Global {
 
         let id = hub
             .bind_group_layouts
-            .prepare(id_in)
+            .prepare::<G>(id_in)
             .assign_error("<derived>");
         (id, Some(error))
     }
@@ -1691,8 +1669,8 @@ impl Global {
         &self,
         device_id: DeviceId,
         desc: &pipeline::ComputePipelineDescriptor,
-        id_in: Option<id::ComputePipelineId>,
-        implicit_pipeline_ids: Option<ImplicitPipelineIds<'_>>,
+        id_in: Input<G, id::ComputePipelineId>,
+        implicit_pipeline_ids: Option<ImplicitPipelineIds<G>>,
     ) -> (
         id::ComputePipelineId,
         Option<pipeline::CreateComputePipelineError>,
@@ -1701,7 +1679,7 @@ impl Global {
 
         let hub = A::hub(self);
 
-        let fid = hub.compute_pipelines.prepare(id_in);
+        let fid = hub.compute_pipelines.prepare::<G>(id_in);
         let implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         let implicit_error_context = implicit_context.clone();
 
@@ -1765,7 +1743,7 @@ impl Global {
         &self,
         pipeline_id: id::ComputePipelineId,
         index: u32,
-        id_in: Option<id::BindGroupLayoutId>,
+        id_in: Input<G, id::BindGroupLayoutId>,
     ) -> (
         id::BindGroupLayoutId,
         Option<binding_model::GetBindGroupLayoutError>,
@@ -1779,7 +1757,10 @@ impl Global {
             };
 
             let id = match pipeline.layout.bind_group_layouts.get(index as usize) {
-                Some(bg) => hub.bind_group_layouts.prepare(id_in).assign_existing(bg),
+                Some(bg) => hub
+                    .bind_group_layouts
+                    .prepare::<G>(id_in)
+                    .assign_existing(bg),
                 None => break binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
             };
 
@@ -1788,7 +1769,7 @@ impl Global {
 
         let id = hub
             .bind_group_layouts
-            .prepare(id_in)
+            .prepare::<G>(id_in)
             .assign_error("<derived>");
         (id, Some(error))
     }
@@ -2114,7 +2095,7 @@ impl Global {
 
         let (closures, queue_empty) = {
             if let wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
-                if submission_index.queue_id != device_id.transmute() {
+                if submission_index.queue_id != device_id {
                     return Err(WaitIdleError::WrongSubmissionIndex(
                         submission_index.queue_id,
                         device_id,
@@ -2248,7 +2229,7 @@ impl Global {
         if let Some(device) = hub.devices.unregister(device_id) {
             let device_lost_closure = device.lock_life().device_lost_closure.take();
             if let Some(closure) = device_lost_closure {
-                closure.call(DeviceLostReason::Dropped, String::from("Device dropped."));
+                closure.call(DeviceLostReason::Unknown, String::from("Device dropped."));
             }
 
             // The things `Device::prepare_to_die` takes care are mostly
@@ -2266,8 +2247,8 @@ impl Global {
         }
     }
 
-    // This closure will be called exactly once during "lose the device",
-    // or when it is replaced.
+    // This closure will be called exactly once during "lose the device"
+    // or when the device is dropped, if it was never lost.
     pub fn device_set_device_lost_closure<A: HalApi>(
         &self,
         device_id: DeviceId,
@@ -2277,12 +2258,6 @@ impl Global {
 
         if let Ok(device) = hub.devices.get(device_id) {
             let mut life_tracker = device.lock_life();
-            if let Some(existing_closure) = life_tracker.device_lost_closure.take() {
-                // It's important to not hold the lock while calling the closure.
-                drop(life_tracker);
-                existing_closure.call(DeviceLostReason::ReplacedCallback, "".to_string());
-                life_tracker = device.lock_life();
-            }
             life_tracker.device_lost_closure = Some(device_lost_closure);
         }
     }
@@ -2339,7 +2314,7 @@ impl Global {
         range: Range<BufferAddress>,
         op: BufferMapOperation,
     ) -> BufferAccessResult {
-        api_log!("Buffer::map_async {buffer_id:?} range {range:?} op: {op:?}");
+        api_log!("Buffer::map_async {buffer_id:?}");
 
         // User callbacks must not be called while holding buffer_map_async_inner's locks, so we
         // defer the error callback if it needs to be called immediately (typically when running
@@ -2466,7 +2441,7 @@ impl Global {
         size: Option<BufferAddress>,
     ) -> Result<(*mut u8, u64), BufferAccessError> {
         profiling::scope!("Buffer::get_mapped_range");
-        api_log!("Buffer::get_mapped_range {buffer_id:?} offset {offset:?} size {size:?}");
+        api_log!("Buffer::get_mapped_range {buffer_id:?}");
 
         let hub = A::hub(self);
 
