@@ -67,30 +67,92 @@ add_task(async function testReasonDropdown() {
   );
 });
 
-async function getListItems() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  const rbs = new ReportBrokenSiteHelper(AppMenu(win));
+async function getListItems(rbs) {
   const items = Array.from(rbs.reasonInput.querySelectorAll("menuitem")).map(
     i => i.id.replace("report-broken-site-popup-reason-", "")
   );
   Assert.equal(items[0], "choose", "First option is always 'choose'");
-  await BrowserTestUtils.closeWindow(win);
-  return items;
+  return items.join(",");
 }
 
 add_task(async function testReasonDropdownRandomized() {
   ensureReportBrokenSitePreffedOn();
   ensureReasonOptional();
 
-  let isRandomized = false;
-  const list1 = await getListItems();
-  for (let attempt = 0; attempt < 100; ++attempt) {
-    // try up to 100 times
-    const list = await getListItems();
-    if (!areObjectsEqual(list, list1)) {
-      isRandomized = true;
-      break;
+  const USER_ID_PREF = "app.normandy.user_id";
+  const RANDOMIZE_PREF = "ui.new-webcompat-reporter.reason-dropdown.randomized";
+
+  const origNormandyUserID = Services.prefs.getCharPref(
+    USER_ID_PREF,
+    undefined
+  );
+
+  await BrowserTestUtils.withNewTab(
+    REPORTABLE_PAGE_URL,
+    async function (browser) {
+      // confirm that the default order is initially used
+      Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
+      const rbs = await AppMenu().openReportBrokenSite();
+      const defaultOrder = [
+        "choose",
+        "slow",
+        "media",
+        "content",
+        "account",
+        "adblockers",
+        "other",
+      ];
+      Assert.deepEqual(
+        await getListItems(rbs),
+        defaultOrder,
+        "non-random order is correct"
+      );
+
+      // confirm that a random order happens per user
+      let randomOrder;
+      let isRandomized = false;
+      Services.prefs.setBoolPref(RANDOMIZE_PREF, true);
+
+      // This becomes ClientEnvironment.randomizationId, which we can set to
+      // any value which results in a different order from the default ordering.
+      Services.prefs.setCharPref("app.normandy.user_id", "dummy");
+
+      // clicking cancel triggers a reset, which is when the randomization
+      // logic is called. so we must click cancel after pref-changes here.
+      rbs.clickCancel();
+      await AppMenu().openReportBrokenSite();
+      randomOrder = await getListItems(rbs);
+      Assert.ok(
+        randomOrder != defaultOrder,
+        "options are randomized with pref on"
+      );
+
+      // confirm that the order doesn't change per user
+      isRandomized = false;
+      for (let attempt = 0; attempt < 5; ++attempt) {
+        rbs.clickCancel();
+        await AppMenu().openReportBrokenSite();
+        const order = await getListItems(rbs);
+
+        if (order != randomOrder) {
+          isRandomized = true;
+          break;
+        }
+      }
+      Assert.ok(!isRandomized, "options keep the same order per user");
+
+      // confirm that the order reverts to the default if pref flipped to false
+      Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
+      rbs.clickCancel();
+      await AppMenu().openReportBrokenSite();
+      Assert.deepEqual(
+        defaultOrder,
+        await getListItems(rbs),
+        "reverts to non-random order correctly"
+      );
+      rbs.clickCancel();
     }
-  }
-  Assert.ok(isRandomized, "Downdown options are randomized");
+  );
+
+  Services.prefs.setCharPref(USER_ID_PREF, origNormandyUserID);
 });
