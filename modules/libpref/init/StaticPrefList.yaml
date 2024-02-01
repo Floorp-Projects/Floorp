@@ -12329,6 +12329,7 @@
 # Whether to use the rust implemented DefaultURI for unknown scheme types
 - name: network.url.useDefaultURI
   type: RelaxedAtomicBool
+  value: false
   value: true
   mirror: always
 
