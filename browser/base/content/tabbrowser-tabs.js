@@ -906,8 +906,8 @@
       let rect = window.windowUtils.getBoundsWithoutFlushing(
         this.arrowScrollbox
       );
-      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
-      if(VertitalEnabled) {
+      const verticalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+      if(verticalEnabled) {
         // check if the drop point is vertically within the window
         if (eY > wY && eY < wY + window.outerHeight) {
           // also avoid detaching if the the tab was dropped too close to
