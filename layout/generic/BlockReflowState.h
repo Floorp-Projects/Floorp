@@ -307,6 +307,11 @@ class BlockReflowState {
   nscoord mInsetForBalance;
 
   // Physical size. Use only for physical <-> logical coordinate conversion.
+  //
+  // Note: for vertical-rl writing-mode, if mContainerSize's width is
+  // initialized to zero due to unconstrained block-size, lines will be
+  // positioned (physically) incorrectly. We will fix them up at the end of
+  // nsBlockFrame::Reflow() after we know the total block-size of the frame.
   nsSize mContainerSize;
   const nsSize& ContainerSize() const { return mContainerSize; }
 
