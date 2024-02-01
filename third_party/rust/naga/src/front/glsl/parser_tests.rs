@@ -1,7 +1,7 @@
 use super::{
     ast::Profile,
     error::ExpectedToken,
-    error::{Error, ErrorKind, ParseError},
+    error::{Error, ErrorKind},
     token::TokenValue,
     Frontend, Options, Span,
 };
@@ -21,12 +21,10 @@ fn version() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::InvalidVersion(99000),
-                meta: Span::new(9, 14)
-            }],
-        },
+        vec![Error {
+            kind: ErrorKind::InvalidVersion(99000),
+            meta: Span::new(9, 14)
+        }],
     );
 
     assert_eq!(
@@ -37,12 +35,10 @@ fn version() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::InvalidVersion(449),
-                meta: Span::new(9, 12)
-            }]
-        },
+        vec![Error {
+            kind: ErrorKind::InvalidVersion(449),
+            meta: Span::new(9, 12)
+        }]
     );
 
     assert_eq!(
@@ -53,12 +49,10 @@ fn version() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::InvalidProfile("smart".into()),
-                meta: Span::new(13, 18),
-            }]
-        },
+        vec![Error {
+            kind: ErrorKind::InvalidProfile("smart".into()),
+            meta: Span::new(13, 18),
+        }]
     );
 
     assert_eq!(
@@ -69,21 +63,19 @@ fn version() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![
-                Error {
-                    kind: ErrorKind::PreprocessorError(PreprocessorError::UnexpectedHash,),
-                    meta: Span::new(27, 28),
-                },
-                Error {
-                    kind: ErrorKind::InvalidToken(
-                        TokenValue::Identifier("version".into()),
-                        vec![ExpectedToken::Eof]
-                    ),
-                    meta: Span::new(28, 35)
-                }
-            ]
-        },
+        vec![
+            Error {
+                kind: ErrorKind::PreprocessorError(PreprocessorError::UnexpectedHash,),
+                meta: Span::new(27, 28),
+            },
+            Error {
+                kind: ErrorKind::InvalidToken(
+                    TokenValue::Identifier("version".into()),
+                    vec![ExpectedToken::Eof]
+                ),
+                meta: Span::new(28, 35)
+            }
+        ]
     );
 
     // valid versions
@@ -455,12 +447,10 @@ fn functions() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::SemanticError("Function already defined".into()),
-                meta: Span::new(134, 152),
-            }]
-        },
+        vec![Error {
+            kind: ErrorKind::SemanticError("Function already defined".into()),
+            meta: Span::new(134, 152),
+        }]
     );
 
     println!();
@@ -636,12 +626,10 @@ fn implicit_conversions() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::SemanticError("Unknown function \'test\'".into()),
-                meta: Span::new(156, 165),
-            }]
-        },
+        vec![Error {
+            kind: ErrorKind::SemanticError("Unknown function \'test\'".into()),
+            meta: Span::new(156, 165),
+        }]
     );
 
     assert_eq!(
@@ -660,12 +648,10 @@ fn implicit_conversions() {
             )
             .err()
             .unwrap(),
-        ParseError {
-            errors: vec![Error {
-                kind: ErrorKind::SemanticError("Ambiguous best function for \'test\'".into()),
-                meta: Span::new(158, 165),
-            }]
-        }
+        vec![Error {
+            kind: ErrorKind::SemanticError("Ambiguous best function for \'test\'".into()),
+            meta: Span::new(158, 165),
+        }]
     );
 }
 

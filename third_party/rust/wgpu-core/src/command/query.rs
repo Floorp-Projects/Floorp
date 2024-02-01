@@ -7,7 +7,8 @@ use crate::{
     device::DeviceError,
     global::Global,
     hal_api::HalApi,
-    id::{self, Id},
+    id::{self, Id, TypedId},
+    identity::GlobalIdentityHandlerFactory,
     init_tracker::MemoryInitKind,
     resource::QuerySet,
     storage::Storage,
@@ -48,7 +49,7 @@ impl<A: HalApi> QueryResetMap<A> {
     pub fn reset_queries(
         &mut self,
         raw_encoder: &mut A::CommandEncoder,
-        query_set_storage: &Storage<QuerySet<A>>,
+        query_set_storage: &Storage<QuerySet<A>, id::QuerySetId>,
         backend: wgt::Backend,
     ) -> Result<(), id::QuerySetId> {
         for (query_set_id, (state, epoch)) in self.map.drain() {
@@ -313,7 +314,7 @@ impl<A: HalApi> QuerySet<A> {
 
 pub(super) fn end_occlusion_query<A: HalApi>(
     raw_encoder: &mut A::CommandEncoder,
-    storage: &Storage<QuerySet<A>>,
+    storage: &Storage<QuerySet<A>, id::QuerySetId>,
     active_query: &mut Option<(id::QuerySetId, u32)>,
 ) -> Result<(), QueryUseError> {
     if let Some((query_set_id, query_index)) = active_query.take() {
@@ -330,7 +331,7 @@ pub(super) fn end_occlusion_query<A: HalApi>(
 
 pub(super) fn end_pipeline_statistics_query<A: HalApi>(
     raw_encoder: &mut A::CommandEncoder,
-    storage: &Storage<QuerySet<A>>,
+    storage: &Storage<QuerySet<A>, id::QuerySetId>,
     active_query: &mut Option<(id::QuerySetId, u32)>,
 ) -> Result<(), QueryUseError> {
     if let Some((query_set_id, query_index)) = active_query.take() {
@@ -345,7 +346,7 @@ pub(super) fn end_pipeline_statistics_query<A: HalApi>(
     }
 }
 
-impl Global {
+impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn command_encoder_write_timestamp<A: HalApi>(
         &self,
         command_encoder_id: id::CommandEncoderId,

@@ -10,7 +10,7 @@ use std::{borrow::Cow, marker::PhantomData, sync::Arc};
 use super::{PendingTransition, ResourceTracker};
 use crate::{
     hal_api::HalApi,
-    id::BufferId,
+    id::{BufferId, TypedId},
     resource::{Buffer, Resource},
     snatch::SnatchGuard,
     storage::Storage,
@@ -26,6 +26,7 @@ use wgt::{strict_assert, strict_assert_eq};
 impl ResourceUses for BufferUses {
     const EXCLUSIVE: Self = Self::EXCLUSIVE;
 
+    type Id = BufferId;
     type Selector = ();
 
     fn bits(self) -> u16 {
@@ -91,7 +92,7 @@ impl<A: HalApi> BufferBindGroupState<A> {
     /// Adds the given resource with the given state.
     pub fn add_single<'a>(
         &self,
-        storage: &'a Storage<Buffer<A>>,
+        storage: &'a Storage<Buffer<A>, BufferId>,
         id: BufferId,
         state: BufferUses,
     ) -> Option<&'a Arc<Buffer<A>>> {
@@ -109,7 +110,7 @@ impl<A: HalApi> BufferBindGroupState<A> {
 pub(crate) struct BufferUsageScope<A: HalApi> {
     state: Vec<BufferUses>,
 
-    metadata: ResourceMetadata<A, Buffer<A>>,
+    metadata: ResourceMetadata<A, BufferId, Buffer<A>>,
 }
 
 impl<A: HalApi> BufferUsageScope<A> {
@@ -247,7 +248,7 @@ impl<A: HalApi> BufferUsageScope<A> {
     /// the vectors will be extended. A call to set_size is not needed.
     pub fn merge_single<'a>(
         &mut self,
-        storage: &'a Storage<Buffer<A>>,
+        storage: &'a Storage<Buffer<A>, BufferId>,
         id: BufferId,
         new_state: BufferUses,
     ) -> Result<&'a Arc<Buffer<A>>, UsageConflict> {
@@ -287,12 +288,12 @@ pub(crate) struct BufferTracker<A: HalApi> {
     start: Vec<BufferUses>,
     end: Vec<BufferUses>,
 
-    metadata: ResourceMetadata<A, Buffer<A>>,
+    metadata: ResourceMetadata<A, BufferId, Buffer<A>>,
 
     temp: Vec<PendingTransition<BufferUses>>,
 }
 
-impl<A: HalApi> ResourceTracker<Buffer<A>> for BufferTracker<A> {
+impl<A: HalApi> ResourceTracker<BufferId, Buffer<A>> for BufferTracker<A> {
     /// Try to remove the buffer `id` from this tracker if it is otherwise unused.
     ///
     /// A buffer is 'otherwise unused' when the only references to it are:
@@ -653,11 +654,11 @@ impl BufferStateProvider<'_> {
 unsafe fn insert_or_merge<A: HalApi>(
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
-    resource_metadata: &mut ResourceMetadata<A, Buffer<A>>,
+    resource_metadata: &mut ResourceMetadata<A, BufferId, Buffer<A>>,
     index32: u32,
     index: usize,
     state_provider: BufferStateProvider<'_>,
-    metadata_provider: ResourceMetadataProvider<'_, A, Buffer<A>>,
+    metadata_provider: ResourceMetadataProvider<'_, A, BufferId, Buffer<A>>,
 ) -> Result<(), UsageConflict> {
     let currently_owned = unsafe { resource_metadata.contains_unchecked(index) };
 
@@ -708,11 +709,11 @@ unsafe fn insert_or_merge<A: HalApi>(
 unsafe fn insert_or_barrier_update<A: HalApi>(
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
-    resource_metadata: &mut ResourceMetadata<A, Buffer<A>>,
+    resource_metadata: &mut ResourceMetadata<A, BufferId, Buffer<A>>,
     index: usize,
     start_state_provider: BufferStateProvider<'_>,
     end_state_provider: Option<BufferStateProvider<'_>>,
-    metadata_provider: ResourceMetadataProvider<'_, A, Buffer<A>>,
+    metadata_provider: ResourceMetadataProvider<'_, A, BufferId, Buffer<A>>,
     barriers: &mut Vec<PendingTransition<BufferUses>>,
 ) {
     let currently_owned = unsafe { resource_metadata.contains_unchecked(index) };
@@ -742,11 +743,11 @@ unsafe fn insert_or_barrier_update<A: HalApi>(
 unsafe fn insert<A: HalApi>(
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
-    resource_metadata: &mut ResourceMetadata<A, Buffer<A>>,
+    resource_metadata: &mut ResourceMetadata<A, BufferId, Buffer<A>>,
     index: usize,
     start_state_provider: BufferStateProvider<'_>,
     end_state_provider: Option<BufferStateProvider<'_>>,
-    metadata_provider: ResourceMetadataProvider<'_, A, Buffer<A>>,
+    metadata_provider: ResourceMetadataProvider<'_, A, BufferId, Buffer<A>>,
 ) {
     let new_start_state = unsafe { start_state_provider.get_state(index) };
     let new_end_state =
@@ -776,7 +777,7 @@ unsafe fn merge<A: HalApi>(
     index32: u32,
     index: usize,
     state_provider: BufferStateProvider<'_>,
-    metadata_provider: ResourceMetadataProvider<'_, A, Buffer<A>>,
+    metadata_provider: ResourceMetadataProvider<'_, A, BufferId, Buffer<A>>,
 ) -> Result<(), UsageConflict> {
     let current_state = unsafe { current_states.get_unchecked_mut(index) };
     let new_state = unsafe { state_provider.get_state(index) };
