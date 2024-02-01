@@ -519,10 +519,10 @@
       // dragend such that the mouse appears to have the same position
       // relative to the corner of the dragged tab.
 
-      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+      const verticalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
       //replace clientX/Y with screenX/Y to fix dragging tabs between windows
       function getClientElementPosition(ele) {
-        if(!VertitalEnabled) {
+        if(!verticalEnabled) {
           return ele.getBoundingClientRect().left;
         } 
         return ele.getBoundingClientRect().top;
@@ -648,17 +648,17 @@
       } else {
         let newIndex = this._getDropIndex(event);
         let children = this.allTabs;
-        const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+        const verticalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
         if (newIndex == children.length) {
           let tabRect = this._getVisibleTabs().at(-1).getBoundingClientRect();
-          if (RTL_UI && !VertitalEnabled) {
+          if (RTL_UI && !verticalEnabled) {
             newMargin = rect.right - tabRect.left;
           } else {
             newMargin = tabRect.right - rect.left;
           }
         } else {
           let tabRect = children[newIndex].getBoundingClientRect();
-          if (RTL_UI && !VertitalEnabled) {
+          if (RTL_UI && !verticalEnabled) {
             newMargin = rect.right - tabRect.right;
           } else {
             newMargin = tabRect.left - rect.left;
@@ -1535,13 +1535,13 @@
         }
       }
 
-      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+      const verticalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
 
       // horizontal tabs & vertical tabs have different animation properties
-      const animLastScreen = VertitalEnabled ? "animLastScreenY" : "animLastScreenX";
-      const screen = VertitalEnabled ? "screenY" : "screenX";
-      const screenOrientation = VertitalEnabled ? "height" : "width";
-      const translate = VertitalEnabled ? "translateY" : "translateX";
+      const animLastScreen = verticalEnabled ? "animLastScreenY" : "animLastScreenX";
+      const screen = verticalEnabled ? "screenY" : "screenX";
+      const screenOrientation = verticalEnabled ? "height" : "width";
+      const translate = verticalEnabled ? "translateY" : "translateX";
 
       if (!(animLastScreen in draggedTab._dragData)) {
         draggedTab._dragData[animLastScreen] = draggedTab._dragData[screen];
@@ -1562,7 +1562,7 @@
         pinned ? numPinned : undefined
       );
 
-      if (RTL_UI && !VertitalEnabled) {
+      if (RTL_UI && !verticalEnabled) {
         tabs.reverse();
         // Copy moving tabs array to avoid infinite reversing.
         movingTabs = [...movingTabs].reverse();
