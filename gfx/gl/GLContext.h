@@ -187,6 +187,8 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   bool mImplicitMakeCurrent = false;
   bool mUseTLSIsCurrent;
 
+  static void ResetTLSCurrentContext();
+
   class TlsScope final {
     const WeakPtr<GLContext> mGL;
     const bool mWasTlsOk;
