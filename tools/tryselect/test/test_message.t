@@ -13,6 +13,7 @@ Test custom commit messages with fuzzy selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
@@ -34,6 +35,7 @@ Test custom commit messages with fuzzy selector
   Calculated try_task_config.json:
   {
       "parameters": {
+          "optimize_target_tasks": false,
           "try_task_config": {
               "env": {
                   "TRY_SELECTOR": "fuzzy"
