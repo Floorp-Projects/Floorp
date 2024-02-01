@@ -2425,7 +2425,7 @@ bool COLRFonts::PaintGlyphLayers(
     hb_blob_t* aCOLR, hb_face_t* aFace, const GlyphLayers* aLayers,
     DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
     ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
-    const sRGBColor& aCurrentColor, FontPalette* aPalette) {
+    const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors) {
   const auto* glyphRecord = reinterpret_cast<const BaseGlyphRecord*>(aLayers);
   // Default to opaque rendering (non-webrender applies alpha with a layer)
   float alpha = 1.0;
@@ -2454,7 +2454,7 @@ bool COLRFonts::PaintGlyphLayers(
   const COLRHeader* colr =
       reinterpret_cast<const COLRHeader*>(hb_blob_get_data(aCOLR, &length));
   PaintState state{{colr},
-                   aPalette->mColors.Elements(),
+                   aColors->Elements(),
                    aDrawTarget,
                    aScaledFont,
                    nullptr,  // variations not needed
@@ -2462,7 +2462,7 @@ bool COLRFonts::PaintGlyphLayers(
                    length,
                    aCurrentColor,
                    0.0,  // fontUnitsToPixels not needed
-                   uint16_t(aPalette->mColors.Length()),
+                   uint16_t(aColors->Length()),
                    0,
                    nullptr};
   return glyphRecord->Paint(state, alpha, aPoint);
@@ -2494,8 +2494,8 @@ bool COLRFonts::PaintGlyphGraph(
     hb_blob_t* aCOLR, hb_font_t* aFont, const GlyphPaintGraph* aPaintGraph,
     DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
     ScaledFont* aScaledFont, DrawOptions aDrawOptions, const Point& aPoint,
-    const sRGBColor& aCurrentColor, FontPalette* aPalette, uint32_t aGlyphId,
-    float aFontUnitsToPixels) {
+    const sRGBColor& aCurrentColor, const nsTArray<sRGBColor>* aColors,
+    uint32_t aGlyphId, float aFontUnitsToPixels) {
   if (aTextDrawer) {
     // Currently we always punt to a blob for COLRv1 glyphs.
     aTextDrawer->FoundUnsupportedFeature();
@@ -2507,7 +2507,7 @@ bool COLRFonts::PaintGlyphGraph(
 
   AutoTArray<uint32_t, 32> visitedOffsets;
   PaintState state{{nullptr},
-                   aPalette->mColors.Elements(),
+                   aColors->Elements(),
                    aDrawTarget,
                    aScaledFont,
                    coords,
@@ -2515,7 +2515,7 @@ bool COLRFonts::PaintGlyphGraph(
                    hb_blob_get_length(aCOLR),
                    aCurrentColor,
                    aFontUnitsToPixels,
-                   uint16_t(aPalette->mColors.Length()),
+                   uint16_t(aColors->Length()),
                    uint16_t(coordCount),
                    &visitedOffsets};
   state.mHeader.v1 =
@@ -2576,7 +2576,7 @@ uint16_t COLRFonts::GetColrTableVersion(hb_blob_t* aCOLR) {
   return colr->version;
 }
 
-already_AddRefed<FontPalette> COLRFonts::SetupColorPalette(
+UniquePtr<nsTArray<sRGBColor>> COLRFonts::SetupColorPalette(
     hb_face_t* aFace, const FontPaletteValueSet* aPaletteValueSet,
     nsAtom* aFontPalette, const nsACString& aFamilyName) {
   // Find the base color palette to use, if there are multiple available;
@@ -2631,10 +2631,10 @@ already_AddRefed<FontPalette> COLRFonts::SetupColorPalette(
   hb_ot_color_palette_get_colors(aFace, paletteIndex, 0, &count,
                                  colors.Elements());
 
-  RefPtr palette = new FontPalette();
-  palette->mColors.SetCapacity(count);
+  auto palette = MakeUnique<nsTArray<sRGBColor>>();
+  palette->SetCapacity(count);
   for (const auto c : colors) {
-    palette->mColors.AppendElement(
+    palette->AppendElement(
         sRGBColor(hb_color_get_red(c) / 255.0, hb_color_get_green(c) / 255.0,
                   hb_color_get_blue(c) / 255.0, hb_color_get_alpha(c) / 255.0));
   }
@@ -2642,13 +2642,13 @@ already_AddRefed<FontPalette> COLRFonts::SetupColorPalette(
   // Apply @font-palette-values overrides, if present.
   if (fpv) {
     for (const auto overrideColor : fpv->mOverrides) {
-      if (overrideColor.mIndex < palette->mColors.Length()) {
-        palette->mColors[overrideColor.mIndex] = overrideColor.mColor;
+      if (overrideColor.mIndex < palette->Length()) {
+        (*palette)[overrideColor.mIndex] = overrideColor.mColor;
       }
     }
   }
 
-  return palette.forget();
+  return palette;
 }
 
 const FontPaletteValueSet::PaletteValues* FontPaletteValueSet::Lookup(

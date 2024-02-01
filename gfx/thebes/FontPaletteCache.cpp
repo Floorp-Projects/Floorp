@@ -14,7 +14,7 @@ void gfx::PaletteCache::SetPaletteValueSet(
   Clear();
 }
 
-already_AddRefed<gfx::FontPalette> gfx::PaletteCache::GetPaletteFor(
+nsTArray<gfx::sRGBColor>* gfx::PaletteCache::GetPaletteFor(
     gfxFontEntry* aFontEntry, nsAtom* aPaletteName) {
   auto entry = Lookup(std::pair(aFontEntry, aPaletteName));
   if (!entry) {
@@ -27,6 +27,5 @@ already_AddRefed<gfx::FontPalette> gfx::PaletteCache::GetPaletteFor(
 
     entry.Set(std::move(newData));
   }
-  RefPtr result = entry.Data().mPalette;
-  return result.forget();
+  return entry.Data().mPalette.get();
 }
