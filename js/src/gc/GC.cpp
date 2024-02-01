@@ -3355,9 +3355,9 @@ void GCRuntime::updateAllocationRates() {
 static const char* GCHeapStateToLabel(JS::HeapState heapState) {
   switch (heapState) {
     case JS::HeapState::MinorCollecting:
-      return "js::Nursery::collect";
+      return "Minor GC";
     case JS::HeapState::MajorCollecting:
-      return "js::GCRuntime::collect";
+      return "Major GC";
     default:
       MOZ_CRASH("Unexpected heap state when pushing GC profiling stack frame");
   }
@@ -3385,9 +3385,10 @@ AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
 
   if (heapState == JS::HeapState::MinorCollecting ||
       heapState == JS::HeapState::MajorCollecting) {
-    profilingStackFrame.emplace(gc->rt->mainContextFromOwnThread(),
-                                GCHeapStateToLabel(heapState),
-                                GCHeapStateToProfilingCategory(heapState));
+    profilingStackFrame.emplace(
+        gc->rt->mainContextFromOwnThread(), GCHeapStateToLabel(heapState),
+        GCHeapStateToProfilingCategory(heapState),
+        uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   }
 }
 
