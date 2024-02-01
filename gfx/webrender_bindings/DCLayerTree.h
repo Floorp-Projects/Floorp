@@ -144,6 +144,7 @@ class DCLayerTree {
   gl::GLContext* GetGLContext() const { return mGL; }
   EGLConfig GetEGLConfig() const { return mEGLConfig; }
   ID3D11Device* GetDevice() const { return mDevice; }
+  ID3D11DeviceContext* GetDeviceContext() const { return mCtx; }
   IDCompositionDevice2* GetCompositionDevice() const {
     return mCompositionDevice;
   }
