@@ -5,65 +5,24 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 #shopping-settings-wrapper {
-  --shopping-settings-between-label-and-control-option-gap: 4px;
   display: grid;
   grid-template-rows: auto;
   row-gap: 8px;
   margin-top: 12px;
+}
 
-  .shopping-settings-toggle-option-wrapper {
-    display: grid;
-    row-gap: var(--shopping-settings-between-label-and-control-option-gap);
-  }
+#shopping-settings-opt-out-button {
+  display: flex;
+  justify-self: center;
+  align-items: center;
+}
 
-  #shopping-settings-opt-out-section {
-    display: grid;
-    justify-content: center;
+#powered-by-fakespot {
+  font-size: 12px;
+  color: var(--text-color-deemphasized);
+}
 
-    #shopping-settings-opt-out-button {
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  #powered-by-fakespot {
-    font-size: 12px;
-    color: var(--text-color-deemphasized);
-  }
-
-  #shopping-settings-toggles-section {
-    display: grid;
-    row-gap: 8px;
-
-    #shopping-ads-learn-more,
-    #shopping-auto-open-description {
-      margin-inline-end: 20px;
-      color: var(--text-color-deemphasized);
-    }
-  }
-
-  /* When `browser.shopping.experience2023.autoOpen` is true. */
-  &.shopping-settings-auto-open-ui-enabled {
-    --shopping-settings-between-options-gap: 12px;
-    row-gap: var(--shopping-settings-between-options-gap);
-
-    #shopping-settings-toggles-section {
-      display: grid;
-      row-gap: var(--shopping-settings-between-options-gap);
-    }
-
-    .divider {
-      border: var(--shopping-card-border-width) solid var(--shopping-card-border-color);
-    }
-
-    #shopping-settings-opt-out-section {
-      justify-content: flex-start;
-      row-gap: var(--shopping-settings-between-label-and-control-option-gap);
-
-      #shopping-settings-opt-out-button {
-        width: fit-content;
-        margin-inline-start: 0;
-      }
-    }
-  }
+#shopping-ads-learn-more {
+  margin-inline-end: 20px;
+  color: var(--text-color-deemphasized);
 }

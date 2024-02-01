@@ -45,23 +45,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.shopping.experience2023.ads.exposure",
   false
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "autoOpenEnabled",
-  "browser.shopping.experience2023.autoOpen.enabled",
-  true
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "autoOpenEnabledByUser",
-  "browser.shopping.experience2023.autoOpen.userEnabled",
-  true,
-  function autoOpenEnabledByUserChanged() {
-    for (let actor of gAllActors) {
-      actor.autoOpenEnabledByUserChanged();
-    }
-  }
-);
 
 export class ShoppingSidebarChild extends RemotePageChild {
   constructor() {
@@ -190,14 +173,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return this.adsEnabled && this.adsEnabledByUser;
   }
 
-  get autoOpenEnabled() {
-    return lazy.autoOpenEnabled;
-  }
-
-  get autoOpenEnabledByUser() {
-    return lazy.autoOpenEnabledByUser;
-  }
-
   optedInStateChanged() {
     // Force re-fetching things if needed by clearing the last product URI:
     this.#productURI = null;
@@ -211,12 +186,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     });
 
     this.requestRecommendations(this.#productURI);
-  }
-
-  autoOpenEnabledByUserChanged() {
-    this.sendToContent("autoOpenEnabledByUserChanged", {
-      autoOpenEnabledByUser: this.autoOpenEnabledByUser,
-    });
   }
 
   getProductURI() {
@@ -270,8 +239,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
       this.sendToContent("Update", {
         adsEnabled: this.adsEnabled,
         adsEnabledByUser: this.adsEnabledByUser,
-        autoOpenEnabled: this.autoOpenEnabled,
-        autoOpenEnabledByUser: this.autoOpenEnabledByUser,
         showOnboarding: !this.canFetchAndShowData,
         data: null,
         recommendationData: null,
@@ -373,8 +340,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
       this.sendToContent("Update", {
         adsEnabled: this.adsEnabled,
         adsEnabledByUser: this.adsEnabledByUser,
-        autoOpenEnabled: this.autoOpenEnabled,
-        autoOpenEnabledByUser: this.autoOpenEnabledByUser,
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
