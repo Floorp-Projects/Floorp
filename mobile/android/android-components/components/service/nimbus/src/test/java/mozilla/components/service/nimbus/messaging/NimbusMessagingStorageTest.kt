@@ -55,6 +55,8 @@ class NimbusMessagingStorageTest {
     }
     private lateinit var featuresInterface: FeaturesInterface
 
+    private val displayOnceStyle = StyleData(maxDisplayCount = 1)
+
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
@@ -84,7 +86,9 @@ class NimbusMessagingStorageTest {
             messagingFeature,
         )
 
-        `when`(nimbus.createMessageHelper(any())).thenReturn(mock())
+        val helper: NimbusMessagingHelperInterface = mock()
+        `when`(helper.evalJexl(any())).thenReturn(true)
+        `when`(nimbus.createMessageHelper(any())).thenReturn(helper)
     }
 
     @After
@@ -175,8 +179,10 @@ class NimbusMessagingStorageTest {
 
             val results = storage.getMessages()
 
-            assertEquals(1, results.size)
-            assertEquals("normal-message", results[0].id)
+            assertEquals(2, results.size)
+
+            val message = storage.getNextMessage(HOMESCREEN, results)!!
+            assertEquals("normal-message", message.id)
         }
 
     @Test
@@ -210,9 +216,10 @@ class NimbusMessagingStorageTest {
             )
 
             val results = storage.getMessages()
+            assertEquals(2, results.size)
 
-            assertEquals(1, results.size)
-            assertEquals("normal-message", results[0].id)
+            val message = storage.getNextMessage(HOMESCREEN, results)!!
+            assertEquals("normal-message", message.id)
         }
 
     @Test
@@ -258,9 +265,10 @@ class NimbusMessagingStorageTest {
             )
 
             val results = storage.getMessages()
+            assertEquals(3, results.size)
 
-            assertEquals(1, results.size)
-            assertEquals("normal-message", results[0].id)
+            val message = storage.getNextMessage(HOMESCREEN, results)!!
+            assertEquals("normal-message", message.id)
         }
 
     @Test
@@ -489,7 +497,7 @@ class NimbusMessagingStorageTest {
             "same-id",
             createMessageData(surface = HOMESCREEN),
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -511,7 +519,7 @@ class NimbusMessagingStorageTest {
             "same-id",
             messageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -537,7 +545,7 @@ class NimbusMessagingStorageTest {
             "id",
             messageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -546,7 +554,7 @@ class NimbusMessagingStorageTest {
             "control-id",
             controlMessageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -575,7 +583,7 @@ class NimbusMessagingStorageTest {
             "id",
             messageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -584,7 +592,7 @@ class NimbusMessagingStorageTest {
             "control-id",
             controlMessageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -615,7 +623,7 @@ class NimbusMessagingStorageTest {
             "id",
             messageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -624,7 +632,7 @@ class NimbusMessagingStorageTest {
             "incorrect-id",
             incorrectMessageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )
@@ -633,7 +641,7 @@ class NimbusMessagingStorageTest {
             "control-id",
             controlMessageData,
             action = "action",
-            mock(),
+            style = displayOnceStyle,
             listOf("trigger"),
             Message.Metadata("same-id"),
         )

@@ -111,8 +111,19 @@ class NimbusMessagingStorage(
     }
 
     /**
-     * Returns a list of currently available messages descending sorted by their priority.
-     * This list of messages will not include any expired, pressed or dismissed messages.
+     * Returns a list of currently available messages descending sorted by their [StyleData.priority].
+     *
+     * "Currently available" means all messages contained in the Nimbus SDK, validated and denormalized.
+     *
+     * The messages have the JEXL triggers and actions that came from the Nimbus SDK, but these themselves
+     * are not validated at this time.
+     *
+     * The messages also have state attached, which manage how many times the messages has been shown,
+     * and if the user has interacted with it or not.
+     *
+     * The list of messages may also contain control messages which should not be shown to the user.
+     *
+     * All additional filtering of these messages will happen in [getNextMessage].
      */
     suspend fun getMessages(): List<Message> {
         val featureValue = messagingFeature.value()
@@ -120,20 +131,34 @@ class NimbusMessagingStorage(
         return nimbusMessages.keys
             .mapNotNull { key ->
                 createMessage(featureValue, key)
-            }.filter {
-                !it.isExpired &&
-                    !it.metadata.dismissed &&
-                    !it.metadata.pressed
             }.sortedByDescending {
                 it.style.priority
             }
     }
 
     /**
-     * Returns the next higher priority message which all their triggers are true.
+     * Returns the next message for this surface.
+     *
+     * Message selection takes into account,
+     * - the message's surface,
+     * - how many times the message has been displayed already
+     * - whether or not the user has interacted with the message already.
+     * - the message eligibility, via JEXL triggers.
+     *
+     * If more than one message for this surface is eligible to be shown, then the
+     * first one to be encountered in [messages] list is returned.
      */
-    fun getNextMessage(surface: MessageSurfaceId, availableMessages: List<Message>): Message? =
-        createMessagingHelper().use {
+    fun getNextMessage(surface: MessageSurfaceId, messages: List<Message>): Message? {
+        val availableMessages = messages
+            .filter {
+                it.surface == surface
+            }
+            .filter {
+                !it.isExpired &&
+                    !it.metadata.dismissed &&
+                    !it.metadata.pressed
+            }
+        return createMessagingHelper().use {
             getNextMessage(
                 surface,
                 availableMessages,
@@ -141,6 +166,7 @@ class NimbusMessagingStorage(
                 it,
             )
         }
+    }
 
     @Suppress("ReturnCount")
     private fun getNextMessage(
@@ -150,7 +176,6 @@ class NimbusMessagingStorage(
         helper: NimbusMessagingHelperInterface,
     ): Message? {
         val message = availableMessages
-            .filter { surface == it.surface }
             .filter { !excluded.contains(it.id) }
             .firstOrNull { isMessageEligible(it, helper) } ?: return null
 
