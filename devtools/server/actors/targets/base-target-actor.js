@@ -9,6 +9,7 @@ const {
   TYPES,
   getResourceWatcher,
 } = require("resource://devtools/server/actors/resources/index.js");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
@@ -187,6 +188,19 @@ class BaseTargetActor extends Actor {
             ]);
           }
         }
+        return;
+      }
+      // Bug 1874204: For now, in the browser toolbox, only frame and workers are traced.
+      // Content process targets are ignored as they would also include each document/frame target.
+      // This would require some work to ignore FRAME targets from here, only in case of browser toolbox,
+      // and also handle all content process documents for DOM Event logging.
+      //
+      // Bug 1874219: Also ignore extensions for now as they are all running in the same process,
+      // whereas we can only spawn one tracer per thread.
+      if (
+        this.targetType == Targets.TYPES.PROCESS ||
+        this.url?.startsWith("moz-extension://")
+      ) {
         return;
       }
       const tracerActor = this.getTargetScopedActor("tracer");
