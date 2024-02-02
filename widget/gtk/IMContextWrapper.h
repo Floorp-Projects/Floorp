@@ -117,10 +117,6 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   void OnUpdateComposition();
   void OnLayoutChange();
 
-  // Set GdkWindow associated with IM context.
-  // It can be null which disables context operations.
-  void SetGdkWindow(GdkWindow* aGdkWindow);
-
   TextEventDispatcher* GetTextEventDispatcher();
 
   // TODO: Typically, new IM comes every several years.  And now, our code
