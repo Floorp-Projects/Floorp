@@ -1343,8 +1343,7 @@ void nsLookAndFeel::MaybeApplyAdwaitaOverrides() {
     return;
   }
 
-  if (light.mFamily == ThemeFamily::Adwaita ||
-      light.mFamily == ThemeFamily::Yaru) {
+  if (light.mFamily == ThemeFamily::Adwaita) {
     // #323232 is rgba(0,0,0,.8) over #fafafa.
     light.mWindow =
         light.mDialog = {NS_RGB(0xfa, 0xfa, 0xfa), NS_RGB(0x32, 0x32, 0x32)};
@@ -1362,8 +1361,7 @@ void nsLookAndFeel::MaybeApplyAdwaitaOverrides() {
     light.mSidebarBorder = NS_RGBA(0, 0, 0, 18);
   }
 
-  if (dark.mFamily == ThemeFamily::Adwaita ||
-      dark.mFamily == ThemeFamily::Yaru) {
+  if (dark.mFamily == ThemeFamily::Adwaita) {
     dark.mWindow = {NS_RGB(0x24, 0x24, 0x24), NS_RGB(0xff, 0xff, 0xff)};
     dark.mDialog = {NS_RGB(0x38, 0x38, 0x38), NS_RGB(0xff, 0xff, 0xff)};
     dark.mField = {NS_RGB(0x3a, 0x3a, 0x3a), NS_RGB(0xff, 0xff, 0xff)};
@@ -1799,9 +1797,6 @@ void nsLookAndFeel::PerThemeData::Init() {
     }
     if (mName.EqualsLiteral("Breeze") || mName.EqualsLiteral("Breeze-Dark")) {
       return ThemeFamily::Breeze;
-    }
-    if (StringBeginsWith(mName, "Yaru-remix"_ns)) {
-      return ThemeFamily::YaruRemix;
     }
     if (StringBeginsWith(mName, "Yaru"_ns)) {
       return ThemeFamily::Yaru;
