@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+from contextlib import contextmanager
 
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
@@ -88,3 +89,25 @@ class QuotaTestCase(MarionetteTestCase):
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             return self.marionette.execute_async_script(script)
+
+    @contextmanager
+    def using_new_window(self, path, private=False):
+        """
+        This helper method is created to ensure that a temporary
+        window required inside the test scope is lifetime'd properly
+        """
+
+        oldWindow = self.marionette.current_window_handle
+        try:
+            newWindow = self.marionette.open(type="window", private=private)
+            self.marionette.switch_to_window(newWindow["handle"])
+            self.marionette.navigate(self.marionette.absolute_url(path))
+            origin = self.marionette.absolute_url("")[:-1]
+            if private:
+                origin += "^privateBrowsingId=1"
+
+            yield (origin, "private" if private else "default")
+
+        finally:
+            self.marionette.close()
+            self.marionette.switch_to_window(oldWindow)

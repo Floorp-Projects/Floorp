@@ -26,8 +26,8 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
     def setUp(self):
         super(CacheAPIEncryptionPBM, self).setUp()
 
+        self.testHTML = "dom/cache/basicCacheAPI_PBM.html"
         self.cacheName = "CachePBMTest"
-
         self.profilePath = self.marionette.instance.profile.profile
         self.cacheAPIStoragePath = None
 
@@ -45,27 +45,33 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
 
         self.dbCheckpointThresholdBytes = 512 * 1024
 
-        # Navigate by opening a new private window
-        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
-        self.marionette.switch_to_window(pbmWindowHandle)
-        self.marionette.navigate(
-            self.marionette.absolute_url("dom/cache/basicCacheAPI_PBM.html")
-        )
-
-        self.origin = self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
-
     def tearDown(self):
         super(CacheAPIEncryptionPBM, self).setUp()
 
         self.marionette.set_pref(CACHEAPI_PBM_PREF, self.defaultCacheAPIPBMPref)
         self.marionette.set_pref(QM_TESTING_PREF, self.defaultQMPrefValue)
 
-        self.marionette.execute_script("window.wrappedJSObject.releaseCache()")
+    def test_request_response_ondisk(self):
+        with self.using_new_window(self.testHTML, private=False) as (
+            self.origin,
+            self.persistenceType,
+        ):
+            self.runAndValidate(
+                lambda exists: self.assertTrue(
+                    exists, "Failed to find expected data on disk"
+                )
+            )
 
-        # closes the new private window we opened in the setUp and referred by 'pbmWindowHandle'
-        self.marionette.close()
+    def test_encrypted_request_response_ondisk(self):
+        with self.using_new_window(self.testHTML, private=True) as (
+            self.origin,
+            self.persistenceType,
+        ):
+            self.runAndValidate(
+                lambda exists: self.assertFalse(exists, "Data on disk is not encrypted")
+            )
 
-    def test_ensure_encrypted_request_response(self):
+    def runAndValidate(self, validator):
         self.marionette.execute_async_script(
             """
                 const [name, requestStr, responseStr, resolve] = arguments;
@@ -73,24 +79,32 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
                 const request = new Request(requestStr);
                 const response = new Response(responseStr);
                 window.wrappedJSObject.addDataIntoCache(name, request, response)
-                                      .then(()=> { resolve(); });
+                                    .then(resolve);
             """,
-            script_args=(self.cacheName, self.cacheRequestStr, self.cacheResponseStr),
+            script_args=(
+                self.cacheName,
+                self.cacheRequestStr,
+                self.cacheResponseStr,
+            ),
         )
 
         self.ensureInvariantHolds(
             lambda _: os.path.exists(self.getCacheAPIStoragePath())
         )
 
-        self.ensureSqliteIsEncrypted()
+        self.validateSqlite(validator)
+        self.validateBodyFile(validator)
 
+    def validateBodyFile(self, validator):
         # Ensure response bodies have been flushed to the disk
         self.ensureInvariantHolds(
-            lambda _: self.findDirObj(self.cacheAPIStoragePath, "morgue", False)
+            lambda _: self.findDirObj(self.getCacheAPIStoragePath(), "morgue", False)
             is not None
         )
 
-        cacheResponseDir = self.findDirObj(self.cacheAPIStoragePath, "morgue", False)
+        cacheResponseDir = self.findDirObj(
+            self.getCacheAPIStoragePath(), "morgue", False
+        )
 
         self.ensureInvariantHolds(lambda _: any(os.listdir(cacheResponseDir)))
 
@@ -114,26 +128,28 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
         with open(cacheResponseBodyPath, "rb") as f_binary:
             foundRawValue = re.search(b"sNaPpY", f_binary.read()) is not None
 
-        self.assertFalse(foundRawValue, "Response body did not get encrypted")
+        validator(foundRawValue)
 
-    def ensureSqliteIsEncrypted(self):
+    def validateSqlite(self, validator):
         self.ensureInvariantHolds(
             lambda _: self.findDirObj(
-                self.cacheAPIStoragePath, self.cacheDBJournalFileName, True
+                self.getCacheAPIStoragePath(), self.cacheDBJournalFileName, True
             )
             is not None
         )
         dbJournalFile = self.findDirObj(
-            self.cacheAPIStoragePath, self.cacheDBJournalFileName, True
+            self.getCacheAPIStoragePath(), self.cacheDBJournalFileName, True
         )
 
         self.ensureInvariantHolds(
             lambda _: self.findDirObj(
-                self.cacheAPIStoragePath, self.cacheDBFileName, True
+                self.getCacheAPIStoragePath(), self.cacheDBFileName, True
             )
             is not None
         )
-        dbFile = self.findDirObj(self.cacheAPIStoragePath, self.cacheDBFileName, True)
+        dbFile = self.findDirObj(
+            self.getCacheAPIStoragePath(), self.cacheDBFileName, True
+        )
 
         # Confirm journal file size is less than 512KB which ensures that checkpoint
         # has not happend yet (dom/cache/DBSchema.cpp::InitializeConnection, kWalAutoCheckpointPages)
@@ -144,26 +160,27 @@ class CacheAPIEncryptionPBM(QuotaTestCase):
         # Before checkpointing, journal file size should be greater than main sqlite db file.
         self.assertTrue(os.path.getsize(dbJournalFile) > os.path.getsize(dbFile))
 
-        self.assertFalse(
-            self.cacheRequestStr.encode("ascii") in open(dbJournalFile, "rb").read(),
-            "Sqlite journal file did not get encrypted",
+        validator(
+            self.cacheRequestStr.encode("ascii") in open(dbJournalFile, "rb").read()
         )
 
-        self.assertTrue(self.resetStoragesForPrincipal(self.origin, "private", "cache"))
+        self.assertTrue(
+            self.resetStoragesForPrincipal(self.origin, self.persistenceType, "cache")
+        )
 
         self.assertFalse(os.path.getsize(dbJournalFile) > os.path.getsize(dbFile))
 
-        self.assertFalse(
-            self.cacheRequestStr.encode("ascii") in open(dbFile, "rb").read(),
-            "Sqlite main db file did not get encrypted",
-        )
+        validator(self.cacheRequestStr.encode("ascii") in open(dbFile, "rb").read())
 
     def getCacheAPIStoragePath(self):
         if self.cacheAPIStoragePath is not None:
             return self.cacheAPIStoragePath
 
+        assert self.origin is not None
+        assert self.persistenceType is not None
+
         self.cacheAPIStoragePath = self.getStoragePath(
-            self.profilePath, self.origin, "private", "cache"
+            self.profilePath, self.origin, self.persistenceType, "cache"
         )
 
         print("cacheAPI origin directory = " + self.cacheAPIStoragePath)
