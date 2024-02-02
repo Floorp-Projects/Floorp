@@ -21,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
   DiscoveryStreamFeed:
     "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs",
+  FaviconFeed: "resource://activity-stream/lib/FaviconFeed.sys.mjs",
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
@@ -64,11 +65,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "SystemTickFeed",
   "resource://activity-stream/lib/SystemTickFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FaviconFeed",
-  "resource://activity-stream/lib/FaviconFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

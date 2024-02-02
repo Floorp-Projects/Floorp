@@ -1,14 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { getDomain } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/TippyTopProvider.sys.mjs"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
+import { getDomain } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// RemoteSettings, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
@@ -99,7 +102,7 @@ async function fetchVisitPaths(url) {
  * Note this is not an urgent request, hence it is dispatched to the main
  * thread idle handler to avoid any possible performance impact.
  */
-async function fetchIconFromRedirects(url) {
+export async function fetchIconFromRedirects(url) {
   const visitPaths = await fetchVisitPaths(url);
   if (visitPaths.length > 1) {
     const lastVisit = visitPaths.pop();
@@ -118,7 +121,7 @@ async function fetchIconFromRedirects(url) {
   }
 }
 
-class FaviconFeed {
+export class FaviconFeed {
   constructor() {
     this._queryForRedirects = new Set();
   }
@@ -193,5 +196,3 @@ class FaviconFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["FaviconFeed", "fetchIconFromRedirects"];

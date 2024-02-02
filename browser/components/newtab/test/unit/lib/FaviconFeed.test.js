@@ -1,5 +1,5 @@
 "use strict";
-import { FaviconFeed, fetchIconFromRedirects } from "lib/FaviconFeed.jsm";
+import { FaviconFeed, fetchIconFromRedirects } from "lib/FaviconFeed.sys.mjs";
 import { actionTypes as at } from "common/Actions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 

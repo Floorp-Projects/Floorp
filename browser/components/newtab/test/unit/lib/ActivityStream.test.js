@@ -12,7 +12,7 @@ import { PlacesFeed } from "lib/PlacesFeed.sys.mjs";
 import { PrefsFeed } from "lib/PrefsFeed.jsm";
 import { SystemTickFeed } from "lib/SystemTickFeed.jsm";
 import { TelemetryFeed } from "lib/TelemetryFeed.sys.mjs";
-import { FaviconFeed } from "lib/FaviconFeed.jsm";
+import { FaviconFeed } from "lib/FaviconFeed.sys.mjs";
 import { TopSitesFeed } from "lib/TopSitesFeed.jsm";
 import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
 import { HighlightsFeed } from "lib/HighlightsFeed.sys.mjs";
