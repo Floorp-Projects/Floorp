@@ -13,12 +13,9 @@ ChromeUtils.defineESModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
   SectionsManager: "resource://activity-stream/lib/SectionsManager.sys.mjs",
+  shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
-
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
 
 const {
   HighlightsFeed,

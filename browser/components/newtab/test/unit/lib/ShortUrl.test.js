@@ -1,5 +1,5 @@
 import { GlobalOverrider } from "test/unit/utils";
-import { shortURL } from "lib/ShortURL.jsm";
+import { shortURL } from "lib/ShortURL.sys.mjs";
 
 const puny = "xn--kpry57d";
 const idn = "台灣";

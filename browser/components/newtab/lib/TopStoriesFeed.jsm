@@ -9,8 +9,8 @@ const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
 const { Prefs } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
 );
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
+const { shortURL } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ShortURL.sys.mjs"
 );
 const { SectionsManager } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/SectionsManager.sys.mjs"
