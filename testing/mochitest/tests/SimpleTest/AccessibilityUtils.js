@@ -516,7 +516,34 @@ this.AccessibilityUtils = (function () {
     return (
       node.tagName == "span" &&
       ariaRoles.includes("option") &&
-      node.classList.contains("urlbarView-row-inner")
+      node.classList.contains("urlbarView-row-inner") &&
+      node.hasAttribute("data-l10n-id")
+    );
+  }
+
+  /**
+   * Determine if an accessible is a menuitem within the XUL menu. We know each
+   * menuitem is accessible, but it disappears as soon as it is clicked during
+   * tests and the a11y-checks do not have time to test the label, because the
+   * Fluent localization is not yet completed by then. Thus, we need to special
+   * case the label check for these controls.
+   */
+  function isUnlabeledMenuitem(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    let hasLabel = false;
+    for (const child of node.childNodes) {
+      if (child.tagName == "label") {
+        hasLabel = true;
+      }
+    }
+    return (
+      accessible.role == Ci.nsIAccessibleRole.ROLE_MENUITEM &&
+      accessible.parent.role == Ci.nsIAccessibleRole.ROLE_MENUPOPUP &&
+      hasLabel &&
+      node.hasAttribute("data-l10n-id")
     );
   }
 
@@ -729,14 +756,15 @@ this.AccessibilityUtils = (function () {
    */
   function assertLabelled(accessible, allowRecurse = true) {
     const { DOMNode } = accessible;
-    if (
-      isUnlabeledUrlBarCombobox(accessible) ||
-      isUnlabeledUrlBarOption(accessible)
-    ) {
-      return;
-    }
     let name = accessible.name;
     if (!name) {
+      if (
+        isUnlabeledUrlBarCombobox(accessible) ||
+        isUnlabeledUrlBarOption(accessible) ||
+        isUnlabeledMenuitem(accessible)
+      ) {
+        return;
+      }
       // If text has just been inserted into the tree, the a11y engine might not
       // have picked it up yet.
       forceRefreshDriverTick(DOMNode);
