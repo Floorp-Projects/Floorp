@@ -6,12 +6,23 @@ import subprocess
 from pathlib import Path
 from typing import Union
 
+from . import get_tool_path
+
 # The logic here is far from robust. Improvements are welcome.
 
 
+def update_git_repo(repo: str, path: Union[str, Path]):
+    """Ensure a git repository exists at a path and is up to date."""
+    git = get_tool_path("git")
+    path = Path(path)
+    if path.exists():
+        subprocess.check_call([git, "pull", repo], cwd=str(path))
+    else:
+        subprocess.check_call([git, "clone", repo, str(path)])
+
+
 def update_mercurial_repo(
-    hg: str,
-    repo,
+    repo: str,
     path: Union[str, Path],
     revision="default",
     hostfingerprints=None,
@@ -20,6 +31,7 @@ def update_mercurial_repo(
     """Ensure a HG repository exists at a path and is up to date."""
     hostfingerprints = hostfingerprints or {}
 
+    hg = get_tool_path("hg")
     path = Path(path)
 
     args = [hg]
