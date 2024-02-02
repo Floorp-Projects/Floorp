@@ -5,7 +5,7 @@ import {
 import {
   ActivityStreamMessageChannel,
   DEFAULT_OPTIONS,
-} from "lib/ActivityStreamMessageChannel.jsm";
+} from "lib/ActivityStreamMessageChannel.sys.mjs";
 import { addNumberReducer, GlobalOverrider } from "test/unit/utils";
 import { applyMiddleware, createStore } from "redux";
 
