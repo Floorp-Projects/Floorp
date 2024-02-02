@@ -10,6 +10,8 @@
 
 add_common_setup();
 
+requestLongerTimeout(2);
+
 async function clickSendAndCheckPing(rbs, expectedReason = null) {
   const pingCheck = new Promise(resolve => {
     GleanPings.brokenSiteReport.testBeforeNextSubmit(() => {
