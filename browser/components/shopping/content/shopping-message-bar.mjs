@@ -90,12 +90,6 @@ class ShoppingMessageBar extends MozLitElement {
         composed: true,
       })
     );
-    this.dispatchEvent(
-      new CustomEvent("ShowCallout4", {
-        bubbles: true,
-        composed: true,
-      })
-    );
   }
 
   getStaleWarningTemplate() {
