@@ -4,9 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{convert::TryFrom, ops::Range};
+
 use neqo_common::Decoder;
-use std::convert::TryFrom;
-use std::ops::Range;
 
 /// An implementation of a xoshiro256** pseudorandom generator.
 pub struct Random {

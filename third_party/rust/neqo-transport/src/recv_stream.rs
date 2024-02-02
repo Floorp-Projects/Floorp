@@ -7,25 +7,29 @@
 // Building a stream of ordered bytes to give the application from a series of
 // incoming STREAM frames.
 
-use std::cmp::max;
-use std::collections::BTreeMap;
-use std::convert::TryFrom;
-use std::mem;
-use std::rc::{Rc, Weak};
+use std::{
+    cell::RefCell,
+    cmp::max,
+    collections::BTreeMap,
+    convert::TryFrom,
+    mem,
+    rc::{Rc, Weak},
+};
 
+use neqo_common::{qtrace, Role};
 use smallvec::SmallVec;
 
-use crate::events::ConnectionEvents;
-use crate::fc::ReceiverFlowControl;
-use crate::frame::FRAME_TYPE_STOP_SENDING;
-use crate::packet::PacketBuilder;
-use crate::recovery::{RecoveryToken, StreamRecoveryToken};
-use crate::send_stream::SendStreams;
-use crate::stats::FrameStats;
-use crate::stream_id::StreamId;
-use crate::{AppError, Error, Res};
-use neqo_common::{qtrace, Role};
-use std::cell::RefCell;
+use crate::{
+    events::ConnectionEvents,
+    fc::ReceiverFlowControl,
+    frame::FRAME_TYPE_STOP_SENDING,
+    packet::PacketBuilder,
+    recovery::{RecoveryToken, StreamRecoveryToken},
+    send_stream::SendStreams,
+    stats::FrameStats,
+    stream_id::StreamId,
+    AppError, Error, Res,
+};
 
 const RX_STREAM_DATA_WINDOW: u64 = 0x10_0000; // 1MiB
 
@@ -196,26 +200,49 @@ impl RxStreamOrderer {
             false
         };
 
-        // Now handle possible overlap with next entries
-        let mut to_remove = SmallVec::<[_; 8]>::new();
         let mut to_add = new_data;
+        if self
+            .data_ranges
+            .last_entry()
+            .map_or(false, |e| *e.key() >= new_start)
+        {
+            // Is this at the end (common case)?  If so, nothing to do in this block
+            // Common case:
+            //  PPPPPP        -> PPPPPP
+            //        NNNNNNN          NNNNNNN
+            // or
+            //  PPPPPP             -> PPPPPP
+            //             NNNNNNN               NNNNNNN
+            //
+            // Not the common case, handle possible overlap with next entries
+            //  PPPPPP       AAA      -> PPPPPP
+            //        NNNNNNN                  NNNNNNN
+            // or
+            //  PPPPPP     AAAA      -> PPPPPP     AAAA
+            //        NNNNNNN                 NNNNN
+            // or (this is where to_remove is used)
+            //  PPPPPP    AA       -> PPPPPP
+            //        NNNNNNN               NNNNNNN
 
-        for (&next_start, next_data) in self.data_ranges.range_mut(new_start..) {
-            let next_end = next_start + u64::try_from(next_data.len()).unwrap();
-            let overlap = new_end.saturating_sub(next_start);
-            if overlap == 0 {
-                break;
-            } else if next_end >= new_end {
-                qtrace!(
-                    "New frame {}-{} overlaps with next frame by {}, truncating",
-                    new_start,
-                    new_end,
-                    overlap
-                );
-                let truncate_to = new_data.len() - usize::try_from(overlap).unwrap();
-                to_add = &new_data[..truncate_to];
-                break;
-            } else {
+            let mut to_remove = SmallVec::<[_; 8]>::new();
+
+            for (&next_start, next_data) in self.data_ranges.range_mut(new_start..) {
+                let next_end = next_start + u64::try_from(next_data.len()).unwrap();
+                let overlap = new_end.saturating_sub(next_start);
+                if overlap == 0 {
+                    // Fills in the hole, exactly (probably common)
+                    break;
+                } else if next_end >= new_end {
+                    qtrace!(
+                        "New frame {}-{} overlaps with next frame by {}, truncating",
+                        new_start,
+                        new_end,
+                        overlap
+                    );
+                    let truncate_to = new_data.len() - usize::try_from(overlap).unwrap();
+                    to_add = &new_data[..truncate_to];
+                    break;
+                }
                 qtrace!(
                     "New frame {}-{} spans entire next frame {}-{}, replacing",
                     new_start,
@@ -224,11 +251,12 @@ impl RxStreamOrderer {
                     next_end
                 );
                 to_remove.push(next_start);
+                // Continue, since we may have more overlaps
             }
-        }
 
-        for start in to_remove {
-            self.data_ranges.remove(&start);
+            for start in to_remove {
+                self.data_ranges.remove(&start);
+            }
         }
 
         if !to_add.is_empty() {
@@ -278,11 +306,11 @@ impl RxStreamOrderer {
     }
 
     /// Bytes read by the application.
-    fn retired(&self) -> u64 {
+    pub fn retired(&self) -> u64 {
         self.retired
     }
 
-    fn received(&self) -> u64 {
+    pub fn received(&self) -> u64 {
         self.received
     }
 
@@ -652,12 +680,12 @@ impl RecvStream {
             | RecvStreamState::AbortReading { .. }
             | RecvStreamState::WaitForReset { .. }
             | RecvStreamState::ResetRecvd { .. } => {
-                qtrace!("data received when we are in state {}", self.state.name())
+                qtrace!("data received when we are in state {}", self.state.name());
             }
         }
 
         if !already_data_ready && (self.data_ready() || self.needs_to_inform_app_about_fin()) {
-            self.conn_events.recv_stream_readable(self.stream_id)
+            self.conn_events.recv_stream_readable(self.stream_id);
         }
 
         Ok(())
@@ -764,6 +792,7 @@ impl RecvStream {
     }
 
     /// # Errors
+    ///
     /// `NoMoreData` if data and fin bit were previously read by the application.
     pub fn read(&mut self, buf: &mut [u8]) -> Res<(usize, bool)> {
         let data_recvd_state = matches!(self.state, RecvStreamState::DataRecvd { .. });
@@ -837,7 +866,7 @@ impl RecvStream {
                     err,
                     final_received: received,
                     final_read: read,
-                })
+                });
             }
             RecvStreamState::DataRecvd {
                 fc,
@@ -961,9 +990,11 @@ impl RecvStream {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use neqo_common::Encoder;
     use std::ops::Range;
+
+    use neqo_common::Encoder;
+
+    use super::*;
 
     const SESSION_WINDOW: usize = 1024;
 

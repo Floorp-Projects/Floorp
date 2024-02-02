@@ -5,7 +5,7 @@
 #[cfg(not(windows))]
 use libc::{AF_INET, AF_INET6};
 use neqo_common::event::Provider;
-use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role};
+use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, IpTos, Role};
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::{
     features::extended_connect::SessionCloseReason, Error as Http3Error, Http3Client,
@@ -318,10 +318,15 @@ pub unsafe extern "C" fn neqo_http3conn_process_input(
         Ok(addr) => addr,
         Err(result) => return result,
     };
-    conn.conn.process_input(
-        Datagram::new(remote, conn.local_addr, (*packet).to_vec()),
-        get_current_or_last_output_time(&conn.last_output_time),
+    let d = Datagram::new(
+        remote,
+        conn.local_addr,
+        IpTos::default(),
+        None,
+        (*packet).to_vec(),
     );
+    conn.conn
+        .process_input(&d, get_current_or_last_output_time(&conn.last_output_time));
     return NS_OK;
 }
 
@@ -596,7 +601,7 @@ fn crypto_error_code(err: neqo_crypto::Error) -> u64 {
 // number.
 #[repr(C)]
 pub enum CloseError {
-    TransportInternalError(u16),
+    TransportInternalError,
     TransportInternalErrorOther(u16),
     TransportError(u64),
     CryptoError(u64),
@@ -610,7 +615,7 @@ pub enum CloseError {
 impl From<TransportError> for CloseError {
     fn from(error: TransportError) -> CloseError {
         match error {
-            TransportError::InternalError(c) => CloseError::TransportInternalError(c),
+            TransportError::InternalError => CloseError::TransportInternalError,
             TransportError::CryptoError(neqo_crypto::Error::EchRetry(_)) => CloseError::EchRetry,
             TransportError::CryptoError(c) => CloseError::CryptoError(crypto_error_code(c)),
             TransportError::CryptoAlert(c) => CloseError::CryptoAlert(c),
@@ -629,7 +634,8 @@ impl From<TransportError> for CloseError {
             | TransportError::InvalidToken
             | TransportError::KeysExhausted
             | TransportError::ApplicationError
-            | TransportError::NoAvailablePath => CloseError::TransportError(error.code()),
+            | TransportError::NoAvailablePath
+            | TransportError::CryptoBufferExceeded => CloseError::TransportError(error.code()),
             TransportError::EchRetry(_) => CloseError::EchRetry,
             TransportError::AckedUnsentPacket => CloseError::TransportInternalErrorOther(0),
             TransportError::ConnectionIdLimitExceeded => CloseError::TransportInternalErrorOther(1),

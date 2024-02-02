@@ -4,11 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::huffman::encode_huffman;
-use crate::prefix::Prefix;
+use std::{convert::TryFrom, ops::Deref};
+
 use neqo_common::Encoder;
-use std::convert::TryFrom;
-use std::ops::Deref;
+
+use crate::{huffman::encode_huffman, prefix::Prefix};
 
 #[derive(Default, Debug, PartialEq)]
 pub(crate) struct QpackData {

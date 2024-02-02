@@ -4,11 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::{Cipher, Version};
-use crate::err::{sec::SEC_ERROR_BAD_DATA, Error, Res};
-use crate::p11::SymKey;
-use crate::RealAead;
 use std::fmt;
+
+use crate::{
+    constants::{Cipher, Version},
+    err::{sec::SEC_ERROR_BAD_DATA, Error, Res},
+    p11::SymKey,
+    RealAead,
+};
 
 pub const FIXED_TAG_FUZZING: &[u8] = &[0x0a; 16];
 
@@ -76,8 +79,8 @@ impl FuzzingAead {
         let len_encrypted = input.len() - FIXED_TAG_FUZZING.len();
         // Check that:
         // 1) expansion is all zeros and
-        // 2) if the encrypted data is also supplied that at least some values
-        //    are no zero (otherwise padding will be interpreted as a valid packet)
+        // 2) if the encrypted data is also supplied that at least some values are no zero
+        //    (otherwise padding will be interpreted as a valid packet)
         if &input[len_encrypted..] == FIXED_TAG_FUZZING
             && (len_encrypted == 0 || input[..len_encrypted].iter().any(|x| *x != 0x0))
         {

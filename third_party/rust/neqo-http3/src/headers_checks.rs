@@ -6,10 +6,12 @@
 
 #![allow(clippy::unused_unit)] // see https://github.com/Lymia/enumset/issues/44
 
-use crate::{Error, MessageType, Res};
+use std::convert::TryFrom;
+
 use enumset::{enum_set, EnumSet, EnumSetType};
 use neqo_common::Header;
-use std::convert::TryFrom;
+
+use crate::{Error, MessageType, Res};
 
 #[derive(EnumSetType, Debug)]
 enum PseudoHeaderState {
@@ -45,7 +47,9 @@ impl TryFrom<(MessageType, &str)> for PseudoHeaderState {
 }
 
 /// Check whether the response is informational(1xx).
+///
 /// # Errors
+///
 /// Returns an error if response headers do not contain
 /// a status header or if the value of the header is 101 or cannot be parsed.
 pub fn is_interim(headers: &[Header]) -> Res<bool> {
@@ -89,7 +93,9 @@ fn track_pseudo(
 
 /// Checks if request/response headers are well formed, i.e. contain
 /// allowed pseudo headers and in a right order, etc.
+///
 /// # Errors
+///
 /// Returns an error if headers are not well formed.
 pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
     let mut method_value: Option<&str> = None;
@@ -155,7 +161,9 @@ pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
 
 /// Checks if trailers are well formed, i.e. pseudo headers are not
 /// allowed in trailers.
+///
 /// # Errors
+///
 /// Returns an error if trailers are not well formed.
 pub fn trailers_valid(headers: &[Header]) -> Res<()> {
     for header in headers {
@@ -168,9 +176,10 @@ pub fn trailers_valid(headers: &[Header]) -> Res<()> {
 
 #[cfg(test)]
 mod tests {
+    use neqo_common::Header;
+
     use super::headers_valid;
     use crate::MessageType;
-    use neqo_common::Header;
 
     fn create_connect_headers() -> Vec<Header> {
         vec![

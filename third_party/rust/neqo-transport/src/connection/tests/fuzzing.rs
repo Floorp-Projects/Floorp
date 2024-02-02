@@ -8,10 +8,11 @@
 #![warn(clippy::pedantic)]
 #![cfg(feature = "fuzzing")]
 
-use super::{connect_force_idle, default_client, default_server};
-use crate::StreamType;
 use neqo_crypto::FIXED_TAG_FUZZING;
 use test_fixture::now;
+
+use super::{connect_force_idle, default_client, default_server};
+use crate::StreamType;
 
 #[test]
 fn no_encryption() {
@@ -27,7 +28,7 @@ fn no_encryption() {
     let client_pkt = client.process_output(now()).dgram().unwrap();
     assert!(client_pkt[..client_pkt.len() - FIXED_TAG_FUZZING.len()].ends_with(DATA_CLIENT));
 
-    server.process_input(client_pkt, now());
+    server.process_input(&client_pkt, now());
     let mut buf = vec![0; 100];
     let (len, _) = server.stream_recv(stream_id, &mut buf).unwrap();
     assert_eq!(len, DATA_CLIENT.len());
@@ -36,7 +37,7 @@ fn no_encryption() {
     let server_pkt = server.process_output(now()).dgram().unwrap();
     assert!(server_pkt[..server_pkt.len() - FIXED_TAG_FUZZING.len()].ends_with(DATA_SERVER));
 
-    client.process_input(server_pkt, now());
+    client.process_input(&server_pkt, now());
     let (len, _) = client.stream_recv(stream_id, &mut buf).unwrap();
     assert_eq!(len, DATA_SERVER.len());
     assert_eq!(&buf[..len], DATA_SERVER);

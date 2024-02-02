@@ -4,6 +4,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    mem,
+    ops::{Deref, Div},
+};
+
+use neqo_common::{qtrace, Header};
+
 use crate::{
     prefix::{
         BASE_PREFIX_NEGATIVE, BASE_PREFIX_POSITIVE, HEADER_FIELD_INDEX_DYNAMIC,
@@ -16,11 +23,6 @@ use crate::{
     reader::{parse_utf8, ReceiverBufferWrapper},
     table::HeaderTable,
     Error, Res,
-};
-use neqo_common::{qtrace, Header};
-use std::{
-    mem,
-    ops::{Deref, Div},
 };
 
 #[derive(Default, Debug, PartialEq)]

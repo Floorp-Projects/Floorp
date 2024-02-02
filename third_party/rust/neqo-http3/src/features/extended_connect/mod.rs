@@ -9,14 +9,18 @@
 pub(crate) mod webtransport_session;
 pub(crate) mod webtransport_streams;
 
-use crate::client_events::Http3ClientEvents;
-use crate::features::NegotiationState;
-use crate::settings::{HSettingType, HSettings};
-use crate::{CloseType, Http3StreamInfo, Http3StreamType};
+use std::fmt::Debug;
+
 use neqo_common::Header;
 use neqo_transport::{AppError, StreamId};
-use std::fmt::Debug;
 pub(crate) use webtransport_session::WebTransportSession;
+
+use crate::{
+    client_events::Http3ClientEvents,
+    features::NegotiationState,
+    settings::{HSettingType, HSettings},
+    CloseType, Http3StreamInfo, Http3StreamType,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum SessionCloseReason {

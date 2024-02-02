@@ -4,6 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    convert::TryFrom,
+    ffi::CString,
+    os::raw::{c_char, c_uint},
+    ptr::{addr_of_mut, null_mut},
+};
+
+use neqo_common::qtrace;
+
 use crate::{
     err::{ssl::SSL_ERROR_ECH_RETRY_WITH_ECH, Error, Res},
     experimental_api,
@@ -13,14 +22,6 @@ use crate::{
     },
     ssl::{PRBool, PRFileDesc},
 };
-use neqo_common::qtrace;
-use std::{
-    convert::TryFrom,
-    ffi::CString,
-    os::raw::{c_char, c_uint},
-    ptr::{addr_of_mut, null_mut},
-};
-
 pub use crate::{
     p11::{HpkeAeadId as AeadId, HpkeKdfId as KdfId, HpkeKemId as KemId},
     ssl::HpkeSymmetricSuite as SymmetricSuite,
@@ -89,8 +90,11 @@ pub fn convert_ech_error(fd: *mut PRFileDesc, err: Error) -> Error {
 /// Generate a key pair for encrypted client hello (ECH).
 ///
 /// # Errors
+///
 /// When NSS fails to generate a key pair or when the KEM is not supported.
+///
 /// # Panics
+///
 /// When underlying types aren't large enough to hold keys.  So never.
 pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     let slot = Slot::internal()?;
@@ -109,6 +113,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
 
     // If we have tracing on, try to ensure that key data can be read.
     let insensitive_secret_ptr = if log::log_enabled!(log::Level::Trace) {
+        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
@@ -126,6 +131,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     };
     assert_eq!(insensitive_secret_ptr.is_null(), public_ptr.is_null());
     let secret_ptr = if insensitive_secret_ptr.is_null() {
+        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
@@ -151,6 +157,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
 /// Encode a configuration for encrypted client hello (ECH).
 ///
 /// # Errors
+///
 /// When NSS fails to generate a valid configuration encoding (i.e., unlikely).
 pub fn encode_config(config: u8, public_name: &str, pk: &PublicKey) -> Res<Vec<u8>> {
     // A sensible fixed value for the maximum length of a name.

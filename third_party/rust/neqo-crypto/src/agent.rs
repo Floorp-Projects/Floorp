@@ -4,6 +4,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    ffi::{CStr, CString},
+    mem::{self, MaybeUninit},
+    ops::{Deref, DerefMut},
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    ptr::{null, null_mut},
+    rc::Rc,
+    time::Instant,
+};
+
+use neqo_common::{hex_snip_middle, hex_with_len, qdebug, qinfo, qtrace, qwarn};
+
 pub use crate::{
     agentio::{as_c_void, Record, RecordList},
     cert::CertificateInfo,
@@ -24,19 +39,6 @@ use crate::{
     secrets::SecretHolder,
     ssl::{self, PRBool},
     time::{Time, TimeHolder},
-};
-use neqo_common::{hex_snip_middle, hex_with_len, qdebug, qinfo, qtrace, qwarn};
-use std::{
-    cell::RefCell,
-    convert::TryFrom,
-    ffi::{CStr, CString},
-    mem::{self, MaybeUninit},
-    ops::{Deref, DerefMut},
-    os::raw::{c_uint, c_void},
-    pin::Pin,
-    ptr::{null, null_mut},
-    rc::Rc,
-    time::Instant,
 };
 
 /// The maximum number of tickets to remember for a given connection.
@@ -157,6 +159,7 @@ impl SecretAgentPreInfo {
     }
 
     /// # Panics
+    ///
     /// If `usize` is less than 32 bits and the value is too large.
     #[must_use]
     pub fn max_early_data(&self) -> usize {
@@ -183,6 +186,7 @@ impl SecretAgentPreInfo {
     /// which contains a valid ECH configuration.
     ///
     /// # Errors
+    ///
     /// When the public name is not valid UTF-8.  (Note: names should be ASCII.)
     pub fn ech_public_name(&self) -> Res<Option<&str>> {
         if self.info.valuesSet & ssl::ssl_preinfo_ech == 0 || self.info.echPublicName.is_null() {
@@ -395,6 +399,7 @@ impl SecretAgent {
     /// Default configuration.
     ///
     /// # Errors
+    ///
     /// If `set_version_range` fails.
     fn configure(&mut self, grease: bool) -> Res<()> {
         self.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
@@ -411,6 +416,7 @@ impl SecretAgent {
     /// Set the versions that are supported.
     ///
     /// # Errors
+    ///
     /// If the range of versions isn't supported.
     pub fn set_version_range(&mut self, min: Version, max: Version) -> Res<()> {
         let range = ssl::SSLVersionRange { min, max };
@@ -420,6 +426,7 @@ impl SecretAgent {
     /// Enable a set of ciphers.  Note that the order of these is not respected.
     ///
     /// # Errors
+    ///
     /// If NSS can't enable or disable ciphers.
     pub fn set_ciphers(&mut self, ciphers: &[Cipher]) -> Res<()> {
         if self.state != HandshakeState::New {
@@ -447,6 +454,7 @@ impl SecretAgent {
     /// Set key exchange groups.
     ///
     /// # Errors
+    ///
     /// If the underlying API fails (which shouldn't happen).
     pub fn set_groups(&mut self, groups: &[Group]) -> Res<()> {
         // SSLNamedGroup is a different size to Group, so copy one by one.
@@ -461,9 +469,21 @@ impl SecretAgent {
         })
     }
 
+    /// Set the number of additional key shares that will be sent in the client hello
+    ///
+    /// # Errors
+    ///
+    /// If the underlying API fails (which shouldn't happen).
+    pub fn send_additional_key_shares(&mut self, count: usize) -> Res<()> {
+        secstatus_to_res(unsafe {
+            ssl::SSL_SendAdditionalKeyShares(self.fd, c_uint::try_from(count)?)
+        })
+    }
+
     /// Set TLS options.
     ///
     /// # Errors
+    ///
     /// Returns an error if the option or option value is invalid; i.e., never.
     pub fn set_option(&mut self, opt: ssl::Opt, value: bool) -> Res<()> {
         opt.set(self.fd, value)
@@ -472,6 +492,7 @@ impl SecretAgent {
     /// Enable 0-RTT.
     ///
     /// # Errors
+    ///
     /// See `set_option`.
     pub fn enable_0rtt(&mut self) -> Res<()> {
         self.set_option(ssl::Opt::EarlyData, true)
@@ -480,6 +501,7 @@ impl SecretAgent {
     /// Disable the `EndOfEarlyData` message.
     ///
     /// # Errors
+    ///
     /// See `set_option`.
     pub fn disable_end_of_early_data(&mut self) -> Res<()> {
         self.set_option(ssl::Opt::SuppressEndOfEarlyData, true)
@@ -493,8 +515,11 @@ impl SecretAgent {
     /// 255 octets in length.
     ///
     /// # Errors
+    ///
     /// This should always panic rather than return an error.
+    ///
     /// # Panics
+    ///
     /// If any of the provided `protocols` are more than 255 bytes long.
     ///
     /// [RFC7301]: https://datatracker.ietf.org/doc/html/rfc7301
@@ -539,11 +564,12 @@ impl SecretAgent {
 
     /// Install an extension handler.
     ///
-    /// This can be called multiple times with different values for `ext`.  The handler is provided as
-    /// `Rc<RefCell<dyn T>>` so that the caller is able to hold a reference to the handler and later
-    /// access any state that it accumulates.
+    /// This can be called multiple times with different values for `ext`.  The handler is provided
+    /// as `Rc<RefCell<dyn T>>` so that the caller is able to hold a reference to the handler
+    /// and later access any state that it accumulates.
     ///
     /// # Errors
+    ///
     /// When the extension handler can't be successfully installed.
     pub fn extension_handler(
         &mut self,
@@ -587,6 +613,7 @@ impl SecretAgent {
     /// Calling this function collects all the relevant information.
     ///
     /// # Errors
+    ///
     /// When the underlying socket functions fail.
     pub fn preinfo(&self) -> Res<SecretAgentPreInfo> {
         SecretAgentPreInfo::new(self.fd)
@@ -605,7 +632,9 @@ impl SecretAgent {
     }
 
     /// Call this function to mark the peer as authenticated.
+    ///
     /// # Panics
+    ///
     /// If the handshake doesn't need to be authenticated.
     pub fn authenticated(&mut self, status: AuthenticationStatus) {
         assert!(self.state.authentication_needed());
@@ -654,6 +683,7 @@ impl SecretAgent {
     /// function if you want to proceed, because this will mark the certificate as OK.
     ///
     /// # Errors
+    ///
     /// When the handshake fails this returns an error.
     pub fn handshake(&mut self, now: Instant, input: &[u8]) -> Res<Vec<u8>> {
         self.now.set(now)?;
@@ -690,6 +720,7 @@ impl SecretAgent {
     /// If you send data from multiple epochs, you might end up being sad.
     ///
     /// # Errors
+    ///
     /// When the handshake fails this returns an error.
     pub fn handshake_raw(&mut self, now: Instant, input: Option<Record>) -> Res<RecordList> {
         self.now.set(now)?;
@@ -717,6 +748,7 @@ impl SecretAgent {
     }
 
     /// # Panics
+    ///
     /// If setup fails.
     #[allow(unknown_lints, clippy::branches_sharing_code)]
     pub fn close(&mut self) {
@@ -822,6 +854,7 @@ impl Client {
     /// Create a new client agent.
     ///
     /// # Errors
+    ///
     /// Errors returned if the socket can't be created or configured.
     pub fn new(server_name: impl Into<String>, grease: bool) -> Res<Self> {
         let server_name = server_name.into();
@@ -911,6 +944,7 @@ impl Client {
     /// Enable resumption, using a token previously provided.
     ///
     /// # Errors
+    ///
     /// Error returned when the resumption token is invalid or
     /// the socket is not able to use the value.
     pub fn enable_resumption(&mut self, token: impl AsRef<[u8]>) -> Res<()> {
@@ -934,6 +968,7 @@ impl Client {
     /// ECH greasing.  When that is done, there is no need to look for `EchRetry`
     ///
     /// # Errors
+    ///
     /// Error returned when the configuration is invalid.
     pub fn enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
         let config = ech_config_list.as_ref();
@@ -986,7 +1021,8 @@ pub enum ZeroRttCheckResult {
     Fail,
 }
 
-/// A `ZeroRttChecker` is used by the agent to validate the application token (as provided by `send_ticket`)
+/// A `ZeroRttChecker` is used by the agent to validate the application token (as provided by
+/// `send_ticket`)
 pub trait ZeroRttChecker: std::fmt::Debug + std::marker::Unpin {
     fn check(&self, token: &[u8]) -> ZeroRttCheckResult;
 }
@@ -1027,6 +1063,7 @@ impl Server {
     /// Create a new server agent.
     ///
     /// # Errors
+    ///
     /// Errors returned when NSS fails.
     pub fn new(certificates: &[impl AsRef<str>]) -> Res<Self> {
         let mut agent = SecretAgent::new()?;
@@ -1080,7 +1117,8 @@ impl Server {
                 ssl::SSLHelloRetryRequestAction::ssl_hello_retry_reject_0rtt
             }
             ZeroRttCheckResult::HelloRetryRequest(tok) => {
-                // Don't bother propagating errors from this, because it should be caught in testing.
+                // Don't bother propagating errors from this, because it should be caught in
+                // testing.
                 assert!(tok.len() <= usize::try_from(retry_token_max).unwrap());
                 let slc = std::slice::from_raw_parts_mut(retry_token, tok.len());
                 slc.copy_from_slice(&tok);
@@ -1094,6 +1132,7 @@ impl Server {
     /// via the Deref implementation on Server.
     ///
     /// # Errors
+    ///
     /// Returns an error if the underlying NSS functions fail.
     pub fn enable_0rtt(
         &mut self,
@@ -1121,6 +1160,7 @@ impl Server {
     /// The records that are sent are captured and returned.
     ///
     /// # Errors
+    ///
     /// If NSS is unable to send a ticket, or if this agent is incorrectly configured.
     pub fn send_ticket(&mut self, now: Instant, extra: &[u8]) -> Res<RecordList> {
         self.agent.now.set(now)?;
@@ -1136,6 +1176,7 @@ impl Server {
     /// Enable encrypted client hello (ECH).
     ///
     /// # Errors
+    ///
     /// Fails when NSS cannot create a key pair.
     pub fn enable_ech(
         &mut self,

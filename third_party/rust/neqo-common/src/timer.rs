@@ -4,9 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-use std::mem;
-use std::time::{Duration, Instant};
+use std::{
+    convert::TryFrom,
+    mem,
+    time::{Duration, Instant},
+};
 
 /// Internal structure for a timer item.
 struct TimerItem<T> {
@@ -21,10 +23,10 @@ impl<T> TimerItem<T> {
 }
 
 /// A timer queue.
-/// This uses a classic timer wheel arrangement, with some characteristics that might be considered peculiar.
-/// Each slot in the wheel is sorted (complexity O(N) insertions, but O(logN) to find cut points).
-/// Time is relative, the wheel has an origin time and it is unable to represent times that are more than
-/// `granularity * capacity` past that time.
+/// This uses a classic timer wheel arrangement, with some characteristics that might be considered
+/// peculiar. Each slot in the wheel is sorted (complexity O(N) insertions, but O(logN) to find cut
+/// points). Time is relative, the wheel has an origin time and it is unable to represent times that
+/// are more than `granularity * capacity` past that time.
 pub struct Timer<T> {
     items: Vec<Vec<TimerItem<T>>>,
     now: Instant,
@@ -34,7 +36,9 @@ pub struct Timer<T> {
 
 impl<T> Timer<T> {
     /// Construct a new wheel at the given granularity, starting at the given time.
+    ///
     /// # Panics
+    ///
     /// When `capacity` is too large to fit in `u32` or `granularity` is zero.
     pub fn new(now: Instant, granularity: Duration, capacity: usize) -> Self {
         assert!(u32::try_from(capacity).is_ok());
@@ -109,7 +113,9 @@ impl<T> Timer<T> {
     }
 
     /// Asserts if the time given is in the past or too far in the future.
+    ///
     /// # Panics
+    ///
     /// When `time` is in the past relative to previous calls.
     pub fn add(&mut self, time: Instant, item: T) {
         assert!(time >= self.now);
@@ -241,8 +247,9 @@ impl<T> Timer<T> {
 
 #[cfg(test)]
 mod test {
-    use super::{Duration, Instant, Timer};
     use lazy_static::lazy_static;
+
+    use super::{Duration, Instant, Timer};
 
     lazy_static! {
         static ref NOW: Instant = Instant::now();

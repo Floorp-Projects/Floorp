@@ -31,6 +31,7 @@ pub struct NeqoQlogShared {
 
 impl NeqoQlog {
     /// Create an enabled `NeqoQlog` configuration.
+    ///
     /// # Errors
     ///
     /// Will return `qlog::Error` if cannot write to the new log.
@@ -46,6 +47,11 @@ impl NeqoQlog {
                 qlog_path: qlog_path.as_ref().to_owned(),
             }))),
         })
+    }
+
+    #[must_use]
+    pub fn inner(&self) -> Rc<RefCell<Option<NeqoQlogShared>>> {
+        Rc::clone(&self.inner)
     }
 
     /// Create a disabled `NeqoQlog` configuration.
@@ -142,5 +148,41 @@ pub fn new_trace(role: Role) -> qlog::TraceSeq {
             },
             time_format: Some("relative".to_string()),
         }),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use qlog::events::Event;
+    use test_fixture::EXPECTED_LOG_HEADER;
+
+    const EV_DATA: qlog::events::EventData =
+        qlog::events::EventData::SpinBitUpdated(qlog::events::connectivity::SpinBitUpdated {
+            state: true,
+        });
+
+    const EXPECTED_LOG_EVENT: &str = concat!(
+        "\u{1e}",
+        r#"{"time":0.0,"name":"connectivity:spin_bit_updated","data":{"state":true}}"#,
+        "\n"
+    );
+
+    #[test]
+    fn new_neqo_qlog() {
+        let (_log, contents) = test_fixture::new_neqo_qlog();
+        assert_eq!(contents.to_string(), EXPECTED_LOG_HEADER);
+    }
+
+    #[test]
+    fn add_event() {
+        let (mut log, contents) = test_fixture::new_neqo_qlog();
+        log.add_event(|| Some(Event::with_time(1.1, EV_DATA)));
+        assert_eq!(
+            contents.to_string(),
+            format!(
+                "{EXPECTED_LOG_HEADER}{e}",
+                e = EXPECTED_LOG_EVENT.replace("\"time\":0.0,", "\"time\":1.1,")
+            )
+        );
     }
 }

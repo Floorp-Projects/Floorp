@@ -4,6 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    convert::{TryFrom, TryInto},
+    fmt,
+    ops::{Deref, DerefMut},
+    os::raw::{c_char, c_uint},
+    ptr::null_mut,
+};
+
 use crate::{
     constants::{Cipher, Version},
     err::Res,
@@ -11,14 +19,6 @@ use crate::{
     p11::{PK11SymKey, SymKey},
     scoped_ptr,
     ssl::{self, PRUint16, PRUint64, PRUint8, SSLAeadContext},
-};
-
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt,
-    ops::{Deref, DerefMut},
-    os::raw::{c_char, c_uint},
-    ptr::null_mut,
 };
 
 experimental_api!(SSL_MakeAead(
@@ -62,6 +62,7 @@ impl RealAead {
     /// Create a new AEAD based on the indicated TLS version and cipher suite.
     ///
     /// # Errors
+    ///
     /// Returns `Error` when the supporting NSS functions fail.
     pub fn new(
         _fuzzing: bool,
@@ -107,6 +108,7 @@ impl RealAead {
     /// the value provided in `Aead::expansion`.
     ///
     /// # Errors
+    ///
     /// If the input can't be protected or any input is too large for NSS.
     pub fn encrypt<'a>(
         &self,
@@ -139,6 +141,7 @@ impl RealAead {
     /// the final result will be shorter.
     ///
     /// # Errors
+    ///
     /// If the input isn't authenticated or any input is too large for NSS.
     pub fn decrypt<'a>(
         &self,

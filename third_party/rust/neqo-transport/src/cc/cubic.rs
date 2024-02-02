@@ -6,12 +6,15 @@
 
 #![deny(clippy::pedantic)]
 
-use std::fmt::{self, Display};
-use std::time::{Duration, Instant};
+use std::{
+    convert::TryFrom,
+    fmt::{self, Display},
+    time::{Duration, Instant},
+};
+
+use neqo_common::qtrace;
 
 use crate::cc::{classic_cc::WindowAdjustment, MAX_DATAGRAM_SIZE_F64};
-use neqo_common::qtrace;
-use std::convert::TryFrom;
 
 // CUBIC congestion control
 
@@ -39,9 +42,9 @@ const EXPONENTIAL_GROWTH_REDUCTION: f64 = 2.0;
 /// This has the effect of reducing larger values to `1<<53`.
 /// If you have a congestion window that large, something is probably wrong.
 fn convert_to_f64(v: usize) -> f64 {
-    let mut f_64 = f64::try_from(u32::try_from(v >> 21).unwrap_or(u32::MAX)).unwrap();
+    let mut f_64 = f64::from(u32::try_from(v >> 21).unwrap_or(u32::MAX));
     f_64 *= 2_097_152.0; // f_64 <<= 21
-    f_64 += f64::try_from(u32::try_from(v & 0x1f_ffff).unwrap()).unwrap();
+    f_64 += f64::from(u32::try_from(v & 0x1f_ffff).unwrap());
     f_64
 }
 
@@ -163,8 +166,8 @@ impl WindowAdjustment for Cubic {
         // of `MAX_DATAGRAM_SIZE` to match the increase of `target - cwnd / cwnd` as defined
         // in the specification (Sections 4.4 and 4.5).
         // The amount of data required therefore reduces asymptotically as the target increases.
-        // If the target is not significantly higher than the congestion window, require a very large
-        // amount of acknowledged data (effectively block increases).
+        // If the target is not significantly higher than the congestion window, require a very
+        // large amount of acknowledged data (effectively block increases).
         let mut acked_to_increase =
             MAX_DATAGRAM_SIZE_F64 * curr_cwnd_f64 / (target_cwnd - curr_cwnd_f64).max(1.0);
 
@@ -178,9 +181,10 @@ impl WindowAdjustment for Cubic {
     fn reduce_cwnd(&mut self, curr_cwnd: usize, acked_bytes: usize) -> (usize, usize) {
         let curr_cwnd_f64 = convert_to_f64(curr_cwnd);
         // Fast Convergence
-        // If congestion event occurs before the maximum congestion window before the last congestion event,
-        // we reduce the the maximum congestion window and thereby W_max.
-        // check cwnd + MAX_DATAGRAM_SIZE instead of cwnd because with cwnd in bytes, cwnd may be slightly off.
+        // If congestion event occurs before the maximum congestion window before the last
+        // congestion event, we reduce the the maximum congestion window and thereby W_max.
+        // check cwnd + MAX_DATAGRAM_SIZE instead of cwnd because with cwnd in bytes, cwnd may be
+        // slightly off.
         self.last_max_cwnd = if curr_cwnd_f64 + MAX_DATAGRAM_SIZE_F64 < self.last_max_cwnd {
             curr_cwnd_f64 * CUBIC_FAST_CONVERGENCE
         } else {

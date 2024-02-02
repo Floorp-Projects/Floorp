@@ -7,20 +7,23 @@
 // Congestion control
 #![deny(clippy::pedantic)]
 
-use crate::{path::PATH_MTU_V6, tracking::SentPacket, Error};
-use neqo_common::qlog::NeqoQlog;
-
 use std::{
     fmt::{Debug, Display},
     str::FromStr,
     time::{Duration, Instant},
 };
 
+use neqo_common::qlog::NeqoQlog;
+
+use crate::{path::PATH_MTU_V6, rtt::RttEstimate, tracking::SentPacket, Error};
+
 mod classic_cc;
 mod cubic;
 mod new_reno;
 
-pub use classic_cc::{ClassicCongestionControl, CWND_INITIAL, CWND_INITIAL_PKTS, CWND_MIN};
+pub use classic_cc::ClassicCongestionControl;
+#[cfg(test)]
+pub use classic_cc::{CWND_INITIAL, CWND_INITIAL_PKTS, CWND_MIN};
 pub use cubic::Cubic;
 pub use new_reno::NewReno;
 
@@ -40,7 +43,7 @@ pub trait CongestionControl: Display + Debug {
     #[must_use]
     fn cwnd_avail(&self) -> usize;
 
-    fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], min_rtt: Duration, now: Instant);
+    fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], rtt_est: &RttEstimate, now: Instant);
 
     /// Returns true if the congestion window was reduced.
     fn on_packets_lost(

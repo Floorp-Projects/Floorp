@@ -1,8 +1,9 @@
-use crate::{frames::HFrame, Error, Header, Res};
+use std::{convert::TryFrom, fmt};
+
 use neqo_transport::StreamId;
 use sfv::{BareItem, Item, ListEntry, Parser};
-use std::convert::TryFrom;
-use std::fmt;
+
+use crate::{frames::HFrame, Error, Header, Res};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Priority {
@@ -21,6 +22,7 @@ impl Default for Priority {
 
 impl Priority {
     /// # Panics
+    ///
     /// If an invalid urgency (>7 is given)
     #[must_use]
     pub fn new(urgency: u8, incremental: bool) -> Priority {
@@ -44,9 +46,13 @@ impl Priority {
     }
 
     /// Constructs a priority from raw bytes (either a field value of frame content).
+    ///
     /// # Errors
+    ///
     /// When the contained syntax is invalid.
+    ///
     /// # Panics
+    ///
     /// Never, but the compiler is not smart enough to work that out.
     pub fn from_bytes(bytes: &[u8]) -> Res<Priority> {
         let dict = Parser::parse_dictionary(bytes).map_err(|_| Error::HttpFrame)?;
@@ -149,9 +155,9 @@ impl PriorityHandler {
 
 #[cfg(test)]
 mod test {
-    use crate::priority::PriorityHandler;
-    use crate::{HFrame, Priority};
     use neqo_transport::StreamId;
+
+    use crate::{priority::PriorityHandler, HFrame, Priority};
 
     #[test]
     fn priority_updates_ignore_same() {
@@ -183,7 +189,8 @@ mod test {
         let mut p = PriorityHandler::new(false, Priority::new(5, false));
         assert!(p.maybe_update_priority(Priority::new(6, false)));
         assert!(p.maybe_update_priority(Priority::new(7, false)));
-        // updating two times with a different priority -> the last priority update should be in the next frame
+        // updating two times with a different priority -> the last priority update should be in the
+        // next frame
         let expected = HFrame::PriorityUpdateRequest {
             element_id: 4,
             priority: Priority::new(7, false),

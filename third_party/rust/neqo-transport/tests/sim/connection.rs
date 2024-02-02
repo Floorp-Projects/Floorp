@@ -6,17 +6,19 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use super::{Node, Rng};
-use neqo_common::{event::Provider, qdebug, qtrace, Datagram};
-use neqo_crypto::AuthenticationStatus;
-use neqo_transport::{
-    Connection, ConnectionEvent, ConnectionParameters, Output, State, StreamId, StreamType,
-};
 use std::{
     cmp::min,
     fmt::{self, Debug},
     time::Instant,
 };
+
+use neqo_common::{event::Provider, qdebug, qtrace, Datagram};
+use neqo_crypto::AuthenticationStatus;
+use neqo_transport::{
+    Connection, ConnectionEvent, ConnectionParameters, Output, State, StreamId, StreamType,
+};
+
+use super::{Node, Rng};
 
 /// The status of the processing of an event.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -120,7 +122,7 @@ impl Node for ConnectionNode {
     fn process(&mut self, mut d: Option<Datagram>, now: Instant) -> Output {
         _ = self.process_goals(|goal, c| goal.process(c, now));
         loop {
-            let res = self.c.process(d.take(), now);
+            let res = self.c.process(d.take().as_ref(), now);
 
             let mut active = false;
             while let Some(e) = self.c.next_event() {

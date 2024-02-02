@@ -7,13 +7,15 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
+use std::{
+    collections::HashMap,
+    env, fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
+
 use bindgen::Builder;
 use serde_derive::Deserialize;
-use std::collections::HashMap;
-use std::env;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
 
 const BINDINGS_DIR: &str = "bindings";
 const BINDINGS_CONFIG: &str = "bindings.toml";
@@ -60,7 +62,8 @@ fn is_debug() -> bool {
 // On windows, this doesn't just work, you have to set LIBCLANG_PATH.
 // Rather than download the 400Mb+ files, like gecko does, let's just reuse their work.
 fn setup_clang() {
-    if env::consts::OS != "windows" {
+    // If this isn't Windows, or we're in CI, then we don't need to do anything.
+    if env::consts::OS != "windows" || env::var("GITHUB_WORKFLOW").unwrap() == "CI" {
         return;
     }
     println!("rerun-if-env-changed=LIBCLANG_PATH");
@@ -130,6 +133,11 @@ fn nss_dir() -> PathBuf {
 }
 
 fn get_bash() -> PathBuf {
+    // If BASH is set, use that.
+    if let Ok(bash) = env::var("BASH") {
+        return PathBuf::from(bash);
+    }
+
     // When running under MOZILLABUILD, we need to make sure not to invoke
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
@@ -257,7 +265,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
             builder = builder.clang_arg("-DANDROID");
         }
         if bindings.cplusplus {
-            builder = builder.clang_args(&["-x", "c++", "-std=c++11"]);
+            builder = builder.clang_args(&["-x", "c++", "-std=c++14"]);
         }
     }
 

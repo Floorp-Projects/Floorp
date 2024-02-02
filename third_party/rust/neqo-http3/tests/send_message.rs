@@ -28,8 +28,8 @@ lazy_static! {
 fn exchange_packets(client: &mut Http3Client, server: &mut Http3Server) {
     let mut out = None;
     loop {
-        out = client.process(out, now()).dgram();
-        out = server.process(out, now()).dgram();
+        out = client.process(out.as_ref(), now()).dgram();
+        out = server.process(out.as_ref(), now()).dgram();
         if out.is_none() {
             break;
         }

@@ -11,30 +11,38 @@
 
 [package]
 edition = "2018"
-rust-version = "1.65.0"
+rust-version = "1.70.0"
 name = "neqo-common"
-version = "0.6.8"
+version = "0.7.0"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 build = "build.rs"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-lazy_static = "1.3.0"
-qlog = "0.9.0"
+enum-map = "2.7"
+lazy_static = "1.4"
 
 [dependencies.env_logger]
 version = "0.10"
 default-features = false
 
 [dependencies.log]
-version = "0.4.0"
+version = "0.4"
 default-features = false
 
+[dependencies.qlog]
+git = "https://github.com/cloudflare/quiche"
+rev = "09ea4b244096a013071cfe2175bbf2945fb7f8d1"
+
 [dependencies.time]
-version = "=0.3.23"
+version = "0.3.23"
 features = ["formatting"]
 
+[dev-dependencies.test-fixture]
+path = "../test-fixture"
+
 [features]
+ci = []
 deny-warnings = []
 
 [target."cfg(windows)".dependencies.winapi]

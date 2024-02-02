@@ -7,16 +7,14 @@
 // Management of the peer's ack rate.
 #![deny(clippy::pedantic)]
 
-use crate::connection::params::ACK_RATIO_SCALE;
-use crate::frame::FRAME_TYPE_ACK_FREQUENCY;
-use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
-use crate::stats::FrameStats;
+use std::{cmp::max, convert::TryFrom, time::Duration};
 
 use neqo_common::qtrace;
-use std::cmp::max;
-use std::convert::TryFrom;
-use std::time::Duration;
+
+use crate::{
+    connection::params::ACK_RATIO_SCALE, frame::FRAME_TYPE_ACK_FREQUENCY, packet::PacketBuilder,
+    recovery::RecoveryToken, stats::FrameStats,
+};
 
 #[derive(Debug, Clone)]
 pub struct AckRate {

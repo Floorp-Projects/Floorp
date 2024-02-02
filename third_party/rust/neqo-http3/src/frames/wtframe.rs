@@ -4,9 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::{frames::reader::FrameDecoder, Error, Res};
-use neqo_common::{Decoder, Encoder};
 use std::convert::TryFrom;
+
+use neqo_common::{Decoder, Encoder};
+
+use crate::{frames::reader::FrameDecoder, Error, Res};
 
 pub(crate) type WebTransportFrameType = u64;
 

@@ -6,22 +6,22 @@
 
 // This file implements functions necessary for address validation.
 
+use std::{
+    convert::TryFrom,
+    net::{IpAddr, SocketAddr},
+    time::{Duration, Instant},
+};
+
 use neqo_common::{qinfo, qtrace, Decoder, Encoder, Role};
 use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
     selfencrypt::SelfEncrypt,
 };
-
-use crate::cid::ConnectionId;
-use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
-use crate::stats::FrameStats;
-use crate::{Error, Res};
-
 use smallvec::SmallVec;
-use std::convert::TryFrom;
-use std::net::{IpAddr, SocketAddr};
-use std::time::{Duration, Instant};
+
+use crate::{
+    cid::ConnectionId, packet::PacketBuilder, recovery::RecoveryToken, stats::FrameStats, Res,
+};
 
 /// A prefix we add to Retry tokens to distinguish them from NEW_TOKEN tokens.
 const TOKEN_IDENTIFIER_RETRY: &[u8] = &[0x52, 0x65, 0x74, 0x72, 0x79];
@@ -433,9 +433,6 @@ impl NewTokenSender {
 
                 builder.encode_varint(crate::frame::FRAME_TYPE_NEW_TOKEN);
                 builder.encode_vvec(&t.token);
-                if builder.len() > builder.limit() {
-                    return Err(Error::InternalError(7));
-                }
 
                 tokens.push(RecoveryToken::NewToken(t.seqno));
                 stats.new_token += 1;
@@ -460,8 +457,9 @@ impl NewTokenSender {
 
 #[cfg(test)]
 mod tests {
-    use super::NewTokenState;
     use neqo_common::Role;
+
+    use super::NewTokenState;
 
     const ONE: &[u8] = &[1, 2, 3];
     const TWO: &[u8] = &[4, 5];

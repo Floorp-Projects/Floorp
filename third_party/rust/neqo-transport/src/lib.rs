@@ -16,7 +16,6 @@ mod cc;
 mod cid;
 mod connection;
 mod crypto;
-mod dump;
 mod events;
 mod fc;
 mod frame;
@@ -26,6 +25,9 @@ mod path;
 mod qlog;
 mod quic_datagrams;
 mod recovery;
+#[cfg(feature = "bench")]
+pub mod recv_stream;
+#[cfg(not(feature = "bench"))]
 mod recv_stream;
 mod rtt;
 mod send_stream;
@@ -38,26 +40,29 @@ pub mod tparams;
 mod tracking;
 pub mod version;
 
-pub use self::cc::CongestionControlAlgorithm;
-pub use self::cid::{
-    ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
-    EmptyConnectionIdGenerator, RandomConnectionIdGenerator,
+pub use self::{
+    cc::CongestionControlAlgorithm,
+    cid::{
+        ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
+        EmptyConnectionIdGenerator, RandomConnectionIdGenerator,
+    },
+    connection::{
+        params::{ConnectionParameters, ACK_RATIO_SCALE},
+        Connection, Output, State, ZeroRttState,
+    },
+    events::{ConnectionEvent, ConnectionEvents},
+    frame::CloseError,
+    quic_datagrams::DatagramTracking,
+    recv_stream::{RecvStreamStats, RECV_BUFFER_SIZE},
+    send_stream::{SendStreamStats, SEND_BUFFER_SIZE},
+    stats::Stats,
+    stream_id::{StreamId, StreamType},
+    version::Version,
 };
-pub use self::connection::{
-    params::ConnectionParameters, params::ACK_RATIO_SCALE, Connection, Output, State, ZeroRttState,
-};
-pub use self::events::{ConnectionEvent, ConnectionEvents};
-pub use self::frame::CloseError;
-pub use self::quic_datagrams::DatagramTracking;
-pub use self::stats::Stats;
-pub use self::stream_id::{StreamId, StreamType};
-pub use self::version::Version;
-
-pub use self::recv_stream::{RecvStreamStats, RECV_BUFFER_SIZE};
-pub use self::send_stream::{SendStreamStats, SEND_BUFFER_SIZE};
 
 pub type TransportError = u64;
 const ERROR_APPLICATION_CLOSE: TransportError = 12;
+const ERROR_CRYPTO_BUFFER_EXCEEDED: TransportError = 13;
 const ERROR_AEAD_LIMIT_REACHED: TransportError = 15;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Eq)]
@@ -65,7 +70,7 @@ pub enum Error {
     NoError,
     // Each time tihe error is return a different parameter is supply.
     // This will be use to distinguish each occurance of this error.
-    InternalError(u16),
+    InternalError,
     ConnectionRefused,
     FlowControlError,
     StreamLimitError,
@@ -76,6 +81,7 @@ pub enum Error {
     ProtocolViolation,
     InvalidToken,
     ApplicationError,
+    CryptoBufferExceeded,
     CryptoError(CryptoError),
     QlogError,
     CryptoAlert(u8),
@@ -142,6 +148,7 @@ impl Error {
             Self::KeysExhausted => ERROR_AEAD_LIMIT_REACHED,
             Self::ApplicationError => ERROR_APPLICATION_CLOSE,
             Self::NoAvailablePath => 16,
+            Self::CryptoBufferExceeded => ERROR_CRYPTO_BUFFER_EXCEEDED,
             Self::CryptoAlert(a) => 0x100 + u64::from(*a),
             // As we have a special error code for ECH fallbacks, we lose the alert.
             // Send the server "ech_required" directly.
@@ -176,7 +183,7 @@ impl From<std::num::TryFromIntError> for Error {
 }
 
 impl ::std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn ::std::error::Error + 'static)> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::CryptoError(e) => Some(e),
             _ => None,
@@ -186,7 +193,7 @@ impl ::std::error::Error for Error {
 
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "Transport error: {:?}", self)
+        write!(f, "Transport error: {self:?}")
     }
 }
 
@@ -202,7 +209,7 @@ impl ConnectionError {
     pub fn app_code(&self) -> Option<AppError> {
         match self {
             Self::Application(e) => Some(*e),
-            _ => None,
+            Self::Transport(_) => None,
         }
     }
 }

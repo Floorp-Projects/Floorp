@@ -7,7 +7,7 @@
 #![deny(warnings)]
 
 use base64::prelude::*;
-use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header};
+use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header, IpTos};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
     Error, Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent,
@@ -193,7 +193,7 @@ impl Http3TestServer {
 
 impl HttpServer for Http3TestServer {
     fn process(&mut self, dgram: Option<Datagram>) -> Output {
-        self.server.process(dgram, Instant::now())
+        self.server.process(dgram.as_ref(), Instant::now())
     }
 
     fn process_events(&mut self) {
@@ -633,7 +633,7 @@ impl HttpServer for Http3TestServer {
 
 impl HttpServer for Server {
     fn process(&mut self, dgram: Option<Datagram>) -> Output {
-        self.process(dgram, Instant::now())
+        self.process(dgram.as_ref(), Instant::now())
     }
 
     fn process_events(&mut self) {
@@ -874,7 +874,7 @@ impl Http3ProxyServer {
 
 impl HttpServer for Http3ProxyServer {
     fn process(&mut self, dgram: Option<Datagram>) -> Output {
-        self.server.process(dgram, Instant::now())
+        self.server.process(dgram.as_ref(), Instant::now())
     }
 
     fn process_events(&mut self) {
@@ -1063,7 +1063,13 @@ fn read_dgram(
         eprintln!("zero length datagram received?");
         Ok(None)
     } else {
-        Ok(Some(Datagram::new(remote_addr, *local_address, &buf[..sz])))
+        Ok(Some(Datagram::new(
+            remote_addr,
+            *local_address,
+            IpTos::default(),
+            None,
+            &buf[..sz],
+        )))
     }
 }
 

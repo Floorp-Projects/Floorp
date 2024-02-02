@@ -4,6 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    convert::TryFrom,
+    os::raw::{c_char, c_uint},
+    ptr::null_mut,
+};
+
 use crate::{
     constants::{
         Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
@@ -14,12 +20,6 @@ use crate::{
         random, Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
         CKM_HKDF_DERIVE, CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
     },
-};
-
-use std::{
-    convert::TryFrom,
-    os::raw::{c_char, c_uint},
-    ptr::null_mut,
 };
 
 experimental_api!(SSL_HkdfExtract(
@@ -54,6 +54,7 @@ fn key_size(version: Version, cipher: Cipher) -> Res<usize> {
 /// Generate a random key of the right size for the given suite.
 ///
 /// # Errors
+///
 /// Only if NSS fails.
 pub fn generate_key(version: Version, cipher: Cipher) -> Res<SymKey> {
     import_key(version, &random(key_size(version, cipher)?))
@@ -62,12 +63,14 @@ pub fn generate_key(version: Version, cipher: Cipher) -> Res<SymKey> {
 /// Import a symmetric key for use with HKDF.
 ///
 /// # Errors
+///
 /// Errors returned if the key buffer is an incompatible size or the NSS functions fail.
 pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
     if version != TLS_VERSION_1_3 {
         return Err(Error::UnsupportedVersion);
     }
     let slot = Slot::internal()?;
+    #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
     let key_ptr = unsafe {
         PK11_ImportDataKey(
             *slot,
@@ -84,6 +87,7 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
 /// Extract a PRK from the given salt and IKM using the algorithm defined in RFC 5869.
 ///
 /// # Errors
+///
 /// Errors returned if inputs are too large or the NSS functions fail.
 pub fn extract(
     version: Version,
@@ -103,6 +107,7 @@ pub fn extract(
 /// Expand a PRK using the HKDF-Expand-Label function defined in RFC 8446.
 ///
 /// # Errors
+///
 /// Errors returned if inputs are too large or the NSS functions fail.
 pub fn expand_label(
     version: Version,

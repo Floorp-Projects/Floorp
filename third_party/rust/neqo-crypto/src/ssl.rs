@@ -15,10 +15,12 @@
     clippy::borrow_as_ptr
 )]
 
-use crate::constants::Epoch;
-use crate::err::{secstatus_to_res, Res};
-
 use std::os::raw::{c_uint, c_void};
+
+use crate::{
+    constants::Epoch,
+    err::{secstatus_to_res, Res},
+};
 
 include!(concat!(env!("OUT_DIR"), "/nss_ssl.rs"));
 mod SSLOption {
