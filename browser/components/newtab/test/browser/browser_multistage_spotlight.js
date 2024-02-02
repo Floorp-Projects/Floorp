@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Spotlight } = ChromeUtils.import(
-  "resource://activity-stream/lib/Spotlight.jsm"
+const { Spotlight } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/Spotlight.sys.mjs"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/PanelTestProvider.sys.mjs"

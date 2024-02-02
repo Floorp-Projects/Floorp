@@ -14,9 +14,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+  Spotlight: "resource://activity-stream/lib/Spotlight.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
   CFRPageActions: "resource:///modules/asrouter/CFRPageActions.jsm",
 });
 
