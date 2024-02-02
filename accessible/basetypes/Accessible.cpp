@@ -572,11 +572,13 @@ nsStaticAtom* Accessible::ComputedARIARole() const {
       (roleMap->roleRule == kUseNativeRole || roleMap->IsOfType(eLandmark) ||
        roleMap->roleAtom == nsGkAtoms::alertdialog ||
        roleMap->roleAtom == nsGkAtoms::feed ||
-       roleMap->roleAtom == nsGkAtoms::rowgroup ||
-       roleMap->roleAtom == nsGkAtoms::searchbox)) {
+       roleMap->roleAtom == nsGkAtoms::rowgroup)) {
     // Explicit ARIA role (e.g. specified via the role attribute) which does not
     // map to a unique Gecko role.
     return roleMap->roleAtom;
+  }
+  if (IsSearchbox()) {
+    return nsGkAtoms::searchbox;
   }
   role geckoRole = Role();
   if (geckoRole == roles::LANDMARK) {
