@@ -24,12 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Screenshots",
-  "resource://activity-stream/lib/Screenshots.jsm"
-);
 
 const HIGHLIGHTS_MAX_LENGTH = 16;
 

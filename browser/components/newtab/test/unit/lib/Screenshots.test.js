@@ -1,6 +1,6 @@
 "use strict";
 import { GlobalOverrider } from "test/unit/utils";
-import { Screenshots } from "lib/Screenshots.jsm";
+import { Screenshots } from "lib/Screenshots.sys.mjs";
 
 const URL = "foo.com";
 const FAKE_THUMBNAIL_PATH = "fake/path/thumb.jpg";
