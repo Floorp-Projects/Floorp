@@ -34,17 +34,17 @@ class EnumSet {
 
   constexpr EnumSet() : mBitField() {}
 
-  constexpr MOZ_IMPLICIT EnumSet(T aEnum) : mBitField(bitFor(aEnum)) {}
+  constexpr MOZ_IMPLICIT EnumSet(T aEnum) : mBitField(BitFor(aEnum)) {}
 
   constexpr EnumSet(T aEnum1, T aEnum2)
-      : mBitField(bitFor(aEnum1) | bitFor(aEnum2)) {}
+      : mBitField(BitFor(aEnum1) | BitFor(aEnum2)) {}
 
   constexpr EnumSet(T aEnum1, T aEnum2, T aEnum3)
-      : mBitField(bitFor(aEnum1) | bitFor(aEnum2) | bitFor(aEnum3)) {}
+      : mBitField(BitFor(aEnum1) | BitFor(aEnum2) | BitFor(aEnum3)) {}
 
   constexpr EnumSet(T aEnum1, T aEnum2, T aEnum3, T aEnum4)
-      : mBitField(bitFor(aEnum1) | bitFor(aEnum2) | bitFor(aEnum3) |
-                  bitFor(aEnum4)) {}
+      : mBitField(BitFor(aEnum1) | BitFor(aEnum2) | BitFor(aEnum3) |
+                  BitFor(aEnum4)) {}
 
   constexpr MOZ_IMPLICIT EnumSet(std::initializer_list<T> list) : mBitField() {
     for (auto value : list) {
@@ -57,7 +57,7 @@ class EnumSet {
 
   constexpr EnumSet& operator=(const EnumSet& aEnumSet) {
     mBitField = aEnumSet.mBitField;
-    incVersion();
+    IncVersion();
     return *this;
   }
 #endif
@@ -66,8 +66,8 @@ class EnumSet {
    * Add an element
    */
   constexpr void operator+=(T aEnum) {
-    incVersion();
-    mBitField |= bitFor(aEnum);
+    IncVersion();
+    mBitField |= BitFor(aEnum);
   }
 
   /**
@@ -83,7 +83,7 @@ class EnumSet {
    * Union
    */
   void operator+=(const EnumSet& aEnumSet) {
-    incVersion();
+    IncVersion();
     mBitField |= aEnumSet.mBitField;
   }
 
@@ -100,8 +100,8 @@ class EnumSet {
    * Remove an element
    */
   void operator-=(T aEnum) {
-    incVersion();
-    mBitField &= ~(bitFor(aEnum));
+    IncVersion();
+    mBitField &= ~(BitFor(aEnum));
   }
 
   /**
@@ -117,7 +117,7 @@ class EnumSet {
    * Remove a set of elements
    */
   void operator-=(const EnumSet& aEnumSet) {
-    incVersion();
+    IncVersion();
     mBitField &= ~(aEnumSet.mBitField);
   }
 
@@ -134,7 +134,7 @@ class EnumSet {
    * Clear
    */
   void clear() {
-    incVersion();
+    IncVersion();
     mBitField = Serialized();
   }
 
@@ -142,7 +142,7 @@ class EnumSet {
    * Intersection
    */
   void operator&=(const EnumSet& aEnumSet) {
-    incVersion();
+    IncVersion();
     mBitField &= aEnumSet.mBitField;
   }
 
@@ -165,7 +165,7 @@ class EnumSet {
   /**
    * Equality
    */
-  bool operator==(T aEnum) const { return mBitField == bitFor(aEnum); }
+  bool operator==(T aEnum) const { return mBitField == BitFor(aEnum); }
 
   /**
    * Not equal
@@ -183,7 +183,7 @@ class EnumSet {
    * Test is an element is contained in the set.
    */
   bool contains(T aEnum) const {
-    return static_cast<bool>(mBitField & bitFor(aEnum));
+    return static_cast<bool>(mBitField & BitFor(aEnum));
   }
 
   /**
@@ -219,7 +219,7 @@ class EnumSet {
   Serialized serialize() const { return mBitField; }
 
   void deserialize(Serialized aValue) {
-    incVersion();
+    IncVersion();
     mBitField = aValue;
   }
 
@@ -299,7 +299,7 @@ class EnumSet {
   ConstIterator end() const { return ConstIterator(*this, kMaxBits); }
 
  private:
-  constexpr static Serialized bitFor(T aEnum) {
+  constexpr static Serialized BitFor(T aEnum) {
     auto bitNumber = static_cast<size_t>(aEnum);
     MOZ_DIAGNOSTIC_ASSERT(bitNumber < kMaxBits);
     if constexpr (std::is_unsigned_v<Serialized>) {
@@ -311,7 +311,7 @@ class EnumSet {
     }
   }
 
-  constexpr void incVersion() {
+  constexpr void IncVersion() {
 #ifdef DEBUG
     mVersion++;
 #endif
