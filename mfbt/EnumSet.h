@@ -182,9 +182,7 @@ class EnumSet {
   /**
    * Test is an element is contained in the set.
    */
-  bool contains(T aEnum) const {
-    return static_cast<bool>(mBitField & BitFor(aEnum));
-  }
+  bool contains(T aEnum) const { return HasBitFor(aEnum); }
 
   /**
    * Test if a set is contained in the set.
@@ -241,7 +239,7 @@ class EnumSet {
       mVersion = mSet->mVersion;
 #endif
       MOZ_ASSERT(aPos <= kMaxBits);
-      if (aPos != kMaxBits && !mSet->contains(T(mPos))) {
+      if (aPos != kMaxBits && !mSet->HasBitAt(mPos)) {
         ++*this;
       }
     }
@@ -278,7 +276,7 @@ class EnumSet {
     T operator*() const {
       MOZ_ASSERT(mSet);
       MOZ_ASSERT(mPos < kMaxBits);
-      MOZ_ASSERT(mSet->contains(T(mPos)));
+      MOZ_ASSERT(mSet->HasBitAt(mPos));
       checkVersion();
       return T(mPos);
     }
@@ -289,7 +287,7 @@ class EnumSet {
       checkVersion();
       do {
         mPos++;
-      } while (mPos < kMaxBits && !mSet->contains(T(mPos)));
+      } while (mPos < kMaxBits && !mSet->HasBitAt(mPos));
       return *this;
     }
   };
@@ -300,15 +298,28 @@ class EnumSet {
 
  private:
   constexpr static Serialized BitFor(T aEnum) {
-    auto bitNumber = static_cast<size_t>(aEnum);
-    MOZ_DIAGNOSTIC_ASSERT(bitNumber < kMaxBits);
+    const auto pos = static_cast<size_t>(aEnum);
+    return BitAt(pos);
+  }
+
+  constexpr static Serialized BitAt(size_t aPos) {
+    MOZ_DIAGNOSTIC_ASSERT(aPos < kMaxBits);
     if constexpr (std::is_unsigned_v<Serialized>) {
-      return static_cast<Serialized>(Serialized{1} << bitNumber);
+      return static_cast<Serialized>(Serialized{1} << aPos);
     } else {
       Serialized bitField;
-      bitField[bitNumber] = true;
+      bitField[aPos] = true;
       return bitField;
     }
+  }
+
+  constexpr bool HasBitFor(T aEnum) const {
+    const auto pos = static_cast<size_t>(aEnum);
+    return HasBitAt(pos);
+  }
+
+  constexpr bool HasBitAt(size_t aPos) const {
+    return static_cast<bool>(mBitField & BitAt(aPos));
   }
 
   constexpr void IncVersion() {
