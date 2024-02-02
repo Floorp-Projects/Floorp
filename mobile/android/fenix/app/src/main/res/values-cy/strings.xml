@@ -1878,7 +1878,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Gosodwch batrwm cloi dyfais, PIN, neu gyfrinair i ddiogelu eich mewngofnodion a’ch cyfrineiriau sydd wedi’u cadw rhag i rhywun arall sydd â mynediad i’ch dyfais.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Sefydlwch batrwm clo dyfais, PIN, neu gyfrinair i amddiffyn eich dulliau talu a arbedwyd rhag cael mynediad iddynt os oes gan rywun arall eich dyfais.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Gosodwch batrwm clo dyfais, PIN, neu gyfrinair i ddiogelu eich dulliau talu rhag i rywun arall sydd â\'ch dyfais gael mynediad iddyn nhw.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Gosod nawr</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2041,11 +2041,11 @@
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Maes testun golygadwy cyfeiriad gwe’r mewngofnodi.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Y maes testun y gellir ei olygu ar gyfer cyfeiriad y wefan.</string>
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Maes testun golygadwy y wefan.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Maes testun golygadwy enw defnyddiwr y mewngofnodi.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Y maes testun y gellir ei olygu ar gyfer yr enw defnyddiwr.</string>
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Maes testun golygadwy yr enw defnyddiwr.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Maes testun golygadwy cyfrinair y mewngofnodi.</string>
     <!--  The editable text field for a login's password. -->

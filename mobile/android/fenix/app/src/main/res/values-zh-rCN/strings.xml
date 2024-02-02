@@ -338,9 +338,14 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">暂时不要</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox 隐私声明</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">我们乐于为您护航</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">这款由非营利组织支持的浏览器会自动阻止大公司在网上偷偷跟踪您。</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">这款由非营利组织支持的浏览器会自动阻止大公司在网上偷偷跟踪您。\n\n请阅读我们的隐私声明详细了解。</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -703,6 +708,8 @@
     <string name="preferences_sync_bookmarks">书签</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">登录信息</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">密码</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">打开的标签页</string>
     <!-- Preference for signing out -->
@@ -730,6 +737,8 @@
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">信用卡</string>
 
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">付款方式</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">邮政地址</string>
 
@@ -1703,8 +1712,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">密码</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">密码</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">保存登录名和密码</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">保存密码</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">询问是否保存</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1723,26 +1736,46 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">添加登录信息</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">添加密码</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">同步登录信息</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">同步密码</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">跨设备同步登录信息</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">跨设备同步密码</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">保存的登录信息</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">保存的密码</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">您保存或同步到 %s 的登录信息将显示于此处。</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">保存和同步到 %s 的密码会显示在这里，所有密码均已加密保存。
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">详细了解“同步”。</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">详细了解同步功能</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">例外</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">不保存登录名和密码的网站将显示于此处。</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s 将不会保存此处所列网站的密码。</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">将不保存这些网站的登录名和密码。</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s 将不会保存这些网站的密码。</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">删除所有例外</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">搜索登录信息</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">搜索密码</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">网站</string>
     <!-- The header for the username for a login -->
@@ -1771,10 +1804,16 @@
     <string name="saved_login_hide_password">隐藏密码</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">解锁以查看您保存的登录信息</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">解锁以查看保存的密码</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">保护您的登录名和密码</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">保护您保存的密码</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">设置设备锁定图案、PIN 或密码以保护您保存的登录名与密码，避免他人盗用。</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">设置设备锁定图案、PIN 或密码以保护您保存的密码，避免他人盗用。</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">稍后</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1793,6 +1832,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">排序登录信息菜单</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">密码排序菜单</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">自动填充</string>
@@ -1800,10 +1842,16 @@
     <string name="preferences_addresses">地址</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">信用卡</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">付款方式</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">保存并自动填充信用卡信息</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">保存和填写付款方式</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">数据已加密</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s 会加密您保存的所有付款方式</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">跨设备同步信用卡信息</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1811,16 +1859,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">添加信用卡</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">添加信用卡</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">管理保存的卡片</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">管理信用卡</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">添加地址</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">管理地址</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">保存并自动填充地址</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">保存和填充地址</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">包含号码、邮箱和收货地址等信息</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">包括电话号码和邮箱地址</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">添加信用卡</string>
@@ -1842,6 +1899,8 @@
     <string name="credit_cards_delete_card_button">删除卡片</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">您确定要删除此信用卡吗？</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">确定删除信用卡吗？</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">删除</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1857,15 +1916,23 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">请输入有效的信用卡卡号</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">请输入有效卡号</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">请填写此栏</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">请输入持卡人姓名</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">解锁后即可查看保存的卡片信息</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">保护您的卡片信息</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">保护您保存的付款方式</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">设置设备锁定图案、PIN 或密码以保护您保存的卡片信息，避免他人盗用。</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">设置设备锁定图案、PIN 或密码以保护您保存的付款方式，避免他人盗用。</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">立即设置</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1876,6 +1943,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">解锁以使用存储的卡片信息</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">解锁以使用保存的付款方式</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">添加地址</string>
     <!-- Title of the "Edit address" screen -->
@@ -1913,6 +1982,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">您确定要删除此地址吗？</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">确定删除此地址吗？</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">删除</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2011,30 +2082,52 @@
     <string name="login_menu_edit_button">编辑</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">您确定要删除此登录信息吗？</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">您确定要删除此密码吗？</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">删除</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">取消</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">登录选项</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">密码选项</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">登录信息中的网址输入框。</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">网址输入框。</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">登录信息中的用户名输入框。</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">用户名输入框。</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">登录信息中的密码输入框。</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">密码输入框。</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">保存编辑过的登录信息。</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">保存更改。</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">编辑</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">编辑密码</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">新建登录信息</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">添加密码</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">需要密码</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">请输入密码</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">用户名不能为空</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">请输入用户名</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">主机名不能为空</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">请输入网址</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">语音搜索</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2320,7 +2413,7 @@
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">打开核查评价</string>
 
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag">测试中</string>
+    <string name="review_quality_check_beta_flag">测试版</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">打开核查评价</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
@@ -2397,6 +2490,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">正在翻译</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">选择语言</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">翻译时遇到问题，请重试。</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2417,6 +2512,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">永不翻译%1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">永不翻译此网站</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">将覆盖其他所有设置</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">将覆盖“询问是否翻译”</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">翻译设置</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

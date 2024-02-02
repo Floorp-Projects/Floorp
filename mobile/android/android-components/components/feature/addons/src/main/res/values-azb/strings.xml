@@ -22,6 +22,8 @@
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">باشقا %1$d دامنه‌‌لرده دیتالاریزا ال چاتما</string>
+    <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
+    <string name="mozac_feature_addons_permissions_content_description_item">%3$d -دن %2$d و %1$s</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">موروچو تاغلارینا ال چاتما</string>
     <!-- Description for unlimited_storage permission. -->
@@ -148,6 +150,8 @@
     <string name="mozac_feature_addons_addons_manager">تاخیلان مودیریتی</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text">تاخیلان‌لار گئچیجی اولاراق گوجدن سالینمیش.</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">بیر ویا نئچه تاخیلان دایاندیریلدی، بودا سیستمیزی ثابیتسیز ائله‌دی.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button">تاخیلان‌لاری یئنی‌دن باشلات</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
@@ -170,20 +174,86 @@
     <string name="mozac_feature_addons_supported_checker_notification_title">یئنی تاخیلان الده وار</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">یئنی تاخیلان‌لار الده وار</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s -یه %1$s اکله‌یین</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s و %2$s\'یی %3$s\'ا اکله‌یین</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">بونلاری %1$s\'ا اکله‌ییه</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">فایرفاکس‌‍ین تاخیلان تکنولوژیسی مدرنلشیر. بو تاخیلان‌لار فایرفاکس ۷۵ و سونراکی یازیملارلا توتوشمایان چرچیوه‌لردن ایستیفاده ائدیر.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ایندی توصیه اولونان اوزانتی‌لارین ایلک سئچیمی اوچون ساپورت وئریریق.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">تاخیلان یئندیریلیر و دوغرولانیر...</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">تاخیلان‌لاری سورغولاماق  آلینمادی.</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">یئرلی %1$s اوچون و %2$s وارساییلان دیل اوچون ترجومه تاپیلمادی. </string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">باشاریلی قورولدو %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s قورماسی قیریلدی</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">بو تاخیلانین قورماسی قیریلدی</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">باغلانتی خطاسی سببینه گؤره بو تاخیلان یئندیری‌لنمه‌دی.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">بو تاخیلانی قورماق مومکون اولمادی، چونکی خاراب گؤرونور.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">بو تاخیلانی قورماق مومکون اولمادی، چونکی دوغرولانمیب.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s قورولا بیلمه‌دی، چونکی او، %2$s %3$s ایله اویغون دئییل.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s قورماق اولمادی، چونکی اونون ثابیتلیک و یا امنیت موشکول‌لرینه سبب اولماسینین ریسکی چوخدور.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s باشاریلی گوجلندی.</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s گوجلندیرمه‌سی قیریلدی</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_disabled">%1$s باشاریلی گوجدن سالیندی.</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">%1$s گوجدن سالماسی قیریلدی</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_uninstalled">%1$s باشاریلی قالدیریلدی</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s ایشدن سالماسی قیریلدی</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s باشاریلی قالدیریلدی</string>
-    </resources>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s قالدیریلماسی قیریلدی</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">بو تاخیلان %1$s -ین اؤنجه‌کی بیر یازیمیندان داشیندی.</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">تاخیلان</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s تاخیلان</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">آرتیق بیلین</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">باشاریلی گونجللندی.</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">هئچ گونجللمه یوخ</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">خطا</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">گونجل‌لییجی بیلگی‌لری</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">سون چالیشما:</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">دوروم:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s، %2$s لیستینه اکلندی.</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">منودا آچین</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">تامام، باشا دوشدوم</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">آرتیق بیلین</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">امنیت ویا ثابیتلیک موشکول‌لری سببی ایله %1$s گوجدن سالیندی.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s -نین گوونلی اولدوغو دوغورلانمادی و گوجدن سالیندی.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s سیزین %2$s یازیمیزا (%3$s یازیمی) اویغون دئییل.</string>
+</resources>

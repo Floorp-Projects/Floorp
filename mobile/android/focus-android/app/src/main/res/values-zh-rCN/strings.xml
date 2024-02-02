@@ -83,6 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">分享方式</string>
 
+    <string name="notification_erase_title_android_14">需要清除浏览历史吗？</string>
+    <string name="notification_erase_text_android_14">点按或清除此通知，即可安全清除浏览历史。</string>
+
     <string name="notification_erase_text">清除浏览记录</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

@@ -2439,9 +2439,9 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">要翻譯此頁面嗎？</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
-    <string name="translations_bottom_sheet_title_first_time">在 %1$s 試用有隱私的翻譯功能</string>
+    <string name="translations_bottom_sheet_title_first_time">在 %1$s 試用保護隱私的翻譯功能</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
-    <string name="translations_bottom_sheet_info_message">為了保護您的隱私，要翻譯的內容不會離開您的裝置。即將支援更多新語言並改善功能！%1$s</string>
+    <string name="translations_bottom_sheet_info_message">為了保護您的隱私，要翻譯的內容不會離開您的裝置。未來將持續支援更多語言並改善功能！%1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">更多資訊</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -2478,15 +2478,15 @@
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">總是提供翻譯</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
-    <string name="translation_option_bottom_sheet_always_translate_in_language">總是翻譯 %1$s</string>
+    <string name="translation_option_bottom_sheet_always_translate_in_language">總是翻譯%1$s</string>
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
-    <string name="translation_option_bottom_sheet_never_translate_in_language">永不翻譯 %1$s</string>
+    <string name="translation_option_bottom_sheet_never_translate_in_language">永不翻譯%1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">永不翻譯此網站</string>
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">覆蓋所有其他設定</string>
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">蓋過其他所有設定</string>
     <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_description">覆蓋提供翻譯功能</string>
+    <string name="translation_option_bottom_sheet_switch_description">蓋過翻譯功能提示</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">翻譯設定</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
@@ -2518,7 +2518,7 @@
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">提供翻譯（預設）</string>
     <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s 將提供此語言的網站翻譯內容</string>
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s 將提示是否要翻譯此語言的網站內容</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">總是翻譯</string>
 
@@ -2527,7 +2527,7 @@
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">永不翻譯</string>
     <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="automatic_translation_option_never_translate_summary_preference">%1$s 不會提供此語言的翻譯功能</string>
+    <string name="automatic_translation_option_never_translate_summary_preference">%1$s 不會提示此語言的網站翻譯功能</string>
 
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
@@ -2576,7 +2576,7 @@
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
-    <string name="delete_language_file_dialog_title">要刪除 %1$s（%2$s）嗎？</string>
+    <string name="delete_language_file_dialog_title">要刪除%1$s（%2$s）嗎？</string>
     <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="delete_language_file_dialog_message">若您刪除此語言，%1$s 將在翻譯時下載部分語言檔到您的快取空間。</string>
     <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
