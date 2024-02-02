@@ -16,7 +16,7 @@ import { FaviconFeed } from "lib/FaviconFeed.jsm";
 import { TopSitesFeed } from "lib/TopSitesFeed.jsm";
 import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
 import { HighlightsFeed } from "lib/HighlightsFeed.sys.mjs";
-import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
+import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.sys.mjs";
 
 import { LinksCache } from "lib/LinksCache.sys.mjs";
 import { PersistentCache } from "lib/PersistentCache.sys.mjs";
