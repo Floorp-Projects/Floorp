@@ -1,4 +1,7 @@
-import { SYSTEM_TICK_INTERVAL, SystemTickFeed } from "lib/SystemTickFeed.jsm";
+import {
+  SYSTEM_TICK_INTERVAL,
+  SystemTickFeed,
+} from "lib/SystemTickFeed.sys.mjs";
 import { actionTypes as at } from "common/Actions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
