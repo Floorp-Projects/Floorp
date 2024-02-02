@@ -20,19 +20,18 @@
 
 #include "jsnum.h"  // ParseDecimalNumber, GetFullInteger, FullStringToDouble
 
-#include "builtin/Array.h"              // NewDenseCopiedArray
-#include "builtin/ParseRecordObject.h"  // js::ParseRecordObject
-#include "ds/IdValuePair.h"             // IdValuePair
-#include "gc/GCEnum.h"                  // CanGC
-#include "gc/Tracer.h"                  // JS::TraceRoot
-#include "js/AllocPolicy.h"             // ReportOutOfMemory
-#include "js/CharacterEncoding.h"       // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"            // JS::ColumnNumberOneOrigin
-#include "js/ErrorReport.h"             // JS_ReportErrorNumberASCII
-#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
-#include "js/GCVector.h"                // JS::GCVector
-#include "js/Id.h"                      // jsid
-#include "js/JSON.h"                    // JS::IsValidJSON
+#include "builtin/Array.h"            // NewDenseCopiedArray
+#include "ds/IdValuePair.h"           // IdValuePair
+#include "gc/GCEnum.h"                // CanGC
+#include "gc/Tracer.h"                // JS::TraceRoot
+#include "js/AllocPolicy.h"           // ReportOutOfMemory
+#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
+#include "js/ColumnNumber.h"          // JS::ColumnNumberOneOrigin
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/GCVector.h"              // JS::GCVector
+#include "js/Id.h"                    // jsid
+#include "js/JSON.h"                  // JS::IsValidJSON
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
 #include "js/TypeDecls.h"  // Latin1Char
 #include "js/Utility.h"    // js_delete
@@ -44,7 +43,6 @@
 #include "vm/JSAtomUtils.h"     // AtomizeChars
 #include "vm/JSContext.h"       // JSContext
 #include "vm/PlainObject.h"     // NewPlainObjectWithMaybeDuplicateKeys
-#include "vm/Realm.h"           // JS::Realm
 #include "vm/StringType.h"  // JSString, JSAtom, JSLinearString, NewStringCopyN, NameToId
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
@@ -57,279 +55,10 @@ using mozilla::IsAsciiHexDigit;
 using mozilla::RangedPtr;
 
 template <typename CharT, typename ParserT, typename StringBuilderT>
-void JSONTokenizer<CharT, ParserT, StringBuilderT>::getTextPosition(
-    uint32_t* column, uint32_t* line) {
-  CharPtr ptr = begin;
-  uint32_t col = 1;
-  uint32_t row = 1;
-  for (; ptr < current; ptr++) {
-    if (*ptr == '\n' || *ptr == '\r') {
-      ++row;
-      col = 1;
-      // \r\n is treated as a single newline.
-      if (ptr + 1 < current && *ptr == '\r' && *(ptr + 1) == '\n') {
-        ++ptr;
-      }
-    } else {
-      ++col;
-    }
-  }
-  *column = col;
-  *line = row;
-}
-
-static inline bool IsJSONWhitespace(char16_t c) {
-  return c == '\t' || c == '\r' || c == '\n' || c == ' ';
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-bool JSONTokenizer<CharT, ParserT,
-                   StringBuilderT>::consumeTrailingWhitespaces() {
-  for (; current < end; current++) {
-    if (!IsJSONWhitespace(*current)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("unexpected end of data");
-    return token(JSONToken::Error);
-  }
-
-  sourceStart = current;
-  switch (*current) {
-    case '"':
-      return readString<JSONStringType::LiteralValue>();
-
-    case '-':
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      return readNumber();
-
-    case 't':
-      if (end - current < 4 || current[1] != 'r' || current[2] != 'u' ||
-          current[3] != 'e') {
-        error("unexpected keyword");
-        return token(JSONToken::Error);
-      }
-      current += 4;
-      if (!parser->handler.setBooleanValue(true, getSource())) {
-        return token(JSONToken::OOM);
-      }
-      return token(JSONToken::True);
-
-    case 'f':
-      if (end - current < 5 || current[1] != 'a' || current[2] != 'l' ||
-          current[3] != 's' || current[4] != 'e') {
-        error("unexpected keyword");
-        return token(JSONToken::Error);
-      }
-      current += 5;
-      if (!parser->handler.setBooleanValue(false, getSource())) {
-        return token(JSONToken::OOM);
-      }
-      return token(JSONToken::False);
-
-    case 'n':
-      if (end - current < 4 || current[1] != 'u' || current[2] != 'l' ||
-          current[3] != 'l') {
-        error("unexpected keyword");
-        return token(JSONToken::Error);
-      }
-      current += 4;
-      if (!parser->handler.setNullValue(getSource())) {
-        return token(JSONToken::OOM);
-      }
-      return token(JSONToken::Null);
-
-    case '[':
-      current++;
-      return token(JSONToken::ArrayOpen);
-    case ']':
-      current++;
-      return token(JSONToken::ArrayClose);
-
-    case '{':
-      current++;
-      return token(JSONToken::ObjectOpen);
-    case '}':
-      current++;
-      return token(JSONToken::ObjectClose);
-
-    case ',':
-      current++;
-      return token(JSONToken::Comma);
-
-    case ':':
-      current++;
-      return token(JSONToken::Colon);
-
-    default:
-      error("unexpected character");
-      return token(JSONToken::Error);
-  }
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advancePropertyName() {
-  MOZ_ASSERT(current[-1] == ',');
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data when property name was expected");
-    return token(JSONToken::Error);
-  }
-
-  if (*current == '"') {
-    return readString<JSONStringType::PropertyName>();
-  }
-
-  error("expected double-quoted property name");
-  return token(JSONToken::Error);
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken
-JSONTokenizer<CharT, ParserT, StringBuilderT>::advancePropertyColon() {
-  MOZ_ASSERT(current[-1] == '"');
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data after property name when ':' was expected");
-    return token(JSONToken::Error);
-  }
-
-  if (*current == ':') {
-    current++;
-    return token(JSONToken::Colon);
-  }
-
-  error("expected ':' after property name in object");
-  return token(JSONToken::Error);
-}
-
-template <typename CharT>
-static inline void AssertPastValue(const RangedPtr<const CharT> current) {
-  /*
-   * We're past an arbitrary JSON value, so the previous character is
-   * *somewhat* constrained, even if this assertion is pretty broad.  Don't
-   * knock it till you tried it: this assertion *did* catch a bug once.
-   */
-  MOZ_ASSERT((current[-1] == 'l' && current[-2] == 'l' && current[-3] == 'u' &&
-              current[-4] == 'n') ||
-             (current[-1] == 'e' && current[-2] == 'u' && current[-3] == 'r' &&
-              current[-4] == 't') ||
-             (current[-1] == 'e' && current[-2] == 's' && current[-3] == 'l' &&
-              current[-4] == 'a' && current[-5] == 'f') ||
-             current[-1] == '}' || current[-1] == ']' || current[-1] == '"' ||
-             IsAsciiDigit(current[-1]));
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken
-JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterProperty() {
-  AssertPastValue(current);
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data after property value in object");
-    return token(JSONToken::Error);
-  }
-
-  if (*current == ',') {
-    current++;
-    return token(JSONToken::Comma);
-  }
-
-  if (*current == '}') {
-    current++;
-    return token(JSONToken::ObjectClose);
-  }
-
-  error("expected ',' or '}' after property value in object");
-  return token(JSONToken::Error);
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken
-JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterObjectOpen() {
-  MOZ_ASSERT(current[-1] == '{');
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data while reading object contents");
-    return token(JSONToken::Error);
-  }
-
-  if (*current == '"') {
-    return readString<JSONStringType::PropertyName>();
-  }
-
-  if (*current == '}') {
-    current++;
-    return token(JSONToken::ObjectClose);
-  }
-
-  error("expected property name or '}'");
-  return token(JSONToken::Error);
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
-JSONToken
-JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterArrayElement() {
-  AssertPastValue(current);
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data when ',' or ']' was expected");
-    return token(JSONToken::Error);
-  }
-
-  if (*current == ',') {
-    current++;
-    return token(JSONToken::Comma);
-  }
-
-  if (*current == ']') {
-    current++;
-    return token(JSONToken::ArrayClose);
-  }
-
-  error("expected ',' or ']' after array element");
-  return token(JSONToken::Error);
-}
-
-template <typename CharT, typename ParserT, typename StringBuilderT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
     const CharPtr start, size_t length) {
-  if (!parser->handler.template setStringValue<ST>(start, length,
-                                                   getSource())) {
+  if (!parser->handler.template setStringValue<ST>(start, length)) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -339,7 +68,7 @@ template <typename CharT, typename ParserT, typename StringBuilderT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
     StringBuilderT& builder) {
-  if (!parser->handler.template setStringValue<ST>(builder, getSource())) {
+  if (!parser->handler.template setStringValue<ST>(builder)) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -347,9 +76,7 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
 
 template <typename CharT, typename ParserT, typename StringBuilderT>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::numberToken(double d) {
-  if (!parser->handler.setNumberValue(d, getSource())) {
-    return JSONToken::OOM;
-  }
+  parser->handler.setNumberValue(d);
   return JSONToken::Number;
 }
 
@@ -595,9 +322,267 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::readNumber() {
   return numberToken(negative ? -d : d);
 }
 
+static inline bool IsJSONWhitespace(char16_t c) {
+  return c == '\t' || c == '\r' || c == '\n' || c == ' ';
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+bool JSONTokenizer<CharT, ParserT,
+                   StringBuilderT>::consumeTrailingWhitespaces() {
+  for (; current < end; current++) {
+    if (!IsJSONWhitespace(*current)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("unexpected end of data");
+    return token(JSONToken::Error);
+  }
+
+  switch (*current) {
+    case '"':
+      return readString<JSONStringType::LiteralValue>();
+
+    case '-':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      return readNumber();
+
+    case 't':
+      if (end - current < 4 || current[1] != 'r' || current[2] != 'u' ||
+          current[3] != 'e') {
+        error("unexpected keyword");
+        return token(JSONToken::Error);
+      }
+      current += 4;
+      return token(JSONToken::True);
+
+    case 'f':
+      if (end - current < 5 || current[1] != 'a' || current[2] != 'l' ||
+          current[3] != 's' || current[4] != 'e') {
+        error("unexpected keyword");
+        return token(JSONToken::Error);
+      }
+      current += 5;
+      return token(JSONToken::False);
+
+    case 'n':
+      if (end - current < 4 || current[1] != 'u' || current[2] != 'l' ||
+          current[3] != 'l') {
+        error("unexpected keyword");
+        return token(JSONToken::Error);
+      }
+      current += 4;
+      return token(JSONToken::Null);
+
+    case '[':
+      current++;
+      return token(JSONToken::ArrayOpen);
+    case ']':
+      current++;
+      return token(JSONToken::ArrayClose);
+
+    case '{':
+      current++;
+      return token(JSONToken::ObjectOpen);
+    case '}':
+      current++;
+      return token(JSONToken::ObjectClose);
+
+    case ',':
+      current++;
+      return token(JSONToken::Comma);
+
+    case ':':
+      current++;
+      return token(JSONToken::Colon);
+
+    default:
+      error("unexpected character");
+      return token(JSONToken::Error);
+  }
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advancePropertyName() {
+  MOZ_ASSERT(current[-1] == ',');
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data when property name was expected");
+    return token(JSONToken::Error);
+  }
+
+  if (*current == '"') {
+    return readString<JSONStringType::PropertyName>();
+  }
+
+  error("expected double-quoted property name");
+  return token(JSONToken::Error);
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken
+JSONTokenizer<CharT, ParserT, StringBuilderT>::advancePropertyColon() {
+  MOZ_ASSERT(current[-1] == '"');
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data after property name when ':' was expected");
+    return token(JSONToken::Error);
+  }
+
+  if (*current == ':') {
+    current++;
+    return token(JSONToken::Colon);
+  }
+
+  error("expected ':' after property name in object");
+  return token(JSONToken::Error);
+}
+
+template <typename CharT>
+static inline void AssertPastValue(const RangedPtr<const CharT> current) {
+  /*
+   * We're past an arbitrary JSON value, so the previous character is
+   * *somewhat* constrained, even if this assertion is pretty broad.  Don't
+   * knock it till you tried it: this assertion *did* catch a bug once.
+   */
+  MOZ_ASSERT((current[-1] == 'l' && current[-2] == 'l' && current[-3] == 'u' &&
+              current[-4] == 'n') ||
+             (current[-1] == 'e' && current[-2] == 'u' && current[-3] == 'r' &&
+              current[-4] == 't') ||
+             (current[-1] == 'e' && current[-2] == 's' && current[-3] == 'l' &&
+              current[-4] == 'a' && current[-5] == 'f') ||
+             current[-1] == '}' || current[-1] == ']' || current[-1] == '"' ||
+             IsAsciiDigit(current[-1]));
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken
+JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterProperty() {
+  AssertPastValue(current);
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data after property value in object");
+    return token(JSONToken::Error);
+  }
+
+  if (*current == ',') {
+    current++;
+    return token(JSONToken::Comma);
+  }
+
+  if (*current == '}') {
+    current++;
+    return token(JSONToken::ObjectClose);
+  }
+
+  error("expected ',' or '}' after property value in object");
+  return token(JSONToken::Error);
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken
+JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterObjectOpen() {
+  MOZ_ASSERT(current[-1] == '{');
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data while reading object contents");
+    return token(JSONToken::Error);
+  }
+
+  if (*current == '"') {
+    return readString<JSONStringType::PropertyName>();
+  }
+
+  if (*current == '}') {
+    current++;
+    return token(JSONToken::ObjectClose);
+  }
+
+  error("expected property name or '}'");
+  return token(JSONToken::Error);
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+JSONToken
+JSONTokenizer<CharT, ParserT, StringBuilderT>::advanceAfterArrayElement() {
+  AssertPastValue(current);
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data when ',' or ']' was expected");
+    return token(JSONToken::Error);
+  }
+
+  if (*current == ',') {
+    current++;
+    return token(JSONToken::Comma);
+  }
+
+  if (*current == ']') {
+    current++;
+    return token(JSONToken::ArrayClose);
+  }
+
+  error("expected ',' or ']' after array element");
+  return token(JSONToken::Error);
+}
+
 template <typename CharT, typename ParserT, typename StringBuilderT>
 void JSONTokenizer<CharT, ParserT, StringBuilderT>::error(const char* msg) {
   parser->error(msg);
+}
+
+template <typename CharT, typename ParserT, typename StringBuilderT>
+void JSONTokenizer<CharT, ParserT, StringBuilderT>::getTextPosition(
+    uint32_t* column, uint32_t* line) {
+  CharPtr ptr = begin;
+  uint32_t col = 1;
+  uint32_t row = 1;
+  for (; ptr < current; ptr++) {
+    if (*ptr == '\n' || *ptr == '\r') {
+      ++row;
+      col = 1;
+      // \r\n is treated as a single newline.
+      if (ptr + 1 < current && *ptr == '\r' && *(ptr + 1) == '\n') {
+        ++ptr;
+      }
+    } else {
+      ++col;
+    }
+  }
+  *column = col;
+  *line = row;
 }
 
 // JSONFullParseHandlerAnyChar uses an AutoSelectGCHeap to switch to allocating
@@ -631,6 +616,71 @@ JSONFullParseHandlerAnyChar::~JSONFullParseHandlerAnyChar() {
   for (size_t i = 0; i < freeProperties.length(); i++) {
     js_delete(freeProperties[i]);
   }
+}
+
+void JSONFullParseHandlerAnyChar::trace(JSTracer* trc) {
+  JS::TraceRoot(trc, &v, "JSONFullParseHandlerAnyChar current value");
+}
+
+inline void JSONFullParseHandlerAnyChar::freeStackEntry(StackEntry& entry) {
+  if (entry.state == JSONParserState::FinishArrayElement) {
+    js_delete(&entry.elements());
+  } else {
+    js_delete(&entry.properties());
+  }
+}
+
+template <typename CharT>
+void JSONParser<CharT>::trace(JSTracer* trc) {
+  this->handler.trace(trc);
+
+  for (auto& elem : this->stack) {
+    if (elem.state == JSONParserState::FinishArrayElement) {
+      elem.elements().trace(trc);
+    } else {
+      elem.properties().trace(trc);
+    }
+  }
+}
+
+inline void JSONFullParseHandlerAnyChar::setNumberValue(double d) {
+  v = JS::NumberValue(d);
+}
+
+template <typename CharT>
+template <JSONStringType ST>
+inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
+                                                        size_t length) {
+  JSString* str;
+  if constexpr (ST == JSONStringType::PropertyName) {
+    str = AtomizeChars(cx, start.get(), length);
+  } else {
+    str = NewStringCopyN<CanGC>(cx, start.get(), length, gcHeap);
+  }
+
+  if (!str) {
+    return false;
+  }
+  v = JS::StringValue(str);
+  return true;
+}
+
+template <typename CharT>
+template <JSONStringType ST>
+inline bool JSONFullParseHandler<CharT>::setStringValue(
+    StringBuilder& builder) {
+  JSString* str;
+  if constexpr (ST == JSONStringType::PropertyName) {
+    str = builder.buffer.finishAtom();
+  } else {
+    str = builder.buffer.finishString(gcHeap);
+  }
+
+  if (!str) {
+    return false;
+  }
+  v = JS::StringValue(str);
+  return true;
 }
 
 inline bool JSONFullParseHandlerAnyChar::objectOpen(
@@ -755,84 +805,6 @@ inline bool JSONFullParseHandlerAnyChar::finishArray(
   return true;
 }
 
-inline void JSONFullParseHandlerAnyChar::freeStackEntry(StackEntry& entry) {
-  if (entry.state == JSONParserState::FinishArrayElement) {
-    js_delete(&entry.elements());
-  } else {
-    js_delete(&entry.properties());
-  }
-}
-
-void JSONFullParseHandlerAnyChar::trace(JSTracer* trc) {
-  JS::TraceRoot(trc, &v, "JSONFullParseHandlerAnyChar current value");
-}
-
-template <typename CharT>
-bool JSONFullParseHandler<CharT>::StringBuilder::append(char16_t c) {
-  return buffer.append(c);
-}
-
-template <typename CharT>
-bool JSONFullParseHandler<CharT>::StringBuilder::append(const CharT* begin,
-                                                        const CharT* end) {
-  return buffer.append(begin, end);
-}
-
-template <typename CharT>
-template <JSONStringType ST>
-inline bool JSONFullParseHandler<CharT>::setStringValue(
-    CharPtr start, size_t length, mozilla::Span<const CharT>&& source) {
-  JSString* str;
-  if constexpr (ST == JSONStringType::PropertyName) {
-    str = AtomizeChars(cx, start.get(), length);
-  } else {
-    str = NewStringCopyN<CanGC>(cx, start.get(), length, gcHeap);
-  }
-
-  if (!str) {
-    return false;
-  }
-  v = JS::StringValue(str);
-  return createJSONParseRecord(v, source);
-}
-
-template <typename CharT>
-template <JSONStringType ST>
-inline bool JSONFullParseHandler<CharT>::setStringValue(
-    StringBuilder& builder, mozilla::Span<const CharT>&& source) {
-  JSString* str;
-  if constexpr (ST == JSONStringType::PropertyName) {
-    str = builder.buffer.finishAtom();
-  } else {
-    str = builder.buffer.finishString(gcHeap);
-  }
-
-  if (!str) {
-    return false;
-  }
-  v = JS::StringValue(str);
-  return createJSONParseRecord(v, source);
-}
-
-template <typename CharT>
-inline bool JSONFullParseHandler<CharT>::setNumberValue(
-    double d, mozilla::Span<const CharT>&& source) {
-  v = JS::NumberValue(d);
-  return createJSONParseRecord(v, source);
-}
-
-template <typename CharT>
-inline bool JSONFullParseHandler<CharT>::setBooleanValue(
-    bool value, mozilla::Span<const CharT>&& source) {
-  return createJSONParseRecord(JS::BooleanValue(value), source);
-}
-
-template <typename CharT>
-inline bool JSONFullParseHandler<CharT>::setNullValue(
-    mozilla::Span<const CharT>&& source) {
-  return createJSONParseRecord(JS::NullValue(), source);
-}
-
 template <typename CharT>
 void JSONFullParseHandler<CharT>::reportError(const char* msg, uint32_t line,
                                               uint32_t column) {
@@ -846,27 +818,32 @@ void JSONFullParseHandler<CharT>::reportError(const char* msg, uint32_t line,
                             msg, lineString, columnString);
 }
 
-template <typename CharT>
-void JSONFullParseHandler<CharT>::trace(JSTracer* trc) {
-  Base::trace(trc);
-  parseRecord.trace(trc);
+template <typename CharT, typename HandlerT>
+void JSONPerHandlerParser<CharT, HandlerT>::outOfMemory() {
+  ReportOutOfMemory(handler.context());
+}
+
+template <typename CharT, typename HandlerT>
+void JSONPerHandlerParser<CharT, HandlerT>::error(const char* msg) {
+  if (handler.ignoreError()) {
+    return;
+  }
+
+  uint32_t column = 1, line = 1;
+  tokenizer.getTextPosition(&column, &line);
+
+  handler.reportError(msg, line, column);
 }
 
 template <typename CharT>
-inline bool JSONFullParseHandler<CharT>::createJSONParseRecord(
-    const Value& value, mozilla::Span<const CharT>& source) {
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
-    MOZ_ASSERT(!source.IsEmpty());
-    Rooted<JSONParseNode*> parseNode(cx,
-                                     NewStringCopy<CanGC, CharT>(cx, source));
-    if (!parseNode) {
-      return false;
-    }
-    parseRecord = ParseRecordObject(parseNode, value);
-  }
-#endif
-  return true;
+bool JSONFullParseHandler<CharT>::StringBuilder::append(char16_t c) {
+  return buffer.append(c);
+}
+
+template <typename CharT>
+bool JSONFullParseHandler<CharT>::StringBuilder::append(const CharT* begin,
+                                                        const CharT* end) {
+  return buffer.append(begin, end);
 }
 
 template <typename CharT, typename HandlerT>
@@ -875,6 +852,11 @@ JSONPerHandlerParser<CharT, HandlerT>::~JSONPerHandlerParser() {
     handler.freeStackEntry(stack[i]);
   }
 }
+
+template class js::JSONPerHandlerParser<Latin1Char,
+                                        js::JSONFullParseHandler<Latin1Char>>;
+template class js::JSONPerHandlerParser<char16_t,
+                                        js::JSONFullParseHandler<char16_t>>;
 
 template <typename CharT, typename HandlerT>
 template <typename TempValueT, typename ResultSetter>
@@ -1046,33 +1028,6 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
   return true;
 }
 
-template <typename CharT, typename HandlerT>
-void JSONPerHandlerParser<CharT, HandlerT>::outOfMemory() {
-  ReportOutOfMemory(handler.context());
-}
-
-template <typename CharT, typename HandlerT>
-void JSONPerHandlerParser<CharT, HandlerT>::error(const char* msg) {
-  if (handler.ignoreError()) {
-    return;
-  }
-
-  uint32_t column = 1, line = 1;
-  tokenizer.getTextPosition(&column, &line);
-
-  handler.reportError(msg, line, column);
-}
-
-template class js::JSONPerHandlerParser<Latin1Char,
-                                        js::JSONFullParseHandler<Latin1Char>>;
-template class js::JSONPerHandlerParser<char16_t,
-                                        js::JSONFullParseHandler<char16_t>>;
-
-template class js::JSONPerHandlerParser<Latin1Char,
-                                        js::JSONSyntaxParseHandler<Latin1Char>>;
-template class js::JSONPerHandlerParser<char16_t,
-                                        js::JSONSyntaxParseHandler<char16_t>>;
-
 template <typename CharT>
 bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp) {
   JS::Rooted<JS::Value> tempValue(this->handler.cx);
@@ -1081,32 +1036,6 @@ bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp) {
 
   return this->parseImpl(tempValue,
                          [&](JS::Handle<JS::Value> value) { vp.set(value); });
-}
-
-template <typename CharT>
-bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp,
-                              JS::MutableHandle<ParseRecordObject> pro) {
-  JS::Rooted<JS::Value> tempValue(this->handler.cx);
-
-  vp.setUndefined();
-
-  bool result = this->parseImpl(
-      tempValue, [&](JS::Handle<JS::Value> value) { vp.set(value); });
-  pro.get() = std::move(this->handler.parseRecord);
-  return result;
-}
-
-template <typename CharT>
-void JSONParser<CharT>::trace(JSTracer* trc) {
-  this->handler.trace(trc);
-
-  for (auto& elem : this->stack) {
-    if (elem.state == JSONParserState::FinishArrayElement) {
-      elem.elements().trace(trc);
-    } else {
-      elem.properties().trace(trc);
-    }
-  }
 }
 
 template class js::JSONParser<Latin1Char>;
@@ -1191,6 +1120,11 @@ bool JSONSyntaxParser<CharT>::parse() {
   return true;
 }
 
+template class js::JSONPerHandlerParser<Latin1Char,
+                                        js::JSONSyntaxParseHandler<Latin1Char>>;
+template class js::JSONPerHandlerParser<char16_t,
+                                        js::JSONSyntaxParseHandler<char16_t>>;
+
 template class js::JSONSyntaxParser<Latin1Char>;
 template class js::JSONSyntaxParser<char16_t>;
 
@@ -1260,8 +1194,7 @@ class MOZ_STACK_CLASS DelegateHandler {
   FrontendContext* context() { return fc; }
 
   template <JSONStringType ST>
-  inline bool setStringValue(CharPtr start, size_t length,
-                             mozilla::Span<const CharT>&& source) {
+  inline bool setStringValue(CharPtr start, size_t length) {
     if (hadHandlerError_) {
       return false;
     }
@@ -1274,8 +1207,7 @@ class MOZ_STACK_CLASS DelegateHandler {
   }
 
   template <JSONStringType ST>
-  inline bool setStringValue(StringBuilder& builder,
-                             mozilla::Span<const CharT>&& source) {
+  inline bool setStringValue(StringBuilder& builder) {
     if (hadHandlerError_) {
       return false;
     }
@@ -1299,21 +1231,15 @@ class MOZ_STACK_CLASS DelegateHandler {
                                  builder.buffer.length());
   }
 
-  inline bool setNumberValue(double d, mozilla::Span<const CharT>&& source) {
+  inline void setNumberValue(double d) {
     if (hadHandlerError_) {
-      return false;
+      return;
     }
 
     if (!handler_->numberValue(d)) {
       hadHandlerError_ = true;
     }
-    return !hadHandlerError_;
   }
-
-  inline bool setBooleanValue(bool value, mozilla::Span<const CharT>&& source) {
-    return true;
-  }
-  inline bool setNullValue(mozilla::Span<const CharT>&& source) { return true; }
 
   inline DummyValue numberValue() const { return DummyValue(); }
 
