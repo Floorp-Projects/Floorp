@@ -19,10 +19,7 @@ import {
   actionUtils as au,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
-
-const { classifySite } = ChromeUtils.import(
-  "resource://activity-stream/lib/SiteClassifier.jsm"
-);
+import { classifySite } from "resource://activity-stream/lib/SiteClassifier.sys.mjs";
 
 const lazy = {};
 

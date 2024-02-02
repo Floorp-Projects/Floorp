@@ -1,4 +1,4 @@
-import { classifySite } from "lib/SiteClassifier.jsm";
+import { classifySite } from "lib/SiteClassifier.sys.mjs";
 
 const FAKE_CLASSIFIER_DATA = [
   {

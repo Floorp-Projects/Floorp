@@ -8,9 +8,7 @@ import {
   actionUtils as au,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
 
 // We use importESModule here instead of static import so that
 // the Karma test environment won't choke on this module. This

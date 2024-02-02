@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -35,7 +42,7 @@ function handleIDNHost(hostname) {
  * @param {string} host The host to be analyzed.
  * @return {str} The suffix or empty string if there's no suffix.
  */
-function getETLD(host) {
+export function getETLD(host) {
   try {
     return Services.eTLD.getPublicSuffixFromHost(host);
   } catch (err) {
@@ -51,7 +58,7 @@ function getETLD(host) {
  *         {str} link.url (required)- The url of the link
  * @return {str}   A short url
  */
-function shortURL({ url }) {
+export function shortURL({ url }) {
   if (!url) {
     return "";
   }
@@ -79,5 +86,3 @@ function shortURL({ url }) {
     parsed.href
   );
 }
-
-const EXPORTED_SYMBOLS = ["shortURL", "getETLD"];

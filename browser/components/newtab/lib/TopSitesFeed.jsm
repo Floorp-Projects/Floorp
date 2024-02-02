@@ -16,8 +16,8 @@ const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } =
 const { Dedupe } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Dedupe.sys.mjs"
 );
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
+const { shortURL } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ShortURL.sys.mjs"
 );
 const { getDefaultOptions } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"

@@ -4,9 +4,7 @@
 
 import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
 
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
 import {
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
