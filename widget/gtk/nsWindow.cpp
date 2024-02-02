@@ -5794,6 +5794,7 @@ Window nsWindow::GetX11Window() {
 }
 
 void nsWindow::EnsureGdkWindow() {
+  MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
   if (!mGdkWindow) {
     mGdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
@@ -9517,7 +9518,6 @@ void nsWindow::GetCompositorWidgetInitData(
   nsCString displayName;
 
   LOG("nsWindow::GetCompositorWidgetInitData");
-  EnsureGdkWindow();
 
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
       GetX11Window(), displayName, GetShapedState(), GdkIsX11Display(),
