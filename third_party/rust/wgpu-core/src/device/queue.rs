@@ -13,6 +13,7 @@ use crate::{
     hal_api::HalApi,
     hal_label,
     id::{self, QueueId},
+    identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, Resource,
@@ -23,7 +24,6 @@ use crate::{
 
 use hal::{CommandEncoder as _, Device as _, Queue as _};
 use parking_lot::Mutex;
-use smallvec::SmallVec;
 
 use std::{
     iter, mem, ptr,
@@ -36,19 +36,17 @@ use super::Device;
 pub struct Queue<A: HalApi> {
     pub device: Option<Arc<Device<A>>>,
     pub raw: Option<A::Queue>,
-    pub info: ResourceInfo<Queue<A>>,
+    pub info: ResourceInfo<QueueId>,
 }
 
-impl<A: HalApi> Resource for Queue<A> {
+impl<A: HalApi> Resource<QueueId> for Queue<A> {
     const TYPE: ResourceType = "Queue";
 
-    type Marker = crate::id::markers::Queue;
-
-    fn as_info(&self) -> &ResourceInfo<Self> {
+    fn as_info(&self) -> &ResourceInfo<QueueId> {
         &self.info
     }
 
-    fn as_info_mut(&mut self) -> &mut ResourceInfo<Self> {
+    fn as_info_mut(&mut self) -> &mut ResourceInfo<QueueId> {
         &mut self.info
     }
 }
@@ -229,18 +227,18 @@ impl<A: HalApi> PendingWrites<A> {
             .push(TempResource::StagingBuffer(buffer));
     }
 
-    fn pre_submit(&mut self) -> Result<Option<&A::CommandBuffer>, DeviceError> {
+    #[must_use]
+    fn pre_submit(&mut self) -> Option<&A::CommandBuffer> {
         self.dst_buffers.clear();
         self.dst_textures.clear();
         if self.is_active {
-            let cmd_buf = unsafe { self.command_encoder.end_encoding()? };
+            let cmd_buf = unsafe { self.command_encoder.end_encoding().unwrap() };
             self.is_active = false;
             self.executing_command_buffers.push(cmd_buf);
-
-            return Ok(self.executing_command_buffers.last());
+            self.executing_command_buffers.last()
+        } else {
+            None
         }
-
-        Ok(None)
     }
 
     #[must_use]
@@ -363,7 +361,7 @@ pub enum QueueSubmitError {
 
 //TODO: move out common parts of write_xxx.
 
-impl Global {
+impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn queue_write_buffer<A: HalApi>(
         &self,
         queue_id: QueueId,
@@ -437,7 +435,7 @@ impl Global {
         &self,
         queue_id: QueueId,
         buffer_size: wgt::BufferSize,
-        id_in: Option<id::StagingBufferId>,
+        id_in: Input<G, id::StagingBufferId>,
     ) -> Result<(id::StagingBufferId, *mut u8), QueueWriteError> {
         profiling::scope!("Queue::create_staging_buffer");
         let hub = A::hub(self);
@@ -452,7 +450,7 @@ impl Global {
         let (staging_buffer, staging_buffer_ptr) =
             prepare_staging_buffer(device, buffer_size.get(), device.instance_flags)?;
 
-        let fid = hub.staging_buffers.prepare(id_in);
+        let fid = hub.staging_buffers.prepare::<G>(id_in);
         let (id, _) = fid.assign(staging_buffer);
         resource_log!("Queue::create_staging_buffer {id:?}");
 
@@ -670,7 +668,7 @@ impl Global {
             .get(destination.texture)
             .map_err(|_| TransferError::InvalidTexture(destination.texture))?;
 
-        if dst.device.as_info().id() != queue_id.transmute() {
+        if dst.device.as_info().id() != queue_id {
             return Err(DeviceError::WrongDevice.into());
         }
 
@@ -1117,12 +1115,9 @@ impl Global {
                 .fetch_add(1, Ordering::Relaxed)
                 + 1;
             let mut active_executions = Vec::new();
-
             let mut used_surface_textures = track::TextureUsageScope::new();
 
             let snatch_guard = device.snatchable_lock.read();
-
-            let mut submit_surface_textures_owned = SmallVec::<[_; 2]>::new();
 
             {
                 let mut command_buffer_guard = hub.command_buffers.write();
@@ -1151,7 +1146,7 @@ impl Global {
                             Err(_) => continue,
                         };
 
-                        if cmdbuf.device.as_info().id() != queue_id.transmute() {
+                        if cmdbuf.device.as_info().id() != queue_id {
                             return Err(DeviceError::WrongDevice.into());
                         }
 
@@ -1222,17 +1217,8 @@ impl Global {
                                         return Err(QueueSubmitError::DestroyedTexture(id));
                                     }
                                     Some(TextureInner::Native { .. }) => false,
-                                    Some(TextureInner::Surface {
-                                        ref has_work,
-                                        ref raw,
-                                        ..
-                                    }) => {
+                                    Some(TextureInner::Surface { ref has_work, .. }) => {
                                         has_work.store(true, Ordering::Relaxed);
-
-                                        if raw.is_some() {
-                                            submit_surface_textures_owned.push(texture.clone());
-                                        }
-
                                         true
                                     }
                                 };
@@ -1423,17 +1409,8 @@ impl Global {
                             return Err(QueueSubmitError::DestroyedTexture(id));
                         }
                         Some(TextureInner::Native { .. }) => {}
-                        Some(TextureInner::Surface {
-                            ref has_work,
-                            ref raw,
-                            ..
-                        }) => {
+                        Some(TextureInner::Surface { ref has_work, .. }) => {
                             has_work.store(true, Ordering::Relaxed);
-
-                            if raw.is_some() {
-                                submit_surface_textures_owned.push(texture.clone());
-                            }
-
                             unsafe {
                                 used_surface_textures
                                     .merge_single(texture, None, hal::TextureUses::PRESENT)
@@ -1464,7 +1441,7 @@ impl Global {
             }
 
             let refs = pending_writes
-                .pre_submit()?
+                .pre_submit()
                 .into_iter()
                 .chain(
                     active_executions
@@ -1472,23 +1449,12 @@ impl Global {
                         .flat_map(|pool_execution| pool_execution.cmd_buffers.iter()),
                 )
                 .collect::<Vec<_>>();
-
-            let mut submit_surface_textures =
-                SmallVec::<[_; 2]>::with_capacity(submit_surface_textures_owned.len());
-
-            for texture in &submit_surface_textures_owned {
-                submit_surface_textures.extend(match texture.inner.get(&snatch_guard) {
-                    Some(TextureInner::Surface { raw, .. }) => raw.as_ref(),
-                    _ => None,
-                });
-            }
-
             unsafe {
                 queue
                     .raw
                     .as_ref()
                     .unwrap()
-                    .submit(&refs, &submit_surface_textures, Some((fence, submit_index)))
+                    .submit(&refs, Some((fence, submit_index)))
                     .map_err(DeviceError::from)?;
             }
 

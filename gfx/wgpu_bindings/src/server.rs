@@ -4,6 +4,7 @@
 
 use crate::{
     error::{ErrMsg, ErrorBuffer, ErrorBufferType},
+    identity::IdentityRecyclerFactory,
     wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction, DropAction,
     QueueWriteAction, SwapChainId, TextureAction,
 };
@@ -74,20 +75,23 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
 
 // hide wgc's global in private
 pub struct Global {
-    global: wgc::global::Global,
+    global: wgc::global::Global<IdentityRecyclerFactory>,
     #[allow(dead_code)]
     owner: *mut c_void,
 }
 
 impl std::ops::Deref for Global {
-    type Target = wgc::global::Global;
+    type Target = wgc::global::Global<IdentityRecyclerFactory>;
     fn deref(&self) -> &Self::Target {
         &self.global
     }
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_new(owner: *mut c_void) -> *mut Global {
+pub extern "C" fn wgpu_server_new(
+    factory: IdentityRecyclerFactory,
+    owner: *mut c_void,
+) -> *mut Global {
     log::info!("Initializing WGPU server");
     let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
     let backends = if backends_pref.is_empty() {
@@ -114,6 +118,7 @@ pub extern "C" fn wgpu_server_new(owner: *mut c_void) -> *mut Global {
 
     let global = wgc::global::Global::new(
         "wgpu",
+        factory,
         wgt::InstanceDescriptor {
             backends,
             flags: instance_flags,
@@ -188,8 +193,8 @@ pub unsafe extern "C" fn wgpu_server_instance_request_adapter(
                 && desc.AdapterLuid.LowPart == adapter_luid.unwrap().low_part
                 && desc.AdapterLuid.HighPart == adapter_luid.unwrap().high_part
             {
-                let adapter_id = global
-                    .create_adapter_from_hal::<wgh::api::Dx12>(adapter, Some(id.unwrap().clone()));
+                let adapter_id =
+                    global.create_adapter_from_hal::<wgh::api::Dx12>(adapter, id.unwrap().clone());
                 return ids.iter().position(|&i| i == adapter_id).unwrap() as i8;
             }
         }
@@ -200,7 +205,10 @@ pub unsafe extern "C" fn wgpu_server_instance_request_adapter(
         return -1;
     }
 
-    match global.request_adapter(desc, wgc::instance::AdapterInputs::IdSet(ids)) {
+    match global.request_adapter(
+        desc,
+        wgc::instance::AdapterInputs::IdSet(ids, |i| i.backend()),
+    ) {
         Ok(id) => ids.iter().position(|&i| i == id).unwrap() as i8,
         Err(e) => {
             error_buf.init(e);
@@ -288,7 +296,7 @@ pub unsafe extern "C" fn wgpu_server_adapter_request_device(
     // TODO: in https://github.com/gfx-rs/wgpu/pull/3626/files#diff-033343814319f5a6bd781494692ea626f06f6c3acc0753a12c867b53a646c34eR97
     // which introduced the queue id parameter, the queue id is also the device id. I don't know how applicable this is to
     // other situations (this one in particular).
-    let (_, _, error) = gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, Some(new_id), Some(new_id.transmute())));
+    let (_, _, error) = gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, new_id, new_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -310,11 +318,7 @@ pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_server_set_device_lost_callback(
-    global: &Global,
-    self_id: id::DeviceId,
-    callback: wgc::device::DeviceLostClosureC,
-) {
+pub unsafe extern "C" fn wgpu_server_set_device_lost_callback(global: &Global, self_id: id::DeviceId, callback: wgc::device::DeviceLostClosureC) {
     gfx_select!(self_id => global.device_set_device_lost_closure(self_id, wgc::device::DeviceLostClosure::from_c(callback)));
 }
 
@@ -387,7 +391,7 @@ pub extern "C" fn wgpu_server_device_create_shader_module(
 
     let (_, error) = gfx_select!(
         self_id => global.device_create_shader_module(
-            self_id, &desc, source, Some(module_id)
+            self_id, &desc, source, module_id
         )
     );
 
@@ -422,7 +426,7 @@ pub extern "C" fn wgpu_server_device_create_buffer(
             message: "Out of memory",
             r#type: ErrorBufferType::OutOfMemory,
         });
-        gfx_select!(self_id => global.create_buffer_error(Some(buffer_id), label));
+        gfx_select!(self_id => global.create_buffer_error(buffer_id, label));
         return;
     }
 
@@ -432,8 +436,7 @@ pub extern "C" fn wgpu_server_device_create_buffer(
         usage,
         mapped_at_creation,
     };
-    let (_, error) =
-        gfx_select!(self_id => global.device_create_buffer(self_id, &desc, Some(buffer_id)));
+    let (_, error) = gfx_select!(self_id => global.device_create_buffer(self_id, &desc, buffer_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -531,10 +534,7 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
 
 #[allow(unused_variables)]
 #[no_mangle]
-pub extern "C" fn wgpu_server_get_device_fence_handle(
-    global: &Global,
-    device_id: id::DeviceId,
-) -> *mut c_void {
+pub extern "C" fn wgpu_server_get_device_fence_handle(global: &Global, device_id: id::DeviceId) -> *mut c_void {
     assert!(device_id.backend() == wgt::Backend::Dx12);
 
     #[cfg(target_os = "windows")]
@@ -622,7 +622,7 @@ impl Global {
                     || desc.size.height > max
                     || desc.size.depth_or_array_layers > max
                 {
-                    gfx_select!(self_id => self.create_texture_error(Some(id), desc.label));
+                    gfx_select!(self_id => self.create_texture_error(id, desc.label));
                     error_buf.init(ErrMsg {
                         message: "Out of memory",
                         r#type: ErrorBufferType::OutOfMemory,
@@ -709,7 +709,7 @@ impl Global {
                                 hal_texture,
                                 self_id,
                                 &desc,
-                                Some(id),
+                                id,
                             )
                         };
                         if let Some(err) = error {
@@ -719,60 +719,52 @@ impl Global {
                     }
                 }
 
-                let (_, error) = self.device_create_texture::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateSampler(id, desc) => {
-                let (_, error) = self.device_create_sampler::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_sampler::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateBindGroupLayout(id, desc) => {
-                let (_, error) =
-                    self.device_create_bind_group_layout::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_bind_group_layout::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::RenderPipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
-                let (_, error) = self.render_pipeline_get_bind_group_layout::<A>(
-                    pipeline_id,
-                    index,
-                    Some(bgl_id),
-                );
+                let (_, error) =
+                    self.render_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::ComputePipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
-                let (_, error) = self.compute_pipeline_get_bind_group_layout::<A>(
-                    pipeline_id,
-                    index,
-                    Some(bgl_id),
-                );
+                let (_, error) =
+                    self.compute_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreatePipelineLayout(id, desc) => {
-                let (_, error) = self.device_create_pipeline_layout::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_pipeline_layout::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateBindGroup(id, desc) => {
-                let (_, error) = self.device_create_bind_group::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_bind_group::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateShaderModule(id, desc, code) => {
                 let source = wgc::pipeline::ShaderModuleSource::Wgsl(code);
-                let (_, error) =
-                    self.device_create_shader_module::<A>(self_id, &desc, source, Some(id));
+                let (_, error) = self.device_create_shader_module::<A>(self_id, &desc, source, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -781,15 +773,11 @@ impl Global {
                 let implicit_ids = implicit
                     .as_ref()
                     .map(|imp| wgc::device::ImplicitPipelineIds {
-                        root_id: Some(imp.pipeline),
+                        root_id: imp.pipeline,
                         group_ids: &imp.bind_groups,
                     });
-                let (_, error) = self.device_create_compute_pipeline::<A>(
-                    self_id,
-                    &desc,
-                    Some(id),
-                    implicit_ids,
-                );
+                let (_, error) =
+                    self.device_create_compute_pipeline::<A>(self_id, &desc, id, implicit_ids);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -798,26 +786,26 @@ impl Global {
                 let implicit_ids = implicit
                     .as_ref()
                     .map(|imp| wgc::device::ImplicitPipelineIds {
-                        root_id: Some(imp.pipeline),
+                        root_id: imp.pipeline,
                         group_ids: &imp.bind_groups,
                     });
                 let (_, error) =
-                    self.device_create_render_pipeline::<A>(self_id, &desc, Some(id), implicit_ids);
+                    self.device_create_render_pipeline::<A>(self_id, &desc, id, implicit_ids);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateRenderBundle(id, encoder, desc) => {
-                let (_, error) = self.render_bundle_encoder_finish::<A>(encoder, &desc, Some(id));
+                let (_, error) = self.render_bundle_encoder_finish::<A>(encoder, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateRenderBundleError(buffer_id, label) => {
-                self.create_render_bundle_error::<A>(Some(buffer_id), label);
+                self.create_render_bundle_error::<A>(buffer_id, label);
             }
             DeviceAction::CreateCommandEncoder(id, desc) => {
-                let (_, error) = self.device_create_command_encoder::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.device_create_command_encoder::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -839,7 +827,7 @@ impl Global {
     ) {
         match action {
             TextureAction::CreateView(id, desc) => {
-                let (_, error) = self.texture_create_view::<A>(self_id, &desc, Some(id));
+                let (_, error) = self.texture_create_view::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -1027,7 +1015,7 @@ pub extern "C" fn wgpu_server_device_create_encoder(
 
     let desc = desc.map_label(|_| label);
     let (_, error) =
-        gfx_select!(self_id => global.device_create_command_encoder(self_id, &desc, Some(new_id)));
+        gfx_select!(self_id => global.device_create_command_encoder(self_id, &desc, new_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -1072,8 +1060,7 @@ pub unsafe extern "C" fn wgpu_server_encoder_copy_texture_to_buffer(
         buffer: dst_buffer,
         layout: dst_layout.into_wgt(),
     };
-    if let Err(err) = gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, &destination, size))
-    {
+    if let Err(err) = gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, &destination, size)) {
         error_buf.init(err);
     }
 }
@@ -1176,7 +1163,10 @@ pub extern "C" fn wgpu_server_render_pipeline_drop(global: &Global, self_id: id:
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_texture_destroy(global: &Global, self_id: id::TextureId) {
+pub extern "C" fn wgpu_server_texture_destroy(
+    global: &Global,
+    self_id: id::TextureId,
+) {
     let _ = gfx_select!(self_id => global.texture_destroy(self_id));
 }
 
@@ -1203,7 +1193,7 @@ pub extern "C" fn wgpu_server_compute_pipeline_get_bind_group_layout(
     assign_id: id::BindGroupLayoutId,
     mut error_buf: ErrorBuffer,
 ) {
-    let (_, error) = gfx_select!(self_id => global.compute_pipeline_get_bind_group_layout(self_id, index, Some(assign_id)));
+    let (_, error) = gfx_select!(self_id => global.compute_pipeline_get_bind_group_layout(self_id, index, assign_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -1217,7 +1207,7 @@ pub extern "C" fn wgpu_server_render_pipeline_get_bind_group_layout(
     assign_id: id::BindGroupLayoutId,
     mut error_buf: ErrorBuffer,
 ) {
-    let (_, error) = gfx_select!(self_id => global.render_pipeline_get_bind_group_layout(self_id, index, Some(assign_id)));
+    let (_, error) = gfx_select!(self_id => global.render_pipeline_get_bind_group_layout(self_id, index, assign_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
