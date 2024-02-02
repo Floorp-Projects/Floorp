@@ -24,6 +24,9 @@ struct CallConfig;
 // This interface exists to allow webrtc to be optionally built without media
 // support (i.e., if only being used for data channels). PeerConnectionFactory
 // is constructed with a CallFactoryInterface, which may or may not be null.
+// TODO(bugs.webrtc.org/15574): Delete this interface when
+// `PeerConnectionFactoryDependencies::call_factory` is removed in favor of
+// `PeerConnectionFactoryDependencies::media_factory`.
 class CallFactoryInterface {
  public:
   virtual ~CallFactoryInterface() = default;

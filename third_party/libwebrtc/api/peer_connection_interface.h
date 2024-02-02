@@ -120,6 +120,8 @@
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "api/turn_customizer.h"
 #include "api/video/video_bitrate_allocator_factory.h"
+#include "api/video_codecs/video_decoder_factory.h"
+#include "api/video_codecs/video_encoder_factory.h"
 #include "call/rtp_transport_controller_send_factory_interface.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
@@ -144,6 +146,9 @@ class Thread;
 }  // namespace rtc
 
 namespace webrtc {
+
+// MediaFactory class definition is not part of the api.
+class MediaFactory;
 
 // MediaStream container interface.
 class StreamCollectionInterface : public rtc::RefCountInterface {
@@ -1427,6 +1432,8 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   // called without a `port_allocator`.
   std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory;
   std::unique_ptr<TaskQueueFactory> task_queue_factory;
+  // TODO(bugs.webrtc.org/15574): Deprecate `media_engine` and `call_factory`
+  // when chromium and webrtc are updated to use `media_factory` instead.
   std::unique_ptr<cricket::MediaEngineInterface> media_engine;
   std::unique_ptr<CallFactoryInterface> call_factory;
   std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory;
@@ -1447,6 +1454,23 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   std::unique_ptr<RtpTransportControllerSendFactoryInterface>
       transport_controller_send_factory;
   std::unique_ptr<Metronome> metronome;
+
+  // Media specific dependencies. Unused when `media_factory == nullptr`.
+  rtc::scoped_refptr<AudioDeviceModule> adm;
+  rtc::scoped_refptr<AudioEncoderFactory> audio_encoder_factory;
+  rtc::scoped_refptr<AudioDecoderFactory> audio_decoder_factory;
+  rtc::scoped_refptr<AudioMixer> audio_mixer;
+  rtc::scoped_refptr<AudioProcessing> audio_processing;
+  std::unique_ptr<AudioFrameProcessor> audio_frame_processor;
+  std::unique_ptr<VideoEncoderFactory> video_encoder_factory;
+  std::unique_ptr<VideoDecoderFactory> video_decoder_factory;
+
+  // The `media_factory` members allows webrtc to be optionally built without
+  // media support (i.e., if only being used for data channels).
+  // By default media is disabled. To enable media call
+  // `EnableMedia(PeerConnectionFactoryDependencies&)`. Definition of the
+  // `MediaFactory` interface is a webrtc implementation detail.
+  std::unique_ptr<MediaFactory> media_factory;
 };
 
 // PeerConnectionFactoryInterface is the factory interface used for creating

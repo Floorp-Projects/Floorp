@@ -35,6 +35,20 @@ rtc_source_set("callfactory_api") {
   ]
 }
 
+rtc_source_set("enable_media") {
+  visibility = [ "*" ]
+  sources = [
+    "enable_media.cc",
+    "enable_media.h",
+  ]
+  deps = [
+    ":libjingle_peerconnection_api",
+    "../call",
+    "../media:rtc_audio_video",
+    "../pc:media_factory",
+  ]
+}
+
 if (!build_with_chromium && !build_with_mozilla) {
   rtc_library("create_peerconnection_factory") {
     visibility = [ "*" ]
@@ -328,6 +342,7 @@ if (!build_with_mozilla) {
     ":turn_customizer",
     "../call:rtp_interfaces",
     "../p2p:rtc_p2p",
+    "../pc:media_factory",
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:logging",
     "../rtc_base:network",
