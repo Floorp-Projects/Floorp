@@ -1,4 +1,4 @@
-import { FilterAdult } from "lib/FilterAdult.jsm";
+import { FilterAdult } from "lib/FilterAdult.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("FilterAdult", () => {

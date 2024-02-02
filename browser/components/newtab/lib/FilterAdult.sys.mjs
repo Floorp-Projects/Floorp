@@ -1,8 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -45,7 +51,7 @@ function md5Hash(text) {
   return gCryptoHash.finish(true);
 }
 
-const FilterAdult = {
+export const FilterAdult = {
   /**
    * Filter out any link objects that have a url with an adult base domain.
    *
@@ -107,8 +113,6 @@ const FilterAdult = {
     );
   },
 };
-
-const EXPORTED_SYMBOLS = ["FilterAdult"];
 
 // These are md5 hashes of base domains to be filtered out. Originally from:
 // https://hg.mozilla.org/mozilla-central/log/default/browser/base/content/newtab/newTab.inadjacent.json
