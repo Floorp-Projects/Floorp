@@ -4769,7 +4769,7 @@ bool BaselineCodeGen<Handler>::emit_FreshenLexicalEnv() {
     pushArg(R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
-    return callVM<Fn, jit::DebugLeaveThenFreshenLexicalEnv>();
+    return callVM<Fn, jit::DebuggeeFreshenLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
     prepareVMCall();
@@ -4793,7 +4793,7 @@ bool BaselineCodeGen<Handler>::emit_RecreateLexicalEnv() {
     pushArg(R0.scratchReg());
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
-    return callVM<Fn, jit::DebugLeaveThenRecreateLexicalEnv>();
+    return callVM<Fn, jit::DebuggeeRecreateLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
     prepareVMCall();

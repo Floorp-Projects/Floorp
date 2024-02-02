@@ -5077,12 +5077,12 @@ PBIResult PortableBaselineInterpret(JSContext* cx_, State& state, Stack& stack,
       {
         PUSH_EXIT_FRAME();
         if (frame->isDebuggee()) {
-          TRACE_PRINTF("doing DebugLeaveThenRecreateLexicalEnv\n");
-          if (!DebugLeaveThenRecreateLexicalEnv(cx, frame, pc)) {
+          TRACE_PRINTF("doing DebuggeeRecreateLexicalEnv\n");
+          if (!DebuggeeRecreateLexicalEnv(cx, frame, pc)) {
             goto error;
           }
         } else {
-          if (!frame->recreateLexicalEnvironment(cx)) {
+          if (!frame->recreateLexicalEnvironment<false>(cx)) {
             goto error;
           }
         }
@@ -5094,12 +5094,12 @@ PBIResult PortableBaselineInterpret(JSContext* cx_, State& state, Stack& stack,
       {
         PUSH_EXIT_FRAME();
         if (frame->isDebuggee()) {
-          TRACE_PRINTF("doing DebugLeaveThenFreshenLexicalEnv\n");
-          if (!DebugLeaveThenFreshenLexicalEnv(cx, frame, pc)) {
+          TRACE_PRINTF("doing DebuggeeFreshenLexicalEnv\n");
+          if (!DebuggeeFreshenLexicalEnv(cx, frame, pc)) {
             goto error;
           }
         } else {
-          if (!frame->freshenLexicalEnvironment(cx)) {
+          if (!frame->freshenLexicalEnvironment<false>(cx)) {
             goto error;
           }
         }

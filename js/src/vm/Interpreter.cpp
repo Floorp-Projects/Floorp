@@ -4006,11 +4006,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       MOZ_ASSERT(scope == envScope);
 #endif
 
-      if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
-        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
-      }
-
-      if (!REGS.fp()->freshenLexicalEnvironment(cx)) {
+      if (!REGS.fp()->freshenLexicalEnvironment(cx, REGS.pc)) {
         goto error;
       }
     }
@@ -4024,11 +4020,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       MOZ_ASSERT(scope == envScope);
 #endif
 
-      if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
-        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
-      }
-
-      if (!REGS.fp()->recreateLexicalEnvironment(cx)) {
+      if (!REGS.fp()->recreateLexicalEnvironment(cx, REGS.pc)) {
         goto error;
       }
     }

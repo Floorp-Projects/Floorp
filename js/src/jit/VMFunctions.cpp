@@ -1293,23 +1293,21 @@ bool DebugLeaveThenPopLexicalEnv(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FreshenLexicalEnv(JSContext* cx, BaselineFrame* frame) {
-  return frame->freshenLexicalEnvironment(cx);
+  return frame->freshenLexicalEnvironment<false>(cx);
 }
 
-bool DebugLeaveThenFreshenLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                     const jsbytecode* pc) {
-  MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
-  return frame->freshenLexicalEnvironment(cx);
+bool DebuggeeFreshenLexicalEnv(JSContext* cx, BaselineFrame* frame,
+                               const jsbytecode* pc) {
+  return frame->freshenLexicalEnvironment<true>(cx, pc);
 }
 
 bool RecreateLexicalEnv(JSContext* cx, BaselineFrame* frame) {
-  return frame->recreateLexicalEnvironment(cx);
+  return frame->recreateLexicalEnvironment<false>(cx);
 }
 
-bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                      const jsbytecode* pc) {
-  MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
-  return frame->recreateLexicalEnvironment(cx);
+bool DebuggeeRecreateLexicalEnv(JSContext* cx, BaselineFrame* frame,
+                                const jsbytecode* pc) {
+  return frame->recreateLexicalEnvironment<true>(cx, pc);
 }
 
 bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
