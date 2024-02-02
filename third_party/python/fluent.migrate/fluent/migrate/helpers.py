@@ -7,6 +7,8 @@ They take a string argument and immediately return a corresponding AST node.
 (As opposed to Transforms which are AST nodes on their own and only return the
 migrated AST nodes when they are evaluated by a MigrationContext.) """
 
+from __future__ import annotations
+from typing import List
 
 from fluent.syntax import FluentParser, ast as FTL
 from fluent.syntax.visitor import Transformer
@@ -17,9 +19,7 @@ from .errors import NotSupportedError, InvalidTransformError
 def VARIABLE_REFERENCE(name):
     """Create an ExternalArgument expression."""
 
-    return FTL.VariableReference(
-        id=FTL.Identifier(name)
-    )
+    return FTL.VariableReference(id=FTL.Identifier(name))
 
 
 def MESSAGE_REFERENCE(name):
@@ -28,8 +28,8 @@ def MESSAGE_REFERENCE(name):
     If the passed name contains a `.`, we're generating
     a message reference with an attribute.
     """
-    if '.' in name:
-        name, attribute = name.split('.')
+    if "." in name:
+        name, attribute = name.split(".")
         attribute = FTL.Identifier(attribute)
     else:
         attribute = None
@@ -43,9 +43,7 @@ def MESSAGE_REFERENCE(name):
 def TERM_REFERENCE(name):
     """Create a TermReference expression."""
 
-    return FTL.TermReference(
-        id=FTL.Identifier(name)
-    )
+    return FTL.TermReference(id=FTL.Identifier(name))
 
 
 class IntoTranforms(Transformer):
@@ -59,26 +57,29 @@ class IntoTranforms(Transformer):
         anno = node.annotations[0]
         raise InvalidTransformError(
             "Transform contains parse error: {}, at {}".format(
-                anno.message, anno.span.start))
+                anno.message, anno.span.start
+            )
+        )
 
     def visit_FunctionReference(self, node):
         name = node.id.name
         if name in self.IMPLICIT_TRANSFORMS:
             raise NotSupportedError(
                 "{} may not be used with transforms_from(). It runs "
-                "implicitly on all Patterns anyways.".format(name))
+                "implicitly on all Patterns anyways.".format(name)
+            )
         if name in self.FORBIDDEN_TRANSFORMS:
             raise NotSupportedError(
                 "{} may not be used with transforms_from(). It requires "
-                "additional logic in Python code.".format(name))
-        if name in ('COPY', 'COPY_PATTERN'):
-            args = (
-                self.into_argument(arg) for arg in node.arguments.positional
+                "additional logic in Python code.".format(name)
             )
+        if name in ("COPY", "COPY_PATTERN"):
+            args = (self.into_argument(arg) for arg in node.arguments.positional)
             kwargs = {
                 arg.name.name: self.into_argument(arg.value)
-                for arg in node.arguments.named}
-            if name == 'COPY':
+                for arg in node.arguments.named
+            }
+            if name == "COPY":
                 return COPY(*args, **kwargs)
             return COPY_PATTERN(*args, **kwargs)
         return self.generic_visit(node)
@@ -117,15 +118,15 @@ class IntoTranforms(Transformer):
                 return self.substitutions[node.id.name]
             except KeyError:
                 raise InvalidTransformError(
-                    "Unknown substitution in COPY: {}".format(
-                        node.id.name))
+                    "Unknown substitution in COPY: {}".format(node.id.name)
+                )
         else:
             raise InvalidTransformError(
-                "Invalid argument passed to COPY: {}".format(
-                    type(node).__name__))
+                "Invalid argument passed to COPY: {}".format(type(node).__name__)
+            )
 
 
-def transforms_from(ftl, **substitutions):
+def transforms_from(ftl, **substitutions) -> List[FTL.Message | FTL.Term]:
     """Parse FTL code into a list of Message nodes with Transforms.
 
     The FTL may use a fabricated COPY function inside of placeables which

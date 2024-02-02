@@ -1,20 +1,23 @@
+from __future__ import annotations
+from typing import Dict, Optional, Set, Tuple, cast
+
 import os
 import codecs
 from functools import partial
 import logging
 from itertools import zip_longest
 
+from compare_locales.parser import getParser
+from compare_locales.plurals import get_plural
 import fluent.syntax.ast as FTL
 from fluent.syntax.parser import FluentParser
 from fluent.syntax.serializer import FluentSerializer
-from compare_locales.parser import getParser
-from compare_locales.plurals import get_plural
 
+from .changesets import Changes
+from .errors import UnreadableReferenceError
 from .evaluator import Evaluator
 from .merge import merge_resource
-from .errors import (
-    UnreadableReferenceError,
-)
+from .transforms import Source
 
 
 class InternalContext:
@@ -23,9 +26,11 @@ class InternalContext:
     For the public interface, see `context.MigrationContext`.
     """
 
-    def __init__(
-        self, lang, reference_dir, localization_dir, enforce_translated=False
-    ):
+    dependencies: Dict[Tuple[str, str], Set[Tuple[str, Source]]] = {}
+    localization_dir: str
+    reference_dir: str
+
+    def __init__(self, lang, enforce_translated=False):
         self.fluent_parser = FluentParser(with_spans=False)
         self.fluent_serializer = FluentSerializer()
 
@@ -33,11 +38,11 @@ class InternalContext:
         # language.  E.g. ('one', 'other') for English.
         self.plural_categories = get_plural(lang)
         if self.plural_categories is None:
-            logger = logging.getLogger('migrate')
+            logger = logging.getLogger("migrate")
             logger.warning(
-                'Plural rule for "{}" is not defined in '
-                'compare-locales'.format(lang))
-            self.plural_categories = ('one', 'other')
+                f'Plural rule for "{lang}" is not defined in "compare-locales"'
+            )
+            self.plural_categories = ("one", "other")
 
         self.enforce_translated = enforce_translated
         # Parsed input resources stored by resource path.
@@ -53,14 +58,14 @@ class InternalContext:
         # AST hierarchy and evaluating nodes which are migration Transforms.
         self.evaluator = Evaluator(self)
 
-    def read_ftl_resource(self, path):
+    def read_ftl_resource(self, path: str):
         """Read an FTL resource and parse it into an AST."""
-        f = codecs.open(path, 'r', 'utf8')
+        f = codecs.open(path, "r", "utf8")
         try:
             contents = f.read()
         except UnicodeDecodeError as err:
-            logger = logging.getLogger('migrate')
-            logger.warning(f'Unable to read file {path}: {err}')
+            logger = logging.getLogger("migrate")
+            logger.warning(f"Unable to read file {path}: {err}")
             raise err
         finally:
             f.close()
@@ -75,24 +80,25 @@ class InternalContext:
         ]
 
         if len(annots):
-            logger = logging.getLogger('migrate')
+            logger = logging.getLogger("migrate")
             for annot in annots:
                 msg = annot.message
-                logger.warning(f'Syntax error in {path}: {msg}')
+                logger.warning(f"Syntax error in {path}: {msg}")
 
         return ast
 
-    def read_legacy_resource(self, path):
+    def read_legacy_resource(self, path: str):
         """Read a legacy resource and parse it into a dict."""
         parser = getParser(path)
         parser.readFile(path)
         # Transform the parsed result which is an iterator into a dict.
         return {
-            entity.key: entity.val for entity in parser
+            entity.key: entity.val
+            for entity in parser
             if entity.localized or self.enforce_translated
         }
 
-    def read_reference_ftl(self, path):
+    def read_reference_ftl(self, path: str):
         """Read and parse a reference FTL file.
 
         A missing resource file is a fatal error and will raise an
@@ -102,15 +108,15 @@ class InternalContext:
         try:
             return self.read_ftl_resource(fullpath)
         except OSError:
-            error_message = f'Missing reference file: {fullpath}'
-            logging.getLogger('migrate').error(error_message)
+            error_message = f"Missing reference file: {fullpath}"
+            logging.getLogger("migrate").error(error_message)
             raise UnreadableReferenceError(error_message)
         except UnicodeDecodeError as err:
-            error_message = f'Error reading file {fullpath}: {err}'
-            logging.getLogger('migrate').error(error_message)
+            error_message = f"Error reading file {fullpath}: {err}"
+            logging.getLogger("migrate").error(error_message)
             raise UnreadableReferenceError(error_message)
 
-    def read_localization_ftl(self, path):
+    def read_localization_ftl(self, path: str):
         """Read and parse an existing localization FTL file.
 
         Create a new FTL.Resource if the file doesn't exist or can't be
@@ -120,20 +126,22 @@ class InternalContext:
         try:
             return self.read_ftl_resource(fullpath)
         except OSError:
-            logger = logging.getLogger('migrate')
+            logger = logging.getLogger("migrate")
             logger.info(
-                'Localization file {} does not exist and '
-                'it will be created'.format(path))
+                "Localization file {} does not exist and "
+                "it will be created".format(path)
+            )
             return FTL.Resource()
         except UnicodeDecodeError:
-            logger = logging.getLogger('migrate')
+            logger = logging.getLogger("migrate")
             logger.warning(
-                'Localization file {} has broken encoding. '
-                'It will be re-created and some translations '
-                'may be lost'.format(path))
+                "Localization file {} has broken encoding. "
+                "It will be re-created and some translations "
+                "may be lost".format(path)
+            )
             return FTL.Resource()
 
-    def maybe_add_localization(self, path):
+    def maybe_add_localization(self, path: str):
         """Add a localization resource to migrate translations from.
 
         Uses a compare-locales parser to create a dict of (key, string value)
@@ -142,17 +150,17 @@ class InternalContext:
         """
         try:
             fullpath = os.path.join(self.localization_dir, path)
-            if not fullpath.endswith('.ftl'):
+            if not fullpath.endswith(".ftl"):
                 collection = self.read_legacy_resource(fullpath)
             else:
                 collection = self.read_ftl_resource(fullpath)
         except OSError:
-            logger = logging.getLogger('migrate')
-            logger.warning(f'Missing localization file: {path}')
+            logger = logging.getLogger("migrate")
+            logger.warning(f"Missing localization file: {path}")
         else:
             self.localization_resources[path] = collection
 
-    def get_legacy_source(self, path, key):
+    def get_legacy_source(self, path: str, key: str):
         """Get an entity value from a localized legacy source.
 
         Used by the `Source` transform.
@@ -160,14 +168,14 @@ class InternalContext:
         resource = self.localization_resources[path]
         return resource.get(key, None)
 
-    def get_fluent_source_pattern(self, path, key):
+    def get_fluent_source_pattern(self, path: str, key: str):
         """Get a pattern from a localized Fluent source.
 
         If the key contains a `.`, does an attribute lookup.
         Used by the `COPY_PATTERN` transform.
         """
         resource = self.localization_resources[path]
-        msg_key, _, attr_key = key.partition('.')
+        msg_key, _, attr_key = key.partition(".")
         found = None
         for entry in resource.body:
             if isinstance(entry, (FTL.Message, FTL.Term)):
@@ -190,20 +198,27 @@ class InternalContext:
         in two FTL resources.
         If the order or number of messages differ, the result is also False.
         """
+
         def message_id(message):
             "Return the message's identifer name for sorting purposes."
             return message.id.name
 
         messages1 = sorted(
-            (entry for entry in res1.body
-             if isinstance(entry, FTL.Message)
-                or isinstance(entry, FTL.Term)),
-            key=message_id)
+            (
+                entry
+                for entry in res1.body
+                if isinstance(entry, FTL.Message) or isinstance(entry, FTL.Term)
+            ),
+            key=message_id,
+        )
         messages2 = sorted(
-            (entry for entry in res2.body
-             if isinstance(entry, FTL.Message)
-                or isinstance(entry, FTL.Term)),
-            key=message_id)
+            (
+                entry
+                for entry in res2.body
+                if isinstance(entry, FTL.Message) or isinstance(entry, FTL.Term)
+            ),
+            key=message_id,
+        )
         for msg1, msg2 in zip_longest(messages1, messages2):
             if msg1 is None or msg2 is None:
                 return False
@@ -211,7 +226,11 @@ class InternalContext:
                 return False
         return True
 
-    def merge_changeset(self, changeset=None, known_translations=None):
+    def merge_changeset(
+        self,
+        changeset: Optional[Changes] = None,
+        known_translations: Optional[Changes] = None,
+    ):
         """Return a generator of FTL ASTs for the changeset.
 
         The input data must be configured earlier using the `add_*` methods.
@@ -233,7 +252,7 @@ class InternalContext:
             changeset = {
                 (path, key)
                 for path, strings in self.localization_resources.items()
-                if not path.endswith('.ftl')
+                if not path.endswith(".ftl")
                 for key in strings.keys()
             }
 
@@ -244,7 +263,8 @@ class InternalContext:
             current = self.target_resources[path]
             transforms = self.transforms.get(path, [])
             in_changeset = partial(
-                self.in_changeset, changeset, known_translations, path)
+                self.in_changeset, changeset, known_translations, path
+            )
 
             # Merge legacy translations with the existing ones using the
             # reference as a template.
@@ -269,7 +289,9 @@ class InternalContext:
             # The result for this path is a complete `FTL.Resource`.
             yield path, snapshot
 
-    def in_changeset(self, changeset, known_translations, path, ident):
+    def in_changeset(
+        self, changeset: Changes, known_translations: Changes, path: str, ident
+    ) -> bool:
         """Check if a message should be migrated in this changeset.
 
         The message is identified by path and ident.
@@ -304,11 +326,13 @@ class InternalContext:
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1321271
         # We only return True if our current changeset touches
         # the transform, and we have all of the dependencies.
-        active_deps = message_deps & changeset
+        active_deps = cast(bool, message_deps & changeset)
         available_deps = message_deps & known_translations
         return active_deps and message_deps == available_deps
 
-    def serialize_changeset(self, changeset, known_translations=None):
+    def serialize_changeset(
+        self, changeset: Changes, known_translations: Optional[Changes] = None
+    ):
         """Return a dict of serialized FTLs for the changeset.
 
         Given `changeset`, return a dict whose keys are resource paths and
@@ -317,9 +341,7 @@ class InternalContext:
 
         return {
             path: self.fluent_serializer.serialize(snapshot)
-            for path, snapshot in self.merge_changeset(
-                changeset, known_translations
-            )
+            for path, snapshot in self.merge_changeset(changeset, known_translations)
         }
 
     def evaluate(self, node):
