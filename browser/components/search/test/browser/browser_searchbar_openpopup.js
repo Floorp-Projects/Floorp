@@ -78,7 +78,7 @@ function add_no_popup_task(task) {
 
 // Simulates the full set of events for a context click
 function context_click(target) {
-  for (let event of ["mousedown", "contextmenu", "mouseup"]) {
+  for (let event of ["mousedown", "contextmenu"]) {
     EventUtils.synthesizeMouseAtCenter(target, { type: event, button: 2 });
   }
 }
