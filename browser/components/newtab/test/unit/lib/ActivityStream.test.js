@@ -14,7 +14,7 @@ import { SystemTickFeed } from "lib/SystemTickFeed.sys.mjs";
 import { TelemetryFeed } from "lib/TelemetryFeed.sys.mjs";
 import { FaviconFeed } from "lib/FaviconFeed.sys.mjs";
 import { TopSitesFeed } from "lib/TopSitesFeed.sys.mjs";
-import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
+import { TopStoriesFeed } from "lib/TopStoriesFeed.sys.mjs";
 import { HighlightsFeed } from "lib/HighlightsFeed.sys.mjs";
 import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.sys.mjs";
 

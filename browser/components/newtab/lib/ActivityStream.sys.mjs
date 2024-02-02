@@ -35,6 +35,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SystemTickFeed: "resource://activity-stream/lib/SystemTickFeed.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
   TopSitesFeed: "resource://activity-stream/lib/TopSitesFeed.sys.mjs",
+  TopStoriesFeed: "resource://activity-stream/lib/TopStoriesFeed.sys.mjs",
 });
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
@@ -43,12 +44,6 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.sys.mjs";
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TopStoriesFeed",
-  "resource://activity-stream/lib/TopStoriesFeed.jsm"
-);
 
 const REGION_BASIC_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-basic-config";
