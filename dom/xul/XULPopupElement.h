@@ -47,9 +47,7 @@ class XULPopupElement : public XULMenuParentElement {
     SetXULAttr(nsGkAtoms::label, aValue, rv);
   }
 
-  bool IsMenu() const {
-    return IsAnyOfXULElements(nsGkAtoms::popup, nsGkAtoms::menupopup);
-  }
+  bool IsMenu() const { return IsXULElement(nsGkAtoms::menupopup); }
 
   void GetPosition(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::position, aValue);
@@ -102,7 +100,7 @@ class XULPopupElement : public XULMenuParentElement {
 
   NS_IMPL_FROMNODE_HELPER(XULPopupElement,
                           IsAnyOfXULElements(nsGkAtoms::menupopup,
-                                             nsGkAtoms::popup, nsGkAtoms::panel,
+                                             nsGkAtoms::panel,
                                              nsGkAtoms::tooltip));
 
  protected:

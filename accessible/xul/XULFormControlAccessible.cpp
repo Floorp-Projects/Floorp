@@ -131,7 +131,6 @@ bool XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const {
       //   menu buttons can have popup accessibles (@type="menu" or
       //   columnpicker).
       aEl->IsXULElement(nsGkAtoms::menupopup) ||
-      aEl->IsXULElement(nsGkAtoms::popup) ||
       // A XUL button can be labelled by a direct child text node, so we need to
       // allow that as a child so it will be picked up when computing name from
       // subtree.
