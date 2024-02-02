@@ -43,6 +43,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
+import org.mozilla.fenix.compose.ext.toLocaleString
 import org.mozilla.fenix.debugsettings.ui.DebugDrawer
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
@@ -152,19 +153,19 @@ private fun TabCounter(
 
         TabCountRow(
             tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_normal),
-            count = activeTabCount.toString(),
+            count = activeTabCount,
         )
 
         if (inactiveTabsEnabled) {
             TabCountRow(
                 tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_inactive),
-                count = inactiveTabCount.toString(),
+                count = inactiveTabCount,
             )
         }
 
         TabCountRow(
             tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_private),
-            count = privateTabCount.toString(),
+            count = privateTabCount,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -175,7 +176,7 @@ private fun TabCounter(
 
         TabCountRow(
             tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_total),
-            count = totalTabCount.toString(),
+            count = totalTabCount,
         )
     }
 }
@@ -183,7 +184,7 @@ private fun TabCounter(
 @Composable
 private fun TabCountRow(
     tabType: String,
-    count: String,
+    count: Int,
 ) {
     Row(
         modifier = Modifier
@@ -198,14 +199,14 @@ private fun TabCountRow(
         )
 
         Text(
-            text = count,
+            text = count.toLocaleString(),
             color = FirefoxTheme.colors.textSecondary,
             style = FirefoxTheme.typography.headline6,
         )
     }
 }
 
-private const val DEFAULT_TABS_TO_ADD = "1"
+private const val DEFAULT_TABS_TO_ADD = 1
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -213,7 +214,7 @@ private fun TabCreationTool(
     inactiveTabsEnabled: Boolean,
     onCreateTabsClick: ((quantity: Int, isInactive: Boolean, isPrivate: Boolean) -> Unit),
 ) {
-    var tabQuantityToCreate by rememberSaveable { mutableStateOf(DEFAULT_TABS_TO_ADD) }
+    var tabQuantityToCreate by rememberSaveable { mutableStateOf(DEFAULT_TABS_TO_ADD.toLocaleString()) }
     var hasError by rememberSaveable { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
 

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
@@ -21,9 +22,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.ext.toLocaleString
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -48,19 +51,20 @@ private const val TAB_TEXT_BOTTOM_PADDING_RATIO = 4
 
 @Composable
 fun TabCounter(tabCount: Int) {
+    val formattedTabCount = tabCount.toLocaleString()
     val normalTabCountText: String
     val tabCountTextRatio: Float
     val needsBottomPaddingForInfiniteTabs: Boolean
 
     when (tabCount) {
         in MIN_SINGLE_DIGIT..MAX_SINGLE_DIGIT -> {
-            normalTabCountText = tabCount.toString()
+            normalTabCountText = formattedTabCount
             tabCountTextRatio = ONE_DIGIT_SIZE_RATIO
             needsBottomPaddingForInfiniteTabs = false
         }
 
         in TWO_DIGIT_THRESHOLD..MAX_VISIBLE_TABS -> {
-            normalTabCountText = tabCount.toString()
+            normalTabCountText = formattedTabCount
             tabCountTextRatio = TWO_DIGITS_SIZE_RATIO
             needsBottomPaddingForInfiniteTabs = false
         }
@@ -77,7 +81,7 @@ fun TabCounter(tabCount: Int) {
     } else {
         stringResource(
             id = R.string.mozac_tab_counter_open_tab_tray_plural,
-            tabCount.toString(),
+            formattedTabCount,
         )
     }
 
@@ -119,9 +123,14 @@ fun TabCounter(tabCount: Int) {
 }
 
 @LightDarkPreview
+@Preview(locale = "ar")
 @Composable
 private fun TabCounterPreview() {
     FirefoxTheme {
-        TabCounter(tabCount = 55)
+        Box(
+            modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
+        ) {
+            TabCounter(tabCount = 55)
+        }
     }
 }
