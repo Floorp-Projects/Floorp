@@ -1,24 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
-const { BasePromiseWorker } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseWorker.sys.mjs"
-);
-
 const RECIPE_NAME = "personality-provider-recipe";
 const MODELS_NAME = "personality-provider-models";
 
-class PersonalityProvider {
+export class PersonalityProvider {
   constructor(modelKeys) {
     this.modelKeys = modelKeys;
     this.onSync = this.onSync.bind(this);
@@ -36,7 +32,7 @@ class PersonalityProvider {
       return this._personalityProviderWorker;
     }
 
-    this._personalityProviderWorker = new BasePromiseWorker(
+    this._personalityProviderWorker = new lazy.BasePromiseWorker(
       "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.worker.mjs",
       { type: "module" }
     );
@@ -279,5 +275,3 @@ class PersonalityProvider {
     };
   }
 }
-
-const EXPORTED_SYMBOLS = ["PersonalityProvider"];
