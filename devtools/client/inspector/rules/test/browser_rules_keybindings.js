@@ -6,6 +6,7 @@
 // Test keyboard navigation in the rule view
 
 add_task(async function () {
+  await pushPref("devtools.inspector.rule-view.focusNextOnEnter", false);
   await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", true);
   const tab = await addTab(`data:text/html;charset=utf-8,
     <style>h1 {}</style>
@@ -169,6 +170,7 @@ add_task(async function () {
 // also works fine on them.
 
 add_task(async function testKeyboardNavigationInElementRule() {
+  await pushPref("devtools.inspector.rule-view.focusNextOnEnter", false);
   await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
