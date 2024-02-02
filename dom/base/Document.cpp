@@ -7680,8 +7680,7 @@ bool Document::ContainsEMEContent() {
 
 bool Document::ContainsMSEContent() {
   bool containsMSE = false;
-
-  auto check = [&containsMSE](nsISupports* aSupports) {
+  EnumerateActivityObservers([&containsMSE](nsISupports* aSupports) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
     if (auto* mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
       RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
@@ -7689,9 +7688,7 @@ bool Document::ContainsMSEContent() {
         containsMSE = true;
       }
     }
-  };
-
-  EnumerateActivityObservers(check);
+  });
   return containsMSE;
 }
 
@@ -10970,12 +10967,10 @@ void Document::FlushExternalResources(FlushType aType) {
     return;
   }
 
-  auto flush = [aType](Document& aDoc) {
+  EnumerateExternalResources([aType](Document& aDoc) {
     aDoc.FlushPendingNotifications(aType);
     return CallState::Continue;
-  };
-
-  EnumerateExternalResources(flush);
+  });
 }
 
 void Document::SetXMLDeclaration(const char16_t* aVersion,
@@ -11842,11 +11837,10 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
 
   NotifyActivityChanged();
 
-  auto notifyExternal = [aPersisted](Document& aExternalResource) {
+  EnumerateExternalResources([aPersisted](Document& aExternalResource) {
     aExternalResource.OnPageShow(aPersisted, nullptr);
     return CallState::Continue;
-  };
-  EnumerateExternalResources(notifyExternal);
+  });
 
   if (mAnimationController) {
     mAnimationController->OnPageShow();
@@ -11944,11 +11938,10 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     UpdateVisibilityState();
   }
 
-  auto notifyExternal = [aPersisted](Document& aExternalResource) {
+  EnumerateExternalResources([aPersisted](Document& aExternalResource) {
     aExternalResource.OnPageHide(aPersisted, nullptr);
     return CallState::Continue;
-  };
-  EnumerateExternalResources(notifyExternal);
+  });
   NotifyActivityChanged();
 
   ClearPendingFullscreenRequests(this);
@@ -12314,12 +12307,10 @@ void Document::SuppressEventHandling(uint32_t aIncrease) {
     ScriptLoader()->AddExecuteBlocker();
   }
 
-  auto suppressInSubDoc = [aIncrease](Document& aSubDoc) {
+  EnumerateSubDocuments([aIncrease](Document& aSubDoc) {
     aSubDoc.SuppressEventHandling(aIncrease);
     return CallState::Continue;
-  };
-
-  EnumerateSubDocuments(suppressInSubDoc);
+  });
 }
 
 void Document::NotifyAbortedLoad() {
@@ -12712,11 +12703,10 @@ static void GetAndUnsuppressSubDocuments(
     aDocument.ScriptLoader()->RemoveExecuteBlocker();
   }
   aDocuments.AppendElement(&aDocument);
-  auto recurse = [&aDocuments](Document& aSubDoc) {
+  aDocument.EnumerateSubDocuments([&aDocuments](Document& aSubDoc) {
     GetAndUnsuppressSubDocuments(aSubDoc, aDocuments);
     return CallState::Continue;
-  };
-  aDocument.EnumerateSubDocuments(recurse);
+  });
 }
 
 void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
@@ -12794,11 +12784,10 @@ void Document::FireOrClearPostMessageEvents(bool aFireEvents) {
 
 void Document::SetSuppressedEventListener(EventListener* aListener) {
   mSuppressedEventListener = aListener;
-  auto setOnSubDocs = [&](Document& aDocument) {
+  EnumerateSubDocuments([&](Document& aDocument) {
     aDocument.SetSuppressedEventListener(aListener);
     return CallState::Continue;
-  };
-  EnumerateSubDocuments(setOnSubDocs);
+  });
 }
 
 bool Document::IsActive() const {
@@ -14164,11 +14153,10 @@ void EvaluateMediaQueryLists(nsTArray<RefPtr<MediaQueryList>>& aListsToNotify,
   if (!aRecurse) {
     return;
   }
-  auto recurse = [&](Document& aSubDoc) {
+  aDocument.EnumerateSubDocuments([&](Document& aSubDoc) {
     EvaluateMediaQueryLists(aListsToNotify, aSubDoc, true);
     return CallState::Continue;
-  };
-  aDocument.EnumerateSubDocuments(recurse);
+  });
 }
 
 void Document::EvaluateMediaQueriesAndReportChanges(bool aRecurse) {
@@ -14487,13 +14475,12 @@ void Document::AsyncExitFullscreen(Document* aDoc) {
 static uint32_t CountFullscreenSubDocuments(Document& aDoc) {
   uint32_t count = 0;
   // FIXME(emilio): Should this be recursive and dig into our nested subdocs?
-  auto subDoc = [&count](Document& aSubDoc) {
+  aDoc.EnumerateSubDocuments([&count](Document& aSubDoc) {
     if (aSubDoc.Fullscreen()) {
       count++;
     }
     return CallState::Continue;
-  };
-  aDoc.EnumerateSubDocuments(subDoc);
+  });
   return count;
 }
 
@@ -14514,11 +14501,10 @@ static Document* GetFullscreenLeaf(Document& aDoc) {
     return nullptr;
   }
   Document* leaf = nullptr;
-  auto recurse = [&leaf](Document& aSubDoc) {
+  aDoc.EnumerateSubDocuments([&leaf](Document& aSubDoc) {
     leaf = GetFullscreenLeaf(aSubDoc);
     return leaf ? CallState::Stop : CallState::Continue;
-  };
-  aDoc.EnumerateSubDocuments(recurse);
+  });
   return leaf;
 }
 
