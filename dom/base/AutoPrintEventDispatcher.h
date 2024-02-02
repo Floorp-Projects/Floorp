@@ -20,12 +20,11 @@ class AutoPrintEventDispatcher {
   // RecvCloneDocumentTreeIntoSelf.
   static void CollectInProcessSubdocuments(
       Document& aDoc, nsTArray<nsCOMPtr<Document>>& aDocs) {
-    auto recurse = [&aDocs](Document& aSubDoc) {
+    aDoc.EnumerateSubDocuments([&aDocs](Document& aSubDoc) {
       aDocs.AppendElement(&aSubDoc);
       CollectInProcessSubdocuments(aSubDoc, aDocs);
       return CallState::Continue;
-    };
-    aDoc.EnumerateSubDocuments(recurse);
+    });
   }
 
   MOZ_CAN_RUN_SCRIPT void DispatchEvent(bool aBefore) {

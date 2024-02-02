@@ -1902,13 +1902,12 @@ void nsPresContext::UIResolutionChangedInternal() {
     NotifyChildrenUIResolutionChanged(window);
   }
 
-  auto recurse = [](dom::Document& aSubDoc) {
+  mDocument->EnumerateSubDocuments([](dom::Document& aSubDoc) {
     if (nsPresContext* pc = aSubDoc.GetPresContext()) {
       pc->UIResolutionChangedInternal();
     }
     return CallState::Continue;
-  };
-  mDocument->EnumerateSubDocuments(recurse);
+  });
 }
 
 void nsPresContext::EmulateMedium(nsAtom* aMediaType) {
@@ -2025,13 +2024,13 @@ void nsPresContext::MediaFeatureValuesChanged(
 
   if (aPropagation & MediaFeatureChangePropagation::SubDocuments) {
     // And then into any subdocuments.
-    auto recurse = [&aChange, aPropagation](dom::Document& aSubDoc) {
-      if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-        pc->MediaFeatureValuesChanged(aChange, aPropagation);
-      }
-      return CallState::Continue;
-    };
-    mDocument->EnumerateSubDocuments(recurse);
+    mDocument->EnumerateSubDocuments(
+        [&aChange, aPropagation](dom::Document& aSubDoc) {
+          if (nsPresContext* pc = aSubDoc.GetPresContext()) {
+            pc->MediaFeatureValuesChanged(aChange, aPropagation);
+          }
+          return CallState::Continue;
+        });
   }
 
   // We notify the media feature values changed for the responsive content of
@@ -2463,13 +2462,12 @@ void nsPresContext::NotifyRevokingDidPaint(TransactionId aTransactionId) {
     transaction->mIsWaitingForPreviousTransaction = true;
   }
 
-  auto recurse = [&aTransactionId](dom::Document& aSubDoc) {
+  mDocument->EnumerateSubDocuments([&aTransactionId](dom::Document& aSubDoc) {
     if (nsPresContext* pc = aSubDoc.GetPresContext()) {
       pc->NotifyRevokingDidPaint(aTransactionId);
     }
     return CallState::Continue;
-  };
-  mDocument->EnumerateSubDocuments(recurse);
+  });
 }
 
 void nsPresContext::NotifyDidPaintForSubtree(
@@ -2536,13 +2534,13 @@ void nsPresContext::NotifyDidPaintForSubtree(
                                     EventQueuePriority::MediumHigh);
   }
 
-  auto recurse = [&aTransactionId, &aTimeStamp](dom::Document& aSubDoc) {
-    if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-      pc->NotifyDidPaintForSubtree(aTransactionId, aTimeStamp);
-    }
-    return CallState::Continue;
-  };
-  mDocument->EnumerateSubDocuments(recurse);
+  mDocument->EnumerateSubDocuments(
+      [&aTransactionId, &aTimeStamp](dom::Document& aSubDoc) {
+        if (nsPresContext* pc = aSubDoc.GetPresContext()) {
+          pc->NotifyDidPaintForSubtree(aTransactionId, aTimeStamp);
+        }
+        return CallState::Continue;
+      });
 }
 
 already_AddRefed<nsITimer> nsPresContext::CreateTimer(
