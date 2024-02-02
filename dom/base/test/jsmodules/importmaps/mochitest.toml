@@ -30,4 +30,6 @@ support-files = [
 
 ["test_bug_1873417.html"]
 
+["test_dynamic_importMap_with_external_script.html"]
+
 ["test_importMap_with_external_script.html"]
