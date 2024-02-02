@@ -8,7 +8,7 @@ Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index 1b112e9f7b..3180453a2b 100644
+index 15921ccffb..b0aa0ff72d 100644
 --- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
 +++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
 @@ -521,7 +521,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
