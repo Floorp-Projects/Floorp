@@ -4734,6 +4734,10 @@ bool AsyncPanZoomController::UpdateAnimation(
   // Even if there's no animation, if we have a scroll offset change pending due
   // to the frame delay, we need to keep compositing.
   if (mLastSampleTime == aSampleTime) {
+    APZC_LOG_DETAIL(
+        "UpdateAnimation short-circuit, animation=%p, pending frame-delayed "
+        "offset=%d\n",
+        this, mAnimation.get(), HavePendingFrameDelayedOffset());
     return !!mAnimation || HavePendingFrameDelayedOffset();
   }
 
@@ -4750,6 +4754,8 @@ bool AsyncPanZoomController::UpdateAnimation(
   // so that e.g. a main-thread animation can stay in sync with user-driven
   // scrolling or a compositor animation.
   bool needComposite = SampleCompositedAsyncTransform(aProofOfLock);
+  APZC_LOG_DETAIL("UpdateAnimation needComposite=%d mAnimation=%p\n", this,
+                  needComposite, mAnimation.get());
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;

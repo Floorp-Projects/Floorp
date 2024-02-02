@@ -763,6 +763,9 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
     controller->ScheduleRenderOnCompositorThread(
         wr::RenderReasons::ANIMATED_PROPERTY);
   }
+  APZCTM_LOG(
+      "APZCTreeManager(%p)::SampleForWebRender, want more composites: %d\n",
+      this, (activeAnimations && controller));
 
   nsTArray<wr::WrTransformProperty> transforms;
 
