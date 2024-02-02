@@ -3928,6 +3928,14 @@ var gCSSProperties = {
     alias_for: "user-select",
     subproperties: ["user-select"],
   },
+  "user-find": {
+    domProp: "userFind",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["none"],
+    invalid_values: [],
+  },
   "user-select": {
     domProp: "userSelect",
     inherited: false,

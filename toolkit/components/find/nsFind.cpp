@@ -140,7 +140,7 @@ static bool IsRubyAnnotationNode(const nsINode* aNode) {
          StyleDisplay::RubyTextContainer == display;
 }
 
-static bool IsVisibleNode(const nsINode* aNode) {
+static bool IsFindableNode(const nsINode* aNode) {
   if (!IsDisplayedNode(aNode)) {
     return false;
   }
@@ -151,7 +151,8 @@ static bool IsVisibleNode(const nsINode* aNode) {
     return true;
   }
 
-  if (frame->HidesContent(nsIFrame::IncludeContentVisibility::Hidden) ||
+  if (frame->StyleUI()->UserFind() == StyleUserFind::None ||
+      frame->HidesContent(nsIFrame::IncludeContentVisibility::Hidden) ||
       frame->IsHiddenByContentVisibilityOnAnyAncestor(
           nsIFrame::IncludeContentVisibility::Hidden)) {
     return false;
@@ -953,8 +954,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
         }
 
         RefPtr<nsRange> range = nsRange::Create(current);
-        if (startParent && endParent && IsVisibleNode(startParent) &&
-            IsVisibleNode(endParent)) {
+        if (startParent && endParent && IsFindableNode(startParent) &&
+            IsFindableNode(endParent)) {
           IgnoredErrorResult rv;
           range->SetStart(*startParent, matchStartOffset, rv);
           if (!rv.Failed()) {

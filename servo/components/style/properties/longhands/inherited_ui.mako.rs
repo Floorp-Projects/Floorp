@@ -78,6 +78,19 @@ ${helpers.single_keyword(
     affects="",
 )}
 
+${helpers.single_keyword(
+    "user-find",
+    "auto none",
+    engines="gecko",
+    gecko_ffi_name="mUserFind",
+    gecko_enum_prefix="StyleUserFind",
+    animation_value_type="discrete",
+    gecko_pref="layout.css.user-find.enabled",
+    spec="Prototype of solution proposed in https://github.com/w3c/csswg-drafts/issues/3460",
+    has_effect_on_gecko_scrollbars=False,
+    affects="",
+)}
+
 ${helpers.predefined_type(
     "caret-color",
     "color::CaretColor",

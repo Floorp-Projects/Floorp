@@ -192,6 +192,12 @@ let runTests = t.step_func_done(function() {
   `, "ZWSP should be ignored");
 
   testFindable(2, " ", "a    b    c", "Collapsed whitespace");
+
+  // TODO(emilio): This might be worth discussing in the spec. For now
+  // hard-coding our implementation.
+  testFindable(false, "find me", `
+    Do you find <span style="user-find: none">not findable</span> me?
+  `, "boundary-crossing user-find: none");
 });
 
 window.onload = function() {

@@ -105,6 +105,7 @@ rusty-enums = [
     "mozilla::StyleInert",
     "mozilla::StyleUserModify",
     "mozilla::StyleUserInput",
+    "mozilla::StyleUserFind",
     "mozilla::StyleBoxDirection",
     "mozilla::StyleRubyAlign",
     "mozilla::StyleTextSecurity",
