@@ -69,6 +69,28 @@ add_task(async function () {
   await addExpression(dbg, "firstCall()");
   is(getWatchExpressionLabel(dbg, 1), "firstCall()");
   is(getWatchExpressionValue(dbg, 1), "43", "has a value");
+
+  await addExpression(dbg, "$('body')");
+  is(getWatchExpressionLabel(dbg, 2), "$('body')");
+  ok(
+    getWatchExpressionValue(dbg, 2).includes("body"),
+    "uses console command $() helper"
+  );
+
+  info("Implement a custom '$' function in the page");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
+    content.eval("window.$ = function () {return 'page-override';}");
+  });
+
+  info("Refresh expressions");
+  const refreshed = waitForDispatch(dbg.store, "EVALUATE_EXPRESSIONS");
+  await clickElement(dbg, "expressionRefresh");
+  await refreshed;
+
+  ok(
+    getWatchExpressionValue(dbg, 2).includes("page-override"),
+    "the expression uses the page symbols and not the console command '$' function"
+  );
 });
 
 function assertEmptyValue(dbg, index) {

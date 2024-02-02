@@ -226,7 +226,7 @@ const WebConsoleCommandsManager = {
    *        String to evaluate.
    * @param string selectedNodeActorID
    *        The Node actor ID of the currently selected DOM Element, if any is selected.
-   * @param bool ignoreExistingBindings
+   * @param bool preferConsoleCommandsOverLocalSymbols
    *        If true, define all bindings even if there's conflicting existing
    *        symbols.  This is for the case evaluating non-user code in frame
    *        environment.
@@ -245,7 +245,7 @@ const WebConsoleCommandsManager = {
     frame,
     evalInput,
     selectedNodeActorID,
-    ignoreExistingBindings
+    preferConsoleCommandsOverLocalSymbols
   ) {
     const bindings = Object.create(null);
 
@@ -283,9 +283,10 @@ const WebConsoleCommandsManager = {
       // When we run user code in global scope, all bindings are automatically
       // shadowed, except for "help" function which is checked by getEvalInput.
       //
-      // When we run internal code, always override existing symbols.
+      // When preferConsoleCommandsOverLocalSymbols is true, ignore symbols in
+      // the current scope and always use commands ones.
       if (
-        !ignoreExistingBindings &&
+        !preferConsoleCommandsOverLocalSymbols &&
         (frame || name === "help") &&
         this._isCommandNameAlreadyInScope(name, frame, debuggerGlobal)
       ) {

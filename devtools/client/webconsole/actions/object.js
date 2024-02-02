@@ -23,7 +23,10 @@ function storeAsGlobal(actor) {
 
     const res = await commands.scriptCommand.execute(evalString, {
       selectedObjectActor: actor,
+      // Prevent any type of breakpoint when evaluating this code
       disableBreaks: true,
+      // Ensure always overriding "$0" and "_self" console command, even if the page implements a variable with the same name.
+      preferConsoleCommandsOverLocalSymbols: true,
     });
 
     // Select the adhoc target in the console.
@@ -49,7 +52,10 @@ function copyMessageObject(actor, variableText) {
       // See server/actors/webconsole/eval-with-debugger.js `evalWithDebugger`.
       const res = await commands.scriptCommand.execute("copy(_self)", {
         selectedObjectActor: actor,
+        // Prevent any type of breakpoint when evaluating this code
         disableBreaks: true,
+        // ensure always overriding "$0" and "_self" console command, even if the page implements a variable with the same name.
+        preferConsoleCommandsOverLocalSymbols: true,
       });
 
       clipboardHelper.copyString(res.helperResult.value);
