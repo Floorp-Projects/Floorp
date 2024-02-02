@@ -214,10 +214,6 @@ def expected_eslint_modules():
     )
     with open(mozilla_json_path, encoding="utf-8") as f:
         dependencies = json.load(f).get("dependencies", {})
-        # Bug 1860508: We skip checking eslint-visitor-keys because the Babel
-        # dependencies currently require an older version to that which
-        # eslint-plugin-mozilla requires.
-        dependencies.pop("eslint-visitor-keys")
         expected_modules.update(dependencies)
 
     # Also read the in-tree ESLint plugin spidermonkey information, to ensure the

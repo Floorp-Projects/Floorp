@@ -5,10 +5,15 @@
 "use strict";
 
 module.exports = {
-  env: {
-    "mozilla/browser-window": true,
-  },
-
+  overrides: [
+    {
+      files: "./**/*.?(m)js",
+      excludedFiles: "aboutwebrtc/**",
+      env: {
+        "mozilla/browser-window": true,
+      },
+    },
+  ],
   plugins: ["mozilla"],
 
   rules: {

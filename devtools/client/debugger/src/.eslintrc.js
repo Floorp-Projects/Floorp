@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 module.exports = {
-  plugins: ["react", "mozilla", "@babel", "import", "file-header"],
+  plugins: ["react", "mozilla", "import", "file-header"],
   globals: {
     atob: true,
     btoa: true,
@@ -32,13 +32,6 @@ module.exports = {
     ecmaVersion: "latest",
     sourceType: "module",
     ecmaFeatures: { jsx: true },
-
-    // When the linter runs from the MC root, it won't pick up this project's
-    // babel.config.js, so we explicitly set Babel's root location so that
-    // it knows where to look.
-    babelOptions: {
-      root: __dirname,
-    },
   },
   env: {
     es6: true,
