@@ -40,7 +40,6 @@ const TEST_URL =
 
 // Check that long URLs are rendered correctly in the rule view.
 add_task(async function () {
-  await pushPref("devtools.inspector.showRulesViewEnterKeyNotice", false);
   const { inspector } = await openInspectorForURL(TEST_URL);
   const view = selectRuleView(inspector);
 

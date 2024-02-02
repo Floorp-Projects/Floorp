@@ -687,52 +687,6 @@ CssRuleView.prototype = {
     this.pageStyle.addNewRule(element, pseudoClasses);
   },
 
-  maybeShowEnterKeyNotice() {
-    const SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF =
-      "devtools.inspector.showRulesViewEnterKeyNotice";
-    // Make the Enter key notice visible if it wasn't dismissed by the user yet and they
-    // didn't set devtools.inspector.rule-view.focusNextOnEnter to true.
-    if (
-      !Services.prefs.getBoolPref(
-        SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF,
-        false
-      ) ||
-      this.inplaceEditorFocusNextOnEnter === true
-    ) {
-      return;
-    }
-
-    const enterKeyNoticeEl = this.styleDocument.getElementById(
-      "ruleview-kbd-enter-notice"
-    );
-
-    if (!enterKeyNoticeEl.hasAttribute("hidden")) {
-      return;
-    }
-
-    // Compute the right key (Cmd / Ctrl) depending on the OS
-    enterKeyNoticeEl.querySelector(
-      "#ruleview-kbd-enter-notice-ctrl-cmd"
-    ).textContent = Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl";
-    enterKeyNoticeEl.removeAttribute("hidden");
-
-    enterKeyNoticeEl
-      .querySelector("#ruleview-kbd-enter-notice-dismiss-button")
-      .addEventListener(
-        "click",
-        () => {
-          // Hide the notice
-          enterKeyNoticeEl.setAttribute("hidden", "");
-          // And set the pref to false so we don't show the notice on next startup.
-          Services.prefs.setBoolPref(
-            SHOW_RULES_VIEW_ENTER_KEY_NOTICE_PREF,
-            false
-          );
-        },
-        { once: true, signal: this._abortController.signal }
-      );
-  },
-
   /**
    * Disables add rule button when needed
    */
