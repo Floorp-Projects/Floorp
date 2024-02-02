@@ -124,7 +124,7 @@ module.exports = function (config) {
               functions: 100,
               branches: 75,
             },
-            "lib/Screenshots.jsm": {
+            "lib/Screenshots.sys.mjs": {
               statements: 94,
               lines: 94,
               functions: 75,

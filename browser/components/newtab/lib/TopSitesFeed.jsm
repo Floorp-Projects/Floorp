@@ -45,12 +45,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
+  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Screenshots",
-  "resource://activity-stream/lib/Screenshots.jsm"
-);
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(

@@ -11,12 +11,9 @@ ChromeUtils.defineESModuleGetters(this, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
-
-const { Screenshots } = ChromeUtils.import(
-  "resource://activity-stream/lib/Screenshots.jsm"
-);
 
 const { SectionsManager } = ChromeUtils.import(
   "resource://activity-stream/lib/SectionsManager.jsm"
