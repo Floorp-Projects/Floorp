@@ -1,62 +1,47 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 16 Apr 2021 17:35:00 -0500
-Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D113438
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- modules/video_capture/video_capture_impl.h          | 6 ++++--
- rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
- sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index e46e050609..dcc93fd3a0 100644
---- a/modules/video_capture/video_capture_impl.h
-+++ b/modules/video_capture/video_capture_impl.h
-@@ -97,6 +97,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-   rtc::RaceChecker capture_checker_;
-   // current Device unique name;
-   char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
-+  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
-+  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
-+      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
-   Mutex api_lock_;
-   // Should be set by platform dependent code in StartCapture.
-   VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
-@@ -104,8 +108,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-  private:
-   void UpdateFrameCount();
-   uint32_t CalculateFrameRate(int64_t now_ns);
--  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
--      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
-   void DeliverRawFrame(uint8_t* videoFrame,
-                        size_t videoFrameLength,
-                        const VideoCaptureCapability& frameInfo,
-diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
-index 4a0ba9dc09..eac12022ed 100644
---- a/rtc_base/system/warn_current_thread_is_deadlocked.h
-+++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
-@@ -13,7 +13,7 @@
- 
- namespace webrtc {
- 
--#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
- void WarnThatTheCurrentThreadIsProbablyDeadlocked();
- #else
- inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
-diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
-index 4f97cf74cf..363be347b5 100644
---- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
-+++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
-@@ -80,7 +80,7 @@ public class VideoCodecInfo {
-   }
- 
-   @CalledByNative
--  Map getParams() {
-+  Map<String, String> getParams() {
-     return params;
-   }
- }
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
++
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
++
++#include_next <X11/extensions/Xrandr.h>
++
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_
