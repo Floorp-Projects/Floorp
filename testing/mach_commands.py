@@ -1184,8 +1184,14 @@ def run_rusttests(command_context, **kwargs):
     category="testing",
     description="Test Fluent migration recipes.",
 )
+@CommandArgument(
+    "--l10n-git",
+    action="store_true",
+    dest="l10n_git",
+    help="Use git rather than hg source repository",
+)
 @CommandArgument("test_paths", nargs="*", metavar="N", help="Recipe paths to test.")
-def run_migration_tests(command_context, test_paths=None, **kwargs):
+def run_migration_tests(command_context, l10n_git=False, test_paths=None, **kwargs):
     if not test_paths:
         test_paths = []
     command_context.activate_virtualenv()
@@ -1222,9 +1228,11 @@ def run_migration_tests(command_context, test_paths=None, **kwargs):
                 "ERROR in {file}: {error}",
             )
             rv |= 1
-    obj_dir = fmt.prepare_object_dir(command_context)
+    obj_dir, repo_dir = fmt.prepare_directories(command_context, l10n_git)
     for context in with_context:
-        rv |= fmt.test_migration(command_context, obj_dir, **context)
+        rv |= fmt.test_migration(
+            command_context, obj_dir, repo_dir, l10n_git, **context
+        )
     return rv
 
 
