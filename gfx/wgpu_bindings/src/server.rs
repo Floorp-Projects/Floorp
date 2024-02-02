@@ -541,15 +541,29 @@ pub extern "C" fn wgpu_server_get_device_fence_handle(global: &Global, device_id
     if device_id.backend() == wgt::Backend::Dx12 {
         let mut handle = ptr::null_mut();
         let dx12_device = unsafe {
-            global.device_as_hal::<wgc::api::Dx12, _, d3d12::Device>(device_id, |hal_device| {
-                hal_device.unwrap().raw_device().clone()
+            global.device_as_hal::<wgc::api::Dx12, _, Option<d3d12::Device>>(device_id, |hal_device| {
+                hal_device.map(|device| device.raw_device().clone())
             })
         };
+        let dx12_device = match dx12_device {
+            Some(device) => device,
+            None => {
+                return ptr::null_mut();
+            }
+        };
+
         let dx12_fence = unsafe {
-            global.device_fence_as_hal::<wgc::api::Dx12, _, d3d12::Fence>(device_id, |hal_fence| {
-                hal_fence.unwrap().raw_fence().clone()
+            global.device_fence_as_hal::<wgc::api::Dx12, _, Option<d3d12::Fence>>(device_id, |hal_fence| {
+                hal_fence.map(|fence| fence.raw_fence().clone())
             })
         };
+        let dx12_fence = match dx12_fence {
+            Some(fence) => fence,
+            None => {
+                return ptr::null_mut();
+            }
+        };
+
         let hr = unsafe {
             dx12_device.CreateSharedHandle(
                 dx12_fence.as_mut_ptr() as *mut winapi::um::d3d12::ID3D12DeviceChild,
