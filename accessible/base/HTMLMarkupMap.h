@@ -207,6 +207,8 @@ MARKUPMAP(h5, New_HyperText, roles::HEADING)
 
 MARKUPMAP(h6, New_HyperText, roles::HEADING)
 
+MARKUPMAP(hgroup, New_HyperText, roles::GROUPING)
+
 MARKUPMAP(
     hr,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
