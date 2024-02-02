@@ -208,7 +208,7 @@ private fun MessageCardPreview() {
         ) {
             MessageCard(
                 messageText = stringResource(id = R.string.default_browser_experiment_card_text),
-                titleText = stringResource(id = R.string.bookmark_empty_title_error),
+                titleText = stringResource(id = R.string.default_browser_experiment_card_title),
                 onClick = {},
                 onCloseButtonClick = {},
             )
@@ -245,7 +245,7 @@ private fun MessageCardWithButtonLabelPreview() {
         ) {
             MessageCard(
                 messageText = stringResource(id = R.string.default_browser_experiment_card_text),
-                titleText = stringResource(id = R.string.bookmark_empty_title_error),
+                titleText = stringResource(id = R.string.default_browser_experiment_card_title),
                 buttonText = stringResource(id = R.string.preferences_set_as_default_browser),
                 onClick = {},
                 onCloseButtonClick = {},

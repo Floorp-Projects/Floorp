@@ -25,6 +25,7 @@ import:
         - value:
             messages:
               default-browser:
+                title: default_browser_experiment_card_title
                 text: default_browser_experiment_card_text
                 surface: homescreen
                 action: "MAKE_DEFAULT_BROWSER"
