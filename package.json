@@ -4,10 +4,6 @@
   "repository": {},
   "license": "MPL-2.0",
   "devDependencies": {
-    "@babel/core": "7.23.9",
-    "@babel/eslint-parser": "7.23.10",
-    "@babel/eslint-plugin": "7.23.5",
-    "@babel/plugin-syntax-jsx": "7.23.3",
     "@microsoft/eslint-plugin-sdl": "0.2.2",
     "eslint": "8.56.0",
     "eslint-config-prettier": "8.8.0",
