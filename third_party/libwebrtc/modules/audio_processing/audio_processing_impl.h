@@ -43,7 +43,6 @@
 #include "modules/audio_processing/rms_level.h"
 #include "modules/audio_processing/transient/transient_suppressor.h"
 #include "rtc_base/gtest_prod_util.h"
-#include "rtc_base/ignore_wundef.h"
 #include "rtc_base/swap_queue.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"

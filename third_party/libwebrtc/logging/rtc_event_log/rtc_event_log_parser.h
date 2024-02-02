@@ -54,10 +54,8 @@
 #include "logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/ignore_wundef.h"
 
 // Files generated at build-time by the protobuf compiler.
-RTC_PUSH_IGNORING_WUNDEF()
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
 #include "external/webrtc/webrtc/logging/rtc_event_log/rtc_event_log.pb.h"
 #include "external/webrtc/webrtc/logging/rtc_event_log/rtc_event_log2.pb.h"
@@ -65,7 +63,6 @@ RTC_PUSH_IGNORING_WUNDEF()
 #include "logging/rtc_event_log/rtc_event_log.pb.h"
 #include "logging/rtc_event_log/rtc_event_log2.pb.h"
 #endif
-RTC_POP_IGNORING_WUNDEF()
 
 namespace webrtc {
 

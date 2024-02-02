@@ -546,7 +546,6 @@ rtc_library("rtc_audio_video") {
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:dscp",
     "../rtc_base:event_tracer",
-    "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:network_route",

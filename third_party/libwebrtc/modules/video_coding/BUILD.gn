@@ -757,7 +757,6 @@ if (rtc_include_tests) {
         "../../api/video_codecs:video_codecs_api",
         "../../modules/utility:utility",
         "../../rtc_base:checks",
-        "../../rtc_base:ignore_wundef",
         "../../sdk/android:internal_jni",
         "../../sdk/android:native_api_base",
         "../../sdk/android:native_api_codecs",
