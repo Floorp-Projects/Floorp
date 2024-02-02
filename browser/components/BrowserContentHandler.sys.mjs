@@ -158,16 +158,27 @@ const OVERRIDE_NEW_MSTONE = 2;
 const OVERRIDE_NEW_BUILD_ID = 3;
 /**
  * Determines whether a home page override is needed.
- * Returns:
- *  OVERRIDE_NEW_PROFILE if this is the first run with a new profile.
- *  OVERRIDE_NEW_MSTONE if this is the first run with a build with a different
- *                      Gecko milestone (i.e. right after an upgrade).
- *  OVERRIDE_NEW_BUILD_ID if this is the first run with a new build ID of the
- *                        same Gecko milestone (i.e. after a nightly upgrade).
- *  OVERRIDE_NONE otherwise.
+ * @param {boolean} [updateMilestones=true]
+ *   True if we should update the milestone prefs after comparing those prefs
+ *   with the current platform version and build ID.
+ *
+ *   If updateMilestones is false, then this function has no side-effects.
+ *
+ * @returns {number}
+ *   One of the following constants:
+ *     OVERRIDE_NEW_PROFILE
+ *       if this is the first run with a new profile.
+ *     OVERRIDE_NEW_MSTONE
+ *       if this is the first run with a build with a different Gecko milestone
+ *       (i.e. right after an upgrade).
+ *     OVERRIDE_NEW_BUILD_ID
+ *       if this is the first run with a new build ID of the same Gecko
+ *       milestone (i.e. after a nightly upgrade).
+ *     OVERRIDE_NONE
+ *       otherwise.
  */
-function needHomepageOverride(prefb) {
-  var savedmstone = prefb.getCharPref(
+function needHomepageOverride(updateMilestones = true) {
+  var savedmstone = Services.prefs.getCharPref(
     "browser.startup.homepage_override.mstone",
     ""
   );
@@ -178,7 +189,7 @@ function needHomepageOverride(prefb) {
 
   var mstone = Services.appinfo.platformVersion;
 
-  var savedBuildID = prefb.getCharPref(
+  var savedBuildID = Services.prefs.getCharPref(
     "browser.startup.homepage_override.buildID",
     ""
   );
@@ -191,19 +202,32 @@ function needHomepageOverride(prefb) {
     // about:rights we've removed the EULA stuff and default pref, but we need
     // a way to make existing profiles retain the default that we removed.
     if (savedmstone) {
-      prefb.setBoolPref("browser.rights.3.shown", true);
+      Services.prefs.setBoolPref("browser.rights.3.shown", true);
 
       // Remember that we saw a major version change.
       gMajorUpgrade = true;
     }
 
-    prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
-    prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
+    if (updateMilestones) {
+      Services.prefs.setCharPref(
+        "browser.startup.homepage_override.mstone",
+        mstone
+      );
+      Services.prefs.setCharPref(
+        "browser.startup.homepage_override.buildID",
+        buildID
+      );
+    }
     return savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE;
   }
 
   if (buildID != savedBuildID) {
-    prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
+    if (updateMilestones) {
+      Services.prefs.setCharPref(
+        "browser.startup.homepage_override.buildID",
+        buildID
+      );
+    }
     return OVERRIDE_NEW_BUILD_ID;
   }
 
@@ -663,7 +687,14 @@ nsBrowserContentHandler.prototype = {
     }
 
     if (cmdLine.handleFlag("first-startup", false)) {
-      lazy.FirstStartup.init();
+      // We don't want subsequent calls to needHompageOverride to have different
+      // values because the milestones in prefs got updated, so we intentionally
+      // tell needHomepageOverride to leave the milestone prefs alone when doing
+      // this check.
+      let override = needHomepageOverride(false /* updateMilestones */);
+      if (override == OVERRIDE_NEW_PROFILE) {
+        lazy.FirstStartup.init();
+      }
     }
 
     var fileParam = cmdLine.handleFlagWithParam("file", false);
@@ -751,7 +782,7 @@ nsBrowserContentHandler.prototype = {
         "browser.startup.homepage_override.buildID",
         "unknown"
       );
-      override = needHomepageOverride(prefb);
+      override = needHomepageOverride();
       if (override != OVERRIDE_NONE) {
         switch (override) {
           case OVERRIDE_NEW_PROFILE:
