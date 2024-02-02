@@ -211,7 +211,7 @@ class StreamResetHandler {
   void HandleResponse(const ParameterDescriptor& descriptor);
 
   // Expiration handler for the Reconfig timer.
-  absl::optional<DurationMs> OnReconfigTimerExpiry();
+  DurationMs OnReconfigTimerExpiry();
 
   const absl::string_view log_prefix_;
   Context* ctx_;

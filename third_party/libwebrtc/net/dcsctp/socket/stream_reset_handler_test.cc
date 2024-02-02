@@ -97,11 +97,11 @@ class StreamResetHandlerTest : public testing::Test {
         }),
         delayed_ack_timer_(timer_manager_.CreateTimer(
             "test/delayed_ack",
-            []() { return absl::nullopt; },
+            []() { return DurationMs(0); },
             TimerOptions(DurationMs(0)))),
         t3_rtx_timer_(timer_manager_.CreateTimer(
             "test/t3_rtx",
-            []() { return absl::nullopt; },
+            []() { return DurationMs(0); },
             TimerOptions(DurationMs(0)))),
         data_tracker_(std::make_unique<DataTracker>("log: ",
                                                     delayed_ack_timer_.get(),

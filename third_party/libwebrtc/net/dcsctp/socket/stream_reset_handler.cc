@@ -347,13 +347,13 @@ void StreamResetHandler::ResetStreams(
   }
 }
 
-absl::optional<DurationMs> StreamResetHandler::OnReconfigTimerExpiry() {
+DurationMs StreamResetHandler::OnReconfigTimerExpiry() {
   if (current_request_->has_been_sent()) {
     // There is an outstanding request, which timed out while waiting for a
     // response.
     if (!ctx_->IncrementTxErrorCounter("RECONFIG timeout")) {
       // Timed out. The connection will close after processing the timers.
-      return absl::nullopt;
+      return DurationMs(0);
     }
   } else {
     // There is no outstanding request, but there is a prepared one. This means

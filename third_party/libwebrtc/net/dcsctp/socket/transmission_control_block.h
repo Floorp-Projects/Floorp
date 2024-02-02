@@ -149,9 +149,9 @@ class TransmissionControlBlock : public Context {
 
  private:
   // Will be called when the retransmission timer (t3-rtx) expires.
-  absl::optional<DurationMs> OnRtxTimerExpiry();
+  DurationMs OnRtxTimerExpiry();
   // Will be called when the delayed ack timer expires.
-  absl::optional<DurationMs> OnDelayedAckTimerExpiry();
+  DurationMs OnDelayedAckTimerExpiry();
 
   const absl::string_view log_prefix_;
   const DcSctpOptions options_;
