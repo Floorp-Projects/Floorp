@@ -225,7 +225,7 @@ class EnumSet {
 
   class ConstIterator {
     const EnumSet* mSet;
-    uint32_t mPos;
+    size_t mPos;
 #ifdef DEBUG
     uint64_t mVersion;
 #endif
@@ -236,8 +236,7 @@ class EnumSet {
     }
 
    public:
-    ConstIterator(const EnumSet& aSet, uint32_t aPos)
-        : mSet(&aSet), mPos(aPos) {
+    ConstIterator(const EnumSet& aSet, size_t aPos) : mSet(&aSet), mPos(aPos) {
 #ifdef DEBUG
       mVersion = mSet->mVersion;
 #endif
