@@ -9,13 +9,13 @@ import { JsonSchema } from "resource://gre/modules/JsonSchema.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  SpecialMessageActions:
-    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   FeatureCalloutBroker:
     "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
+  InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
   CFRPageActions: "resource:///modules/asrouter/CFRPageActions.jsm",
 });
