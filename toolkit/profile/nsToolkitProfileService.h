@@ -145,6 +145,9 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   // True if this install should use a dedicated default profile.
   const bool mUseDedicatedProfile;
   nsString mStartupReason;
+  // Records the version of the profiles.ini file as it was when it was loaded
+  // during startup.
+  nsCString mStartupFileVersion;
   bool mMaybeLockProfile;
   // Holds the current application update channel. This is only really held
   // so it can be overriden in tests.

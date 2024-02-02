@@ -51,5 +51,17 @@ add_task(async () => {
     "Should be two profiles (old-style default and dedicated default)."
   );
 
+  let { databaseVersion, profileCount } = getTelemetryScalars();
+  Assert.equal(
+    databaseVersion,
+    "0",
+    "Database file was not present at startup."
+  );
+  Assert.equal(
+    profileCount,
+    2,
+    "Should be two profiles (old-style default and dedicated default)."
+  );
+
   checkProfileService(profilesData);
 });
