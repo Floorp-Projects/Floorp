@@ -855,7 +855,10 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
 
   if (acknowledged_bitrate_.has_value() &&
       config_->append_acknowledged_rate_candidate) {
-    if (!(config_->not_use_acked_rate_in_alr && in_alr)) {
+    if (!(config_->not_use_acked_rate_in_alr && in_alr) ||
+        (config_->padding_duration > TimeDelta::Zero() &&
+         last_padding_info_.padding_timestamp + config_->padding_duration >=
+             last_send_time_most_recent_observation_)) {
       bandwidths.push_back(*acknowledged_bitrate_ *
                            config_->bandwidth_backoff_lower_bound_factor);
     }

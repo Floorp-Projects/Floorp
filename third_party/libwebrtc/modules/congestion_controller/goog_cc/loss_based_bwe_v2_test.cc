@@ -1542,6 +1542,56 @@ TEST_F(LossBasedBweV2Test, IncreaseUsingPaddingStateIfFieldTrial) {
             LossBasedState::kIncreaseUsingPadding);
 }
 
+TEST_F(LossBasedBweV2Test, DecreaseToAckedCandidateIfPaddingInAlr) {
+  ExplicitKeyValueConfig key_value_config(ShortObservationConfig(
+      "PaddingDuration:1000ms,"
+      // Set InstantUpperBoundBwBalance high to disable InstantUpperBound cap.
+      "InstantUpperBoundBwBalance:10000kbps"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(1000));
+  int feedback_id = 0;
+  while (loss_based_bandwidth_estimator.GetLossBasedResult().state !=
+         LossBasedState::kDecreasing) {
+    loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+        CreatePacketResultsWith100pLossRate(
+            /*first_packet_timestamp=*/Timestamp::Zero() +
+            kObservationDurationLowerBound * feedback_id),
+        /*delay_based_estimate=*/DataRate::PlusInfinity(),
+        /*in_alr=*/true);
+    feedback_id++;
+  }
+
+  while (loss_based_bandwidth_estimator.GetLossBasedResult().state !=
+         LossBasedState::kIncreaseUsingPadding) {
+    loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+        CreatePacketResultsWithReceivedPackets(
+            /*first_packet_timestamp=*/Timestamp::Zero() +
+            kObservationDurationLowerBound * feedback_id),
+        /*delay_based_estimate=*/DataRate::PlusInfinity(),
+        /*in_alr=*/true);
+    feedback_id++;
+  }
+  ASSERT_GT(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      DataRate::KilobitsPerSec(900));
+
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(100));
+  // Padding is sent now, create some lost packets.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith100pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound * feedback_id),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/true);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  EXPECT_EQ(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      DataRate::KilobitsPerSec(100));
+}
+
 TEST_F(LossBasedBweV2Test, DecreaseAfterPadding) {
   ExplicitKeyValueConfig key_value_config(ShortObservationConfig(
       "PaddingDuration:1000ms,BwRampupUpperBoundFactor:2.0"));
