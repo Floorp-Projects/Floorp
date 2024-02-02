@@ -359,9 +359,11 @@ gboolean moz_container_wayland_map_event(GtkWidget* widget,
   LOGCONTAINER("%s [%p]\n", __FUNCTION__,
                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
-  // We need to mark MozContainer as mapped to make sure
-  // moz_container_wayland_unmap() is called on hide/withdraw.
-  gtk_widget_set_mapped(widget, TRUE);
+  // Return early if we're not mapped. Gtk may send bogus map_event signal
+  // to unmapped widgets (see Bug 1875369).
+  if (!gtk_widget_get_mapped(widget)) {
+    return false;
+  }
 
   // Make sure we're on main thread as we can't lock mozContainer here
   // due to moz_container_wayland_add_or_fire_initial_draw_callback() call
@@ -412,6 +414,9 @@ void moz_container_wayland_map(GtkWidget* widget) {
                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
+
+  // We need to mark MozContainer as mapped to make sure
+  // moz_container_wayland_unmap() is called on hide/withdraw.
   gtk_widget_set_mapped(widget, TRUE);
 
   if (gtk_widget_get_has_window(widget)) {
