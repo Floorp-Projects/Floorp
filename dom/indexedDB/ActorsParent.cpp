@@ -2166,7 +2166,6 @@ class Database final
   int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
-  const bool mChromeWriteAccessAllowed;
   const bool mInPrivateBrowsing;
   FlippedOnce<false> mClosed;
   FlippedOnce<false> mInvalidated;
@@ -2184,8 +2183,8 @@ class Database final
            const quota::OriginMetadata& aOriginMetadata, uint32_t aTelemetryId,
            SafeRefPtr<FullDatabaseMetadata> aMetadata,
            SafeRefPtr<DatabaseFileManager> aFileManager,
-           RefPtr<DirectoryLock> aDirectoryLock, bool aChromeWriteAccessAllowed,
-           bool aInPrivateBrowsing, const Maybe<const CipherKey>& aMaybeKey);
+           RefPtr<DirectoryLock> aDirectoryLock, bool aInPrivateBrowsing,
+           const Maybe<const CipherKey>& aMaybeKey);
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -3040,7 +3039,6 @@ class FactoryOp
   bool mWaitingForPermissionRetry;
   bool mEnforcingQuota;
   const bool mDeleting;
-  bool mChromeWriteAccessAllowed;
   FlippedOnce<false> mInPrivateBrowsing;
 
  public:
@@ -9165,7 +9163,7 @@ Database::Database(SafeRefPtr<Factory> aFactory,
                    SafeRefPtr<FullDatabaseMetadata> aMetadata,
                    SafeRefPtr<DatabaseFileManager> aFileManager,
                    RefPtr<DirectoryLock> aDirectoryLock,
-                   bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing,
+                   bool aInPrivateBrowsing,
                    const Maybe<const CipherKey>& aMaybeKey)
     : mFactory(std::move(aFactory)),
       mMetadata(std::move(aMetadata)),
@@ -9179,7 +9177,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mKey(aMaybeKey),
       mTelemetryId(aTelemetryId),
       mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
-      mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
       mInPrivateBrowsing(aInPrivateBrowsing),
       mBackgroundThread(GetCurrentSerialEventTarget())
 #ifdef DEBUG
@@ -9191,8 +9188,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
   MOZ_ASSERT(mFactory);
   MOZ_ASSERT(mMetadata);
   MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT_IF(aChromeWriteAccessAllowed,
-                aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo);
 
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
@@ -9555,17 +9550,6 @@ Database::AllocPBackgroundIDBTransactionParent(
                          aMode != IDBTransaction::Mode::ReadWrite &&
                          aMode != IDBTransaction::Mode::ReadWriteFlush &&
                          aMode != IDBTransaction::Mode::Cleanup)) {
-    return nullptr;
-  }
-
-  // If this is a readwrite transaction to a chrome database make sure the child
-  // has write access.
-  // XXX: Maybe add NS_AUUF_OR_WARN_IF also here, see bug 1758875
-  if (NS_WARN_IF((aMode == IDBTransaction::Mode::ReadWrite ||
-                  aMode == IDBTransaction::Mode::ReadWriteFlush ||
-                  aMode == IDBTransaction::Mode::Cleanup) &&
-                 mPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
-                 !mChromeWriteAccessAllowed)) {
     return nullptr;
   }
 
@@ -14399,8 +14383,7 @@ FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
       mState(State::Initial),
       mWaitingForPermissionRetry(false),
       mEnforcingQuota(true),
-      mDeleting(aDeleting),
-      mChromeWriteAccessAllowed(false) {
+      mDeleting(aDeleting) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mFactory);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
@@ -14753,8 +14736,6 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     MOZ_ASSERT(mState == State::Initial);
     MOZ_ASSERT(persistenceType == PERSISTENCE_TYPE_PERSISTENT);
-
-    mChromeWriteAccessAllowed = true;
 
     return PermissionValue::kPermissionAllowed;
   }
@@ -15869,8 +15850,8 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
       mCommonParams.principalInfo(),
       mContentHandle ? Some(mContentHandle->ChildID()) : Nothing(),
       mOriginMetadata, mTelemetryId, mMetadata.clonePtr(),
-      mFileManager.clonePtr(), std::move(mDirectoryLock),
-      mChromeWriteAccessAllowed, mInPrivateBrowsing, maybeKey);
+      mFileManager.clonePtr(), std::move(mDirectoryLock), mInPrivateBrowsing,
+      maybeKey);
 
   if (info) {
     info->mLiveDatabases.AppendElement(
