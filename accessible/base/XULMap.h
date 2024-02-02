@@ -91,10 +91,6 @@ XULMAP(panel,
                                                     aContext->Document());
        })
 
-XULMAP(popup, [](Element* aElement, LocalAccessible* aContext) {
-  return CreateMenupopupAccessible(aElement, aContext);
-})
-
 XULMAP(tree,
        [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
          nsIContent* child =

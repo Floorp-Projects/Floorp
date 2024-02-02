@@ -45,7 +45,7 @@ class XULMenuParentElement : public nsXULElement {
 
   NS_IMPL_FROMNODE_HELPER(XULMenuParentElement,
                           IsAnyOfXULElements(nsGkAtoms::menupopup,
-                                             nsGkAtoms::popup, nsGkAtoms::panel,
+                                             nsGkAtoms::panel,
                                              nsGkAtoms::tooltip,
                                              nsGkAtoms::menubar));
 
