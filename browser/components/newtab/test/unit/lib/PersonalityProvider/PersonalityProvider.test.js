@@ -1,5 +1,5 @@
 import { GlobalOverrider } from "test/unit/utils";
-import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.jsm";
+import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.sys.mjs";
 
 describe("Personality Provider", () => {
   let instance;
