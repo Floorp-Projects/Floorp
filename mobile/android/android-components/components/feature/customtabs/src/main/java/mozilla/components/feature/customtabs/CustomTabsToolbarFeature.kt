@@ -6,6 +6,7 @@ package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
 import android.graphics.Bitmap
+import android.util.Size
 import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
@@ -37,6 +38,7 @@ import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
+import mozilla.components.support.utils.ext.resizeMaintainingAspectRatio
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -200,13 +202,15 @@ class CustomTabsToolbarFeature(
         buttonConfig: CustomTabActionButtonConfig?,
     ) {
         buttonConfig?.let { config ->
+            val icon = config.icon
+            val scaledIconSize = icon.resizeMaintainingAspectRatio(ACTION_BUTTON_MAX_DRAWABLE_DP_SIZE)
             val drawableIcon = Bitmap.createScaledBitmap(
-                config.icon,
-                ACTION_BUTTON_DRAWABLE_WIDTH_DP.dpToPx(context.resources.displayMetrics),
-                ACTION_BUTTON_DRAWABLE_HEIGHT_DP.dpToPx(context.resources.displayMetrics),
+                icon,
+                scaledIconSize.width.dpToPx(context.resources.displayMetrics),
+                scaledIconSize.height.dpToPx(context.resources.displayMetrics),
                 true,
-            )
-                .toDrawable(context.resources)
+            ).toDrawable(context.resources)
+
             if (config.tint || forceActionButtonTinting) {
                 drawableIcon.setTint(readableColor)
             }
@@ -302,7 +306,6 @@ class CustomTabsToolbarFeature(
     }
 
     companion object {
-        private const val ACTION_BUTTON_DRAWABLE_WIDTH_DP = 24
-        private const val ACTION_BUTTON_DRAWABLE_HEIGHT_DP = 24
+        private val ACTION_BUTTON_MAX_DRAWABLE_DP_SIZE = Size(48, 24)
     }
 }
