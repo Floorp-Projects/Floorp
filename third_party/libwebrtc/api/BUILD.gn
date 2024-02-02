@@ -462,6 +462,11 @@ rtc_source_set("wrapping_async_dns_resolver") {
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
+rtc_source_set("ref_count") {
+  visibility = [ "*" ]
+  sources = [ "ref_count.h" ]
+}
+
 rtc_source_set("scoped_refptr") {
   visibility = [ "*" ]
   sources = [ "scoped_refptr.h" ]
