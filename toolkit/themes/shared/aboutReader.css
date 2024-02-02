@@ -792,7 +792,7 @@ pre {
 .moz-reader-content li,
 .moz-reader-content figure,
 .moz-reader-content .wp-caption {
-  margin: -10px -10px 20px;
+  margin: -10px -10px calc(8px + var(--line-height) * 0.4);
   padding: 10px;
   border-radius: 5px;
 }
