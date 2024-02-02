@@ -30,6 +30,11 @@ MULTI_TASK_ROOT = f"{API_ROOT}/tasks"
 ON_TRY = "MOZ_AUTOMATION" in os.environ
 DOWNLOAD_TIMEOUT = 30
 METRICS_MATCHER = re.compile(r"(perfMetrics\s.*)")
+PRETTY_APP_NAMES = {
+    "org.mozilla.fenix": "fenix",
+    "org.mozilla.firefox": "fenix",
+    "org.mozilla.geckoview_example": "geckoview",
+}
 
 
 class NoPerfMetricsError(Exception):
@@ -620,3 +625,10 @@ def create_path(path):
         create_path(path.parent)
         path.mkdir(exist_ok=True)
         return path
+
+
+def get_pretty_app_name(app):
+    # XXX See bug 1712337, we need a singluar point of entry
+    # for the binary to allow us to get the version/app info
+    # so that we can get a pretty name on desktop.
+    return PRETTY_APP_NAMES[app]
