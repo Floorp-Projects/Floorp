@@ -5800,6 +5800,9 @@ void nsWindow::EnsureGdkWindow() {
   if (!mGdkWindow) {
     mGdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
+    if (mIMContext) {
+      mIMContext->SetGdkWindow(mGdkWindow);
+    }
   }
 }
 
@@ -9904,6 +9907,9 @@ void nsWindow::DisableRendering() {
   DestroyLayerManager();
 
   if (mGdkWindow) {
+    if (mIMContext) {
+      mIMContext->SetGdkWindow(nullptr);
+    }
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
     mGdkWindow = nullptr;
   }
