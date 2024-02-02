@@ -131,9 +131,9 @@ module.exports = function (config) {
               branches: 84,
             },
             /**
-             * Store.jsm is tested via an xpcshell test
+             * Store.sys.mjs is tested via an xpcshell test
              */
-            "lib/Store.jsm": {
+            "lib/Store.sys.mjs": {
               statements: 8,
               lines: 8,
               functions: 0,
