@@ -688,155 +688,121 @@ def metric_map(f, *inputs):
 namespace mozilla::dom {
 
 const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
-  if (aIsPage) {
-    switch (aUseCounter) {
+  static constexpr struct {
+    UseCounter counter;
+    const char* name;
+    glean::impl::CounterMetric doc_metric;
+    glean::impl::CounterMetric page_metric;
+  } kEntries[] = {
 """
     )
-    for uc in page:
+
+    # This order must match the order UseCounter is defined,
+    # (and we guarantee it via the MOZ_ASSERT below at runtime).
+    assert len(page) == len(doc)
+    assert len(ops_page) == len(ops_doc)
+    assert len(css_page) == len(css_doc)
+
+    for pc, dc in zip(page, doc):
+        assert pc[0] == dc[0]
+        assert pc[1] == dc[1]
         f.write(
             f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_page::{uc[1]}.Add();
-        return "use.counter.page.{uc[1]}";
+        {{
+          UseCounter::{pc[0]},
+          "{pc[1]}",
+          glean::use_counter_doc::{pc[1]},
+          glean::use_counter_page::{pc[1]},
+        }},
 """
         )
 
-    for uc in ops_page:
+    for pc, dc in zip(ops_page, ops_doc):
+        assert pc[0] == dc[0]
+        assert pc[1] == dc[1]
         f.write(
             f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_deprecated_ops_page::{uc[1]}.Add();
-        return "use.counter.deprectated.ops.page.{uc[1]}";
+        {{
+          UseCounter::{pc[0]},
+          "deprecated_ops.{pc[1]}",
+          glean::use_counter_deprecated_ops_doc::{pc[1]},
+          glean::use_counter_deprecated_ops_page::{pc[1]},
+        }},
 """
         )
 
-    for uc in css_page:
+    for pc, dc in zip(css_page, css_doc):
+        assert pc[0] == dc[0]
+        assert pc[1] == dc[1]
         f.write(
             f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_css_page::{uc[1]}.Add();
-        return "use.counter.css.page.{uc[1]}";
+        {{
+          UseCounter::{pc[0]},
+          "css.{pc[1]}",
+          glean::use_counter_css_doc::{pc[1]},
+          glean::use_counter_css_page::{pc[1]},
+        }},
 """
         )
 
     f.write(
         """\
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unknown page usecounter.");
-        glean::use_counter_error::unknown_counter.Get("page"_ns).Add();
-        return "";
-    }
-  } else {
-    switch (aUseCounter) {
-"""
-    )
-    for uc in doc:
-        f.write(
-            f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_doc::{uc[1]}.Add();
-        return "use.counter.doc.{uc[1]}";
-"""
-        )
+  };
 
-    for uc in ops_doc:
-        f.write(
-            f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_deprecated_ops_doc::{uc[1]}.Add();
-        return "use.counter.deprecated.ops.doc.{uc[1]}";
-"""
-        )
-
-    for uc in css_doc:
-        f.write(
-            f"""\
-      case UseCounter::{uc[0]}:
-        glean::use_counter_css_doc::{uc[1]}.Add();
-        return "use.counter.css.doc.{uc[1]}";
-"""
-        )
-
-    f.write(
-        """\
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unknown document usecounter.");
-        glean::use_counter_error::unknown_counter.Get("doc"_ns).Add();
-        return "";
-    }
-  }
+  MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
+  const auto& entry = kEntries[size_t(aUseCounter)];
+  MOZ_ASSERT(entry.counter == aUseCounter, "Wrongly ordered array");
+  (aIsPage ? entry.page_metric : entry.doc_metric).Add();
+  return entry.name;
 }
 
 const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind aKind) {
-  switch(aKind) {
-    case WorkerKind::WorkerKindDedicated:
-      switch (aUseCounter) {
+  static constexpr struct {
+    UseCounterWorker counter;
+    const char* name;
+    glean::impl::CounterMetric dedicated_metric;
+    glean::impl::CounterMetric shared_metric;
+    glean::impl::CounterMetric service_metric;
+  } kEntries[] = {
 """
     )
-    for uc in dedicated:
+    assert len(dedicated) == len(shared)
+    assert len(dedicated) == len(service)
+    for dc, sc, servicec in zip(dedicated, shared, service):
+        assert dc[0] == sc[0]
+        assert dc[1] == sc[1]
+        assert dc[0] == servicec[0]
+        assert dc[1] == servicec[1]
         f.write(
             f"""\
-        case UseCounterWorker::{uc[0]}:
-          glean::use_counter_worker_dedicated::{uc[1]}.Add();
-          return "use.counter.worker.dedicated.{uc[1]}";
+        {{
+          UseCounterWorker::{dc[0]},
+          "{dc[1]}",
+          glean::use_counter_worker_dedicated::{dc[1]},
+          glean::use_counter_worker_shared::{dc[1]},
+          glean::use_counter_worker_service::{dc[1]},
+        }},
 """
         )
-
     f.write(
         """\
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown dedicated worker usecounter.");
-          glean::use_counter_error::unknown_counter.Get("dedicated"_ns).Add();
-          return "";
-      }
+  };
+
+  MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
+  const auto& entry = kEntries[size_t(aUseCounter)];
+  MOZ_ASSERT(entry.counter == aUseCounter, "Wrongly ordered array");
+  switch (aKind) {
+    case WorkerKind::WorkerKindDedicated:
+      entry.dedicated_metric.Add();
       break;
     case WorkerKind::WorkerKindShared:
-      switch (aUseCounter) {
-"""
-    )
-    for uc in shared:
-        f.write(
-            f"""\
-        case UseCounterWorker::{uc[0]}:
-          glean::use_counter_worker_shared::{uc[1]}.Add();
-          return "use.counter.worker.shared.{uc[1]}";
-"""
-        )
-
-    f.write(
-        """\
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown shared worker usecounter.");
-          glean::use_counter_error::unknown_counter.Get("shared"_ns).Add();
-          return "";
-      }
+      entry.shared_metric.Add();
       break;
     case WorkerKind::WorkerKindService:
-      switch (aUseCounter) {
-"""
-    )
-    for uc in service:
-        f.write(
-            f"""\
-        case UseCounterWorker::{uc[0]}:
-          glean::use_counter_worker_service::{uc[1]}.Add();
-          return "use.counter.worker.service.{uc[1]}";
-"""
-        )
-
-    f.write(
-        """\
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown service worker usecounter.");
-          glean::use_counter_error::unknown_counter.Get("service"_ns).Add();
-          return "";
-      }
-    default:
-      // Not being a supported worker type isn't an error.
-      // But trying to increment it _is_.
-      MOZ_ASSERT_UNREACHABLE("Unknown type of worker.");
-      return "";
+      entry.service_metric.Add();
+      break;
   }
+  return entry.name;
 }
 
 }  // namespace mozilla
