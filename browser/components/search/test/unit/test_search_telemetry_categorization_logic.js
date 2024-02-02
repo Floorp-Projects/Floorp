@@ -90,10 +90,6 @@ const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2 = {
   "FZ5zPYh6ByI0KGWKkmpDoA==": [1, 5, 2, 94],
 };
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_3 = {
-  "WvodmXTKbmLPVwFSai5uMQ==": [0, 52, 3, 45],
-};
-
 add_setup(async () => {
   Services.prefs.setBoolPref(
     "browser.search.serpEventTelemetryCategorization.enabled",
@@ -345,28 +341,6 @@ add_task(async function test_rank_penalization_highest_score_lower_on_page() {
   Assert.deepEqual(
     resultsToReport,
     { category: "2", num_domains: 2, num_inconclusive: 0, num_unknown: 0 },
-    "Should report the correct values for categorizing the SERP."
-  );
-});
-
-add_task(async function test_high_inconclusive_causes_domain_to_be_ignored() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
-    TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_3
-  );
-
-  let domains = new Set(["test63.com"]);
-
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
-
-  Assert.deepEqual(
-    resultsToReport,
-    {
-      category: SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE,
-      num_domains: 1,
-      num_inconclusive: 1,
-      num_unknown: 0,
-    },
     "Should report the correct values for categorizing the SERP."
   );
 });

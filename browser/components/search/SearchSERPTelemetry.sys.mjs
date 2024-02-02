@@ -51,7 +51,6 @@ export const SEARCH_TELEMETRY_SHARED = {
 const impressionIdsWithoutEngagementsSet = new Set();
 
 export const CATEGORIZATION_SETTINGS = {
-  HIGHEST_SCORE_THRESHOLD: 50,
   MAX_DOMAINS_TO_CATEGORIZE: 10,
   MINIMUM_SCORE: 0,
   STARTING_RANK: 2,
@@ -1860,17 +1859,11 @@ class SERPCategorizer {
         continue;
       }
 
-      let isInconclusive =
-        (categoryCandidates.length == 1 &&
-          categoryCandidates[0].category ==
-            SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE) ||
-        categoryCandidates.some(
-          c =>
-            c.category ==
-              SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE &&
-            c.score >= CATEGORIZATION_SETTINGS.HIGHEST_SCORE_THRESHOLD
-        );
-      if (isInconclusive) {
+      // Inconclusive domains do not have more than one category candidate.
+      if (
+        categoryCandidates[0].category ==
+        SearchSERPTelemetryUtils.CATEGORIZATION.INCONCLUSIVE
+      ) {
         inconclusivesCount++;
         continue;
       }
