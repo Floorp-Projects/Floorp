@@ -612,8 +612,8 @@
  *   need not be provided in such cases.
  * MOZ_TEMPORARY_CLASS: Applies to all classes. Any class with this annotation
  *   is expected to only live in a temporary. If another class inherits from
- *   this class, then it is considered to be a non-temporary class as well,
- *   although this attribute need not be provided in such cases.
+ *   this class, then it is considered to be a temporary class as well, although
+ *   this attribute need not be provided in such cases.
  * MOZ_RAII: Applies to all classes. Any class with this annotation is assumed
  *   to be a RAII guard, which is expected to live on the stack in an automatic
  *   allocation. It is prohibited from being allocated in a temporary, static
