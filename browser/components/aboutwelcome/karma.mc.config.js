@@ -72,9 +72,9 @@ module.exports = function (config) {
       // This will make karma fail if coverage reporting is less than the minimums here
       thresholds: !isTDD && {
         each: {
-          statements: 100,
-          lines: 100,
-          functions: 100,
+          statements: 80,
+          lines: 80,
+          functions: 80,
           branches: 66,
           overrides: {
             "modules/*.jsm": {
@@ -120,17 +120,37 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/components/**/*.jsx": {
-              statements: 51.1,
-              lines: 52.38,
-              functions: 31.2,
-              branches: 31.2,
+            "content-src/components/MSLocalized.jsx": {
+              statements: 77.42,
+              lines: 77.42,
+              functions: 75,
             },
-            "content-src/**/*.jsx": {
-              statements: 62,
-              lines: 60,
+            "content-src/components/CTAParagraph.jsx": {
               functions: 50,
+            },
+            "content-src/components/HeroImage.jsx": {
+              branches: 62.5,
+            },
+            "content-src/components/LinkParagraph.jsx": {
+              functions: 75,
+              branches: 37.5,
+            },
+            "content-src/components/MRColorways.jsx": {
+              statements: 76.09,
+              lines: 75,
+              functions: 76.92,
+            },
+            "content-src/components/MobileDownloads.jsx": {
+              branches: 56.25,
+            },
+            "content-src/components/Themes.jsx": {
               branches: 50,
+            },
+            "content-src/components/MultiStageAboutWelcome.jsx": {
+              statements: 73.71,
+              lines: 75.4,
+              functions: 72.5,
+              branches: 58.62,
             },
           },
         },
