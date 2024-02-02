@@ -1,6 +1,6 @@
 import { GlobalOverrider } from "test/unit/utils";
 import { PanelTestProvider } from "asrouter/modules/PanelTestProvider.sys.mjs";
-import { _MomentsPageHub } from "lib/MomentsPageHub.jsm";
+import { _MomentsPageHub } from "lib/MomentsPageHub.sys.mjs";
 const HOMEPAGE_OVERRIDE_PREF = "browser.startup.homepage_override.once";
 
 describe("MomentsPageHub", () => {

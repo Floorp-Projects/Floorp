@@ -1,8 +1,8 @@
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/PanelTestProvider.sys.mjs"
 );
-const { MomentsPageHub } = ChromeUtils.import(
-  "resource://activity-stream/lib/MomentsPageHub.jsm"
+const { MomentsPageHub } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/MomentsPageHub.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"

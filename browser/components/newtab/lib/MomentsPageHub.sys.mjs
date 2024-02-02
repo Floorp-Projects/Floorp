@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const lazy = {};
 
@@ -21,7 +20,7 @@ const REACH_EVENT_METHOD = "reach";
 // for the event `object`
 const REACH_EVENT_OBJECT = "moments_page";
 
-class _MomentsPageHub {
+export class _MomentsPageHub {
   constructor() {
     this.id = "moments-page-hub";
     this.state = {};
@@ -169,6 +168,4 @@ class _MomentsPageHub {
  * ToolbarBadgeHub - singleton instance of _ToolbarBadgeHub that can initiate
  * message requests and render messages.
  */
-const MomentsPageHub = new _MomentsPageHub();
-
-const EXPORTED_SYMBOLS = ["_MomentsPageHub", "MomentsPageHub"];
+export const MomentsPageHub = new _MomentsPageHub();
