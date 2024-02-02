@@ -20,7 +20,7 @@
 
 namespace webrtc {
 
-void SetMediaEngineDefaults(cricket::MediaEngineDependencies* deps) {
+void DeprecatedSetMediaEngineDefaults(cricket::MediaEngineDependencies* deps) {
   RTC_DCHECK(deps);
   if (deps->task_queue_factory == nullptr) {
     static TaskQueueFactory* const task_queue_factory =
