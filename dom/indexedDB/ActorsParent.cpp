@@ -330,10 +330,6 @@ constexpr auto kSQLiteJournalSuffix = u".sqlite-journal"_ns;
 constexpr auto kSQLiteSHMSuffix = u".sqlite-shm"_ns;
 constexpr auto kSQLiteWALSuffix = u".sqlite-wal"_ns;
 
-constexpr auto kPermissionStringBase = "indexedDB-chrome-"_ns;
-constexpr auto kPermissionReadSuffix = "-read"_ns;
-constexpr auto kPermissionWriteSuffix = "-write"_ns;
-
 // The following constants define all names of binding parameters in statements,
 // where they are bound by name. This should include all parameter names which
 // are bound by name. Binding may be done by index when the statement definition
@@ -3138,9 +3134,6 @@ class FactoryOp
  private:
   mozilla::Result<PermissionValue, nsresult> CheckPermission(
       ContentParent* aContentParent);
-
-  static bool CheckAtLeastOneAppHasPermission(
-      ContentParent* aContentParent, const nsACString& aPermissionString);
 
   nsresult FinishOpen();
 
@@ -14761,47 +14754,7 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
     MOZ_ASSERT(mState == State::Initial);
     MOZ_ASSERT(persistenceType == PERSISTENCE_TYPE_PERSISTENT);
 
-    if (aContentParent) {
-      // Check to make sure that the child process has access to the database it
-      // is accessing.
-      NS_ConvertUTF16toUTF8 databaseName(mCommonParams.metadata().name());
-
-      const nsAutoCString permissionStringWrite =
-          kPermissionStringBase + databaseName + kPermissionWriteSuffix;
-      const nsAutoCString permissionStringRead =
-          kPermissionStringBase + databaseName + kPermissionReadSuffix;
-
-      bool canWrite = CheckAtLeastOneAppHasPermission(aContentParent,
-                                                      permissionStringWrite);
-
-      bool canRead;
-      if (canWrite) {
-        MOZ_ASSERT(CheckAtLeastOneAppHasPermission(aContentParent,
-                                                   permissionStringRead));
-        canRead = true;
-      } else {
-        canRead = CheckAtLeastOneAppHasPermission(aContentParent,
-                                                  permissionStringRead);
-      }
-
-      // Deleting a database requires write permissions.
-      if (mDeleting && !canWrite) {
-        aContentParent->KillHard("IndexedDB CheckPermission 2");
-        IDB_REPORT_INTERNAL_ERR();
-        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      }
-
-      // Opening or deleting requires read permissions.
-      if (!canRead) {
-        aContentParent->KillHard("IndexedDB CheckPermission 3");
-        IDB_REPORT_INTERNAL_ERR();
-        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      }
-
-      mChromeWriteAccessAllowed = canWrite;
-    } else {
-      mChromeWriteAccessAllowed = true;
-    }
+    mChromeWriteAccessAllowed = true;
 
     return PermissionValue::kPermissionAllowed;
   }
@@ -14864,16 +14817,6 @@ nsresult FactoryOp::SendVersionChangeMessages(
 
   return NS_OK;
 }  // namespace indexedDB
-
-// static
-bool FactoryOp::CheckAtLeastOneAppHasPermission(
-    ContentParent* aContentParent, const nsACString& aPermissionString) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aContentParent);
-  MOZ_ASSERT(!aPermissionString.IsEmpty());
-
-  return true;
-}
 
 nsresult FactoryOp::FinishOpen() {
   AssertIsOnOwningThread();
