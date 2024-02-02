@@ -456,6 +456,8 @@ class nsWindow final : public nsBaseWidget {
   // rendering queue blocking (see Bug 1782948).
   void ClearRenderingQueue();
 
+  void DisableRendering();
+
   bool ApplyEnterLeaveMutterWorkaround();
 
   void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
