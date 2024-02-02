@@ -24,6 +24,7 @@ ChromeUtils.defineModuleGetter(
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
 ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadsManager: "resource://activity-stream/lib/DownloadsManager.sys.mjs",
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
@@ -32,11 +33,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadsManager",
-  "resource://activity-stream/lib/DownloadsManager.jsm"
 );
 
 const HIGHLIGHTS_MAX_LENGTH = 16;

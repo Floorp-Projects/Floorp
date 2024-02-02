@@ -20,7 +20,7 @@ import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.sys.mjs";
 
 import { LinksCache } from "lib/LinksCache.sys.mjs";
 import { PersistentCache } from "lib/PersistentCache.sys.mjs";
-import { DownloadsManager } from "lib/DownloadsManager.jsm";
+import { DownloadsManager } from "lib/DownloadsManager.sys.mjs";
 
 describe("ActivityStream", () => {
   let sandbox;
