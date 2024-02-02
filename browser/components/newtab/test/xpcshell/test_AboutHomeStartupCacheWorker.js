@@ -21,8 +21,8 @@ const { TestUtils } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { DiscoveryStreamFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
+const { DiscoveryStreamFeed } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs"
 );
 
 SearchTestUtils.init(this);

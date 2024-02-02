@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -13,12 +12,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// setTimeout / clearTimeout, and overrides importESModule
+// to be a no-op (which can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 const CACHE_KEY = "discovery_stream";
 const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -58,7 +66,7 @@ const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 
 let getHardcodedLayout;
 
-class DiscoveryStreamFeed {
+export class DiscoveryStreamFeed {
   constructor() {
     // Internal state for checking if we've intialized all our data
     this.loaded = false;
@@ -2234,5 +2242,3 @@ getHardcodedLayout = ({
     },
   ],
 });
-
-const EXPORTED_SYMBOLS = ["DiscoveryStreamFeed"];

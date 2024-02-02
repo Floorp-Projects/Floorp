@@ -19,6 +19,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutPreferences: "resource://activity-stream/lib/AboutPreferences.sys.mjs",
   DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.sys.mjs",
   DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
+  DiscoveryStreamFeed:
+    "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs",
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
@@ -77,11 +79,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "TopStoriesFeed",
   "resource://activity-stream/lib/TopStoriesFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DiscoveryStreamFeed",
-  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
 );
 
 const REGION_BASIC_CONFIG =
