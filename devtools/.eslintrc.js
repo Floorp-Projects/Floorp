@@ -155,6 +155,16 @@ module.exports = {
         "mozilla/specific": false,
       },
     },
+    {
+      files: [
+        "client/inspector/markup/test/doc_markup_events_react_*_jsx.html",
+      ],
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
   ],
   rules: {
     // These are the rules that have been configured so far to match the

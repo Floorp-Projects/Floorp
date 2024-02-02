@@ -14,7 +14,7 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true,
+    es2022: true,
     "mozilla/privileged": true,
     "mozilla/specific": true,
   },
@@ -83,6 +83,9 @@ module.exports = {
     },
     {
       files: ["**/*.mjs"],
+      parserOptions: {
+        sourceType: "module",
+      },
       rules: {
         "mozilla/use-static-import": "error",
         // This rule defaults to not allowing "use strict" in module files since

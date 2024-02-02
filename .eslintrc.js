@@ -55,13 +55,6 @@ const httpTestingPaths = [
 ];
 
 module.exports = {
-  parser: "@babel/eslint-parser",
-  parserOptions: {
-    sourceType: "script",
-    babelOptions: {
-      configFile: path.join(__dirname, ".babel-eslint.rc.js"),
-    },
-  },
   settings: {
     "import/extensions": [".mjs"],
   },
@@ -82,6 +75,18 @@ module.exports = {
       env: {
         node: true,
         browser: false,
+      },
+    },
+    {
+      files: [
+        "**/*.jsx",
+        "browser/components/pocket/content/**/*.js",
+        "browser/components/storybook/.storybook/**/*.mjs",
+      ],
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
     {
