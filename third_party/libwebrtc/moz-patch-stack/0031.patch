@@ -58,7 +58,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08567f4539a12b542
 ---
  .gn                                           |  2 +
  BUILD.gn                                      | 45 ++++++++++++++++++-
- api/BUILD.gn                                  | 34 +++++++++++++-
+ api/BUILD.gn                                  | 33 +++++++++++++-
  api/rtp_sender_interface.h                    |  4 +-
  api/rtp_sender_setparameters_callback.cc      | 27 +++++++++++
  api/rtp_sender_setparameters_callback.h       | 28 ++++++++++++
@@ -87,7 +87,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08567f4539a12b542
  test/BUILD.gn                                 | 10 +++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 32 ++++++++-----
- 31 files changed, 311 insertions(+), 99 deletions(-)
+ 31 files changed, 311 insertions(+), 98 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -193,7 +193,7 @@ index 7e8325e306..f61f8965b9 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index bd0f52e0d6..4259701e4d 100644
+index a3b32bc4ad..36f299771e 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -49,7 +49,7 @@ rtc_source_set("enable_media") {
@@ -205,7 +205,7 @@ index bd0f52e0d6..4259701e4d 100644
    rtc_library("create_peerconnection_factory") {
      visibility = [ "*" ]
      allow_poison = [ "default_task_queue" ]
-@@ -203,6 +203,10 @@ rtc_source_set("ice_transport_interface") {
+@@ -204,6 +204,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
  rtc_library("dtls_transport_interface") {
@@ -216,7 +216,7 @@ index bd0f52e0d6..4259701e4d 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -219,6 +223,7 @@ rtc_library("dtls_transport_interface") {
+@@ -220,6 +224,7 @@ rtc_library("dtls_transport_interface") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -224,7 +224,7 @@ index bd0f52e0d6..4259701e4d 100644
  
  rtc_library("dtmf_sender_interface") {
    visibility = [ "*" ]
-@@ -231,6 +236,10 @@ rtc_library("dtmf_sender_interface") {
+@@ -232,6 +237,10 @@ rtc_library("dtmf_sender_interface") {
  }
  
  rtc_library("rtp_sender_interface") {
@@ -235,17 +235,14 @@ index bd0f52e0d6..4259701e4d 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -242,8 +251,8 @@ rtc_library("rtp_sender_interface") {
-     ":dtmf_sender_interface",
-     ":frame_transformer_interface",
-     ":media_stream_interface",
--    ":rtc_error",
+@@ -246,16 +255,31 @@ rtc_library("rtp_sender_interface") {
+     ":ref_count",
+     ":rtc_error",
      ":rtp_parameters",
 +    ":rtp_sender_setparameters_callback",
      ":scoped_refptr",
      "../rtc_base:checks",
-     "../rtc_base:refcount",
-@@ -251,10 +260,24 @@ rtc_library("rtp_sender_interface") {
+     "../rtc_base/system:rtc_export",
      "crypto:frame_encryptor_interface",
      "video_codecs:video_codecs_api",
    ]
@@ -270,7 +267,7 @@ index bd0f52e0d6..4259701e4d 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -372,6 +395,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -373,6 +397,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -278,7 +275,7 @@ index bd0f52e0d6..4259701e4d 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -568,6 +592,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -572,6 +597,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -286,7 +283,7 @@ index bd0f52e0d6..4259701e4d 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -618,6 +643,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -622,6 +648,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -294,7 +291,7 @@ index bd0f52e0d6..4259701e4d 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -736,6 +762,7 @@ rtc_library("create_frame_generator") {
+@@ -740,6 +767,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -302,7 +299,7 @@ index bd0f52e0d6..4259701e4d 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -752,6 +779,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -756,6 +784,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -310,7 +307,7 @@ index bd0f52e0d6..4259701e4d 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -924,6 +952,7 @@ rtc_source_set("refcountedbase") {
+@@ -930,6 +959,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -318,7 +315,7 @@ index bd0f52e0d6..4259701e4d 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -942,6 +971,7 @@ rtc_library("ice_transport_factory") {
+@@ -948,6 +978,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -327,11 +324,11 @@ index bd0f52e0d6..4259701e4d 100644
  rtc_library("neteq_simulator_api") {
    visibility = [ "*" ]
 diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
-index 41d35bc287..619b601f1f 100644
+index 7b8ab135c8..7090c233cd 100644
 --- a/api/rtp_sender_interface.h
 +++ b/api/rtp_sender_interface.h
 @@ -32,9 +32,9 @@
- #include "rtc_base/ref_count.h"
+ #include "api/video_codecs/video_encoder_factory.h"
  #include "rtc_base/system/rtc_export.h"
  
 -namespace webrtc {
@@ -340,7 +337,7 @@ index 41d35bc287..619b601f1f 100644
 -using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
 +namespace webrtc {
  
- class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
+ class RTC_EXPORT RtpSenderInterface : public webrtc::RefCountInterface {
   public:
 diff --git a/api/rtp_sender_setparameters_callback.cc b/api/rtp_sender_setparameters_callback.cc
 new file mode 100644
