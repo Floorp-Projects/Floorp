@@ -6,7 +6,8 @@
 
 #include "PotentialCheckerboardDurationTracker.h"
 
-#include "mozilla/Telemetry.h"  // for Telemetry
+#include "mozilla/Telemetry.h"           // for Telemetry
+#include "mozilla/glean/GleanMetrics.h"  // for Glean telemetry
 
 namespace mozilla {
 namespace layers {
@@ -28,9 +29,8 @@ void PotentialCheckerboardDurationTracker::CheckerboardDone(
   mInCheckerboard = false;
   if (!Tracking()) {
     if (aRecordTelemetry) {
-      mozilla::Telemetry::AccumulateTimeDelta(
-          mozilla::Telemetry::CHECKERBOARD_POTENTIAL_DURATION,
-          mCurrentPeriodStart);
+      mozilla::glean::gfx_checkerboard::potential_duration
+          .AccumulateRawDuration(mCurrentPeriodStart - TimeStamp::Now());
     }
   }
 }

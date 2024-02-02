@@ -63,6 +63,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsDebug.h"          // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
@@ -1776,18 +1777,20 @@ int32_t RecordContentFrameTime(
                         ContentFrameMarker{});
   }
 
-  Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+  mozilla::glean::gfx_content_frame_time::from_paint.AccumulateSamples(
+      {static_cast<unsigned long long>(fracLatencyNorm)});
 
   if (!(aTxnId == VsyncId()) && aVsyncStart) {
     latencyMs = (aCompositeEnd - aVsyncStart).ToMilliseconds();
     latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
     fracLatencyNorm = lround(latencyNorm * 100.0);
     int32_t result = fracLatencyNorm;
-    Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_VSYNC, fracLatencyNorm);
+    mozilla::glean::gfx_content_frame_time::from_vsync.AccumulateSamples(
+        {static_cast<unsigned long long>(fracLatencyNorm)});
 
     if (aContainsSVGGroup) {
-      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG,
-                            fracLatencyNorm);
+      mozilla::glean::gfx_content_frame_time::with_svg.AccumulateSamples(
+          {static_cast<unsigned long long>(fracLatencyNorm)});
     }
 
     // Record CONTENT_FRAME_TIME_REASON.
@@ -1819,35 +1822,63 @@ int32_t RecordContentFrameTime(
       // Success
       Telemetry::AccumulateCategorical(
           LABELS_CONTENT_FRAME_TIME_REASON::OnTime);
+      mozilla::glean::gfx_content_frame_time::reason
+          .EnumGet(glean::gfx_content_frame_time::ReasonLabel::eOnTime)
+          .Add();
     } else {
       if (aCompositeId == VsyncId()) {
         // aCompositeId is 0, possibly something got trigged from
         // outside vsync?
         Telemetry::AccumulateCategorical(
             LABELS_CONTENT_FRAME_TIME_REASON::NoVsyncNoId);
+        mozilla::glean::gfx_content_frame_time::reason
+            .EnumGet(glean::gfx_content_frame_time::ReasonLabel::eNoVsyncNoId)
+            .Add();
       } else if (aTxnId >= aCompositeId) {
         // Vsync ids are nonsensical, maybe we're trying to catch up?
         Telemetry::AccumulateCategorical(
             LABELS_CONTENT_FRAME_TIME_REASON::NoVsync);
+        mozilla::glean::gfx_content_frame_time::reason
+            .EnumGet(glean::gfx_content_frame_time::ReasonLabel::eNoVsync)
+            .Add();
       } else if (aCompositeId - aTxnId > 1) {
         // Composite started late (and maybe took too long as well)
         if (aFullPaintTime >= TimeDuration::FromMilliseconds(20)) {
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeLong);
+          mozilla::glean::gfx_content_frame_time::reason
+              .EnumGet(glean::gfx_content_frame_time::ReasonLabel::
+                           eMissedCompositeLong)
+              .Add();
         } else if (aFullPaintTime >= TimeDuration::FromMilliseconds(10)) {
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeMid);
+          mozilla::glean::gfx_content_frame_time::reason
+              .EnumGet(glean::gfx_content_frame_time::ReasonLabel::
+                           eMissedCompositeMid)
+              .Add();
         } else if (aFullPaintTime >= TimeDuration::FromMilliseconds(5)) {
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeLow);
+          mozilla::glean::gfx_content_frame_time::reason
+              .EnumGet(glean::gfx_content_frame_time::ReasonLabel::
+                           eMissedCompositeLow)
+              .Add();
         } else {
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
+          mozilla::glean::gfx_content_frame_time::reason
+              .EnumGet(
+                  glean::gfx_content_frame_time::ReasonLabel::eMissedComposite)
+              .Add();
         }
       } else {
         // Composite started on time, but must have taken too long.
         Telemetry::AccumulateCategorical(
             LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
+        mozilla::glean::gfx_content_frame_time::reason
+            .EnumGet(glean::gfx_content_frame_time::ReasonLabel::eSlowComposite)
+            .Add();
       }
     }
 
@@ -1857,17 +1888,18 @@ int32_t RecordContentFrameTime(
         latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
         fracLatencyNorm = lround(latencyNorm * 100.0);
       }
-      Telemetry::Accumulate(
-          Telemetry::CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD,
-          fracLatencyNorm);
+      mozilla::glean::gfx_content_frame_time::without_resource_upload
+          .AccumulateSamples(
+              {static_cast<unsigned long long>(fracLatencyNorm)});
 
       if (aStats) {
         latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
         latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
         fracLatencyNorm = lround(latencyNorm * 100.0);
       }
-      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_UPLOAD,
-                            fracLatencyNorm);
+      mozilla::glean::gfx_content_frame_time::without_resource_upload
+          .AccumulateSamples(
+              {static_cast<unsigned long long>(fracLatencyNorm)});
     }
     return result;
   }
@@ -1962,9 +1994,8 @@ void RecordCompositionPayloadsPresented(
             mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
             presented);
       } else if (payload.mType == CompositionPayloadType::eAPZScroll) {
-        Telemetry::AccumulateTimeDelta(
-            mozilla::Telemetry::SCROLL_PRESENT_LATENCY, payload.mTimeStamp,
-            presented);
+        mozilla::glean::gfx::scroll_present_latency.AccumulateRawDuration(
+            presented - payload.mTimeStamp);
       } else if (payload.mType ==
                  CompositionPayloadType::eMouseUpFollowedByClick) {
         Telemetry::AccumulateTimeDelta(

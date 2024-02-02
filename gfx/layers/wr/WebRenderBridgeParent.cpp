@@ -22,6 +22,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
@@ -200,9 +201,8 @@ class SceneBuiltNotification : public wr::NotificationHandler {
                             MarkerTiming::Interval(startTime, endTime),
                             ContentBuildMarker);
           }
-          Telemetry::Accumulate(
-              Telemetry::CONTENT_FULL_PAINT_TIME,
-              static_cast<uint32_t>((endTime - startTime).ToMilliseconds()));
+          mozilla::glean::gfx_content::full_paint_time.AccumulateRawDuration(
+              endTime - startTime);
           parent->NotifySceneBuiltForEpoch(epoch, endTime);
         }));
   }

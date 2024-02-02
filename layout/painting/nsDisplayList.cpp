@@ -69,6 +69,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -8564,11 +8565,9 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint() {
     return;
   }
 
-  double totalMs = (TimeStamp::Now() - mStart).ToMilliseconds();
-
   // Record the total time.
-  Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME,
-                        static_cast<uint32_t>(totalMs));
+  mozilla::glean::gfx_content::paint_time.AccumulateRawDuration(
+      TimeStamp::Now() - mStart);
 }
 
 static nsIFrame* GetSelfOrPlaceholderFor(nsIFrame* aFrame) {
