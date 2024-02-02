@@ -15,11 +15,7 @@ def merge_resource(ctx, reference, current, transforms, in_changeset):
     """
 
     def merge_body(body):
-        return [
-            entry
-            for entry in map(merge_entry, body)
-            if entry is not None
-        ]
+        return [entry for entry in map(merge_entry, body) if entry is not None]
 
     def merge_entry(entry):
         # All standalone comments will be merged.

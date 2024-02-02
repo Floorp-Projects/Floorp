@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: fluent.migrate
-Version: 0.12.0
+Version: 0.13.0
 Summary: Toolchain to migrate legacy translation to Fluent.
 Home-page: https://github.com/mozilla/fluent-migrate
 Author: Mozilla
@@ -11,14 +11,15 @@ Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: POSIX
-Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: compare-locales (<10.0,>=9.0.1)
-Requires-Dist: fluent.syntax (<0.20,>=0.19.0)
+Requires-Dist: compare-locales <10.0,>=9.0.1
+Requires-Dist: fluent.syntax <0.20,>=0.19.0
 Provides-Extra: hg
 Requires-Dist: python-hglib ; extra == 'hg'
 

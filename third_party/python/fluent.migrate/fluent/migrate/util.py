@@ -16,7 +16,7 @@ def parse(Parser, string):
     # Parse the string into the internal Context.
     parser = Parser()
     # compare-locales expects ASCII strings.
-    parser.readContents(string.encode('utf8'))
+    parser.readContents(string.encode("utf8"))
     # Transform the parsed result which is an iterator into a dict.
     return {ent.key: ent for ent in parser}
 
@@ -35,10 +35,7 @@ def ftl_pattern_to_json(code):
 
 
 def to_json(merged_iter):
-    return {
-        path: resource.to_json()
-        for path, resource in merged_iter
-    }
+    return {path: resource.to_json() for path, resource in merged_iter}
 
 
 LOCALIZABLE_ENTRIES = (FTL.Message, FTL.Term)
@@ -79,7 +76,7 @@ def ftl(code):
     """
 
     # The code might be triple-quoted.
-    code = code.lstrip('\n')
+    code = code.lstrip("\n")
 
     return textwrap.dedent(code)
 
