@@ -50,8 +50,8 @@ class HeartbeatHandler {
   void HandleHeartbeatAck(HeartbeatAckChunk chunk);
 
  private:
-  absl::optional<DurationMs> OnIntervalTimerExpiry();
-  absl::optional<DurationMs> OnTimeoutTimerExpiry();
+  DurationMs OnIntervalTimerExpiry();
+  DurationMs OnTimeoutTimerExpiry();
 
   const absl::string_view log_prefix_;
   Context* ctx_;

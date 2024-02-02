@@ -102,10 +102,11 @@ class Timer {
   // The maximum timer duration - one day.
   static constexpr DurationMs kMaxTimerDuration = DurationMs(24 * 3600 * 1000);
 
-  // When expired, the timer handler can optionally return a new duration which
-  // will be set as `duration` and used as base duration when the timer is
-  // restarted and as input to the backoff algorithm.
-  using OnExpired = std::function<absl::optional<DurationMs>()>;
+  // When expired, the timer handler can optionally return a new non-zero
+  // duration which will be set as `duration` and used as base duration when the
+  // timer is restarted and as input to the backoff algorithm. If zero is
+  // returned, the current duration is used.
+  using OnExpired = std::function<DurationMs()>;
 
   // TimerManager will have pointers to these instances, so they must not move.
   Timer(const Timer&) = delete;

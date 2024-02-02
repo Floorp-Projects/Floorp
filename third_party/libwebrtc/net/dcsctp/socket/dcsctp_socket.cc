@@ -921,7 +921,7 @@ bool DcSctpSocket::HandleUnrecognizedChunk(
   return continue_processing;
 }
 
-absl::optional<DurationMs> DcSctpSocket::OnInitTimerExpiry() {
+DurationMs DcSctpSocket::OnInitTimerExpiry() {
   RTC_DLOG(LS_VERBOSE) << log_prefix() << "Timer " << t1_init_->name()
                        << " has expired: " << t1_init_->expiration_count()
                        << "/" << t1_init_->options().max_restarts.value_or(-1);
@@ -933,10 +933,10 @@ absl::optional<DurationMs> DcSctpSocket::OnInitTimerExpiry() {
     InternalClose(ErrorKind::kTooManyRetries, "No INIT_ACK received");
   }
   RTC_DCHECK(IsConsistent());
-  return absl::nullopt;
+  return DurationMs(0);
 }
 
-absl::optional<DurationMs> DcSctpSocket::OnCookieTimerExpiry() {
+DurationMs DcSctpSocket::OnCookieTimerExpiry() {
   // https://tools.ietf.org/html/rfc4960#section-4
   // "If the T1-cookie timer expires, the endpoint MUST retransmit COOKIE
   // ECHO and restart the T1-cookie timer without changing state.  This MUST
@@ -957,10 +957,10 @@ absl::optional<DurationMs> DcSctpSocket::OnCookieTimerExpiry() {
   }
 
   RTC_DCHECK(IsConsistent());
-  return absl::nullopt;
+  return DurationMs(0);
 }
 
-absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
+DurationMs DcSctpSocket::OnShutdownTimerExpiry() {
   RTC_DLOG(LS_VERBOSE) << log_prefix() << "Timer " << t2_shutdown_->name()
                        << " has expired: " << t2_shutdown_->expiration_count()
                        << "/"
@@ -980,7 +980,7 @@ absl::optional<DurationMs> DcSctpSocket::OnShutdownTimerExpiry() {
 
     InternalClose(ErrorKind::kTooManyRetries, "No SHUTDOWN_ACK received");
     RTC_DCHECK(IsConsistent());
-    return absl::nullopt;
+    return DurationMs(0);
   }
 
   // https://tools.ietf.org/html/rfc4960#section-9.2

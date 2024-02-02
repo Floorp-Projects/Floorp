@@ -109,9 +109,10 @@ void Timer::Trigger(TimerGeneration generation) {
       timeout_->Start(duration, MakeTimeoutId(id_, generation_));
     }
 
-    absl::optional<DurationMs> new_duration = on_expired_();
-    if (new_duration.has_value() && new_duration != duration_) {
-      duration_ = new_duration.value();
+    DurationMs new_duration = on_expired_();
+    RTC_DCHECK(new_duration != DurationMs::InfiniteDuration());
+    if (new_duration > DurationMs(0) && new_duration != duration_) {
+      duration_ = new_duration;
       if (is_running_) {
         // Restart it with new duration.
         timeout_->Stop();
