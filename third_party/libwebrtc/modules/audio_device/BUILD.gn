@@ -490,7 +490,6 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
       "../../common_audio",
       "../../rtc_base:buffer",
       "../../rtc_base:checks",
-      "../../rtc_base:ignore_wundef",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
       "../../rtc_base:race_checker",
