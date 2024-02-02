@@ -158,30 +158,6 @@ use.counter:
     send_in_pings:
       - use-counters
 
-use.counter.error:
-  unknown_counter:
-    type: labeled_counter
-    description: >
-      How many times did we try to increment a use counter we couldn't find?
-      Labeled by what kind of use counter it is.
-    labels:
-      - page
-      - doc
-      - dedicated
-      - shared
-      - service
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - chutten@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
 """
 
 USE_COUNTER_TEMPLATE = """\
