@@ -594,25 +594,30 @@ function checkProfileService(
   }
 }
 
-function checkStartupReason(expected = undefined) {
-  const tId = "startup.profile_selection_reason";
+// Maps the interesting scalar IDs to simple names that can be used as JS variables.
+const SCALARS = {
+  selectionReason: "startup.profile_selection_reason",
+  databaseVersion: "startup.profile_database_version",
+  profileCount: "startup.profile_count",
+};
+
+function getTelemetryScalars() {
   let scalars = TelemetryTestUtils.getProcessScalars("parent");
 
-  if (expected === undefined) {
-    Assert.ok(
-      !(tId in scalars),
-      "Startup telemetry should not have been recorded."
-    );
-    return;
+  let results = {};
+  for (let [prop, scalarId] of Object.entries(SCALARS)) {
+    results[prop] = scalars[scalarId];
   }
 
-  if (tId in scalars) {
-    Assert.equal(
-      scalars[tId],
-      expected,
-      "Should have seen the right startup reason."
-    );
-  } else {
-    Assert.ok(false, "Startup telemetry should have been recorded.");
-  }
+  return results;
+}
+
+function checkStartupReason(expected = undefined) {
+  let { selectionReason } = getTelemetryScalars();
+
+  Assert.equal(
+    selectionReason,
+    expected,
+    "Should have seen the right startup reason."
+  );
 }

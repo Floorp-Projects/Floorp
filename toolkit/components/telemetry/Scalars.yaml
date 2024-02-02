@@ -6061,6 +6061,50 @@ startup:
       - main
       - new-profile
 
+  profile_database_version:
+    bug_numbers:
+      - 1878339
+    description: >
+      The version of the profiles.ini database loaded during startup. A value
+      of "0" is used to indicate that no file was present during startup.
+    expires: "133"
+    keyed: false
+    kind: string
+    notification_emails:
+      - dtownsend@mozilla.com
+      - kbryant@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'thunderbird'
+    record_in_processes:
+      - main
+    record_into_store:
+      - main
+      - new-profile
+
+  profile_count:
+    bug_numbers:
+      - 1878339
+    description: >
+      This records the number of known profiles after startup completes. This
+      includes any profiles that were created during startup.
+    expires: "133"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - dtownsend@mozilla.com
+      - kbryant@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'thunderbird'
+    record_in_processes:
+      - main
+    record_into_store:
+      - main
+      - new-profile
+
   is_cold:
     bug_numbers:
       - 1542833
