@@ -2751,8 +2751,10 @@ async function addExpression(dbg, input) {
   findElementWithSelector(dbg, selectors.expressionInput).focus();
   type(dbg, input);
   const evaluated = waitForDispatch(dbg.store, "EVALUATE_EXPRESSION");
+  const clearAutocomplete = waitForDispatch(dbg.store, "CLEAR_AUTOCOMPLETE");
   pressKey(dbg, "Enter");
   await evaluated;
+  await clearAutocomplete;
 }
 
 async function editExpression(dbg, input) {

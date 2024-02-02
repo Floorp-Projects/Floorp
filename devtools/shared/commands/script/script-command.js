@@ -41,6 +41,8 @@ class ScriptCommand {
    * @param {boolean} options.disableBreaks: Set to true to avoid triggering any
    *        type of breakpoint when evaluating the source. Also, the evaluated source won't be
    *        visible in the debugger UI.
+   * @param {boolean} options.preferConsoleCommandsOverLocalSymbols: Set to true to force
+   *        overriding local symbols defined by the page with same-name console commands.
    *
    * @return {Promise}: A promise that resolves with the response.
    */
@@ -107,6 +109,8 @@ class ScriptCommand {
           selectedObjectActor,
           url: options.url,
           disableBreaks: options.disableBreaks,
+          preferConsoleCommandsOverLocalSymbols:
+            options.preferConsoleCommandsOverLocalSymbols,
         })
         .then(packet => {
           resultID = packet.resultID;

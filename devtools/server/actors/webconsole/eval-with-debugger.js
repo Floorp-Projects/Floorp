@@ -99,6 +99,8 @@ function isObject(value) {
  *        - eager: Set to true if you want the evaluation to bail if it may have side effects.
  *        - url: the url to evaluate the script as. Defaults to "debugger eval code",
  *        or "debugger eager eval code" if eager is true.
+ *        - preferConsoleCommandsOverLocalSymbols: Set to true if console commands
+ *        should override local symbols.
  * @param object webConsole
  *
  * @return object
@@ -156,7 +158,7 @@ function evalWithDebugger(string, options = {}, webConsole) {
     frame,
     string,
     options.selectedNodeActor,
-    !!options.disableBreaks
+    options.preferConsoleCommandsOverLocalSymbols
   );
   let { bindings } = helpers;
 
@@ -200,9 +202,7 @@ function evalWithDebugger(string, options = {}, webConsole) {
     evalOptions.hideFromDebugger = true;
   }
 
-  if (options.disableBreaks) {
-    // disableBreaks is used for all non-user-provided code, and in this case
-    // extra bindings shouldn't be shadowed.
+  if (options.preferConsoleCommandsOverLocalSymbols) {
     evalOptions.useInnerBindings = true;
   }
 

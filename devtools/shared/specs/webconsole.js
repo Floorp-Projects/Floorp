@@ -157,6 +157,7 @@ const webconsoleSpecPrototype = {
         mapped: Option(0, "nullable:json"),
         eager: Option(0, "nullable:boolean"),
         disableBreaks: Option(0, "nullable:boolean"),
+        preferConsoleCommandsOverLocalSymbols: Option(0, "nullable:boolean"),
       },
       response: RetVal("console.evaluatejsasync"),
     },
