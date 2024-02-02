@@ -1721,6 +1721,10 @@ class MTableSwitch final : public MControlInstruction,
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
+  // It does read memory in that it must read an entry from the jump table,
+  // but that's effectively data that is private to this MIR.  And it should
+  // certainly never be modified by any other MIR.  Hence it is effect-free
+  // from an alias-analysis standpoint.
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -10021,6 +10025,16 @@ class MWasmLoadInstanceDataField : public MUnaryInstruction,
   }
 
   AliasType mightAlias(const MDefinition* def) const override;
+
+#ifdef JS_JITSPEW
+  void getExtras(ExtrasCollector* extras) override {
+    char buf[96];
+    SprintfLiteral(buf, "(offs=%lld, isConst=%s)",
+                   (long long int)instanceDataOffset_,
+                   isConstant_ ? "true" : "false");
+    extras->add(buf);
+  }
+#endif
 };
 
 class MWasmLoadGlobalCell : public MUnaryInstruction,
