@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { TopSitesFeed, DEFAULT_TOP_SITES } = ChromeUtils.import(
-  "resource://activity-stream/lib/TopSitesFeed.jsm"
+const { TopSitesFeed, DEFAULT_TOP_SITES } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TopSitesFeed.sys.mjs"
 );
 
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(

@@ -34,6 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Store: "resource://activity-stream/lib/Store.sys.mjs",
   SystemTickFeed: "resource://activity-stream/lib/SystemTickFeed.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
+  TopSitesFeed: "resource://activity-stream/lib/TopSitesFeed.sys.mjs",
 });
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
@@ -43,11 +44,6 @@ import {
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TopSitesFeed",
-  "resource://activity-stream/lib/TopSitesFeed.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "TopStoriesFeed",

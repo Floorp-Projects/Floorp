@@ -3,14 +3,11 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { TopSitesFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TopSitesFeed.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   SearchService: "resource://gre/modules/SearchService.sys.mjs",
+  TopSitesFeed: "resource://activity-stream/lib/TopSitesFeed.sys.mjs",
 });
 
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";

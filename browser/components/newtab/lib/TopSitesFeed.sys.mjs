@@ -1,28 +1,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { TippyTopProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/TippyTopProvider.sys.mjs"
-);
-const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } =
-  ChromeUtils.importESModule(
-    "resource://activity-stream/common/Reducers.sys.mjs"
-  );
-const { Dedupe } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Dedupe.sys.mjs"
-);
-const { shortURL } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ShortURL.sys.mjs"
-);
-const { getDefaultOptions } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
-);
-const {
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
+import {
+  insertPinned,
+  TOP_SITES_MAX_SITES_PER_ROW,
+} from "resource://activity-stream/common/Reducers.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
+
+import {
   CUSTOM_SEARCH_SHORTCUTS,
   SEARCH_SHORTCUTS_EXPERIMENT,
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
@@ -30,9 +23,7 @@ const {
   checkHasSearchEngine,
   getSearchProvider,
   getSearchFormURL,
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/SearchShortcuts.sys.mjs"
-);
+} from "resource://activity-stream/lib/SearchShortcuts.sys.mjs";
 
 const lazy = {};
 
@@ -68,7 +59,7 @@ ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
 
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
-const DEFAULT_TOP_SITES = [];
+export const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
 const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
@@ -277,7 +268,7 @@ class TopSitesTelemetry {
   }
 }
 
-class ContileIntegration {
+export class ContileIntegration {
   constructor(topSitesFeed) {
     this._topSitesFeed = topSitesFeed;
     this._lastPeriodicUpdate = 0;
@@ -503,7 +494,7 @@ class ContileIntegration {
   }
 }
 
-class TopSitesFeed {
+export class TopSitesFeed {
   constructor() {
     this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
@@ -1961,9 +1952,3 @@ class TopSitesFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = [
-  "TopSitesFeed",
-  "DEFAULT_TOP_SITES",
-  "ContileIntegration",
-];
