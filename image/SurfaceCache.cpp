@@ -1899,8 +1899,7 @@ bool SurfaceCache::IsLegalSize(const IntSize& aSize) {
     NS_WARNING("width or height too large");
     return false;
   }
-  const int32_t maxSize =
-      StaticPrefs::image_mem_max_legal_imgframe_size_kb_AtStartup();
+  const int32_t maxSize = StaticPrefs::image_mem_max_legal_imgframe_size_kb();
   if (MOZ_UNLIKELY(maxSize > 0 && requiredBytes.value() / 1024 > maxSize)) {
     return false;
   }

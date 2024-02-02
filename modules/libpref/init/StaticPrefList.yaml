@@ -6999,9 +6999,9 @@
 # testing/fuzzing purposes. -1 disables this limit (there are other limits in
 # place).
 - name: image.mem.max_legal_imgframe_size_kb
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: -1
-  mirror: once
+  mirror: always
 
 # Whether we record SVG images as blobs or not.
 - name: image.svg.blob-image
