@@ -85,7 +85,7 @@ RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
     return nullptr;
   }
 
-  GdkWindow* gdkWindow = gtk_widget_get_window(aWindow->GetGtkWidget());
+  GdkWindow* gdkWindow = aWindow->GetToplevelGdkWindow();
   if (!gdkWindow) {
     LOG_SCREEN("  failed, can't get GdkWindow");
     return nullptr;
