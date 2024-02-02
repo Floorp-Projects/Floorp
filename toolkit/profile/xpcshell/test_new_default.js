@@ -34,6 +34,13 @@ add_task(async () => {
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("firstrun-claimed-default");
+  let { databaseVersion, profileCount } = getTelemetryScalars();
+  Assert.equal(
+    databaseVersion,
+    "1",
+    "Old database file was present at startup."
+  );
+  Assert.equal(profileCount, 3, "Should be three profiles.");
 
   let hash = xreDirProvider.getInstallHash();
   let profileData = readProfilesIni();

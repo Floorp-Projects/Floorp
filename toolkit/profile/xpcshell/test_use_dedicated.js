@@ -42,6 +42,13 @@ add_task(async () => {
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("default");
+  let { databaseVersion, profileCount } = getTelemetryScalars();
+  Assert.equal(
+    databaseVersion,
+    "2",
+    "New database file was present at startup."
+  );
+  Assert.equal(profileCount, 3, "Should be three profiles present.");
 
   let profileData = readProfilesIni();
 
