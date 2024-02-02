@@ -2,7 +2,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "common/Actions.sys.mjs";
-import { NewTabInit } from "lib/NewTabInit.jsm";
+import { NewTabInit } from "lib/NewTabInit.sys.mjs";
 
 describe("NewTabInit", () => {
   let instance;

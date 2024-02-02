@@ -1,17 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 /**
  * NewTabInit - A placeholder for now. This will send a copy of the state to all
  *              newly opened tabs.
  */
-class NewTabInit {
+export class NewTabInit {
   constructor() {
     this._repliedEarlyTabs = new Map();
   }
@@ -53,5 +53,3 @@ class NewTabInit {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["NewTabInit"];

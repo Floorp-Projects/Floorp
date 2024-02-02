@@ -5,7 +5,7 @@ import { GlobalOverrider } from "test/unit/utils";
 import { DEFAULT_SITES } from "lib/DefaultSites.sys.mjs";
 import { AboutPreferences } from "lib/AboutPreferences.sys.mjs";
 import { DefaultPrefs } from "lib/ActivityStreamPrefs.sys.mjs";
-import { NewTabInit } from "lib/NewTabInit.jsm";
+import { NewTabInit } from "lib/NewTabInit.sys.mjs";
 import { SectionsFeed } from "lib/SectionsManager.jsm";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { PlacesFeed } from "lib/PlacesFeed.sys.mjs";
