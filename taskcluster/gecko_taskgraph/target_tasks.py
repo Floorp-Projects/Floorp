@@ -1632,3 +1632,31 @@ def target_tasks_snap_upstream_tests(full_task_graph, parameters, graph_config):
     for name, task in full_task_graph.tasks.items():
         if "snap-upstream-test" in name and not "-try" in name:
             yield name
+
+
+@_target_task("nightly-android")
+def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
+    def filter(task, parameters):
+        build_type = task.attributes.get("build-type", "")
+        return build_type in (
+            "nightly",
+            "focus-nightly",
+            "fenix-nightly",
+            "fenix-nightly-firebase",
+            "focus-nightly-firebase",
+        )
+
+    index_path = (
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.branch."
+        f"{parameters['head_ref']}.revision.{parameters['head_rev']}.taskgraph.decision-nightly-android"
+    )
+    if os.environ.get("MOZ_AUTOMATION") and retry(
+        index_exists,
+        args=(index_path,),
+        kwargs={
+            "reason": "to avoid triggering multiple nightlies off the same revision",
+        },
+    ):
+        return []
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
