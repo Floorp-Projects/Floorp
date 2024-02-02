@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs",
   FaviconFeed: "resource://activity-stream/lib/FaviconFeed.sys.mjs",
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
+  NewTabInit: "resource://activity-stream/lib/NewTabInit.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -36,11 +37,6 @@ import {
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabInit",
-  "resource://activity-stream/lib/NewTabInit.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "SectionsFeed",
