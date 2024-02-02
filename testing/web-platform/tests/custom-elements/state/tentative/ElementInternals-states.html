@@ -27,6 +27,8 @@ test(() => {
 test(() => {
   let i = (new TestElement()).internals;
   assert_throws_js(TypeError, () => { i.states.supports('foo'); });
+  i.states.add(''); // should not throw.
+  i.states.add('--a\tb'); // should not throw.
 }, 'CustomStateSet behavior of ElementInternals.states: Exceptions');
 
 test(() => {
