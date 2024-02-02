@@ -267,11 +267,9 @@ struct SsrcInfo {
   std::string stream_id;
   std::string track_id;
 };
-typedef std::vector<SsrcInfo> SsrcInfoVec;
-typedef std::vector<SsrcGroup> SsrcGroupVec;
+using SsrcInfoVec = std::vector<SsrcInfo>;
+using SsrcGroupVec = std::vector<SsrcGroup>;
 
-template <class T>
-static void AddFmtpLine(const T& codec, std::string* message);
 static void BuildMediaDescription(const ContentInfo* content_info,
                                   const TransportInfo* transport_info,
                                   const cricket::MediaType media_type,
