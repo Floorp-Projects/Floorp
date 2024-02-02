@@ -3,13 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import inspect
-import subprocess
 from argparse import ArgumentParser
 from textwrap import dedent
 
 import mozunit
 import pytest
 from tryselect.task_config import Pernosco, all_task_configs
+
+TC_URL = "https://firefox-ci-tc.services.mozilla.com"
+TH_URL = "https://treeherder.mozilla.org"
 
 # task configs have a list of tests of the form (input, expected)
 TASK_CONFIG_TESTS = {
@@ -130,26 +132,25 @@ def test_task_configs(config_patch_resolver, task_config, args, expected):
 
 
 @pytest.fixture
-def patch_pernosco_email_check(monkeypatch):
-    def inner(val):
-        def fake_check_output(*args, **kwargs):
-            return val
-
-        monkeypatch.setattr(subprocess, "check_output", fake_check_output)
+def patch_ssh_user(mocker):
+    def inner(user):
+        mock_stdout = mocker.Mock()
+        mock_stdout.stdout = dedent(
+            f"""
+            key1 foo
+            user {user}
+            key2 bar
+            """
+        )
+        return mocker.patch(
+            "tryselect.util.ssh.subprocess.run", return_value=mock_stdout
+        )
 
     return inner
 
 
-def test_pernosco(patch_pernosco_email_check):
-    patch_pernosco_email_check(
-        dedent(
-            """
-        user foobar@mozilla.com
-        hostname hg.mozilla.com
-    """
-        )
-    )
-
+def test_pernosco(patch_ssh_user):
+    patch_ssh_user("user@mozilla.com")
     parser = ArgumentParser()
 
     cfg = Pernosco()
@@ -157,6 +158,95 @@ def test_pernosco(patch_pernosco_email_check):
     args = parser.parse_args(["--pernosco"])
     params = cfg.get_parameters(**vars(args))
     assert params == {"try_task_config": {"env": {"PERNOSCO": "1"}}}
+
+
+def test_exisiting_tasks(responses, patch_ssh_user):
+    parser = ArgumentParser()
+    cfg = all_task_configs["existing-tasks"]()
+    cfg.add_arguments(parser)
+
+    user = "user@example.com"
+    rev = "a" * 40
+    task_id = "abc"
+    label_to_taskid = {"task-foo": "123", "task-bar": "456"}
+
+    args = ["--use-existing-tasks"]
+    args = parser.parse_args(args)
+
+    responses.add(
+        responses.GET,
+        f"{TH_URL}/api/project/try/push/?count=1&author={user}",
+        json={"meta": {"count": 1}, "results": [{"revision": rev}]},
+    )
+
+    responses.add(
+        responses.GET,
+        f"{TC_URL}/api/index/v1/task/gecko.v2.try.revision.{rev}.taskgraph.decision",
+        json={"taskId": task_id},
+    )
+
+    responses.add(
+        responses.GET,
+        f"{TC_URL}/api/queue/v1/task/{task_id}/artifacts/public/label-to-taskid.json",
+        json=label_to_taskid,
+    )
+
+    m = patch_ssh_user(user)
+    params = cfg.get_parameters(**vars(args))
+    assert params == {"existing_tasks": label_to_taskid}
+
+    m.assert_called_once_with(
+        ["ssh", "-G", "hg.mozilla.org"], text=True, check=True, capture_output=True
+    )
+
+
+def test_exisiting_tasks_task_id(responses):
+    parser = ArgumentParser()
+    cfg = all_task_configs["existing-tasks"]()
+    cfg.add_arguments(parser)
+
+    task_id = "abc"
+    label_to_taskid = {"task-foo": "123", "task-bar": "456"}
+
+    args = ["--use-existing-tasks", f"task-id={task_id}"]
+    args = parser.parse_args(args)
+
+    responses.add(
+        responses.GET,
+        f"{TC_URL}/api/queue/v1/task/{task_id}/artifacts/public/label-to-taskid.json",
+        json=label_to_taskid,
+    )
+
+    params = cfg.get_parameters(**vars(args))
+    assert params == {"existing_tasks": label_to_taskid}
+
+
+def test_exisiting_tasks_rev(responses):
+    parser = ArgumentParser()
+    cfg = all_task_configs["existing-tasks"]()
+    cfg.add_arguments(parser)
+
+    rev = "aaaaaa"
+    task_id = "abc"
+    label_to_taskid = {"task-foo": "123", "task-bar": "456"}
+
+    args = ["--use-existing-tasks", f"rev={rev}"]
+    args = parser.parse_args(args)
+
+    responses.add(
+        responses.GET,
+        f"{TC_URL}/api/index/v1/task/gecko.v2.try.revision.{rev}.taskgraph.decision",
+        json={"taskId": task_id},
+    )
+
+    responses.add(
+        responses.GET,
+        f"{TC_URL}/api/queue/v1/task/{task_id}/artifacts/public/label-to-taskid.json",
+        json=label_to_taskid,
+    )
+
+    params = cfg.get_parameters(**vars(args))
+    assert params == {"existing_tasks": label_to_taskid}
 
 
 if __name__ == "__main__":
