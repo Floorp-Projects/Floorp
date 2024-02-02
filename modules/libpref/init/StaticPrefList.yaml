@@ -7001,7 +7001,7 @@
 - name: image.mem.max_legal_imgframe_size_kb
   type: int32_t
   value: -1
-  mirror: always
+  mirror: once
 
 # Whether we record SVG images as blobs or not.
 - name: image.svg.blob-image
