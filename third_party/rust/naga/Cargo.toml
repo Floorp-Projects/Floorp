@@ -48,7 +48,7 @@ harness = false
 [dependencies]
 arrayvec = "0.7"
 bit-set = "0.5"
-bitflags = "2.2"
+bitflags = "2.4"
 log = "0.4"
 num-traits = "0.2"
 rustc-hash = "1.1.0"
