@@ -53,9 +53,7 @@ features = ["serde_derive"]
 
 [features]
 fragile-send-sync-non-atomic-wasm = []
-replay = ["serde"]
 strict_asserts = []
-trace = ["serde"]
 
 [target."cfg(target_arch = \"wasm32\")".dependencies]
 js-sys = "0.3.67"
