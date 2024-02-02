@@ -9,7 +9,7 @@ import { NewTabInit } from "lib/NewTabInit.sys.mjs";
 import { SectionsFeed } from "lib/SectionsManager.jsm";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { PlacesFeed } from "lib/PlacesFeed.sys.mjs";
-import { PrefsFeed } from "lib/PrefsFeed.jsm";
+import { PrefsFeed } from "lib/PrefsFeed.sys.mjs";
 import { SystemTickFeed } from "lib/SystemTickFeed.jsm";
 import { TelemetryFeed } from "lib/TelemetryFeed.sys.mjs";
 import { FaviconFeed } from "lib/FaviconFeed.sys.mjs";
