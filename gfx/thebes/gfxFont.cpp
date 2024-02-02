@@ -2676,7 +2676,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
           GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
           aDrawTarget, aTextDrawer, aFontParams.scaledFont,
           aFontParams.drawOptions, aPoint, aFontParams.currentColor,
-          aFontParams.palette, aGlyphId, mFUnitsConvFactor);
+          aFontParams.palette->Colors(), aGlyphId, mFUnitsConvFactor);
     }
   }
 
@@ -2686,7 +2686,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     bool ok = COLRFonts::PaintGlyphLayers(
         GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
         aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
-        aFontParams.currentColor, aFontParams.palette);
+        aFontParams.currentColor, aFontParams.palette->Colors());
     return ok;
   }
 

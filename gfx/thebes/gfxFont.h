@@ -10,7 +10,6 @@
 #include <new>
 #include <utility>
 #include <functional>
-#include "FontPaletteCache.h"
 #include "PLDHashTable.h"
 #include "ThebesRLBoxTypes.h"
 #include "gfxFontVariations.h"
@@ -27,6 +26,7 @@
 #include "mozilla/RWLock.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/FontPaletteCache.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/2D.h"
@@ -2338,7 +2338,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
   mozilla::gfx::DrawOptions drawOptions;
   gfxFloat advanceDirection;
   mozilla::gfx::sRGBColor currentColor;
-  nsTArray<mozilla::gfx::sRGBColor>* palette;  // owned by TextRunDrawParams
+  RefPtr<mozilla::gfx::FontPalette> palette;
   mozilla::gfx::Rect fontExtents;
   bool isVerticalFont;
   bool haveSVGGlyphs;

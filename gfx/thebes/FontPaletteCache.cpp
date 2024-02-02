@@ -5,6 +5,7 @@
 
 #include "FontPaletteCache.h"
 #include "COLRFonts.h"
+#include "gfxFontEntry.h"
 
 using namespace mozilla;
 
@@ -14,7 +15,7 @@ void gfx::PaletteCache::SetPaletteValueSet(
   Clear();
 }
 
-nsTArray<gfx::sRGBColor>* gfx::PaletteCache::GetPaletteFor(
+already_AddRefed<gfx::FontPalette> gfx::PaletteCache::GetPaletteFor(
     gfxFontEntry* aFontEntry, nsAtom* aPaletteName) {
   auto entry = Lookup(std::pair(aFontEntry, aPaletteName));
   if (!entry) {
@@ -22,10 +23,11 @@ nsTArray<gfx::sRGBColor>* gfx::PaletteCache::GetPaletteFor(
     newData.mKey = std::pair(aFontEntry, aPaletteName);
 
     gfxFontEntry::AutoHBFace face = aFontEntry->GetHBFace();
-    newData.mPalette = gfx::COLRFonts::SetupColorPalette(
-        face, mPaletteValueSet, aPaletteName, aFontEntry->FamilyName());
+    newData.mPalette = new FontPalette(gfx::COLRFonts::CreateColorPalette(
+        face, mPaletteValueSet, aPaletteName, aFontEntry->FamilyName()));
 
     entry.Set(std::move(newData));
   }
-  return entry.Data().mPalette.get();
+  RefPtr result = entry.Data().mPalette;
+  return result.forget();
 }

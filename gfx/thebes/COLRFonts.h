@@ -126,7 +126,7 @@ class COLRFonts {
 
   static uint16_t GetColrTableVersion(hb_blob_t* aCOLR);
 
-  static UniquePtr<nsTArray<sRGBColor>> SetupColorPalette(
+  static nsTArray<sRGBColor> CreateColorPalette(
       hb_face_t* aFace, const FontPaletteValueSet* aPaletteValueSet,
       nsAtom* aFontPalette, const nsACString& aFamilyName);
 };
