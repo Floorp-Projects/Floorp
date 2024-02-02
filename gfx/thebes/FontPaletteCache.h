@@ -6,23 +6,43 @@
 #ifndef FONT_PALETTE_CACHE_H
 #define FONT_PALETTE_CACHE_H
 
-#include "gfxFontEntry.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/RefPtr.h"
 #include "nsAtom.h"
+#include "nsTArray.h"
 #include <utility>
+
+class gfxFontEntry;
 
 namespace mozilla::gfx {
 
 class FontPaletteValueSet;
+
+// A resolved font palette as an array of colors.
+class FontPalette {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FontPalette);
+
+ public:
+  FontPalette() = default;
+  explicit FontPalette(nsTArray<mozilla::gfx::sRGBColor>&& aColors)
+      : mColors(std::move(aColors)) {}
+
+  const nsTArray<mozilla::gfx::sRGBColor>* Colors() const { return &mColors; }
+
+ private:
+  ~FontPalette() = default;
+
+  nsTArray<mozilla::gfx::sRGBColor> mColors;
+};
 
 // MRU cache used for resolved color-font palettes, to avoid reconstructing
 // the palette for each glyph rendered with a given font.
 using CacheKey = std::pair<RefPtr<gfxFontEntry>, RefPtr<nsAtom>>;
 struct CacheData {
   CacheKey mKey;
-  mozilla::UniquePtr<nsTArray<mozilla::gfx::sRGBColor>> mPalette;
+  RefPtr<FontPalette> mPalette;
 };
 
 class PaletteCache
@@ -33,8 +53,8 @@ class PaletteCache
 
   void SetPaletteValueSet(const FontPaletteValueSet* aSet);
 
-  nsTArray<mozilla::gfx::sRGBColor>* GetPaletteFor(gfxFontEntry* aFontEntry,
-                                                   nsAtom* aPaletteName);
+  already_AddRefed<FontPalette> GetPaletteFor(gfxFontEntry* aFontEntry,
+                                              nsAtom* aPaletteName);
 
   static mozilla::HashNumber Hash(const CacheKey& aKey) {
     return mozilla::HashGeneric(aKey.first.get(), aKey.second.get());

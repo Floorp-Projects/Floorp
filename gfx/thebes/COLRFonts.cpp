@@ -2576,7 +2576,7 @@ uint16_t COLRFonts::GetColrTableVersion(hb_blob_t* aCOLR) {
   return colr->version;
 }
 
-UniquePtr<nsTArray<sRGBColor>> COLRFonts::SetupColorPalette(
+nsTArray<sRGBColor> COLRFonts::CreateColorPalette(
     hb_face_t* aFace, const FontPaletteValueSet* aPaletteValueSet,
     nsAtom* aFontPalette, const nsACString& aFamilyName) {
   // Find the base color palette to use, if there are multiple available;
@@ -2631,10 +2631,10 @@ UniquePtr<nsTArray<sRGBColor>> COLRFonts::SetupColorPalette(
   hb_ot_color_palette_get_colors(aFace, paletteIndex, 0, &count,
                                  colors.Elements());
 
-  auto palette = MakeUnique<nsTArray<sRGBColor>>();
-  palette->SetCapacity(count);
+  nsTArray<sRGBColor> palette;
+  palette.SetCapacity(count);
   for (const auto c : colors) {
-    palette->AppendElement(
+    palette.AppendElement(
         sRGBColor(hb_color_get_red(c) / 255.0, hb_color_get_green(c) / 255.0,
                   hb_color_get_blue(c) / 255.0, hb_color_get_alpha(c) / 255.0));
   }
@@ -2642,8 +2642,8 @@ UniquePtr<nsTArray<sRGBColor>> COLRFonts::SetupColorPalette(
   // Apply @font-palette-values overrides, if present.
   if (fpv) {
     for (const auto overrideColor : fpv->mOverrides) {
-      if (overrideColor.mIndex < palette->Length()) {
-        (*palette)[overrideColor.mIndex] = overrideColor.mColor;
+      if (overrideColor.mIndex < palette.Length()) {
+        palette[overrideColor.mIndex] = overrideColor.mColor;
       }
     }
   }
