@@ -173,6 +173,24 @@ def enable_decorators(value):
 set_config("ENABLE_DECORATORS", enable_decorators)
 set_define("ENABLE_DECORATORS", enable_decorators)
 
+# Enable JSON.parse with source
+# ===================================================
+option(
+    "--enable-json-parse-with-source",
+    default=moz_debug,
+    help="Enable experimental JS JSON.parse with source support",
+)
+
+
+@depends("--enable-json-parse-with-source", moz_debug)
+def enable_json_parse_with_source(value, moz_debug):
+    if value or moz_debug:
+        return True
+
+
+set_config("ENABLE_JSON_PARSE_WITH_SOURCE", enable_json_parse_with_source)
+set_define("ENABLE_JSON_PARSE_WITH_SOURCE", enable_json_parse_with_source)
+
 
 # Portable Baseline Intepreter
 # =======================================================
