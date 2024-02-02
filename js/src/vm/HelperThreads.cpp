@@ -1096,8 +1096,7 @@ size_t GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const {
 }
 
 size_t GlobalHelperThreadState::maxPromiseHelperThreads() const {
-  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER1) ||
-      IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
+  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PROMISE_TASK)) {
     return 1;
   }
   return std::min(cpuCount, threadCount);
