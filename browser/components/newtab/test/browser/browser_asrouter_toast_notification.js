@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { ToastNotification } = ChromeUtils.import(
-  "resource://activity-stream/lib/ToastNotification.jsm"
+const { ToastNotification } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ToastNotification.sys.mjs"
 );
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/PanelTestProvider.sys.mjs"

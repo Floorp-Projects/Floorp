@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -18,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   AlertsService: ["@mozilla.org/alerts-service;1", "nsIAlertsService"],
 });
 
-const ToastNotification = {
+export const ToastNotification = {
   // Allow testing to stub the alerts service.
   get AlertsService() {
     return lazy.AlertsService;
@@ -139,5 +136,3 @@ const ToastNotification = {
     return true;
   },
 };
-
-const EXPORTED_SYMBOLS = ["ToastNotification"];
