@@ -22,3 +22,8 @@ shopping-settings-auto-open-description-three-sites = When you view products on 
 shopping-settings-auto-open-description-single-site = When you view products on { $currentSite }
 
 shopping-settings-sidebar-enabled-state = Review Checker is <strong>On</strong>
+shopping-message-bar-keep-closed-header =
+  .heading = Keep closed?
+  .message = You can update your settings to keep Review Checker closed by default. Right now, it opens automatically.
+shopping-message-bar-keep-closed-dismiss-button = No thanks
+shopping-message-bar-keep-closed-accept-button = Yes, keep closed

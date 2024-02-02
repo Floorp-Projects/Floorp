@@ -35,6 +35,8 @@ prefs = [
 
 ["browser_inprogress_analysis.js"]
 
+["browser_keep_close_message_bar.js"]
+
 ["browser_network_offline.js"]
 
 ["browser_not_enough_reviews.js"]
