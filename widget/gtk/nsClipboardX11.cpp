@@ -30,25 +30,21 @@ using namespace mozilla;
 nsRetrievalContextX11::nsRetrievalContextX11() = default;
 
 static void DispatchSelectionNotifyEvent(GtkWidget* widget, XEvent* xevent) {
-  GdkWindow* window = gtk_widget_get_window(widget);
-  if (window) {
-    GdkEvent event = {};
-    event.selection.type = GDK_SELECTION_NOTIFY;
-    event.selection.window = window;
-    event.selection.selection =
-        gdk_x11_xatom_to_atom(xevent->xselection.selection);
-    event.selection.target = gdk_x11_xatom_to_atom(xevent->xselection.target);
-    event.selection.property =
-        gdk_x11_xatom_to_atom(xevent->xselection.property);
-    event.selection.time = xevent->xselection.time;
+  GdkEvent event = {};
+  event.selection.type = GDK_SELECTION_NOTIFY;
+  event.selection.window = gtk_widget_get_window(widget);
+  event.selection.selection =
+      gdk_x11_xatom_to_atom(xevent->xselection.selection);
+  event.selection.target = gdk_x11_xatom_to_atom(xevent->xselection.target);
+  event.selection.property = gdk_x11_xatom_to_atom(xevent->xselection.property);
+  event.selection.time = xevent->xselection.time;
 
-    gtk_widget_event(widget, &event);
-  }
+  gtk_widget_event(widget, &event);
 }
 
 static void DispatchPropertyNotifyEvent(GtkWidget* widget, XEvent* xevent) {
   GdkWindow* window = gtk_widget_get_window(widget);
-  if (window && ((gdk_window_get_events(window)) & GDK_PROPERTY_CHANGE_MASK)) {
+  if ((gdk_window_get_events(window)) & GDK_PROPERTY_CHANGE_MASK) {
     GdkEvent event = {};
     event.property.type = GDK_PROPERTY_NOTIFY;
     event.property.window = window;

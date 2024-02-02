@@ -323,11 +323,6 @@ static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
 }
 
 void moz_container_wayland_unmap(GtkWidget* widget) {
-  g_return_if_fail(IS_MOZ_CONTAINER(widget));
-
-  // Unmap MozContainer first so we can remove our resources
-  moz_container_unmap(widget);
-
   MozContainer* container = MOZ_CONTAINER(widget);
   MozContainerWayland* wl_container = &container->data.wl_container;
   MutexAutoLock lock(wl_container->container_lock);
@@ -364,11 +359,9 @@ gboolean moz_container_wayland_map_event(GtkWidget* widget,
   LOGCONTAINER("%s [%p]\n", __FUNCTION__,
                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
-  // Return early if we're not mapped. Gtk may send bogus map_event signal
-  // to unmapped widgets (see Bug 1875369).
-  if (!gtk_widget_get_mapped(widget)) {
-    return false;
-  }
+  // We need to mark MozContainer as mapped to make sure
+  // moz_container_wayland_unmap() is called on hide/withdraw.
+  gtk_widget_set_mapped(widget, TRUE);
 
   // Make sure we're on main thread as we can't lock mozContainer here
   // due to moz_container_wayland_add_or_fire_initial_draw_callback() call
@@ -419,9 +412,6 @@ void moz_container_wayland_map(GtkWidget* widget) {
                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
-
-  // We need to mark MozContainer as mapped to make sure
-  // moz_container_wayland_unmap() is called on hide/withdraw.
   gtk_widget_set_mapped(widget, TRUE);
 
   if (gtk_widget_get_has_window(widget)) {
