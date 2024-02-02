@@ -9320,6 +9320,12 @@
   value: true
   mirror: always
 
+# Whether table cells can generate scroll boxes.
+- name: layout.tables.scrollable-cells
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to disable layer pixel alignment in scroll related stuff.
 - name: layout.scroll.disable-pixel-alignment
   type: RelaxedAtomicBool
