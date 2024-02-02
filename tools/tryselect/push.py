@@ -97,8 +97,17 @@ def generate_try_task_config(method, labels, params=None, routes=None):
     # True). Their dependencies can be optimized though.
     params.setdefault("optimize_target_tasks", False)
 
+    # Remove selected labels from 'existing_tasks' parameter if present
+    if "existing_tasks" in params:
+        params["existing_tasks"] = {
+            label: tid
+            for label, tid in params["existing_tasks"].items()
+            if label not in labels
+        }
+
     try_config = params.setdefault("try_task_config", {})
     try_config.setdefault("env", {})["TRY_SELECTOR"] = method
+
     try_config["tasks"] = sorted(labels)
 
     if routes:
