@@ -140,9 +140,9 @@ module.exports = function (config) {
               branches: 0,
             },
             /**
-             * TopSitesFeed.jsm is tested via an xpcshell test
+             * TopSitesFeed.sys.mjs is tested via an xpcshell test
              */
-            "lib/TopSitesFeed.jsm": {
+            "lib/TopSitesFeed.sys.mjs": {
               statements: 9,
               lines: 9,
               functions: 5,
