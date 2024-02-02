@@ -2416,6 +2416,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:dtls_transport_interface",
       "../api:dtmf_sender_interface",
       "../api:enable_media",
+      "../api:enable_media_with_defaults",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",
       "../api:field_trials_view",

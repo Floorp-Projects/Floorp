@@ -53,6 +53,30 @@ rtc_source_set("enable_media") {
   }
 }
 
+rtc_source_set("enable_media_with_defaults") {
+  visibility = [ "*" ]
+  allow_poison = [
+    "audio_codecs",
+    "default_task_queue",
+    "software_video_codecs",
+  ]
+  sources = [
+    "enable_media_with_defaults.cc",
+    "enable_media_with_defaults.h",
+  ]
+  deps = [
+    ":enable_media",
+    ":libjingle_peerconnection_api",
+    "../modules/audio_processing:api",
+    "../rtc_base/system:rtc_export",
+    "audio_codecs:builtin_audio_decoder_factory",
+    "audio_codecs:builtin_audio_encoder_factory",
+    "task_queue:default_task_queue_factory",
+    "video_codecs:builtin_video_decoder_factory",
+    "video_codecs:builtin_video_encoder_factory",
+  ]
+}
+
 if (!build_with_chromium && !build_with_mozilla) {
   rtc_library("create_peerconnection_factory") {
     visibility = [ "*" ]

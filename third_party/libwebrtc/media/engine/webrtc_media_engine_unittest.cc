@@ -324,7 +324,7 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBwe3) {
 
 TEST(WebRtcMediaEngineTest, Create) {
   MediaEngineDependencies deps;
-  webrtc::SetMediaEngineDefaults(&deps);
+  webrtc::DeprecatedSetMediaEngineDefaults(&deps);
   webrtc::test::ScopedKeyValueConfig trials;
   deps.trials = &trials;
 

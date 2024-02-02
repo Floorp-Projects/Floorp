@@ -786,7 +786,10 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     media_deps.task_queue_factory =
         pc_factory_dependencies.task_queue_factory.get();
     media_deps.adm = fake_audio_capture_module_;
-    webrtc::SetMediaEngineDefaults(&media_deps);
+    // TODO(bugs.webrtc.org/15574): Migrate this test helper to use EnableMedia
+    // instead of creating media_engine directly. In particular ensure no tests
+    // rely on behaviour where call_factory is set, while media_engine is not.
+    webrtc::DeprecatedSetMediaEngineDefaults(&media_deps);
 
     if (reset_encoder_factory) {
       media_deps.video_encoder_factory.reset();
