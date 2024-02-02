@@ -1,17 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// EventEmitter, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
 );
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { getDefaultOptions } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 const lazy = {};
 
@@ -155,7 +160,7 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
   }),
 });
 
-const SectionsManager = {
+export const SectionsManager = {
   ACTIONS_TO_PROXY: ["WEBEXT_CLICK", "WEBEXT_DISMISS"],
   CONTEXT_MENU_PREFS: { CheckSavedToPocket: "extensions.pocket.enabled" },
   CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES: {
@@ -481,7 +486,7 @@ for (const action of [
 
 EventEmitter.decorate(SectionsManager);
 
-class SectionsFeed {
+export class SectionsFeed {
   constructor() {
     this.init = this.init.bind(this);
     this.onAddSection = this.onAddSection.bind(this);
@@ -712,5 +717,3 @@ class SectionsFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["SectionsFeed", "SectionsManager"];

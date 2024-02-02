@@ -7,7 +7,7 @@ import {
   PRELOAD_MESSAGE_TYPE,
 } from "common/Actions.sys.mjs";
 import { EventEmitter, GlobalOverrider } from "test/unit/utils";
-import { SectionsFeed, SectionsManager } from "lib/SectionsManager.jsm";
+import { SectionsFeed, SectionsManager } from "lib/SectionsManager.sys.mjs";
 
 const FAKE_ID = "FAKE_ID";
 const FAKE_OPTIONS = { icon: "FAKE_ICON", title: "FAKE_TITLE" };
