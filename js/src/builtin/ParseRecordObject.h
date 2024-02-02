@@ -22,6 +22,18 @@ class ParseRecordObject {
 
   ParseRecordObject();
   ParseRecordObject(Handle<js::JSONParseNode*> parseNode, const Value& val);
+  ParseRecordObject(ParseRecordObject&& other)
+      : parseNode(std::move(other.parseNode)),
+        key(std::move(other.key)),
+        value(std::move(other.value)) {}
+
+  // move assignment
+  ParseRecordObject& operator=(ParseRecordObject&& other) noexcept {
+    parseNode = other.parseNode;
+    key = other.key;
+    value = other.value;
+    return *this;
+  }
 };
 
 }  // namespace js

@@ -1839,7 +1839,8 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
 
   RootedValue keyVal(cx, StringValue(key));
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-  if (cx->realm()->creationOptions().getJSONParseWithSource() && parseRecord) {
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    MOZ_ASSERT(parseRecord);
     RootedObject context(cx, NewPlainObject(cx));
     if (!context) {
       return false;
@@ -1855,7 +1856,8 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
   return js::Call(cx, reviver, holder, keyVal, val, vp);
 }
 
-static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
+static bool Revive(JSContext* cx, HandleValue reviver, ParseRecordObject* pro,
+                   MutableHandleValue vp) {
   Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
@@ -1865,28 +1867,18 @@ static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
     return false;
   }
 
+  MOZ_ASSERT_IF(cx->realm()->creationOptions().getJSONParseWithSource(),
+                pro->value == vp.get());
   Rooted<jsid> id(cx, NameToId(cx->names().empty_));
-  ParseRecordObject snapshot;
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-  // TODO: get parseNode value somehow!
-  Rooted<JSString*> parseNode(cx, JS_NewStringCopyZ(cx, "1"));
-  if (!parseNode) {
-    return false;
-  }
-  Rooted<Value> val(cx, ObjectValue(*obj));
-  snapshot.parseNode = parseNode;
-  snapshot.key = id;
-  snapshot.value = vp;
-#endif
-  return InternalizeJSONProperty(cx, obj, id, reviver, &snapshot, vp);
+  return InternalizeJSONProperty(cx, obj, id, reviver, pro, vp);
 }
 
 template <typename CharT>
 bool ParseJSON(JSContext* cx, const mozilla::Range<const CharT> chars,
-               MutableHandleValue vp) {
+               MutableHandleValue vp, ParseRecordObject* pro) {
   Rooted<JSONParser<CharT>> parser(cx, cx, chars,
                                    JSONParser<CharT>::ParseType::JSONParse);
-  return parser.parse(vp);
+  return parser.parse(vp, pro);
 }
 
 template <typename CharT>
@@ -1894,13 +1886,14 @@ bool js::ParseJSONWithReviver(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
                               HandleValue reviver, MutableHandleValue vp) {
   /* https://262.ecma-international.org/14.0/#sec-json.parse steps 2-10. */
-  if (!ParseJSON(cx, chars, vp)) {
+  ParseRecordObject pro;
+  if (!ParseJSON(cx, chars, vp, &pro)) {
     return false;
   }
 
   /* Steps 11-12. */
   if (IsCallable(reviver)) {
-    return Revive(cx, reviver, vp);
+    return Revive(cx, reviver, &pro, vp);
   }
   return true;
 }
@@ -2092,13 +2085,14 @@ static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
 
   HandleValue reviver = args.get(1);
   RootedValue unfiltered(cx);
+  ParseRecordObject pro;
 
   if (linearChars.isLatin1()) {
-    if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered)) {
+    if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered, &pro)) {
       return false;
     }
   } else {
-    if (!ParseJSON(cx, linearChars.twoByteRange(), &unfiltered)) {
+    if (!ParseJSON(cx, linearChars.twoByteRange(), &unfiltered, &pro)) {
       return false;
     }
   }
