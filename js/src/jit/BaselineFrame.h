@@ -303,8 +303,12 @@ class BaselineFrame {
 
   [[nodiscard]] inline bool pushLexicalEnvironment(JSContext* cx,
                                                    Handle<LexicalScope*> scope);
-  [[nodiscard]] inline bool freshenLexicalEnvironment(JSContext* cx);
-  [[nodiscard]] inline bool recreateLexicalEnvironment(JSContext* cx);
+  template <bool IsDebuggee>
+  [[nodiscard]] inline bool freshenLexicalEnvironment(
+      JSContext* cx, const jsbytecode* pc = nullptr);
+  template <bool IsDebuggee>
+  [[nodiscard]] inline bool recreateLexicalEnvironment(
+      JSContext* cx, const jsbytecode* pc = nullptr);
 
   [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
   [[nodiscard]] bool pushClassBodyEnvironment(JSContext* cx,

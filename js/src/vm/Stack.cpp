@@ -264,7 +264,8 @@ bool InterpreterFrame::pushLexicalEnvironment(JSContext* cx,
   return true;
 }
 
-bool InterpreterFrame::freshenLexicalEnvironment(JSContext* cx) {
+bool InterpreterFrame::freshenLexicalEnvironment(JSContext* cx,
+                                                 jsbytecode* pc) {
   Rooted<BlockLexicalEnvironmentObject*> env(
       cx, &envChain_->as<BlockLexicalEnvironmentObject>());
   BlockLexicalEnvironmentObject* fresh =
@@ -273,17 +274,30 @@ bool InterpreterFrame::freshenLexicalEnvironment(JSContext* cx) {
     return false;
   }
 
+  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+    Rooted<BlockLexicalEnvironmentObject*> freshRoot(cx, fresh);
+    DebugEnvironments::onPopLexical(cx, this, pc);
+    fresh = freshRoot;
+  }
+
   replaceInnermostEnvironment(*fresh);
   return true;
 }
 
-bool InterpreterFrame::recreateLexicalEnvironment(JSContext* cx) {
+bool InterpreterFrame::recreateLexicalEnvironment(JSContext* cx,
+                                                  jsbytecode* pc) {
   Rooted<BlockLexicalEnvironmentObject*> env(
       cx, &envChain_->as<BlockLexicalEnvironmentObject>());
   BlockLexicalEnvironmentObject* fresh =
       BlockLexicalEnvironmentObject::recreate(cx, env);
   if (!fresh) {
     return false;
+  }
+
+  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+    Rooted<BlockLexicalEnvironmentObject*> freshRoot(cx, fresh);
+    DebugEnvironments::onPopLexical(cx, this, pc);
+    fresh = freshRoot;
   }
 
   replaceInnermostEnvironment(*fresh);

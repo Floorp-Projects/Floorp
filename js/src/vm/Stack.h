@@ -538,8 +538,8 @@ class InterpreterFrame {
    */
 
   bool pushLexicalEnvironment(JSContext* cx, Handle<LexicalScope*> scope);
-  bool freshenLexicalEnvironment(JSContext* cx);
-  bool recreateLexicalEnvironment(JSContext* cx);
+  bool freshenLexicalEnvironment(JSContext* cx, jsbytecode* pc);
+  bool recreateLexicalEnvironment(JSContext* cx, jsbytecode* pc);
 
   bool pushClassBodyEnvironment(JSContext* cx, Handle<ClassBodyScope*> scope);
 

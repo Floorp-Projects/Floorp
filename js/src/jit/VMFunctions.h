@@ -483,13 +483,13 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                                                BaselineFrame* frame,
                                                const jsbytecode* pc);
 [[nodiscard]] bool FreshenLexicalEnv(JSContext* cx, BaselineFrame* frame);
-[[nodiscard]] bool DebugLeaveThenFreshenLexicalEnv(JSContext* cx,
-                                                   BaselineFrame* frame,
-                                                   const jsbytecode* pc);
+[[nodiscard]] bool DebuggeeFreshenLexicalEnv(JSContext* cx,
+                                             BaselineFrame* frame,
+                                             const jsbytecode* pc);
 [[nodiscard]] bool RecreateLexicalEnv(JSContext* cx, BaselineFrame* frame);
-[[nodiscard]] bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx,
-                                                    BaselineFrame* frame,
-                                                    const jsbytecode* pc);
+[[nodiscard]] bool DebuggeeRecreateLexicalEnv(JSContext* cx,
+                                              BaselineFrame* frame,
+                                              const jsbytecode* pc);
 [[nodiscard]] bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
                                         const jsbytecode* pc);
 
