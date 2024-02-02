@@ -156,7 +156,7 @@ def preprocess(cxx, preprocessorOption, source, args=[]):
 def messages(jsmsg):
     defines = []
     for line in open(jsmsg):
-        match = re.match("MSG_DEF\((JSMSG_(\w+))", line)
+        match = re.match(r"MSG_DEF\((JSMSG_(\w+))", line)
         if match:
             defines.append("#define %s %i" % (match.group(1), len(defines)))
             continue
