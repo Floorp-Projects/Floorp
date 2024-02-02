@@ -30,17 +30,24 @@ internal object TranslationsStateReducer {
         }
 
         is TranslationsAction.TranslateStateChangeAction -> {
-            if (action.translationEngineState.requestedTranslationPair != null) {
+            if (action.translationEngineState.requestedTranslationPair == null ||
+                action.translationEngineState.requestedTranslationPair?.fromLanguage == null ||
+                action.translationEngineState.requestedTranslationPair?.toLanguage == null
+            ) {
+                state.copyWithTranslationsState(action.tabId) {
+                    it.copy(
+                        isTranslated = false,
+                        translationEngineState = action.translationEngineState,
+                    )
+                }
+            } else {
                 state.copyWithTranslationsState(action.tabId) {
                     it.copy(
                         isTranslated = true,
+                        translationError = null,
+                        translationEngineState = action.translationEngineState,
                     )
                 }
-            }
-            state.copyWithTranslationsState(action.tabId) {
-                it.copy(
-                    translationEngineState = action.translationEngineState,
-                )
             }
         }
 

@@ -9,15 +9,20 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettings
+import mozilla.components.concept.engine.translate.TranslationPair
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.lang.Exception
@@ -67,6 +72,40 @@ class TranslationsActionTest {
             .joinBlocking()
 
         assertEquals(true, tabState().translationsState.translationEngineState != null)
+    }
+
+    @Test
+    fun `WHEN a TranslateStateChangeAction is dispatched THEN the translation status updates accordingly`() {
+        assertNull(tabState().translationsState.translationEngineState)
+        assertFalse(tabState().translationsState.isTranslated)
+
+        val translatedEngineState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = TranslationPair(fromLanguage = "es", toLanguage = "en"),
+        )
+
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
+            .joinBlocking()
+
+        // Translated state
+        assertEquals(translatedEngineState, tabState().translationsState.translationEngineState)
+        assertTrue(tabState().translationsState.isTranslated)
+
+        val nonTranslatedEngineState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = TranslationPair(fromLanguage = null, toLanguage = null),
+        )
+
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, nonTranslatedEngineState))
+            .joinBlocking()
+
+        // Non-translated state
+        assertEquals(nonTranslatedEngineState, tabState().translationsState.translationEngineState)
+        assertFalse(tabState().translationsState.isTranslated)
     }
 
     @Test
