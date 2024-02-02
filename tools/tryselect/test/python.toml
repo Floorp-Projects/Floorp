@@ -20,8 +20,6 @@ subsuite = "try"
 # shouldn't be run in parallel with those other tests.
 sequential = true
 
-["test_push.py"]
-
 ["test_release.py"]
 
 ["test_scriptworker.py"]
