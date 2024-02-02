@@ -14,9 +14,26 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "AUTO_OPEN_SIDEBAR_ENABLED",
+  "browser.shopping.experience2023.autoOpen.enabled",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "AUTO_OPEN_SIDEBAR_USER_ENABLED",
+  "browser.shopping.experience2023.autoOpen.userEnabled",
+  true
+);
+
 export class ShoppingSidebarParent extends JSWindowActorParent {
   static SHOPPING_ACTIVE_PREF = "browser.shopping.experience2023.active";
   static SHOPPING_OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";
+  static SIDEBAR_CLOSED_COUNT_PREF =
+    "browser.shopping.experience2023.sidebarClosedCount";
+  static SHOW_KEEP_SIDEBAR_CLOSED_MESSAGE_PREF =
+    "browser.shopping.experience2023.showKeepSidebarClosedMessage";
 
   updateProductURL(uri, flags) {
     this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
@@ -34,6 +51,13 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
           "browser[messagemanagergroup=browsers]"
         );
         return associatedTabbedBrowser.currentURI?.spec ?? null;
+      case "Shopping:SendTrigger":
+        let trigger = message.data;
+        if (!trigger.browser) {
+          trigger.browser =
+            this.browsingContext.topChromeWindow.gBrowser.selectedBrowser;
+        }
+        lazy.ShoppingUtils.sendTrigger(message.data);
     }
     return null;
   }
@@ -41,10 +65,60 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
   /**
    * Called when the user clicks the URL bar button.
    */
-  static urlbarButtonClick(event) {
+  static async urlbarButtonClick(event) {
     if (event.button > 0) {
       return;
     }
+
+    if (
+      lazy.AUTO_OPEN_SIDEBAR_ENABLED &&
+      lazy.AUTO_OPEN_SIDEBAR_USER_ENABLED &&
+      event.target.getAttribute("shoppingsidebaropen") === "true"
+    ) {
+      let gBrowser = event.target.ownerGlobal.gBrowser;
+      let shoppingBrowser = gBrowser
+        .getPanel(gBrowser.selectedBrowser)
+        .querySelector(".shopping-sidebar");
+      let actor =
+        shoppingBrowser.browsingContext.currentWindowGlobal.getActor(
+          "ShoppingSidebar"
+        );
+
+      let isKeepClosedMessageShowing = await actor.sendQuery(
+        "ShoppingSidebar:IsKeepClosedMessageShowing"
+      );
+
+      let sidebarClosedCount = Services.prefs.getIntPref(
+        ShoppingSidebarParent.SIDEBAR_CLOSED_COUNT_PREF,
+        0
+      );
+      if (
+        !isKeepClosedMessageShowing &&
+        sidebarClosedCount >= 4 &&
+        Services.prefs.getBoolPref(
+          ShoppingSidebarParent.SHOW_KEEP_SIDEBAR_CLOSED_MESSAGE_PREF,
+          true
+        )
+      ) {
+        actor.sendAsyncMessage("ShoppingSidebar:ShowKeepClosedMessage");
+        return;
+      }
+
+      actor.sendAsyncMessage("ShoppingSidebar:HideKeepClosedMessage");
+
+      if (sidebarClosedCount >= 6) {
+        Services.prefs.setBoolPref(
+          ShoppingSidebarParent.SHOW_KEEP_SIDEBAR_CLOSED_MESSAGE_PREF,
+          false
+        );
+      }
+
+      Services.prefs.setIntPref(
+        ShoppingSidebarParent.SIDEBAR_CLOSED_COUNT_PREF,
+        sidebarClosedCount + 1
+      );
+    }
+
     this.toggleAllSidebars("urlBar");
   }
 

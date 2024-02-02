@@ -755,6 +755,7 @@
 
 #shopping-sidebar-button > .urlbar-icon {
   list-style-image: url(chrome://browser/content/shopping/assets/shopping.svg);
+  pointer-events: none;
 }
 
 #shopping-sidebar-button[shoppingsidebaropen="true"] > .urlbar-icon {
