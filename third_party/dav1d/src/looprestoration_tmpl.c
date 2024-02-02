@@ -527,6 +527,8 @@ static void sgr_mix_c(pixel *p, const ptrdiff_t stride,
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
 #include "src/arm/looprestoration.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/looprestoration.h"
 #elif ARCH_PPC64LE
 #include "src/ppc/looprestoration.h"
 #elif ARCH_X86
@@ -545,6 +547,8 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
     loop_restoration_dsp_init_arm(c, bpc);
+#elif ARCH_LOONGARCH64
+    loop_restoration_dsp_init_loongarch(c, bpc);
 #elif ARCH_PPC64LE
     loop_restoration_dsp_init_ppc(c, bpc);
 #elif ARCH_X86

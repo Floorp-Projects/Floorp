@@ -919,6 +919,8 @@ static void splat_mv_c(refmvs_block **rr, const refmvs_block *const rmv,
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
 #include "src/arm/refmvs.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/refmvs.h"
 #elif ARCH_X86
 #include "src/x86/refmvs.h"
 #endif
@@ -933,6 +935,8 @@ COLD void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *const c)
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
     refmvs_dsp_init_arm(c);
+#elif ARCH_LOONGARCH64
+    refmvs_dsp_init_loongarch(c);
 #elif ARCH_X86
     refmvs_dsp_init_x86(c);
 #endif

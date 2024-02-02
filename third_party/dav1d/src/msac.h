@@ -51,6 +51,8 @@ typedef struct MsacContext {
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
 #include "src/arm/msac.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/msac.h"
 #elif ARCH_X86
 #include "src/x86/msac.h"
 #endif

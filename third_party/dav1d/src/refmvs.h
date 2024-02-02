@@ -171,6 +171,7 @@ void dav1d_refmvs_find(const refmvs_tile *rt,
 
 void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *dsp);
 void dav1d_refmvs_dsp_init_arm(Dav1dRefmvsDSPContext *dsp);
+void dav1d_refmvs_dsp_init_loongarch(Dav1dRefmvsDSPContext *dsp);
 void dav1d_refmvs_dsp_init_x86(Dav1dRefmvsDSPContext *dsp);
 
 #endif /* DAV1D_SRC_REF_MVS_H */
