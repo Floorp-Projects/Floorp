@@ -9,3 +9,152 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - "Firefox :: Shopping"
+
+shopping_product:
+  request_error:
+    type: event
+    description: |
+      There was an error requesting the Fakespot API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  request_failure:
+    type: event
+    description: |
+      There was a failure with the request to the Fakespot API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  server_failure:
+    type: event
+    description: |
+      There was a Fakespot API server issue that prevented
+      the request from succeeding.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  request_retried:
+    type: event
+    description: |
+      Status returned a 500 error when requesting the Fakespot API
+      and will be retried.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  request_retries_failed:
+    type: event
+    description: |
+      Request still failed after the maxiumn number of
+      retry events.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  request_aborted:
+    type: event
+    description: |
+      Request to the Fakespot API was aborted.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  invalid_request:
+    type: event
+    description: |
+      An invalid JSON request was sent to the Fakespot API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  invalid_response:
+    type: event
+    description: |
+      An invalid JSON response was received from the Fakespot API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+  invalid_ohttp_config:
+    type: event
+    description: |
+      OHTTP was configured for shopping but the config is invalid.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848386
+    data_sensitivity:
+      - technical
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
