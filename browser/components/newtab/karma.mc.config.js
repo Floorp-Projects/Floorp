@@ -103,7 +103,7 @@ module.exports = function (config) {
               functions: 100,
               branches: 83,
             },
-            "lib/DownloadsManager.jsm": {
+            "lib/DownloadsManager.sys.mjs": {
               statements: 100,
               lines: 100,
               functions: 100,

@@ -1,5 +1,5 @@
 import { actionTypes as at } from "common/Actions.sys.mjs";
-import { DownloadsManager } from "lib/DownloadsManager.jsm";
+import { DownloadsManager } from "lib/DownloadsManager.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("Downloads Manager", () => {
