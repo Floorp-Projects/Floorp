@@ -1,23 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { Prefs } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
-);
-const { shortURL } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ShortURL.sys.mjs"
-);
-const { SectionsManager } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/SectionsManager.sys.mjs"
-);
-const { PersistentCache } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PersistentCache.sys.mjs"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { SectionsManager } from "resource://activity-stream/lib/SectionsManager.sys.mjs";
+import { PersistentCache } from "resource://activity-stream/lib/PersistentCache.sys.mjs";
 
 const lazy = {};
 
@@ -26,23 +18,26 @@ ChromeUtils.defineESModuleGetters(lazy, {
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
 });
 
-const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
-const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
+export const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
+export const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
 const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
-const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
-const SECTION_ID = "topstories";
+export const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
+export const SECTION_ID = "topstories";
 const IMPRESSION_SOURCE = "TOP_STORIES";
-const SPOC_IMPRESSION_TRACKING_PREF =
+
+export const SPOC_IMPRESSION_TRACKING_PREF =
   "feeds.section.topstories.spoc.impressions";
+
 const DISCOVERY_STREAM_PREF_ENABLED = "discoverystream.enabled";
 const DISCOVERY_STREAM_PREF_ENABLED_PATH =
   "browser.newtabpage.activity-stream.discoverystream.enabled";
-const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
+export const REC_IMPRESSION_TRACKING_PREF =
+  "feeds.section.topstories.rec.impressions";
 const PREF_USER_TOPSTORIES = "feeds.section.topstories";
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 const DISCOVERY_STREAM_PREF = "discoverystream.config";
 
-class TopStoriesFeed {
+export class TopStoriesFeed {
   constructor(ds) {
     // Use discoverystream config pref default values for fast path and
     // if needed lazy load activity stream top stories feed based on
@@ -734,13 +729,3 @@ class TopStoriesFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = [
-  "TopStoriesFeed",
-  "STORIES_UPDATE_TIME",
-  "TOPICS_UPDATE_TIME",
-  "SECTION_ID",
-  "SPOC_IMPRESSION_TRACKING_PREF",
-  "REC_IMPRESSION_TRACKING_PREF",
-  "DEFAULT_RECS_EXPIRE_TIME",
-];

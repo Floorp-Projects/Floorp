@@ -149,10 +149,10 @@ module.exports = function (config) {
               branches: 0,
             },
             /**
-             * TopStoresFeed.jsm is not tested in automation and is slated
+             * TopStoresFeed.sys.mjs is not tested in automation and is slated
              * for eventual removal.
              */
-            "lib/TopStoriesFeed.jsm": {
+            "lib/TopStoriesFeed.sys.mjs": {
               statements: 0,
               lines: 0,
               functions: 0,
