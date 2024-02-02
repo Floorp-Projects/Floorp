@@ -7,8 +7,7 @@
 #![allow(dead_code)]
 #![allow(clippy::upper_case_acronyms)]
 
-use std::os::raw::c_char;
-use std::str::Utf8Error;
+use std::{os::raw::c_char, str::Utf8Error};
 
 use crate::ssl::{SECStatus, SECSuccess};
 
@@ -19,9 +18,7 @@ mod codes {
     include!(concat!(env!("OUT_DIR"), "/nss_sslerr.rs"));
     include!(concat!(env!("OUT_DIR"), "/mozpkix.rs"));
 }
-pub use codes::mozilla_pkix_ErrorCode as mozpkix;
-pub use codes::SECErrorCodes as sec;
-pub use codes::SSLErrorCodes as ssl;
+pub use codes::{mozilla_pkix_ErrorCode as mozpkix, SECErrorCodes as sec, SSLErrorCodes as ssl};
 pub mod nspr {
     include!(concat!(env!("OUT_DIR"), "/nspr_err.rs"));
 }
@@ -137,9 +134,12 @@ pub fn is_blocked(result: &Res<()>) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::err::{self, is_blocked, secstatus_to_res, Error, PRErrorCode, PR_SetError};
-    use crate::ssl::{SECFailure, SECSuccess};
     use test_fixture::fixture_init;
+
+    use crate::{
+        err::{self, is_blocked, secstatus_to_res, Error, PRErrorCode, PR_SetError},
+        ssl::{SECFailure, SECSuccess},
+    };
 
     fn set_error_code(code: PRErrorCode) {
         // This code doesn't work without initializing NSS first.

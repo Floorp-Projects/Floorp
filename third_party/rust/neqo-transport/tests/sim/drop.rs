@@ -6,11 +6,15 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use super::{Node, Rng};
+use std::{
+    fmt::{self, Debug},
+    time::Instant,
+};
+
 use neqo_common::{qtrace, Datagram};
 use neqo_transport::Output;
-use std::fmt::{self, Debug};
-use std::time::Instant;
+
+use super::{Node, Rng};
 
 /// A random dropper.
 pub struct Drop {

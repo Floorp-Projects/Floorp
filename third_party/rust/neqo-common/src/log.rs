@@ -6,11 +6,10 @@
 
 #![allow(clippy::module_name_repetitions)]
 
+use std::{io::Write, sync::Once, time::Instant};
+
 use env_logger::Builder;
 use lazy_static::lazy_static;
-use std::io::Write;
-use std::sync::Once;
-use std::time::Instant;
 
 #[macro_export]
 macro_rules! do_log {

@@ -4,12 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::frames::{FrameReader, HFrame, StreamReaderConnectionWrapper};
-use crate::{CloseType, Error, Http3StreamType, ReceiveOutput, RecvStream, Res, Stream};
 use neqo_common::qdebug;
 use neqo_transport::{Connection, StreamId};
 
-/// The remote control stream is responsible only for reading frames. The frames are handled by `Http3Connection`.
+use crate::{
+    frames::{FrameReader, HFrame, StreamReaderConnectionWrapper},
+    CloseType, Error, Http3StreamType, ReceiveOutput, RecvStream, Res, Stream,
+};
+
+/// The remote control stream is responsible only for reading frames. The frames are handled by
+/// `Http3Connection`.
 #[derive(Debug)]
 pub(crate) struct ControlStreamRemote {
     stream_id: StreamId,

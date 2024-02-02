@@ -4,21 +4,18 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::frames::HFrame;
-use crate::{
-    headers_checks::{headers_valid, is_interim, trailers_valid},
-    qlog, BufferedStream, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpSendStream, Res,
-    SendStream, SendStreamEvents, Stream,
-};
+use std::{any::Any, cell::RefCell, cmp::min, fmt::Debug, rc::Rc};
 
 use neqo_common::{qdebug, qinfo, qtrace, Encoder, Header, MessageType};
 use neqo_qpack::encoder::QPackEncoder;
 use neqo_transport::{streams::SendOrder, Connection, StreamId};
-use std::any::Any;
-use std::cell::RefCell;
-use std::cmp::min;
-use std::fmt::Debug;
-use std::rc::Rc;
+
+use crate::{
+    frames::HFrame,
+    headers_checks::{headers_valid, is_interim, trailers_valid},
+    qlog, BufferedStream, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpSendStream, Res,
+    SendStream, SendStreamEvents, Stream,
+};
 
 const MAX_DATA_HEADER_SIZE_2: usize = (1 << 6) - 1; // Maximal amount of data with DATA frame header size 2
 const MAX_DATA_HEADER_SIZE_2_LIMIT: usize = MAX_DATA_HEADER_SIZE_2 + 3; // 63 + 3 (size of the next buffer data frame header)
@@ -134,6 +131,7 @@ impl SendMessage {
     }
 
     /// # Errors
+    ///
     /// `ClosedCriticalStream` if the encoder stream is closed.
     /// `InternalError` if an unexpected error occurred.
     fn encode(
@@ -236,11 +234,13 @@ impl SendStream for SendMessage {
     }
 
     /// # Errors
+    ///
     /// `InternalError` if an unexpected error occurred.
     /// `InvalidStreamId` if the stream does not exist,
     /// `AlreadyClosed` if the stream has already been closed.
-    /// `TransportStreamDoesNotExist` if the transport stream does not exist (this may happen if `process_output`
-    /// has not been called when needed, and HTTP3 layer has not picked up the info that the stream has been closed.)
+    /// `TransportStreamDoesNotExist` if the transport stream does not exist (this may happen if
+    /// `process_output` has not been called when needed, and HTTP3 layer has not picked up the
+    /// info that the stream has been closed.)
     fn send(&mut self, conn: &mut Connection) -> Res<()> {
         let sent = Error::map_error(self.stream.send_buffer(conn), Error::HttpInternal(5))?;
         qlog::h3_data_moved_down(conn.qlog_mut(), self.stream_id(), sent);

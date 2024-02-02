@@ -16,15 +16,19 @@ mod incrdecoder;
 pub mod log;
 pub mod qlog;
 pub mod timer;
-
-pub use self::codec::{Decoder, Encoder};
-pub use self::datagram::Datagram;
-pub use self::header::Header;
-pub use self::incrdecoder::{
-    IncrementalDecoderBuffer, IncrementalDecoderIgnore, IncrementalDecoderUint,
-};
+pub mod tos;
 
 use std::fmt::Write;
+
+use enum_map::Enum;
+
+pub use self::{
+    codec::{Decoder, Encoder},
+    datagram::Datagram,
+    header::Header,
+    incrdecoder::{IncrementalDecoderBuffer, IncrementalDecoderIgnore, IncrementalDecoderUint},
+    tos::{IpTos, IpTosDscp, IpTosEcn},
+};
 
 #[must_use]
 pub fn hex(buf: impl AsRef<[u8]>) -> String {
@@ -75,7 +79,7 @@ pub const fn const_min(a: usize, b: usize) -> usize {
     [a, b][(a >= b) as usize]
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Enum)]
 /// Client or Server.
 pub enum Role {
     Client,

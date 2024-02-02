@@ -2200,6 +2200,7 @@ void Http3Session::SetSecInfo() {
 // 0x00-0xff. (https://tools.ietf.org/html/draft-ietf-quic-tls_34#section-4.8)
 // Since telemetry does not allow more than 100 bucket, we use three diffrent
 // keys to map all alert codes.
+const uint32_t HTTP3_TELEMETRY_TRANSPORT_INTERNAL_ERROR = 15;
 const uint32_t HTTP3_TELEMETRY_TRANSPORT_END = 16;
 const uint32_t HTTP3_TELEMETRY_TRANSPORT_UNKNOWN = 17;
 const uint32_t HTTP3_TELEMETRY_TRANSPORT_CRYPTO_UNKNOWN = 18;
@@ -2281,7 +2282,7 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
   switch (aError.tag) {
     case CloseError::Tag::TransportInternalError:
       key = "transport_internal"_ns;
-      value = aError.transport_internal_error._0;
+      value = HTTP3_TELEMETRY_TRANSPORT_INTERNAL_ERROR;
       break;
     case CloseError::Tag::TransportInternalErrorOther:
       key = "transport_other"_ns;

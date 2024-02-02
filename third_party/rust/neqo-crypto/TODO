@@ -1,4 +1,0 @@
-early data - API in place for inspection, but depends on resumption
-handle panics more gracefully for extension handlers
-client certificates
-read/write - probably never

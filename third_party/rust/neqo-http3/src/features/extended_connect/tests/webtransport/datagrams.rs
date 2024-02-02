@@ -4,13 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::features::extended_connect::tests::webtransport::{
-    wt_default_parameters, WtTest, DATAGRAM_SIZE,
-};
-use crate::{Error, Http3Parameters, WebTransportRequest};
+use std::convert::TryFrom;
+
 use neqo_common::Encoder;
 use neqo_transport::Error as TransportError;
-use std::convert::TryFrom;
+
+use crate::{
+    features::extended_connect::tests::webtransport::{
+        wt_default_parameters, WtTest, DATAGRAM_SIZE,
+    },
+    Error, Http3Parameters, WebTransportRequest,
+};
 
 const DGRAM: &[u8] = &[0, 100];
 

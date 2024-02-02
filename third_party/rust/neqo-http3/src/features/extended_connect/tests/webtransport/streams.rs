@@ -4,10 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::features::extended_connect::tests::webtransport::WtTest;
-use crate::{features::extended_connect::SessionCloseReason, Error};
-use neqo_transport::StreamType;
 use std::mem;
+
+use neqo_transport::StreamType;
+
+use crate::{
+    features::extended_connect::{tests::webtransport::WtTest, SessionCloseReason},
+    Error,
+};
 
 #[test]
 fn wt_client_stream_uni() {
@@ -287,13 +291,17 @@ fn wt_server_stream_bidi_stop_sending() {
 //  1) Both sides of a bidirectional client stream are opened.
 //  2) A client unidirectional stream is opened.
 //  3) A client unidirectional stream has been closed and both sides consumed the closing info.
-//  4) A client unidirectional stream has been closed, but only the server has consumed the closing info.
-//  5) A client unidirectional stream has been closed, but only the client has consum the closing info.
+//  4) A client unidirectional stream has been closed, but only the server has consumed the closing
+//     info.
+//  5) A client unidirectional stream has been closed, but only the client has consum the closing
+//     info.
 //  6) Both sides of a bidirectional server stream are opened.
 //  7) A server unidirectional stream is opened.
 //  8) A server unidirectional stream has been closed and both sides consumed the closing info.
-//  9) A server unidirectional stream has been closed, but only the server has consumed the closing info.
-//  10) A server unidirectional stream has been closed, but only the client has consumed the closing info.
+//  9) A server unidirectional stream has been closed, but only the server has consumed the closing
+//     info.
+//  10) A server unidirectional stream has been closed, but only the client has consumed the closing
+//      info.
 //  11) Both sides of a bidirectional stream have been closed and consumed by both sides.
 //  12) Both sides of a bidirectional stream have been closed, but not consumed by both sides.
 //  13) Multiples open streams

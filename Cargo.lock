@@ -1520,6 +1520,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "enum-map"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9"
+dependencies = [
+ "enum-map-derive",
+]
+
+[[package]]
+name = "enum-map-derive"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "enumset"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3811,9 +3831,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.6.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
 dependencies = [
+ "enum-map",
  "env_logger",
  "lazy_static",
  "log",
@@ -3824,10 +3845,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.6.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
 dependencies = [
- "bindgen 0.64.999",
+ "bindgen 0.69.2",
  "log",
  "mozbuild",
  "neqo-common",
@@ -3838,8 +3859,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.6.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3856,8 +3877,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.6.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
 dependencies = [
  "lazy_static",
  "log",
@@ -3870,8 +3891,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.6.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
 dependencies = [
  "indexmap 1.9.3",
  "lazy_static",
@@ -4517,14 +4538,13 @@ dependencies = [
 
 [[package]]
 name = "qlog"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "321df7a3199d152be256a416096136191e88b7716f1e2e4c8c05b9f77ffb648b"
+version = "0.11.0"
+source = "git+https://github.com/cloudflare/quiche?rev=09ea4b244096a013071cfe2175bbf2945fb7f8d1#09ea4b244096a013071cfe2175bbf2945fb7f8d1"
 dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "serde_with 1.999.999",
+ "serde_with",
  "smallvec",
 ]
 
@@ -5012,13 +5032,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "serde_with"
-version = "1.999.999"
-dependencies = [
- "serde_with 3.0.0",
 ]
 
 [[package]]

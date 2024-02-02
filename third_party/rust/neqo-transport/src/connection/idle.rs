@@ -4,12 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::recovery::RecoveryToken;
-use neqo_common::qtrace;
 use std::{
     cmp::{max, min},
     time::{Duration, Instant},
 };
+
+use neqo_common::qtrace;
+
+use crate::recovery::RecoveryToken;
 
 #[derive(Debug, Clone)]
 /// There's a little bit of different behavior for resetting idle timeout. See

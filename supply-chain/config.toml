@@ -165,6 +165,10 @@ notes = "This is a first-party crate which is entirely unrelated to the crates.i
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
 
+[policy.qlog]
+audit-as-crates-io = true
+notes = "Use this revision (09ea4b244096a013071cfe2175bbf2945fb7f8d1) of qlog temporarily."
+
 [policy.rure]
 audit-as-crates-io = true
 notes = "Identical to upstream, but with cdylib and staticlib targets disabled to avoid unnecessary build artifacts and linker errors."

@@ -4,6 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{os::raw::c_void, pin::Pin};
+
+use neqo_common::qdebug;
+
 use crate::{
     agentio::as_c_void,
     constants::Epoch,
@@ -11,8 +15,6 @@ use crate::{
     p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey},
     ssl::{PRFileDesc, SSLSecretCallback, SSLSecretDirection},
 };
-use neqo_common::qdebug;
-use std::{os::raw::c_void, pin::Pin};
 
 experimental_api!(SSL_SecretCallback(
     fd: *mut PRFileDesc,

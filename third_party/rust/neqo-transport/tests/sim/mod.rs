@@ -14,23 +14,23 @@ mod drop;
 pub mod rng;
 mod taildrop;
 
+use std::{
+    cell::RefCell,
+    cmp::min,
+    convert::TryFrom,
+    fmt::Debug,
+    rc::Rc,
+    time::{Duration, Instant},
+};
+
 use neqo_common::{qdebug, qinfo, qtrace, Datagram, Encoder};
 use neqo_transport::Output;
 use rng::Random;
-use std::cell::RefCell;
-use std::cmp::min;
-use std::convert::TryFrom;
-use std::fmt::Debug;
-use std::rc::Rc;
-use std::time::{Duration, Instant};
 use test_fixture::{self, now};
-
 use NodeState::{Active, Idle, Waiting};
 
 pub mod network {
-    pub use super::delay::Delay;
-    pub use super::drop::Drop;
-    pub use super::taildrop::TailDrop;
+    pub use super::{delay::Delay, drop::Drop, taildrop::TailDrop};
 }
 
 type Rng = Rc<RefCell<Random>>;

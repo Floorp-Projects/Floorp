@@ -49,6 +49,7 @@ functions = [
     "SSL_PeerSignedCertTimestamps",
     "SSL_PeerStapledOCSPResponses",
     "SSL_ResetHandshake",
+    "SSL_SendAdditionalKeyShares",
     "SSL_SetNextProtoNego",
     "SSL_SetURL",
     "SSL_VersionRangeSet",

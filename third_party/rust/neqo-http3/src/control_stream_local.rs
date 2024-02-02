@@ -4,12 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::frames::HFrame;
-use crate::{BufferedStream, Http3StreamType, RecvStream, Res};
+use std::{
+    collections::{HashMap, VecDeque},
+    convert::TryFrom,
+};
+
 use neqo_common::{qtrace, Encoder};
 use neqo_transport::{Connection, StreamId, StreamType};
-use std::collections::{HashMap, VecDeque};
-use std::convert::TryFrom;
+
+use crate::{frames::HFrame, BufferedStream, Http3StreamType, RecvStream, Res};
 
 pub const HTTP3_UNI_STREAM_TYPE_CONTROL: u64 = 0x0;
 

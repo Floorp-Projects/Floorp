@@ -4,11 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::static_table::{StaticTableEntry, HEADER_STATIC_TABLE};
-use crate::{Error, Res};
+use std::{collections::VecDeque, convert::TryFrom};
+
 use neqo_common::qtrace;
-use std::collections::VecDeque;
-use std::convert::TryFrom;
+
+use crate::{
+    static_table::{StaticTableEntry, HEADER_STATIC_TABLE},
+    Error, Res,
+};
 
 pub const ADDITIONAL_TABLE_ENTRY_SIZE: usize = 32;
 
@@ -106,9 +109,12 @@ impl HeaderTable {
     }
 
     /// Change the dynamic table capacity.
-    /// ### Errors
+    ///
+    /// # Errors
+    ///
     /// `ChangeCapacity` if table capacity cannot be reduced.
-    /// The table cannot be reduce if there are entries that are referred at the moment or their inserts are unacked.
+    /// The table cannot be reduce if there are entries that are referred at the moment or their
+    /// inserts are unacked.
     pub fn set_capacity(&mut self, cap: u64) -> Res<()> {
         qtrace!([self], "set capacity to {}", cap);
         if !self.evict_to(cap) {
@@ -119,7 +125,9 @@ impl HeaderTable {
     }
 
     /// Get a static entry with `index`.
-    /// ### Errors
+    ///
+    /// # Errors
+    ///
     /// `HeaderLookup` if the index does not exist in the static table.
     pub fn get_static(index: u64) -> Res<&'static StaticTableEntry> {
         let inx = usize::try_from(index).or(Err(Error::HeaderLookup))?;
@@ -151,7 +159,9 @@ impl HeaderTable {
     }
 
     /// Get a entry in the  dynamic table.
-    /// ### Errors
+    ///
+    /// # Errors
+    ///
     /// `HeaderLookup` if entry does not exist.
     pub fn get_dynamic(&self, index: u64, base: u64, post: bool) -> Res<&DynamicTableEntry> {
         let inx = if post {
@@ -186,8 +196,8 @@ impl HeaderTable {
     }
 
     /// Look for a header pair.
-    /// The function returns `LookupResult`: `index`, `static_table` (if it is a static table entry) and `value_matches`
-    /// (if the header value matches as well not only header name)
+    /// The function returns `LookupResult`: `index`, `static_table` (if it is a static table entry)
+    /// and `value_matches` (if the header value matches as well not only header name)
     pub fn lookup(&mut self, name: &[u8], value: &[u8], can_block: bool) -> Option<LookupResult> {
         qtrace!(
             [self],
@@ -280,9 +290,11 @@ impl HeaderTable {
     }
 
     /// Insert a new entry.
-    /// ### Errors
-    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough space and/or
-    /// other entry cannot be evicted.
+    ///
+    /// # Errors
+    ///
+    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough
+    /// space and/or other entry cannot be evicted.
     pub fn insert(&mut self, name: &[u8], value: &[u8]) -> Res<u64> {
         qtrace!([self], "insert name={:?} value={:?}", name, value);
         let entry = DynamicTableEntry {
@@ -304,9 +316,11 @@ impl HeaderTable {
     }
 
     /// Insert a new entry with the name refer to by a index to static or dynamic table.
-    /// ### Errors
-    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough space and/or
-    /// other entry cannot be evicted.
+    ///
+    /// # Errors
+    ///
+    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough
+    /// space and/or other entry cannot be evicted.
     /// `HeaderLookup` if the index dos not exits in the static/dynamic table.
     pub fn insert_with_name_ref(
         &mut self,
@@ -336,9 +350,11 @@ impl HeaderTable {
     }
 
     /// Duplicate an entry.
-    /// ### Errors
-    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough space and/or
-    /// other entry cannot be evicted.
+    ///
+    /// # Errors
+    ///
+    /// `DynamicTableFull` if an entry cannot be added to the table because there is not enough
+    /// space and/or other entry cannot be evicted.
     /// `HeaderLookup` if the index dos not exits in the static/dynamic table.
     pub fn duplicate(&mut self, index: u64) -> Res<u64> {
         qtrace!([self], "duplicate entry={}", index);
@@ -355,7 +371,9 @@ impl HeaderTable {
     }
 
     /// Increment number of acknowledge entries.
-    /// ### Errors
+    ///
+    /// # Errors
+    ///
     /// `IncrementAck` if ack is greater than actual number of inserts.
     pub fn increment_acked(&mut self, increment: u64) -> Res<()> {
         qtrace!([self], "increment acked by {}", increment);

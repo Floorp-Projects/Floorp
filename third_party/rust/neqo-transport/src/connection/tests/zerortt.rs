@@ -4,19 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::Connection;
-use super::{
-    connect, default_client, default_server, exchange_ticket, new_server, resumed_server,
-    CountingConnectionIdGenerator,
-};
-use crate::events::ConnectionEvent;
-use crate::{ConnectionParameters, Error, StreamType, Version};
+use std::{cell::RefCell, rc::Rc};
 
 use neqo_common::event::Provider;
 use neqo_crypto::{AllowZeroRtt, AntiReplay};
-use std::cell::RefCell;
-use std::rc::Rc;
 use test_fixture::{self, assertions, now};
+
+use super::{
+    super::Connection, connect, default_client, default_server, exchange_ticket, new_server,
+    resumed_server, CountingConnectionIdGenerator,
+};
+use crate::{events::ConnectionEvent, ConnectionParameters, Error, StreamType, Version};
 
 #[test]
 fn zero_rtt_negotiate() {
@@ -62,12 +60,12 @@ fn zero_rtt_send_recv() {
     // 0-RTT packets on their own shouldn't be padded to 1200.
     assert!(client_0rtt.as_dgram_ref().unwrap().len() < 1200);
 
-    let server_hs = server.process(client_hs.dgram(), now());
+    let server_hs = server.process(client_hs.as_dgram_ref(), now());
     assert!(server_hs.as_dgram_ref().is_some()); // ServerHello, etc...
 
     let all_frames = server.stats().frame_tx.all;
     let ack_frames = server.stats().frame_tx.ack;
-    let server_process_0rtt = server.process(client_0rtt.dgram(), now());
+    let server_process_0rtt = server.process(client_0rtt.as_dgram_ref(), now());
     assert!(server_process_0rtt.as_dgram_ref().is_some());
     assert_eq!(server.stats().frame_tx.all, all_frames + 1);
     assert_eq!(server.stats().frame_tx.ack, ack_frames + 1);
@@ -104,7 +102,7 @@ fn zero_rtt_send_coalesce() {
 
     assertions::assert_coalesced_0rtt(&client_0rtt.as_dgram_ref().unwrap()[..]);
 
-    let server_hs = server.process(client_0rtt.dgram(), now());
+    let server_hs = server.process(client_0rtt.as_dgram_ref(), now());
     assert!(server_hs.as_dgram_ref().is_some()); // Should produce ServerHello etc...
 
     let server_stream_id = server
@@ -161,9 +159,9 @@ fn zero_rtt_send_reject() {
     let client_0rtt = client.process(None, now());
     assert!(client_0rtt.as_dgram_ref().is_some());
 
-    let server_hs = server.process(client_hs.dgram(), now());
+    let server_hs = server.process(client_hs.as_dgram_ref(), now());
     assert!(server_hs.as_dgram_ref().is_some()); // Should produce ServerHello etc...
-    let server_ignored = server.process(client_0rtt.dgram(), now());
+    let server_ignored = server.process(client_0rtt.as_dgram_ref(), now());
     assert!(server_ignored.as_dgram_ref().is_none());
 
     // The server shouldn't receive that 0-RTT data.
@@ -171,14 +169,14 @@ fn zero_rtt_send_reject() {
     assert!(!server.events().any(recvd_stream_evt));
 
     // Client should get a rejection.
-    let client_fin = client.process(server_hs.dgram(), now());
+    let client_fin = client.process(server_hs.as_dgram_ref(), now());
     let recvd_0rtt_reject = |e| e == ConnectionEvent::ZeroRttRejected;
     assert!(client.events().any(recvd_0rtt_reject));
 
     // Server consume client_fin
-    let server_ack = server.process(client_fin.dgram(), now());
+    let server_ack = server.process(client_fin.as_dgram_ref(), now());
     assert!(server_ack.as_dgram_ref().is_some());
-    let client_out = client.process(server_ack.dgram(), now());
+    let client_out = client.process(server_ack.as_dgram_ref(), now());
     assert!(client_out.as_dgram_ref().is_none());
 
     // ...and the client stream should be gone.
@@ -194,7 +192,7 @@ fn zero_rtt_send_reject() {
     assert!(client_after_reject.is_some());
 
     // The server should receive new stream
-    server.process_input(client_after_reject.unwrap(), now());
+    server.process_input(&client_after_reject.unwrap(), now());
     assert!(server.events().any(recvd_stream_evt));
 }
 
@@ -233,8 +231,8 @@ fn zero_rtt_update_flow_control() {
     assert!(!client.stream_send_atomic(bidi_stream, MESSAGE).unwrap());
 
     // Now get the server transport parameters.
-    let server_hs = server.process(client_hs, now()).dgram();
-    client.process_input(server_hs.unwrap(), now());
+    let server_hs = server.process(client_hs.as_ref(), now()).dgram();
+    client.process_input(&server_hs.unwrap(), now());
 
     // The streams should report a writeable event.
     let mut uni_stream_event = false;

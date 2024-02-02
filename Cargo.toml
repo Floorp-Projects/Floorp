@@ -124,9 +124,6 @@ memmap2 = { path = "build/rust/memmap2" }
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 
-# Patch serde_with 1.0 to 3.0
-serde_with = { path = "build/rust/serde_with" }
-
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }
 

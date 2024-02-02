@@ -4,21 +4,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::{ContentType, Epoch};
-use crate::err::{nspr, Error, PR_SetError, Res};
-use crate::prio;
-use crate::ssl;
+use std::{
+    cmp::min,
+    convert::{TryFrom, TryInto},
+    fmt, mem,
+    ops::Deref,
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    ptr::{null, null_mut},
+    vec::Vec,
+};
 
 use neqo_common::{hex, hex_with_len, qtrace};
-use std::cmp::min;
-use std::convert::{TryFrom, TryInto};
-use std::fmt;
-use std::mem;
-use std::ops::Deref;
-use std::os::raw::{c_uint, c_void};
-use std::pin::Pin;
-use std::ptr::{null, null_mut};
-use std::vec::Vec;
+
+use crate::{
+    constants::{ContentType, Epoch},
+    err::{nspr, Error, PR_SetError, Res},
+    prio, ssl,
+};
 
 // Alias common types.
 type PrFd = *mut prio::PRFileDesc;

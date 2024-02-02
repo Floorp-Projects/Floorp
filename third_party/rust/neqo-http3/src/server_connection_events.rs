@@ -4,17 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::connection::Http3State;
+use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+
+use neqo_common::Header;
+use neqo_transport::{AppError, StreamId};
+
 use crate::{
+    connection::Http3State,
     features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason},
     CloseType, Http3StreamInfo, HttpRecvStreamEvents, Priority, RecvStreamEvents, SendStreamEvents,
 };
-use neqo_common::Header;
-use neqo_transport::AppError;
-use neqo_transport::StreamId;
-use std::cell::RefCell;
-use std::collections::VecDeque;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum Http3ServerConnEvent {

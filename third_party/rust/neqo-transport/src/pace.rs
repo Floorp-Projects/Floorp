@@ -7,12 +7,14 @@
 // Pacer
 #![deny(clippy::pedantic)]
 
-use neqo_common::qtrace;
+use std::{
+    cmp::min,
+    convert::TryFrom,
+    fmt::{Debug, Display},
+    time::{Duration, Instant},
+};
 
-use std::cmp::min;
-use std::convert::TryFrom;
-use std::fmt::{Debug, Display};
-use std::time::{Duration, Instant};
+use neqo_common::qtrace;
 
 /// This value determines how much faster the pacer operates than the
 /// congestion window.
@@ -26,6 +28,8 @@ const PACER_SPEEDUP: usize = 2;
 
 /// A pacer that uses a leaky bucket.
 pub struct Pacer {
+    /// Whether pacing is enabled.
+    enabled: bool,
     /// The last update time.
     t: Instant,
     /// The maximum capacity, or burst size, in bytes.
@@ -47,9 +51,15 @@ impl Pacer {
     /// The value of `p` is the packet size in bytes, which determines the minimum
     /// credit needed before a packet is sent.  This should be a substantial
     /// fraction of the maximum packet size, if not the packet size.
-    pub fn new(now: Instant, m: usize, p: usize) -> Self {
+    pub fn new(enabled: bool, now: Instant, m: usize, p: usize) -> Self {
         assert!(m >= p, "maximum capacity has to be at least one packet");
-        Self { t: now, m, c: m, p }
+        Self {
+            enabled,
+            t: now,
+            m,
+            c: m,
+            p,
+        }
     }
 
     /// Determine when the next packet will be available based on the provided RTT
@@ -74,10 +84,15 @@ impl Pacer {
     }
 
     /// Spend credit.  This cannot fail; users of this API are expected to call
-    /// next() to determine when to spend.  This takes the current time (`now`),
+    /// `next()` to determine when to spend.  This takes the current time (`now`),
     /// an estimate of the round trip time (`rtt`), the estimated congestion
     /// window (`cwnd`), and the number of bytes that were sent (`count`).
     pub fn spend(&mut self, now: Instant, rtt: Duration, cwnd: usize, count: usize) {
+        if !self.enabled {
+            self.t = now;
+            return;
+        }
+
         qtrace!([self], "spend {} over {}, {:?}", count, cwnd, rtt);
         // Increase the capacity by:
         //    `(now - self.t) * PACER_SPEEDUP * cwnd / rtt`
@@ -108,10 +123,13 @@ impl Debug for Pacer {
     }
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
-    use super::Pacer;
+    use std::time::Duration;
+
     use test_fixture::now;
+
+    use super::Pacer;
 
     const RTT: Duration = Duration::from_millis(1000);
     const PACKET: usize = 1000;
@@ -119,20 +137,29 @@ mod tests {
 
     #[test]
     fn even() {
-        let mut n = now();
-        let p = Pacer::new(n, PACKET, PACKET);
-        assert_eq!(p.next(RTT, CWND), None);
+        let n = now();
+        let mut p = Pacer::new(true, n, PACKET, PACKET);
+        assert_eq!(p.next(RTT, CWND), n);
         p.spend(n, RTT, CWND, PACKET);
-        assert_eq!(p.next(RTT, CWND), Some(n + (RTT / 10)));
+        assert_eq!(p.next(RTT, CWND), n + (RTT / 20));
     }
 
     #[test]
     fn backwards_in_time() {
-        let mut n = now();
-        let p = Pacer::new(n + RTT, PACKET, PACKET);
-        assert_eq!(p.next(RTT, CWND), None);
+        let n = now();
+        let mut p = Pacer::new(true, n + RTT, PACKET, PACKET);
+        assert_eq!(p.next(RTT, CWND), n + RTT);
         // Now spend some credit in the past using a time machine.
         p.spend(n, RTT, CWND, PACKET);
-        assert_eq!(p.next(RTT, CWND), Some(n + (RTT / 10)));
+        assert_eq!(p.next(RTT, CWND), n + (RTT / 20));
+    }
+
+    #[test]
+    fn pacing_disabled() {
+        let n = now();
+        let mut p = Pacer::new(false, n, PACKET, PACKET);
+        assert_eq!(p.next(RTT, CWND), n);
+        p.spend(n, RTT, CWND, PACKET);
+        assert_eq!(p.next(RTT, CWND), n);
     }
 }

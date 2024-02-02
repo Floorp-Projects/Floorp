@@ -6,11 +6,9 @@
 
 // Functions that handle capturing QLOG traces.
 
-use neqo_common::hex;
-use neqo_common::qlog::NeqoQlog;
+use neqo_common::{hex, qlog::NeqoQlog};
 use qlog::events::{
-    qpack::QpackInstructionTypeName,
-    qpack::{QPackInstruction, QpackInstructionParsed},
+    qpack::{QPackInstruction, QpackInstructionParsed, QpackInstructionTypeName},
     EventData, RawInfo,
 };
 

@@ -4,23 +4,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{fmt::Debug, mem};
+
+use neqo_common::qtrace;
+
 use crate::{
     client_events::Http3ClientEvents,
     settings::{HSettingType, HSettings},
 };
-use neqo_common::qtrace;
-use std::fmt::Debug;
-use std::mem;
 
 pub mod extended_connect;
 
 /// States:
 /// - `Disable` - it is not turned on for this connection.
-/// - `Negotiating` - the feature is enabled locally, but settings from the peer
-///                  have not been received yet.
+/// - `Negotiating` - the feature is enabled locally, but settings from the peer have not been
+///   received yet.
 /// - `Negotiated` - the settings have been received and both sides support the feature.
-/// - `NegotiationFailed` - the settings have been received and the peer does not
-///                         support the feature.
+/// - `NegotiationFailed` - the settings have been received and the peer does not support the
+///   feature.
 #[derive(Debug)]
 pub enum NegotiationState {
     Disabled,

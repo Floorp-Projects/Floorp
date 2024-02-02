@@ -61,6 +61,7 @@ pub enum ConnectivityEventType {
     ConnectionIdUpdated,
     SpinBitUpdated,
     ConnectionStateUpdated,
+    MtuUpdated,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
@@ -135,4 +136,12 @@ pub struct SpinBitUpdated {
 pub struct ConnectionStateUpdated {
     pub old: Option<ConnectionState>,
     pub new: ConnectionState,
+}
+
+#[serde_with::skip_serializing_none]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
+pub struct MtuUpdated {
+    pub old: Option<u16>,
+    pub new: u16,
+    pub done: Option<bool>,
 }

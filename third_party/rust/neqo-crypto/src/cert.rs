@@ -4,18 +4,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::err::secstatus_to_res;
-use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList, Item, SECItem, SECItemArray};
-use crate::ssl::{
-    PRFileDesc, SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps,
-    SSL_PeerStapledOCSPResponses,
+use std::{
+    convert::TryFrom,
+    ptr::{addr_of, NonNull},
+    slice,
 };
+
 use neqo_common::qerror;
 
-use std::convert::TryFrom;
-use std::ptr::{addr_of, NonNull};
-
-use std::slice;
+use crate::{
+    err::secstatus_to_res,
+    p11::{CERTCertListNode, CERT_GetCertificateDer, CertList, Item, SECItem, SECItemArray},
+    ssl::{
+        PRFileDesc, SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps,
+        SSL_PeerStapledOCSPResponses,
+    },
+};
 
 pub struct CertificateInfo {
     certs: CertList,

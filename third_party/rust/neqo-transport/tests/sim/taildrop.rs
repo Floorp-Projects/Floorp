@@ -6,14 +6,18 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use super::Node;
+use std::{
+    cmp::max,
+    collections::VecDeque,
+    convert::TryFrom,
+    fmt::{self, Debug},
+    time::{Duration, Instant},
+};
+
 use neqo_common::{qtrace, Datagram};
 use neqo_transport::Output;
-use std::cmp::max;
-use std::collections::VecDeque;
-use std::convert::TryFrom;
-use std::fmt::{self, Debug};
-use std::time::{Duration, Instant};
+
+use super::Node;
 
 /// One second in nanoseconds.
 const ONE_SECOND_NS: u128 = 1_000_000_000;

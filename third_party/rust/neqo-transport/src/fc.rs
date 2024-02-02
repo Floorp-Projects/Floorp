@@ -7,6 +7,14 @@
 // Tracks possibly-redundant flow control signals from other code and converts
 // into flow control frames needing to be sent to the remote.
 
+use std::{
+    convert::TryFrom,
+    fmt::Debug,
+    ops::{Deref, DerefMut, Index, IndexMut},
+};
+
+use neqo_common::{qtrace, Role};
+
 use crate::{
     frame::{
         FRAME_TYPE_DATA_BLOCKED, FRAME_TYPE_MAX_DATA, FRAME_TYPE_MAX_STREAMS_BIDI,
@@ -18,13 +26,6 @@ use crate::{
     stats::FrameStats,
     stream_id::{StreamId, StreamType},
     Error, Res,
-};
-use neqo_common::{qtrace, Role};
-
-use std::{
-    convert::TryFrom,
-    fmt::Debug,
-    ops::{Deref, DerefMut, Index, IndexMut},
 };
 
 #[derive(Debug)]
@@ -575,6 +576,8 @@ impl IndexMut<StreamType> for LocalStreamLimits {
 
 #[cfg(test)]
 mod test {
+    use neqo_common::{Encoder, Role};
+
     use super::{LocalStreamLimits, ReceiverFlowControl, RemoteStreamLimits, SenderFlowControl};
     use crate::{
         packet::PacketBuilder,
@@ -582,7 +585,6 @@ mod test {
         stream_id::{StreamId, StreamType},
         Error,
     };
-    use neqo_common::{Encoder, Role};
 
     #[test]
     fn blocked_at_zero() {

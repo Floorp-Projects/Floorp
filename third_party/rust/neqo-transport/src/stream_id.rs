@@ -133,8 +133,9 @@ impl ::std::fmt::Display for StreamId {
 
 #[cfg(test)]
 mod test {
-    use super::StreamId;
     use neqo_common::Role;
+
+    use super::StreamId;
 
     #[test]
     fn bidi_stream_properties() {

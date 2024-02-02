@@ -4,20 +4,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use neqo_common::Encoder;
-use std::cmp::{min, Ordering};
-use std::mem;
-use std::rc::Rc;
-use std::time::Instant;
-
-use crate::frame::{
-    FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION, FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
-    FRAME_TYPE_HANDSHAKE_DONE,
+use std::{
+    cmp::{min, Ordering},
+    mem,
+    rc::Rc,
+    time::Instant,
 };
-use crate::packet::PacketBuilder;
-use crate::path::PathRef;
-use crate::recovery::RecoveryToken;
-use crate::{ConnectionError, Error, Res};
+
+use neqo_common::Encoder;
+
+use crate::{
+    frame::{
+        FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION, FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
+        FRAME_TYPE_HANDSHAKE_DONE,
+    },
+    packet::PacketBuilder,
+    path::PathRef,
+    recovery::RecoveryToken,
+    ConnectionError, Error, Res,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// The state of the Connection.
@@ -206,16 +211,13 @@ impl StateSignaling {
             debug_assert!(false, "StateSignaling must be in Idle state.");
             return;
         }
-        *self = Self::HandshakeDone
+        *self = Self::HandshakeDone;
     }
 
     pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Res<Option<RecoveryToken>> {
         if matches!(self, Self::HandshakeDone) && builder.remaining() >= 1 {
             *self = Self::Idle;
             builder.encode_varint(FRAME_TYPE_HANDSHAKE_DONE);
-            if builder.len() > builder.limit() {
-                return Err(Error::InternalError(14));
-            }
             Ok(Some(RecoveryToken::HandshakeDone))
         } else {
             Ok(None)

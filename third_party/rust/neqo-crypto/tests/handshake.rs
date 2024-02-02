@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 
+use std::{mem, time::Instant};
+
 use neqo_common::qinfo;
 use neqo_crypto::{
     AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, ResumptionToken,
     SecretAgent, Server, ZeroRttCheckResult, ZeroRttChecker,
 };
-use std::mem;
-use std::time::Instant;
 use test_fixture::{anti_replay, fixture_init, now};
 
 /// Consume records until the handshake state changes.

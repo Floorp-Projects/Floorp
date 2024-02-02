@@ -6,19 +6,18 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use crate::connection::Http3State;
-use crate::settings::HSettingType;
-use crate::{
-    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason},
-    CloseType, Http3StreamInfo, HttpRecvStreamEvents, RecvStreamEvents, SendStreamEvents,
-};
+use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+
 use neqo_common::{event::Provider as EventProvider, Header};
 use neqo_crypto::ResumptionToken;
 use neqo_transport::{AppError, StreamId, StreamType};
 
-use std::cell::RefCell;
-use std::collections::VecDeque;
-use std::rc::Rc;
+use crate::{
+    connection::Http3State,
+    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason},
+    settings::HSettingType,
+    CloseType, Http3StreamInfo, HttpRecvStreamEvents, RecvStreamEvents, SendStreamEvents,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum WebTransportEvent {

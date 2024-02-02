@@ -6,13 +6,6 @@
 
 #![allow(clippy::upper_case_acronyms)]
 
-use crate::{
-    agentio::as_c_void,
-    err::{Error, Res},
-    once::OnceResult,
-    ssl::{PRFileDesc, SSLTimeFunc},
-};
-
 use std::{
     boxed::Box,
     convert::{TryFrom, TryInto},
@@ -20,6 +13,13 @@ use std::{
     os::raw::c_void,
     pin::Pin,
     time::{Duration, Instant},
+};
+
+use crate::{
+    agentio::as_c_void,
+    err::{Error, Res},
+    once::OnceResult,
+    ssl::{PRFileDesc, SSLTimeFunc},
 };
 
 include!(concat!(env!("OUT_DIR"), "/nspr_time.rs"));
@@ -207,12 +207,13 @@ impl Default for TimeHolder {
 
 #[cfg(test)]
 mod test {
-    use super::{get_base, init, Interval, PRTime, Time};
-    use crate::err::Res;
     use std::{
         convert::{TryFrom, TryInto},
         time::{Duration, Instant},
     };
+
+    use super::{get_base, init, Interval, PRTime, Time};
+    use crate::err::Res;
 
     #[test]
     fn convert_stable() {

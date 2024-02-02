@@ -4,19 +4,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::decoder_instructions::{DecoderInstruction, DecoderInstructionReader};
-use crate::encoder_instructions::EncoderInstruction;
-use crate::header_block::HeaderEncoder;
-use crate::qlog;
-use crate::qpack_send_buf::QpackData;
-use crate::reader::ReceiverConnWrapper;
-use crate::stats::Stats;
-use crate::table::{HeaderTable, LookupResult, ADDITIONAL_TABLE_ENTRY_SIZE};
-use crate::{Error, QpackSettings, Res};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    convert::TryFrom,
+};
+
 use neqo_common::{qdebug, qerror, qlog::NeqoQlog, qtrace, Header};
 use neqo_transport::{Connection, Error as TransportError, StreamId};
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::convert::TryFrom;
+
+use crate::{
+    decoder_instructions::{DecoderInstruction, DecoderInstructionReader},
+    encoder_instructions::EncoderInstruction,
+    header_block::HeaderEncoder,
+    qlog,
+    qpack_send_buf::QpackData,
+    reader::ReceiverConnWrapper,
+    stats::Stats,
+    table::{HeaderTable, LookupResult, ADDITIONAL_TABLE_ENTRY_SIZE},
+    Error, QpackSettings, Res,
+};
 
 pub const QPACK_UNI_STREAM_TYPE_ENCODER: u64 = 0x2;
 
@@ -45,9 +51,9 @@ pub struct QPackEncoder {
     local_stream: LocalStreamState,
     max_blocked_streams: u16,
     // Remember header blocks that are referring to dynamic table.
-    // There can be multiple header blocks in one stream, headers, trailer, push stream request, etc.
-    // This HashMap maps a stream ID to a list of header blocks. Each header block is a list of
-    // referenced dynamic table entries.
+    // There can be multiple header blocks in one stream, headers, trailer, push stream request,
+    // etc. This HashMap maps a stream ID to a list of header blocks. Each header block is a
+    // list of referenced dynamic table entries.
     unacked_header_blocks: HashMap<StreamId, VecDeque<HashSet<u64>>>,
     blocked_stream_cnt: u16,
     use_huffman: bool,
@@ -75,7 +81,9 @@ impl QPackEncoder {
 
     /// This function is use for setting encoders table max capacity. The value is received as
     /// a `SETTINGS_QPACK_MAX_TABLE_CAPACITY` setting parameter.
+    ///
     /// # Errors
+    ///
     /// `EncoderStream` if value is too big.
     /// `ChangeCapacity` if table capacity cannot be reduced.
     pub fn set_max_capacity(&mut self, cap: u64) -> Res<()> {
@@ -103,7 +111,9 @@ impl QPackEncoder {
 
     /// This function is use for setting encoders max blocked streams. The value is received as
     /// a `SETTINGS_QPACK_BLOCKED_STREAMS` setting parameter.
+    ///
     /// # Errors
+    ///
     /// `EncoderStream` if value is too big.
     pub fn set_max_blocked_streams(&mut self, blocked_streams: u64) -> Res<()> {
         self.max_blocked_streams = u16::try_from(blocked_streams).or(Err(Error::EncoderStream))?;
@@ -111,7 +121,9 @@ impl QPackEncoder {
     }
 
     /// Reads decoder instructions.
+    ///
     /// # Errors
+    ///
     /// May return: `ClosedCriticalStream` if stream has been closed or `DecoderStream`
     /// in case of any other transport error.
     pub fn receive(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<()> {
@@ -221,14 +233,20 @@ impl QPackEncoder {
         }
     }
 
-    /// Inserts a new entry into a table and sends the corresponding instruction to a peer. An entry is added only
-    /// if it is possible to send the corresponding instruction immediately, i.e. the encoder stream is not
-    /// blocked by the flow control (or stream internal buffer(this is very unlikely)).
-    /// ### Errors
+    /// Inserts a new entry into a table and sends the corresponding instruction to a peer. An entry
+    /// is added only if it is possible to send the corresponding instruction immediately, i.e.
+    /// the encoder stream is not blocked by the flow control (or stream internal buffer(this is
+    /// very unlikely)).
+    ///
+    /// # Errors
+    ///
     /// `EncoderStreamBlocked` if the encoder stream is blocked by the flow control.
     /// `DynamicTableFull` if the dynamic table does not have enough space for the entry.
-    /// The function can return transport errors: `InvalidStreamId`, `InvalidInput` and `FinalSizeError`.
+    /// The function can return transport errors: `InvalidStreamId`, `InvalidInput` and
+    /// `FinalSizeError`.
+    ///
     /// # Panics
+    ///
     /// When the insertion fails (it should not).
     pub fn send_and_insert(
         &mut self,
@@ -279,7 +297,8 @@ impl QPackEncoder {
         stream_id: StreamId,
     ) -> Res<()> {
         if let Some(cap) = self.next_capacity {
-            // Check if it is possible to reduce the capacity, e.g. if enough space can be make free for the reduction.
+            // Check if it is possible to reduce the capacity, e.g. if enough space can be make free
+            // for the reduction.
             if cap < self.table.capacity() && !self.table.can_evict_to(cap) {
                 return Err(Error::DynamicTableFull);
             }
@@ -293,7 +312,7 @@ impl QPackEncoder {
                     false,
                     "can_evict_to should have checked and make sure this operation is possible"
                 );
-                return Err(Error::InternalError(1));
+                return Err(Error::InternalError);
             }
             self.max_entries = cap / 32;
             self.next_capacity = None;
@@ -302,7 +321,9 @@ impl QPackEncoder {
     }
 
     /// Sends any qpack encoder instructions.
+    ///
     /// # Errors
+    ///
     ///   returns `EncoderStream` in case of an error.
     pub fn send_encoder_updates(&mut self, conn: &mut Connection) -> Res<()> {
         match self.local_stream {
@@ -338,10 +359,14 @@ impl QPackEncoder {
     }
 
     /// Encodes headers
+    ///
     /// # Errors
+    ///
     /// `ClosedCriticalStream` if the encoder stream is closed.
     /// `InternalError` if an unexpected error occurred.
+    ///
     /// # Panics
+    ///
     /// If there is a programming error.
     pub fn encode_header_block(
         &mut self,
@@ -358,11 +383,9 @@ impl QPackEncoder {
             // to write to the encoder stream AND if it can't uses
             // literal instructions.
             // The errors can be:
-            //   1) `EncoderStreamBlocked` - this is an error that
-            //      can occur.
+            //   1) `EncoderStreamBlocked` - this is an error that can occur.
             //   2) `InternalError` - this is unexpected error.
-            //   3) `ClosedCriticalStream` - this is error that should
-            //      close the HTTP/3 session.
+            //   3) `ClosedCriticalStream` - this is error that should close the HTTP/3 session.
             // The last 2 errors are ignored here and will be picked up
             // by the main loop.
             encoder_blocked = true;
@@ -406,8 +429,9 @@ impl QPackEncoder {
                     self.table.add_ref(index);
                 }
             } else if can_block && !encoder_blocked {
-                // Insert using an InsertWithNameLiteral instruction. This entry name does not match any name in the
-                // tables therefore we cannot use any other instruction.
+                // Insert using an InsertWithNameLiteral instruction. This entry name does not match
+                // any name in the tables therefore we cannot use any other
+                // instruction.
                 if let Ok(index) = self.send_and_insert(conn, &name, &value) {
                     encoded_h.encode_indexed_dynamic(index);
                     ref_entries.insert(index);
@@ -417,16 +441,15 @@ impl QPackEncoder {
                     // to write to the encoder stream AND if it can't uses
                     // literal instructions.
                     // The errors can be:
-                    //   1) `EncoderStreamBlocked` - this is an error that
-                    //      can occur.
-                    //   2) `DynamicTableFull` - this is an error that
-                    //      can occur.
+                    //   1) `EncoderStreamBlocked` - this is an error that can occur.
+                    //   2) `DynamicTableFull` - this is an error that can occur.
                     //   3) `InternalError` - this is unexpected error.
-                    //   4) `ClosedCriticalStream` - this is error that should
-                    //      close the HTTP/3 session.
+                    //   4) `ClosedCriticalStream` - this is error that should close the HTTP/3
+                    //      session.
                     // The last 2 errors are ignored here and will be picked up
                     // by the main loop.
-                    // As soon as one of the instructions cannot be written or the table is full, do not try again.
+                    // As soon as one of the instructions cannot be written or the table is full, do
+                    // not try again.
                     encoder_blocked = true;
                     encoded_h.encode_literal_with_name_literal(&name, &value);
                 }
@@ -458,7 +481,9 @@ impl QPackEncoder {
     }
 
     /// Encoder stream has been created. Add the stream id.
+    ///
     /// # Panics
+    ///
     /// If a stream has already been added.
     pub fn add_send_stream(&mut self, stream_id: StreamId) {
         if self.local_stream == LocalStreamState::NoStream {
@@ -505,18 +530,20 @@ fn map_stream_send_atomic_error(err: &TransportError) -> Error {
         }
         _ => {
             debug_assert!(false, "Unexpected error");
-            Error::InternalError(2)
+            Error::InternalError
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::mem;
+
+    use neqo_transport::{ConnectionParameters, StreamId, StreamType};
+    use test_fixture::{default_client, default_server, handshake, new_server, now, DEFAULT_ALPN};
+
     use super::{Connection, Error, Header, QPackEncoder, Res};
     use crate::QpackSettings;
-    use neqo_transport::{ConnectionParameters, StreamId, StreamType};
-    use std::mem;
-    use test_fixture::{default_client, default_server, handshake, new_server, now, DEFAULT_ALPN};
 
     struct TestEncoder {
         encoder: QPackEncoder,
@@ -529,7 +556,8 @@ mod tests {
     impl TestEncoder {
         pub fn change_capacity(&mut self, capacity: u64) -> Res<()> {
             self.encoder.set_max_capacity(capacity).unwrap();
-            // We will try to really change the table only when we send the change capacity instruction.
+            // We will try to really change the table only when we send the change capacity
+            // instruction.
             self.encoder.send_encoder_updates(&mut self.conn)
         }
 
@@ -556,8 +584,8 @@ mod tests {
         pub fn send_instructions(&mut self, encoder_instruction: &[u8]) {
             self.encoder.send_encoder_updates(&mut self.conn).unwrap();
             let out = self.conn.process(None, now());
-            let out2 = self.peer_conn.process(out.dgram(), now());
-            mem::drop(self.conn.process(out2.dgram(), now()));
+            let out2 = self.peer_conn.process(out.as_dgram_ref(), now());
+            mem::drop(self.conn.process(out2.as_dgram_ref(), now()));
             let mut buf = [0_u8; 100];
             let (amount, fin) = self
                 .peer_conn
@@ -619,7 +647,7 @@ mod tests {
             .stream_send(encoder.recv_stream_id, decoder_instruction)
             .unwrap();
         let out = encoder.peer_conn.process(None, now());
-        mem::drop(encoder.conn.process(out.dgram(), now()));
+        mem::drop(encoder.conn.process(out.as_dgram_ref(), now()));
         assert!(encoder
             .encoder
             .read_instructions(&mut encoder.conn, encoder.recv_stream_id)
@@ -722,7 +750,8 @@ mod tests {
                 ],
                 encoder_inst: &[],
             },
-            // test adding a new header and encode_post_base_index, also test fix_header_block_prefix
+            // test adding a new header and encode_post_base_index, also test
+            // fix_header_block_prefix
             TestElement {
                 headers: vec![Header::new("my-header", "my-value")],
                 header_block: &[0x02, 0x80, 0x10],
@@ -796,7 +825,8 @@ mod tests {
                 ],
                 encoder_inst: &[],
             },
-            // test adding a new header and encode_post_base_index, also test fix_header_block_prefix
+            // test adding a new header and encode_post_base_index, also test
+            // fix_header_block_prefix
             TestElement {
                 headers: vec![Header::new("my-header", "my-value")],
                 header_block: &[0x02, 0x80, 0x10],
@@ -870,7 +900,8 @@ mod tests {
         assert!(res.is_ok());
         encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
-        // insert "content-length: 12345 which will fail because the ntry in the table cannot be evicted.
+        // insert "content-length: 12345 which will fail because the ntry in the table cannot be
+        // evicted.
         let res =
             encoder
                 .encoder
@@ -921,7 +952,8 @@ mod tests {
         assert_eq!(&buf[..], ENCODE_INDEXED_REF_DYNAMIC);
         encoder.send_instructions(&[]);
 
-        // insert "content-length: 12345 which will fail because the entry in the table cannot be evicted
+        // insert "content-length: 12345 which will fail because the entry in the table cannot be
+        // evicted
         let res =
             encoder
                 .encoder
@@ -1004,8 +1036,8 @@ mod tests {
 
         encoder.send_instructions(&[]);
 
-        // The next one will not use the dynamic entry because it is exceeding the max_blocked_streams
-        // limit.
+        // The next one will not use the dynamic entry because it is exceeding the
+        // max_blocked_streams limit.
         let buf = encoder.encoder.encode_header_block(
             &mut encoder.conn,
             &[Header::new("content-length", "1234")],
@@ -1099,7 +1131,8 @@ mod tests {
 
         assert_eq!(encoder.encoder.blocked_stream_cnt(), 1);
 
-        // The next one will not create a new entry because the encoder is on max_blocked_streams limit.
+        // The next one will not create a new entry because the encoder is on max_blocked_streams
+        // limit.
         let buf = encoder.encoder.encode_header_block(
             &mut encoder.conn,
             &[Header::new("name2", "value2")],
@@ -1274,8 +1307,8 @@ mod tests {
         assert_eq!(encoder.encoder.blocked_stream_cnt(), 2);
 
         // receive a stream cancel for the first stream.
-        // This will remove the first stream as blocking but it will not mark the instruction as acked.
-        // and the second steam will still be blocking.
+        // This will remove the first stream as blocking but it will not mark the instruction as
+        // acked. and the second steam will still be blocking.
         recv_instruction(&mut encoder, STREAM_CANCELED_ID_1);
 
         // The stream is not blocking anymore because header ack also acks the instruction.
@@ -1507,9 +1540,10 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(1000).is_ok());
         encoder.send_instructions(CAP_INSTRUCTION_1000);
 
-        // Encode a header block with 2 headers. The first header will be added to the dynamic table.
-        // The second will not be added to the dynamic table, because the corresponding instruction
-        // cannot be written immediately due to the flow control limit.
+        // Encode a header block with 2 headers. The first header will be added to the dynamic
+        // table. The second will not be added to the dynamic table, because the
+        // corresponding instruction cannot be written immediately due to the flow control
+        // limit.
         let buf1 = encoder.encoder.encode_header_block(
             &mut encoder.conn,
             &[
@@ -1524,7 +1558,8 @@ mod tests {
         // Assert that the second header is encoded as a literal with a name literal
         assert_eq!(buf1[3] & 0xf0, 0x20);
 
-        // Try to encode another header block. Here both headers will be encoded as a literal with a name literal
+        // Try to encode another header block. Here both headers will be encoded as a literal with a
+        // name literal
         let buf2 = encoder.encoder.encode_header_block(
             &mut encoder.conn,
             &[
@@ -1540,10 +1575,10 @@ mod tests {
 
         // exchange a flow control update.
         let out = encoder.peer_conn.process(None, now());
-        mem::drop(encoder.conn.process(out.dgram(), now()));
+        mem::drop(encoder.conn.process(out.as_dgram_ref(), now()));
 
-        // Try writing a new header block. Now, headers will be added to the dynamic table again, because
-        // instructions can be sent.
+        // Try writing a new header block. Now, headers will be added to the dynamic table again,
+        // because instructions can be sent.
         let buf3 = encoder.encoder.encode_header_block(
             &mut encoder.conn,
             &[
@@ -1587,7 +1622,7 @@ mod tests {
             .send_encoder_updates(&mut encoder.conn)
             .unwrap();
         let out = encoder.conn.process(None, now());
-        mem::drop(encoder.peer_conn.process(out.dgram(), now()));
+        mem::drop(encoder.peer_conn.process(out.as_dgram_ref(), now()));
         // receive an insert count increment.
         recv_instruction(&mut encoder, &[0x01]);
 

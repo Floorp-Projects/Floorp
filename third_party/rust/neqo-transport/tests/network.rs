@@ -9,14 +9,14 @@
 
 mod sim;
 
+use std::{ops::Range, time::Duration};
+
 use neqo_transport::{ConnectionError, ConnectionParameters, Error, State};
 use sim::{
     connection::{ConnectionNode, ReachState, ReceiveData, SendData},
     network::{Delay, Drop, TailDrop},
     Simulator,
 };
-use std::ops::Range;
-use std::time::Duration;
 
 /// The amount of transfer.  Much more than this takes a surprising amount of time.
 const TRANSFER_AMOUNT: usize = 1 << 20; // 1M
@@ -67,7 +67,7 @@ simulate!(
                 )))
             ]
         ),
-        Delay::new(weeks(150)..weeks(150)),
+        Delay::new(weeks(6)..weeks(6)),
         Drop::percentage(10),
         ConnectionNode::new_server(
             ConnectionParameters::default().idle_timeout(weeks(1000)),
@@ -78,7 +78,7 @@ simulate!(
                 )))
             ]
         ),
-        Delay::new(weeks(100)..weeks(100)),
+        Delay::new(weeks(8)..weeks(8)),
         Drop::percentage(10),
     ],
 );

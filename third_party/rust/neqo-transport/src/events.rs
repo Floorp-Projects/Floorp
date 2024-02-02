@@ -6,16 +6,17 @@
 
 // Collecting a list of events relevant to whoever is using the Connection.
 
-use std::cell::RefCell;
-use std::collections::VecDeque;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::VecDeque, rc::Rc};
 
-use crate::connection::State;
-use crate::quic_datagrams::DatagramTracking;
-use crate::stream_id::{StreamId, StreamType};
-use crate::{AppError, Stats};
 use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
+
+use crate::{
+    connection::State,
+    quic_datagrams::DatagramTracking,
+    stream_id::{StreamId, StreamType},
+    AppError, Stats,
+};
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub enum OutgoingDatagramOutcome {
@@ -235,7 +236,7 @@ impl ConnectionEvents {
     where
         F: Fn(&ConnectionEvent) -> bool,
     {
-        self.events.borrow_mut().retain(|evt| !f(evt))
+        self.events.borrow_mut().retain(|evt| !f(evt));
     }
 }
 

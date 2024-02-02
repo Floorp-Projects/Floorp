@@ -11,16 +11,15 @@ use std::{
     cmp::{max, min, Ordering},
     collections::{BTreeMap, VecDeque},
     convert::TryFrom,
+    hash::{Hash, Hasher},
     mem,
     ops::Add,
     rc::Rc,
 };
 
 use indexmap::IndexMap;
-use smallvec::SmallVec;
-use std::hash::{Hash, Hasher};
-
 use neqo_common::{qdebug, qerror, qinfo, qtrace, Encoder, Role};
+use smallvec::SmallVec;
 
 use crate::{
     events::ConnectionEvents,
@@ -260,7 +259,7 @@ impl RangeTracker {
 
         // Create final chunk if anything remains of the new range
         if tmp_len > 0 {
-            v.push((tmp_off, tmp_len, new_state))
+            v.push((tmp_off, tmp_len, new_state));
         }
 
         v
@@ -276,8 +275,6 @@ impl RangeTracker {
             .map(|(len, _)| *len);
 
         if let Some(len_from_zero) = acked_range_from_zero {
-            let mut to_remove = SmallVec::<[_; 8]>::new();
-
             let mut new_len_from_zero = len_from_zero;
 
             // See if there's another Acked range entry contiguous to this one
@@ -286,16 +283,13 @@ impl RangeTracker {
                 .get(&new_len_from_zero)
                 .filter(|(_, state)| *state == RangeState::Acked)
             {
-                to_remove.push(new_len_from_zero);
+                let to_remove = new_len_from_zero;
                 new_len_from_zero += *next_len;
+                self.used.remove(&to_remove);
             }
 
             if len_from_zero != new_len_from_zero {
                 self.used.get_mut(&0).expect("must be there").0 = new_len_from_zero;
-            }
-
-            for val in to_remove {
-                self.used.remove(&val);
             }
         }
     }
@@ -312,7 +306,7 @@ impl RangeTracker {
             self.used.insert(sub_off, (sub_len, sub_state));
         }
 
-        self.coalesce_acked_from_zero()
+        self.coalesce_acked_from_zero();
     }
 
     fn unmark_range(&mut self, off: u64, len: usize) {
@@ -443,7 +437,7 @@ impl TxBuffer {
     }
 
     pub fn mark_as_sent(&mut self, offset: u64, len: usize) {
-        self.ranges.mark_range(offset, len, RangeState::Sent)
+        self.ranges.mark_range(offset, len, RangeState::Sent);
     }
 
     pub fn mark_as_acked(&mut self, offset: u64, len: usize) {
@@ -463,7 +457,7 @@ impl TxBuffer {
     }
 
     pub fn mark_as_lost(&mut self, offset: u64, len: usize) {
-        self.ranges.unmark_range(offset, len)
+        self.ranges.unmark_range(offset, len);
     }
 
     /// Forget about anything that was marked as sent.
@@ -622,7 +616,7 @@ pub struct SendStream {
 
 impl Hash for SendStream {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.stream_id.hash(state)
+        self.stream_id.hash(state);
     }
 }
 
@@ -751,7 +745,7 @@ impl SendStream {
                 final_written,
                 ..
             } => *final_retired + *final_written,
-            _ => 0,
+            SendStreamState::Ready { .. } => 0,
         }
     }
 
@@ -763,7 +757,7 @@ impl SendStream {
             SendStreamState::DataRecvd { retired, .. } => *retired,
             SendStreamState::ResetSent { final_retired, .. }
             | SendStreamState::ResetRecvd { final_retired, .. } => *final_retired,
-            _ => 0,
+            SendStreamState::Ready { .. } => 0,
         }
     }
 
@@ -909,7 +903,7 @@ impl SendStream {
             | SendStreamState::Send { .. }
             | SendStreamState::DataSent { .. }
             | SendStreamState::DataRecvd { .. } => {
-                qtrace!([self], "Reset acked while in {} state?", self.state.name())
+                qtrace!([self], "Reset acked while in {} state?", self.state.name());
             }
             SendStreamState::ResetSent {
                 final_retired,
@@ -1023,7 +1017,7 @@ impl SendStream {
             } => {
                 send_buf.mark_as_acked(offset, len);
                 if self.avail() > 0 {
-                    self.conn_events.send_stream_writable(self.stream_id)
+                    self.conn_events.send_stream_writable(self.stream_id);
                 }
             }
             SendStreamState::DataSent {
@@ -1101,7 +1095,7 @@ impl SendStream {
             let stream_was_blocked = fc.available() == 0;
             fc.update(limit);
             if stream_was_blocked && self.avail() > 0 {
-                self.conn_events.send_stream_writable(self.stream_id)
+                self.conn_events.send_stream_writable(self.stream_id);
             }
         }
     }
@@ -1285,7 +1279,8 @@ pub struct OrderGroupIter<'a> {
     // We store the next position in the OrderGroup.
     // Otherwise we'd need an explicit "done iterating" call to be made, or implement Drop to
     // copy the value back.
-    // This is where next was when we iterated for the first time; when we get back to that we stop.
+    // This is where next was when we iterated for the first time; when we get back to that we
+    // stop.
     started_at: Option<usize>,
 }
 
@@ -1326,7 +1321,10 @@ impl OrderGroup {
 
     pub fn insert(&mut self, stream_id: StreamId) {
         match self.vec.binary_search(&stream_id) {
-            Ok(_) => panic!("Duplicate stream_id {}", stream_id), // element already in vector @ `pos`
+            Ok(_) => {
+                // element already in vector @ `pos`
+                panic!("Duplicate stream_id {}", stream_id)
+            }
             Err(pos) => self.vec.insert(pos, stream_id),
         }
     }
@@ -1336,7 +1334,10 @@ impl OrderGroup {
             Ok(pos) => {
                 self.vec.remove(pos);
             }
-            Err(_) => panic!("Missing stream_id {}", stream_id), // element already in vector @ `pos`
+            Err(_) => {
+                // element already in vector @ `pos`
+                panic!("Missing stream_id {}", stream_id)
+            }
         }
     }
 }
@@ -1484,7 +1485,7 @@ impl SendStreams {
 
     pub fn reset_acked(&mut self, id: StreamId) {
         if let Some(ss) = self.map.get_mut(&id) {
-            ss.reset_acked()
+            ss.reset_acked();
         }
     }
 
@@ -1526,7 +1527,7 @@ impl SendStreams {
                     match stream.sendorder() {
                         None => regular.remove(*stream_id),
                         Some(sendorder) => {
-                            sendordered.get_mut(&sendorder).unwrap().remove(*stream_id)
+                            sendordered.get_mut(&sendorder).unwrap().remove(*stream_id);
                         }
                     };
                 }
@@ -1595,16 +1596,13 @@ impl SendStreams {
                 .flat_map(|group| group.iter()),
         );
         for stream_id in stream_ids {
-            match self.map.get_mut(&stream_id).unwrap().sendorder() {
-                Some(order) => qdebug!("   {} ({})", stream_id, order),
-                None => qdebug!("   None"),
+            let stream = self.map.get_mut(&stream_id).unwrap();
+            if let Some(order) = stream.sendorder() {
+                qdebug!("   {} ({})", stream_id, order)
+            } else {
+                qdebug!("   None")
             }
-            if !self
-                .map
-                .get_mut(&stream_id)
-                .unwrap()
-                .write_frames_with_early_return(priority, builder, tokens, stats)
-            {
+            if !stream.write_frames_with_early_return(priority, builder, tokens, stats) {
                 break;
             }
         }
@@ -1642,10 +1640,10 @@ pub struct SendStreamRecoveryToken {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use crate::events::ConnectionEvent;
     use neqo_common::{event::Provider, hex_with_len, qtrace};
+
+    use super::*;
+    use crate::events::ConnectionEvent;
 
     fn connection_fc(limit: u64) -> Rc<RefCell<SenderFlowControl<()>>> {
         Rc::new(RefCell::new(SenderFlowControl::new((), limit)))

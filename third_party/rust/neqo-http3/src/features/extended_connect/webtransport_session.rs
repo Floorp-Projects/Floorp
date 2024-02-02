@@ -6,6 +6,12 @@
 
 #![allow(clippy::module_name_repetitions)]
 
+use std::{any::Any, cell::RefCell, collections::BTreeSet, mem, rc::Rc};
+
+use neqo_common::{qtrace, Encoder, Header, MessageType, Role};
+use neqo_qpack::{QPackDecoder, QPackEncoder};
+use neqo_transport::{streams::SendOrder, Connection, DatagramTracking, StreamId};
+
 use super::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason};
 use crate::{
     frames::{FrameReader, StreamReaderRecvStreamWrapper, WebTransportFrame},
@@ -15,14 +21,6 @@ use crate::{
     HttpRecvStreamEvents, Priority, PriorityHandler, ReceiveOutput, RecvStream, RecvStreamEvents,
     Res, SendStream, SendStreamEvents, Stream,
 };
-use neqo_common::{qtrace, Encoder, Header, MessageType, Role};
-use neqo_qpack::{QPackDecoder, QPackEncoder};
-use neqo_transport::{streams::SendOrder, Connection, DatagramTracking, StreamId};
-use std::any::Any;
-use std::cell::RefCell;
-use std::collections::BTreeSet;
-use std::mem;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq)]
 enum SessionState {
@@ -100,6 +98,7 @@ impl WebTransportSession {
     }
 
     /// # Panics
+    ///
     /// This function is only called with `RecvStream` and `SendStream` that also implement
     /// the http specific functions and `http_stream()` will never return `None`.
     #[must_use]
@@ -134,8 +133,11 @@ impl WebTransportSession {
     }
 
     /// # Errors
+    ///
     /// The function can only fail if supplied headers are not valid http headers.
+    ///
     /// # Panics
+    ///
     /// `control_stream_send` implements the  http specific functions and `http_stream()`
     /// will never return `None`.
     pub fn send_request(&mut self, headers: &[Header], conn: &mut Connection) -> Res<()> {
@@ -220,6 +222,7 @@ impl WebTransportSession {
     }
 
     /// # Panics
+    ///
     /// This cannot panic because headers are checked before this function called.
     pub fn maybe_check_headers(&mut self) {
         if SessionState::Negotiating != self.state {
@@ -335,6 +338,7 @@ impl WebTransportSession {
     }
 
     /// # Errors
+    ///
     /// It may return an error if the frame is not correctly decoded.
     pub fn read_control_stream(&mut self, conn: &mut Connection) -> Res<()> {
         let (f, fin) = self
@@ -373,8 +377,9 @@ impl WebTransportSession {
     }
 
     /// # Errors
-    /// Return an error if the stream was closed on the transport layer, but that information is not yet
-    /// consumed on the http/3 layer.
+    ///
+    /// Return an error if the stream was closed on the transport layer, but that information is not
+    /// yet consumed on the http/3 layer.
     pub fn close_session(&mut self, conn: &mut Connection, error: u32, message: &str) -> Res<()> {
         self.state = SessionState::Done;
         let close_frame = WebTransportFrame::CloseSession {
@@ -399,6 +404,7 @@ impl WebTransportSession {
     }
 
     /// # Errors
+    ///
     /// Returns an error if the datagram exceeds the remote datagram size limit.
     pub fn send_datagram(
         &self,

@@ -4,23 +4,28 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::super::{ConnectionError, ERROR_AEAD_LIMIT_REACHED};
-use super::super::{Connection, ConnectionParameters, Error, Output, State, StreamType};
+use std::mem;
+
+use neqo_common::{qdebug, Datagram};
+use test_fixture::{self, now};
+
 use super::{
+    super::{
+        super::{ConnectionError, ERROR_AEAD_LIMIT_REACHED},
+        Connection, ConnectionParameters, Error, Output, State, StreamType,
+    },
     connect, connect_force_idle, default_client, default_server, maybe_authenticate,
     send_and_receive, send_something, AT_LEAST_PTO,
 };
-use crate::crypto::{OVERWRITE_INVOCATIONS, UPDATE_WRITE_KEYS_AT};
-use crate::packet::PacketNumber;
-use crate::path::PATH_MTU_V6;
-
-use neqo_common::{qdebug, Datagram};
-use std::mem;
-use test_fixture::{self, now};
+use crate::{
+    crypto::{OVERWRITE_INVOCATIONS, UPDATE_WRITE_KEYS_AT},
+    packet::PacketNumber,
+    path::PATH_MTU_V6,
+};
 
 fn check_discarded(
     peer: &mut Connection,
-    pkt: Datagram,
+    pkt: &Datagram,
     response: bool,
     dropped: usize,
     dups: usize,
@@ -59,11 +64,11 @@ fn discarded_initial_keys() {
 
     qdebug!("---- server: CH -> SH, EE, CERT, CV, FIN");
     let mut server = default_server();
-    let init_pkt_s = server.process(init_pkt_c.clone(), now()).dgram();
+    let init_pkt_s = server.process(init_pkt_c.as_ref(), now()).dgram();
     assert!(init_pkt_s.is_some());
 
     qdebug!("---- client: cert verification");
-    let out = client.process(init_pkt_s.clone(), now()).dgram();
+    let out = client.process(init_pkt_s.as_ref(), now()).dgram();
     assert!(out.is_some());
 
     // The client has received a handshake packet. It will remove the Initial keys.
@@ -71,7 +76,7 @@ fn discarded_initial_keys() {
     // The initial packet should be dropped. The packet contains a Handshake packet as well, which
     // will be marked as dup.  And it will contain padding, which will be "dropped".
     // The client will generate a Handshake packet here to avoid stalling.
-    check_discarded(&mut client, init_pkt_s.unwrap(), true, 2, 1);
+    check_discarded(&mut client, &init_pkt_s.unwrap(), true, 2, 1);
 
     assert!(maybe_authenticate(&mut client));
 
@@ -79,7 +84,7 @@ fn discarded_initial_keys() {
     // packet from the client.
     // We will check this by processing init_pkt_c a second time.
     // The dropped packet is padding. The Initial packet has been mark dup.
-    check_discarded(&mut server, init_pkt_c.clone().unwrap(), false, 1, 1);
+    check_discarded(&mut server, &init_pkt_c.clone().unwrap(), false, 1, 1);
 
     qdebug!("---- client: SH..FIN -> FIN");
     let out = client.process(None, now()).dgram();
@@ -87,14 +92,14 @@ fn discarded_initial_keys() {
 
     // The server will process the first Handshake packet.
     // After this the Initial keys will be dropped.
-    let out = server.process(out, now()).dgram();
+    let out = server.process(out.as_ref(), now()).dgram();
     assert!(out.is_some());
 
     // Check that the Initial keys are dropped at the server
     // We will check this by processing init_pkt_c a third time.
     // The Initial packet has been dropped and padding that follows it.
     // There is no dups, everything has been dropped.
-    check_discarded(&mut server, init_pkt_c.unwrap(), false, 1, 0);
+    check_discarded(&mut server, &init_pkt_c.unwrap(), false, 1, 0);
 }
 
 #[test]
@@ -151,7 +156,7 @@ fn key_update_client() {
     // The previous PTO packet (see above) was dropped, so we should get an ACK here.
     let dgram = send_and_receive(&mut client, &mut server, now);
     assert!(dgram.is_some());
-    let res = client.process(dgram, now);
+    let res = client.process(dgram.as_ref(), now);
     // This is the first packet that the client has received from the server
     // with new keys, so its read timer just started.
     if let Output::Callback(t) = res {
@@ -190,7 +195,7 @@ fn key_update_consecutive() {
     assert_eq!(client.get_epochs(), (Some(4), Some(3)));
 
     // Have the server process the ACK.
-    if let Output::Callback(_) = server.process(dgram, now) {
+    if let Output::Callback(_) = server.process(dgram.as_ref(), now) {
         assert_eq!(server.get_epochs(), (Some(4), Some(3)));
         // Now move the server temporarily into the future so that it
         // rotates the keys.  The client stays in the present.
@@ -208,7 +213,7 @@ fn key_update_consecutive() {
 
     // However, as the server didn't wait long enough to update again, the
     // client hasn't rotated its keys, so the packet gets dropped.
-    check_discarded(&mut client, dgram, false, 1, 0);
+    check_discarded(&mut client, &dgram, false, 1, 0);
 }
 
 // Key updates can't be initiated too early.
@@ -225,12 +230,12 @@ fn key_update_before_confirmed() {
     assert_update_blocked(&mut client);
 
     // Server Initial + Handshake
-    let dgram = server.process(dgram, now()).dgram();
+    let dgram = server.process(dgram.as_ref(), now()).dgram();
     assert!(dgram.is_some());
     assert_update_blocked(&mut server);
 
     // Client Handshake
-    client.process_input(dgram.unwrap(), now());
+    client.process_input(&dgram.unwrap(), now());
     assert_update_blocked(&mut client);
 
     assert!(maybe_authenticate(&mut client));
@@ -241,12 +246,12 @@ fn key_update_before_confirmed() {
     assert_update_blocked(&mut client);
 
     // Server HANDSHAKE_DONE
-    let dgram = server.process(dgram, now()).dgram();
+    let dgram = server.process(dgram.as_ref(), now()).dgram();
     assert!(dgram.is_some());
     assert!(server.initiate_key_update().is_ok());
 
     // Client receives HANDSHAKE_DONE
-    let dgram = client.process(dgram, now()).dgram();
+    let dgram = client.process(dgram.as_ref(), now()).dgram();
     assert!(dgram.is_none());
     assert!(client.initiate_key_update().is_ok());
 }
@@ -277,13 +282,13 @@ fn exhaust_read_keys() {
     let dgram = send_something(&mut client, now());
 
     overwrite_invocations(0);
-    let dgram = server.process(Some(dgram), now()).dgram();
+    let dgram = server.process(Some(&dgram), now()).dgram();
     assert!(matches!(
         server.state(),
         State::Closed(ConnectionError::Transport(Error::KeysExhausted))
     ));
 
-    client.process_input(dgram.unwrap(), now());
+    client.process_input(&dgram.unwrap(), now());
     assert!(matches!(
         client.state(),
         State::Draining {

@@ -6,34 +6,39 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use crate::{Error, RecvStream, Res};
+use std::{convert::TryFrom, fmt::Debug};
+
 use neqo_common::{
     hex_with_len, qtrace, Decoder, IncrementalDecoderBuffer, IncrementalDecoderIgnore,
     IncrementalDecoderUint,
 };
 use neqo_transport::{Connection, StreamId};
-use std::convert::TryFrom;
-use std::fmt::Debug;
+
+use crate::{Error, RecvStream, Res};
 
 const MAX_READ_SIZE: usize = 4096;
 
 pub(crate) trait FrameDecoder<T> {
     fn is_known_type(frame_type: u64) -> bool;
     /// # Errors
+    ///
     /// Returns `HttpFrameUnexpected` if frames is not alowed, i.e. is a `H3_RESERVED_FRAME_TYPES`.
     fn frame_type_allowed(_frame_type: u64) -> Res<()> {
         Ok(())
     }
+
     /// # Errors
+    ///
     /// If a frame cannot be properly decoded.
     fn decode(frame_type: u64, frame_len: u64, data: Option<&[u8]>) -> Res<Option<T>>;
 }
 
 pub(crate) trait StreamReader {
     /// # Errors
+    ///
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
-    /// Return an error if the stream was closed on the transport layer, but that information is not yet
-    /// consumed on the  http/3 layer.
+    /// Return an error if the stream was closed on the transport layer, but that information is not
+    /// yet consumed on the  http/3 layer.
     fn read_data(&mut self, buf: &mut [u8]) -> Res<(usize, bool)>;
 }
 
@@ -50,6 +55,7 @@ impl<'a> StreamReaderConnectionWrapper<'a> {
 
 impl<'a> StreamReader for StreamReaderConnectionWrapper<'a> {
     /// # Errors
+    ///
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
     fn read_data(&mut self, buf: &mut [u8]) -> Res<(usize, bool)> {
         let res = self.conn.stream_recv(self.stream_id, buf)?;
@@ -70,6 +76,7 @@ impl<'a> StreamReaderRecvStreamWrapper<'a> {
 
 impl<'a> StreamReader for StreamReaderRecvStreamWrapper<'a> {
     /// # Errors
+    ///
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
     fn read_data(&mut self, buf: &mut [u8]) -> Res<(usize, bool)> {
         self.recv_stream.read_data(self.conn, buf)
@@ -146,7 +153,9 @@ impl FrameReader {
     }
 
     /// returns true if quic stream was closed.
+    ///
     /// # Errors
+    ///
     /// May return `HttpFrame` if a frame cannot be decoded.
     /// and `TransportStreamDoesNotExist` if `stream_recv` fails.
     pub fn receive<T: FrameDecoder<T>>(
@@ -186,6 +195,7 @@ impl FrameReader {
     }
 
     /// # Errors
+    ///
     /// May return `HttpFrame` if a frame cannot be decoded.
     fn consume<T: FrameDecoder<T>>(&mut self, mut input: Decoder) -> Res<Option<T>> {
         match &mut self.state {

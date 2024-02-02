@@ -21,7 +21,9 @@ impl IncrementalDecoderUint {
     }
 
     /// Consume some data.
+    ///
     /// # Panics
+    ///
     /// Never, but this is not something the compiler can tell.
     pub fn consume(&mut self, dv: &mut Decoder) -> Option<u64> {
         if let Some(r) = &mut self.remaining {
@@ -87,7 +89,9 @@ impl IncrementalDecoderBuffer {
     }
 
     /// Consume some bytes from the decoder.
+    ///
     /// # Panics
+    ///
     /// Never; but rust doesn't know that.
     pub fn consume(&mut self, dv: &mut Decoder) -> Option<Vec<u8>> {
         let amount = min(self.remaining, dv.remaining());
@@ -109,7 +113,9 @@ pub struct IncrementalDecoderIgnore {
 
 impl IncrementalDecoderIgnore {
     /// Make a new ignoring decoder.
+    ///
     /// # Panics
+    ///
     /// If the amount to ignore is zero.
     #[must_use]
     pub fn new(n: usize) -> Self {

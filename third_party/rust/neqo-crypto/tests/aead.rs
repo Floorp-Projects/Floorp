@@ -2,9 +2,10 @@
 #![warn(clippy::pedantic)]
 #![cfg(not(feature = "fuzzing"))]
 
-use neqo_crypto::constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
-use neqo_crypto::hkdf;
-use neqo_crypto::Aead;
+use neqo_crypto::{
+    constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
+    hkdf, Aead,
+};
 use test_fixture::fixture_init;
 
 const AAD: &[u8] = &[
