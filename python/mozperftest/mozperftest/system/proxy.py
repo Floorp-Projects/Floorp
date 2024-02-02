@@ -14,7 +14,13 @@ from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
 
 from mozperftest.layers import Layer
-from mozperftest.utils import ON_TRY, download_file, get_output_dir, install_package
+from mozperftest.utils import (
+    ON_TRY,
+    download_file,
+    get_output_dir,
+    get_pretty_app_name,
+    install_package,
+)
 
 LOG = get_proxy_logger(component="proxy")
 HERE = os.path.dirname(__file__)
@@ -95,6 +101,11 @@ class ProxyRunner(Layer):
             "the login fields won't be checked with a request such as this (i.e. it overrides "
             "those settings).",
         },
+        "deterministic": {
+            "action": "store_true",
+            "default": False,
+            "help": "If set, the deterministic JS script will be injected into the pages.",
+        },
     }
 
     def __init__(self, env, mach_cmd):
@@ -149,6 +160,9 @@ class ProxyRunner(Layer):
         if metadata.flavor == "mobile-browser":
             command.extend(["--tool=%s" % "mitmproxy-android"])
             command.extend(["--binary=android"])
+            command.extend(
+                [f"--app={get_pretty_app_name(self.get_arg('android-app-name'))}"]
+            )
         else:
             command.extend(["--tool=%s" % "mitmproxy"])
             # XXX See bug 1712337, we need a single point where we can get the binary used from
