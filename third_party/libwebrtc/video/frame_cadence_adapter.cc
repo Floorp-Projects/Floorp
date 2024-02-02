@@ -249,7 +249,7 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
       const VideoTrackSourceConstraints& constraints) override;
 
  private:
-  // Called from OnFrame in zero-hertz mode.
+  // Called from OnFrame in both pass-through and zero-hertz mode.
   void OnFrameOnMainQueue(Timestamp post_time,
                           int frames_scheduled_for_processing,
                           const VideoFrame& frame) RTC_RUN_ON(queue_);
@@ -276,6 +276,7 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   absl::optional<ZeroHertzAdapterMode> zero_hertz_adapter_;
   // If set, zero-hertz mode has been enabled.
   absl::optional<ZeroHertzModeParams> zero_hertz_params_;
+  std::atomic<bool> zero_hertz_adapter_is_active_{false};
   // Cache for the current adapter mode.
   AdapterMode* current_adapter_mode_ = nullptr;
 
@@ -657,14 +658,21 @@ void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
   // Local time in webrtc time base.
   Timestamp post_time = clock_->CurrentTime();
   frames_scheduled_for_processing_.fetch_add(1, std::memory_order_relaxed);
-  TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                           "OnFrameToEncode", frame.video_frame_buffer().get());
-  TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                           "OnFrameToQueue", frame.video_frame_buffer().get());
+  if (zero_hertz_adapter_is_active_.load(std::memory_order_relaxed)) {
+    TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                             "OnFrameToEncode",
+                             frame.video_frame_buffer().get());
+    TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                             "OnFrameToQueue",
+                             frame.video_frame_buffer().get());
+  }
   queue_->PostTask(SafeTask(safety_.flag(), [this, post_time, frame] {
     RTC_DCHECK_RUN_ON(queue_);
-    TRACE_EVENT_ASYNC_END0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                           "OnFrameToQueue", frame.video_frame_buffer().get());
+    if (zero_hertz_adapter_is_active_.load(std::memory_order_relaxed)) {
+      TRACE_EVENT_ASYNC_END0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                             "OnFrameToQueue",
+                             frame.video_frame_buffer().get());
+    }
     if (zero_hertz_adapter_created_timestamp_.has_value()) {
       TimeDelta time_until_first_frame =
           clock_->CurrentTime() - *zero_hertz_adapter_created_timestamp_;
@@ -730,14 +738,17 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
     if (!was_zero_hertz_enabled) {
       zero_hertz_adapter_.emplace(queue_, clock_, callback_,
                                   source_constraints_->max_fps.value());
+      zero_hertz_adapter_is_active_.store(true, std::memory_order_relaxed);
       RTC_LOG(LS_INFO) << "Zero hertz mode activated.";
       zero_hertz_adapter_created_timestamp_ = clock_->CurrentTime();
     }
     zero_hertz_adapter_->ReconfigureParameters(zero_hertz_params_.value());
     current_adapter_mode_ = &zero_hertz_adapter_.value();
   } else {
-    if (was_zero_hertz_enabled)
+    if (was_zero_hertz_enabled) {
       zero_hertz_adapter_ = absl::nullopt;
+      zero_hertz_adapter_is_active_.store(false, std::memory_order_relaxed);
+    }
     current_adapter_mode_ = &passthrough_adapter_.value();
   }
 }
