@@ -17,11 +17,9 @@ const { Screenshots } = ChromeUtils.import(
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
 );
-const { FilterAdult } = ChromeUtils.import(
-  "resource://activity-stream/lib/FilterAdult.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(this, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",

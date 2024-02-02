@@ -36,12 +36,8 @@ const {
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FilterAdult",
-  "resource://activity-stream/lib/FilterAdult.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",

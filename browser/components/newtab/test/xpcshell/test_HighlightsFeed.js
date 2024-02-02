@@ -8,14 +8,11 @@ const { actionTypes: at } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
-
-const { FilterAdult } = ChromeUtils.import(
-  "resource://activity-stream/lib/FilterAdult.jsm"
-);
 
 const { Screenshots } = ChromeUtils.import(
   "resource://activity-stream/lib/Screenshots.jsm"

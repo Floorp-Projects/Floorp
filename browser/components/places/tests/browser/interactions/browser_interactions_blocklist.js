@@ -9,11 +9,8 @@ const ALLOWED_TEST_URL = "http://mochi.test:8888/";
 const BLOCKED_TEST_URL = "https://example.com/browser";
 
 ChromeUtils.defineESModuleGetters(this, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
 add_setup(async function () {
