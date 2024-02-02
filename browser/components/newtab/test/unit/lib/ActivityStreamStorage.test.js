@@ -1,4 +1,4 @@
-import { ActivityStreamStorage } from "lib/ActivityStreamStorage.jsm";
+import { ActivityStreamStorage } from "lib/ActivityStreamStorage.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 let overrider = new GlobalOverrider();

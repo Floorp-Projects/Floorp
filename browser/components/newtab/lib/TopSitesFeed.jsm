@@ -19,8 +19,8 @@ const { Dedupe } = ChromeUtils.importESModule(
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
 );
-const { getDefaultOptions } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
+const { getDefaultOptions } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
 );
 const {
   CUSTOM_SEARCH_SHORTCUTS,
