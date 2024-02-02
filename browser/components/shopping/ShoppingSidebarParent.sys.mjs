@@ -51,13 +51,6 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
           "browser[messagemanagergroup=browsers]"
         );
         return associatedTabbedBrowser.currentURI?.spec ?? null;
-      case "Shopping:SendTrigger":
-        let trigger = message.data;
-        if (!trigger.browser) {
-          trigger.browser =
-            this.browsingContext.topChromeWindow.gBrowser.selectedBrowser;
-        }
-        lazy.ShoppingUtils.sendTrigger(message.data);
     }
     return null;
   }
