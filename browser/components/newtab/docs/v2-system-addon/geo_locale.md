@@ -1,6 +1,6 @@
 # Custom `geo`, `locale`, and update channels
 
-There are instances where you may need to change your local build's locale, geo, and update channel (such as changes to the visibility of Discovery Stream on a per-geo/locale basis in `ActivityStream.jsm`).
+There are instances where you may need to change your local build's locale, geo, and update channel (such as changes to the visibility of Discovery Stream on a per-geo/locale basis in `ActivityStream.sys.mjs`).
 
 ## Changing update channel
 

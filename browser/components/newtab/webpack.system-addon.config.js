@@ -60,7 +60,7 @@ module.exports = (env = {}) => ({
       },
     ],
   },
-  // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.jsm"
+  // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.sys.mjs"
   resolve: {
     extensions: [".js", ".jsx"],
     modules: ["node_modules", "."],

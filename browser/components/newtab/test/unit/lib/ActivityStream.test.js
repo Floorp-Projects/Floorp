@@ -1,5 +1,5 @@
 import { CONTENT_MESSAGE_TYPE } from "common/Actions.sys.mjs";
-import { ActivityStream, PREFS_CONFIG } from "lib/ActivityStream.jsm";
+import { ActivityStream, PREFS_CONFIG } from "lib/ActivityStream.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 import { DEFAULT_SITES } from "lib/DefaultSites.sys.mjs";

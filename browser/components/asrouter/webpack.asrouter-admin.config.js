@@ -23,7 +23,7 @@ module.exports = Object.assign({}, config(), {
     "react-dom": "ReactDOM",
   },
   plugins: [new webpack.BannerPlugin(banner)],
-  // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.jsm"
+  // This resolve config allows us to import with paths relative to the root directory
   resolve: {
     extensions: [".js", ".jsx"],
     alias: {
