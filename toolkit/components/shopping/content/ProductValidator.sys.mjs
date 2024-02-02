@@ -24,10 +24,9 @@ async function validate(json, SchemaURL, logErrors) {
   }
 
   let result = JsonSchema.validate(json, schemas[SchemaURL]);
+  let { errors } = result;
   if (!result.valid && logErrors) {
-    console.error(
-      `Invalid result: ${JSON.stringify(result.errors, undefined, 2)}`
-    );
+    console.error(`Invalid result: ${JSON.stringify(errors, undefined, 2)}`);
   }
   return result.valid;
 }
