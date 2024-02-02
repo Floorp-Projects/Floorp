@@ -37,6 +37,7 @@
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -1061,58 +1062,56 @@ void gfxPlatform::ReportTelemetry() {
     RefPtr<widget::Screen> primaryScreen = screenManager.GetPrimaryScreen();
     const LayoutDeviceIntRect rect = primaryScreen->GetRect();
 
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_COUNT, screenCount);
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_HEIGHT,
-                         uint32_t(rect.Height()));
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_WIDTH,
-                         uint32_t(rect.Width()));
+    mozilla::glean::gfx_display::count.Set(screenCount);
+    mozilla::glean::gfx_display::primary_height.Set(rect.Height());
+    mozilla::glean::gfx_display::primary_width.Set(rect.Width());
   }
 
   nsString adapterDesc;
   gfxInfo->GetAdapterDescription(adapterDesc);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DESCRIPTION,
-                       adapterDesc);
+  mozilla::glean::gfx_adapter_primary::description.Set(
+      NS_ConvertUTF16toUTF8(adapterDesc));
 
   nsString adapterVendorId;
   gfxInfo->GetAdapterVendorID(adapterVendorId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_VENDOR_ID,
-                       adapterVendorId);
+  mozilla::glean::gfx_adapter_primary::vendor_id.Set(
+      NS_ConvertUTF16toUTF8(adapterVendorId));
 
   nsString adapterDeviceId;
   gfxInfo->GetAdapterDeviceID(adapterDeviceId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DEVICE_ID,
-                       adapterDeviceId);
+  mozilla::glean::gfx_adapter_primary::device_id.Set(
+      NS_ConvertUTF16toUTF8(adapterDeviceId));
 
   nsString adapterSubsystemId;
   gfxInfo->GetAdapterSubsysID(adapterSubsystemId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_SUBSYSTEM_ID,
-                       adapterSubsystemId);
+  mozilla::glean::gfx_adapter_primary::subsystem_id.Set(
+      NS_ConvertUTF16toUTF8(adapterSubsystemId));
 
   uint32_t adapterRam = 0;
   gfxInfo->GetAdapterRAM(&adapterRam);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_RAM, adapterRam);
+  mozilla::glean::gfx_adapter_primary::ram.Set(adapterRam);
 
   nsString adapterDriver;
   gfxInfo->GetAdapterDriver(adapterDriver);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_FILES,
-                       adapterDriver);
+  mozilla::glean::gfx_adapter_primary::driver_files.Set(
+      NS_ConvertUTF16toUTF8(adapterDriver));
 
   nsString adapterDriverVendor;
   gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_VENDOR,
-                       adapterDriverVendor);
+  mozilla::glean::gfx_adapter_primary::driver_vendor.Set(
+      NS_ConvertUTF16toUTF8(adapterDriverVendor));
 
   nsString adapterDriverVersion;
   gfxInfo->GetAdapterDriverVersion(adapterDriverVersion);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_VERSION,
-                       adapterDriverVersion);
+  mozilla::glean::gfx_adapter_primary::driver_version.Set(
+      NS_ConvertUTF16toUTF8(adapterDriverVersion));
 
   nsString adapterDriverDate;
   gfxInfo->GetAdapterDriverDate(adapterDriverDate);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_DATE,
-                       adapterDriverDate);
+  mozilla::glean::gfx_adapter_primary::driver_date.Set(
+      NS_ConvertUTF16toUTF8(adapterDriverDate));
 
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_HEADLESS, IsHeadless());
+  mozilla::glean::gfx_status::headless.Set(IsHeadless());
 
   MOZ_ASSERT(gPlatform, "Need gPlatform to generate some telemetry.");
   Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR,
@@ -3704,22 +3703,19 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
   mCompositorBackend = aBackend;
 
   if (XRE_IsParentProcess()) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::GFX_COMPOSITOR,
-        NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
+    nsDependentCString compositor(GetLayersBackendName(mCompositorBackend));
+    mozilla::glean::gfx_status::compositor.Set(compositor);
 
     nsCString geckoVersion;
     nsCOMPtr<nsIXULAppInfo> app = do_GetService("@mozilla.org/xre/app-info;1");
     if (app) {
       app->GetVersion(geckoVersion);
     }
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_LAST_COMPOSITOR_GECKO_VERSION,
-                         NS_ConvertASCIItoUTF16(geckoVersion));
+    mozilla::glean::gfx_status::last_compositor_gecko_version.Set(geckoVersion);
 
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::GFX_FEATURE_WEBRENDER,
-        NS_ConvertUTF8toUTF16(gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
-                                  .GetStatusAndFailureIdString()));
+    mozilla::glean::gfx_feature::webrender.Set(
+        gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+            .GetStatusAndFailureIdString());
   }
 
   // Notify that we created a compositor, so telemetry can update.

@@ -41,10 +41,11 @@
 #include "mozilla/ServoStyleConsts.h"   // for StyleComputedTimingFunction
 #include "mozilla/EventForwards.h"      // for nsEventStatus_*
 #include "mozilla/EventStateManager.h"  // for EventStateManager
-#include "mozilla/MouseEvents.h"        // for WidgetWheelEvent
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/RecursiveMutex.h"     // for RecursiveMutexAutoLock, etc
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/MouseEvents.h"     // for WidgetWheelEvent
+#include "mozilla/Preferences.h"     // for Preferences
+#include "mozilla/RecursiveMutex.h"  // for RecursiveMutexAutoLock, etc
+#include "mozilla/RefPtr.h"          // for RefPtr
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_general.h"
@@ -5288,13 +5289,12 @@ void AsyncPanZoomController::UpdateCheckerboardEvent(
     const MutexAutoLock& aProofOfLock, uint32_t aMagnitude) {
   if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(aMagnitude)) {
     // This checkerboard event is done. Report some metrics to telemetry.
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_SEVERITY,
-                                   mCheckerboardEvent->GetSeverity());
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_PEAK,
-                                   mCheckerboardEvent->GetPeak());
-    mozilla::Telemetry::Accumulate(
-        mozilla::Telemetry::CHECKERBOARD_DURATION,
-        (uint32_t)mCheckerboardEvent->GetDuration().ToMilliseconds());
+    mozilla::glean::gfx_checkerboard::severity.AccumulateSamples(
+        {mCheckerboardEvent->GetSeverity()});
+    mozilla::glean::gfx_checkerboard::peak_pixel_count.AccumulateSamples(
+        {mCheckerboardEvent->GetPeak()});
+    mozilla::glean::gfx_checkerboard::duration.AccumulateRawDuration(
+        mCheckerboardEvent->GetDuration());
 
     // mCheckerboardEvent only gets created if we are supposed to record
     // telemetry so we always pass true for aRecordTelemetry.

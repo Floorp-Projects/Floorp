@@ -538,7 +538,7 @@ void TestTriggerMetrics(uint32_t aProcessType,
           [promise]() { promise->MaybeRejectWithUndefined(); });
     } break;
     case nsIXULRuntime::PROCESS_TYPE_GPU:
-      gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
+      mozilla::gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise]() { promise->MaybeResolveWithUndefined(); },
           [promise]() { promise->MaybeRejectWithUndefined(); });

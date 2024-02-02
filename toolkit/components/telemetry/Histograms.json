@@ -290,7 +290,7 @@
   },
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
@@ -302,7 +302,7 @@
   },
   "CHECKERBOARD_PEAK": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
@@ -314,7 +314,7 @@
   },
   "CHECKERBOARD_POTENTIAL_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
@@ -326,7 +326,7 @@
   },
   "CHECKERBOARD_SEVERITY": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
@@ -354,7 +354,7 @@
   },
   "COMPOSITE_TIME": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jnicol@mozilla.com"],
     "expires_in_version": "never",
     "description": "Composite times in milliseconds",
@@ -2419,7 +2419,7 @@
   },
   "SCROLL_PRESENT_LATENCY": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "perf-telemetry-alerts@mozilla.com",
       "sefeng@mozilla.com",
@@ -15727,7 +15727,7 @@
   },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com",
@@ -15743,7 +15743,7 @@
   },
   "CONTENT_FULL_PAINT_TIME": {
     "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com",
@@ -15759,7 +15759,7 @@
   },
   "CONTENT_FRAME_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jnicol@mozilla.com"],
     "bug_numbers": [1470528, 1509536, 1584109],
     "expires_in_version": "never",
@@ -15771,7 +15771,7 @@
   },
   "CONTENT_FRAME_TIME_VSYNC": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com"
@@ -15787,7 +15787,7 @@
   },
   "CONTENT_FRAME_TIME_WITH_SVG": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com"
@@ -15802,7 +15802,7 @@
   },
   "CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com"
@@ -15816,7 +15816,7 @@
   },
   "CONTENT_FRAME_TIME_WITHOUT_UPLOAD": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com"
@@ -15830,7 +15830,7 @@
   },
   "CONTENT_FRAME_TIME_REASON": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "mwoodrow@mozilla.com"
