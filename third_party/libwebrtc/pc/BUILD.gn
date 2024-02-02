@@ -314,6 +314,15 @@ rtc_source_set("jsep_transport_controller") {
   ]
 }
 
+rtc_source_set("media_factory") {
+  sources = [ "media_factory.h" ]
+  deps = [
+    "../api:callfactory_api",
+    "../call:call_interfaces",
+    "../media:rtc_media_base",
+  ]
+}
+
 rtc_source_set("media_session") {
   visibility = [ "*" ]  # Used by Chrome
   sources = [
@@ -919,6 +928,7 @@ rtc_library("connection_context") {
     "connection_context.h",
   ]
   deps = [
+    ":media_factory",
     "../api:callfactory_api",
     "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
@@ -2405,6 +2415,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:create_peerconnection_factory",
       "../api:dtls_transport_interface",
       "../api:dtmf_sender_interface",
+      "../api:enable_media",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",
       "../api:field_trials_view",
