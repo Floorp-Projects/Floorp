@@ -165,11 +165,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
         ShoppingProduct.sendAttributionEvent("impression", aid);
         Glean.shopping.surfaceAdsImpression.record();
         break;
-      case "ShowCallout4":
-        this.sendAsyncMessage("Shopping:SendTrigger", {
-          id: "shoppingAutoOpenUserDisabled", // TODO: update this in bug 1874949
-        });
-        break;
     }
   }
 
