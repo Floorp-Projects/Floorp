@@ -182,7 +182,7 @@ class ParseError(Exception):
 
 
 class ExpressionParser(object):
-    """
+    r"""
     A parser for a simple expression language.
 
     The expression language can be described as follows::

@@ -34,10 +34,10 @@ all_shared_architecture_names = set(
     ["x86_shared", "arm", "arm64", "loong64", "riscv64", "wasm32"]
 )
 
-reBeforeArg = "(?<=[(,\s])"
-reArgType = "(?P<type>[\w\s:*&<>]+)"
-reArgName = "(?P<name>\s\w+)"
-reArgDefault = "(?P<default>(?:\s=(?:(?:\s[\w:]+\(\))|[^,)]+))?)"
+reBeforeArg = r"(?<=[(,\s])"
+reArgType = r"(?P<type>[\w\s:*&<>]+)"
+reArgName = r"(?P<name>\s\w+)"
+reArgDefault = r"(?P<default>(?:\s=(?:(?:\s[\w:]+\(\))|[^,)]+))?)"
 reAfterArg = "(?=[,)])"
 reMatchArg = re.compile(reBeforeArg + reArgType + reArgName + reArgDefault + reAfterArg)
 
@@ -52,7 +52,7 @@ def get_normalized_signatures(signature, fileAnnot=None):
     # Remove new-line induced spaces after opening braces.
     signature = re.sub(r"\(\s+", "(", signature).strip()
     # Match arguments, and keep only the type.
-    signature = reMatchArg.sub("\g<type>", signature)
+    signature = reMatchArg.sub(r"\g<type>", signature)
     # Remove class name
     signature = signature.replace("MacroAssembler::", "")
 
@@ -63,7 +63,7 @@ def get_normalized_signatures(signature, fileAnnot=None):
 
     if "DEFINED_ON(" in signature:
         archs = re.sub(
-            r".*DEFINED_ON\((?P<archs>[^()]*)\).*", "\g<archs>", signature
+            r".*DEFINED_ON\((?P<archs>[^()]*)\).*", r"\g<archs>", signature
         ).split(",")
         archs = [a.strip() for a in archs]
         signature = re.sub(r"\s+DEFINED_ON\([^()]*\)", "", signature)

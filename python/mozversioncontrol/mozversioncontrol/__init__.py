@@ -125,7 +125,7 @@ class Repository(object):
         if self._version:
             return self._version
         info = self._run("--version").strip()
-        match = re.search("version ([^+)]+)", info)
+        match = re.search(r"version ([^+)]+)", info)
         if not match:
             raise Exception("Unable to identify tool version.")
 
