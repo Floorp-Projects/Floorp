@@ -46,6 +46,7 @@ rtc_source_set("enable_media") {
     "../call",
     "../media:rtc_audio_video",
     "../pc:media_factory",
+    "../rtc_base/system:rtc_export",
   ]
   if (build_with_mozilla) {
     deps -= [ "../pc:media_factory" ]

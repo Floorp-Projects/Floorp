@@ -12,6 +12,7 @@
 #define API_ENABLE_MEDIA_H_
 
 #include "api/peer_connection_interface.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -19,7 +20,7 @@ namespace webrtc {
 // This function is located in its own build target to allow webrtc users that
 // do not need any media to avoid linking media specific code and thus to reduce
 // binary size.
-void EnableMedia(PeerConnectionFactoryDependencies& deps);
+RTC_EXPORT void EnableMedia(PeerConnectionFactoryDependencies& deps);
 
 }  // namespace webrtc
 

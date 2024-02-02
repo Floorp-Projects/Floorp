@@ -9,12 +9,12 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/136b3fc0377be6dca
  1 file changed, 3 insertions(+)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 36f299771e..d8250af53e 100644
+index a4c2c07e02..500cc9ec77 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -47,6 +47,9 @@ rtc_source_set("enable_media") {
-     "../media:rtc_audio_video",
+@@ -48,6 +48,9 @@ rtc_source_set("enable_media") {
      "../pc:media_factory",
+     "../rtc_base/system:rtc_export",
    ]
 +  if (build_with_mozilla) {
 +    deps -= [ "../pc:media_factory" ]
