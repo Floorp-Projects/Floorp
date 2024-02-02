@@ -114,7 +114,6 @@ class FuzzyParser(BaseTryParser):
         "chemspill-prio",
         "disable-pgo",
         "env",
-        "existing-tasks",
         "gecko-profile",
         "path",
         "pernosco",

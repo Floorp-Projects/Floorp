@@ -8,17 +8,10 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 from moztest.resolve import TestResolver
-from responses import RequestsMock
 from taskgraph.graph import Graph
 from taskgraph.task import Task
 from taskgraph.taskgraph import TaskGraph
 from tryselect import push
-
-
-@pytest.fixture
-def responses():
-    with RequestsMock() as rsps:
-        yield rsps
 
 
 @pytest.fixture
