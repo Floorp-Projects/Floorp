@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   FeatureCalloutBroker:
     "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
+  InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -35,7 +36,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
   MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.jsm",
-  InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
   ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
   TARGETING_PREFERENCES: "resource:///modules/asrouter/ASRouterPreferences.jsm",
