@@ -169,6 +169,10 @@ def set_treeherder_machine_platform(config, tasks):
             task["treeherder-machine-platform"] = task["test-platform"].replace(
                 ".", "-"
             )
+        elif "android-em-7.0-x86-qr" in task["test-platform"]:
+            task["treeherder-machine-platform"] = task["test-platform"].replace(
+                ".", "-"
+            )
         elif "-qr" in task["test-platform"]:
             task["treeherder-machine-platform"] = task["test-platform"]
         elif "android-hw" in task["test-platform"]:
@@ -755,7 +759,7 @@ test_setting_description_schema = Schema(
     {
         Required("_hash"): str,
         "platform": {
-            Required("arch"): Any("32", "64", "aarch64", "arm7", "x86_64"),
+            Required("arch"): Any("32", "64", "aarch64", "arm7", "x86", "x86_64"),
             Required("os"): {
                 Required("name"): Any("android", "linux", "macosx", "windows"),
                 Required("version"): str,

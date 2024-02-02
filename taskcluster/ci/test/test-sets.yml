@@ -454,6 +454,9 @@ android-x86_64-tests:
     - web-platform-tests-wdspec
     - xpcshell
 
+android-x86-tests:
+    - cppunittest
+
 android-hw-aarch64-opt-unittests:
     - jittest
 
