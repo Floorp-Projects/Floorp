@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
 
 const lazy = {};
 
@@ -15,9 +12,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 // Frequency at which SYSTEM_TICK events are fired
-const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
+export const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
 
-class SystemTickFeed {
+export class SystemTickFeed {
   init() {
     this._idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
       Ci.nsIUserIdleService
@@ -71,5 +68,3 @@ class SystemTickFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["SystemTickFeed", "SYSTEM_TICK_INTERVAL"];

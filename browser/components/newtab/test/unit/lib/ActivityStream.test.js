@@ -10,7 +10,7 @@ import { SectionsFeed } from "lib/SectionsManager.sys.mjs";
 import { RecommendationProvider } from "lib/RecommendationProvider.sys.mjs";
 import { PlacesFeed } from "lib/PlacesFeed.sys.mjs";
 import { PrefsFeed } from "lib/PrefsFeed.sys.mjs";
-import { SystemTickFeed } from "lib/SystemTickFeed.jsm";
+import { SystemTickFeed } from "lib/SystemTickFeed.sys.mjs";
 import { TelemetryFeed } from "lib/TelemetryFeed.sys.mjs";
 import { FaviconFeed } from "lib/FaviconFeed.sys.mjs";
 import { TopSitesFeed } from "lib/TopSitesFeed.jsm";
