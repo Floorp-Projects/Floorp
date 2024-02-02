@@ -294,6 +294,15 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
                    std::min(best_candidate.loss_limited_bandwidth,
                             config_->bandwidth_rampup_upper_bound_factor *
                                 (*acknowledged_bitrate_)));
+      // Increase current estimate by at least 1kbps to make sure that the state
+      // will be switched to kIncreasing, thus padding is triggered.
+      if (loss_based_result_.state == LossBasedState::kDecreasing &&
+          best_candidate.loss_limited_bandwidth ==
+              current_best_estimate_.loss_limited_bandwidth) {
+        best_candidate.loss_limited_bandwidth =
+            current_best_estimate_.loss_limited_bandwidth +
+            DataRate::KilobitsPerSec(1);
+      }
     }
   }
 
