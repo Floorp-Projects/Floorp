@@ -1832,6 +1832,12 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
   }
 
   RootedValue keyVal(cx, StringValue(key));
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    RootedValue parseRecord(cx, JS::UndefinedValue());
+    return js::Call(cx, reviver, holder, keyVal, val, parseRecord, vp);
+  }
+#endif
   return js::Call(cx, reviver, holder, keyVal, val, vp);
 }
 
