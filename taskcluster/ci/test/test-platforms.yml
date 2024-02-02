@@ -438,11 +438,6 @@ android-em-7.0-x86_64-qr/debug-isolated-process:
     test-sets:
         - android-x86_64-tests
 
-android-em-7.0-x86-qr/opt:
-    build-platform: android-x86/opt
-    test-sets:
-        - android-x86-tests
-
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
 # android-hw-a51-11-0 Samsung Galaxy A51 Android 11.0
