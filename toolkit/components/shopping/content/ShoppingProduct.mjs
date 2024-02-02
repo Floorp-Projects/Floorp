@@ -365,11 +365,8 @@ export class ShoppingProduct extends EventEmitter {
         requestSchema,
         allowValidationFailure
       );
-      if (!validRequest) {
-        Glean?.shoppingProduct?.invalidRequest.record();
-        if (!allowValidationFailure) {
-          return null;
-        }
+      if (!validRequest && !allowValidationFailure) {
+        return null;
       }
     }
 
@@ -397,11 +394,9 @@ export class ShoppingProduct extends EventEmitter {
       // In the time it took to fetch the OHTTP config, we might have been
       // aborted...
       if (signal.aborted) {
-        Glean?.shoppingProduct?.requestAborted.record();
         return null;
       }
       if (!config) {
-        Glean?.shoppingProduct?.invalidOhttpConfig.record();
         console.error(
           new Error(
             "OHTTP was configured for shopping but we couldn't get a valid config."
@@ -434,35 +429,21 @@ export class ShoppingProduct extends EventEmitter {
           responseSchema,
           allowValidationFailure
         );
-        if (!validResponse) {
-          Glean?.shoppingProduct?.invalidResponse.record();
-          if (!allowValidationFailure) {
-            return null;
-          }
+        if (!validResponse && !allowValidationFailure) {
+          return null;
         }
       }
     } catch (error) {
-      Glean?.shoppingProduct?.requestError.record();
       console.error(error);
-    }
-
-    if (!responseOk && responseStatus < 500) {
-      Glean?.shoppingProduct?.requestFailure.record();
     }
 
     // Retry 500 errors.
     if (!responseOk && responseStatus >= 500) {
       failCount++;
-
-      Glean?.shoppingProduct?.serverFailure.record();
-
       // Make sure we still want to retry
       if (failCount > maxRetries) {
-        Glean?.shoppingProduct?.requestRetriesFailed.record();
         return null;
       }
-
-      Glean?.shoppingProduct?.requestRetried.record();
       // Wait for a back off timeout base on the number of failures.
       let backOff = retryTimeout * Math.pow(2, failCount - 1);
 
@@ -553,7 +534,6 @@ export class ShoppingProduct extends EventEmitter {
       );
     }
     let abortHandler = e => {
-      Glean?.shoppingProduct?.requestAborted.record();
       obliviousHttpChannel.cancel(Cr.NS_BINDING_ABORTED);
     };
     signal.addEventListener("abort", abortHandler);
@@ -646,7 +626,6 @@ export class ShoppingProduct extends EventEmitter {
     if (ohttpRelayURL && ohttpConfigURL) {
       let config = await ShoppingProduct.getOHTTPConfig(ohttpConfigURL);
       if (!config) {
-        Glean?.shoppingProduct?.invalidOhttpConfig.record();
         console.error(
           new Error(
             "OHTTP was configured for shopping but we couldn't get a valid config."
@@ -726,7 +705,6 @@ export class ShoppingProduct extends EventEmitter {
 
     while (!isFinished && pollCount < pollAttempts) {
       if (this._abortController.signal.aborted) {
-        Glean?.shoppingProduct?.requestAborted.record();
         return null;
       }
       let backOff = pollCount == 0 ? initialWait : pollTimeout;
