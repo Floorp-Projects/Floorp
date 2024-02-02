@@ -284,4 +284,6 @@ add_task(async function test() {
 
   observerStub.restore();
   notifierStub.restore();
+
+  await SpecialPowers.popPrefEnv();
 });

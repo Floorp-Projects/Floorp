@@ -4,6 +4,7 @@ support-files = [
   "test-page.html",
   "short-test-page.html",
   "large-test-page.html",
+  "test-page-resize.html",
 ]
 
 prefs = [
@@ -45,3 +46,5 @@ skip-if = ["!crashreporter"]
 ["browser_screenshots_test_visible.js"]
 
 ["browser_test_element_picker.js"]
+
+["browser_test_resize.js"]
