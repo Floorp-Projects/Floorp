@@ -612,14 +612,11 @@ void nsWindow::Destroy() {
   mWaylandVsyncDispatcher = nullptr;
 #endif
 
-  /** Need to clean our LayerManager up while still alive */
-  DestroyLayerManager();
-
-  // Ensure any resources assigned to the window get cleaned up first
-  // to avoid double-freeing.
-  mSurfaceProvider.CleanupResources();
-
-  g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
+  // dragService will be null after shutdown of the service manager.
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  if (dragService && this == dragService->GetMostRecentDestWindow()) {
+    dragService->ScheduleLeaveEvent();
+  }
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   if (rollupListener) {
@@ -629,13 +626,15 @@ void nsWindow::Destroy() {
     }
   }
 
-  // dragService will be null after shutdown of the service manager.
-  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (dragService && this == dragService->GetMostRecentDestWindow()) {
-    dragService->ScheduleLeaveEvent();
-  }
-
   NativeShow(false);
+
+  ClearTransparencyBitmap();
+
+  // Ensure any resources assigned to the window get cleaned up first
+  // to avoid double-freeing.
+  DisableRendering();
+
+  g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
 
   if (mIMContext) {
     mIMContext->OnDestroyWindow(this);
