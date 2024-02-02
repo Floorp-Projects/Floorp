@@ -9,8 +9,8 @@ const { EventEmitter } = ChromeUtils.importESModule(
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
-const { getDefaultOptions } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
+const { getDefaultOptions } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
 );
 
 const lazy = {};

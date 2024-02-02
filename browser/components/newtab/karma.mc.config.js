@@ -97,7 +97,7 @@ module.exports = function (config) {
               functions: 100,
               branches: 100,
             },
-            "lib/ActivityStreamStorage.jsm": {
+            "lib/ActivityStreamStorage.sys.mjs": {
               statements: 100,
               lines: 100,
               functions: 100,

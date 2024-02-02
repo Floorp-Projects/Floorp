@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
 });
 
-class ActivityStreamStorage {
+export class ActivityStreamStorage {
   /**
    * @param storeNames Array of strings used to create all the required stores
    */
@@ -114,8 +114,6 @@ class ActivityStreamStorage {
   }
 }
 
-function getDefaultOptions(options) {
+export function getDefaultOptions(options) {
   return { collapsed: !!options.collapsed };
 }
-
-const EXPORTED_SYMBOLS = ["ActivityStreamStorage", "getDefaultOptions"];

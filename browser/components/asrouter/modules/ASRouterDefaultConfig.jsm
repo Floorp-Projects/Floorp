@@ -25,8 +25,8 @@ const { ASRouterPreferences } = ChromeUtils.import(
 const { QueryCache } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
-const { ActivityStreamStorage } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
+const { ActivityStreamStorage } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
 );
 
 const createStorage = async telemetryFeed => {
