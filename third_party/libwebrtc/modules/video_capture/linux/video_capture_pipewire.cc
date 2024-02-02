@@ -48,7 +48,10 @@ VideoType VideoCaptureModulePipeWire::PipeWireRawFormatToVideoType(
 
 VideoCaptureModulePipeWire::VideoCaptureModulePipeWire(
     VideoCaptureOptions* options)
-    : VideoCaptureImpl(), session_(options->pipewire_session()) {}
+    : VideoCaptureImpl(),
+      session_(options->pipewire_session()),
+      initialized_(false),
+      started_(false) {}
 
 VideoCaptureModulePipeWire::~VideoCaptureModulePipeWire() {
   RTC_DCHECK_RUN_ON(&api_checker_);
@@ -121,6 +124,14 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
   RTC_DCHECK_RUN_ON(&api_checker_);
 
+  if (initialized_) {
+    if (capability == _requestedCapability) {
+      return 0;
+    } else {
+      StopCapture();
+    }
+  }
+
   uint8_t buffer[1024] = {};
 
   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
@@ -171,6 +182,8 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
   }
 
   _requestedCapability = capability;
+  initialized_ = true;
+
   return 0;
 }
 

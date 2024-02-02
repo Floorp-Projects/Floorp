@@ -50,6 +50,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
   int node_id_ RTC_GUARDED_BY(capture_checker_);
   VideoCaptureCapability configured_capability_
       RTC_GUARDED_BY(pipewire_checker_);
+  bool initialized_ RTC_GUARDED_BY(capture_checker_);
   bool started_ RTC_GUARDED_BY(api_lock_);
 
   struct pw_stream* stream_ RTC_GUARDED_BY(pipewire_checker_) = nullptr;
