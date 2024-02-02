@@ -58,7 +58,6 @@ const { ASRouter } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"
 );
 import { BackgroundTasksUtils } from "resource://gre/modules/BackgroundTasksUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -70,11 +69,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
+  ToastNotification: "resource://activity-stream/lib/ToastNotification.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
 });
 
 const SERVER_STAGE = "https://firefox.settings.services.allizom.org/v1";
