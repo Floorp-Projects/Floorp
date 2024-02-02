@@ -179,7 +179,10 @@ nsHttpTransaction::~nsHttpTransaction() {
   }
 
   // Force the callbacks and connection to be released right now
-  mCallbacks = nullptr;
+  {
+    MutexAutoLock lock(mLock);
+    mCallbacks = nullptr;
+  }
 
   mEarlyHintObserver = nullptr;
 
@@ -3432,7 +3435,12 @@ void nsHttpTransaction::OnHttp3BackupTimer() {
     }
   };
 
-  CreateBackupConnection(mBackupConnInfo, mCallbacks, mCaps,
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  {
+    MutexAutoLock lock(mLock);
+    callbacks = mCallbacks;
+  }
+  CreateBackupConnection(mBackupConnInfo, callbacks, mCaps,
                          std::move(callback));
 }
 
@@ -3467,7 +3475,12 @@ void nsHttpTransaction::OnFastFallbackTimer() {
     self->OnBackupConnectionReady(true);
   };
 
-  CreateBackupConnection(mBackupConnInfo, mCallbacks, mCaps,
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  {
+    MutexAutoLock lock(mLock);
+    callbacks = mCallbacks;
+  }
+  CreateBackupConnection(mBackupConnInfo, callbacks, mCaps,
                          std::move(callback));
 }
 
