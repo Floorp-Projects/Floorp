@@ -12316,7 +12316,7 @@
 # Whether to use the rust implemented DefaultURI for unknown scheme types
 - name: network.url.useDefaultURI
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # The maximum allowed length for a URL - 32MB default.
