@@ -27,6 +27,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrefsFeed: "resource://activity-stream/lib/PrefsFeed.sys.mjs",
   PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
+  RecommendationProvider:
+    "resource://activity-stream/lib/RecommendationProvider.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
 });
@@ -42,11 +44,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "SectionsFeed",
   "resource://activity-stream/lib/SectionsManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RecommendationProvider",
-  "resource://activity-stream/lib/RecommendationProvider.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,
