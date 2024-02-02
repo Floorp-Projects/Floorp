@@ -1,8 +1,9 @@
-commit 6cbb6da9473c56d95358d8e679c5a6d2b4574efb
-Author: Philip Chimento <pchimento@igalia.com>
-Date:   Thu Nov 2 17:22:41 2023 -0700
+commit 584048ed081d85f5eed6e884a7b40b6f4bcd67d7
+Author: Nicolò Ribaudo <nribaudo@igalia.com>
+Date:   Tue Jan 30 16:53:17 2024 +0100
 
-    Temporal: Change overflow behaviour of PYM/PMD.toPlainDate
+    Add additional tests for out-of-range date-times
     
-    These tests cover the proposed normative change:
-    https://github.com/tc39/proposal-temporal/issues/2706
+    - https://github.com/tc39/proposal-temporal/pull/2727#discussion_r1414066610
+    - https://github.com/tc39/proposal-temporal/pull/2727#discussion_r1414065876
+    - https://github.com/tc39/proposal-temporal/pull/2727#discussion_r1414067272

@@ -6,7 +6,7 @@
 esid: sec-keywords-and-reserved-words
 description: >
   ReservedWord (null) cannot contain UnicodeEscapeSequence.
-info: | 
+info: |
   Note 1
 
   Per 5.1.5, keywords in the grammar match literal sequences of specific SourceCharacter elements.

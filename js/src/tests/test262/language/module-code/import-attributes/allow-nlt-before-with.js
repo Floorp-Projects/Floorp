@@ -30,4 +30,4 @@ import "./ensure-linking-error_FIXTURE.js";
 
 import * as x from './import-attribute-1_FIXTURE.js'
 with
-{ type: 'foo' };
+{};

@@ -15,5 +15,7 @@ const combined = s1.union(s2);
 
 assert.compareArray([...combined], expected);
 assert.sameValue(combined instanceof Set, true, "The returned object is a Set");
+assert.sameValue(combined === s1, false, "The returned object is a new object");
+assert.sameValue(combined === s2, false, "The returned object is a new object");
 
 reportCompare(0, 0);
