@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 // Use XPCOMUtils.defineLazyModuleGetters to make the test harness keeps working
 // after bug 1608279.
@@ -18,9 +17,11 @@
 //     above stops working
 //   * babel-plugin-jsm-to-esmodules ignores the first parameter of the lazy
 //     getter API, and the result is wrong
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PersistentCache: "resource://activity-stream/lib/PersistentCache.sys.mjs",
@@ -30,9 +31,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm",
 });
 
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+
 const CACHE_KEY = "personalization";
 const PREF_PERSONALIZATION_MODEL_KEYS =
   "discoverystream.personalization.modelKeys";
@@ -47,7 +50,7 @@ const PREF_PERSONALIZATION_OVERRIDE =
 // A recommendation provider scores a list of stories, currently this is a personality provider.
 // So all calls to the provider, anything involved with the setup of the provider,
 // accessing prefs for the provider, or updaing devtools with provider state, is contained in here.
-class RecommendationProvider {
+export class RecommendationProvider {
   constructor() {
     // Persistent cache for remote endpoint data.
     this.cache = new lazy.PersistentCache(CACHE_KEY, true);
@@ -308,5 +311,3 @@ class RecommendationProvider {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["RecommendationProvider"];
