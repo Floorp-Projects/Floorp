@@ -2,7 +2,7 @@
 import {
   AboutPreferences,
   PREFERENCES_LOADED_EVENT,
-} from "lib/AboutPreferences.jsm";
+} from "lib/AboutPreferences.sys.mjs";
 import {
   actionTypes as at,
   actionCreators as ac,

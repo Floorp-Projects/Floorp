@@ -1,14 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
+export const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 
 const lazy = {};
 
@@ -52,7 +52,7 @@ const PREFS_BEFORE_SECTIONS = () => [
   },
 ];
 
-class AboutPreferences {
+export class AboutPreferences {
   init() {
     Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
   }
@@ -296,5 +296,3 @@ class AboutPreferences {
     gHomePane.toggleRestoreDefaultsBtn();
   }
 }
-
-const EXPORTED_SYMBOLS = ["AboutPreferences", "PREFERENCES_LOADED_EVENT"];
