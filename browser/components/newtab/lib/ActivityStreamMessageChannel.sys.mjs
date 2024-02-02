@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -11,17 +9,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTabParent: "resource:///actors/AboutNewTabParent.sys.mjs",
 });
 
-const {
-  actionCreators: ac,
-  actionTypes: at,
-  actionUtils: au,
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
 
-const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS = {
   dispatch(action) {
     throw new Error(
       `\nMessageChannel: Received action ${action.type}, but no dispatcher was defined.\n`
@@ -32,7 +28,7 @@ const DEFAULT_OPTIONS = {
   incomingMessageName: "ActivityStream:ContentToMain",
 };
 
-class ActivityStreamMessageChannel {
+export class ActivityStreamMessageChannel {
   /**
    * ActivityStreamMessageChannel - This module connects a Redux store to the new tab page actor.
    *                  You should use the BroadcastToContent, AlsoToOneContent, and AlsoToMain action creators
@@ -335,5 +331,3 @@ class ActivityStreamMessageChannel {
     this.onActionFromContent(action, tabDetails.portID);
   }
 }
-
-const EXPORTED_SYMBOLS = ["ActivityStreamMessageChannel", "DEFAULT_OPTIONS"];
