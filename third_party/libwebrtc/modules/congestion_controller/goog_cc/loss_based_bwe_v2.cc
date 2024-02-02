@@ -149,6 +149,10 @@ bool LossBasedBweV2::ReadyToUseInStartPhase() const {
   return IsReady() && config_->use_in_start_phase;
 }
 
+bool LossBasedBweV2::UseInStartPhase() const {
+  return config_->use_in_start_phase;
+}
+
 LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   if (!IsReady()) {
     if (!IsEnabled()) {

@@ -62,6 +62,9 @@ class LossBasedBweV2 {
   // Returns true if loss based BWE is ready to be used in the start phase.
   bool ReadyToUseInStartPhase() const;
 
+  // Returns true if loss based BWE can be used in the start phase.
+  bool UseInStartPhase() const;
+
   // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
   Result GetLossBasedResult() const;
 
