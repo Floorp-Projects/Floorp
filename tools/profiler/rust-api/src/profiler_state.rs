@@ -65,7 +65,6 @@ pub fn can_accept_markers() -> bool {
 #[inline]
 fn get_active_and_features() -> u32 {
     use crate::gecko_bindings::structs::mozilla::profiler::detail;
-    use std::mem;
     use std::sync::atomic::{AtomicU32, Ordering};
 
     // This is reaching for the C++ atomic value instead of calling an FFI
@@ -73,6 +72,10 @@ fn get_active_and_features() -> u32 {
     // more expensive compared to this method. That's why it's worth to go with
     // this solution for performance. But it's crucial to keep the implementation
     // of this and the callers in sync with the C++ counterparts.
-    unsafe { mem::transmute::<_, &AtomicU32>(&detail::RacyFeatures_sActiveAndFeatures) }
-        .load(Ordering::Relaxed)
+    let active_and_features: &AtomicU32 = unsafe {
+        let ptr: *const u32 = std::ptr::addr_of!(detail::RacyFeatures_sActiveAndFeatures);
+        // TODO: Switch this to use `AtomicU32::from_ptr` once our Rust MSRV is at least 1.75.0
+        &*ptr.cast()
+    };
+    active_and_features.load(Ordering::Relaxed)
 }
