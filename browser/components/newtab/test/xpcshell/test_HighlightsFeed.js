@@ -12,12 +12,9 @@ ChromeUtils.defineESModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
+  SectionsManager: "resource://activity-stream/lib/SectionsManager.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
-
-const { SectionsManager } = ChromeUtils.import(
-  "resource://activity-stream/lib/SectionsManager.jsm"
-);
 
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"

@@ -30,6 +30,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RecommendationProvider:
     "resource://activity-stream/lib/RecommendationProvider.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
+  SectionsFeed: "resource://activity-stream/lib/SectionsManager.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
 });
 
@@ -40,11 +41,6 @@ import {
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SectionsFeed",
-  "resource://activity-stream/lib/SectionsManager.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "Store",

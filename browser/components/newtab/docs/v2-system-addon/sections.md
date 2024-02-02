@@ -10,7 +10,7 @@ rows are available it displays an empty state consisting of an icon and a
 message. Optionally, the section may have a info option menu that is displayed
 when users hover over the info icon.
 
-On load, `SectionsManager` and `SectionsFeed` in `SectionsManager.jsm` add the
+On load, `SectionsManager` and `SectionsFeed` in `SectionsManager.sys.mjs` add the
 sections configured in the `BUILT_IN_SECTIONS` map to the state. These sections
 are initially disabled, so aren't visible. The section's feed may use the
 methods provided by the `SectionsManager` to enable its section and update its

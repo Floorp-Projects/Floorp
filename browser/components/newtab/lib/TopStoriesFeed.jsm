@@ -12,8 +12,8 @@ const { Prefs } = ChromeUtils.importESModule(
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
 );
-const { SectionsManager } = ChromeUtils.import(
-  "resource://activity-stream/lib/SectionsManager.jsm"
+const { SectionsManager } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/SectionsManager.sys.mjs"
 );
 const { PersistentCache } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/PersistentCache.sys.mjs"
