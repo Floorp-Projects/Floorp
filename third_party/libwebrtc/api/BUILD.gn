@@ -47,6 +47,9 @@ rtc_source_set("enable_media") {
     "../media:rtc_audio_video",
     "../pc:media_factory",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../pc:media_factory" ]
+  }
 }
 
 if (!build_with_chromium && !build_with_mozilla) {
