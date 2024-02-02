@@ -27,6 +27,8 @@ const AUTO_OPEN_ENABLED_PREF =
   "browser.shopping.experience2023.autoOpen.enabled";
 const AUTO_OPEN_USER_ENABLED_PREF =
   "browser.shopping.experience2023.autoOpen.userEnabled";
+const SIDEBAR_CLOSED_COUNT_PREF =
+  "browser.shopping.experience2023.sidebarClosedCount";
 
 const CFR_FEATURES_PREF =
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features";
@@ -89,6 +91,8 @@ export const ShoppingUtils = {
       Services.prefs.setBoolPref(ACTIVE_PREF, true);
     }
     Services.prefs.addObserver(ACTIVE_PREF, this.onActiveUpdate);
+
+    Services.prefs.setIntPref(SIDEBAR_CLOSED_COUNT_PREF, 0);
 
     this.initialized = true;
   },

@@ -91,19 +91,29 @@ export class ShoppingSidebarChild extends RemotePageChild {
         let uri = url ? Services.io.newURI(url) : null;
         // If we're going from null to null, bail out:
         if (!this.#productURI && !uri) {
-          return;
+          return null;
         }
 
         // If we haven't reloaded, check if the URIs represent the same product
         // as sites might change the URI after they have loaded (Bug 1852099).
         if (!isReload && this.isSameProduct(uri, this.#productURI)) {
-          return;
+          return null;
         }
 
         this.#productURI = uri;
         this.updateContent({ haveUpdatedURI: true });
         break;
+      case "ShoppingSidebar:ShowKeepClosedMessage":
+        this.sendToContent("ShowKeepClosedMessage");
+        break;
+      case "ShoppingSidebar:HideKeepClosedMessage":
+        this.sendToContent("HideKeepClosedMessage");
+        break;
+      case "ShoppingSidebar:IsKeepClosedMessageShowing":
+        return !!this.document.querySelector("shopping-container")
+          ?.wrappedJSObject.showingKeepClosedMessage;
     }
+    return null;
   }
 
   isSameProduct(newURI, currentURI) {
@@ -154,6 +164,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
         aid = event.detail.aid;
         ShoppingProduct.sendAttributionEvent("impression", aid);
         Glean.shopping.surfaceAdsImpression.record();
+        break;
+      case "ShowCallout4":
+        this.sendAsyncMessage("Shopping:SendTrigger", {
+          id: "shoppingAutoOpenUserDisabled", // TODO: update this in bug 1874949
+        });
         break;
     }
   }
