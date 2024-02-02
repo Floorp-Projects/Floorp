@@ -721,7 +721,7 @@ class IPDLResolverInner final {
 
   template <typename F>
   void Resolve(F&& aWrite) {
-    ResolveOrReject(true, std::forward<F>(aWrite));
+    ResolveOrReject(true, aWrite);
   }
 
  private:
