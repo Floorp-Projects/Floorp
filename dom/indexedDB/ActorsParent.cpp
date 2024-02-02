@@ -9026,23 +9026,24 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   MOZ_ASSERT(commonParams);
 
   const DatabaseMetadata& metadata = commonParams->metadata();
+
   if (NS_AUUF_OR_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
     return nullptr;
   }
 
   const PrincipalInfo& principalInfo = commonParams->principalInfo();
-  if (NS_AUUF_OR_WARN_IF(principalInfo.type() ==
-                         PrincipalInfo::TNullPrincipalInfo)) {
+
+  if (NS_AUUF_OR_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
+    IPC_FAIL(this, "Invalid principal!");
     return nullptr;
   }
+
+  MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
+             principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
   if (NS_AUUF_OR_WARN_IF(
           principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
           metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
-    return nullptr;
-  }
-
-  if (NS_AUUF_OR_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
     return nullptr;
   }
 
@@ -14699,14 +14700,7 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
 
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
   if (principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
-    if (principalInfo.type() != PrincipalInfo::TContentPrincipalInfo) {
-      if (aContentParent) {
-        // We just want ContentPrincipalInfo or SystemPrincipalInfo.
-        aContentParent->KillHard("IndexedDB CheckPermission 0");
-      }
-
-      return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
-    }
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
     const ContentPrincipalInfo& contentPrincipalInfo =
         principalInfo.get_ContentPrincipalInfo();
