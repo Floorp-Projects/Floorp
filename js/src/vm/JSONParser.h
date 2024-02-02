@@ -325,6 +325,8 @@ class MOZ_STACK_CLASS JSONFullParseHandler
 
   void reportError(const char* msg, uint32_t line, uint32_t column);
 
+  void trace(JSTracer* trc);
+
  protected:
   inline bool createJSONParseRecord(const Value& value,
                                     mozilla::Span<const CharT>& source);
@@ -508,7 +510,8 @@ class MOZ_STACK_CLASS JSONParser
    * represent |undefined|, so the JSON data couldn't have specified it.)
    */
   bool parse(JS::MutableHandle<JS::Value> vp);
-  bool parse(JS::MutableHandle<JS::Value> vp, ParseRecordObject* pro);
+  bool parse(JS::MutableHandle<JS::Value> vp,
+             JS::MutableHandle<ParseRecordObject> pro);
 
   void trace(JSTracer* trc);
 };
@@ -520,7 +523,8 @@ class MutableWrappedPtrOperations<JSONParser<CharT>, Wrapper>
   bool parse(JS::MutableHandle<JS::Value> vp) {
     return static_cast<Wrapper*>(this)->get().parse(vp);
   }
-  bool parse(JS::MutableHandle<JS::Value> vp, ParseRecordObject* pro) {
+  bool parse(JS::MutableHandle<JS::Value> vp,
+             JS::MutableHandle<ParseRecordObject> pro) {
     return static_cast<Wrapper*>(this)->get().parse(vp, pro);
   }
 };
