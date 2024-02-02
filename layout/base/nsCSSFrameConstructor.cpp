@@ -2278,7 +2278,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
   if (isMathMLContent) {
     cellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
   } else {
-    isScrollable = innerPseudoStyle->StyleDisplay()->IsScrollableOverflow();
+    isScrollable = innerPseudoStyle->StyleDisplay()->IsScrollableOverflow() &&
+                   !aState.mPresContext->IsPaginated() &&
+                   StaticPrefs::layout_tables_scrollable_cells();
     if (isScrollable) {
       innerPseudoStyle = BeginBuildingScrollFrame(
           aState, content, innerPseudoStyle, cellFrame,
