@@ -26,6 +26,7 @@ class IDBEncryptionPBM(QuotaTestCase):
     def setUp(self):
         super(IDBEncryptionPBM, self).setUp()
 
+        self.testHTML = "dom/indexedDB/basicIDB_PBM.html"
         self.IDBName = "IDBTest"
         self.IDBStoreName = "IDBTestStore"
         self.IDBVersion = 1
@@ -40,41 +41,61 @@ class IDBEncryptionPBM(QuotaTestCase):
         self.defaultQMPrefValue = self.marionette.get_pref(QM_TESTING_PREF)
         self.marionette.set_pref(QM_TESTING_PREF, True)
 
-        # Navigate by opening a new private window
-        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
-        self.marionette.switch_to_window(pbmWindowHandle)
-        self.marionette.navigate(
-            self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
-        )
-
-        self.origin = self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
-
     def tearDown(self):
-        super(IDBEncryptionPBM, self).setUp()
+        super(IDBEncryptionPBM, self).tearDown()
 
         self.marionette.set_pref(INDEXED_DB_PBM_PREF, self.defaultIDBPrefValue)
         self.marionette.set_pref(QM_TESTING_PREF, self.defaultQMPrefValue)
 
-        # closes the new private window we opened in the setUp and referred by 'pbmWindowHandle'
-        self.marionette.close()
+    def test_raw_IDB_data_ondisk(self):
+        with self.using_new_window(self.testHTML, private=False) as (
+            self.origin,
+            self.persistenceType,
+        ):
+            self.runAndValidate(
+                lambda exists: self.assertTrue(
+                    exists, "Failed to find expected data on disk"
+                )
+            )
 
-    def test_ensure_encrypted_blob(self):
-        self.marionette.execute_script(
+    def test_ensure_encrypted_IDB_data_ondisk(self):
+        with self.using_new_window(self.testHTML, private=True) as (
+            self.origin,
+            self.persistenceType,
+        ):
+            self.runAndValidate(
+                lambda exists: self.assertFalse(exists, "Data on disk is not encrypted")
+            )
+
+    def runAndValidate(self, validator):
+        self.marionette.execute_async_script(
             """
-                const [idb, store, key, value] = arguments;
+                const [idb, store, key, value, resolve] = arguments;
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value).then(resolve);
+            """,
+            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
+        )
+        self.validateSqlite(validator)
+
+        self.marionette.execute_async_script(
+            """
+                const [idb, store, key, value, resolve] = arguments;
                 const blobValue = new Blob([value], {type:'text/plain'});
 
-                window.wrappedJSObject.addDataIntoIDB(idb, store, key, blobValue);
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, blobValue).then(resolve);
             """,
             script_args=(self.IDBName, self.IDBStoreName, "blobKey", self.IDBValue),
         )
+        self.validateBlob(validator)
 
+    def validateBlob(self, validator):
         self.ensureInvariantHolds(lambda _: self.sqliteWALReleased())
         self.ensureInvariantHolds(
-            lambda _: self.findDirObj(self.idbStoragePath, ".files", False) is not None
+            lambda _: self.findDirObj(self.getIDBStoragePath(), ".files", False)
+            is not None
         )
 
-        idbBlobDir = self.findDirObj(self.idbStoragePath, ".files", False)
+        idbBlobDir = self.findDirObj(self.getIDBStoragePath(), ".files", False)
 
         # seems like there's a timing issue here. There are sometimes no blob file
         # even after WAL is released. Allowing some buffer time and ensuring blob file
@@ -88,23 +109,16 @@ class IDBEncryptionPBM(QuotaTestCase):
                 re.search(self.IDBValue.encode("ascii"), f_binary.read()) is not None
             )
 
-        self.assertFalse(foundRawValue, "Blob file did not get encrypted")
+        validator(foundRawValue)
 
-    def test_ensure_encrpted_sqlite_data(self):
-        self.marionette.execute_script(
-            """
-                const [idb, store, key, value] = arguments;
-                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value);
-            """,
-            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
-        )
-
+    def validateSqlite(self, validator):
         self.ensureInvariantHolds(lambda _: self.sqliteWALReleased())
         self.ensureInvariantHolds(
-            lambda _: self.findDirObj(self.idbStoragePath, ".sqlite", True) is not None
+            lambda _: self.findDirObj(self.getIDBStoragePath(), ".sqlite", True)
+            is not None
         )
 
-        sqliteDBFile = self.findDirObj(self.idbStoragePath, ".sqlite", True)
+        sqliteDBFile = self.findDirObj(self.getIDBStoragePath(), ".sqlite", True)
 
         foundRawValue = False
         with open(sqliteDBFile, "rb") as f_binary:
@@ -112,14 +126,17 @@ class IDBEncryptionPBM(QuotaTestCase):
                 re.search(self.IDBValue.encode("ascii"), f_binary.read()) is not None
             )
 
-        self.assertFalse(foundRawValue, "sqlite data did not get encrypted")
+        validator(foundRawValue)
 
     def getIDBStoragePath(self):
         if self.idbStoragePath is not None:
             return self.idbStoragePath
 
+        assert self.origin is not None
+        assert self.persistenceType is not None
+
         self.idbStoragePath = self.getStoragePath(
-            self.profilePath, self.origin, "private", "idb"
+            self.profilePath, self.origin, self.persistenceType, "idb"
         )
 
         print("idb origin directory = " + self.idbStoragePath)

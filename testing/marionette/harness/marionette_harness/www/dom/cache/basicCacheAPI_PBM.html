@@ -14,7 +14,7 @@
 
             async function addDataIntoCache(name, request, response) {
                 let cache = await ensureCache(name);
-                await cache.put(request, response);
+                return cache.put(request, response);
             };
         </script>
     </head>

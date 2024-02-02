@@ -26,7 +26,8 @@
 				await (new Promise((resolve, reject) => {
 						var transaction = db.transaction([store], "readwrite");
 						var put = transaction.objectStore(store).put(value, key);
-						put.onsuccess = resolve();
+						put.onerror = reject;
+						put.onsuccess = resolve;
 				}));
 
 				closeIDB(db)
@@ -34,6 +35,14 @@
 
 			function closeIDB(db) {
 				db.close();
+			}
+
+			function deleteIDB(db) {
+				return new Promise((resolve, reject) => {
+					let deleteReq = indexedDB.deleteDatabase(db);
+					deleteReq.onerror = reject;
+					deleteReq.onsuccess = resolve;
+				});
 			}
 		</script>
 	</head>
