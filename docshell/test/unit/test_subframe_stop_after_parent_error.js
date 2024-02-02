@@ -69,16 +69,13 @@ function promiseStateStop(webProgress) {
     thunks.add(listener);
     webProgress.addProgressListener(
       listener,
-      Ci.nsIWebProgress.NOTIFY_STATE_REQUEST
+      Ci.nsIWebProgress.NOTIFY_STATE_NETWORK
     );
   });
 }
 
 async function runTest(waitForErrorPage) {
-  let page = await XPCShellContentUtils.loadContentPage("about:blank", {
-    remote: false,
-  });
-  let { browser } = page;
+  let page = await XPCShellContentUtils.loadContentPage("about:blank");
 
   // Watch for the HTTP request for the top frame so that we can cancel
   // it with an error.
@@ -87,20 +84,25 @@ async function runTest(waitForErrorPage) {
     subject => subject.QueryInterface(Ci.nsIRequest).name == topFrameRequest.url
   );
 
-  // Create a frame with a source URL which will not return a response
-  // before we cancel it with an error.
-  let doc = browser.contentDocument;
-  let frame = doc.createElement("iframe");
-  frame.src = topFrameRequest.url;
-  doc.body.appendChild(frame);
+  await page.spawn(
+    [topFrameRequest.url, subFrameRequest.url],
+    function (topFrameUrl, subFrameRequestUrl) {
+      // Create a frame with a source URL which will not return a response
+      // before we cancel it with an error.
+      let doc = this.content.document;
+      let frame = doc.createElement("iframe");
+      frame.src = topFrameUrl;
+      doc.body.appendChild(frame);
 
-  // Create a subframe in the initial about:blank document for the above
-  // frame which will not return a response before we cancel the
-  // document request.
-  let frameDoc = frame.contentDocument;
-  let subframe = frameDoc.createElement("iframe");
-  subframe.src = subFrameRequest.url;
-  frameDoc.body.appendChild(subframe);
+      // Create a subframe in the initial about:blank document for the above
+      // frame which will not return a response before we cancel the
+      // document request.
+      let frameDoc = frame.contentDocument;
+      let subframe = frameDoc.createElement("iframe");
+      subframe.src = subFrameRequestUrl;
+      frameDoc.body.appendChild(subframe);
+    }
+  );
 
   let [req] = await requestPromise;
 
@@ -109,9 +111,7 @@ async function runTest(waitForErrorPage) {
 
   // Request cancelation is not synchronous, so wait for the STATE_STOP
   // event to fire.
-  await promiseStateStop(
-    browser.docShell.nsIInterfaceRequestor.getInterface(Ci.nsIWebProgress)
-  );
+  await promiseStateStop(page.browsingContext.webProgress);
 
   // And make a trip through the event loop to give the DocLoader a
   // chance to update its state.
@@ -121,12 +121,11 @@ async function runTest(waitForErrorPage) {
     // Make sure that canceling the request with an error code actually
     // shows an error page without waiting for a subframe response.
     await TestUtils.waitForCondition(() =>
-      frame.contentDocument.documentURI.startsWith("about:neterror?")
+      page.browsingContext.children[0]?.currentWindowGlobal?.documentURI?.spec.startsWith(
+        "about:neterror?"
+      )
     );
   }
-
-  info("Remove frame");
-  frame.remove();
 
   await page.close();
 }
