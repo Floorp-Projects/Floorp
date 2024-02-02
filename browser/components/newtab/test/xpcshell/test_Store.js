@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Store } = ChromeUtils.import(
-  "resource://activity-stream/lib/Store.jsm"
+const { Store } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/Store.sys.mjs"
 );
 const { ActivityStreamMessageChannel } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/ActivityStreamMessageChannel.sys.mjs"

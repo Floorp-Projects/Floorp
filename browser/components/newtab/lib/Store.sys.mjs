@@ -1,23 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { ActivityStreamMessageChannel } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamMessageChannel.sys.mjs"
-);
-const { ActivityStreamStorage } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
-);
-const { Prefs } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
-);
-const { reducers } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Reducers.sys.mjs"
-);
-const { redux } = ChromeUtils.importESModule(
-  "resource://activity-stream/vendor/Redux.sys.mjs"
-);
+import { ActivityStreamMessageChannel } from "resource://activity-stream/lib/ActivityStreamMessageChannel.sys.mjs";
+import { ActivityStreamStorage } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+import { reducers } from "resource://activity-stream/common/Reducers.sys.mjs";
+import { redux } from "resource://activity-stream/vendor/Redux.sys.mjs";
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -26,7 +15,7 @@ const { redux } = ChromeUtils.importESModule(
  *         It also accepts an array of "Feeds" on inititalization, which
  *         can listen for any action that is dispatched through the store.
  */
-class Store {
+export class Store {
   /**
    * constructor - The redux store and message manager are created here,
    *               but no listeners are added until "init" is called.
@@ -197,5 +186,3 @@ class Store {
     return this._messageChannel;
   }
 }
-
-const EXPORTED_SYMBOLS = ["Store"];
