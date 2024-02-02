@@ -35,6 +35,13 @@ add_task(async () => {
 
   let { profile, didCreate } = selectStartupProfile();
   checkStartupReason("default");
+  let { databaseVersion, profileCount } = getTelemetryScalars();
+  Assert.equal(
+    databaseVersion,
+    "1",
+    "Old database file was present at startup."
+  );
+  Assert.equal(profileCount, 2, "Should be two profiles.");
 
   // Should have added the backup data to the service, check that is true.
   profileData.installs = installs;
