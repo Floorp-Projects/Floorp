@@ -37,8 +37,12 @@
 
 #if ARCH_AARCH64 || ARCH_ARM
 #include "src/arm/cpu.h"
+#elif ARCH_LOONGARCH
+#include "src/loongarch/cpu.h"
 #elif ARCH_PPC64LE
 #include "src/ppc/cpu.h"
+#elif ARCH_RISCV
+#include "src/riscv/cpu.h"
 #elif ARCH_X86
 #include "src/x86/cpu.h"
 #endif
@@ -63,6 +67,10 @@ static ALWAYS_INLINE unsigned dav1d_get_cpu_flags(void) {
 #elif ARCH_PPC64LE
 #if defined(__VSX__)
     flags |= DAV1D_PPC_CPU_FLAG_VSX;
+#endif
+#elif ARCH_RISCV
+#if defined(__riscv_v)
+    flags |= DAV1D_RISCV_CPU_FLAG_V;
 #endif
 #elif ARCH_X86
 #if defined(__AVX512F__) && defined(__AVX512CD__) && \

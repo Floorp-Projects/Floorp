@@ -25,6 +25,11 @@ option('enable_tests',
     value: true,
     description: 'Build dav1d tests')
 
+option('enable_seek_stress',
+    type: 'boolean',
+    value: false,
+    description: 'Build seek_stress test tool')
+
 option('enable_docs',
     type: 'boolean',
     value: false,

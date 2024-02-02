@@ -62,11 +62,13 @@ endforeach
 
 # ASM option
 is_asm_enabled = (get_option('enable_asm') == true and
-    (host_machine.cpu_family() == 'x86' or
-     (host_machine.cpu_family() == 'x86_64' and cc.get_define('__ILP32__').strip() == '') or
-     host_machine.cpu_family() == 'aarch64'      or
+    (host_machine.cpu_family() == 'aarch64' or
      host_machine.cpu_family().startswith('arm') or
-     host_machine.cpu() == 'ppc64le'))
+     host_machine.cpu() == 'ppc64le' or
+     host_machine.cpu_family().startswith('riscv') or
+     host_machine.cpu_family().startswith('loongarch') or
+     host_machine.cpu_family() == 'x86' or
+     (host_machine.cpu_family() == 'x86_64' and cc.get_define('__ILP32__').strip() == '')))
 cdata.set10('HAVE_ASM', is_asm_enabled)
 
 if is_asm_enabled and get_option('b_sanitize') == 'memory'
@@ -232,7 +234,9 @@ endif
 
 if (host_machine.cpu_family() == 'aarch64' or
     host_machine.cpu_family().startswith('arm') or
-    host_machine.cpu() == 'ppc64le')
+    host_machine.cpu_family().startswith('loongarch') or
+    host_machine.cpu() == 'ppc64le' or
+    host_machine.cpu_family().startswith('riscv'))
     if cc.has_function('getauxval', prefix : '#include <sys/auxv.h>', args : test_args)
         cdata.set('HAVE_GETAUXVAL', 1)
     endif
@@ -378,6 +382,14 @@ if host_machine.cpu_family().startswith('x86')
 endif
 
 cdata.set10('ARCH_PPC64LE', host_machine.cpu() == 'ppc64le')
+
+cdata.set10('ARCH_RISCV', host_machine.cpu_family().startswith('riscv'))
+cdata.set10('ARCH_RV32', host_machine.cpu_family() == 'riscv32')
+cdata.set10('ARCH_RV64', host_machine.cpu_family() == 'riscv64')
+
+cdata.set10('ARCH_LOONGARCH', host_machine.cpu_family().startswith('loongarch'))
+cdata.set10('ARCH_LOONGARCH32', host_machine.cpu_family() == 'loongarch32')
+cdata.set10('ARCH_LOONGARCH64', host_machine.cpu_family() == 'loongarch64')
 
 # meson's cc.symbols_have_underscore_prefix() is unfortunately unrelieably
 # when additional flags like '-fprofile-instr-generate' are passed via CFLAGS
