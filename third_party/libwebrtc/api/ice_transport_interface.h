@@ -15,10 +15,10 @@
 
 #include "api/async_dns_resolver.h"
 #include "api/async_resolver_factory.h"
+#include "api/ref_count.h"
 #include "api/rtc_error.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/scoped_refptr.h"
-#include "rtc_base/ref_count.h"
 
 namespace cricket {
 class IceTransportInternal;
@@ -33,7 +33,7 @@ class FieldTrialsView;
 // An ICE transport, as represented to the outside world.
 // This object is refcounted, and is therefore alive until the
 // last holder has released it.
-class IceTransportInterface : public rtc::RefCountInterface {
+class IceTransportInterface : public webrtc::RefCountInterface {
  public:
   // Accessor for the internal representation of an ICE transport.
   // The returned object can only be safely used on the signalling thread.

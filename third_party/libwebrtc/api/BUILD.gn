@@ -144,13 +144,14 @@ rtc_library("media_stream_interface") {
   deps = [
     ":audio_options_api",
     ":make_ref_counted",
+    ":ref_count",
+    ":ref_count",
     ":rtp_parameters",
     ":scoped_refptr",
     ":sequence_checker",
     ":video_track_source_constraints",
     "../modules/audio_processing:audio_processing_statistics",
     "../rtc_base:checks",
-    "../rtc_base:refcount",
     "../rtc_base/system:no_unique_address",
     "../rtc_base/system:rtc_export",
     "video:recordable_encoded_frame",
@@ -198,9 +199,9 @@ rtc_source_set("ice_transport_interface") {
   deps = [
     ":async_dns_resolver",
     ":packet_socket_factory",
+    ":ref_count",
     ":rtc_error",
     ":scoped_refptr",
-    "../rtc_base:refcount",
     "rtc_event_log:rtc_event_log",
   ]
 }
@@ -218,9 +219,9 @@ if (!build_with_mozilla) {
   ]
   deps = [
     ":ice_transport_interface",
+    ":ref_count",
     ":rtc_error",
     ":scoped_refptr",
-    "../rtc_base:refcount",
     "../rtc_base:ssl",
     "../rtc_base/system:rtc_export",
   ]
@@ -234,7 +235,7 @@ rtc_library("dtmf_sender_interface") {
   sources = [ "dtmf_sender_interface.h" ]
   deps = [
     ":media_stream_interface",
-    "../rtc_base:refcount",
+    ":ref_count",
   ]
 }
 
@@ -254,11 +255,12 @@ if (!build_with_mozilla) {
     ":dtmf_sender_interface",
     ":frame_transformer_interface",
     ":media_stream_interface",
+    ":ref_count",
+    ":rtc_error",
     ":rtp_parameters",
     ":rtp_sender_setparameters_callback",
     ":scoped_refptr",
     "../rtc_base:checks",
-    "../rtc_base:refcount",
     "../rtc_base/system:rtc_export",
     "crypto:frame_encryptor_interface",
     "video_codecs:video_codecs_api",
@@ -334,6 +336,7 @@ if (!build_with_mozilla) {
     ":network_state_predictor_api",
     ":packet_socket_factory",
     ":priority",
+    ":ref_count",
     ":rtc_error",
     ":rtc_stats_api",
     ":rtp_packet_info",
@@ -350,7 +353,6 @@ if (!build_with_mozilla) {
     "../rtc_base:logging",
     "../rtc_base:network",
     "../rtc_base:network_constants",
-    "../rtc_base:refcount",
     "../rtc_base:rtc_certificate_generator",
     "../rtc_base:ssl",
     "../rtc_base:stringutils",
@@ -405,8 +407,8 @@ rtc_source_set("frame_transformer_interface") {
   sources = [ "frame_transformer_interface.h" ]
   deps = [
     ":make_ref_counted",
+    ":ref_count",
     ":scoped_refptr",
-    "../rtc_base:refcount",
     "video:encoded_frame",
     "video:video_frame_metadata",
   ]
@@ -493,7 +495,10 @@ rtc_source_set("scoped_refptr") {
 rtc_source_set("make_ref_counted") {
   visibility = [ "*" ]
   sources = [ "make_ref_counted.h" ]
-  deps = [ "../rtc_base:refcount" ]
+  deps = [
+    ":ref_count",
+    "../rtc_base:refcount",
+  ]
 }
 
 rtc_source_set("video_quality_analyzer_api") {
@@ -818,6 +823,7 @@ rtc_source_set("rtc_stats_api") {
 
   deps = [
     ":make_ref_counted",
+    ":ref_count",
     ":scoped_refptr",
     "../api:refcountedbase",
     "../rtc_base:checks",
@@ -950,6 +956,7 @@ rtc_source_set("refcountedbase") {
   visibility = [ "*" ]
   sources = [ "ref_counted_base.h" ]
   deps = [
+    ":ref_count",
     "../rtc_base:macromagic",
     "../rtc_base:refcount",
   ]
@@ -1250,6 +1257,7 @@ if (rtc_include_tests) {
       ":array_view",
       ":libjingle_peerconnection_api",
       ":make_ref_counted",
+      ":ref_count",
       ":rtp_parameters",
       "../rtc_base:checks",
       "../rtc_base:refcount",
@@ -1303,6 +1311,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":libjingle_peerconnection_api",
+      ":ref_count",
       "../api:scoped_refptr",
       "../rtc_base:refcount",
       "../test:test_support",
@@ -1443,6 +1452,7 @@ if (rtc_include_tests) {
     sources = [ "test/mock_video_track.h" ]
 
     deps = [
+      ":ref_count",
       "../api:media_stream_interface",
       "../api:scoped_refptr",
       "../rtc_base:refcount",
@@ -1623,10 +1633,10 @@ rtc_library("frame_transformer_factory") {
   ]
   deps = [
     ":frame_transformer_interface",
+    ":ref_count",
     ":scoped_refptr",
     "../audio:audio",
     "../modules/rtp_rtcp",
-    "../rtc_base:refcount",
     "video:encoded_frame",
     "video:video_frame_metadata",
   ]
