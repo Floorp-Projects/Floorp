@@ -16,10 +16,9 @@
 #include <stdint.h>  // uint32_t
 #include <utility>   // std::move
 
-#include "builtin/ParseRecordObject.h"  // js::ParseRecordObject
-#include "ds/IdValuePair.h"             // IdValuePair
-#include "gc/GC.h"                      // AutoSelectGCHeap
-#include "js/GCVector.h"                // JS::GCVector
+#include "ds/IdValuePair.h"  // IdValuePair
+#include "gc/GC.h"           // AutoSelectGCHeap
+#include "js/GCVector.h"     // JS::GCVector
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
 #include "js/Value.h"           // JS::Value, JS::BooleanValue, JS::NullValue
 #include "js/Vector.h"          // Vector
@@ -57,34 +56,24 @@ class MOZ_STACK_CLASS JSONTokenizer {
   using CharPtr = mozilla::RangedPtr<const CharT>;
 
  protected:
-  CharPtr sourceStart;
   CharPtr current;
   const CharPtr begin, end;
 
   ParserT* parser = nullptr;
 
-  JSONTokenizer(CharPtr sourceStart, CharPtr current, const CharPtr begin,
-                const CharPtr end, ParserT* parser)
-      : sourceStart(sourceStart),
-        current(current),
-        begin(begin),
-        end(end),
-        parser(parser) {
-    MOZ_ASSERT(current <= end);
-    MOZ_ASSERT(parser);
-  }
-
  public:
   JSONTokenizer(CharPtr current, const CharPtr begin, const CharPtr end,
                 ParserT* parser)
-      : JSONTokenizer(current, current, begin, end, parser) {}
+      : current(current), begin(begin), end(end), parser(parser) {
+    MOZ_ASSERT(current <= end);
+    MOZ_ASSERT(parser);
+  }
 
   explicit JSONTokenizer(mozilla::Range<const CharT> data, ParserT* parser)
       : JSONTokenizer(data.begin(), data.begin(), data.end(), parser) {}
 
   JSONTokenizer(JSONTokenizer<CharT, ParserT, StringBuilderT>&& other) noexcept
-      : JSONTokenizer(other.sourceStart, other.current, other.begin, other.end,
-                      other.parser) {}
+      : JSONTokenizer(other.current, other.begin, other.end, other.parser) {}
 
   JSONTokenizer(const JSONTokenizer<CharT, ParserT, StringBuilderT>& other) =
       delete;
@@ -129,11 +118,6 @@ class MOZ_STACK_CLASS JSONTokenizer {
   JSONToken readNumber();
 
   void error(const char* msg);
-
- protected:
-  inline mozilla::Span<const CharT> getSource() const {
-    return mozilla::Span<const CharT>(sourceStart.get(), current.get());
-  }
 };
 
 // Possible states the parser can be in between values.
@@ -238,6 +222,8 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
     return v;
   }
 
+  inline void setNumberValue(double d);
+
   JS::Value stringValue() const {
     MOZ_ASSERT(v.isString());
     return v;
@@ -303,8 +289,6 @@ class MOZ_STACK_CLASS JSONFullParseHandler
     bool append(const CharT* begin, const CharT* end);
   };
 
-  ParseRecordObject parseRecord;
-
   explicit JSONFullParseHandler(JSContext* cx) : Base(cx) {}
 
   JSONFullParseHandler(JSONFullParseHandler&& other) noexcept
@@ -314,22 +298,11 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   void operator=(const JSONFullParseHandler& other) = delete;
 
   template <JSONStringType ST>
-  inline bool setStringValue(CharPtr start, size_t length,
-                             mozilla::Span<const CharT>&& source);
+  inline bool setStringValue(CharPtr start, size_t length);
   template <JSONStringType ST>
-  inline bool setStringValue(StringBuilder& builder,
-                             mozilla::Span<const CharT>&& source);
-  inline bool setNumberValue(double d, mozilla::Span<const CharT>&& source);
-  inline bool setBooleanValue(bool value, mozilla::Span<const CharT>&& source);
-  inline bool setNullValue(mozilla::Span<const CharT>&& source);
+  inline bool setStringValue(StringBuilder& builder);
 
   void reportError(const char* msg, uint32_t line, uint32_t column);
-
-  void trace(JSTracer* trc);
-
- protected:
-  inline bool createJSONParseRecord(const Value& value,
-                                    mozilla::Span<const CharT>& source);
 };
 
 template <typename CharT>
@@ -376,24 +349,16 @@ class MOZ_STACK_CLASS JSONSyntaxParseHandler {
   FrontendContext* context() { return fc; }
 
   template <JSONStringType ST>
-  inline bool setStringValue(CharPtr start, size_t length,
-                             mozilla::Span<const CharT>&& source) {
+  inline bool setStringValue(CharPtr start, size_t length) {
     return true;
   }
 
   template <JSONStringType ST>
-  inline bool setStringValue(StringBuilder& builder,
-                             mozilla::Span<const CharT>&& source) {
+  inline bool setStringValue(StringBuilder& builder) {
     return true;
   }
 
-  inline bool setNumberValue(double d, mozilla::Span<const CharT>&& source) {
-    return true;
-  }
-  inline bool setBooleanValue(bool value, mozilla::Span<const CharT>&& source) {
-    return true;
-  }
-  inline bool setNullValue(mozilla::Span<const CharT>&& source) { return true; }
+  inline void setNumberValue(double d) {}
 
   inline DummyValue numberValue() const { return DummyValue(); }
 
@@ -510,8 +475,6 @@ class MOZ_STACK_CLASS JSONParser
    * represent |undefined|, so the JSON data couldn't have specified it.)
    */
   bool parse(JS::MutableHandle<JS::Value> vp);
-  bool parse(JS::MutableHandle<JS::Value> vp,
-             JS::MutableHandle<ParseRecordObject> pro);
 
   void trace(JSTracer* trc);
 };
@@ -522,10 +485,6 @@ class MutableWrappedPtrOperations<JSONParser<CharT>, Wrapper>
  public:
   bool parse(JS::MutableHandle<JS::Value> vp) {
     return static_cast<Wrapper*>(this)->get().parse(vp);
-  }
-  bool parse(JS::MutableHandle<JS::Value> vp,
-             JS::MutableHandle<ParseRecordObject> pro) {
-    return static_cast<Wrapper*>(this)->get().parse(vp, pro);
   }
 };
 
