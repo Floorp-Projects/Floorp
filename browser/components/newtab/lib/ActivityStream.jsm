@@ -10,6 +10,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutPreferences: "resource://activity-stream/lib/AboutPreferences.sys.mjs",
   DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.sys.mjs",
   DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
@@ -24,11 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutPreferences",
-  "resource://activity-stream/lib/AboutPreferences.jsm"
-);
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "NewTabInit",

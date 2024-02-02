@@ -76,7 +76,7 @@ module.exports = function (config) {
           functions: 100,
           branches: 66,
           overrides: {
-            "lib/AboutPreferences.jsm": {
+            "lib/AboutPreferences.sys.mjs": {
               statements: 98,
               lines: 98,
               functions: 94,
