@@ -3,7 +3,7 @@ import {
   actionTypes as at,
 } from "common/Actions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
-import { PrefsFeed } from "lib/PrefsFeed.jsm";
+import { PrefsFeed } from "lib/PrefsFeed.sys.mjs";
 
 let overrider = new GlobalOverrider();
 

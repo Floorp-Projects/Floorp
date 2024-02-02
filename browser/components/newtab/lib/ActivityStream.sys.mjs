@@ -25,6 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
   NewTabInit: "resource://activity-stream/lib/NewTabInit.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PrefsFeed: "resource://activity-stream/lib/PrefsFeed.sys.mjs",
   PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
@@ -46,11 +47,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "RecommendationProvider",
   "resource://activity-stream/lib/RecommendationProvider.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrefsFeed",
-  "resource://activity-stream/lib/PrefsFeed.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

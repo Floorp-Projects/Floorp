@@ -95,7 +95,7 @@ export class AboutNewTabChild extends RemotePageChild {
       ) {
         this.sendAsyncMessage("AboutNewTabVisible");
 
-        // Note: newtab feature info is currently being loaded in PrefsFeed.jsm,
+        // Note: newtab feature info is currently being loaded in PrefsFeed.sys.mjs,
         // But we're recording exposure events here.
         lazy.NimbusFeatures.newtab.recordExposureEvent({ once: true });
       }

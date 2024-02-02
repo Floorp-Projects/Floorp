@@ -1,14 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { Prefs } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// AppConstants, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -21,7 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 
-class PrefsFeed {
+export class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
@@ -265,5 +271,3 @@ class PrefsFeed {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["PrefsFeed"];
