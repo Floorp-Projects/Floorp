@@ -248,16 +248,18 @@ export class Region {
     let didShift = false;
     let xDiff = this.right - this.#windowDimensions.scrollWidth;
     if (xDiff > 0) {
-      this.left -= xDiff;
       this.right -= xDiff;
+      this.left -= xDiff;
 
       didShift = true;
     }
 
     let yDiff = this.bottom - this.#windowDimensions.scrollHeight;
     if (yDiff > 0) {
-      this.top -= yDiff;
+      let curHeight = this.height;
+
       this.bottom -= yDiff;
+      this.top = this.bottom - curHeight;
 
       didShift = true;
     }
