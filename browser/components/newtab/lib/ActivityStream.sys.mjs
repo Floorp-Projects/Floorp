@@ -1,8 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// AppConstants, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -22,9 +28,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -90,7 +97,7 @@ function showSpocs({ geo }) {
 
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`
 // that computes a value. A `value_local_dev` is used for development defaults.
-const PREFS_CONFIG = new Map([
+export const PREFS_CONFIG = new Map([
   [
     "default.sites",
     {
@@ -565,7 +572,7 @@ for (const config of FEEDS_DATA) {
   PREFS_CONFIG.set(pref, config);
 }
 
-class ActivityStream {
+export class ActivityStream {
   /**
    * constructor - Initializes an instance of ActivityStream
    */
@@ -730,5 +737,3 @@ class ActivityStream {
     }
   }
 }
-
-const EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];

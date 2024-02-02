@@ -147,7 +147,7 @@ module.exports = function (config) {
           inject: path.join(__dirname, "../newtab/loaders/inject-loader"),
         },
       },
-      // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.jsm"
+      // This resolve config allows us to import with paths relative to the root directory
       resolve: {
         extensions: [".js", ".jsx"],
         modules: [
