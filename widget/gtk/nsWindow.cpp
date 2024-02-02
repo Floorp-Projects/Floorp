@@ -4830,8 +4830,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   const bool defaultPrevented =
       eventStatus.mContentStatus == nsEventStatus_eConsumeNoDefault;
 
-  if (!defaultPrevented && mDrawInTitlebar &&
-      mDraggableRegion.Contains(refPoint)) {
+  if (!defaultPrevented && mDraggableRegion.Contains(refPoint)) {
     if (domButton == MouseButton::ePrimary) {
       mWindowShouldStartDragging = true;
     } else if (domButton == MouseButton::eMiddle &&
