@@ -24,11 +24,6 @@ menuseparator {
      separators (e.g. in bookmarks menus) can be dragged or have a context
      menu. */
   padding-block: 4px;
-
-  @media (-moz-platform: macos) {
-    padding-block: 5px;
-    margin-inline: 9px;
-  }
 }
 
 menuseparator::before {
@@ -105,7 +100,7 @@ menucaption {
   }
 
   @media (-moz-platform: macos) {
-    padding: 3px 9px;
+    padding: 2px 21px;
   }
 }
 
@@ -152,17 +147,14 @@ menucaption {
     margin-inline: 6px 0;
   }
 
-  @media (-moz-platform: macos) {
-    margin-inline: 22px -3px;
-  }
-
   @media (-moz-platform: windows) {
     margin-inline-end: 1em;
   }
 }
 
 @media (-moz-platform: macos) {
-  :is(.menu-accel, .menu-iconic-accel)[value] {
-    margin-inline-start: 25px;
+  .menu-right,
+  .menu-accel-container {
+    margin-inline: 21px -9px;
   }
 }
