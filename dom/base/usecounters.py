@@ -678,7 +678,7 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
     assert len(ops_page) == len(ops_doc)
     assert len(css_page) == len(css_doc)
 
-    index = 0;
+    index = 0
     for pc, dc in zip(page, doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
@@ -691,7 +691,7 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
         }},
 """
         )
-        index += 1;
+        index += 1
 
     for pc, dc in zip(ops_page, ops_doc):
         assert pc[0] == dc[0]
