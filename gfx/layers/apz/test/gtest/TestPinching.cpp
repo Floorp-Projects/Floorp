@@ -313,7 +313,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_DoesntFling_ZoomDisabled) {
 
   PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
                       2, touchInputId, nullptr, nullptr, &blockId,
-                      PinchOptions::LiftFinger2, true);
+                      PinchFlags::LiftFinger2, true);
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));
@@ -351,7 +351,7 @@ TEST_F(APZCPinchGestureDetectorTester,
   uint64_t blockId = 0;
   PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
                       1, touchInputId, nullptr, nullptr, &blockId,
-                      PinchOptions::LiftFinger2);
+                      PinchFlags::LiftFinger2);
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));
@@ -374,7 +374,7 @@ TEST_F(APZCPinchGestureDetectorTester,
   uint64_t blockId = 0;
   PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
                       1, touchInputId, nullptr, nullptr, &blockId,
-                      PinchOptions::LiftFinger2);
+                      PinchFlags::LiftFinger2);
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));

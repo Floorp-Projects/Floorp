@@ -502,7 +502,7 @@ class APZCTesterBase : public ::testing::Test {
     NoFling = 0x4
   };
 
-  enum class PinchOptions {
+  enum class PinchFlags {
     None = 0,
     LiftFinger1 = 0x1,
     LiftFinger2 = 0x2,
@@ -566,25 +566,26 @@ class APZCTesterBase : public ::testing::Test {
                                uint64_t (*aOutInputBlockIds)[2] = nullptr);
 
   template <class InputReceiver>
-  void PinchWithTouchInput(
-      const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aFocus,
-      const ScreenIntPoint& aSecondFocus, float aScale, int& inputId,
-      nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
-      nsEventStatus (*aOutEventStatuses)[4] = nullptr,
-      uint64_t* aOutInputBlockId = nullptr,
-      PinchOptions aOptions = PinchOptions::LiftBothFingers,
-      bool aVertical = false);
+  void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                           const ScreenIntPoint& aFocus,
+                           const ScreenIntPoint& aSecondFocus, float aScale,
+                           int& inputId,
+                           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+                           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+                           uint64_t* aOutInputBlockId = nullptr,
+                           PinchFlags aFlags = PinchFlags::LiftBothFingers,
+                           bool aVertical = false);
 
   // Pinch with one focus point. Zooms in place with no panning
   template <class InputReceiver>
-  void PinchWithTouchInput(
-      const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aFocus,
-      float aScale, int& inputId,
-      nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
-      nsEventStatus (*aOutEventStatuses)[4] = nullptr,
-      uint64_t* aOutInputBlockId = nullptr,
-      PinchOptions aOptions = PinchOptions::LiftBothFingers,
-      bool aVertical = false);
+  void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
+                           const ScreenIntPoint& aFocus, float aScale,
+                           int& inputId,
+                           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+                           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+                           uint64_t* aOutInputBlockId = nullptr,
+                           PinchFlags aFlags = PinchFlags::LiftBothFingers,
+                           bool aVertical = false);
 
   template <class InputReceiver>
   void PinchWithTouchInputAndCheckStatus(
@@ -612,7 +613,7 @@ class APZCTesterBase : public ::testing::Test {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PinchOptions)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PinchFlags)
 
 template <class InputReceiver>
 APZEventResult APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
@@ -852,11 +853,11 @@ void APZCTesterBase::PinchWithTouchInput(
     const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aFocus,
     float aScale, int& inputId, nsTArray<uint32_t>* aAllowedTouchBehaviors,
     nsEventStatus (*aOutEventStatuses)[4], uint64_t* aOutInputBlockId,
-    PinchOptions aOptions, bool aVertical) {
+    PinchFlags aFlags, bool aVertical) {
   // Perform a pinch gesture with the same start & end focus point
   PinchWithTouchInput(aTarget, aFocus, aFocus, aScale, inputId,
                       aAllowedTouchBehaviors, aOutEventStatuses,
-                      aOutInputBlockId, aOptions, aVertical);
+                      aOutInputBlockId, aFlags, aVertical);
 }
 
 template <class InputReceiver>
@@ -865,7 +866,7 @@ void APZCTesterBase::PinchWithTouchInput(
     const ScreenIntPoint& aSecondFocus, float aScale, int& inputId,
     nsTArray<uint32_t>* aAllowedTouchBehaviors,
     nsEventStatus (*aOutEventStatuses)[4], uint64_t* aOutInputBlockId,
-    PinchOptions aOptions, bool aVertical) {
+    PinchFlags aFlags, bool aVertical) {
   // Having pinch coordinates in float type may cause problems with
   // high-precision scale values since SingleTouchData accepts integer value.
   // But for trivial tests it should be ok.
@@ -964,16 +965,16 @@ void APZCTesterBase::PinchWithTouchInput(
     (*aOutEventStatuses)[2] = result.GetStatus();
   }
 
-  if (aOptions & (PinchOptions::LiftFinger1 | PinchOptions::LiftFinger2)) {
+  if (aFlags & (PinchFlags::LiftFinger1 | PinchFlags::LiftFinger2)) {
     mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
     MultiTouchInput mtiEnd =
         MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
-    if (aOptions & PinchOptions::LiftFinger1) {
+    if (aFlags & PinchFlags::LiftFinger1) {
       mtiEnd.mTouches.AppendElement(
           CreateSingleTouchData(inputId, pinchEndPoint1));
     }
-    if (aOptions & PinchOptions::LiftFinger2) {
+    if (aFlags & PinchFlags::LiftFinger2) {
       mtiEnd.mTouches.AppendElement(
           CreateSingleTouchData(inputId + 1, pinchEndPoint2));
     }
