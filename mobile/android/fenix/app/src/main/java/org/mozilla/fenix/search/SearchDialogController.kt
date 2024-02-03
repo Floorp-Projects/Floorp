@@ -143,6 +143,7 @@ class SearchDialogController(
     override fun handleEditingCancelled() {
         clearToolbarFocus()
         dismissDialogAndGoBack()
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
     }
 
     override fun handleTextChanged(text: String) {

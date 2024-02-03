@@ -313,6 +313,10 @@ class SearchDialogControllerTest {
 
         assertTrue(clearToolbarFocusInvoked)
         assertTrue(dismissAndGoBack)
+
+        middleware.assertLastAction(AwesomeBarAction.EngagementFinished::class) { action ->
+            assertTrue(action.abandoned)
+        }
     }
 
     @Test
