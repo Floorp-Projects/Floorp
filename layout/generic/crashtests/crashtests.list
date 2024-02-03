@@ -561,6 +561,7 @@ load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml
 load 986899.html
+asserts(1-3) load 987041-1.html # absurd sizes
 load 1001233.html
 load 1001258-1.html
 load 1001994.html
