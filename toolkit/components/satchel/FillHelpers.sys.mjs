@@ -26,15 +26,12 @@ export class GenericAutocompleteItem {
  *
  * @param {object} browser - An object representing the browser.
  * @param {string} messageId - Message ID from browser/confirmationHints.ftl
- * @param {string} [anchorId="identity-icon-box"] - ID of the element to anchor the hint to.
-                   The "password-notification-icon" and "notification-popup-box" are hidden
-                   at the point of showing the hint (for *most* cases), so approximate the
-                   location with the next closest, visible icon as the anchor.
+ * @param {string} [anchorId="identity-icon"] - ID of the element to anchor the hint to.
  */
 export function showConfirmation(
   browser,
   messageId,
-  anchorId = "identity-icon-box"
+  anchorId = "identity-icon"
 ) {
   const anchor = browser.ownerDocument.getElementById(anchorId);
   anchor.ownerGlobal.ConfirmationHint.show(anchor, messageId, {});
