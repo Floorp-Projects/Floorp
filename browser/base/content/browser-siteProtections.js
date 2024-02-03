@@ -2663,7 +2663,7 @@ var gProtectionsHandler = {
         } else {
           this._protectionsPopup.hidePopup();
           ConfirmationHint.show(
-            this.iconBox,
+            this._trackingProtectionIconContainer,
             "confirmation-hint-breakage-report-sent"
           );
         }
