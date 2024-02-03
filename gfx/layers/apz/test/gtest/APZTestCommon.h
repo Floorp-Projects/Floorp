@@ -571,6 +571,7 @@ class APZCTesterBase : public ::testing::Test {
     uint64_t* mOutInputBlockId = nullptr;
     PinchFlags mFlags = PinchFlags::LiftBothFingers;
     bool mVertical = false;
+    int* mInputId = nullptr;
 
     // Workaround for https://github.com/llvm/llvm-project/issues/36032
     PinchOptions() {}
@@ -597,20 +598,22 @@ class APZCTesterBase : public ::testing::Test {
       mVertical = aVertical;
       return *this;
     }
+    PinchOptions& InputId(int& aInputId) {
+      mInputId = &aInputId;
+      return *this;
+    }
   };
 
   template <class InputReceiver>
   void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
                            const ScreenIntPoint& aFocus,
                            const ScreenIntPoint& aSecondFocus, float aScale,
-                           int& inputId,
                            PinchOptions aOptions = PinchOptions());
 
   // Pinch with one focus point. Zooms in place with no panning
   template <class InputReceiver>
   void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
                            const ScreenIntPoint& aFocus, float aScale,
-                           int& inputId,
                            PinchOptions aOptions = PinchOptions());
 
   template <class InputReceiver>
@@ -877,18 +880,16 @@ void APZCTesterBase::DoubleTapAndCheckStatus(
 template <class InputReceiver>
 void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
                                          const ScreenIntPoint& aFocus,
-                                         float aScale, int& inputId,
-                                         PinchOptions aOptions) {
+                                         float aScale, PinchOptions aOptions) {
   // Perform a pinch gesture with the same start & end focus point
-  PinchWithTouchInput(aTarget, aFocus, aFocus, aScale, inputId, aOptions);
+  PinchWithTouchInput(aTarget, aFocus, aFocus, aScale, aOptions);
 }
 
 template <class InputReceiver>
 void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
                                          const ScreenIntPoint& aFocus,
                                          const ScreenIntPoint& aSecondFocus,
-                                         float aScale, int& inputId,
-                                         PinchOptions aOptions) {
+                                         float aScale, PinchOptions aOptions) {
   // Having pinch coordinates in float type may cause problems with
   // high-precision scale values since SingleTouchData accepts integer value.
   // But for trivial tests it should be ok.
@@ -906,6 +907,8 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   if (!aOptions.mOutInputBlockId) {
     aOptions.mOutInputBlockId = &blockId;
   }
+
+  int inputId = aOptions.mInputId ? *aOptions.mInputId : 0;
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
       TimeDuration::FromMilliseconds(20);
@@ -1007,6 +1010,10 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   }
 
   inputId += 2;
+
+  if (aOptions.mInputId) {
+    *aOptions.mInputId = inputId;
+  }
 }
 
 template <class InputReceiver>
@@ -1015,10 +1022,11 @@ void APZCTesterBase::PinchWithTouchInputAndCheckStatus(
     float aScale, int& inputId, bool aShouldTriggerPinch,
     nsTArray<uint32_t>* aAllowedTouchBehaviors) {
   nsEventStatus statuses[4];  // down, move, move, up
-  PinchWithTouchInput(aTarget, aFocus, aScale, inputId,
+  PinchWithTouchInput(aTarget, aFocus, aScale,
                       PinchOptions()
                           .AllowedTouchBehaviors(aAllowedTouchBehaviors)
-                          .OutEventStatuses(&statuses));
+                          .OutEventStatuses(&statuses)
+                          .InputId(inputId));
 
   nsEventStatus expectedMoveStatus = aShouldTriggerPinch
                                          ? nsEventStatus_eConsumeDoDefault
