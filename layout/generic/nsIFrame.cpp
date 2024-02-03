@@ -207,11 +207,6 @@ struct nsContentAndOffset {
   int32_t mOffset = 0;
 };
 
-// Some Misc #defines
-#define SELECTION_DEBUG 0
-#define FORCE_SELECTION_UPDATE 1
-#define CALC_DEBUG 0
-
 #include "nsILineIterator.h"
 #include "prenv.h"
 
