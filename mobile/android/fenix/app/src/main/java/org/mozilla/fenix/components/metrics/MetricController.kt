@@ -339,7 +339,6 @@ internal class ReleaseMetricController(
                     Awesomebar.sponsoredSuggestionImpressed.record(
                         Awesomebar.SponsoredSuggestionImpressedExtra(
                             provider = "amp",
-                            engagementAbandoned = engagementAbandoned,
                         ),
                     )
                 }
@@ -347,7 +346,6 @@ internal class ReleaseMetricController(
                     Awesomebar.nonSponsoredSuggestionImpressed.record(
                         Awesomebar.NonSponsoredSuggestionImpressedExtra(
                             provider = "wikipedia",
-                            engagementAbandoned = engagementAbandoned,
                         ),
                     )
                 }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.telemetry
 
 import android.content.Context
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
@@ -25,6 +26,7 @@ import mozilla.telemetry.glean.internal.TimerId
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.Event
@@ -59,7 +61,7 @@ class TelemetryMiddleware(
 
     private val logger = Logger("TelemetryMiddleware")
 
-    @Suppress("TooGenericExceptionCaught", "ComplexMethod", "NestedBlockDepth")
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod", "NestedBlockDepth", "LongMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -143,6 +145,13 @@ class TelemetryMiddleware(
             }
             is ExtensionsProcessAction.DisabledAction -> {
                 Addons.extensionsProcessUiDisable.add()
+            }
+            is AwesomeBarAction.EngagementFinished -> {
+                if (action.abandoned) {
+                    Awesomebar.abandonment.record()
+                } else {
+                    Awesomebar.engagement.record()
+                }
             }
             else -> {
                 // no-op
