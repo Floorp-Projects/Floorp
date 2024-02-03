@@ -38,6 +38,10 @@ any specification:
    See [bug 1790548](https://bugzilla.mozilla.org/1790548)
    and [bug 1636428](https://bugzilla.mozilla.org/1636428).
 
+- `negative-lengths`: Tests for negative lengths, for which support or
+   interpretation is unclear in current version of MathML Core.
+   See [issue 132](https://github.com/w3c/mathml-core/issues/132).
+
 - `tables`: Tests for
    [table features](https://www.w3.org/TR/MathML3/chapter3.html#presm.tabmat)
    that are in the initial version of MathML Core.
