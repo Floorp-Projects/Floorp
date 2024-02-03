@@ -833,6 +833,8 @@ random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref
 == 400421-1.html 400421-1-ref.html
 == 400813-1.html 400813-1-ref.html
 == 400826-1.html 400826-1-ref.html
+== 401121-1.html 401121-1-ref.html
+== 401121-2.html 401121-2-ref.html
 == chrome://reftest/content/bugs/401946-1.xhtml about:blank
 pref(layout.outline.include-overflow,true) == 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
