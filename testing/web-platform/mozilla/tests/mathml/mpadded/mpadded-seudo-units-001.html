@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test mpadded</title>
+    <meta name="assert" content="Verify basic rendering of mpadded with pseudo units.">
+    <link rel="match" href="mpadded-seudo-units-001-ref.html">
+  </head>
+  <body>
+    <math>
+      <!-- if lspace is used as a pseudounit, the lspace value is 0 -->
+      <mpadded mathbackground="blue" width="100px" height="3height" depth="3depth"
+               lspace="3lspace" voffset="10px">
+        <mpadded mathbackground="red" width="20px" height="10px"
+                 depth="10px">
+        </mpadded>
+      </mpadded>
+    </math>
+  </body>
+</html>

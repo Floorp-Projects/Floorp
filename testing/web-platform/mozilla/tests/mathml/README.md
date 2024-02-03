@@ -26,6 +26,10 @@ any specification:
    which is reduced to the case `<mi mathvariant="normal">` in MathML
    Core. See [bug 1821980](https://bugzilla.mozilla.org/1821980).
 
+- `mpadded`: Tests for some
+   [mpadded](https://www.w3.org/TR/MathML3/chapter3.html#presm.mpadded)
+   features, which are not in the initial version of MathML Core.
+
 - `menclose`: Tests for the
    [menclose](https://www.w3.org/TR/MathML3/chapter3.html#presm.menclose)
    element, which is not in the initial version of MathML Core.
