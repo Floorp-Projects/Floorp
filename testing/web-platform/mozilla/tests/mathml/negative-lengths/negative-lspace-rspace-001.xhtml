@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>negative lspace/rspace</title>
+    <link rel="match" href="negative-lspace-rspace-001-ref.xhtml"/>
+    <link rel="assert" href="Verify that negative lspace/rspace are ignored."/>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=411227"/>
+    <link rel="help" href="https://github.com/w3c/mathml-core/issues/132"/>
+  </head>
+  <body>
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mn>3</mn>
+      <mo lspace="-5pt" rspace="-4pt">+</mo>
+      <mn>2</mn>
+    </math>
+  </body>
+</html>
