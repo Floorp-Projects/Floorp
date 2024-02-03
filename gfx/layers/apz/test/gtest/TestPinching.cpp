@@ -291,8 +291,8 @@ TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomDisabled) {
   MakeApzcUnzoomable();
 
   // Perform a two finger pan
-  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
-                      1, PinchOptions());
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), 1,
+                      PinchOptions().SecondFocus(ScreenIntPoint(100, 100)));
 
   // Expect to be in a flinging state
   apzc->AssertStateIsFling();
@@ -305,9 +305,11 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_DoesntFling_ZoomDisabled) {
   MakeApzcUnzoomable();
 
   // Perform a pinch
-  PinchWithTouchInput(
-      apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100), 2,
-      PinchOptions().Flags(PinchFlags::LiftFinger2).Vertical(true));
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), 2,
+                      PinchOptions()
+                          .Flags(PinchFlags::LiftFinger2)
+                          .Vertical(true)
+                          .SecondFocus(ScreenIntPoint(100, 100)));
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));
@@ -324,8 +326,8 @@ TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomEnabled) {
   MakeApzcZoomable();
 
   // Perform a two finger pan
-  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
-                      1, PinchOptions());
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), 1,
+                      PinchOptions().SecondFocus(ScreenIntPoint(100, 100)));
 
   // Expect to NOT be in flinging state
   apzc->AssertStateIsReset();
@@ -339,8 +341,10 @@ TEST_F(APZCPinchGestureDetectorTester,
   MakeApzcZoomable();
 
   // Perform a two finger pan lifting only the first finger
-  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
-                      1, PinchOptions().Flags(PinchFlags::LiftFinger2));
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), 1,
+                      PinchOptions()
+                          .Flags(PinchFlags::LiftFinger2)
+                          .SecondFocus(ScreenIntPoint(100, 100)));
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));
@@ -359,8 +363,10 @@ TEST_F(APZCPinchGestureDetectorTester,
   MakeApzcUnzoomable();
 
   // Perform a two finger pan lifting only the first finger
-  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), ScreenIntPoint(100, 100),
-                      1, PinchOptions().Flags(PinchFlags::LiftFinger2));
+  PinchWithTouchInput(apzc, ScreenIntPoint(100, 200), 1,
+                      PinchOptions()
+                          .Flags(PinchFlags::LiftFinger2)
+                          .SecondFocus(ScreenIntPoint(100, 100)));
 
   // Lift second finger after a pause
   mcc->AdvanceBy(TimeDuration::FromMilliseconds(50));

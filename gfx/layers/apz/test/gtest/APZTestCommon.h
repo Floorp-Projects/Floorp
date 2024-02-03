@@ -572,6 +572,7 @@ class APZCTesterBase : public ::testing::Test {
     PinchFlags mFlags = PinchFlags::LiftBothFingers;
     bool mVertical = false;
     int* mInputId = nullptr;
+    Maybe<ScreenIntPoint> mSecondFocus;
 
     // Workaround for https://github.com/llvm/llvm-project/issues/36032
     PinchOptions() {}
@@ -602,13 +603,11 @@ class APZCTesterBase : public ::testing::Test {
       mInputId = &aInputId;
       return *this;
     }
+    PinchOptions& SecondFocus(const ScreenIntPoint& aSecondFocus) {
+      mSecondFocus = Some(aSecondFocus);
+      return *this;
+    }
   };
-
-  template <class InputReceiver>
-  void PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
-                           const ScreenIntPoint& aFocus,
-                           const ScreenIntPoint& aSecondFocus, float aScale,
-                           PinchOptions aOptions = PinchOptions());
 
   // Pinch with one focus point. Zooms in place with no panning
   template <class InputReceiver>
@@ -881,15 +880,6 @@ template <class InputReceiver>
 void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
                                          const ScreenIntPoint& aFocus,
                                          float aScale, PinchOptions aOptions) {
-  // Perform a pinch gesture with the same start & end focus point
-  PinchWithTouchInput(aTarget, aFocus, aFocus, aScale, aOptions);
-}
-
-template <class InputReceiver>
-void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
-                                         const ScreenIntPoint& aFocus,
-                                         const ScreenIntPoint& aSecondFocus,
-                                         float aScale, PinchOptions aOptions) {
   // Having pinch coordinates in float type may cause problems with
   // high-precision scale values since SingleTouchData accepts integer value.
   // But for trivial tests it should be ok.
@@ -909,6 +899,11 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   }
 
   int inputId = aOptions.mInputId ? *aOptions.mInputId : 0;
+
+  // If a second focus point is not specified in the pinch options, use the
+  // same focus point throughout the gesture.
+  ScreenIntPoint secondFocus =
+      aOptions.mSecondFocus.isSome() ? *aOptions.mSecondFocus : aFocus;
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
       TimeDuration::FromMilliseconds(20);
@@ -956,7 +951,7 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
 
   // Pinch instantly but move in steps.
   const int numSteps = 3;
-  auto stepVector = (aSecondFocus - aFocus) / numSteps;
+  auto stepVector = (secondFocus - aFocus) / numSteps;
   for (int k = 1; k < numSteps; k++) {
     ScreenIntPoint stepFocus = aFocus + stepVector * k;
     ScreenIntPoint stepPoint1(stepFocus.x - int32_t(pinchLengthScaledX),
@@ -974,10 +969,10 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
     mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
   }
 
-  ScreenIntPoint pinchEndPoint1(aSecondFocus.x - int32_t(pinchLengthScaledX),
-                                aSecondFocus.y - int32_t(pinchLengthScaledY));
-  ScreenIntPoint pinchEndPoint2(aSecondFocus.x + int32_t(pinchLengthScaledX),
-                                aSecondFocus.y + int32_t(pinchLengthScaledY));
+  ScreenIntPoint pinchEndPoint1(secondFocus.x - int32_t(pinchLengthScaledX),
+                                secondFocus.y - int32_t(pinchLengthScaledY));
+  ScreenIntPoint pinchEndPoint2(secondFocus.x + int32_t(pinchLengthScaledX),
+                                secondFocus.y + int32_t(pinchLengthScaledY));
 
   MultiTouchInput mtiMove2 =
       MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
