@@ -1,4 +1,5 @@
 pypi:pytest==7.0.1
+pypi:pytest-mock==3.12.0
 pypi:Flask==2.1.3
 # (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
 pypi:MarkupSafe==2.0.1
