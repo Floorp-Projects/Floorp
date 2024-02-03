@@ -2467,7 +2467,7 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">要翻译此页面吗？</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
-    <string name="translations_bottom_sheet_title_first_time">试用 %1$s 注重隐私的翻译功能</string>
+    <string name="translations_bottom_sheet_title_first_time">试试 %1$s 注重隐私的翻译功能</string>
 
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
     <string name="translations_bottom_sheet_info_message">为保护隐私，翻译过程只会在本地进行。我们很快会支持更多语言并带来改进！%1$s</string>

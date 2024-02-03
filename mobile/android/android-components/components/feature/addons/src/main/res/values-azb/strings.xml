@@ -185,7 +185,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">ایندی توصیه اولونان اوزانتی‌لارین ایلک سئچیمی اوچون ساپورت وئریریق.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">تاخیلان یئندیریلیر و دوغرولانیر...</string>
+    <string name="mozac_add_on_install_progress_caption">تاخیلان یئندیریلیر و دوغرولانیر…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">تاخیلان‌لاری سورغولاماق  آلینمادی.</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
