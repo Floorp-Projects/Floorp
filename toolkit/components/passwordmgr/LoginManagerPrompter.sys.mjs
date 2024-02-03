@@ -604,15 +604,8 @@ export class LoginManagerPrompter {
           });
           Services.logins.removeLogin(matchingLogins[0]);
           browser.focus();
-          // The "password-notification-icon" and "notification-icon-box" are hidden
-          // at this point, so approximate the location with the next closest,
-          // visible icon as the anchor.
-          const anchor = browser.ownerDocument.getElementById("identity-icon");
           lazy.log.debug("Showing the ConfirmationHint");
-          anchor.ownerGlobal.ConfirmationHint.show(
-            anchor,
-            "confirmation-hint-password-removed"
-          );
+          showConfirmation(browser, "confirmation-hint-password-removed");
         },
       });
     }
