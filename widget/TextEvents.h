@@ -333,6 +333,26 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
              IsAccel()));
   }
 
+  // Returns true if this event is likely an user activation for a link or
+  // a link-like button, where modifier keys are likely be used for controlling
+  // where the link is opened.
+  //
+  // This returns false if the keyboard event is more likely an user-defined
+  // shortcut key.
+  bool CanReflectModifiersToUserActivation() const {
+    MOZ_ASSERT(CanUserGestureActivateTarget(),
+               "Consumer should check CanUserGestureActivateTarget first");
+    // 'carriage return' and 'space' are supported user gestures for activating
+    // a link or a button.
+    // A button often behaves like a link, by calling window.open inside its
+    // event handler.
+    //
+    // Access keys can also activate links/buttons, but access keys have their
+    // own modifiers, and those modifiers are not appropriate for reflecting to
+    // the user activation nor controlling where the link is opened.
+    return mKeyNameIndex == KEY_NAME_INDEX_Enter || mKeyCode == NS_VK_SPACE;
+  }
+
   [[nodiscard]] bool ShouldWorkAsSpaceKey() const {
     if (mKeyCode == NS_VK_SPACE) {
       return true;
