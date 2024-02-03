@@ -460,6 +460,10 @@
       }
     }
 
+    // The test path may contain \ separators for the path.
+    // Bug 1877606: use / consistently
+    properties.test = properties.test.replace(/\\/g, "/");
+
     global.gTestPath = properties.test;
 
     var testpathparts = properties.test.split("/");
