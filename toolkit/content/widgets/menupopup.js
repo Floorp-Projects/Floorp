@@ -7,6 +7,10 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
+  );
+
   // For the non-native context menu styling, we need to know if we need
   // a gutter for checkboxes. To do this, check whether there are any
   // radio/checkbox type menuitems in a menupopup when showing it. We use a
@@ -19,7 +23,12 @@
     function (e) {
       if (e.target.nodeName == "menupopup") {
         let haveCheckableChild = e.target.querySelector(
-          ":scope > menuitem:not([hidden]):is([type=checkbox],[type=radio])"
+          `:scope > menuitem:not([hidden]):is([type=checkbox],[type=radio]${
+            // On macOS, selected menuitems are checked regardless of type
+            AppConstants.platform == "macosx"
+              ? ",[checked=true],[selected=true]"
+              : ""
+          })`
         );
         e.target.toggleAttribute("needsgutter", haveCheckableChild);
       }
