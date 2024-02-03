@@ -9946,7 +9946,7 @@ var ConfirmationHint = {
     );
 
     this._panel.openPopup(anchor, {
-      position: options.position ?? "bottomcenter topleft",
+      position: options.position ?? "bottomleft topleft",
       triggerEvent: options.event,
     });
   },
