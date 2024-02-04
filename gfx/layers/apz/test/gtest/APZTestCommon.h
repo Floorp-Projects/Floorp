@@ -573,6 +573,7 @@ class APZCTesterBase : public ::testing::Test {
     bool mVertical = false;
     int* mInputId = nullptr;
     Maybe<ScreenIntPoint> mSecondFocus;
+    TimeDuration mTimeBetweenTouchEvents = TimeDuration::FromMilliseconds(20);
 
     // Workaround for https://github.com/llvm/llvm-project/issues/36032
     PinchOptions() {}
@@ -605,6 +606,10 @@ class APZCTesterBase : public ::testing::Test {
     }
     PinchOptions& SecondFocus(const ScreenIntPoint& aSecondFocus) {
       mSecondFocus = Some(aSecondFocus);
+      return *this;
+    }
+    PinchOptions& TimeBetweenTouchEvents(const TimeDuration& aDuration) {
+      mTimeBetweenTouchEvents = aDuration;
       return *this;
     }
   };
@@ -905,9 +910,6 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   ScreenIntPoint secondFocus =
       aOptions.mSecondFocus.isSome() ? *aOptions.mSecondFocus : aFocus;
 
-  const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
-      TimeDuration::FromMilliseconds(20);
-
   MultiTouchInput mtiStart =
       MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
@@ -921,7 +923,7 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
     (*aOptions.mOutEventStatuses)[0] = result.GetStatus();
   }
 
-  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+  mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
 
   if (aOptions.mAllowedTouchBehaviors) {
     EXPECT_EQ(2UL, aOptions.mAllowedTouchBehaviors->Length());
@@ -947,7 +949,7 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
     (*aOptions.mOutEventStatuses)[1] = result.GetStatus();
   }
 
-  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+  mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
 
   // Pinch instantly but move in steps.
   const int numSteps = 3;
@@ -966,7 +968,7 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
         CreateSingleTouchData(inputId + 1, stepPoint2));
     Unused << aTarget->ReceiveInputEvent(mtiMoveStep);
 
-    mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+    mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
   }
 
   ScreenIntPoint pinchEndPoint1(secondFocus.x - int32_t(pinchLengthScaledX),
@@ -986,7 +988,7 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   }
 
   if (aOptions.mFlags & (PinchFlags::LiftFinger1 | PinchFlags::LiftFinger2)) {
-    mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+    mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
 
     MultiTouchInput mtiEnd =
         MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
