@@ -686,11 +686,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
       const forceClosePopup = false;
       // Make sure confirmation hint was shown
       info("waiting for verifyConfirmationHint");
-      await verifyConfirmationHint(
-        browser,
-        forceClosePopup,
-        "identity-icon-box"
-      );
+      await verifyConfirmationHint(browser, forceClosePopup, "identity-icon");
     }
   );
 
