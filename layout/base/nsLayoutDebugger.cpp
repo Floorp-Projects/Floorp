@@ -59,11 +59,13 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
     }
   }
   bool snap;
-  nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
+  nsRect rect = aBuilder ? aItem->GetBounds(aBuilder, &snap) : nsRect();
+  nsRect component =
+      aBuilder ? aItem->GetComponentAlphaBounds(aBuilder) : nsRect();
   nsDisplayList* list = aItem->GetChildren();
   const DisplayItemClip& clip = aItem->GetClip();
-  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
+  nsRegion opaque =
+      aBuilder ? aItem->GetOpaqueRegion(aBuilder, &snap) : nsRect();
 
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml && aItem->Painted()) {
@@ -85,7 +87,7 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
       component.width, component.height, clip.ToString().get(),
       ActiveScrolledRoot::ToString(aItem->GetActiveScrolledRoot()).get(),
       DisplayItemClipChain::ToString(aItem->GetClipChain()).get(),
-      aItem->IsUniform(aBuilder) ? " uniform" : "");
+      (aBuilder && aItem->IsUniform(aBuilder)) ? " uniform" : "");
 
   for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
     const nsRect& r = iter.Get();
