@@ -94,6 +94,7 @@ fun TabLayout(
         tabs.forEachIndexed { index, tab ->
             if (tab.id == selectedTabId) {
                 selectedTabIndex = index
+                return@forEachIndexed
             }
         }
     }
