@@ -19,9 +19,9 @@ fails-if(OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 != stretchy-1.html stretchy-1-ref.html
-random-if(gtkWidget) fails-if(geckoview&&device) == mpadded-7.html mpadded-7-ref.html # bug 1309430
-random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
-random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
+== mpadded-7.html mpadded-7-ref.html
+== mpadded-8.html mpadded-8-ref.html
+== mpadded-9.html mpadded-9-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html
 == munderover-align-accent-true.html munderover-align-accent-true-ref.html
