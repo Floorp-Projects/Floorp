@@ -66,6 +66,15 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Add screenshots to help explain your problem.
+      placeholder: Drag or paste images or videos to upload (Video is recommended).
+    validations:
+      required: true
+
   - type: input
     attributes:
       label: Browser Version
