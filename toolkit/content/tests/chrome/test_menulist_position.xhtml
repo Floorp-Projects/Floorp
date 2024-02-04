@@ -52,11 +52,10 @@ function popupShown()
   let index = menulist.selectedIndex;
   if (menulist.selectedItem && navigator.platform.includes("Mac")) {
     let menulistlabelrect = menulist.shadowRoot.getElementById("label").getBoundingClientRect();
-    let paddingTop = parseFloat(getComputedStyle(menulist.selectedItem).paddingTop);
     let mitemlabelrect = menulist.selectedItem.querySelector(".menu-iconic-text").getBoundingClientRect();
 
-    ok(isWithinHalfPixel(menulistlabelrect.top - paddingTop, mitemlabelrect.top),
-       `Labels vertically aligned for ${index} : ${menulistlabelrect.top} - ${paddingTop} vs. ${mitemlabelrect.top}`);
+    ok(isWithinHalfPixel(menulistlabelrect.top, mitemlabelrect.top),
+       `Labels vertically aligned for ${index} : ${menulistlabelrect.top} vs. ${mitemlabelrect.top}`);
 
     // Store the current value and reset it afterwards.
     let current = menulist.selectedIndex;
