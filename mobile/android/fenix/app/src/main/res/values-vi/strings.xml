@@ -242,6 +242,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tùy biến trang chủ</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Màn hình chính</string>
@@ -249,6 +250,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Xóa lịch sử duyệt web</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Dịch trang</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ngôn ngữ được chọn</string>
@@ -260,8 +264,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Quét</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Công cụ tìm kiếm</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Cài đặt công cụ tìm kiếm</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -316,14 +318,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Đồng bộ hóa các thẻ của bạn giữa các thiết bị, quản lý tải xuống, nhận các mẹo về cách tận dụng tối đa khả năng bảo vệ quyền riêng tư của %s và nhiều hơn nữa.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Đồng bộ hóa các thẻ của bạn giữa các thiết bị, quản lý tải xuống, nhận các mẹo về cách tận dụng tối đa khả năng bảo vệ quyền riêng tư của %s và nhiều hơn nữa.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Tiếp tục</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Tiếp tục</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Không phải bây giờ</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Không phải bây giờ</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
@@ -441,21 +443,11 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Chế độ chỉ HTTPS</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Giảm biểu ngữ cookie</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Trình chặn biểu ngữ cookie</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Trình chặn biểu ngữ cookie trong trình duyệt riêng tư</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Giảm biểu ngữ cookie</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Tắt</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Bật</string>
 
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Tắt cho trang web này</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -473,35 +465,16 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Trang web hiện tại không được hỗ trợ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Bật giảm biểu ngữ cookie cho %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Bật trình chặn biểu ngữ cookie cho %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Tắt giảm biểu ngữ cookie cho %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Tắt trình chặn biểu ngữ cookie cho %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s không thể tự động từ chối yêu cầu cookie trên trang web này. Bạn có thể gửi yêu cầu hỗ trợ trang web này trong tương lai.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s sẽ xóa cookie của trang web này và làm mới trang. Xóa tất cả cookie có thể khiến bạn đăng xuất hoặc làm trống giỏ hàng.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Tắt và %1$s sẽ xóa cookie và tải lại trang web này. Điều này có thể khiến bạn bị đăng xuất hoặc bị xóa sạch giỏ hàng.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s thử tự động từ chối tất cả các yêu cầu cookie trên các trang web được hỗ trợ.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Bật và %1$s sẽ thử tự động từ chối tất cả các biểu ngữ cookie trên trang web này.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Cho phép %1$s từ chối biểu ngữ cookie?</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s có thể tự động từ chối nhiều yêu cầu biểu ngữ cookie.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Không phải bây giờ</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Bạn sẽ thấy ít yêu cầu cookie hơn</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Cho phép</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s vừa từ chối cookie cho bạn</string>
@@ -1283,8 +1256,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Bỏ qua</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Không thể in</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">Không thể in trang này</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">In</string>
@@ -1900,7 +1871,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Thiết lập màn hình khóa thiết bị với mẫu hình, mã PIN hoặc mật khẩu để bảo vệ thẻ tín dụng đã lưu của bạn không bị truy cập nếu người khác có thiết bị của bạn.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Đặt mật khẩu thiết bị dạng mẫu hình, mã PIN hoặc mật khẩu để bảo vệ thẻ đã lưu của bạn không bị truy cập nếu người khác lấy đuọc thiết bị của bạn.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Đặt mật khẩu thiết bị dạng mẫu hình, mã PIN hoặc mật khẩu để bảo vệ phương thức thanh toán đã lưu của bạn không bị truy cập nếu người khác lấy đuọc thiết bị của bạn.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Thiết lập ngay</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2061,12 +2032,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Cài đặt mật khẩu</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Trường văn bản có thể chỉnh sửa cho địa chỉ web của thông tin đăng nhập.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho địa chỉ trang web của mật khẩu.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho địa chỉ trang web.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Trường văn bản có thể chỉnh sửa cho tên người dùng của thông tin đăng nhập.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho tên người dùng của mật khẩu.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Trường văn bản có thể chỉnh sửa cho tên người dùng.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Trường văn bản có thể chỉnh sửa cho mật khẩu của thông tin đăng nhập.</string>
     <!--  The editable text field for a login's password. -->
@@ -2263,8 +2234,6 @@
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Điểm nổi bật</b> từ %s đánh giá trong vòng 80 ngày qua mà chúng tôi tin là đáng tin cậy.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Tìm hiểu thêm về %s.</string>
-    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">cách %s bởi Mozilla xác định chất lượng đánh giá</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">cách %s xác định chất lượng đánh giá</string>
     <!-- Text for title of settings section. -->
@@ -2449,6 +2418,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Đang dịch trang</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Chọn ngôn ngữ</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Đã xảy ra sự cố khi dịch. Hãy thử lại.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

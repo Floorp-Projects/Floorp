@@ -242,6 +242,7 @@
     <string name="browser_menu_edit">Modifiche</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalize pagjine iniziâl</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Schermade principâl</string>
@@ -249,6 +250,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Scancele la cronologjie di navigazion</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Tradûs pagjine</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lenghe selezionade</string>
@@ -1879,7 +1883,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Configure une secuence di bloc, PIN o password par protezi lis tôs cjartis di credit salvadis, cussì che se cualchidun altri al varà il to dispositîf nol rivarà a doprâlis.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Configure une secuence di bloc, PIN o password par protezi lis tôs cjartis salvadis, cussì che se cualchidun altri al varà il to dispositîf nol rivarà a doprâlis.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Configure une secuence di bloc, PIN o password par protezi i tiei metodis di paiament salvâts, cussì che se cualchidun altri al varà il to dispositîf nol rivarà a doprâju.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configure cumò</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2038,12 +2042,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Opzions password</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Il cjamp di test modificabil pe direzion web de credenziâl.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Il cjamp di test che si pues modificâ pe direzion dal sît web de password.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Il cjamp di test che si pues modificâ pe direzion dal sît web.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Il cjamp di test modificabil pal non utent de credenziâl.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Il cjamp di test che si pues modificâ pal non utent de password.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Il cjamp di test che si pues modificâ pal non utent.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Il cjamp di test modificabil pe password de credenziâl.</string>
     <!--  The editable text field for a login's password. -->
@@ -2426,6 +2430,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Traduzion in cors</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Sielç une lenghe</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Al è vignût fûr un probleme tal tradusi. Torne prove.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

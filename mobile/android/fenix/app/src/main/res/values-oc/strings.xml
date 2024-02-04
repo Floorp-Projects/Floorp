@@ -1913,6 +1913,8 @@
     <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Securizatz los metòdes de pagament enregistrats</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Configuratz un esquèma de verrolhatge, un còdi PIN o un senhal per protegir vòstres identificants de cartas de crèdit enregistrats se per cas qualqu’un accedisca a vòstre periferic.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Configuratz un esquèma de desverrolhatge, un còdi PIN o un senhal per protegir vòstres mejans de pagament se per cas qualqu’un accedisca a vòstre aparelh.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configurar ara</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2077,8 +2079,12 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Opcions de senhal</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Lo camp de tèxt modificable per l’adreça web de l’identificant.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Lo camp de tèxt modificable per l’adreça del site web.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Lo camp de tèxt modificable pel nom d’utilizaire de l’identificant.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Lo camp de tèxt modificable pel nom d’utilizaire.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Lo camp de tèxt modificable pel senhal de l’identificant.</string>
     <!--  The editable text field for a login's password. -->
