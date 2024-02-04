@@ -923,8 +923,6 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
     (*aOptions.mOutEventStatuses)[0] = result.GetStatus();
   }
 
-  mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
-
   if (aOptions.mAllowedTouchBehaviors) {
     EXPECT_EQ(2UL, aOptions.mAllowedTouchBehaviors->Length());
     aTarget->SetAllowedTouchBehavior(*aOptions.mOutInputBlockId,
@@ -932,6 +930,8 @@ void APZCTesterBase::PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   } else {
     SetDefaultAllowedTouchBehavior(aTarget, *aOptions.mOutInputBlockId, 2);
   }
+
+  mcc->AdvanceBy(aOptions.mTimeBetweenTouchEvents);
 
   ScreenIntPoint pinchStartPoint1(aFocus.x - int32_t(pinchLengthX),
                                   aFocus.y - int32_t(pinchLengthY));
