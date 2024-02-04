@@ -34,6 +34,7 @@ class AndroidImageDecoder : ImageDecoder {
                 null
             }
         } catch (e: OutOfMemoryError) {
+            logger.error("Failed to decode the byte data due to OutOfMemoryError")
             null
         }
 

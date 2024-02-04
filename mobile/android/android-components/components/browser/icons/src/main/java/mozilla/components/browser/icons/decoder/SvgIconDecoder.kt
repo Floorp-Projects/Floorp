@@ -10,7 +10,9 @@ import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
 import coil.decode.SvgDecoder
 import coil.executeBlocking
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.images.decoder.ImageDecoder
 
@@ -20,14 +22,20 @@ import mozilla.components.support.images.decoder.ImageDecoder
  * ⚠️ For guidance on use of the Coil library see comment for [ComponentsDependencies.thirdparty_coil_svg].
  */
 class SvgIconDecoder(val context: Context) : ImageDecoder {
+    private val logger = Logger("SvgIconDecoder")
 
-    override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? {
-        val request = ImageRequest.Builder(context)
-            .data(data)
-            .build()
+    override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? =
+        try {
+            val request = ImageRequest.Builder(context)
+                .size(desiredSize.targetSize)
+                .data(data)
+                .build()
 
-        return SvgImageLoader.getInstance(context).executeBlocking(request).drawable?.toBitmap()
-    }
+            SvgImageLoader.getInstance(context).executeBlocking(request).drawable?.toBitmap()
+        } catch (e: OutOfMemoryError) {
+            logger.error("Failed to decode the byte data due to OutOfMemoryError")
+            null
+        }
 
     private object SvgImageLoader {
         @Volatile
@@ -42,6 +50,8 @@ class SvgIconDecoder(val context: Context) : ImageDecoder {
 
             synchronized(this) {
                 return ImageLoader.Builder(context)
+                    .memoryCachePolicy(CachePolicy.DISABLED)
+                    .diskCachePolicy(CachePolicy.DISABLED)
                     .components { add(SvgDecoder.Factory()) }
                     .build().also { instance = it }
             }
