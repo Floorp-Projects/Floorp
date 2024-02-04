@@ -661,21 +661,7 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByPinch) {
 
   Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(100));
 
-  int inputId = 0;
-  MultiTouchInput mti;
-  mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
-                                             ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(
-      inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti);
-
-  mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
-                                             ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(
-      inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti);
+  PinchWithTouchInput(apzc, ScreenIntPoint(15, 15), 1.5);
 
   apzc->AssertStateIsReset();
 }
