@@ -678,12 +678,12 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
     assert len(ops_page) == len(ops_doc)
     assert len(css_page) == len(css_doc)
 
-    index = 0;
+    index = 0
     static_asserts = []
     for pc, dc in zip(page, doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
-        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));")
         f.write(
             f"""\
         {{
@@ -693,12 +693,12 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
         }},
 """
         )
-        index += 1;
+        index += 1
 
     for pc, dc in zip(ops_page, ops_doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
-        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));")
         f.write(
             f"""\
         {{
@@ -713,7 +713,7 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
     for pc, dc in zip(css_page, css_doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
-        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));")
         f.write(
             f"""\
         {{
@@ -725,8 +725,8 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
         )
         index += 1
 
-    f.write("};\n");
-    f.write("\n".join(static_asserts));
+    f.write("};\n")
+    f.write("\n".join(static_asserts))
     f.write(
         """\
   MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
@@ -753,7 +753,9 @@ const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind a
         assert dc[1] == sc[1]
         assert dc[0] == servicec[0]
         assert dc[1] == servicec[1]
-        static_asserts.append(f"static_assert({index} == size_t(UseCounterWorker::{dc[0]}));");
+        static_asserts.append(
+            f"static_assert({index} == size_t(UseCounterWorker::{dc[0]}));"
+        )
         f.write(
             f"""\
         {{
@@ -765,8 +767,8 @@ const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind a
 """
         )
         index += 1
-    f.write("};\n");
-    f.write("\n".join(static_asserts));
+    f.write("};\n")
+    f.write("\n".join(static_asserts))
     f.write(
         """\
   MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
