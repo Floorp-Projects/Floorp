@@ -213,6 +213,8 @@ skip-if = ["os == 'win'"] # bug 1413442
 
 ["browser_inspector_highlighter-geometry_06.js"]
 
+["browser_inspector_highlighter-geometry_07.js"]
+
 ["browser_inspector_highlighter-geometry_hide_on_interaction.js"]
 
 ["browser_inspector_highlighter-geometry_iframe.js"]
