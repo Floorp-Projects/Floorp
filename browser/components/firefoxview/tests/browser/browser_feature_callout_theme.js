@@ -4,7 +4,7 @@
 "use strict";
 
 const { FeatureCallout } = ChromeUtils.importESModule(
-  "resource:///modules/FeatureCallout.sys.mjs"
+  "resource:///modules/asrouter/FeatureCallout.sys.mjs"
 );
 
 async function testCallout(config) {
