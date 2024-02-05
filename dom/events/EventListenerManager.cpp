@@ -36,7 +36,6 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ChromeUtils.h"
 
@@ -867,12 +866,10 @@ void EventListenerManager::RemoveEventListenerInternal(
 }
 
 static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
-  if (aMessage == eTouchStart || aMessage == eTouchMove) {
-    return true;
-  }
-  if (aMessage == eWheel || aMessage == eLegacyMouseLineOrPageScroll ||
+  if (aMessage == eTouchStart || aMessage == eTouchMove || aMessage == eWheel ||
+      aMessage == eLegacyMouseLineOrPageScroll ||
       aMessage == eLegacyMousePixelScroll) {
-    return StaticPrefs::dom_event_default_to_passive_wheel_listeners();
+    return true;
   }
   return false;
 }
