@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AboutWelcomeDefaults } = ChromeUtils.import(
-  "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm"
+const { AboutWelcomeDefaults } = ChromeUtils.importESModule(
+  "resource:///modules/aboutwelcome/AboutWelcomeDefaults.sys.mjs"
 );
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

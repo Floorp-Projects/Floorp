@@ -9,7 +9,7 @@ import {
 import { Themes } from "content-src/components/Themes";
 import React from "react";
 import { shallow, mount } from "enzyme";
-import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.jsm";
+import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.sys.mjs";
 import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils";
 
 describe("MultiStageAboutWelcome module", () => {

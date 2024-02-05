@@ -1,4 +1,4 @@
-import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.jsm";
+import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.sys.mjs";
 import { MultiStageProtonScreen } from "content-src/components/MultiStageProtonScreen";
 import { AWScreenUtils } from "modules/AWScreenUtils.sys.mjs";
 import React from "react";

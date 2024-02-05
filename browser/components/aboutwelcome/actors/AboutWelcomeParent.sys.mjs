@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutWelcomeDefaults:
+    "resource:///modules/aboutwelcome/AboutWelcomeDefaults.sys.mjs",
   AboutWelcomeTelemetry:
     "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
@@ -18,11 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutWelcomeDefaults:
-    "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
