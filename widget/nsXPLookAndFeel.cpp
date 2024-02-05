@@ -730,6 +730,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Background:
     case ColorID::Appworkspace:
     case ColorID::Scrollbar:
+    case ColorID::Infobackground:
       color = kWindowBackground;
       break;
 
@@ -751,6 +752,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(0x3a, 0x39, 0x44);
       break;
 
+    case ColorID::MozEventreerow:
     case ColorID::MozOddtreerow:
     case ColorID::MozDialog:  // --in-content-box-background
       color = NS_RGB(35, 34, 43);
@@ -759,6 +761,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozDialogtext:
     case ColorID::MozSidebartext:
     case ColorID::Fieldtext:
+    case ColorID::Infotext:
     case ColorID::Buttontext:  // --in-content-button-text-color (via
                                // --in-content-page-color)
     case ColorID::MozComboboxtext:
@@ -778,6 +781,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Threedshadow:
     case ColorID::MozSidebarborder:
     case ColorID::Threedlightshadow:
+    case ColorID::Threedhighlight:
+    case ColorID::Windowframe:
     case ColorID::Buttonborder:  // --in-content-box-border-color computed
                                  // with kWindowText above
                                  // kWindowBackground.
@@ -794,6 +799,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozSidebar:
     case ColorID::Field:
     case ColorID::Buttonface:  // --in-content-button-background
+    case ColorID::Buttonhighlight:
     case ColorID::MozColheader:
     case ColorID::Threedface:
     case ColorID::MozCombobox:
