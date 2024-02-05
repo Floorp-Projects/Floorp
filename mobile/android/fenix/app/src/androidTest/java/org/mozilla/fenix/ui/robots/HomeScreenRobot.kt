@@ -104,14 +104,27 @@ class HomeScreenRobot {
 
     fun verifyHomePrivateBrowsingButton() = assertUIObjectExists(privateBrowsingButton())
     fun verifyHomeMenuButton() = assertUIObjectExists(menuButton)
-    fun verifyTabButton() = assertTabButton()
-    fun verifyCollectionsHeader() = assertCollectionsHeader()
-    fun verifyNoCollectionsText() = assertNoCollectionsText()
+    fun verifyTabButton() =
+        onView(allOf(withId(R.id.tab_button), isDisplayed())).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyCollectionsHeader() =
+        onView(allOf(withText("Collections"))).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyNoCollectionsText() =
+        onView(
+            withText(
+                containsString(
+                    "Collect the things that matter to you.\n" +
+                        "Group together similar searches, sites, and tabs for quick access later.",
+                ),
+            ),
+        ).check(matches(isDisplayed()))
+
     fun verifyHomeWordmark() {
         homeScreenList().scrollToBeginning(3)
         assertUIObjectExists(homepageWordmark())
     }
-    fun verifyHomeComponent() = assertHomeComponent()
+    fun verifyHomeComponent() =
+        onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     fun verifyTabCounter(numberOfOpenTabs: String) =
         assertUIObjectExists(tabCounter(numberOfOpenTabs))
@@ -218,7 +231,16 @@ class HomeScreenRobot {
     fun verifyExistingTopSitesList() =
         assertUIObjectExists(itemWithResId("$packageName:id/top_sites_list"))
 
-    fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
+    fun verifyNotExistingTopSitesList(title: String) {
+        mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime)
+        assertUIObjectExists(
+            itemWithResIdContainingText(
+                "$packageName:id/top_site_title",
+                title,
+            ),
+            exists = false,
+        )
+    }
     fun verifySponsoredShortcutDoesNotExist(sponsoredShortcutTitle: String, position: Int) =
         assertUIObjectExists(
             itemWithResIdAndIndex("$packageName:id/top_site_item", index = position - 1)
@@ -228,17 +250,60 @@ class HomeScreenRobot {
                 ),
             exists = false,
         )
-    fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
+    fun verifyNotExistingSponsoredTopSitesList() =
+        assertUIObjectExists(
+            itemWithResIdContainingText(
+                "$packageName:id/top_site_subtitle",
+                getStringResource(R.string.top_sites_sponsored_label),
+            ),
+            exists = false,
+        )
+
     fun verifyExistingTopSitesTabs(title: String) {
         homeScreenList().scrollIntoView(itemWithResId("$packageName:id/top_sites_list"))
-        assertExistingTopSitesTabs(title)
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_title")
+                .textContains(title),
+        ).waitForExists(waitingTime)
+
+        onView(allOf(withId(R.id.top_sites_list)))
+            .check(matches(hasDescendant(withText(title))))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
     fun verifySponsoredShortcutDetails(sponsoredShortcutTitle: String, position: Int) {
-        assertSponsoredShortcutLogoIsDisplayed(position)
-        assertSponsoredShortcutTitle(sponsoredShortcutTitle, position)
-        assertSponsoredSubtitleIsDisplayed(position)
+        assertUIObjectExists(
+            itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+                .getChild(
+                    UiSelector()
+                        .resourceId("$packageName:id/favicon_card"),
+                ),
+        )
+        assertUIObjectExists(
+            itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+                .getChild(
+                    UiSelector()
+                        .textContains(sponsoredShortcutTitle),
+                ),
+        )
+        assertUIObjectExists(
+            itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+                .getChild(
+                    UiSelector()
+                        .resourceId("$packageName:id/top_site_subtitle"),
+                ),
+        )
     }
-    fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
+    fun verifyTopSiteContextMenuItems() {
+        mDevice.waitNotNull(
+            findObject(By.text("Open in private tab")),
+            waitingTime,
+        )
+        mDevice.waitNotNull(
+            findObject(By.text("Remove")),
+            waitingTime,
+        )
+    }
 
     fun verifyJumpBackInSectionIsDisplayed() {
         scrollToElementByText(getStringResource(R.string.recent_tabs_header))
@@ -247,13 +312,16 @@ class HomeScreenRobot {
     fun verifyJumpBackInSectionIsNotDisplayed() =
         assertUIObjectExists(itemContainingText(getStringResource(R.string.recent_tabs_header)), exists = false)
     fun verifyJumpBackInItemTitle(testRule: ComposeTestRule, itemTitle: String) =
-        assertJumpBackInItemTitle(testRule, itemTitle)
+        testRule.onNodeWithTag("recent.tab.title", useUnmergedTree = true).assert(hasText(itemTitle))
     fun verifyJumpBackInItemWithUrl(testRule: ComposeTestRule, itemUrl: String) =
-        assertJumpBackInItemWithUrl(testRule, itemUrl)
-    fun verifyJumpBackInShowAllButton() = assertJumpBackInShowAllButton()
-    fun verifyRecentlyVisitedSectionIsDisplayed(exists: Boolean) = assertRecentlyVisitedSectionIsDisplayed(exists)
-    fun verifyRecentBookmarksSectionIsDisplayed(exists: Boolean) = assertRecentBookmarksSectionIsDisplayed(exists)
-    fun verifyPocketSectionIsDisplayed(exists: Boolean) = assertPocketSectionIsDisplayed(exists)
+        testRule.onNodeWithTag("recent.tab.url", useUnmergedTree = true).assert(hasText(itemUrl))
+    fun verifyJumpBackInShowAllButton() = assertUIObjectExists(itemContainingText(getStringResource(R.string.recent_tabs_show_all)))
+    fun verifyRecentlyVisitedSectionIsDisplayed(exists: Boolean) =
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.history_metadata_header_2)), exists = exists)
+    fun verifyRecentBookmarksSectionIsDisplayed(exists: Boolean) =
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.recently_saved_title)), exists = exists)
+    fun verifyPocketSectionIsDisplayed(exists: Boolean) =
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.pocket_stories_header_1)), exists = exists)
 
     fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
         // checks if the search group exists in the Recently visited section
@@ -820,117 +888,7 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
             .contains("mInputShown=true"),
     )
 
-private fun assertTabButton() =
-    onView(allOf(withId(R.id.tab_button), isDisplayed()))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertCollectionsHeader() =
-    onView(allOf(withText("Collections")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertNoCollectionsText() =
-    onView(
-        withText(
-            containsString(
-                "Collect the things that matter to you.\n" +
-                    "Group together similar searches, sites, and tabs for quick access later.",
-            ),
-        ),
-    ).check(matches(isDisplayed()))
-
-private fun assertHomeComponent() =
-    onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
-
-private fun assertExistingTopSitesTabs(title: String) {
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("$packageName:id/top_site_title")
-            .textContains(title),
-    ).waitForExists(waitingTime)
-
-    onView(allOf(withId(R.id.top_sites_list)))
-        .check(matches(hasDescendant(withText(title))))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertSponsoredShortcutLogoIsDisplayed(position: Int) =
-    assertUIObjectExists(
-        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
-            .getChild(
-                UiSelector()
-                    .resourceId("$packageName:id/favicon_card"),
-            ),
-    )
-
-private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
-    assertUIObjectExists(
-        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
-            .getChild(
-                UiSelector()
-                    .resourceId("$packageName:id/top_site_subtitle"),
-            ),
-    )
-
-private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, position: Int) =
-    assertUIObjectExists(
-        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
-            .getChild(
-                UiSelector()
-                    .textContains(sponsoredShortcutTitle),
-            ),
-    )
-
-private fun assertNotExistingTopSitesList(title: String) {
-    mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime)
-    assertUIObjectExists(
-        itemWithResIdContainingText(
-            "$packageName:id/top_site_title",
-            title,
-        ),
-        exists = false,
-    )
-}
-
-private fun assertSponsoredTopSitesNotDisplayed() =
-    assertUIObjectExists(
-        itemWithResIdContainingText(
-            "$packageName:id/top_site_subtitle",
-            getStringResource(R.string.top_sites_sponsored_label),
-        ),
-        exists = false,
-    )
-
-private fun assertTopSiteContextMenuItems() {
-    mDevice.waitNotNull(
-        findObject(By.text("Open in private tab")),
-        waitingTime,
-    )
-    mDevice.waitNotNull(
-        findObject(By.text("Remove")),
-        waitingTime,
-    )
-}
-
-private fun assertJumpBackInItemTitle(testRule: ComposeTestRule, itemTitle: String) =
-    testRule.onNodeWithTag("recent.tab.title", useUnmergedTree = true).assert(hasText(itemTitle))
-
-private fun assertJumpBackInItemWithUrl(testRule: ComposeTestRule, itemUrl: String) =
-    testRule.onNodeWithTag("recent.tab.url", useUnmergedTree = true).assert(hasText(itemUrl))
-
-private fun assertJumpBackInShowAllButton() =
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.recent_tabs_show_all)))
-
-private fun assertRecentlyVisitedSectionIsDisplayed(exists: Boolean) =
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.history_metadata_header_2)), exists = exists)
-
-private fun assertRecentBookmarksSectionIsDisplayed(exists: Boolean) =
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.recently_saved_title)), exists = exists)
-
-private fun assertPocketSectionIsDisplayed(exists: Boolean) =
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.pocket_stories_header_1)), exists = exists)
 
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
 
