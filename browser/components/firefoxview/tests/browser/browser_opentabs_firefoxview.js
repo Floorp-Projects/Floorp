@@ -24,10 +24,6 @@ const { NonPrivateTabs } = ChromeUtils.importESModule(
   "resource:///modules/OpenTabs.sys.mjs"
 );
 
-function getCards(openTabs) {
-  return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
-}
-
 async function getRowsForCard(card) {
   await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
   return card.tabList.rowEls;
@@ -69,9 +65,9 @@ async function waitUntilRowsMatch(openTabs, cardIndex, expectedURLs) {
       return false;
     }
     try {
-      card = getCards(openTabs)[cardIndex];
+      card = getOpenTabsCards(openTabs)[cardIndex];
     } catch (ex) {
-      info("Calling getCards produced exception: " + ex.message);
+      info("Calling getOpenTabsCards produced exception: " + ex.message);
     }
     return !!card;
   }, "Waiting for openTabs to be ready and to get the cards");
@@ -134,7 +130,7 @@ async function moreMenuSetup() {
   info("waiting for openTabs' first card rows");
   await waitUntilRowsMatch(openTabs, 0, getVisibleTabURLs());
 
-  let cards = getCards(openTabs);
+  let cards = getOpenTabsCards(openTabs);
   is(cards.length, 1, "There is one open window.");
 
   let rows = await getRowsForCard(cards[0]);

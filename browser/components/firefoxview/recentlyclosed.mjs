@@ -279,13 +279,8 @@ class RecentlyClosedTabsInView extends ViewPage {
     );
   }
 
-  willUpdate(changedProperties) {
+  willUpdate() {
     this.fullyUpdated = false;
-    if (changedProperties.has("searchQuery")) {
-      this.cumulativeSearches = this.searchQuery
-        ? this.cumulativeSearches + 1
-        : 0;
-    }
   }
 
   updated() {
@@ -435,6 +430,9 @@ class RecentlyClosedTabsInView extends ViewPage {
   onSearchQuery(e) {
     this.searchQuery = e.detail.query;
     this.showAll = false;
+    this.cumulativeSearches = this.searchQuery
+      ? this.cumulativeSearches + 1
+      : 0;
     this.#updateSearchResults();
   }
 

@@ -46,6 +46,8 @@ skip-if = ["true"] # Bug 1851453
 
 ["browser_firefoxview_navigation.js"]
 
+["browser_firefoxview_search_telemetry.js"]
+
 ["browser_firefoxview_virtual_list.js"]
 
 ["browser_history_firefoxview.js"]

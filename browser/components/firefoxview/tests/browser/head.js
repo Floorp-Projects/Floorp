@@ -648,3 +648,53 @@ async function telemetryEvent(eventDetails) {
     { clear: true, process: "parent" }
   );
 }
+
+function getOpenTabsCards(openTabs) {
+  return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
+}
+
+async function click_recently_closed_tab_item(itemElem, itemProperty = "") {
+  // Make sure the firefoxview tab still has focus
+  is(
+    itemElem.ownerDocument.location.href,
+    "about:firefoxview#recentlyclosed",
+    "about:firefoxview is the selected tab and showing the Recently closed view page"
+  );
+
+  // Scroll to the tab element to ensure dismiss button is visible
+  itemElem.scrollIntoView();
+  is(isElInViewport(itemElem), true, "Tab is visible in viewport");
+  let clickTarget;
+  switch (itemProperty) {
+    case "dismiss":
+      clickTarget = itemElem.buttonEl;
+      break;
+    default:
+      clickTarget = itemElem.mainEl;
+      break;
+  }
+
+  const closedObjectsChangePromise = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
+  EventUtils.synthesizeMouseAtCenter(clickTarget, {}, itemElem.ownerGlobal);
+  await closedObjectsChangePromise;
+}
+
+async function waitForRecentlyClosedTabsList(doc) {
+  let recentlyClosedComponent = doc.querySelector(
+    "view-recentlyclosed:not([slot=recentlyclosed])"
+  );
+  // Check that the tabs list is rendered
+  await TestUtils.waitForCondition(() => {
+    return recentlyClosedComponent.cardEl;
+  });
+  let cardContainer = recentlyClosedComponent.cardEl;
+  let cardMainSlotNode = Array.from(
+    cardContainer?.mainSlot?.assignedNodes()
+  )[0];
+  await TestUtils.waitForCondition(() => {
+    return cardMainSlotNode.rowEls.length;
+  });
+  return [cardMainSlotNode, cardMainSlotNode.rowEls];
+}
