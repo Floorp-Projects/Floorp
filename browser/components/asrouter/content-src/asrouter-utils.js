@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.sys.mjs";
 import { actionCreators as ac } from "common/Actions.sys.mjs";
 
 export const ASRouterUtils = {

@@ -3,10 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  MESSAGE_TYPE_LIST,
-  MESSAGE_TYPE_HASH as msg,
-} from "resource://activity-stream/common/ActorConstants.sys.mjs";
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// MESSAGE_TYPE_LIST and MESSAGE_TYPE_HASH, and overrides importESModule
+// to be a no-op (which can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
+const { MESSAGE_TYPE_LIST, MESSAGE_TYPE_HASH: msg } =
+  ChromeUtils.importESModule(
+    "resource:///modules/asrouter/ActorConstants.sys.mjs"
+  );
 
 const VALID_TYPES = new Set(MESSAGE_TYPE_LIST);
 

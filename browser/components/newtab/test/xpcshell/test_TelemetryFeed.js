@@ -8,7 +8,7 @@ const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
 );
 
 const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/ActorConstants.sys.mjs"
+  "resource:///modules/asrouter/ActorConstants.sys.mjs"
 );
 
 const { updateAppInfo } = ChromeUtils.importESModule(

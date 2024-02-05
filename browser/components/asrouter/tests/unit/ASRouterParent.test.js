@@ -1,5 +1,5 @@
 import { ASRouterParent } from "actors/ASRouterParent.sys.mjs";
-import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.sys.mjs";
 
 describe("ASRouterParent", () => {
   let asRouterParent = null;

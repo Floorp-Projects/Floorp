@@ -29,6 +29,7 @@ module.exports = Object.assign({}, config(), {
     alias: {
       newtab: absolute("../newtab"),
       common: absolute("../newtab/common"),
+      modules: absolute("modules"),
     },
   },
 });
