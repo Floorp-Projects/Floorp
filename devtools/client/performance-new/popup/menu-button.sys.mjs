@@ -8,9 +8,7 @@
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
 
-const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
-);
+import { createLazyLoaders } from "resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs";
 
 const lazy = createLazyLoaders({
   CustomizableUI: () =>
@@ -20,12 +18,12 @@ const lazy = createLazyLoaders({
       "resource:///modules/CustomizableWidgets.sys.mjs"
     ),
   PopupLogic: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/popup/logic.jsm.js"
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/popup/logic.sys.mjs"
     ),
   Background: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/shared/background.jsm.js"
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/shared/background.sys.mjs"
     ),
 });
 

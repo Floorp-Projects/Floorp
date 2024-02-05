@@ -18,16 +18,14 @@
  * @property {boolean} isInfoCollapsed
  */
 
-const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
-);
+import { createLazyLoaders } from "resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs";
 
 const lazy = createLazyLoaders({
   PanelMultiView: () =>
     ChromeUtils.importESModule("resource:///modules/PanelMultiView.sys.mjs"),
   Background: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/shared/background.jsm.js"
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/shared/background.sys.mjs"
     ),
 });
 

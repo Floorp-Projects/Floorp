@@ -9,8 +9,8 @@ add_task(async function test() {
     "Test what happens if the profiler was previously started by another tool."
   );
 
-  const { startProfiler } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  const { startProfiler } = ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 
   info("Start the profiler before DevTools is loaded.");
