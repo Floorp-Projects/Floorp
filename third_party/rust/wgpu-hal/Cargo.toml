@@ -87,7 +87,7 @@ path = "../naga"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
-version = "0.29.9"
+version = "0.29.10"
 features = ["android-native-activity"]
 
 [build-dependencies]

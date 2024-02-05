@@ -9,7 +9,6 @@ pub use wgc::command::{compute_ffi::*, render_ffi::*};
 
 pub mod client;
 pub mod error;
-pub mod identity;
 pub mod server;
 
 pub use wgc::device::trace::Command as CommandEncoderAction;
@@ -113,7 +112,7 @@ pub struct AdapterInformation<S> {
 #[derive(serde::Serialize, serde::Deserialize)]
 struct ImplicitLayout<'a> {
     pipeline: id::PipelineLayoutId,
-    bind_groups: Cow<'a, [id::BindGroupLayoutId]>,
+    bind_groups: Cow<'a, [Option<id::BindGroupLayoutId>]>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
