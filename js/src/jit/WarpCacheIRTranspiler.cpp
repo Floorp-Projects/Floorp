@@ -746,6 +746,18 @@ bool WarpCacheIRTranspiler::emitMegamorphicHasPropResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSmallObjectVariableKeyHasOwnResult(
+    StringOperandId idId, uint32_t propNamesOffset, uint32_t shapeOffset) {
+  MDefinition* id = getOperand(idId);
+  SharedShape* shape = &shapeStubField(shapeOffset)->asShared();
+
+  auto* ins = MSmallObjectVariableKeyHasProp::New(alloc(), id, shape);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMegamorphicSetElement(ObjOperandId objId,
                                                       ValOperandId idId,
                                                       ValOperandId rhsId,
@@ -1470,14 +1482,14 @@ bool WarpCacheIRTranspiler::emitBooleanToNumber(BooleanOperandId inputId,
   return defineOperand(resultId, ins);
 }
 
-bool WarpCacheIRTranspiler::emitStringToAtom(StringOperandId strId,
-                                             StringOperandId resultId) {
+bool WarpCacheIRTranspiler::emitStringToAtom(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
   auto* ins = MToHashableString::New(alloc(), str);
   add(ins);
 
-  return defineOperand(resultId, ins);
+  setOperand(strId, ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {

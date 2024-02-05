@@ -61,6 +61,7 @@
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/PlainObject-inl.h"
 #include "vm/StringObject-inl.h"
@@ -260,7 +261,8 @@ IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
       pc_(pc),
       cacheKind_(cacheKind),
       mode_(state.mode()),
-      isFirstStub_(state.newStubIsFirstStub()) {}
+      isFirstStub_(state.newStubIsFirstStub()),
+      numOptimizedStubs_(state.numOptimizedStubs()) {}
 
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, ICState state,
@@ -3820,7 +3822,7 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
                                                       ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
-  NativeObject* holder = nullptr;
+  Rooted<NativeObject*> holder(cx_);
   PropertyResult prop;
 
   if (hasOwn) {
@@ -3828,21 +3830,96 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
       return AttachDecision::NoAction;
     }
 
-    holder = &obj->as<NativeObject>();
+    holder.set(&obj->as<NativeObject>());
   } else {
-    if (!LookupPropertyPure(cx_, obj, key, &holder, &prop)) {
+    NativeObject* nHolder = nullptr;
+    if (!LookupPropertyPure(cx_, obj, key, &nHolder, &prop)) {
       return AttachDecision::NoAction;
     }
+    holder.set(nHolder);
   }
   if (prop.isNotFound()) {
     return AttachDecision::NoAction;
   }
-  auto* nobj = &obj->as<NativeObject>();
 
+  TRY_ATTACH(tryAttachSmallObjectVariableKey(obj, objId, key, keyId));
   TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
-  TRY_ATTACH(tryAttachNative(nobj, objId, key, keyId, prop, holder));
+  TRY_ATTACH(tryAttachNative(&obj->as<NativeObject>(), objId, key, keyId, prop,
+                             holder.get()));
 
   return AttachDecision::NoAction;
+}
+
+AttachDecision HasPropIRGenerator::tryAttachSmallObjectVariableKey(
+    HandleObject obj, ObjOperandId objId, jsid key, ValOperandId keyId) {
+  MOZ_ASSERT(obj->is<NativeObject>());
+
+  if (cacheKind_ != CacheKind::HasOwn) {
+    return AttachDecision::NoAction;
+  }
+
+  if (mode_ != ICState::Mode::Megamorphic) {
+    return AttachDecision::NoAction;
+  }
+
+  if (numOptimizedStubs_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!key.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!obj->as<NativeObject>().hasEmptyElements()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (obj->getClass()->getResolve()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!obj->shape()->isShared()) {
+    return AttachDecision::NoAction;
+  }
+
+  static constexpr size_t SMALL_OBJECT_SIZE = 5;
+
+  if (obj->shape()->asShared().slotSpan() > SMALL_OBJECT_SIZE) {
+    return AttachDecision::NoAction;
+  }
+
+  Rooted<ListObject*> keyListObj(cx_, ListObject::create(cx_));
+  if (!keyListObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  for (SharedShapePropertyIter<CanGC> iter(cx_, &obj->shape()->asShared());
+       !iter.done(); iter++) {
+    if (!iter->key().isAtom()) {
+      return AttachDecision::NoAction;
+    }
+
+    if (keyListObj->length() == SMALL_OBJECT_SIZE) {
+      return AttachDecision::NoAction;
+    }
+
+    RootedValue key(cx_, StringValue(iter->key().toAtom()));
+    if (!keyListObj->append(cx_, key)) {
+      cx_->recoverFromOutOfMemory();
+      return AttachDecision::NoAction;
+    }
+  }
+
+  writer.guardShape(objId, obj->shape());
+  writer.guardNoDenseElements(objId);
+  StringOperandId keyStrId = writer.guardToString(keyId);
+  StringOperandId keyAtomId = writer.stringToAtom(keyStrId);
+  writer.smallObjectVariableKeyHasOwnResult(keyAtomId, keyListObj,
+                                            obj->shape());
+  writer.returnFromIC();
+  trackAttached("HasProp.SmallObjectVariableKey");
+  return AttachDecision::Attach;
 }
 
 AttachDecision HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId,
@@ -3937,10 +4014,11 @@ AttachDecision HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj,
       return AttachDecision::NoAction;
     }
   }
-  auto* nobj = &obj->as<NativeObject>();
 
+  TRY_ATTACH(tryAttachSmallObjectVariableKey(obj, objId, key, keyId));
   TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
-  TRY_ATTACH(tryAttachSlotDoesNotExist(nobj, objId, key, keyId));
+  TRY_ATTACH(
+      tryAttachSlotDoesNotExist(&obj->as<NativeObject>(), objId, key, keyId));
 
   return AttachDecision::NoAction;
 }

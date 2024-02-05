@@ -6709,6 +6709,21 @@ AliasSet MMegamorphicLoadSlot::getAliasSet() const {
                         AliasSet::DynamicSlot);
 }
 
+bool MSmallObjectVariableKeyHasProp::congruentTo(const MDefinition* ins) const {
+  if (!ins->isSmallObjectVariableKeyHasProp()) {
+    return false;
+  }
+  if (ins->toSmallObjectVariableKeyHasProp()->shape() != shape()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
+AliasSet MSmallObjectVariableKeyHasProp::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                        AliasSet::DynamicSlot);
+}
+
 bool MMegamorphicHasProp::congruentTo(const MDefinition* ins) const {
   if (!ins->isMegamorphicHasProp()) {
     return false;

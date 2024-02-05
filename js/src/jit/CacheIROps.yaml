@@ -581,10 +581,10 @@
 - name: StringToAtom
   shared: true
   transpile: true
+  custom_writer: true
   cost_estimate: 4
   args:
     str: StringId
-    result: StringId
 
 - name: BooleanToNumber
   shared: true
@@ -908,6 +908,23 @@
     obj: ObjId
     id: ValId
     hasOwn: BoolImm
+
+# For the case where we have an object with a small number of properties,
+# we can do better than a megamorphic hasprop if we just run through those
+# IDs and check for atom pointer equality.
+- name: SmallObjectVariableKeyHasOwnResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    # We don't actually need the object, because we only care about the shape,
+    # which was guarded before this
+    id: StringId
+    # We include the prop names to speed up and simplify the Baseline case,
+    # but only the shape is used from Ion to achieve an unrolled loop with
+    # comparisons to known atoms
+    propNames: ObjectField
+    shape: ShapeField
 
 - name: ObjectToIteratorResult
   shared: true
