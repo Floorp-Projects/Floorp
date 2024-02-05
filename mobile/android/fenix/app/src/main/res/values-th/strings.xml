@@ -241,6 +241,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ปรับแต่งหน้าแรก</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">หน้าแรก</string>
@@ -248,6 +249,7 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">ล้างประวัติการเรียกดู</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ภาษาที่เลือก</string>
@@ -1304,6 +1306,8 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">ปิดแท็บส่วนตัว?</string>
 
+    <string name="notification_erase_text_android_14">แตะหรือปัดการแจ้งเตือนนี้เพื่อปิดแท็บส่วนตัว</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">การตลาด</string>
 
@@ -2283,8 +2287,18 @@
     <string name="review_quality_check_no_analysis_link">ตรวจสอบคุณภาพบทวิจารณ์</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">ลองใช้คำแนะนำที่เชื่อถือได้ของเราเกี่ยวกับบทวิจารณ์ผลิตภัณฑ์</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ ตัวตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง ซึ่งสามารถใช้ใน %3$s และ %4$s ได้ด้วย</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ ตัวตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">ด้วยการใช้พลังของ %1$s โดย Mozilla เราช่วยให้คุณหลีกเลี่ยงบทวิจารณ์ที่มีอคติและไม่น่าไว้วางใจได้ โมเดล AI ของเราจะปรับปรุงอยู่เสมอเพื่อปกป้องคุณในขณะที่คุณซื้อของ %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">เรียนรู้เพิ่มเติม</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sและ%3$sของ %1$s โดย Mozilla</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
+    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับข้อตกลงต่อไปนี้จาก %1$s:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">นโยบายความเป็นส่วนตัว</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2297,6 +2311,8 @@
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ใช่ลองดู</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ไม่ใช่ตอนนี้</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">ค้นพบว่าคุณสามารถเชื่อถือบทวิจารณ์ของผลิตภัณฑ์นี้ได้หรือไม่ ก่อนที่คุณจะตัดสินใจซื้อ</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ลองตัวตรวจสอบบทวิจารณ์</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->
@@ -2357,6 +2373,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">แปลหน้านี้?</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">ลองใช้การแปลแบบส่วนตัวใน %1$s</string>
+    <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
+    <string name="translations_bottom_sheet_info_message">เพื่อความเป็นส่วนตัวของคุณ ข้อมูลการแปลจะไม่ออกไปนอกอุปกรณ์ของคุณ ภาษาและการปรับปรุงใหม่ๆ จะมาในเร็วๆ นี้! %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -2377,6 +2397,13 @@
     <string name="translations_bottom_sheet_translating_in_progress_content_description">อยู่ระหว่างการแปล</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">เกิดปัญหาในการแปล โปรดลองอีกครั้ง</string>
+
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">ไม่สามารถโหลดภาษาได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณแล้วลองอีกครั้ง</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">ขออภัย เรายังไม่รองรับภาษา%1$s</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more">เรียนรู้เพิ่มเติม</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2476,11 +2503,30 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">เลือกแล้ว</string>
 
+    <!-- Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_file_dialog_title">ลบ %1$s (%2$s) หรือไม่?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">หากคุณลบภาษานี้ %1$s จะดาวน์โหลดภาษาบางส่วนลงในแคชของคุณในขณะที่คุณแปล</string>
+    <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
+    The dialog will be presented when the user requests deletion of all languages file.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_all_languages_file_dialog_title">ลบทุกภาษา (%1$s) หรือไม่?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">หากคุณลบทุกภาษา %1$s จะดาวน์โหลดภาษาบางส่วนลงในแคชของคุณในขณะที่คุณแปล</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">ลบ</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">ยกเลิก</string>
 
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">ดาวน์โหลดขณะอยู่ในโหมดประหยัดข้อมูล (%1$s) หรือไม่?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">เราดาวน์โหลดภาษาบางส่วนลงในแคชของคุณเพื่อให้การแปลเป็นส่วนตัว</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">ดาวน์โหลดในโหมดประหยัดข้อมูลเสมอ</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2495,6 +2541,10 @@
     <string name="debug_drawer_title">เครื่องมือดีบัก</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">นำทางย้อนกลับ</string>
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title">เครื่องมือแท็บ</string>
+    <!-- The title of the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_title">จำนวนแท็บ</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal">ใช้งานอยู่</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
@@ -2503,6 +2553,10 @@
     <string name="debug_drawer_tab_tools_tab_count_private">ส่วนตัว</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">รวมทั้งหมด</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">เครื่องมือสร้างแท็บ</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">จำนวนแท็บที่จะสร้าง</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">เพิ่มไปยังแท็บที่ใช้งานอยู่</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->

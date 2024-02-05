@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Odebrat ze zkratek</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Co je nového</string>
     <string name="menu_settings">Nastavení</string>
     <string name="menu_about">O nás</string>
     <string name="menu_help">Nápověda</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Sdílet přes</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Vymazat historii prohlížení?</string>
+    <string name="notification_erase_text_android_14">Klepnutím na toto oznámení nebo jeho smazáním bezpečně vymažete svou historii prohlížení.</string>
+
     <string name="notification_erase_text">Vymazat historii prohlížení</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

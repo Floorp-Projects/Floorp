@@ -244,6 +244,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Налаштувати домівку</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Домашній екран</string>
@@ -251,6 +252,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Стерти історію перегляду</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Перекласти сторінку</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Обрана мова</string>
@@ -1887,7 +1891,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених банківських карток від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених банківських карток від інших, хто може отримати доступ до вашого пристрою.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених способів оплати від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Встановити</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2050,12 +2054,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Параметри пароля</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Текстове поле для редагування вебадреси запису.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Текстове поле для редагування адреси вебсайту.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Текстове поле для редагування адреси вебсайту.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Текстове поле для редагування імені користувача запису.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Текстове поле для редагування імені користувача.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Текстове поле для редагування імені користувача.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Текстове поле для редагування пароля запису.</string>
     <!--  The editable text field for a login's password. -->
@@ -2436,6 +2440,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Виконується переклад</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Вибрати мову</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Виникла проблема з перекладом. Повторіть спробу.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->

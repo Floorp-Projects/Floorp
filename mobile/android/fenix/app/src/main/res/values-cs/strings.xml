@@ -249,6 +249,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Přizpůsobit</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Domovská obrazovka</string>
@@ -256,6 +257,10 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Vymazat historii prohlížení</string>
+
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Přeložit stránku</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Vybraný jazyk</string>
@@ -1716,6 +1721,8 @@
     <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Uložená hesla</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Uložené nebo synchronizované údaje aplikace %s se zobrazí tady.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Hesla, která uložíte nebo synchronizujete s aplikací %s, budou uvedena zde. Všechna uložená hesla jsou šifrována.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Zjistit více o službě Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
@@ -1772,6 +1779,8 @@
     <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zabezpečte svá uložená hesla</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložené přihlašovací údaje, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložená hesla, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Později</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1791,6 +1800,9 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Seřadit podle</string>
+
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Nabídka pro řazení hesel</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1897,6 +1909,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Odemkněte pro použití informací o platební kartě</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Odemknout pro použití uložených způsobů platby</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Přidat adresu</string>
     <!-- Title of the "Edit address" screen -->
@@ -2052,6 +2066,8 @@
     <string name="saved_login_username_description">Textové pole pro uživatelské jméno z přihlašovacích údajů.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Textové pole pro heslo z přihlašovacích údajů.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Upravitelné textové pole pro heslo.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Uložit změny přihlašovacích údajů.</string>
     <!--  The button description to save changes to an edited password. -->
@@ -2428,6 +2444,8 @@
     <string name="translations_bottom_sheet_translating_in_progress">Probíhá překlad</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Právě probíhá překlad</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Vyberte jazyk</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Při překladu došlo k chybě. Zkuste to prosím znovu.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2450,6 +2468,8 @@
     <string name="translation_option_bottom_sheet_never_translate_site">Nikdy nepřekládat tuto stránku</string>
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
     <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Přepíše všechna ostatní nastavení</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Přepíše nabídky k překladu</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Nastavení překladu</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

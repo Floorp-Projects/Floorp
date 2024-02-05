@@ -247,6 +247,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Upraviť domovskú stránku</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Úvodná obrazovka</string>
@@ -254,6 +255,10 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Vymazať históriu prehliadania</string>
+
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Preložiť stránku</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Vybraný jazyk</string>
@@ -265,8 +270,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skenovať</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Vyhľadávač</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavenia vyhľadávania</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -323,14 +326,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Upozornenia vám pomôžu vyťažiť z prehliadača %s ešte viac</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Upozornenia vám pomôžu vyťažiť z prehliadača %s ešte viac</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Synchronizujte svoje karty medzi zariadeniami, spravujte sťahovanie, získajte tipy, ako čo najlepšie využiť ochranu súkromia prehliadača %s a ďalšie.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Synchronizujte svoje karty medzi zariadeniami, spravujte sťahovanie, získajte tipy, ako čo najlepšie využiť ochranu súkromia prehliadača %s a ďalšie.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Pokračovať</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Pokračovať</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Teraz nie</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Teraz nie</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
@@ -449,21 +452,11 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Režim &quot;Len HTTPS&quot;</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Zníženie počtu bannerov k súborom cookie</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Blokovanie bannerov k súborom cookie</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Blokovať bannery k súborom cookie v súkromnom prehliadaní</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Znižovať počet bannerov k súborom cookie</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Vypnuté</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Zapnuté</string>
 
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s sa automaticky pokúša odmietnuť žiadosti o súbory cookie na banneroch k súborom cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Vypnuté pre túto stránku</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -481,36 +474,17 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Stránka momentálne nie je podporovaná</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Zapnúť znižovanie počtu bannerov k súborom cookie pre %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Zapnúť blokovanie bannerov k súborom cookie pre %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Vypnúť znižovanie počtu bannerov k súborom cookie pre %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Vypnúť blokovanie bannerov k súborom cookie pre %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nemôže automaticky odmietnuť žiadosti o súbory cookie na tejto stránke. Môžete však poslať žiadosť o podporu tejto stránky v budúcnosti.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s vymaže súbory cookie tohto webu a obnoví stránku. Vymazanie všetkých súborov cookie vás môže odhlásiť zo stránky alebo vyprázdniť nákupné košíky.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Po vypnutí %1$s vymaže súbory cookie a znova načíta túto lokalitu. Môže vás to odhlásiť alebo vyprázdniť nákupné košíky.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s sa pokúša automaticky odmietnuť všetky žiadosti o súbory cookie na podporovaných stránkach.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Po zapnutí sa %1$s pokúsi automaticky odmietnuť všetky bannery k súborom cookie na tejto stránke.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Povoliť prehliadaču %1$s odmietnuť bannery k súborom cookie?</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s môže automaticky odmietnuť mnoho žiadostí o povolenie súborov cookie.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Teraz nie</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Uvidíte menej žiadostí o súbory cookie</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Povoliť</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s pre vás práve odmietol súbory cookie</string>
@@ -1299,8 +1273,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Zavrieť</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Chyba tlače</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">Túto stránku nie je možné vytlačiť</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Tlačiť</string>
@@ -1920,7 +1892,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené kreditné karty v prípade, že vaše zariadenie bude používať niekto iný.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené karty v prípade, že vaše zariadenie bude používať niekto iný.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené spôsoby platby v prípade, že vaše zariadenie bude používať niekto iný.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Nastaviť teraz</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2081,12 +2053,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti hesiel</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Upraviteľné textové pole pre webovú adresu.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Upraviteľné textové pole pre webovú stránku, kde používate toto heslo.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Upraviteľné textové pole pre webovú adresu.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Upraviteľné textové pole pre používateľské meno.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Upraviteľné textové pole pre používateľské meno, ktoré používate s týmto heslom.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Upraviteľné textové pole pre používateľské meno.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Upraviteľné textové pole pre heslo.</string>
     <!--  The editable text field for a login's password. -->
@@ -2284,8 +2256,6 @@
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Najdôležitejšie informácie</b> pochádzajú z recenzií v obchode %s uverejnených za posledných 80 dní, ktoré považujeme za spoľahlivé.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Ďalšie informácie o tom, %s.</string>
-    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">ako %s od Mozilly určuje kvalitu recenzie</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">ako %s určuje kvalitu recenzie</string>
     <!-- Text for title of settings section. -->
@@ -2470,6 +2440,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Práve prebieha preklad</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Zvoľte jazyk</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Pri preklade sa vyskytol problém. Prosím skúste to znova.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2483,19 +2455,19 @@
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title">Nastavenia prekladov</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
-    <string name="translation_option_bottom_sheet_always_translate">Vždy ponúkať preklad</string>
+    <string name="translation_option_bottom_sheet_always_translate">Vždy ponúknuť preklad</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
-    <string name="translation_option_bottom_sheet_always_translate_in_language">Vždy prekladať jazyk %1$s</string>
+    <string name="translation_option_bottom_sheet_always_translate_in_language">Vždy prekladať z jazyka %1$s</string>
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">Nikdy neprekladať z jazyka %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Nikdy neprekladať túto stránku</string>
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Prepíše všetky ostatné nastavenia</string>
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Má prednosť pred ostatnými nastaveniami</string>
     <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_description">Prepíše ponuky na preklad</string>
+    <string name="translation_option_bottom_sheet_switch_description">Nebude ponúkať preklad</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
-    <string name="translation_option_bottom_sheet_translation_settings">Nastavenia prekladu</string>
+    <string name="translation_option_bottom_sheet_translation_settings">Nastavenia prekladov</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Informácie o prekladoch v aplikácii %1$s</string>
 
@@ -2505,13 +2477,13 @@
     <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
     <string name="translation_settings_offer_to_translate">Ak je to možné, ponúknuť preklad</string>
     <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
-    <string name="translation_settings_always_download">Vždy sťahovať jazyky v režime šetrenia dát</string>
+    <string name="translation_settings_always_download">Sťahovať jazyky aj v režime šetrenia dát</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Nastavenia prekladania obsahu</string>
     <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
     <string name="translation_settings_automatic_translation">Automatický preklad</string>
     <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
-    <string name="translation_settings_automatic_never_translate_sites">Nikdy neprekladať tieto stránky</string>
+    <string name="translation_settings_automatic_never_translate_sites">Neprekladať tieto stránky</string>
     <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
     <string name="translation_settings_download_language">Stiahnuť jazyky</string>
 
@@ -2520,7 +2492,7 @@
     <string name="automatic_translation_toolbar_title_preference">Automatický preklad</string>
 
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
-    <string name="automatic_translation_header_preference">Vyberte jazyk, pre ktorý chcete spravovať predvoľby „vždy prekladať“ a „nikdy neprekladať“.</string>
+    <string name="automatic_translation_header_preference">Vyberte jazyk, pre ktorý chcete spravovať predvoľby „Vždy prekladať“ a „Nikdy neprekladať“.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2557,7 +2529,7 @@
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">Stiahnite si jazyky</string>
     <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
-    <string name="download_languages_header_preference">Stiahnite si kompletné jazyky pre rýchlejšie preklady a preklady offline. %1$s</string>
+    <string name="download_languages_header_preference">Ak chcete rýchlejšie preklady alebo preklady offline, musíte si stiahnuť kompletné jazykové balíky. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Ďalšie informácie</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
