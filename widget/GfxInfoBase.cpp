@@ -2009,6 +2009,59 @@ std::pair<Device, nsString> GfxInfoBase::GetFontVisibilityDeterminationPair() {
       androidProduct.get(), androidProductIsChromebook ? "yes" : "no");
 
 #elif defined(XP_LINUX)
+  ret.first = Device::Linux_Unknown;
+
+  long versionMajor = 0;
+  FILE* fp = fopen("/etc/os-release", "r");
+  if (fp) {
+    char buf[512];
+    while (fgets(buf, sizeof(buf), fp)) {
+      if (strncmp(buf, "VERSION_ID=\"", 12) == 0) {
+        ret.second.AppendPrintf("VERSION_ID=%.11s", buf + 11);
+        versionMajor = strtol(buf + 12, nullptr, 10);
+        if (ret.first != Device::Linux_Unknown) {
+          break;
+        }
+      }
+
+      if (strncmp(buf, "ID=", 3) == 0) {
+        ret.second.AppendPrintf("ID=%.6s", buf + 3);
+        if (strncmp(buf + 3, "ubuntu", 6) == 0) {
+          ret.first = Device::Linux_Ubuntu_any;
+        } else if (strncmp(buf + 3, "fedora", 6) == 0) {
+          ret.first = Device::Linux_Fedora_any;
+        }
+
+        if (versionMajor) {
+          break;
+        }
+      }
+    }
+    fclose(fp);
+  }
+  if (ret.first == Device::Linux_Ubuntu_any) {
+    if (versionMajor == 20) {
+      ret.first = Device::Linux_Ubuntu_20;
+      ret.second.Insert(u"Ubuntu 20 - ", 0);
+    } else if (versionMajor == 22) {
+      ret.first = Device::Linux_Ubuntu_22;
+      ret.second.Insert(u"Ubuntu 22 - ", 0);
+    } else {
+      ret.second.Insert(u"Ubuntu Unknown - ", 0);
+    }
+  } else if (ret.first == Device::Linux_Fedora_any) {
+    if (versionMajor == 38) {
+      ret.first = Device::Linux_Fedora_38;
+      ret.second.Insert(u"Fedora 38 - ", 0);
+    } else if (versionMajor == 39) {
+      ret.first = Device::Linux_Fedora_39;
+      ret.second.Insert(u"Fedora 39 - ", 0);
+    } else {
+      ret.second.Insert(u"Fedora Unknown - ", 0);
+    }
+  } else {
+    ret.second.Insert(u"Linux Unknown - ", 0);
+  }
 
 #elif defined(XP_MACOSX)
   ret.first = Device::MacOS_Platform;
