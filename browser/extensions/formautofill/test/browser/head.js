@@ -1199,7 +1199,7 @@ function normalizeAddressFields(record) {
 async function verifyConfirmationHint(
   browser,
   forceClose,
-  anchorID = "identity-icon"
+  anchorID = "identity-icon-box"
 ) {
   let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
   await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
