@@ -4330,7 +4330,8 @@ bool Element::IsPopoverOpen() const {
   return htmlElement && htmlElement->PopoverOpen();
 }
 
-Element* Element::GetTopmostPopoverAncestor(const Element* aInvoker) const {
+Element* Element::GetTopmostPopoverAncestor(const Element* aInvoker,
+                                            bool isPopover) const {
   const Element* newPopover = this;
 
   nsTHashMap<nsPtrHashKey<const Element>, size_t> popoverPositions;
@@ -4338,7 +4339,10 @@ Element* Element::GetTopmostPopoverAncestor(const Element* aInvoker) const {
   for (Element* popover : OwnerDoc()->AutoPopoverList()) {
     popoverPositions.LookupOrInsert(popover, index++);
   }
-  popoverPositions.LookupOrInsert(newPopover, index);
+
+  if (isPopover) {
+    popoverPositions.LookupOrInsert(newPopover, index);
+  }
 
   Element* topmostPopoverAncestor = nullptr;
 
