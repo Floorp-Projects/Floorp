@@ -21,6 +21,15 @@ class NetworkStringValue(Dict[str, Any]):
 NetworkBytesValue = Union[NetworkStringValue, NetworkBase64Value]
 
 
+class CookieHeader(Dict[str, Any]):
+    def __init__(self, name: str, value: NetworkBytesValue):
+        dict.__init__(self, name=name, value=value)
+
+
+class Header(Dict[str, Any]):
+    def __init__(self, name: str, value: NetworkBytesValue):
+        dict.__init__(self, name=name, value=value)
+
 
 class URLPatternPattern(Dict[str, Any]):
     def __init__(
@@ -96,19 +105,29 @@ class Network(BidiModule):
     @command
     def continue_request(self,
                          request: str,
+                         body: Optional[NetworkBytesValue] = None,
+                         cookies: Optional[List[CookieHeader]] = None,
+                         headers: Optional[List[Header]] = None,
                          method: Optional[str] = None,
                          url: Optional[str] = None) -> Mapping[str, Any]:
         params: MutableMapping[str, Any] = {
             "request": request,
         }
 
+        if body is not None:
+            params["body"] = body
+
+        if cookies is not None:
+            params["cookies"] = cookies
+
+        if headers is not None:
+            params["headers"] = headers
+
         if method is not None:
             params["method"] = method
 
         if url is not None:
             params["url"] = url
-
-        # TODO: Add support for missing parameters: body, cookies, headers
 
         return params
 
