@@ -9,7 +9,7 @@ import sys
 # ipaddress has been backported to 2.6+ in pypi.  If it is installed on the
 # system, use it to handle IPAddress ServerAltnames (this was added in
 # python-3.5) otherwise only do DNS matching.  This allows
-# backports.ssl_match_hostname to continue to be used in Python 2.7.
+# util.ssl_match_hostname to continue to be used in Python 2.7.
 try:
     import ipaddress
 except ImportError:
@@ -78,7 +78,8 @@ def _dnsname_match(dn, hostname, max_wildcards=1):
 
 def _to_unicode(obj):
     if isinstance(obj, str) and sys.version_info < (3,):
-        obj = unicode(obj, encoding="ascii", errors="strict")
+        # ignored flake8 # F821 to support python 2.7 function
+        obj = unicode(obj, encoding="ascii", errors="strict")  # noqa: F821
     return obj
 
 
@@ -111,11 +112,9 @@ def match_hostname(cert, hostname):
     try:
         # Divergence from upstream: ipaddress can't handle byte str
         host_ip = ipaddress.ip_address(_to_unicode(hostname))
-    except ValueError:
-        # Not an IP address (common case)
-        host_ip = None
-    except UnicodeError:
-        # Divergence from upstream: Have to deal with ipaddress not taking
+    except (UnicodeError, ValueError):
+        # ValueError: Not an IP address (common case)
+        # UnicodeError: Divergence from upstream: Have to deal with ipaddress not taking
         # byte strings.  addresses should be all ascii, so we consider it not
         # an ipaddress in this case
         host_ip = None
@@ -123,7 +122,7 @@ def match_hostname(cert, hostname):
         # Divergence from upstream: Make ipaddress library optional
         if ipaddress is None:
             host_ip = None
-        else:
+        else:  # Defensive
             raise
     dnsnames = []
     san = cert.get("subjectAltName", ())
