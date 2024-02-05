@@ -6,7 +6,6 @@ package mozilla.components.feature.customtabs
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
-import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.browser.customtabs.CustomTabColorSchemeParams
@@ -33,7 +32,6 @@ class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String,
-    internal val onLaunchUrlFallback: (Uri) -> Unit,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -87,13 +85,12 @@ class CustomTabWindowFeature(
                         val uri = windowRequest.url.toUri()
                         // This could only fail if the above intent is for our application
                         // and we are not registered to handle its schemes.
-                        // Let's log this to better asses how often this happens in real world and
-                        // if we need to add new schemes to properly support this workflow.
-                        // See Fenix #8412
                         try {
                             intent.launchUrl(activity, uri)
                         } catch (e: ActivityNotFoundException) {
-                            onLaunchUrlFallback(uri)
+                            // Workaround for unsupported schemes
+                            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1878704
+                            state.engineState.engineSession?.loadUrl(windowRequest.url)
                         }
                         store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
                     }

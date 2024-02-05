@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
-import android.content.Intent
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
@@ -28,7 +27,6 @@ import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
-import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
@@ -80,21 +78,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
         )
 
         windowFeature.set(
-            feature = CustomTabWindowFeature(
-                activity,
-                components.core.store,
-                customTabSessionId,
-            ) { uri ->
-                val intent =
-                    Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
-                if (intent.action == Intent.ACTION_VIEW) {
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                    intent.component = null
-                    intent.selector = null
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                activity.startActivity(intent)
-            },
+            feature = CustomTabWindowFeature(activity, components.core.store, customTabSessionId),
             owner = this,
             view = view,
         )

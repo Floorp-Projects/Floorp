@@ -24,6 +24,9 @@ permalink: /changelog/
   * Add `showMenuButton` and `hideMenuButton` API to `BrowserToolbar` and `DisplayToolbar` to allow hiding and showing of the menu button in
   the `BrowserToolbar` [Bug 1864760](https://bugzilla.mozilla.org/show_bug.cgi?id=1864760)
 
+* **feature-customtabs**
+  * Fallback behaviour when failing to open a new window in custom tab will now be loading the URL directly in the same custom tab. [Bug 1832357](https://bugzilla.mozilla.org/show_bug.cgi?id=1832357)
+
 # 123.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v122..releases_v123)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
@@ -31,7 +34,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v123/android-components/.config.yml)
 
 * **feature-customtabs**
- * Sharing a URL from a custom tab always uses the current url of the session. [Bug 1831803](https://bugzilla.mozilla.org/show_bug.cgi?id=1831803)
+  * Sharing a URL from a custom tab always uses the current url of the session. [Bug 1831803](https://bugzilla.mozilla.org/show_bug.cgi?id=1831803)
 
 # 122.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..releases_v122)
