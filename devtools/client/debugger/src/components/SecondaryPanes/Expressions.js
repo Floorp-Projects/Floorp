@@ -23,7 +23,6 @@ import { objectInspector } from "devtools/client/shared/components/reps/index";
 import actions from "../../actions/index";
 import {
   getExpressions,
-  getExpressionError,
   getAutocompleteMatchset,
   getSelectedSource,
   isMapScopesEnabled,
@@ -59,9 +58,7 @@ class Expressions extends Component {
       autocomplete: PropTypes.func.isRequired,
       autocompleteMatches: PropTypes.array,
       clearAutocomplete: PropTypes.func.isRequired,
-      clearExpressionError: PropTypes.func.isRequired,
       deleteExpression: PropTypes.func.isRequired,
-      expressionError: PropTypes.bool.isRequired,
       expressions: PropTypes.array.isRequired,
       highlightDomElement: PropTypes.func.isRequired,
       onExpressionAdded: PropTypes.func.isRequired,
@@ -86,15 +83,17 @@ class Expressions extends Component {
   }
 
   clear = () => {
-    this.setState(() => {
-      this.props.clearExpressionError();
-      return { editing: false, editIndex: -1, inputValue: "", focused: false };
-    });
+    this.setState(() => ({
+      editing: false,
+      editIndex: -1,
+      inputValue: "",
+      focused: false,
+    }));
   };
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (this.state.editing && !nextProps.expressionError) {
+    if (this.state.editing) {
       this.clear();
     }
 
@@ -109,7 +108,6 @@ class Expressions extends Component {
     const { editing, inputValue, focused } = this.state;
     const {
       expressions,
-      expressionError,
       showInput,
       autocompleteMatches,
       isLoadingOriginalVariables,
@@ -119,7 +117,6 @@ class Expressions extends Component {
     return (
       autocompleteMatches !== nextProps.autocompleteMatches ||
       expressions !== nextProps.expressions ||
-      expressionError !== nextProps.expressionError ||
       isLoadingOriginalVariables !== nextProps.isLoadingOriginalVariables ||
       isOriginalVariableMappingDisabled !==
         nextProps.isOriginalVariableMappingDisabled ||
@@ -181,7 +178,6 @@ class Expressions extends Component {
   hideInput = () => {
     this.setState({ focused: false });
     this.props.onExpressionAdded();
-    this.props.clearExpressionError();
   };
 
   createElement = element => {
@@ -205,16 +201,14 @@ class Expressions extends Component {
   };
 
   handleNewSubmit = async e => {
-    const { inputValue } = this.state;
     e.preventDefault();
     e.stopPropagation();
 
-    this.props.clearExpressionError();
     await this.props.addExpression(this.state.inputValue);
     this.setState({
       editing: false,
       editIndex: -1,
-      inputValue: this.props.expressionError ? inputValue : "",
+      inputValue: "",
     });
 
     this.props.clearAutocomplete();
@@ -259,7 +253,6 @@ class Expressions extends Component {
 
   renderExpression = (expression, index) => {
     const {
-      expressionError,
       openLink,
       openElementInInspector,
       highlightDomElement,
@@ -269,7 +262,7 @@ class Expressions extends Component {
     const { editing, editIndex } = this.state;
     const { input: _input, updating } = expression;
     const isEditingExpr = editing && editIndex === index;
-    if (isEditingExpr || (isEditingExpr && expressionError)) {
+    if (isEditingExpr) {
       return this.renderExpressionEditInput(expression);
     }
 
@@ -369,27 +362,19 @@ class Expressions extends Component {
   }
 
   renderNewExpressionInput() {
-    const { expressionError } = this.props;
     const { editing, inputValue, focused } = this.state;
-    const error = editing === false && expressionError === true;
-    const placeholder = error
-      ? L10N.getStr("expressions.errorMsg")
-      : L10N.getStr("expressions.placeholder");
     return form(
       {
         className: classnames(
           "expression-input-container expression-input-form",
-          {
-            focused,
-            error,
-          }
+          { focused }
         ),
         onSubmit: this.handleNewSubmit,
       },
       input({
         className: "input-expression",
         type: "text",
-        placeholder: placeholder,
+        placeholder: L10N.getStr("expressions.placeholder"),
         onChange: this.handleChange,
         onBlur: this.hideInput,
         onKeyDown: this.handleKeyDown,
@@ -411,9 +396,7 @@ class Expressions extends Component {
   }
 
   renderExpressionEditInput(expression) {
-    const { expressionError } = this.props;
     const { inputValue, editing, focused } = this.state;
-    const error = editing === true && expressionError === true;
     return form(
       {
         key: expression.input,
@@ -421,15 +404,12 @@ class Expressions extends Component {
           "expression-input-container expression-input-form",
           {
             focused,
-            error,
           }
         ),
         onSubmit: e => this.handleExistingSubmit(e, expression),
       },
       input({
-        className: classnames("input-expression", {
-          error,
-        }),
+        className: "input-expression",
         type: "text",
         onChange: this.handleChange,
         onBlur: this.clear,
@@ -490,7 +470,6 @@ const mapStateToProps = state => {
     isLoadingOriginalVariables,
     autocompleteMatches: getAutocompleteMatchset(state),
     expressions,
-    expressionError: getExpressionError(state),
   };
 };
 
@@ -498,7 +477,6 @@ export default connect(mapStateToProps, {
   autocomplete: actions.autocomplete,
   clearAutocomplete: actions.clearAutocomplete,
   addExpression: actions.addExpression,
-  clearExpressionError: actions.clearExpressionError,
   updateExpression: actions.updateExpression,
   deleteExpression: actions.deleteExpression,
   openLink: actions.openLink,

@@ -11,7 +11,6 @@ import { prefs } from "../utils/prefs";
 
 export const initialExpressionState = () => ({
   expressions: restoreExpressions(),
-  expressionError: false,
   autocompleteMatches: {},
   currentAutocompleteInput: null,
 });
@@ -19,9 +18,6 @@ export const initialExpressionState = () => ({
 function update(state = initialExpressionState(), action) {
   switch (action.type) {
     case "ADD_EXPRESSION":
-      if (action.expressionError) {
-        return { ...state, expressionError: !!action.expressionError };
-      }
       return appendExpressionToList(state, {
         input: action.input,
         value: null,
@@ -30,13 +26,11 @@ function update(state = initialExpressionState(), action) {
 
     case "UPDATE_EXPRESSION":
       const key = action.expression.input;
-      const newState = updateExpressionInList(state, key, {
+      return updateExpressionInList(state, key, {
         input: action.input,
         value: null,
         updating: true,
       });
-
-      return { ...newState, expressionError: !!action.expressionError };
 
     case "EVALUATE_EXPRESSION":
       return updateExpressionInList(state, action.input, {
@@ -60,9 +54,6 @@ function update(state = initialExpressionState(), action) {
 
     case "DELETE_EXPRESSION":
       return deleteExpression(state, action.input);
-
-    case "CLEAR_EXPRESSION_ERROR":
-      return { ...state, expressionError: false };
 
     case "AUTOCOMPLETE":
       const { matchProp, matches } = action.result;

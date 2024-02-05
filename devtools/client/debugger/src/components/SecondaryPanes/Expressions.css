@@ -72,10 +72,6 @@
   border: 1px solid var(--blue-50);
 }
 
-.expression-input-container.error {
-  border: 1px solid red;
-}
-
 .expression-container {
   padding-top: 3px;
   padding-bottom: 3px;

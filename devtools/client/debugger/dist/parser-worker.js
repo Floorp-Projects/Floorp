@@ -40800,15 +40800,6 @@ Please specify the "importAttributesKeyword" generator option, whose value can b
       );
     }
 
-    function hasSyntaxError(input) {
-      try {
-        parseScript(input);
-        return false;
-      } catch (e) {
-        return `${e.name} : ${e.message}`;
-      }
-    }
-
     // NOTE: this will only work if we are replacing an original identifier
     function replaceNode(ancestors, node) {
       const ancestor = ancestors[ancestors.length - 1];
@@ -41441,7 +41432,6 @@ Please specify the "importAttributesKeyword" generator option, whose value can b
       getClosestFunctionName,
       getScopes,
       clearSources: clearAllHelpersForSources,
-      hasSyntaxError,
       mapExpression,
       setSource,
     });
