@@ -271,6 +271,30 @@ class AbstractFetchDownloadServiceTest {
 
         service.handleRemovePrivateDownloadIntent(downloadState)
 
+        verify(service, times(0)).cancelDownloadJob(downloadJobState)
+        verify(service).removeDownloadJob(downloadJobState)
+        verify(browserStore).dispatch(DownloadAction.RemoveDownloadAction(downloadState.id))
+    }
+
+    @Test
+    fun `WHEN handleRemovePrivateDownloadIntent is called with a private download AND not COMPLETED status THEN removeDownloadJob and cancelDownloadJob must be called`() {
+        val downloadState = DownloadState(url = "mozilla.org/mozilla.txt", private = true)
+        val downloadJobState = DownloadJobState(state = downloadState, status = DOWNLOADING)
+        val browserStore = mock<BrowserStore>()
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
+            },
+        )
+
+        doAnswer { Unit }.`when`(service).removeDownloadJob(any())
+
+        service.downloadJobs[downloadState.id] = downloadJobState
+
+        service.handleRemovePrivateDownloadIntent(downloadState)
+
         verify(service).cancelDownloadJob(downloadJobState)
         verify(service).removeDownloadJob(downloadJobState)
         verify(browserStore).dispatch(DownloadAction.RemoveDownloadAction(downloadState.id))

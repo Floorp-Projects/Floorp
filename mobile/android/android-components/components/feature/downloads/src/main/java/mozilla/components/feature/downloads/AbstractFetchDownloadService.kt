@@ -271,7 +271,10 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun handleRemovePrivateDownloadIntent(download: DownloadState) {
         if (download.private) {
             downloadJobs[download.id]?.let {
-                cancelDownloadJob(it)
+                // Do not cancel already completed downloads.
+                if (it.status != COMPLETED) {
+                    cancelDownloadJob(it)
+                }
                 removeDownloadJob(it)
             }
             store.dispatch(DownloadAction.RemoveDownloadAction(download.id))
