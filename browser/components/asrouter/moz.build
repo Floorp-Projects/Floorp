@@ -31,6 +31,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/Spotlight.sys.mjs",
     "modules/ToastNotification.sys.mjs",
     "modules/ToolbarBadgeHub.jsm",
+    "modules/ToolbarPanelHub.jsm",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

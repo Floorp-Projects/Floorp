@@ -1,6 +1,6 @@
-import { _ToolbarPanelHub } from "lib/ToolbarPanelHub.jsm";
+import { _ToolbarPanelHub } from "modules/ToolbarPanelHub.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { PanelTestProvider } from "asrouter/modules/PanelTestProvider.sys.mjs";
+import { PanelTestProvider } from "modules/PanelTestProvider.sys.mjs";
 
 describe("ToolbarPanelHub", () => {
   let globals;

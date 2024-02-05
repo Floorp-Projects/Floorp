@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
 ChromeUtils.defineModuleGetter(
   this,
   "ToolbarPanelHub",
-  "resource://activity-stream/lib/ToolbarPanelHub.jsm"
+  "resource:///modules/asrouter/ToolbarPanelHub.jsm"
 );
 
 /**

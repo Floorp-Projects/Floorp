@@ -107,6 +107,12 @@ module.exports = function (config) {
               functions: 100,
               branches: 88,
             },
+            "modules/ToolbarPanelHub.jsm": {
+              statements: 88,
+              lines: 88,
+              functions: 94,
+              branches: 84,
+            },
           },
         },
       },

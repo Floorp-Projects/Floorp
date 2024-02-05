@@ -35,7 +35,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ToolbarBadgeHub: "resource:///modules/asrouter/ToolbarBadgeHub.jsm",
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
+  ToolbarPanelHub: "resource:///modules/asrouter/ToolbarPanelHub.jsm",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
   ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
   TARGETING_PREFERENCES: "resource:///modules/asrouter/ASRouterPreferences.jsm",

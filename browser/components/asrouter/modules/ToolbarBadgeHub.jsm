@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
+  ToolbarPanelHub: "resource:///modules/asrouter/ToolbarPanelHub.jsm",
 });
 
 let notificationsByWindow = new WeakMap();
