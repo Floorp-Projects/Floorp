@@ -18,3 +18,9 @@ ParseRecordObject::ParseRecordObject()
 ParseRecordObject::ParseRecordObject(Handle<js::JSONParseNode*> parseNode,
                                      const Value& val)
     : parseNode(parseNode), key(JS::PropertyKey::Void()), value(val) {}
+
+void ParseRecordObject::trace(JSTracer* trc) {
+  JS::TraceRoot(trc, &parseNode, "ParseRecordObject parse node");
+  JS::TraceRoot(trc, &key, "ParseRecordObject key");
+  JS::TraceRoot(trc, &value, "ParseRecordObject value");
+}

@@ -27,6 +27,8 @@ class ParseRecordObject {
         key(std::move(other.key)),
         value(std::move(other.value)) {}
 
+  bool isEmpty() const { return value.isUndefined(); }
+
   // move assignment
   ParseRecordObject& operator=(ParseRecordObject&& other) noexcept {
     parseNode = other.parseNode;
@@ -34,6 +36,8 @@ class ParseRecordObject {
     value = other.value;
     return *this;
   }
+
+  void trace(JSTracer* trc);
 };
 
 }  // namespace js

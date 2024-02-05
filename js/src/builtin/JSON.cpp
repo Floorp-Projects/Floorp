@@ -1719,10 +1719,9 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 }
 
 /* https://262.ecma-international.org/14.0/#sec-internalizejsonproperty */
-static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
-                                    HandleId name, HandleValue reviver,
-                                    ParseRecordObject* parseRecord,
-                                    MutableHandleValue vp) {
+static bool InternalizeJSONProperty(
+    JSContext* cx, HandleObject holder, HandleId name, HandleValue reviver,
+    MutableHandle<ParseRecordObject> parseRecord, MutableHandleValue vp) {
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {
     return false;
@@ -1763,8 +1762,8 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
         }
 
         /* Step 2a(iii)(1). */
-        ParseRecordObject* elementRecord(nullptr);
-        if (!InternalizeJSONProperty(cx, obj, id, reviver, elementRecord,
+        Rooted<ParseRecordObject> elementRecord(cx);
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, &elementRecord,
                                      &newElement)) {
           return false;
         }
@@ -1804,8 +1803,8 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
 
         /* Step 2c(ii)(1). */
         id = keys[i];
-        ParseRecordObject* entryRecord(nullptr);
-        if (!InternalizeJSONProperty(cx, obj, id, reviver, entryRecord,
+        Rooted<ParseRecordObject> entryRecord(cx);
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, &entryRecord,
                                      &newElement)) {
           return false;
         }
@@ -1840,12 +1839,11 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
   RootedValue keyVal(cx, StringValue(key));
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
-    MOZ_ASSERT(parseRecord);
     RootedObject context(cx, NewPlainObject(cx));
     if (!context) {
       return false;
     }
-    Rooted<Value> parseNode(cx, StringValue(parseRecord->parseNode));
+    Rooted<Value> parseNode(cx, StringValue(parseRecord.get().parseNode));
     if (!DefineDataProperty(cx, context, cx->names().source, parseNode)) {
       return false;
     }
@@ -1856,7 +1854,8 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
   return js::Call(cx, reviver, holder, keyVal, val, vp);
 }
 
-static bool Revive(JSContext* cx, HandleValue reviver, ParseRecordObject* pro,
+static bool Revive(JSContext* cx, HandleValue reviver,
+                   MutableHandle<ParseRecordObject> pro,
                    MutableHandleValue vp) {
   Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
   if (!obj) {
@@ -1869,7 +1868,7 @@ static bool Revive(JSContext* cx, HandleValue reviver, ParseRecordObject* pro,
 
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   MOZ_ASSERT_IF(cx->realm()->creationOptions().getJSONParseWithSource(),
-                pro->value == vp.get());
+                pro.get().value == vp.get());
 #endif
   Rooted<jsid> id(cx, NameToId(cx->names().empty_));
   return InternalizeJSONProperty(cx, obj, id, reviver, pro, vp);
@@ -1877,7 +1876,7 @@ static bool Revive(JSContext* cx, HandleValue reviver, ParseRecordObject* pro,
 
 template <typename CharT>
 bool ParseJSON(JSContext* cx, const mozilla::Range<const CharT> chars,
-               MutableHandleValue vp, ParseRecordObject* pro) {
+               MutableHandleValue vp, MutableHandle<ParseRecordObject> pro) {
   Rooted<JSONParser<CharT>> parser(cx, cx, chars,
                                    JSONParser<CharT>::ParseType::JSONParse);
   return parser.parse(vp, pro);
@@ -1888,7 +1887,7 @@ bool js::ParseJSONWithReviver(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
                               HandleValue reviver, MutableHandleValue vp) {
   /* https://262.ecma-international.org/14.0/#sec-json.parse steps 2-10. */
-  ParseRecordObject pro;
+  Rooted<ParseRecordObject> pro(cx);
   if (!ParseJSON(cx, chars, vp, &pro)) {
     return false;
   }
@@ -2087,7 +2086,7 @@ static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
 
   HandleValue reviver = args.get(1);
   RootedValue unfiltered(cx);
-  ParseRecordObject pro;
+  Rooted<ParseRecordObject> pro(cx);
 
   if (linearChars.isLatin1()) {
     if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered, &pro)) {
