@@ -55,6 +55,7 @@ TESTING_JS_MODULES += [
     "content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json",
     "content-src/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "content-src/templates/ToastNotification/ToastNotification.schema.json",
+    "tests/InflightAssetsMessageProvider.sys.mjs",
     "tests/NimbusRolloutMessageProvider.sys.mjs",
 ]
 
