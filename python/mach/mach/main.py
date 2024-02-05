@@ -8,15 +8,17 @@
 import argparse
 import codecs
 import errno
-import imp
 import logging
 import os
 import sys
 import traceback
+import types
 import uuid
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Dict, List, Union
+
+from mozfile import load_source
 
 from .base import (
     CommandContext,
@@ -267,13 +269,13 @@ To see more help for a specific command, run:
             # Ensure parent module is present otherwise we'll (likely) get
             # an error due to unknown parent.
             if "mach.commands" not in sys.modules:
-                mod = imp.new_module("mach.commands")
+                mod = types.ModuleType("mach.commands")
                 sys.modules["mach.commands"] = mod
 
             module_name = f"mach.commands.{uuid.uuid4().hex}"
 
         try:
-            imp.load_source(module_name, str(path))
+            load_source(module_name, str(path))
         except IOError as e:
             if e.errno != errno.ENOENT:
                 raise
