@@ -1,10 +1,7 @@
 import { _ToolbarBadgeHub } from "modules/ToolbarBadgeHub.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.jsm";
-import {
-  _ToolbarPanelHub,
-  ToolbarPanelHub,
-} from "newtab/lib/ToolbarPanelHub.jsm";
+import { _ToolbarPanelHub, ToolbarPanelHub } from "modules/ToolbarPanelHub.jsm";
 
 describe("ToolbarBadgeHub", () => {
   let sandbox;
