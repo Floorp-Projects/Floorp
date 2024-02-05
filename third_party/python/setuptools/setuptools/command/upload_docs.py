@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """upload_docs
 
 Implements a Distutils 'upload_docs' subcommand (upload documentation to
-PyPI's pythonhosted.org).
+sites other than PyPi such as devpi).
 """
 
 from base64 import standard_b64encode
@@ -18,7 +17,9 @@ import functools
 import http.client
 import urllib.parse
 
-from pkg_resources import iter_entry_points
+from .._importlib import metadata
+from ..warnings import SetuptoolsDeprecationWarning
+
 from .upload import upload
 
 
@@ -31,7 +32,7 @@ class upload_docs(upload):
     # supported by Warehouse (and won't be).
     DEFAULT_REPOSITORY = 'https://pypi.python.org/pypi/'
 
-    description = 'Upload documentation to PyPI'
+    description = 'Upload documentation to sites other than PyPi such as devpi'
 
     user_options = [
         ('repository=', 'r',
@@ -43,9 +44,10 @@ class upload_docs(upload):
     boolean_options = upload.boolean_options
 
     def has_sphinx(self):
-        if self.upload_dir is None:
-            for ep in iter_entry_points('distutils.commands', 'build_sphinx'):
-                return True
+        return bool(
+            self.upload_dir is None
+            and metadata.entry_points(group='distutils.commands', name='build_sphinx')
+        )
 
     sub_commands = [('build_sphinx', has_sphinx)]
 
@@ -55,19 +57,20 @@ class upload_docs(upload):
         self.target_dir = None
 
     def finalize_options(self):
+        log.warn(
+            "Upload_docs command is deprecated. Use Read the Docs "
+            "(https://readthedocs.org) instead.")
         upload.finalize_options(self)
         if self.upload_dir is None:
             if self.has_sphinx():
                 build_sphinx = self.get_finalized_command('build_sphinx')
-                self.target_dir = build_sphinx.builder_target_dir
+                self.target_dir = dict(build_sphinx.builder_target_dirs)['html']
             else:
                 build = self.get_finalized_command('build')
                 self.target_dir = os.path.join(build.build_base, 'docs')
         else:
             self.ensure_dirname('upload_dir')
             self.target_dir = self.upload_dir
-        if 'pypi.python.org' in self.repository:
-            log.warn("Upload_docs command is deprecated. Use RTD instead.")
         self.announce('Using upload directory %s' % self.target_dir)
 
     def create_zipfile(self, filename):
@@ -87,6 +90,16 @@ class upload_docs(upload):
             zip_file.close()
 
     def run(self):
+        SetuptoolsDeprecationWarning.emit(
+            "Deprecated command",
+            """
+            upload_docs is deprecated and will be removed in a future version.
+            Instead, use tools like devpi and Read the Docs; or lower level tools like
+            httpie and curl to interact directly with your hosting service API.
+            """,
+            due_date=(2023, 9, 26),  # warning introduced in 27 Jul 2022
+        )
+
         # Run sub commands
         for cmd_name in self.get_sub_commands():
             self.run_command(cmd_name)
