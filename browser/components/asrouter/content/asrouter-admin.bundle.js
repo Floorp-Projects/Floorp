@@ -16,7 +16,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ASRouterUtils": () => (/* binding */ ASRouterUtils)
 /* harmony export */ });
-/* harmony import */ var common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var common_Actions_sys_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -43,7 +43,7 @@ const ASRouterUtils = {
   },
   blockById(id, options) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
       data: {
         id,
         ...options
@@ -52,7 +52,7 @@ const ASRouterUtils = {
   },
   modifyMessageJson(content) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
       data: {
         content
       }
@@ -60,13 +60,13 @@ const ASRouterUtils = {
   },
   executeAction(button_action) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.USER_ACTION,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.USER_ACTION,
       data: button_action
     });
   },
   unblockById(id) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
       data: {
         id
       }
@@ -74,7 +74,7 @@ const ASRouterUtils = {
   },
   blockBundle(bundle) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
       data: {
         bundle
       }
@@ -82,7 +82,7 @@ const ASRouterUtils = {
   },
   unblockBundle(bundle) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
       data: {
         bundle
       }
@@ -90,7 +90,7 @@ const ASRouterUtils = {
   },
   overrideMessage(id) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
       data: {
         id
       }
@@ -98,7 +98,7 @@ const ASRouterUtils = {
   },
   editState(key, value) {
     return ASRouterUtils.sendMessage({
-      type: common_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.EDIT_STATE,
+      type: modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.EDIT_STATE,
       data: {
         [key]: value
       }
