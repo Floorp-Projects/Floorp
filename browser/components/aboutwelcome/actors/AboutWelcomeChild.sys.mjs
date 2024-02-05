@@ -7,13 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutWelcomeDefaults:
+    "resource:///modules/aboutwelcome/AboutWelcomeDefaults.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutWelcomeDefaults:
-    "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
