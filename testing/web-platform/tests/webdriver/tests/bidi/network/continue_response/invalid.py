@@ -1,7 +1,12 @@
 import pytest
 import webdriver.bidi.error as error
 
-from .. import PAGE_EMPTY_TEXT, RESPONSE_COMPLETED_EVENT
+from .. import (
+    create_cookie_header,
+    create_header,
+    PAGE_EMPTY_TEXT,
+    RESPONSE_COMPLETED_EVENT,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -54,7 +59,7 @@ async def test_params_cookies_cookie_name_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": value, "value": {"type": "string", "value": "foo"}}],
+            cookies=[create_cookie_header(overrides={"name": value})],
         )
 
 
@@ -67,7 +72,7 @@ async def test_params_cookies_cookie_value_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": "test", "value": value}],
+            cookies=[create_cookie_header(overrides={"value": value})],
         )
 
 
@@ -80,7 +85,7 @@ async def test_params_cookies_cookie_value_invalid_value(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": "test", "value": value}],
+            cookies=[create_cookie_header(overrides={"value": value})],
         )
 
 
@@ -93,7 +98,7 @@ async def test_params_cookies_cookie_value_type_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+            cookies=[create_cookie_header(value_overrides={"type": value})],
         )
 
 
@@ -106,7 +111,7 @@ async def test_params_cookies_cookie_value_type_invalid_value(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+            cookies=[create_cookie_header(value_overrides={"type": value})],
         )
 
 
@@ -116,13 +121,11 @@ async def test_params_cookies_cookie_value_string_properties_invalid_type(
     setup_blocked_request, bidi_session, property, value
 ):
     request = await setup_blocked_request("responseStarted")
-    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
-    cookie[property] = value
 
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[cookie],
+            cookies=[create_cookie_header(overrides={property: value})],
         )
 
 
@@ -131,13 +134,11 @@ async def test_params_cookies_cookie_value_same_site_invalid_value(
     setup_blocked_request, bidi_session, value
 ):
     request = await setup_blocked_request("responseStarted")
-    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
-    cookie["sameSite"] = value
 
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[cookie],
+            cookies=[create_cookie_header(overrides={"sameSite": value})],
         )
 
 
@@ -147,13 +148,11 @@ async def test_params_cookies_cookie_value_bool_properties_invalid_type(
     setup_blocked_request, bidi_session, property, value
 ):
     request = await setup_blocked_request("responseStarted")
-    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
-    cookie[property] = value
 
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[cookie],
+            cookies=[create_cookie_header(overrides={property: value})],
         )
 
 
@@ -162,13 +161,11 @@ async def test_params_cookies_cookie_value_max_age_invalid_type(
     setup_blocked_request, bidi_session, value
 ):
     request = await setup_blocked_request("responseStarted")
-    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
-    cookie["maxAge"] = value
 
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[cookie],
+            cookies=[create_cookie_header(overrides={"maxAge": value})],
         )
 
 
@@ -177,13 +174,11 @@ async def test_params_cookies_cookie_value_max_age_invalid_value(
     setup_blocked_request, bidi_session, value
 ):
     request = await setup_blocked_request("responseStarted")
-    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
-    cookie["maxAge"] = value
 
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[cookie],
+            cookies=[create_cookie_header(overrides={"maxAge": value})],
         )
 
 
@@ -196,7 +191,7 @@ async def test_params_cookies_cookie_value_value_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            cookies=[{"name": "test", "value": {"type": "string", "value": value}}],
+            cookies=[create_cookie_header(value_overrides={"value": value})],
         )
 
 
@@ -318,7 +313,7 @@ async def test_params_headers_header_name_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": value, "value": {"type": "string", "value": "foo"}}],
+            headers=[create_header(overrides={"name": value})],
         )
 
 
@@ -331,7 +326,7 @@ async def test_params_headers_header_value_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": "test", "value": value}],
+            headers=[create_header(overrides={"value": value})],
         )
 
 
@@ -344,7 +339,7 @@ async def test_params_headers_header_value_invalid_value(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": "test", "value": value}],
+            headers=[create_header(overrides={"value": value})],
         )
 
 
@@ -357,7 +352,7 @@ async def test_params_headers_header_value_type_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+            headers=[create_header(value_overrides={"type": value})],
         )
 
 
@@ -370,7 +365,7 @@ async def test_params_headers_header_value_type_invalid_value(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+            headers=[create_header(value_overrides={"type": value})],
         )
 
 
@@ -383,7 +378,7 @@ async def test_params_headers_header_value_value_invalid_type(
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.network.continue_response(
             request=request,
-            headers=[{"name": "test", "value": {"type": "string", "value": value}}],
+            headers=[create_header(value_overrides={"value": value})],
         )
 
 
