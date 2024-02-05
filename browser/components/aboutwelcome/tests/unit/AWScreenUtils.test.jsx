@@ -1,4 +1,4 @@
-import { AWScreenUtils } from "modules/AWScreenUtils.jsm";
+import { AWScreenUtils } from "modules/AWScreenUtils.sys.mjs";
 import { GlobalOverrider } from "newtab/test/unit/utils";
 import { ASRouter } from "asrouter/modules/ASRouter.jsm";
 

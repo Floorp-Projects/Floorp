@@ -1,6 +1,6 @@
 import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.jsm";
 import { MultiStageProtonScreen } from "content-src/components/MultiStageProtonScreen";
-import { AWScreenUtils } from "modules/AWScreenUtils.jsm";
+import { AWScreenUtils } from "modules/AWScreenUtils.sys.mjs";
 import React from "react";
 import { mount } from "enzyme";
 

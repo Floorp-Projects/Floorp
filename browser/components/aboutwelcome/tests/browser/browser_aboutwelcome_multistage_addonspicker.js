@@ -7,8 +7,8 @@ const { AboutWelcomeParent } = ChromeUtils.importESModule(
 const { AboutWelcomeTelemetry } = ChromeUtils.importESModule(
   "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs"
 );
-const { AWScreenUtils } = ChromeUtils.import(
-  "resource:///modules/aboutwelcome/AWScreenUtils.jsm"
+const { AWScreenUtils } = ChromeUtils.importESModule(
+  "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs"
 );
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
