@@ -113,8 +113,13 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
+#if defined(MOZ_WIDGET_ANDROID)
+const RFPTarget kDefaultFingerprintingProtections =
+    RFPTarget::CanvasRandomization;
+#else
 const RFPTarget kDefaultFingerprintingProtections =
     RFPTarget::CanvasRandomization | RFPTarget::FontVisibilityLangPack;
+#endif
 
 static constexpr uint32_t kSuspiciousFingerprintingActivityThreshold = 1;
 
