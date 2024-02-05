@@ -203,7 +203,7 @@ static inline double DayFromYear(double y) {
 }
 
 static inline double TimeFromYear(double y) {
-  return DayFromYear(y) * msPerDay;
+  return ::DayFromYear(y) * msPerDay;
 }
 
 namespace {
@@ -355,7 +355,7 @@ static double YearFromTime(double t) {
 /* ES5 15.9.1.4. */
 static double DayWithinYear(double t, double year) {
   MOZ_ASSERT_IF(std::isfinite(t), YearFromTime(t) == year);
-  return Day(t) - DayFromYear(year);
+  return Day(t) - ::DayFromYear(year);
 }
 
 static double MonthFromTime(double t) {
@@ -574,7 +574,7 @@ int DateTimeHelper::equivalentYearForDST(int year) {
       {2034, 2035, 2030, 2031, 2037, 2027, 2033},
       {2012, 2024, 2036, 2020, 2032, 2016, 2028}};
 
-  int day = int(DayFromYear(year) + 4) % 7;
+  int day = int(::DayFromYear(year) + 4) % 7;
   if (day < 0) {
     day += 7;
   }
@@ -602,8 +602,8 @@ double DateTimeHelper::daylightSavingTA(DateTimeInfo::ForceUTC forceUTC,
    * many OSes, map it to an equivalent year before asking.
    */
   if (!isRepresentableAsTime32(t)) {
-    int year = equivalentYearForDST(int(YearFromTime(t)));
-    double day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+    int year = equivalentYearForDST(int(::YearFromTime(t)));
+    double day = MakeDay(year, ::MonthFromTime(t), DateFromTime(t));
     t = MakeDate(day, TimeWithinDay(t));
   }
 
@@ -2133,7 +2133,7 @@ static bool date_getUTCFullYear(JSContext* cx, unsigned argc, Value* vp) {
 
   double result = unwrapped->UTCTime().toNumber();
   if (std::isfinite(result)) {
-    result = YearFromTime(result);
+    result = ::YearFromTime(result);
   }
 
   args.rval().setNumber(result);
@@ -2162,7 +2162,7 @@ static bool date_getUTCMonth(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   double d = unwrapped->UTCTime().toNumber();
-  args.rval().setNumber(MonthFromTime(d));
+  args.rval().setNumber(::MonthFromTime(d));
   return true;
 }
 
@@ -2791,8 +2791,8 @@ static bool date_setDate(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 3. */
-  double newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date),
-                            TimeWithinDay(t));
+  double newDate = MakeDate(
+      MakeDay(::YearFromTime(t), ::MonthFromTime(t), date), TimeWithinDay(t));
 
   /* Step 4. */
   ClippedTime u = TimeClip(UTC(unwrapped->forceUTC(), newDate));
@@ -2821,8 +2821,8 @@ static bool date_setUTCDate(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 3. */
-  double newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date),
-                            TimeWithinDay(t));
+  double newDate = MakeDate(
+      MakeDay(::YearFromTime(t), ::MonthFromTime(t), date), TimeWithinDay(t));
 
   /* Step 4. */
   ClippedTime v = TimeClip(newDate);
@@ -2844,7 +2844,7 @@ static bool GetDateOrDefault(JSContext* cx, const CallArgs& args, unsigned i,
 static bool GetMonthOrDefault(JSContext* cx, const CallArgs& args, unsigned i,
                               double t, double* month) {
   if (args.length() <= i) {
-    *month = MonthFromTime(t);
+    *month = ::MonthFromTime(t);
     return true;
   }
   return ToNumber(cx, args[i], month);
@@ -2877,7 +2877,7 @@ static bool date_setMonth(JSContext* cx, unsigned argc, Value* vp) {
 
   /* Step 4. */
   double newDate =
-      MakeDate(MakeDay(YearFromTime(t), m, date), TimeWithinDay(t));
+      MakeDate(MakeDay(::YearFromTime(t), m, date), TimeWithinDay(t));
 
   /* Step 5. */
   ClippedTime u = TimeClip(UTC(unwrapped->forceUTC(), newDate));
@@ -2914,7 +2914,7 @@ static bool date_setUTCMonth(JSContext* cx, unsigned argc, Value* vp) {
 
   /* Step 4. */
   double newDate =
-      MakeDate(MakeDay(YearFromTime(t), m, date), TimeWithinDay(t));
+      MakeDate(MakeDay(::YearFromTime(t), m, date), TimeWithinDay(t));
 
   /* Step 5. */
   ClippedTime v = TimeClip(newDate);
@@ -3054,7 +3054,7 @@ static bool date_setYear(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 5. */
-  double day = MakeDay(yint, MonthFromTime(t), DateFromTime(t));
+  double day = MakeDay(yint, ::MonthFromTime(t), DateFromTime(t));
 
   /* Step 6. */
   double u = UTC(unwrapped->forceUTC(), MakeDate(day, TimeWithinDay(t)));
@@ -3089,8 +3089,8 @@ static bool date_toUTCString(JSContext* cx, unsigned argc, Value* vp) {
   char buf[100];
   SprintfLiteral(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
                  days[int(WeekDay(utctime))], int(DateFromTime(utctime)),
-                 months[int(MonthFromTime(utctime))],
-                 int(YearFromTime(utctime)), int(HourFromTime(utctime)),
+                 months[int(::MonthFromTime(utctime))],
+                 int(::YearFromTime(utctime)), int(HourFromTime(utctime)),
                  int(MinFromTime(utctime)), int(SecFromTime(utctime)));
 
   JSString* str = NewStringCopyZ<CanGC>(cx, buf);
@@ -3120,16 +3120,18 @@ static bool date_toISOString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   char buf[100];
-  int year = int(YearFromTime(utctime));
+  int year = int(::YearFromTime(utctime));
   if (year < 0 || year > 9999) {
     SprintfLiteral(buf, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-                   int(YearFromTime(utctime)), int(MonthFromTime(utctime)) + 1,
+                   int(::YearFromTime(utctime)),
+                   int(::MonthFromTime(utctime)) + 1,
                    int(DateFromTime(utctime)), int(HourFromTime(utctime)),
                    int(MinFromTime(utctime)), int(SecFromTime(utctime)),
                    int(msFromTime(utctime)));
   } else {
     SprintfLiteral(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-                   int(YearFromTime(utctime)), int(MonthFromTime(utctime)) + 1,
+                   int(::YearFromTime(utctime)),
+                   int(::MonthFromTime(utctime)) + 1,
                    int(DateFromTime(utctime)), int(HourFromTime(utctime)),
                    int(MinFromTime(utctime)), int(SecFromTime(utctime)),
                    int(msFromTime(utctime)));
@@ -3224,7 +3226,7 @@ JSString* DateTimeHelper::timeZoneComment(JSContext* cx,
 /* Interface to PRMJTime date struct. */
 PRMJTime DateTimeHelper::toPRMJTime(DateTimeInfo::ForceUTC forceUTC,
                                     double localTime, double utcTime) {
-  double year = YearFromTime(localTime);
+  double year = ::YearFromTime(localTime);
 
   PRMJTime prtm;
   prtm.tm_usec = int32_t(msFromTime(localTime)) * 1000;
@@ -3232,10 +3234,10 @@ PRMJTime DateTimeHelper::toPRMJTime(DateTimeInfo::ForceUTC forceUTC,
   prtm.tm_min = int8_t(MinFromTime(localTime));
   prtm.tm_hour = int8_t(HourFromTime(localTime));
   prtm.tm_mday = int8_t(DateFromTime(localTime));
-  prtm.tm_mon = int8_t(MonthFromTime(localTime));
+  prtm.tm_mon = int8_t(::MonthFromTime(localTime));
   prtm.tm_wday = int8_t(WeekDay(localTime));
   prtm.tm_year = year;
-  prtm.tm_yday = int16_t(DayWithinYear(localTime, year));
+  prtm.tm_yday = int16_t(::DayWithinYear(localTime, year));
   prtm.tm_isdst = (daylightSavingTA(forceUTC, utcTime) != 0);
 
   return prtm;
@@ -3345,19 +3347,19 @@ static bool FormatDate(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
   switch (format) {
     case FormatSpec::DateTime:
       /* Tue Oct 31 2000 09:41:40 GMT-0800 */
-      SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d",
-                     days[int(WeekDay(localTime))],
-                     months[int(MonthFromTime(localTime))],
-                     int(DateFromTime(localTime)), int(YearFromTime(localTime)),
-                     int(HourFromTime(localTime)), int(MinFromTime(localTime)),
-                     int(SecFromTime(localTime)), offset);
+      SprintfLiteral(
+          buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d",
+          days[int(WeekDay(localTime))],
+          months[int(::MonthFromTime(localTime))], int(DateFromTime(localTime)),
+          int(::YearFromTime(localTime)), int(HourFromTime(localTime)),
+          int(MinFromTime(localTime)), int(SecFromTime(localTime)), offset);
       break;
     case FormatSpec::Date:
       /* Tue Oct 31 2000 */
       SprintfLiteral(buf, "%s %s %.2d %.4d", days[int(WeekDay(localTime))],
-                     months[int(MonthFromTime(localTime))],
+                     months[int(::MonthFromTime(localTime))],
                      int(DateFromTime(localTime)),
-                     int(YearFromTime(localTime)));
+                     int(::YearFromTime(localTime)));
       break;
     case FormatSpec::Time:
       /* 09:41:40 GMT-0800 */
@@ -3417,7 +3419,7 @@ static bool ToLocaleFormatHelper(JSContext* cx, DateObject* unwrapped,
         /* ...but not if starts with 4-digit year, like 2022/3/11. */
         !(IsAsciiDigit(buf[0]) && IsAsciiDigit(buf[1]) &&
           IsAsciiDigit(buf[2]) && IsAsciiDigit(buf[3]))) {
-      int year = int(YearFromTime(localTime));
+      int year = int(::YearFromTime(localTime));
       snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2), "%d",
                year);
     }
