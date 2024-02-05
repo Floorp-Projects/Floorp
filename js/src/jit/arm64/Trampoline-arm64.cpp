@@ -591,32 +591,104 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       (Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0,
       "Wrapper register set must be a superset of the Volatile register set.");
 
+  // The first argument is the JSContext.
+  Register reg_cx = IntArgReg0;
+  regs.take(reg_cx);
+  Register temp = regs.getAny();
+
+  // On entry, the stack is:
+  //   ... frame ...
+  //  [args]
+  //  descriptor
+  //
+  // Before we pass arguments (potentially pushing some of them on the stack),
+  // we want:
+  //  ... frame ...
+  //  [args]
+  //  descriptor           \
+  //  return address       | <- exit frame
+  //  saved frame pointer  /
+  //  VM id                  <- exit frame footer
+  //  [space for out-param, if necessary]]
+  //  [alignment padding, if necessary]
+  //
+  // To minimize PSP overhead, we compute the final stack size and update the
+  // stack pointer all in one go. Then we use the PSP to "push" the required
+  // values into the pre-allocated stack space.
+  size_t stackAdjustment = 0;
+
+  // The descriptor was already pushed.
+  stackAdjustment += ExitFrameLayout::SizeWithFooter() - sizeof(uintptr_t);
+  stackAdjustment += f.sizeOfOutParamStackSlot();
+
+  masm.SetStackPointer64(sp);
+
+  // First, update the actual stack pointer to its final aligned value.
+  masm.Sub(ARMRegister(temp, 64), masm.GetStackPointer64(),
+           Operand(stackAdjustment));
+  masm.And(sp, ARMRegister(temp, 64), ~(uint64_t(JitStackAlignment) - 1));
+
   // On link-register platforms, it is the responsibility of the VM *callee* to
   // push the return address, while the caller must ensure that the address
   // is stored in lr on entry. This allows the VM wrapper to work with both
   // direct calls and tail calls.
-  masm.pushReturnAddress();
+  masm.str(ARMRegister(lr, 64),
+           MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
 
-  // First argument is the JSContext.
-  Register reg_cx = IntArgReg0;
-  regs.take(reg_cx);
+  // Push the frame pointer using the PSP.
+  masm.str(ARMRegister(FramePointer, 64),
+           MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
 
-  // Stack is:
-  //    ... frame ...
-  //  +12 [args]
-  //  +8  descriptor
-  //  +0  returnAddress (pushed by this function, caller sets as lr)
-  //
-  // Push the frame pointer to finish the exit frame, then link it up.
-  masm.Push(FramePointer);
-  masm.moveStackPtrTo(FramePointer);
+  // Because we've been moving the PSP as we fill in the frame, we can set the
+  // frame pointer for this frame directly from the PSP.
+  masm.movePtr(PseudoStackPointer, FramePointer);
+
   masm.loadJSContext(reg_cx);
-  masm.enterExitFrame(reg_cx, regs.getAny(), id);
 
-  // Reserve space for the outparameter.
-  masm.reserveVMFunctionOutParamSpace(f);
+  // Finish the exit frame. See MacroAssembler::enterExitFrame.
 
-  masm.setupUnalignedABICallDontSaveRestoreSP();
+  // linkExitFrame
+  masm.loadPtr(Address(reg_cx, JSContext::offsetOfActivation()), temp);
+  masm.storePtr(FramePointer,
+                Address(temp, JitActivation::offsetOfPackedExitFP()));
+
+  // Push `ExitFrameType::VMFunction + VMFunctionId`
+  uint32_t type = uint32_t(ExitFrameType::VMFunction) + uint32_t(id);
+  masm.move32(Imm32(type), temp);
+  masm.str(ARMRegister(temp, 64),
+           MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
+
+  // If the out parameter is a handle, initialize it to empty.
+  // See MacroAssembler::reserveVMFunctionOutParamSpace and PushEmptyRooted.
+  if (f.outParam == Type_Handle) {
+    switch (f.outParamRootType) {
+      case VMFunctionData::RootNone:
+        MOZ_CRASH("Handle must have root type");
+      case VMFunctionData::RootObject:
+      case VMFunctionData::RootString:
+      case VMFunctionData::RootCell:
+      case VMFunctionData::RootBigInt:
+        masm.str(xzr, MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
+        break;
+      case VMFunctionData::RootValue:
+        masm.movePtr(ImmWord(UndefinedValue().asRawBits()), temp);
+        masm.str(ARMRegister(temp, 64),
+                 MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
+        break;
+      case VMFunctionData::RootId:
+        masm.movePtr(ImmWord(JS::PropertyKey::Void().asRawBits()), temp);
+        masm.str(ARMRegister(temp, 64),
+                 MemOperand(PseudoStackPointer64, -8, vixl::PreIndex));
+    }
+  }
+
+  // Now that we've filled in the stack frame, synchronize the PSP with the
+  // real stack pointer and return to PSP-mode while we pass arguments.
+  masm.moveStackPtrTo(PseudoStackPointer);
+  masm.SetStackPointer64(PseudoStackPointer64);
+
+  MOZ_ASSERT(masm.framePushed() == 0);
+  masm.setupAlignedABICall();
   masm.passABIArg(reg_cx);
 
   size_t argDisp = ExitFrameLayout::Size();
@@ -683,8 +755,10 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
     masm.speculationBarrier();
   }
 
-  // Pop frame and restore frame pointer.
-  masm.moveToStackPtr(FramePointer);
+  // Pop frame and restore frame pointer. We call Mov here directly instead
+  // of `moveToStackPtr` to avoid a syncStackPtr. The stack pointer will be
+  // synchronized as part of retn, after adjusting the PSP.
+  masm.Mov(masm.GetStackPointer64(), ARMRegister(FramePointer, 64));
   masm.pop(FramePointer);
 
   // Return. Subtract sizeof(void*) for the frame pointer.
