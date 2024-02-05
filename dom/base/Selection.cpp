@@ -2286,6 +2286,10 @@ void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
 
   // Be aware, this instance may be destroyed after this call.
   NotifySelectionListeners();
+  // Range order is guaranteed after adding a range.
+  // Therefore, this flag can be reset to avoid
+  // another unnecessary and costly reordering.
+  mStyledRanges.mRangesMightHaveChanged = false;
 }
 
 void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
@@ -2304,7 +2308,12 @@ void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
   SelectFrames(presContext, aRange, true);
 
   // Be aware, this instance may be destroyed after this call.
+  RefPtr<Selection> kungFuDeathGrip(this);
   NotifySelectionListeners();
+  // Range order is guaranteed after adding a range.
+  // Therefore, this flag can be reset to avoid
+  // another unnecessary and costly reordering.
+  mStyledRanges.mRangesMightHaveChanged = false;
 }
 
 // Selection::RemoveRangeAndUnselectFramesAndNotifyListeners
