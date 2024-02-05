@@ -161,6 +161,9 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             "--disable-site-isolation-trials",
         ]
 
+        # Disable finch experiments
+        chrome_args += ["--enable-benchmarking"]
+
         if test.get("playback", False):
             pb_args = [
                 "--proxy-server=%s:%d" % (self.playback.host, self.playback.port),
