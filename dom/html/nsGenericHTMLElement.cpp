@@ -3418,7 +3418,7 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
   nsWeakPtr originallyFocusedElement;
   if (IsAutoPopover()) {
     auto originalState = GetPopoverAttributeState();
-    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor(aInvoker);
+    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor(aInvoker, true);
     if (!ancestor) {
       ancestor = document;
     }

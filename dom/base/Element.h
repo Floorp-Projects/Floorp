@@ -583,7 +583,8 @@ class Element : public FragmentOrElement {
   /**
    * https://html.spec.whatwg.org/multipage/popover.html#topmost-popover-ancestor
    */
-  Element* GetTopmostPopoverAncestor(const Element* aInvoker) const;
+  Element* GetTopmostPopoverAncestor(const Element* aInvoker,
+                                     bool isPopover) const;
 
   ElementAnimationData* GetAnimationData() const {
     if (!MayHaveAnimations()) {

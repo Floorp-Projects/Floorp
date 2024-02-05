@@ -63,7 +63,12 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
-  OwnerDoc()->HideAllPopoversWithoutRunningScript();
+  RefPtr<nsINode> hideUntil = GetTopmostPopoverAncestor(nullptr, false);
+  if (!hideUntil) {
+    hideUntil = OwnerDoc();
+  }
+
+  OwnerDoc()->HideAllPopoversUntil(*hideUntil, false, true);
   FocusDialog();
 }
 
@@ -130,7 +135,12 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
-  OwnerDoc()->HideAllPopoversWithoutRunningScript();
+  RefPtr<nsINode> hideUntil = GetTopmostPopoverAncestor(nullptr, false);
+  if (!hideUntil) {
+    hideUntil = OwnerDoc();
+  }
+
+  OwnerDoc()->HideAllPopoversUntil(*hideUntil, false, true);
   FocusDialog();
 
   aError.SuppressException();
