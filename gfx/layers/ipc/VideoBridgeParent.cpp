@@ -318,26 +318,4 @@ bool VideoBridgeParent::IsSameProcess() const {
 void VideoBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
                                       uint64_t aTransactionId) {}
 
-void VideoBridgeParent::OnChannelError() {
-  bool shutdown = sVideoBridgeParentShutDown;
-  if (!shutdown) {
-    // Destory RenderBufferTextureHosts. Shmems of ShmemTextureHosts are going
-    // to be destroyed
-    std::vector<wr::ExternalImageId> ids;
-    auto& ptextures = ManagedPTextureParent();
-    for (const auto& ptexture : ptextures) {
-      RefPtr<TextureHost> texture = TextureHost::AsTextureHost(ptexture);
-      if (texture && texture->AsShmemTextureHost() &&
-          texture->GetMaybeExternalImageId().isSome()) {
-        ids.emplace_back(texture->GetMaybeExternalImageId().ref());
-      }
-    }
-    if (!ids.empty()) {
-      wr::RenderThread::Get()->DestroyExternalImagesSyncWait(std::move(ids));
-    }
-  }
-
-  PVideoBridgeParent::OnChannelError();
-}
-
 }  // namespace mozilla::layers
