@@ -538,7 +538,7 @@ class IToplevelProtocol : public IRefCountedProtocol {
   // Used to be on mState
   int32_t mLastLocalId;
   IDMap<IProtocol*> mActorMap;
-  IDMap<Shmem::SharedMemory*> mShmemMap;
+  IDMap<RefPtr<Shmem::SharedMemory>> mShmemMap;
 
   MessageChannel mChannel;
 };

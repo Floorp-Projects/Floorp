@@ -53,12 +53,7 @@
  * "shmem-access baton" between parent and child.
  */
 
-namespace mozilla {
-namespace layers {
-class ShadowLayerForwarder;
-}  // namespace layers
-
-namespace ipc {
+namespace mozilla::ipc {
 
 class IProtocol;
 class IToplevelProtocol;
@@ -70,10 +65,6 @@ class Shmem final {
   friend struct IPDLParamTraits<mozilla::ipc::Shmem>;
   friend class mozilla::ipc::IProtocol;
   friend class mozilla::ipc::IToplevelProtocol;
-#ifdef DEBUG
-  // For ShadowLayerForwarder::CheckSurfaceDescriptor
-  friend class mozilla::layers::ShadowLayerForwarder;
-#endif
 
  public:
   typedef int32_t id_t;
@@ -131,7 +122,7 @@ class Shmem final {
  private:
   // These shouldn't be used directly, use the IPDL interface instead.
 
-  Shmem(SharedMemory* aSegment, id_t aId);
+  Shmem(SharedMemory* aSegment, id_t aId, size_t aSize, bool aUnsafe);
 
   id_t Id() const { return mId; }
 
@@ -148,11 +139,12 @@ class Shmem final {
     mData = nullptr;
     mSize = 0;
     mId = 0;
+#ifdef DEBUG
+    mUnsafe = false;
+#endif
   }
 
-  static already_AddRefed<Shmem::SharedMemory> Alloc(size_t aNBytes,
-                                                     bool aUnsafe,
-                                                     bool aProtect = false);
+  static already_AddRefed<Shmem::SharedMemory> Alloc(size_t aNBytes);
 
   // Prepare this to be shared with another process. Return an IPC message that
   // contains enough information for the other process to map this segment in
@@ -173,8 +165,6 @@ class Shmem final {
   static already_AddRefed<SharedMemory> OpenExisting(
       const IPC::Message& aDescriptor, id_t* aId, bool aProtect = false);
 
-  static void Dealloc(SharedMemory* aSegment);
-
   template <typename T>
   void AssertAligned() const {
     if (0 != (mSize % sizeof(T))) MOZ_CRASH("shmem is not T-aligned");
@@ -182,13 +172,6 @@ class Shmem final {
 
 #if !defined(DEBUG)
   void AssertInvariants() const {}
-
-  static uint32_t* PtrToSize(SharedMemory* aSegment) {
-    char* endOfSegment =
-        reinterpret_cast<char*>(aSegment->memory()) + aSegment->Size();
-    return reinterpret_cast<uint32_t*>(endOfSegment - sizeof(uint32_t));
-  }
-
 #else
   void AssertInvariants() const;
 #endif
@@ -197,9 +180,11 @@ class Shmem final {
   void* mData;
   size_t mSize;
   id_t mId;
+#ifdef DEBUG
+  bool mUnsafe = false;
+#endif
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif  // ifndef mozilla_ipc_Shmem_h
