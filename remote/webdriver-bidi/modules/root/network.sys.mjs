@@ -98,6 +98,12 @@ const ContinueWithAuthAction = {
  */
 
 /**
+ * @typedef {object} CookieHeader
+ * @property {string} name
+ * @property {BytesValue} value
+ */
+
+/**
  * @typedef {object} FetchTimingInfo
  * @property {number} timeOrigin
  * @property {number} requestTime
@@ -368,6 +374,136 @@ class NetworkModule extends Module {
   }
 
   /**
+   * Continues a request that is blocked by a network intercept at the
+   * beforeRequestSent phase.
+   *
+   * @param {object=} options
+   * @param {string} options.request
+   *     The id of the blocked request that should be continued.
+   * @param {BytesValue=} options.body [unsupported]
+   *     Optional BytesValue to replace the body of the request.
+   * @param {Array<CookieHeader>=} options.cookies [unsupported]
+   *     Optional array of cookie header values to replace the cookie header of
+   *     the request.
+   * @param {Array<Header>=} options.headers [unsupported]
+   *     Optional array of headers to replace the headers of the request.
+   *     request.
+   * @param {string=} options.method [unsupported]
+   *     Optional string to replace the method of the request.
+   * @param {string=} options.url [unsupported]
+   *     Optional string to replace the url of the request. If the provided url
+   *     is not a valid URL, an InvalidArgumentError will be thrown.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchRequestError}
+   *     Raised if the request id does not match any request in the blocked
+   *     requests map.
+   */
+  async continueRequest(options = {}) {
+    this.assertExperimentalCommandsEnabled("network.continueRequest");
+    const {
+      body = null,
+      cookies = null,
+      headers = null,
+      method = null,
+      url = null,
+      request: requestId,
+    } = options;
+
+    lazy.assert.string(
+      requestId,
+      `Expected "request" to be a string, got ${requestId}`
+    );
+
+    if (body !== null) {
+      this.#assertBytesValue(
+        body,
+        `Expected "body" to be a network.BytesValue, got ${body}`
+      );
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"body" not supported yet in network.continueRequest`
+      );
+    }
+
+    if (cookies !== null) {
+      lazy.assert.array(
+        cookies,
+        `Expected "cookies" to be an array got ${cookies}`
+      );
+
+      for (const cookie of cookies) {
+        this.#assertHeader(
+          cookie,
+          `Expected values in "cookies" to be network.CookieHeader, got ${cookie}`
+        );
+      }
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"cookies" not supported yet in network.continueRequest`
+      );
+    }
+
+    if (headers !== null) {
+      lazy.assert.array(
+        headers,
+        `Expected "headers" to be an array got ${headers}`
+      );
+
+      for (const header of headers) {
+        this.#assertHeader(
+          header,
+          `Expected values in "headers" to be network.Header, got ${header}`
+        );
+      }
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"headers" not supported yet in network.continueRequest`
+      );
+    }
+
+    if (method !== null) {
+      lazy.assert.string(
+        method,
+        `Expected "method" to be a string, got ${method}`
+      );
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"method" not supported yet in network.continueRequest`
+      );
+    }
+
+    if (url !== null) {
+      lazy.assert.string(url, `Expected "url" to be a string, got ${url}`);
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"url" not supported yet in network.continueRequest`
+      );
+    }
+
+    if (!this.#blockedRequests.has(requestId)) {
+      throw new lazy.error.NoSuchRequestError(
+        `Blocked request with id ${requestId} not found`
+      );
+    }
+
+    const { phase, request, resolveBlockedEvent } =
+      this.#blockedRequests.get(requestId);
+
+    if (phase !== InterceptPhase.BeforeRequestSent) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected blocked request to be in "beforeRequestSent" phase, got ${phase}`
+      );
+    }
+
+    const wrapper = ChannelWrapper.get(request);
+    wrapper.resume();
+
+    resolveBlockedEvent();
+  }
+
+  /**
    * Continues a response that is blocked by a network intercept at the
    * authRequired phase.
    *
@@ -577,6 +713,18 @@ class NetworkModule extends Module {
     blockedEventPromise.finally(() => {
       this.#blockedRequests.delete(requestId);
     });
+  }
+
+  #assertBytesValue(obj, msg) {
+    lazy.assert.object(obj, msg);
+    lazy.assert.string(obj.value, msg);
+    lazy.assert.in(obj.type, Object.values(BytesValueType), msg);
+  }
+
+  #assertHeader(value, msg) {
+    lazy.assert.object(value, msg);
+    lazy.assert.string(value.name, msg);
+    this.#assertBytesValue(value.value, msg);
   }
 
   #extractChallenges(responseData) {
