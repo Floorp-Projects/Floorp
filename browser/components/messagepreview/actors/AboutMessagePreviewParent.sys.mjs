@@ -11,7 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FeatureCalloutBroker:
     "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
-  InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
+  InfoBar: "resource:///modules/asrouter/InfoBar.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
