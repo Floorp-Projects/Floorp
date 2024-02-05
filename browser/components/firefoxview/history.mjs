@@ -642,6 +642,9 @@ class HistoryInView extends ViewPage {
 
   async onSearchQuery(e) {
     this.searchQuery = e.detail.query;
+    this.cumulativeSearches = this.searchQuery
+      ? this.cumulativeSearches + 1
+      : 0;
     this.#updateSearchResults();
   }
 
@@ -651,11 +654,6 @@ class HistoryInView extends ViewPage {
       // onChangeSortOption() will update history data once it has been fetched
       // from the API.
       this.createHistoryMaps();
-    }
-    if (changedProperties.has("searchQuery")) {
-      this.cumulativeSearches = this.searchQuery
-        ? this.cumulativeSearches + 1
-        : 0;
     }
   }
 }

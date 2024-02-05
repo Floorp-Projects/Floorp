@@ -17,65 +17,19 @@ const DISMISS_CLOSED_TAB_EVENT = [
 ];
 const initialTab = gBrowser.selectedTab;
 
-async function waitForRecentlyClosedTabsList(doc) {
-  let recentlyClosedComponent = doc.querySelector(
-    "view-recentlyclosed:not([slot=recentlyclosed])"
-  );
-  // Check that the tabs list is rendered
-  await TestUtils.waitForCondition(() => {
-    return recentlyClosedComponent.cardEl;
-  });
-  let cardContainer = recentlyClosedComponent.cardEl;
-  let cardMainSlotNode = Array.from(
-    cardContainer?.mainSlot?.assignedNodes()
-  )[0];
-  await TestUtils.waitForCondition(() => {
-    return cardMainSlotNode.rowEls.length;
-  });
-  return [cardMainSlotNode, cardMainSlotNode.rowEls];
-}
-
-async function click_tab_item(itemElem, itemProperty = "") {
-  // Make sure the firefoxview tab still has focus
-  is(
-    itemElem.ownerDocument.location.href,
-    "about:firefoxview#recentlyclosed",
-    "about:firefoxview is the selected tab and showing the Recently closed view page"
-  );
-
-  // Scroll to the tab element to ensure dismiss button is visible
-  itemElem.scrollIntoView();
-  is(isElInViewport(itemElem), true, "Tab is visible in viewport");
-  let clickTarget;
-  switch (itemProperty) {
-    case "dismiss":
-      clickTarget = itemElem.buttonEl;
-      break;
-    default:
-      clickTarget = itemElem.mainEl;
-      break;
-  }
-
-  const closedObjectsChangePromise = TestUtils.topicObserved(
-    "sessionstore-closed-objects-changed"
-  );
-  EventUtils.synthesizeMouseAtCenter(clickTarget, {}, itemElem.ownerGlobal);
-  await closedObjectsChangePromise;
-}
-
 async function restore_tab(itemElem, browser, expectedURL) {
   info(`Restoring tab ${itemElem.url}`);
   let tabRestored = BrowserTestUtils.waitForNewTab(
     browser.getTabBrowser(),
     expectedURL
   );
-  await click_tab_item(itemElem, "main");
+  await click_recently_closed_tab_item(itemElem, "main");
   await tabRestored;
 }
 
 async function dismiss_tab(itemElem) {
   info(`Dismissing tab ${itemElem.url}`);
-  return click_tab_item(itemElem, "dismiss");
+  return click_recently_closed_tab_item(itemElem, "dismiss");
 }
 
 async function tabTestCleanup() {
