@@ -1199,20 +1199,14 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
 
 nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() {
   const bool isVerticalWM = GetWritingMode().IsVertical();
-  nsScrollbarFrame* inlineEndScrollbarBox =
-      isVerticalWM ? mHScrollbarBox : mVScrollbarBox;
-  if (!inlineEndScrollbarBox) {
-    // No scrollbar box frame means no intrinsic size.
-    return 0;
-  }
-
   if (PresContext()->UseOverlayScrollbars()) {
     return 0;
   }
 
   const auto* styleForScrollbar = nsLayoutUtils::StyleForScrollbar(this);
-  if (styleForScrollbar->StyleUIReset()->ScrollbarWidth() ==
-      StyleScrollbarWidth::None) {
+  const auto& styleScrollbarWidth =
+      styleForScrollbar->StyleUIReset()->ScrollbarWidth();
+  if (styleScrollbarWidth == StyleScrollbarWidth::None) {
     // Scrollbar shouldn't appear at all with "scrollbar-width: none".
     return 0;
   }
@@ -1231,9 +1225,8 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() {
     return 0;
   }
 
-  nsSize scrollbarPrefSize = inlineEndScrollbarBox->ScrollbarMinSize();
   const nscoord scrollbarSize =
-      isVerticalWM ? scrollbarPrefSize.height : scrollbarPrefSize.width;
+      GetNonOverlayScrollbarSize(PresContext(), styleScrollbarWidth);
   const auto bothEdges =
       bool(styleScrollbarGutter & StyleScrollbarGutter::BOTH_EDGES);
   return bothEdges ? scrollbarSize * 2 : scrollbarSize;
@@ -5584,14 +5577,6 @@ auto nsHTMLScrollFrame::GetNeededAnonymousContent() const
     }
     if (styles.mVertical != StyleOverflow::Hidden) {
       result += AnonymousContentType::VerticalScrollbar;
-    }
-
-    // If we have scrollbar-gutter, construct the scrollbar frames to query its
-    // size to reserve the gutter space at the inline start or end edges.
-    if (StyleDisplay()->mScrollbarGutter & StyleScrollbarGutter::STABLE) {
-      result += GetWritingMode().IsVertical()
-                    ? AnonymousContentType::HorizontalScrollbar
-                    : AnonymousContentType::VerticalScrollbar;
     }
   }
 
