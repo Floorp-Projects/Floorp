@@ -162,7 +162,18 @@ static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
       // We're only interested in handles in our own process.
       return true;
     }
-    // Get the name of the handle.
+    // UIA creates a named pipe between the client and server processes. We want
+    // to find our handle to that pipe (if any). If this is a named pipe, get
+    // the process id of the remote end. We do this first because querying the
+    // name of the handle might hang in some cases. Counter-intuitively, for UIA
+    // pipes, we're the client and the remote process is the server.
+    ULONG pid = 0;
+    ::GetNamedPipeServerProcessId(aHandle, &pid);
+    if (!pid) {
+      return true;
+    }
+    // We know this is a named pipe and we have the pid. Now, get the name of
+    // the handle and check whether it's a UIA pipe.
     ULONG objNameBufLen;
     NTSTATUS ntStatus = ::NtQueryObject(
         aHandle, (OBJECT_INFORMATION_CLASS)ObjectNameInformation, nullptr, 0,
@@ -184,14 +195,7 @@ static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
     }
     nsDependentString objName(objNameInfo->Name.Buffer,
                               objNameInfo->Name.Length / sizeof(wchar_t));
-
-    // UIA creates a named pipe between the client and server processes. Find
-    // our handle to that pipe (if any).
     if (StringBeginsWith(objName, u"\\Device\\NamedPipe\\UIA_PIPE_"_ns)) {
-      // Get the process id of the remote end. Counter-intuitively, for this
-      // pipe, we're the client and the remote process is the server.
-      ULONG pid = 0;
-      ::GetNamedPipeServerProcessId(aHandle, &pid);
       aPids.AppendElement(pid);
     }
     return true;
