@@ -108,7 +108,7 @@ var TabStateInternal = {
     }
 
     let { WorkspacesService } = ChromeUtils.importESModule(
-      "resource://floorp/modules/WorkspacesService.sys.mjs"
+      "resource:///modules/WorkspacesService.sys.mjs"
     );
 
     // Workspaces
