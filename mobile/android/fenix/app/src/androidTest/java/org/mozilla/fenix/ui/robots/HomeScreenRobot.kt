@@ -48,7 +48,6 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.Matchers
-import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
@@ -98,9 +97,6 @@ class HomeScreenRobot {
 
     fun verifyHomeScreenAppBarItems() =
         assertUIObjectExists(homeScreen(), privateBrowsingButton(), homepageWordmark())
-
-    fun verifyNavigationToolbarItems(numberOfOpenTabs: String = "0") =
-        assertUIObjectExists(navigationToolbar(), menuButton, tabCounter(numberOfOpenTabs))
 
     fun verifyHomePrivateBrowsingButton() = assertUIObjectExists(privateBrowsingButton())
     fun verifyHomeMenuButton() = assertUIObjectExists(menuButton)
@@ -320,8 +316,6 @@ class HomeScreenRobot {
         assertUIObjectExists(itemContainingText(getStringResource(R.string.history_metadata_header_2)), exists = exists)
     fun verifyRecentBookmarksSectionIsDisplayed(exists: Boolean) =
         assertUIObjectExists(itemContainingText(getStringResource(R.string.recently_saved_title)), exists = exists)
-    fun verifyPocketSectionIsDisplayed(exists: Boolean) =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.pocket_stories_header_1)), exists = exists)
 
     fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
         // checks if the search group exists in the Recently visited section
@@ -352,13 +346,6 @@ class HomeScreenRobot {
         onView(ViewMatchers.withResourceName("privateBrowsingButton"))
             .perform(click())
     }
-
-    fun swipeToBottom() = onView(withId(R.id.homeLayout)).perform(ViewActions.swipeUp())
-
-    fun swipeToTop() =
-        onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
-
-    fun clickFirefoxLogo() = homepageWordmark().click()
 
     fun verifyThoughtProvokingStories(enabled: Boolean) {
         if (enabled) {
@@ -789,18 +776,6 @@ class HomeScreenRobot {
             return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun clickJumpBackInItemWithTitle(itemTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice
-                .findObject(
-                    UiSelector()
-                        .resourceId("recent.tab.title")
-                        .textContains(itemTitle),
-                ).clickAndWaitForNewWindow(waitingTime)
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun clickPocketStoryItem(publisher: String, position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.findObject(
                 UiSelector()
@@ -880,14 +855,6 @@ private fun homeScreenList() =
             .scrollable(true),
     ).setAsVerticalList()
 
-private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
-    Assert.assertEquals(
-        isExpectedToBeVisible,
-        mDevice
-            .executeShellCommand("dumpsys input_method | grep mInputShown")
-            .contains("mInputShown=true"),
-    )
-
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
 
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
@@ -933,12 +900,6 @@ val deleteFromHistory =
             withText(R.string.delete_from_history),
         ),
     ).inRoot(RootMatchers.isPlatformPopup())
-
-private val recentlyVisitedList =
-    UiScrollable(
-        UiSelector()
-            .className("android.widget.HorizontalScrollView"),
-    ).setAsHorizontalList()
 
 private val sponsoredShortcutsSettingsButton =
     mDevice
