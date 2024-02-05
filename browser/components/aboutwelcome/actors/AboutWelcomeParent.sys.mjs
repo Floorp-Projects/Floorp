@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeTelemetry:
     "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
@@ -22,7 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeDefaults:
     "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
-  AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.jsm",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {

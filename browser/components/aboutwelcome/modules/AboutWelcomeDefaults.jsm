@@ -5,9 +5,6 @@
 
 const EXPORTED_SYMBOLS = ["AboutWelcomeDefaults"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -17,11 +14,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.jsm",
 });
 
 // Message to be updated based on finalized MR designs
