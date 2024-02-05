@@ -64,8 +64,6 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
-  void OnChannelError() override;
-
  private:
   ~VideoBridgeParent();
 
