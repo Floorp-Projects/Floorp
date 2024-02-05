@@ -755,9 +755,12 @@ void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleDisplay* oldDisp =
       aOldStyle ? aOldStyle->StyleDisplay() : nullptr;
-  if (!oldDisp || oldDisp->mContainerType != disp->mContainerType) {
+
+  const bool wasQueryContainer = oldDisp && oldDisp->IsQueryContainer();
+  const bool isQueryContainer = disp->IsQueryContainer();
+  if (wasQueryContainer != isQueryContainer) {
     auto* pc = PresContext();
-    if (disp->mContainerType != StyleContainerType::Normal) {
+    if (isQueryContainer) {
       pc->RegisterContainerQueryFrame(this);
     } else {
       pc->UnregisterContainerQueryFrame(this);
@@ -810,7 +813,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
   nsPresContext* pc = PresContext();
   mozilla::PresShell* ps = pc->GetPresShell();
   if (IsPrimaryFrame()) {
-    if (disp->mContainerType != StyleContainerType::Normal) {
+    if (disp->IsQueryContainer()) {
       pc->UnregisterContainerQueryFrame(this);
     }
     if (disp->ContentVisibility(*this) == StyleContentVisibility::Auto) {

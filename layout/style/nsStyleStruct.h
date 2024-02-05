@@ -1233,6 +1233,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleContentVisibility mContentVisibility;
   mozilla::StyleContainerType mContainerType;
 
+  bool IsQueryContainer() const {
+    return mContainerType != mozilla::StyleContainerType::Normal;
+  }
+
  private:
   mozilla::StyleAppearance mAppearance;
   mozilla::StyleContain mContain;
