@@ -2416,12 +2416,6 @@
   value: true
   mirror: always
 
-# Whether wheel listeners are passive by default.
-- name: dom.event.default_to_passive_wheel_listeners
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.event.dragexit.enabled
   type: bool
   value: @IS_NOT_NIGHTLY_BUILD@

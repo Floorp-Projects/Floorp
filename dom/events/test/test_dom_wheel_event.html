@@ -316,9 +316,9 @@ function* testDeltaMultiplierPrefs()
     }
   }
 
-  window.addEventListener("wheel", wheelEventHandler, true);
-  window.addEventListener("DOMMouseScroll", legacyEventHandler, true);
-  window.addEventListener("MozMousePixelScroll", legacyEventHandler, true);
+  window.addEventListener("wheel", wheelEventHandler, { capture: true, passive: false });
+  window.addEventListener("DOMMouseScroll", legacyEventHandler, { capture: true, passive: false });
+  window.addEventListener("MozMousePixelScroll", legacyEventHandler, { capture: true, passive: false });
 
   function* dispatchEvent(aIsExpected) {
     for (var i = 0; i < kEvents.length; i++) {
@@ -686,9 +686,9 @@ function* testEventOrder()
   window.addEventListener("DOMMouseScroll", handler, { capture: true, passive: false });
   window.addEventListener("MozMousePixelScroll", handler, { capture: true, passive: false });
 
-  SpecialPowers.addSystemEventListener(window, "wheel", systemHandler, true);
-  SpecialPowers.addSystemEventListener(window, "DOMMouseScroll", systemHandler, true);
-  SpecialPowers.addSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
+  SpecialPowers.wrap(window).addEventListener("wheel", systemHandler, { capture: true, passive: false, mozSystemGroup: true });
+  SpecialPowers.wrap(window).addEventListener("DOMMouseScroll", systemHandler, { capture: true, passive: false, mozSystemGroup: true });
+  SpecialPowers.wrap(window).addEventListener("MozMousePixelScroll", systemHandler, { capture: true, passive: false, mozSystemGroup: true });
 
   for (var i = 0; i < kTests.length; i++) {
     currentTest = kTests[i];
@@ -716,9 +716,9 @@ function* testEventOrder()
   window.removeEventListener("DOMMouseScroll", handler, true);
   window.removeEventListener("MozMousePixelScroll", handler, true);
 
-  SpecialPowers.removeSystemEventListener(window, "wheel", systemHandler, true);
-  SpecialPowers.removeSystemEventListener(window, "DOMMouseScroll", systemHandler, true);
-  SpecialPowers.removeSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
+  window.removeEventListener("wheel", systemHandler, true);
+  window.removeEventListener("DOMMouseScroll", systemHandler, true);
+  window.removeEventListener("MozMousePixelScroll", systemHandler, true);
 }
 
 var gOnWheelAttrHandled = new Array;
@@ -827,9 +827,6 @@ function runTest()
     ["mousewheel.with_shift.delta_multiplier_x", 100],
     ["mousewheel.with_shift.delta_multiplier_y", 100],
     ["mousewheel.with_shift.delta_multiplier_z", 100],
-    // TODO: Need to add passive to SpecialPowers.addSystemEventListener
-    // somehow.
-    ["dom.event.default_to_passive_wheel_listeners", false],
   ]}, continueTest);
 }
 </script>
