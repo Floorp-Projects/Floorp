@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
-  MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.sys.mjs",
+  MomentsPageHub: "resource:///modules/asrouter/MomentsPageHub.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PanelTestProvider: "resource:///modules/asrouter/PanelTestProvider.sys.mjs",
   RemoteL10n: "resource:///modules/asrouter/RemoteL10n.sys.mjs",
