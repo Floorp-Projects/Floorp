@@ -3675,11 +3675,6 @@ int32_t ScriptLoader::PhysicalSizeOfMemoryInGB() {
   return mPhysicalSizeOfMemory;
 }
 
-static bool IsInternalURIScheme(nsIURI* uri) {
-  return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
-         uri->SchemeIs("chrome");
-}
-
 bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
   // Full parse everything if negative.
   if (StaticPrefs::dom_script_loader_delazification_max_size() < 0) {
@@ -3866,13 +3861,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   rv = channel->GetOriginalURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Fixup moz-extension: and resource: URIs, because the channel URI will
-  // point to file:, which won't be allowed to load.
-  if (uri && IsInternalURIScheme(uri)) {
-    aRequest->mBaseURL = uri;
-  } else {
-    channel->GetURI(getter_AddRefs(aRequest->mBaseURL));
-  }
+  aRequest->SetBaseURLFromChannelAndOriginalURI(channel, uri);
 
   if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* request = aRequest->AsModuleRequest();

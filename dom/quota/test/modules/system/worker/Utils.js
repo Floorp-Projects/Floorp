@@ -10,25 +10,11 @@ async function ensureUtilsChild() {
     return;
   }
 
-  try {
-    const { UtilsChild: importedUtilsChild } = await import(
-      "/dom/quota/test/modules/worker/UtilsChild.js"
-    );
+  const { UtilsChild: importedUtilsChild } = await import(
+    "/dom/quota/test/modules/worker/UtilsChild.mjs"
+  );
 
-    UtilsChild = importedUtilsChild;
-
-    throw Error("Please switch to dynamic module import");
-  } catch (e) {
-    if (e.message == "Please switch to dynamic module import") {
-      throw e;
-    }
-
-    importScripts("/dom/quota/test/modules/worker/UtilsChild.js");
-
-    const { UtilsChild: importedUtilsChild } = globalThis.importUtilsChild();
-
-    UtilsChild = importedUtilsChild;
-  }
+  UtilsChild = importedUtilsChild;
 }
 
 const Utils = {

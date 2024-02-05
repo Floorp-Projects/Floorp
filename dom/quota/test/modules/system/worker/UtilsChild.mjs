@@ -24,7 +24,7 @@ function _recvMessage() {
   });
 }
 
-const _UtilsChild = {
+export const UtilsChild = {
   async getCachedOriginUsage() {
     _sendMessage({
       op: "getCachedOriginUsage",
@@ -50,7 +50,3 @@ const _UtilsChild = {
     return _recvMessage();
   },
 };
-
-function importUtilsChild() {
-  return { UtilsChild: _UtilsChild };
-}

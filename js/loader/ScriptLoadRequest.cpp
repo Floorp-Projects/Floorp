@@ -197,6 +197,22 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
   return !!mScriptForBytecodeEncoding;
 }
 
+static bool IsInternalURIScheme(nsIURI* uri) {
+  return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
+         uri->SchemeIs("chrome");
+}
+
+void ScriptLoadRequest::SetBaseURLFromChannelAndOriginalURI(
+    nsIChannel* aChannel, nsIURI* aOriginalURI) {
+  // Fixup moz-extension: and resource: URIs, because the channel URI will
+  // point to file:, which won't be allowed to load.
+  if (aOriginalURI && IsInternalURIScheme(aOriginalURI)) {
+    mBaseURL = aOriginalURI;
+  } else {
+    aChannel->GetURI(getter_AddRefs(mBaseURL));
+  }
+}
+
 //////////////////////////////////////////////////////////////
 // ScriptLoadRequestList
 //////////////////////////////////////////////////////////////
