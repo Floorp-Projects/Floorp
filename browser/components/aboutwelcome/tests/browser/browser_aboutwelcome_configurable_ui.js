@@ -4,8 +4,8 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
-const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
+const { AboutWelcomeTelemetry } = ChromeUtils.importESModule(
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs"
 );
 
 const BASE_SCREEN_CONTENT = {

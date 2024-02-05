@@ -4,8 +4,8 @@ const { AboutWelcomeParent } = ChromeUtils.importESModule(
   "resource:///actors/AboutWelcomeParent.sys.mjs"
 );
 
-const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
+const { AboutWelcomeTelemetry } = ChromeUtils.importESModule(
+  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs"
 );
 const { AWScreenUtils } = ChromeUtils.import(
   "resource:///modules/aboutwelcome/AWScreenUtils.jsm"
