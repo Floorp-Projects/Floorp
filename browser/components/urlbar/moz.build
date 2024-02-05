@@ -27,7 +27,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderCalculator.sys.mjs",
     "UrlbarProviderClipboard.sys.mjs",
     "UrlbarProviderContextualSearch.sys.mjs",
-    "UrlbarProviderExtension.sys.mjs",
     "UrlbarProviderHeuristicFallback.sys.mjs",
     "UrlbarProviderHistoryUrlHeuristic.sys.mjs",
     "UrlbarProviderInputHistory.sys.mjs",
@@ -84,7 +83,6 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser-updateResults/browser.toml",
     "tests/browser/browser.toml",
     "tests/engagementTelemetry/browser/browser.toml",
-    "tests/ext/browser/browser.toml",
     "tests/quicksuggest/browser/browser.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += [

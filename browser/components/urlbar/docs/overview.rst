@@ -400,6 +400,6 @@ The following RESULT_TYPEs are supported:
     // An actionable message to help the user with their query.
     // Payload: { buttons, helpL10n, helpUrl, icon, titleL10n, type }
     TIP: 7,
-    // A type of result created at runtime, for example by an extension.
+    // A type of result which layout is defined at runtime.
     // Payload: { dynamicType }
     DYNAMIC: 8,

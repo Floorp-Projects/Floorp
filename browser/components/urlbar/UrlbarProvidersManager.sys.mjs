@@ -288,25 +288,6 @@ class ProvidersManager {
       return;
     }
 
-    // Update the behavior of extension providers.
-    let updateBehaviorPromises = [];
-    for (let provider of this.providers) {
-      if (
-        provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
-        provider.name != "Omnibox"
-      ) {
-        updateBehaviorPromises.push(
-          provider.tryMethod("updateBehavior", queryContext)
-        );
-      }
-    }
-    if (updateBehaviorPromises.length) {
-      await Promise.all(updateBehaviorPromises);
-      if (query.canceled) {
-        return;
-      }
-    }
-
     await query.start();
   }
 

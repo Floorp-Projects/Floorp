@@ -612,9 +612,6 @@ skip-if = [
   "win11_2009 && debug", # Bug 1797751
 ]
 
-["browser_ext_urlbar.js"]
-https_first_disabled = true
-
 ["browser_ext_user_events.js"]
 
 ["browser_ext_webNavigation_containerIsolation.js"]

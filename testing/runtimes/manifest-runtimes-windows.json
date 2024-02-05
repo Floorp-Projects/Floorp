@@ -188,7 +188,6 @@
     "browser/components/uitour/test/browser.ini": 56.84,
     "browser/components/urlbar/tests/browser-tips/browser.ini": 35.74,
     "browser/components/urlbar/tests/browser/browser.ini": 347.01,
-    "browser/components/urlbar/tests/ext/browser/browser.ini": 1.8,
     "browser/extensions/doh-rollout/test/browser/browser.ini": 151.75,
     "browser/extensions/formautofill/test/browser/browser.ini": 42.02,
     "browser/extensions/formautofill/test/browser/creditCard/browser.ini": 12.18,

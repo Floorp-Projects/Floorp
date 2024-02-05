@@ -40,7 +40,6 @@ Table of Contents
    firefox-suggest-telemetry
    debugging
    ranking
-   experiments
    dynamic-result-types
    preferences
    testing

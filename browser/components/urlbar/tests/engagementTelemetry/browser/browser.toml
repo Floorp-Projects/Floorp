@@ -13,9 +13,6 @@ support-files = [
   "head-sap.js",
   "head-search_mode.js",
   "../../browser-tips/head.js",
-  "../../ext/browser/head.js",
-  "../../ext/api.js",
-  "../../ext/schema.json",
 ]
 prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
 

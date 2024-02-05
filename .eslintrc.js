@@ -726,7 +726,6 @@ module.exports = {
         "browser/components/extensions/test/browser/browser_ext_tabs_warmup.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_zoom.js",
         "browser/components/extensions/test/browser/browser_ext_topSites.js",
-        "browser/components/extensions/test/browser/browser_ext_urlbar.js",
         "browser/components/extensions/test/browser/browser_ext_webNavigation_containerIsolation.js",
         "browser/components/extensions/test/browser/browser_ext_webNavigation_getFrames.js",
         "browser/components/extensions/test/browser/browser_ext_webNavigation_urlbar_transitions.js",
