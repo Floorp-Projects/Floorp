@@ -3,9 +3,59 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
-from distutils.version import StrictVersion
 
 from looseversion import LooseVersion
+from packaging.version import InvalidVersion
+
+
+class StrictVersion:
+    def __init__(self, vstring):
+        self.parse(vstring)
+
+    def __repr__(self):
+        return "%s ('%s')" % (self.__class__.__name__, str(self))
+
+    def __eq__(self, other):
+        return self._cmp(other) == 0
+
+    def __lt__(self, other):
+        return self._cmp(other) < 0
+
+    def parse(self, vstring):
+        match = self.version_re.match(vstring)
+        if not match:
+            raise InvalidVersion("invalid version number '%s'" % vstring)
+
+        major, minor, patch, pre, pre_num = match.group(1, 2, 4, 5, 6)
+        self.version = int(major), int(minor), int(patch or 0)
+        self.pre = (pre[0], int(pre_num)) if pre else ()
+
+    def __str__(self):
+        return ".".join(map(str, self.version)) + (
+            "".join(map(str, self.pre)) if self.pre else ""
+        )
+
+    def _cmp(self, other):
+        if isinstance(other, str):
+            other = StrictVersion(other)
+        elif not isinstance(other, StrictVersion):
+            raise NotImplementedError
+
+        if self.version < other.version:
+            return -1
+        elif self.version == other.version:
+            if self.pre == other.pre:
+                return 0
+            elif not self.pre:
+                return 1
+            elif not other.pre:
+                return -1
+            elif self.pre < other.pre:
+                return -1
+            else:
+                return 1
+        else:
+            return 1
 
 
 class MozillaVersionCompareMixin:
@@ -93,12 +143,12 @@ class LooseModernMozillaVersion(MozillaVersionCompareMixin, LooseVersion):
 def MozillaVersion(version):
     try:
         return ModernMozillaVersion(version)
-    except ValueError:
+    except InvalidVersion:
         pass
     try:
         if version.count(".") == 3:
             return AncientMozillaVersion(version)
-    except ValueError:
+    except InvalidVersion:
         pass
     try:
         return LooseModernMozillaVersion(version)

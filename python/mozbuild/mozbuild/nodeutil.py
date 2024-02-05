@@ -5,14 +5,14 @@
 import os
 import platform
 import subprocess
-from distutils.version import StrictVersion
 
 from mozboot.util import get_tools_dir
 from mozfile import which
+from packaging.version import Version
 from six import PY3
 
-NODE_MIN_VERSION = StrictVersion("12.22.12")
-NPM_MIN_VERSION = StrictVersion("6.14.16")
+NODE_MIN_VERSION = Version("12.22.12")
+NPM_MIN_VERSION = Version("6.14.16")
 
 
 def find_node_paths():
@@ -68,7 +68,7 @@ def check_executable_version(exe, wrap_call_with_node=False):
             .lstrip("v")
             .rstrip()
         )
-    return StrictVersion(out)
+    return Version(out)
 
 
 def find_node_executable(
@@ -87,7 +87,7 @@ def find_node_executable(
             return None, None
 
         if version >= min_version:
-            return nodejs_exe, version.version
+            return nodejs_exe, version.release
 
         return None, None
 
@@ -123,4 +123,4 @@ def find_executable(name, min_version, use_node_for_version_check=False):
     if version < min_version:
         return None, None
 
-    return exe, version.version
+    return exe, version.release
