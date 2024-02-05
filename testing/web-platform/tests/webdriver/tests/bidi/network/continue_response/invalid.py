@@ -6,6 +6,387 @@ from .. import PAGE_EMPTY_TEXT, RESPONSE_COMPLETED_EVENT
 pytestmark = pytest.mark.asyncio
 
 
+@pytest.mark.parametrize("value", [False, 42, "foo", {}])
+async def test_params_cookies_invalid_type(setup_blocked_request, bidi_session, value):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, cookies=value)
+
+
+@pytest.mark.parametrize("value", [None, False, 42, "foo", []])
+async def test_params_cookies_cookie_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, cookies=[value])
+
+
+@pytest.mark.parametrize(
+    "value",
+    [{}, {"name": "name"}, {"value": {"type": "string", "value": "foo"}}],
+    ids=[
+        "empty object",
+        "missing value",
+        "missing name",
+    ],
+)
+async def test_params_cookies_cookie_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[value],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_cookies_cookie_name_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": value, "value": {"type": "string", "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, "foo", []])
+async def test_params_cookies_cookie_value_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": "test", "value": value}],
+        )
+
+
+@pytest.mark.parametrize("value", [{}, {"type": "string"}, {"value": "foo"}])
+async def test_params_cookies_cookie_value_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": "test", "value": value}],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_cookies_cookie_value_type_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("value", ["", "foo"])
+async def test_params_cookies_cookie_value_type_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("property", ["domain", "expiry", "path", "sameSite"])
+@pytest.mark.parametrize("value", [False, 42, {}, []])
+async def test_params_cookies_cookie_value_string_properties_invalid_type(
+    setup_blocked_request, bidi_session, property, value
+):
+    request = await setup_blocked_request("responseStarted")
+    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
+    cookie[property] = value
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[cookie],
+        )
+
+
+@pytest.mark.parametrize("value", ["", "foo"])
+async def test_params_cookies_cookie_value_same_site_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
+    cookie["sameSite"] = value
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[cookie],
+        )
+
+
+@pytest.mark.parametrize("property", ["httpOnly", "secure"])
+@pytest.mark.parametrize("value", [42, "foo", {}, []])
+async def test_params_cookies_cookie_value_bool_properties_invalid_type(
+    setup_blocked_request, bidi_session, property, value
+):
+    request = await setup_blocked_request("responseStarted")
+    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
+    cookie[property] = value
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[cookie],
+        )
+
+
+@pytest.mark.parametrize("value", [False, "foo", {}, []])
+async def test_params_cookies_cookie_value_max_age_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
+    cookie["maxAge"] = value
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[cookie],
+        )
+
+
+@pytest.mark.parametrize("value", [4.3])
+async def test_params_cookies_cookie_value_max_age_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    cookie = {"name": "test", "value": {"type": "string", "value": "foo"}}
+    cookie["maxAge"] = value
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[cookie],
+        )
+
+
+@pytest.mark.parametrize("value", [None, None, False, 42, {}, []])
+async def test_params_cookies_cookie_value_value_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            cookies=[{"name": "test", "value": {"type": "string", "value": value}}],
+        )
+
+
+@pytest.mark.parametrize("value", [False, 42, "foo", []])
+async def test_params_credentials_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, credentials=value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"type": "password", "password": "foo"},
+        {"type": "password", "username": "foo"},
+        {
+            "type": "password",
+        },
+        {
+            "username": "foo",
+            "password": "bar",
+        },
+    ],
+    ids=[
+        "missing username",
+        "missing password",
+        "missing username and password",
+        "missing type",
+    ],
+)
+async def test_params_credentials_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, credentials=value)
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_credentials_type_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            credentials={
+                "type": value,
+            },
+        )
+
+
+@pytest.mark.parametrize("value", ["", "foo"])
+async def test_params_credentials_type_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            credentials={
+                "type": value,
+            },
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_credentials_username_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    credentials = {"type": "password", "username": value, "password": "foo"}
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request, credentials=credentials
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_credentials_password_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+    credentials = {"type": "password", "username": "foo", "password": value}
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request, credentials=credentials
+        )
+
+
+@pytest.mark.parametrize("value", [False, 42, "foo", {}])
+async def test_params_headers_invalid_type(setup_blocked_request, bidi_session, value):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, headers=value)
+
+
+@pytest.mark.parametrize("value", [None, False, 42, "foo", []])
+async def test_params_headers_header_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(request=request, headers=[value])
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_headers_header_name_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": value, "value": {"type": "string", "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, "foo", []])
+async def test_params_headers_header_value_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": "test", "value": value}],
+        )
+
+
+@pytest.mark.parametrize("value", [{}, {"type": "string"}, {"value": "foo"}])
+async def test_params_headers_header_value_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": "test", "value": value}],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_headers_header_value_type_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("value", ["", "foo"])
+async def test_params_headers_header_value_type_invalid_value(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": "test", "value": {"type": value, "value": "foo"}}],
+        )
+
+
+@pytest.mark.parametrize("value", [None, False, 42, {}, []])
+async def test_params_headers_header_value_value_invalid_type(
+    setup_blocked_request, bidi_session, value
+):
+    request = await setup_blocked_request("responseStarted")
+
+    with pytest.raises(error.InvalidArgumentException):
+        await bidi_session.network.continue_response(
+            request=request,
+            headers=[{"name": "test", "value": {"type": "string", "value": value}}],
+        )
+
+
 async def test_params_request_invalid_phase(setup_blocked_request, bidi_session):
     request = await setup_blocked_request("beforeRequestSent")
 
