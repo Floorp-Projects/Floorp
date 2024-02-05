@@ -1,8 +1,4 @@
 /* eslint-disable @microsoft/sdl/no-insecure-url */
-const { sinon } = ChromeUtils.importESModule(
-  "resource://testing-common/Sinon.sys.mjs"
-);
-
 const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
 );

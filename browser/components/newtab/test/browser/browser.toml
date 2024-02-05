@@ -24,34 +24,6 @@ prefs = [
 
 ["browser_as_render.js"]
 
-["browser_asrouter_bug1761522.js"]
-
-["browser_asrouter_bug1800087.js"]
-
-["browser_asrouter_cfr.js"]
-https_first_disabled = true
-
-["browser_asrouter_experimentsAPILoader.js"]
-
-["browser_asrouter_group_frequency.js"]
-https_first_disabled = true
-
-["browser_asrouter_group_userprefs.js"]
-skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1643036
-
-["browser_asrouter_infobar.js"]
-
-["browser_asrouter_momentspagehub.js"]
-tags = "remote-settings"
-
-["browser_asrouter_targeting.js"]
-
-["browser_asrouter_toast_notification.js"]
-
-["browser_asrouter_toolbarbadge.js"]
-tags = "remote-settings"
-skip-if = ["a11y_checks"] # Bug 1854515 and 1858041 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
-
 ["browser_context_menu_item.js"]
 
 ["browser_customize_menu_content.js"]
