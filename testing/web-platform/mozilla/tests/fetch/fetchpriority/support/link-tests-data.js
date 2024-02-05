@@ -56,6 +56,22 @@ const kExpectedRequestsOfLinkPreloadFont = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
 ];
+
+const kExpectedRequestsOfLinkPreloadFontDisabled = [
+    {   fileNameAndSuffix: "dummy.font?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.font?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.font?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.font?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+];
+
 const kExpectedRequestsOfLinkPreloadImage = [
     {   fileNameAndSuffix: "dummy.image?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
@@ -74,6 +90,21 @@ const kExpectedRequestsOfLinkPreloadImage = [
 const kExpectedRequestsOfLinkPreloadFetch = [
     {   fileNameAndSuffix: "dummy.txt?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.txt?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.txt?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.txt?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+];
+
+const kExpectedRequestsOfLinkPreloadFetchDisabled = [
+    {   fileNameAndSuffix: "dummy.txt?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.txt?2",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
@@ -274,4 +305,25 @@ export const kTestData = [
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPrefetchLinks,
         expectedRequests: kExpectedRequestsOfPrefetch
     }
+];
+
+export const kTestDataDisabled = [
+    {   testFileName: "link-initial-preload-font.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
+    },
+    {   testFileName: "link-initial-preload-fetch.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
+    {   testFileName: "link-dynamic-preload-font.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
+    },
+    {   testFileName: "link-dynamic-preload-fetch.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFontLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFetchLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
 ];

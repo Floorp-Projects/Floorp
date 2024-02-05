@@ -93,9 +93,13 @@ function runSingleTest(aTestData, aTestFolderName) {
   }, aTestData.testFileName + ": test different 'fetchpriority' values");
 }
 
-export function runTests() {
+export function runTests(aRunConfig) {
   for (const testGroup of kTestGroups) {
-    for (const singleTestData of testGroup.kTestData) {
+    const testDataKey = aRunConfig.testDataKey;
+    if (!testGroup[testDataKey]) {
+      continue;
+    }
+    for (const singleTestData of testGroup[testDataKey]) {
       runSingleTest(singleTestData, testGroup.kTestFolderName);
     }
   }
