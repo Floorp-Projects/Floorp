@@ -29,6 +29,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/PanelTestProvider.sys.mjs",
     "modules/RemoteL10n.sys.mjs",
     "modules/Spotlight.sys.mjs",
+    "modules/ToastNotification.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

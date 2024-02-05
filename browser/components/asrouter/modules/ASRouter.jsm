@@ -30,7 +30,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
-  ToastNotification: "resource://activity-stream/lib/ToastNotification.sys.mjs",
+  ToastNotification: "resource:///modules/asrouter/ToastNotification.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
