@@ -478,8 +478,10 @@ void gfxPlatformFontList::CheckFamilyList(const char* aList[], size_t aCount) {
   for (size_t i = 1; i < aCount; ++i) {
     const char* b = aList[i];
     uint32_t bLen = strlen(b);
-    MOZ_ASSERT(nsCaseInsensitiveUTF8StringComparator(a, b, aLen, bLen) < 0,
-               "incorrectly sorted font family list!");
+    if (nsCaseInsensitiveUTF8StringComparator(a, b, aLen, bLen) >= 0) {
+      MOZ_CRASH_UNSAFE_PRINTF("incorrectly sorted font family list: %s >= %s",
+                              a, b);
+    }
     a = b;
     aLen = bLen;
   }

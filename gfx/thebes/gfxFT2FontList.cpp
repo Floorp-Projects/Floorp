@@ -32,6 +32,7 @@
 #include "gfxUserFontSet.h"
 #include "gfxFontUtils.h"
 #include "SharedFontList-impl.h"
+#include "StandardFonts-android.inc"
 #include "harfbuzz/hb-ot.h"  // for name ID constants
 
 #include "nsServiceManagerUtils.h"
@@ -686,8 +687,9 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
       .LookupOrInsertWith(
           key,
           [&] {
-            mFamilyInitData.AppendElement(
-                fontlist::Family::InitData{key, aFLE.familyName()});
+            mFamilyInitData.AppendElement(fontlist::Family::InitData{
+                key, aFLE.familyName(), fontlist::Family::kNoIndex,
+                aFLE.visibility()});
             return MakeUnique<nsTArray<fontlist::Face::InitData>>();
           })
       ->AppendElement(fontlist::Face::InitData{
@@ -969,6 +971,12 @@ WillShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 gfxFT2FontList::gfxFT2FontList() : mJarModifiedTime(0) {
+  CheckFamilyList(kBaseFonts_Android);
+  CheckFamilyList(kBaseFonts_Android5_8);
+  CheckFamilyList(kBaseFonts_Android9_Higher);
+  CheckFamilyList(kBaseFonts_Android9_11);
+  CheckFamilyList(kBaseFonts_Android12_Higher);
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     mObserver = new WillShutdownObserver(this);
@@ -1257,6 +1265,117 @@ void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
   }
 }
 
+static bool product_is_chromebook(nsCString product) {
+  return product == "asuka" || product == "asurada" || product == "atlas" ||
+         product == "auron" || product == "banjo" || product == "banon" ||
+         product == "bob" || product == "brask" || product == "brya" ||
+         product == "buddy" || product == "butterfly" || product == "candy" ||
+         product == "caroline" || product == "cave" || product == "celes" ||
+         product == "chell" || product == "cherry" || product == "clapper" ||
+         product == "coral" || product == "corsola" || product == "cyan" ||
+         product == "daisy" || product == "dedede" || product == "drallion" ||
+         product == "edgar" || product == "elm" || product == "enguarde" ||
+         product == "eve" || product == "expresso" || product == "falco" ||
+         product == "fizz" || product == "gandof" || product == "glimmer" ||
+         product == "gnawty" || product == "grunt" || product == "guado" ||
+         product == "guybrush" || product == "hana" || product == "hatch" ||
+         product == "heli" || product == "jacuzzi" || product == "kalista" ||
+         product == "kefka" || product == "kevin" || product == "kip" ||
+         product == "kukui" || product == "lars" || product == "leon" ||
+         product == "link" || product == "lulu" || product == "lumpy" ||
+         product == "mccloud" || product == "monroe" || product == "nami" ||
+         product == "nautilus" || product == "ninja" || product == "nissa" ||
+         product == "nocturne" || product == "nyan" || product == "octopus" ||
+         product == "orco" || product == "panther" || product == "parrot" ||
+         product == "peach" || product == "peppy" || product == "puff" ||
+         product == "pyro" || product == "quawks" || product == "rammus" ||
+         product == "reef" || product == "reks" || product == "relm" ||
+         product == "rikku" || product == "samus" || product == "sand" ||
+         product == "sarien" || product == "scarlet" || product == "sentry" ||
+         product == "setzer" || product == "skyrim" || product == "snappy" ||
+         product == "soraka" || product == "squawks" || product == "staryu" ||
+         product == "stout" || product == "strongbad" || product == "stumpy" ||
+         product == "sumo" || product == "swanky" || product == "terra" ||
+         product == "tidus" || product == "tricky" || product == "trogdor" ||
+         product == "ultima" || product == "veyron" || product == "volteer" ||
+         product == "winky" || product == "wizpig" || product == "wolf" ||
+         product == "x86" || product == "zako" || product == "zork";
+}
+
+FontVisibility gfxFT2FontList::GetVisibilityForFamily(
+    const nsACString& aName) const {
+  static auto android_release_version =
+      atoi(java::sdk::Build::VERSION::RELEASE()->ToCString().get());
+  if (android_release_version < 4 || android_release_version > 20) {
+    // Something is screwy, oh well.
+    return FontVisibility::Unknown;
+  }
+
+  static auto android_manufacturer =
+      java::sdk::Build::MANUFACTURER()->ToCString();
+  nsContentUtils::ASCIIToLower(android_manufacturer);
+
+  static auto android_brand = java::sdk::Build::BRAND()->ToCString();
+  nsContentUtils::ASCIIToLower(android_brand);
+
+  static auto android_model = java::sdk::Build::MODEL()->ToCString();
+  nsContentUtils::ASCIIToLower(android_model);
+
+  static auto android_product = java::sdk::Build::PRODUCT()->ToCString();
+  nsContentUtils::ASCIIToLower(android_product);
+
+  static auto android_product_is_chromebook =
+      product_is_chromebook(android_product);
+
+  if (android_manufacturer == "google" && android_model == android_product &&
+      android_product_is_chromebook) {
+    // Chromebook font set coming later
+    return FontVisibility::Unknown;
+  }
+  if (android_brand == "amazon") {
+    // Amazon Fire font set coming later
+    return FontVisibility::Unknown;
+  }
+  if (android_brand == "peloton") {
+    // We don't know how to categorize fonts on this system
+    return FontVisibility::Unknown;
+  }
+  if (android_product == "vbox86p") {
+    // We can't categorize fonts when running in an emulator on a Desktop
+    return FontVisibility::Unknown;
+  }
+  if (android_model.Find("mitv"_ns) != kNotFound && android_brand == "xiaomi") {
+    // We don't know how to categorize fonts on this system
+    return FontVisibility::Unknown;
+  }
+
+  if (FamilyInList(aName, kBaseFonts_Android)) {
+    return FontVisibility::Base;
+  }
+
+  if (android_release_version <= 8) {
+    if (FamilyInList(aName, kBaseFonts_Android5_8)) {
+      return FontVisibility::Base;
+    }
+  } else {
+    if (FamilyInList(aName, kBaseFonts_Android9_Higher)) {
+      return FontVisibility::Base;
+    }
+
+    if (android_release_version <= 11) {
+      if (FamilyInList(aName, kBaseFonts_Android9_11)) {
+        return FontVisibility::Base;
+      }
+    } else {
+      if (FamilyInList(aName, kBaseFonts_Android12_Higher)) {
+        return FontVisibility::Base;
+      }
+    }
+  }
+
+  return FontVisibility::User;
+}
+
 static void GetName(hb_face_t* aFace, hb_ot_name_id_t aNameID,
                     nsACString& aName) {
   unsigned int n = 0;
@@ -1314,7 +1433,7 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
     nsAutoCString familyKey(familyName);
     BuildKeyNameFromFontName(familyKey);
 
-    FontVisibility visibility = FontVisibility::Unknown;
+    FontVisibility visibility = GetVisibilityForFamily(familyName);
 
     nsAutoCString psname;
     GetName(aFace, HB_OT_NAME_ID_POSTSCRIPT_NAME, psname);
