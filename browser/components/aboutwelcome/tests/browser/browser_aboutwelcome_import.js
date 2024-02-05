@@ -71,7 +71,7 @@ add_task(async function test_wait_import_modal() {
 add_task(async function test_wait_import_spotlight() {
   const spotlightPromise = TestUtils.topicObserved("subdialog-loaded");
   ChromeUtils.importESModule(
-    "resource://activity-stream/lib/Spotlight.sys.mjs"
+    "resource:///modules/asrouter/Spotlight.sys.mjs"
   ).Spotlight.showSpotlightDialog(gBrowser.selectedBrowser, {
     content: { modal: "tab", screens: [IMPORT_SCREEN] },
   });

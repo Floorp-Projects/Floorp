@@ -28,6 +28,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/OnboardingMessageProvider.jsm",
     "modules/PanelTestProvider.sys.mjs",
     "modules/RemoteL10n.sys.mjs",
+    "modules/Spotlight.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

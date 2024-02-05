@@ -29,7 +29,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  Spotlight: "resource://activity-stream/lib/Spotlight.sys.mjs",
+  Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   ToastNotification: "resource://activity-stream/lib/ToastNotification.sys.mjs",
 });
 

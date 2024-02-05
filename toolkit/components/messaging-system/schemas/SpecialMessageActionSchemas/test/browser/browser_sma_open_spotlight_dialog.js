@@ -8,7 +8,7 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
 );
 
 const { Spotlight } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/Spotlight.sys.mjs"
+  "resource:///modules/asrouter/Spotlight.sys.mjs"
 );
 
 add_task(async function test_OPEN_SPOTLIGHT_DIALOG() {
