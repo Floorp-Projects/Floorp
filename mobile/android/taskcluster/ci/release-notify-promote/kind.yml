@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
     - signing-apk
+    - signing-bundle
 
 task-defaults:
     name: notify-release-drivers-promote
