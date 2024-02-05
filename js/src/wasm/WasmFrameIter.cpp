@@ -64,7 +64,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       unwoundCallerFP_(nullptr),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
-      resumePCinCurrentFrame_(nullptr) {
+      resumePCinCurrentFrame_(nullptr),
+      failedUnwindSignatureMismatch_(false) {
   MOZ_ASSERT(fp_);
   instance_ = GetNearestEffectiveInstance(fp_);
 
@@ -85,6 +86,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     MOZ_ASSERT(codeRange_);
 
     lineOrBytecode_ = trapData.bytecodeOffset;
+    failedUnwindSignatureMismatch_ = trapData.failedUnwindSignatureMismatch;
 
     MOZ_ASSERT(!done());
     return;
@@ -241,6 +243,7 @@ void WasmFrameIter::popFrame() {
 
   MOZ_ASSERT(code_ == &instance()->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
+  failedUnwindSignatureMismatch_ = false;
 
   MOZ_ASSERT(!done());
 }
@@ -317,6 +320,12 @@ bool WasmFrameIter::debugEnabled() const {
   // requested, and available via baseline compilation), and Tier::Debug code
   // will be available.
   if (!code_->metadata().debugEnabled) {
+    return false;
+  }
+
+  // Debug information is not available in prologue when the iterator is
+  // failing to unwind invalid signature trap.
+  if (failedUnwindSignatureMismatch_) {
     return false;
   }
 
