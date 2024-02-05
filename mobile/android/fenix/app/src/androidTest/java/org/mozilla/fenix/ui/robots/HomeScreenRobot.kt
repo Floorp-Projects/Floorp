@@ -79,19 +79,20 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
  * Implementation of Robot Pattern for the home screen menu.
  */
 class HomeScreenRobot {
-    val privateSessionMessage =
-        "$appName clears your search and browsing history from private tabs when you close them" +
-            " or quit the app. While this doesn’t make you anonymous to websites or your internet" +
-            " service provider, it makes it easier to keep what you do online private from anyone" +
-            " else who uses this device."
-
     fun verifyNavigationToolbar() = assertUIObjectExists(navigationToolbar())
 
     fun verifyHomeScreen() = assertUIObjectExists(homeScreen())
 
     fun verifyPrivateBrowsingHomeScreenItems() {
         verifyHomeScreenAppBarItems()
-        assertUIObjectExists(itemContainingText(privateSessionMessage))
+        assertUIObjectExists(
+            itemContainingText(
+                "$appName clears your search and browsing history from private tabs when you close them" +
+                    " or quit the app. While this doesn’t make you anonymous to websites or your internet" +
+                    " service provider, it makes it easier to keep what you do online private from anyone" +
+                    " else who uses this device.",
+            ),
+        )
         verifyCommonMythsLink()
     }
 
@@ -99,7 +100,7 @@ class HomeScreenRobot {
         assertUIObjectExists(homeScreen(), privateBrowsingButton(), homepageWordmark())
 
     fun verifyHomePrivateBrowsingButton() = assertUIObjectExists(privateBrowsingButton())
-    fun verifyHomeMenuButton() = assertUIObjectExists(menuButton)
+    fun verifyHomeMenuButton() = assertUIObjectExists(menuButton())
     fun verifyTabButton() =
         onView(allOf(withId(R.id.tab_button), isDisplayed())).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     fun verifyCollectionsHeader() =
@@ -365,8 +366,7 @@ class HomeScreenRobot {
 
     fun verifyPocketRecommendedStoriesItems() {
         for (position in 0..8) {
-            pocketStoriesList
-                .scrollIntoView(UiSelector().index(position))
+            pocketStoriesList().scrollIntoView(UiSelector().index(position))
             assertUIObjectExists(itemWithIndex(position))
         }
     }
@@ -387,8 +387,7 @@ class HomeScreenRobot {
 //    }
 
     fun verifyDiscoverMoreStoriesButton() {
-        pocketStoriesList
-            .scrollIntoView(UiSelector().text("Discover more"))
+        pocketStoriesList().scrollIntoView(UiSelector().text("Discover more"))
         assertUIObjectExists(itemWithText("Discover more"))
     }
 
@@ -661,7 +660,7 @@ class HomeScreenRobot {
             mDevice.findObject(
                 UiSelector().resourceId("$packageName:id/simple_text"),
             ).waitForExists(waitingTime)
-            deleteFromHistory.click()
+            deleteFromHistory().click()
 
             HomeScreenRobot().interact()
             return Transition()
@@ -677,18 +676,18 @@ class HomeScreenRobot {
         }
 
         fun clickSponsorsAndPrivacyButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            sponsorsAndPrivacyButton.waitForExists(waitingTime)
-            sponsorsAndPrivacyButton.clickAndWaitForNewWindow(waitingTime)
+            sponsorsAndPrivacyButton().waitForExists(waitingTime)
+            sponsorsAndPrivacyButton().clickAndWaitForNewWindow(waitingTime)
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickSponsoredShortcutsSettingsButton(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
-            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Looking for: ${sponsoredShortcutsSettingsButton.selector}")
-            sponsoredShortcutsSettingsButton.waitForExists(waitingTime)
-            sponsoredShortcutsSettingsButton.clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Clicked ${sponsoredShortcutsSettingsButton.selector} and waiting for $waitingTime for a new window")
+            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Looking for: ${sponsoredShortcutsSettingsButton().selector}")
+            sponsoredShortcutsSettingsButton().waitForExists(waitingTime)
+            sponsoredShortcutsSettingsButton().clickAndWaitForNewWindow(waitingTime)
+            Log.i(TAG, "clickSponsoredShortcutsSettingsButton: Clicked ${sponsoredShortcutsSettingsButton().selector} and waiting for $waitingTime for a new window")
 
             SettingsSubMenuHomepageRobot().interact()
             return SettingsSubMenuHomepageRobot.Transition()
@@ -793,7 +792,7 @@ class HomeScreenRobot {
         }
 
         fun clickPocketDiscoverMoreButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            pocketStoriesList
+            pocketStoriesList()
                 .scrollIntoView(UiSelector().text("Discover more"))
 
             mDevice.findObject(UiSelector().text("Discover more")).also {
@@ -888,12 +887,12 @@ private fun homepageWordmark() =
 
 private fun navigationToolbar() =
     itemWithResId("$packageName:id/toolbar")
-private val menuButton =
+private fun menuButton() =
     itemWithResId("$packageName:id/menuButton")
 private fun tabCounter(numberOfOpenTabs: String) =
     itemWithResIdAndText("$packageName:id/counter_text", numberOfOpenTabs)
 
-val deleteFromHistory =
+fun deleteFromHistory() =
     onView(
         allOf(
             withId(R.id.simple_text),
@@ -901,7 +900,7 @@ val deleteFromHistory =
         ),
     ).inRoot(RootMatchers.isPlatformPopup())
 
-private val sponsoredShortcutsSettingsButton =
+private fun sponsoredShortcutsSettingsButton() =
     mDevice
         .findObject(
             UiSelector()
@@ -909,7 +908,7 @@ private val sponsoredShortcutsSettingsButton =
                 .resourceId("$packageName:id/simple_text"),
         )
 
-private val sponsorsAndPrivacyButton =
+private fun sponsorsAndPrivacyButton() =
     mDevice
         .findObject(
             UiSelector()
@@ -917,5 +916,5 @@ private val sponsorsAndPrivacyButton =
                 .resourceId("$packageName:id/simple_text"),
         )
 
-private val pocketStoriesList =
+private fun pocketStoriesList() =
     UiScrollable(UiSelector().resourceId("pocket.stories")).setAsHorizontalList()
