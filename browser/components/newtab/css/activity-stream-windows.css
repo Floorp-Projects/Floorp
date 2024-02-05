@@ -1270,9 +1270,9 @@ main.has-snippet {
   -moz-context-properties: fill;
   display: inline-block;
   fill: var(--newtab-wordmark-color);
-  height: 100px;
+  height: 82px;
   margin-inline-start: 25px;
-  width: 300px;
+  width: 135px;
 }
 @media (max-width: 609px) {
   .search-wrapper .logo-and-wordmark .logo {
