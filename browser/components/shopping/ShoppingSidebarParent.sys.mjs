@@ -51,6 +51,16 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
           "browser[messagemanagergroup=browsers]"
         );
         return associatedTabbedBrowser.currentURI?.spec ?? null;
+      case "DisableShopping":
+        Services.prefs.setBoolPref(
+          ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
+          false
+        );
+        Services.prefs.setIntPref(
+          ShoppingSidebarParent.SHOPPING_OPTED_IN_PREF,
+          2
+        );
+        break;
     }
     return null;
   }
@@ -310,7 +320,7 @@ class ShoppingSidebarManagerClass {
         lazy.ShoppingUtils.sendTrigger({
           browser: aBrowser,
           id: "shoppingProductPageWithSidebarClosed",
-          context: { isSidebarClosing: !!sidebar },
+          context: { isSidebarClosing: !aIsNavigation && !!sidebar },
         });
       }
     }
