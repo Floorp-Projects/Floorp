@@ -20,18 +20,19 @@
 
 #include "jsnum.h"  // ParseDecimalNumber, GetFullInteger, FullStringToDouble
 
-#include "builtin/Array.h"            // NewDenseCopiedArray
-#include "ds/IdValuePair.h"           // IdValuePair
-#include "gc/GCEnum.h"                // CanGC
-#include "gc/Tracer.h"                // JS::TraceRoot
-#include "js/AllocPolicy.h"           // ReportOutOfMemory
-#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"          // JS::ColumnNumberOneOrigin
-#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/GCVector.h"              // JS::GCVector
-#include "js/Id.h"                    // jsid
-#include "js/JSON.h"                  // JS::IsValidJSON
+#include "builtin/Array.h"              // NewDenseCopiedArray
+#include "builtin/ParseRecordObject.h"  // js::ParseRecordObject
+#include "ds/IdValuePair.h"             // IdValuePair
+#include "gc/GCEnum.h"                  // CanGC
+#include "gc/Tracer.h"                  // JS::TraceRoot
+#include "js/AllocPolicy.h"             // ReportOutOfMemory
+#include "js/CharacterEncoding.h"       // JS::ConstUTF8CharsZ
+#include "js/ColumnNumber.h"            // JS::ColumnNumberOneOrigin
+#include "js/ErrorReport.h"             // JS_ReportErrorNumberASCII
+#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
+#include "js/GCVector.h"                // JS::GCVector
+#include "js/Id.h"                      // jsid
+#include "js/JSON.h"                    // JS::IsValidJSON
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
 #include "js/TypeDecls.h"  // Latin1Char
 #include "js/Utility.h"    // js_delete
@@ -43,6 +44,7 @@
 #include "vm/JSAtomUtils.h"     // AtomizeChars
 #include "vm/JSContext.h"       // JSContext
 #include "vm/PlainObject.h"     // NewPlainObjectWithMaybeDuplicateKeys
+#include "vm/Realm.h"           // JS::Realm
 #include "vm/StringType.h"  // JSString, JSAtom, JSLinearString, NewStringCopyN, NameToId
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
@@ -58,7 +60,8 @@ template <typename CharT, typename ParserT, typename StringBuilderT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
     const CharPtr start, size_t length) {
-  if (!parser->handler.template setStringValue<ST>(start, length)) {
+  if (!parser->handler.template setStringValue<ST>(start, length,
+                                                   getSource())) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -68,7 +71,7 @@ template <typename CharT, typename ParserT, typename StringBuilderT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
     StringBuilderT& builder) {
-  if (!parser->handler.template setStringValue<ST>(builder)) {
+  if (!parser->handler.template setStringValue<ST>(builder, getSource())) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -76,7 +79,9 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::stringToken(
 
 template <typename CharT, typename ParserT, typename StringBuilderT>
 JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::numberToken(double d) {
-  parser->handler.setNumberValue(d);
+  if (!parser->handler.setNumberValue(d, getSource())) {
+    return JSONToken::OOM;
+  }
   return JSONToken::Number;
 }
 
@@ -347,6 +352,7 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
     return token(JSONToken::Error);
   }
 
+  sourceStart = current;
   switch (*current) {
     case '"':
       return readString<JSONStringType::LiteralValue>();
@@ -371,6 +377,9 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
         return token(JSONToken::Error);
       }
       current += 4;
+      if (!parser->handler.setBooleanValue(true, getSource())) {
+        return token(JSONToken::OOM);
+      }
       return token(JSONToken::True);
 
     case 'f':
@@ -380,6 +389,9 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
         return token(JSONToken::Error);
       }
       current += 5;
+      if (!parser->handler.setBooleanValue(false, getSource())) {
+        return token(JSONToken::OOM);
+      }
       return token(JSONToken::False);
 
     case 'n':
@@ -389,6 +401,9 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::advance() {
         return token(JSONToken::Error);
       }
       current += 4;
+      if (!parser->handler.setNullValue(getSource())) {
+        return token(JSONToken::OOM);
+      }
       return token(JSONToken::Null);
 
     case '[':
@@ -643,14 +658,17 @@ void JSONParser<CharT>::trace(JSTracer* trc) {
   }
 }
 
-inline void JSONFullParseHandlerAnyChar::setNumberValue(double d) {
+template <typename CharT>
+inline bool JSONFullParseHandler<CharT>::setNumberValue(
+    double d, mozilla::Span<const CharT>&& source) {
   v = JS::NumberValue(d);
+  return createJSONParseRecord(v, source);
 }
 
 template <typename CharT>
 template <JSONStringType ST>
-inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
-                                                        size_t length) {
+inline bool JSONFullParseHandler<CharT>::setStringValue(
+    CharPtr start, size_t length, mozilla::Span<const CharT>&& source) {
   JSString* str;
   if constexpr (ST == JSONStringType::PropertyName) {
     str = AtomizeChars(cx, start.get(), length);
@@ -662,13 +680,13 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
     return false;
   }
   v = JS::StringValue(str);
-  return true;
+  return createJSONParseRecord(v, source);
 }
 
 template <typename CharT>
 template <JSONStringType ST>
 inline bool JSONFullParseHandler<CharT>::setStringValue(
-    StringBuilder& builder) {
+    StringBuilder& builder, mozilla::Span<const CharT>&& source) {
   JSString* str;
   if constexpr (ST == JSONStringType::PropertyName) {
     str = builder.buffer.finishAtom();
@@ -680,6 +698,35 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(
     return false;
   }
   v = JS::StringValue(str);
+  return createJSONParseRecord(v, source);
+}
+
+template <typename CharT>
+inline bool JSONFullParseHandler<CharT>::setBooleanValue(
+    bool value, mozilla::Span<const CharT>&& source) {
+  return createJSONParseRecord(JS::BooleanValue(value), source);
+}
+
+template <typename CharT>
+inline bool JSONFullParseHandler<CharT>::setNullValue(
+    mozilla::Span<const CharT>&& source) {
+  return createJSONParseRecord(JS::NullValue(), source);
+}
+
+template <typename CharT>
+inline bool JSONFullParseHandler<CharT>::createJSONParseRecord(
+    const Value& value, mozilla::Span<const CharT>& source) {
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    MOZ_ASSERT(!source.IsEmpty());
+    Rooted<JSONParseNode*> parseNode(cx,
+                                     NewStringCopy<CanGC, CharT>(cx, source));
+    if (!parseNode) {
+      return false;
+    }
+    parseRecord = ParseRecordObject(parseNode, value);
+  }
+#endif
   return true;
 }
 
@@ -1038,6 +1085,21 @@ bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp) {
                          [&](JS::Handle<JS::Value> value) { vp.set(value); });
 }
 
+template <typename CharT>
+bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp,
+                              ParseRecordObject* pro) {
+  JS::Rooted<JS::Value> tempValue(this->handler.cx);
+
+  vp.setUndefined();
+
+  bool result = this->parseImpl(
+      tempValue, [&](JS::Handle<JS::Value> value) { vp.set(value); });
+  if (pro) {
+    *pro = std::move(this->handler.parseRecord);
+  }
+  return result;
+}
+
 template class js::JSONParser<Latin1Char>;
 template class js::JSONParser<char16_t>;
 
@@ -1194,7 +1256,8 @@ class MOZ_STACK_CLASS DelegateHandler {
   FrontendContext* context() { return fc; }
 
   template <JSONStringType ST>
-  inline bool setStringValue(CharPtr start, size_t length) {
+  inline bool setStringValue(CharPtr start, size_t length,
+                             mozilla::Span<const CharT>&& source) {
     if (hadHandlerError_) {
       return false;
     }
@@ -1207,7 +1270,8 @@ class MOZ_STACK_CLASS DelegateHandler {
   }
 
   template <JSONStringType ST>
-  inline bool setStringValue(StringBuilder& builder) {
+  inline bool setStringValue(StringBuilder& builder,
+                             mozilla::Span<const CharT>&& source) {
     if (hadHandlerError_) {
       return false;
     }
@@ -1231,15 +1295,21 @@ class MOZ_STACK_CLASS DelegateHandler {
                                  builder.buffer.length());
   }
 
-  inline void setNumberValue(double d) {
+  inline bool setNumberValue(double d, mozilla::Span<const CharT>&& source) {
     if (hadHandlerError_) {
-      return;
+      return false;
     }
 
     if (!handler_->numberValue(d)) {
       hadHandlerError_ = true;
     }
+    return !hadHandlerError_;
   }
+
+  inline bool setBooleanValue(bool value, mozilla::Span<const CharT>&& source) {
+    return true;
+  }
+  inline bool setNullValue(mozilla::Span<const CharT>&& source) { return true; }
 
   inline DummyValue numberValue() const { return DummyValue(); }
 
