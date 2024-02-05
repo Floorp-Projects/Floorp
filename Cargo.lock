@@ -423,13 +423,6 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.64.999"
-dependencies = [
- "bindgen 0.69.2",
-]
-
-[[package]]
-name = "bindgen"
 version = "0.69.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4c69fae65a523209d34240b60abe0c42d33d1045d445c0839d8a4894a736e2d"
@@ -3992,7 +3985,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c17aec6d4e1822c023689899f09311592a36cbf6de8f85dfaf5f01976790d8d"
 dependencies = [
- "bindgen 0.64.999",
+ "bindgen 0.69.2",
  "mozbuild",
  "once_cell",
  "pkcs11-bindings",
@@ -4364,7 +4357,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0fabbdbe64b22820753da90995b3a73d02907eaeeac6f2414962a566aaa18ea"
 dependencies = [
- "bindgen 0.64.999",
+ "bindgen 0.69.2",
 ]
 
 [[package]]
