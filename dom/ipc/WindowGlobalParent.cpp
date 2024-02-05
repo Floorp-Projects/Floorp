@@ -661,6 +661,23 @@ bool WindowGlobalParent::IsCurrentGlobal() {
   return CanSend() && BrowsingContext()->GetCurrentWindowGlobal() == this;
 }
 
+bool WindowGlobalParent::IsActiveInTab() {
+  if (!CanSend()) {
+    return false;
+  }
+
+  CanonicalBrowsingContext* bc = BrowsingContext();
+  if (!bc || bc->GetCurrentWindowGlobal() != this) {
+    return false;
+  }
+
+  // We check the top BC so we don't need to worry about getting a stale value.
+  // That may not be necessary.
+  MOZ_ASSERT(bc->Top()->IsInBFCache() == bc->IsInBFCache(),
+             "BFCache bit out of sync?");
+  return bc->AncestorsAreCurrent() && !bc->Top()->IsInBFCache();
+}
+
 namespace {
 
 class ShareHandler final : public PromiseNativeHandler {
