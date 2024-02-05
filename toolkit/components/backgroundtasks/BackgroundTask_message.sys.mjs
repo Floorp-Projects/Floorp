@@ -69,7 +69,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
-  ToastNotification: "resource://activity-stream/lib/ToastNotification.sys.mjs",
+  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+  ToastNotification: "resource:///modules/asrouter/ToastNotification.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
