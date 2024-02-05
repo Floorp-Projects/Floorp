@@ -12,7 +12,15 @@ import tokenize
 import mozfile
 import six
 from six import StringIO, string_types
-from six.moves.configparser import SafeConfigParser as ConfigParser
+
+try:
+    from six.moves.configparser import SafeConfigParser as ConfigParser
+except ImportError:  # SafeConfigParser was removed in 3.12
+    from configparser import ConfigParser
+try:
+    ConfigParser.read_file
+except AttributeError:  # read_file was added in 3.2, readfp removed in 3.12
+    ConfigParser.read_file = ConfigParser.readfp
 
 if six.PY3:
 
@@ -24,7 +32,7 @@ __all__ = ("PreferencesReadError", "Preferences")
 
 
 class PreferencesReadError(Exception):
-    """read error for prefrences files"""
+    """read error for preferences files"""
 
 
 class Preferences(object):
@@ -124,7 +132,7 @@ class Preferences(object):
 
         parser = ConfigParser()
         parser.optionxform = str
-        parser.readfp(mozfile.load(path))
+        parser.read_file(mozfile.load(path))
 
         if section:
             if section not in parser.sections():
