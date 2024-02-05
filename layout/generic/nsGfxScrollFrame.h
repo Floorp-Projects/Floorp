@@ -112,6 +112,16 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   // scrollbar that scrolls in the block axis).
   nscoord IntrinsicScrollbarGutterSizeAtInlineEdges();
 
+  // Compute stable scrollbar-gutter from scrollbar-width and scrollbar-gutter
+  // properties.
+  //
+  // Note: this method doesn't consider overflow property and the space created
+  // by the actual scrollbars. That is, if scrollbar-gutter is 'auto', this
+  // method just returns empty result.
+  nsMargin ComputeStableScrollbarGutter(
+      const mozilla::StyleScrollbarWidth& aStyleScrollbarWidth,
+      const mozilla::StyleScrollbarGutter& aStyleScrollbarGutter) const;
+
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const final;
 

@@ -567,35 +567,10 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
     mHScrollbarAllowedForScrollingVVInsideLV = false;
     mVScrollbar = ShowScrollbar::Never;
     mVScrollbarAllowedForScrollingVVInsideLV = false;
-  } else if (const auto& scrollbarGutterStyle =
-                 scrollbarStyle->StyleDisplay()->mScrollbarGutter;
-             scrollbarGutterStyle && !mOverlayScrollbars) {
-    const auto stable =
-        bool(scrollbarGutterStyle & StyleScrollbarGutter::STABLE);
-    const auto bothEdges =
-        bool(scrollbarGutterStyle & StyleScrollbarGutter::BOTH_EDGES);
-
-    const nscoord scrollbarSize = nsHTMLScrollFrame::GetNonOverlayScrollbarSize(
-        aFrame->PresContext(), scrollbarWidth);
-    if (mReflowInput.GetWritingMode().IsVertical()) {
-      if (bothEdges) {
-        mScrollbarGutter.top = mScrollbarGutter.bottom = scrollbarSize;
-      } else if (stable) {
-        // The horizontal scrollbar gutter is always at the bottom side.
-        mScrollbarGutter.bottom = scrollbarSize;
-      }
-    } else {
-      if (bothEdges) {
-        mScrollbarGutter.left = mScrollbarGutter.right = scrollbarSize;
-      } else if (stable) {
-        if (aFrame->IsScrollbarOnRight()) {
-          mScrollbarGutter.right = scrollbarSize;
-        } else {
-          mScrollbarGutter.left = scrollbarSize;
-        }
-      }
-    }
   }
+
+  mScrollbarGutter = aFrame->ComputeStableScrollbarGutter(
+      scrollbarWidth, scrollbarStyle->StyleDisplay()->mScrollbarGutter);
 }
 
 }  // namespace mozilla
@@ -1230,6 +1205,54 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() {
   const auto bothEdges =
       bool(styleScrollbarGutter & StyleScrollbarGutter::BOTH_EDGES);
   return bothEdges ? scrollbarSize * 2 : scrollbarSize;
+}
+
+nsMargin nsHTMLScrollFrame::ComputeStableScrollbarGutter(
+    const StyleScrollbarWidth& aStyleScrollbarWidth,
+    const StyleScrollbarGutter& aStyleScrollbarGutter) const {
+  if (PresContext()->UseOverlayScrollbars()) {
+    // Overlay scrollbars do not consume space per spec.
+    return {};
+  }
+
+  if (aStyleScrollbarWidth == StyleScrollbarWidth::None) {
+    // Scrollbar shouldn't appear at all with "scrollbar-width: none".
+    return {};
+  }
+
+  if (aStyleScrollbarGutter == StyleScrollbarGutter::AUTO) {
+    // Scrollbars create space depending on the 'overflow' property and whether
+    // the content overflows. Callers need to check this scenario if they want
+    // to consider the space created by the actual scrollbars.
+    return {};
+  }
+
+  const bool bothEdges =
+      bool(aStyleScrollbarGutter & StyleScrollbarGutter::BOTH_EDGES);
+  const bool isVerticalWM = GetWritingMode().IsVertical();
+  const nscoord scrollbarSize =
+      GetNonOverlayScrollbarSize(PresContext(), aStyleScrollbarWidth);
+
+  nsMargin scrollbarGutter;
+  if (bothEdges) {
+    if (isVerticalWM) {
+      scrollbarGutter.top = scrollbarGutter.bottom = scrollbarSize;
+    } else {
+      scrollbarGutter.left = scrollbarGutter.right = scrollbarSize;
+    }
+  } else {
+    MOZ_ASSERT(bool(aStyleScrollbarGutter & StyleScrollbarGutter::STABLE),
+               "scrollbar-gutter value should be 'stable'!");
+    if (isVerticalWM) {
+      // The horizontal scrollbar-gutter is always at the bottom side.
+      scrollbarGutter.bottom = scrollbarSize;
+    } else if (IsScrollbarOnRight()) {
+      scrollbarGutter.right = scrollbarSize;
+    } else {
+      scrollbarGutter.left = scrollbarSize;
+    }
+  }
+  return scrollbarGutter;
 }
 
 // Legacy, this sucks!
