@@ -29,4 +29,9 @@ enum class TranslationOperation {
      * The page related settings the translation engine should fetch.
      */
     FETCH_PAGE_SETTINGS,
+
+    /**
+     * The list of never translate sites the translation engine should fetch.
+     */
+    FETCH_NEVER_TRANSLATE_SITES,
 }

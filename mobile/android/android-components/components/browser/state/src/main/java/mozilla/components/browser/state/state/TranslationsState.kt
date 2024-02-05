@@ -19,8 +19,9 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  * @property isTranslated The page is currently translated.
  * @property isTranslateProcessing The page is currently attempting a translation.
  * @property isRestoreProcessing The page is currently attempting a restoration.
- * @property pageSettings The translation engine settings that relate to the current page.
  * @property supportedLanguages Set of languages the translation engine supports.
+ * @property pageSettings The translation engine settings that relate to the current page.
+ * @property neverTranslateSites List of sites the user has opted to never translate.
  * @property translationError Type of error that occurred when acquiring resources, translating, or
  * restoring a translation.
  * @property settingsError Type of error that occurred when acquiring resources or setting preferences.
@@ -34,6 +35,7 @@ data class TranslationsState(
     val isRestoreProcessing: Boolean = false,
     val supportedLanguages: TranslationSupport? = null,
     val pageSettings: TranslationPageSettings? = null,
+    val neverTranslateSites: List<String>? = null,
     val translationError: TranslationError? = null,
     val settingsError: TranslationError? = null,
 )

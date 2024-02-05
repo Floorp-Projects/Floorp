@@ -104,6 +104,17 @@ internal object TranslationsStateReducer {
                         )
                     }
                 }
+
+                TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
+                    // Reset the error state, and then generally expect
+                    // [TranslationsAction.SetNeverTranslateSitesAction] to update
+                    // state in the success case.
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            neverTranslateSites = null,
+                        )
+                    }
+                }
             }
         }
 
@@ -144,6 +155,15 @@ internal object TranslationsStateReducer {
                         )
                     }
                 }
+
+                TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            neverTranslateSites = null,
+                            settingsError = action.translationError,
+                        )
+                    }
+                }
             }
         }
 
@@ -162,6 +182,13 @@ internal object TranslationsStateReducer {
                 )
             }
 
+        is TranslationsAction.SetNeverTranslateSitesAction ->
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    neverTranslateSites = action.neverTranslateSites,
+                )
+            }
+
         is TranslationsAction.OperationRequestedAction ->
             when (action.operation) {
                 TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
@@ -175,6 +202,13 @@ internal object TranslationsStateReducer {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
                             pageSettings = null,
+                        )
+                    }
+                }
+                TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            neverTranslateSites = null,
                         )
                     }
                 }

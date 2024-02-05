@@ -51,6 +51,11 @@ class TranslationsMiddleware(
                             requestTranslationPageSettings(context, action.tabId)
                         }
                     }
+                    TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
+                        scope.launch {
+                            getNeverTranslateSites(context, action.tabId)
+                        }
+                    }
                     TranslationOperation.TRANSLATE,
                     TranslationOperation.RESTORE,
                     -> Unit
@@ -98,6 +103,42 @@ class TranslationsMiddleware(
                     ),
                 )
                 logger.error("Error requesting supported languages: ", it)
+            },
+        )
+    }
+
+    /**
+     * Retrieves the list of never translate sites using [scope] and dispatches the result to the
+     * store via [TranslationsAction.SetNeverTranslateSitesAction] or else dispatches the failure
+     * [TranslationsAction.TranslateExceptionAction].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId Tab ID associated with the request.
+     */
+    private fun getNeverTranslateSites(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String,
+    ) {
+        engine.getNeverTranslateSiteList(
+            onSuccess = {
+                context.store.dispatch(
+                    TranslationsAction.SetNeverTranslateSitesAction(
+                        tabId = tabId,
+                        neverTranslateSites = it,
+                    ),
+                )
+                logger.info("Success requesting never translate sites.")
+            },
+
+            onError = {
+                context.store.dispatch(
+                    TranslationsAction.TranslateExceptionAction(
+                        tabId = tabId,
+                        operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+                        translationError = TranslationError.CouldNotLoadNeverTranslateSites(it),
+                    ),
+                )
+                logger.error("Error requesting never translate sites: ", it)
             },
         )
     }

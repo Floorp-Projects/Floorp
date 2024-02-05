@@ -204,6 +204,24 @@ class TranslationsActionTest {
     }
 
     @Test
+    fun `WHEN a SetNeverTranslateSitesAction is dispatched AND successful THEN update neverTranslateSites`() {
+        // Initial
+        assertEquals(null, tabState().translationsState.neverTranslateSites)
+
+        // Action started
+        val neverTranslateSites = listOf("google.com")
+        store.dispatch(
+            TranslationsAction.SetNeverTranslateSitesAction(
+                tabId = tab.id,
+                neverTranslateSites = neverTranslateSites,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(neverTranslateSites, tabState().translationsState.neverTranslateSites)
+    }
+
+    @Test
     fun `WHEN a TranslateExceptionAction is dispatched due to an error THEN update the error condition according to the operation`() {
         // Initial state
         assertEquals(null, tabState().translationsState.translationError)

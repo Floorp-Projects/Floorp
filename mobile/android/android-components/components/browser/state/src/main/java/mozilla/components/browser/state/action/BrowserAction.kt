@@ -969,6 +969,17 @@ sealed class TranslationsAction : BrowserAction() {
         override val tabId: String,
         val pageSettings: TranslationPageSettings?,
     ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Sets the list of sites that the user has opted to never translate.
+     *
+     * @property tabId The ID of the tab the [EngineSession] that requested the list.
+     * @property neverTranslateSites The never translate sites.
+     */
+    data class SetNeverTranslateSitesAction(
+        override val tabId: String,
+        val neverTranslateSites: List<String>,
+    ) : TranslationsAction(), ActionWithTab
 }
 
 /**

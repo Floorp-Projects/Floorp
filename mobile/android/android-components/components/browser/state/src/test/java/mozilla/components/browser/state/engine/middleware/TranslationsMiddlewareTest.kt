@@ -206,4 +206,47 @@ class TranslationsMiddlewareTest {
 
         waitForIdle()
     }
+
+    @Test
+    fun `WHEN OperationRequestedAction is dispatched to fetch never translate sites AND succeeds THEN SetNeverTranslateSitesAction is dispatched`() = runTest {
+        val neverTranslateSites = listOf("google.com")
+        val sitesCallback = argumentCaptor<((List<String>) -> Unit)>()
+        val action =
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        verify(engine).getNeverTranslateSiteList(onSuccess = sitesCallback.capture(), onError = any())
+        sitesCallback.value.invoke(neverTranslateSites)
+
+        verify(context.store).dispatch(
+            TranslationsAction.SetNeverTranslateSitesAction(
+                tabId = tab.id,
+                neverTranslateSites = neverTranslateSites,
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN OperationRequestedAction is dispatched to fetch never translate sites AND fails THEN TranslateExceptionAction is dispatched`() = runTest {
+        store.dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+            ),
+        ).joinBlocking()
+        waitForIdle()
+
+        verify(store).dispatch(
+            TranslationsAction.TranslateExceptionAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+                translationError = TranslationError.CouldNotLoadNeverTranslateSites(any()),
+            ),
+        )
+        waitForIdle()
+    }
 }
