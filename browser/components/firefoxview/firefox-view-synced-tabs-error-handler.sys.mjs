@@ -153,7 +153,7 @@ export const SyncedTabsErrorHandler = {
     },
     [ErrorType.FXA_ADMIN_DISABLED]: {
       header: "firefoxview-tabpickup-fxa-admin-disabled-header",
-      description: "firefoxview-tabpickup-fxa-admin-disabled-description",
+      description: "firefoxview-tabpickup-fxa-disabled-by-policy-description",
       // The button is hidden for this errorState, so we don't include the
       // buttonLabel property.
     },
