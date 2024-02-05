@@ -17,13 +17,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.dist_id = dist_id
         self.codename = codename
 
-    def suggest_install_distutils(self):
-        print(
-            "HINT: Try installing distutils with "
-            "`apt-get install python3-distutils`.",
-            file=sys.stderr,
-        )
-
     def suggest_install_pip3(self):
         print(
             "HINT: Try installing pip3 with `apt-get install python3-pip`.",
