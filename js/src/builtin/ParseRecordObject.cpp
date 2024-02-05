@@ -1,0 +1,20 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "builtin/ParseRecordObject.h"
+
+#include "vm/JSObject-inl.h"  // NewBuiltinClassInstance
+
+using namespace js;
+
+// https://tc39.es/proposal-json-parse-with-source/#sec-json-parse-record
+
+ParseRecordObject::ParseRecordObject()
+    : parseNode(nullptr), key(JS::PropertyKey::Void()) {}
+
+ParseRecordObject::ParseRecordObject(Handle<js::JSONParseNode*> parseNode,
+                                     const Value& val)
+    : parseNode(parseNode), key(JS::PropertyKey::Void()), value(val) {}
