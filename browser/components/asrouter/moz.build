@@ -24,6 +24,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterTriggerListeners.jsm",
     "modules/CFRMessageProvider.sys.mjs",
     "modules/CFRPageActions.jsm",
+    "modules/InfoBar.sys.mjs",
     "modules/MessagingExperimentConstants.sys.mjs",
     "modules/MomentsPageHub.sys.mjs",
     "modules/OnboardingMessageProvider.jsm",

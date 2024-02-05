@@ -4,7 +4,7 @@
 "use strict";
 
 const { InfoBar } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/InfoBar.sys.mjs"
+  "resource:///modules/asrouter/InfoBar.sys.mjs"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
