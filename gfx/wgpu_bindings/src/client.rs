@@ -14,6 +14,7 @@ use wgc::{id, identity::IdentityManager};
 use wgt::{Backend, TextureFormat};
 
 pub use wgc::command::{compute_ffi::*, render_ffi::*};
+use wgc::id::markers;
 
 use parking_lot::Mutex;
 
@@ -264,20 +265,20 @@ pub struct RenderBundleEncoderDescriptor<'a> {
 
 #[derive(Debug)]
 struct IdentityHub {
-    adapters: IdentityManager<wgc::id::AdapterId>,
-    devices: IdentityManager<wgc::id::DeviceId>,
-    buffers: IdentityManager<wgc::id::BufferId>,
-    command_buffers: IdentityManager<wgc::id::CommandBufferId>,
-    render_bundles: IdentityManager<wgc::id::RenderBundleId>,
-    bind_group_layouts: IdentityManager<wgc::id::BindGroupLayoutId>,
-    pipeline_layouts: IdentityManager<wgc::id::PipelineLayoutId>,
-    bind_groups: IdentityManager<wgc::id::BindGroupId>,
-    shader_modules: IdentityManager<wgc::id::ShaderModuleId>,
-    compute_pipelines: IdentityManager<wgc::id::ComputePipelineId>,
-    render_pipelines: IdentityManager<wgc::id::RenderPipelineId>,
-    textures: IdentityManager<wgc::id::TextureId>,
-    texture_views: IdentityManager<wgc::id::TextureViewId>,
-    samplers: IdentityManager<wgc::id::SamplerId>,
+    adapters: IdentityManager<markers::Adapter>,
+    devices: IdentityManager<markers::Device>,
+    buffers: IdentityManager<markers::Buffer>,
+    command_buffers: IdentityManager<markers::CommandBuffer>,
+    render_bundles: IdentityManager<markers::RenderBundle>,
+    bind_group_layouts: IdentityManager<markers::BindGroupLayout>,
+    pipeline_layouts: IdentityManager<markers::PipelineLayout>,
+    bind_groups: IdentityManager<markers::BindGroup>,
+    shader_modules: IdentityManager<markers::ShaderModule>,
+    compute_pipelines: IdentityManager<markers::ComputePipeline>,
+    render_pipelines: IdentityManager<markers::RenderPipeline>,
+    textures: IdentityManager<markers::Texture>,
+    texture_views: IdentityManager<markers::TextureView>,
+    samplers: IdentityManager<markers::Sampler>,
 }
 
 impl Default for IdentityHub {
@@ -307,7 +308,7 @@ impl ImplicitLayout<'_> {
             pipeline: identities.pipeline_layouts.process(backend),
             bind_groups: Cow::Owned(
                 (0..8) // hal::MAX_BIND_GROUPS
-                    .map(|_| identities.bind_group_layouts.process(backend))
+                    .map(|_| Some(identities.bind_group_layouts.process(backend)))
                     .collect(),
             ),
         }
@@ -633,6 +634,7 @@ pub extern "C" fn wgpu_client_make_encoder_id(
         .select(backend)
         .command_buffers
         .process(backend)
+        .transmute()
 }
 
 #[no_mangle]
@@ -650,7 +652,8 @@ pub extern "C" fn wgpu_client_create_command_encoder(
         .lock()
         .select(backend)
         .command_buffers
-        .process(backend);
+        .process(backend)
+        .transmute();
 
     let action = DeviceAction::CreateCommandEncoder(id, desc.map_label(|_| label));
     *bb = make_byte_buf(&action);
@@ -1148,7 +1151,7 @@ pub unsafe extern "C" fn wgpu_client_create_compute_pipeline(
             let implicit = ImplicitLayout::new(identities.select(backend), backend);
             ptr::write(implicit_pipeline_layout_id, Some(implicit.pipeline));
             for (i, bgl_id) in implicit.bind_groups.iter().enumerate() {
-                *implicit_bind_group_layout_ids.add(i) = Some(*bgl_id);
+                *implicit_bind_group_layout_ids.add(i) = *bgl_id;
             }
             Some(implicit)
         }
@@ -1191,7 +1194,7 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
             let implicit = ImplicitLayout::new(identities.select(backend), backend);
             ptr::write(implicit_pipeline_layout_id, Some(implicit.pipeline));
             for (i, bgl_id) in implicit.bind_groups.iter().enumerate() {
-                *implicit_bind_group_layout_ids.add(i) = Some(*bgl_id);
+                *implicit_bind_group_layout_ids.add(i) = *bgl_id;
             }
             Some(implicit)
         }

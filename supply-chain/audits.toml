@@ -1299,12 +1299,13 @@ delta = "0.5.0 -> 0.7.0"
 [[audits.d3d12]]
 who = [
     "Erich Gubler <egubler@mozilla.com>",
-    "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
+delta = "0.7.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 importable = false
 
 [[audits.darling]]
@@ -2607,13 +2608,13 @@ delta = "0.13.0 -> 0.14.0"
 
 [[audits.naga]]
 who = [
-    "Jim Blandy <jimb@red-bean.com>",
-    "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
+delta = "0.14.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 importable = false
 
 [[audits.net2]]
@@ -4405,13 +4406,13 @@ delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-core]]
 who = [
-    "Jim Blandy <jimb@red-bean.com>",
-    "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
+delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4459,13 +4460,13 @@ delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-hal]]
 who = [
-    "Jim Blandy <jimb@red-bean.com>",
-    "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
+delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4513,13 +4514,13 @@ delta = "0.17.0 -> 0.18.0"
 
 [[audits.wgpu-types]]
 who = [
-    "Jim Blandy <jimb@red-bean.com>",
-    "Nicolas Silva <nical@fastmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Jim Blandy <jimb@red-bean.com>",
+    "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:f9509bcf9ec2b63a64eb7fea93f7f44cd5ae4d2e"
+delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 importable = false
 
 [[audits.whatsys]]
