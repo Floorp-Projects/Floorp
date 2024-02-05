@@ -163,7 +163,7 @@ class SupportsPriorityValueFor {
 
   static int32_t LinkRelPreloadFetch(const FetchPriority aFetchPriority) {
     if (!StaticPrefs::network_fetchpriority_enabled()) {
-      return nsISupportsPriority::PRIORITY_NORMAL;
+      return nsISupportsPriority::PRIORITY_HIGH;
     }
 
     switch (aFetchPriority) {
@@ -176,7 +176,7 @@ class SupportsPriorityValueFor {
     }
 
     MOZ_ASSERT_UNREACHABLE();
-    return nsISupportsPriority::PRIORITY_NORMAL;
+    return nsISupportsPriority::PRIORITY_HIGH;
   }
 };
 
