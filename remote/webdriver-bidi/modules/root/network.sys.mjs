@@ -91,7 +91,7 @@ const ContinueWithAuthAction = {
  * @property {boolean} httpOnly
  * @property {string} name
  * @property {string} path
- * @property {('lax' | 'none' | 'strict')} sameSite
+ * @property {SameSite} sameSite
  * @property {boolean} secure
  * @property {number} size
  * @property {BytesValue} value
@@ -236,6 +236,31 @@ const InterceptPhase = {
 /**
  * @typedef {object} ResponseCompletedParametersProperties
  * @property {ResponseData} response
+ */
+
+/**
+ * Enum of possible sameSite values.
+ *
+ * @readonly
+ * @enum {SameSite}
+ */
+const SameSite = {
+  Lax: "lax",
+  None: "none",
+  Script: "script",
+};
+
+/**
+ * @typedef {object} SetCookieHeader
+ * @property {string} name
+ * @property {BytesValue} value
+ * @property {string=} domain
+ * @property {boolean=} httpOnly
+ * @property {string=} expiry
+ * @property {number=} maxAge
+ * @property {string=} path
+ * @property {SameSite=} sameSite
+ * @property {boolean=} secure
  */
 
 /**
@@ -505,6 +530,143 @@ class NetworkModule extends Module {
 
   /**
    * Continues a response that is blocked by a network intercept at the
+   * responseStarted or authRequired phase.
+   *
+   * @param {object=} options
+   * @param {string} options.request
+   *     The id of the blocked request that should be continued.
+   * @param {Array<SetCookieHeader>=} options.cookies
+   *     Optional array of set-cookie header values to replace the set-cookie
+   *     headers of the response.
+   * @param {AuthCredentials=} options.credentials
+   *     Optional AuthCredentials to use.
+   * @param {Array<Header>=} options.headers
+   *     Optional array of header values to replace the headers of the response.
+   * @param {string=} options.reasonPhrase
+   *     Optional string to replace the status message of the response.
+   * @param {number=} options.statusCode
+   *     Optional number to replace the status code of the response.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchRequestError}
+   *     Raised if the request id does not match any request in the blocked
+   *     requests map.
+   */
+  async continueResponse(options = {}) {
+    this.assertExperimentalCommandsEnabled("network.continueResponse");
+    const {
+      cookies = null,
+      credentials = null,
+      headers = null,
+      reasonPhrase = null,
+      statusCode = null,
+      request: requestId,
+    } = options;
+
+    lazy.assert.string(
+      requestId,
+      `Expected "request" to be a string, got ${requestId}`
+    );
+
+    if (cookies !== null) {
+      lazy.assert.array(
+        cookies,
+        `Expected "cookies" to be an array got ${cookies}`
+      );
+
+      for (const cookie of cookies) {
+        this.#assertSetCookieHeader(cookie);
+      }
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"cookies" not supported yet in network.continueResponse`
+      );
+    }
+
+    if (credentials !== null) {
+      this.#assertAuthCredentials(credentials);
+    }
+
+    if (headers !== null) {
+      lazy.assert.array(
+        headers,
+        `Expected "headers" to be an array got ${headers}`
+      );
+
+      for (const header of headers) {
+        this.#assertHeader(
+          header,
+          `Expected values in "headers" to be network.Header, got ${header}`
+        );
+      }
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"headers" not supported yet in network.continueResponse`
+      );
+    }
+
+    if (reasonPhrase !== null) {
+      lazy.assert.string(
+        reasonPhrase,
+        `Expected "reasonPhrase" to be a string, got ${reasonPhrase}`
+      );
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"reasonPhrase" not supported yet in network.continueResponse`
+      );
+    }
+
+    if (statusCode !== null) {
+      lazy.assert.positiveInteger(
+        statusCode,
+        `Expected "statusCode" to be a positive integer, got ${statusCode}`
+      );
+
+      throw new lazy.error.UnsupportedOperationError(
+        `"statusCode" not supported yet in network.continueResponse`
+      );
+    }
+
+    if (!this.#blockedRequests.has(requestId)) {
+      throw new lazy.error.NoSuchRequestError(
+        `Blocked request with id ${requestId} not found`
+      );
+    }
+
+    const { authCallbacks, phase, request, resolveBlockedEvent } =
+      this.#blockedRequests.get(requestId);
+
+    if (
+      phase !== InterceptPhase.ResponseStarted &&
+      phase !== InterceptPhase.AuthRequired
+    ) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected blocked request to be in "beforeRequestSent" or "authRequired" phase, got ${phase}`
+      );
+    }
+
+    if (phase === InterceptPhase.AuthRequired) {
+      // Requests blocked in the AuthRequired phase should be resumed using
+      // authCallbacks.
+      if (credentials !== null) {
+        await authCallbacks.provideAuthCredentials(
+          credentials.username,
+          credentials.password
+        );
+      } else {
+        await authCallbacks.provideAuthCredentials();
+      }
+    } else {
+      const wrapper = ChannelWrapper.get(request);
+      wrapper.resume();
+    }
+
+    resolveBlockedEvent();
+  }
+
+  /**
+   * Continues a response that is blocked by a network intercept at the
    * authRequired phase.
    *
    * @param {object=} options
@@ -540,25 +702,7 @@ class NetworkModule extends Module {
     }
 
     if (action == ContinueWithAuthAction.ProvideCredentials) {
-      lazy.assert.object(
-        credentials,
-        `Expected "credentials" to be an object, got ${credentials}`
-      );
-
-      if (credentials.type !== "password") {
-        throw new lazy.error.InvalidArgumentError(
-          `Expected credentials "type" to be "password" got ${credentials.type}`
-        );
-      }
-
-      lazy.assert.string(
-        credentials.username,
-        `Expected credentials "username" to be a string, got ${credentials.username}`
-      );
-      lazy.assert.string(
-        credentials.password,
-        `Expected credentials "password" to be a string, got ${credentials.password}`
-      );
+      this.#assertAuthCredentials(credentials);
     }
 
     if (!this.#blockedRequests.has(requestId)) {
@@ -715,6 +859,28 @@ class NetworkModule extends Module {
     });
   }
 
+  #assertAuthCredentials(credentials) {
+    lazy.assert.object(
+      credentials,
+      `Expected "credentials" to be an object, got ${credentials}`
+    );
+
+    if (credentials.type !== "password") {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected credentials "type" to be "password" got ${credentials.type}`
+      );
+    }
+
+    lazy.assert.string(
+      credentials.username,
+      `Expected credentials "username" to be a string, got ${credentials.username}`
+    );
+    lazy.assert.string(
+      credentials.password,
+      `Expected credentials "password" to be a string, got ${credentials.password}`
+    );
+  }
+
   #assertBytesValue(obj, msg) {
     lazy.assert.object(obj, msg);
     lazy.assert.string(obj.value, msg);
@@ -725,6 +891,81 @@ class NetworkModule extends Module {
     lazy.assert.object(value, msg);
     lazy.assert.string(value.name, msg);
     this.#assertBytesValue(value.value, msg);
+  }
+
+  #assertSetCookieHeader(setCookieHeader) {
+    lazy.assert.object(
+      setCookieHeader,
+      `Expected set-cookie header to be an object, got ${setCookieHeader}`
+    );
+
+    const {
+      name,
+      value,
+      domain = null,
+      httpOnly = null,
+      expiry = null,
+      maxAge = null,
+      path = null,
+      sameSite = null,
+      secure = null,
+    } = setCookieHeader;
+
+    lazy.assert.string(
+      name,
+      `Expected set-cookie header "name" to be a string, got ${name}`
+    );
+
+    this.#assertBytesValue(
+      value,
+      `Expected set-cookie header "value" to be a BytesValue, got ${name}`
+    );
+
+    if (domain !== null) {
+      lazy.assert.string(
+        domain,
+        `Expected set-cookie header "domain" to be a string, got ${domain}`
+      );
+    }
+    if (httpOnly !== null) {
+      lazy.assert.boolean(
+        httpOnly,
+        `Expected set-cookie header "httpOnly" to be a boolean, got ${httpOnly}`
+      );
+    }
+    if (expiry !== null) {
+      lazy.assert.string(
+        expiry,
+        `Expected set-cookie header "expiry" to be a string, got ${expiry}`
+      );
+    }
+    if (maxAge !== null) {
+      lazy.assert.integer(
+        maxAge,
+        `Expected set-cookie header "maxAge" to be an integer, got ${maxAge}`
+      );
+    }
+    if (path !== null) {
+      lazy.assert.string(
+        path,
+        `Expected set-cookie header "path" to be a string, got ${path}`
+      );
+    }
+    if (sameSite !== null) {
+      lazy.assert.in(
+        sameSite,
+        Object.values(SameSite),
+        `Expected set-cookie header "sameSite" to be one of ${Object.values(
+          SameSite
+        )}, got ${sameSite}`
+      );
+    }
+    if (secure !== null) {
+      lazy.assert.boolean(
+        secure,
+        `Expected set-cookie header "secure" to be a boolean, got ${secure}`
+      );
+    }
   }
 
   #extractChallenges(responseData) {
