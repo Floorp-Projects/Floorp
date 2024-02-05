@@ -187,8 +187,6 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   // initialize font lists
   nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
 
-  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
-
   void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
                                    StandardFile aStdFile) MOZ_REQUIRES(mLock);
 
