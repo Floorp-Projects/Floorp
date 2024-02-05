@@ -5504,7 +5504,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void setIsDefinitelyTypedArrayConstructor(Register obj, Register output);
 
   void loadMegamorphicCache(Register dest);
-  void loadStringToAtomCacheLastLookups(Register dest);
+  void lookupStringInAtomCacheLastLookups(Register str, Register scratch,
+                                          Label* fail);
   void loadMegamorphicSetPropCache(Register dest);
 
   void loadAtomOrSymbolAndHash(ValueOperand value, Register outId,

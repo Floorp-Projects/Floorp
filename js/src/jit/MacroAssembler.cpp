@@ -2659,10 +2659,28 @@ void MacroAssembler::loadMegamorphicSetPropCache(Register dest) {
   movePtr(ImmPtr(runtime()->addressOfMegamorphicSetPropCache()), dest);
 }
 
-void MacroAssembler::loadStringToAtomCacheLastLookups(Register dest) {
+void MacroAssembler::lookupStringInAtomCacheLastLookups(Register str,
+                                                        Register scratch,
+                                                        Label* fail) {
+  Label found;
+
   uintptr_t cachePtr = uintptr_t(runtime()->addressOfStringToAtomCache());
   void* offset = (void*)(cachePtr + StringToAtomCache::offsetOfLastLookups());
-  movePtr(ImmPtr(offset), dest);
+  movePtr(ImmPtr(offset), scratch);
+
+  static_assert(StringToAtomCache::NumLastLookups == 2);
+  size_t stringOffset = StringToAtomCache::LastLookup::offsetOfString();
+  size_t lookupSize = sizeof(StringToAtomCache::LastLookup);
+  branchPtr(Assembler::Equal, Address(scratch, stringOffset), str, &found);
+  branchPtr(Assembler::NotEqual, Address(scratch, lookupSize + stringOffset),
+            str, fail);
+  addPtr(Imm32(lookupSize), scratch);
+
+  // We found a hit in the lastLookups_ array! Load the associated atom
+  // and jump back up to our usual atom handling code
+  bind(&found);
+  size_t atomOffset = StringToAtomCache::LastLookup::offsetOfAtom();
+  loadPtr(Address(scratch, atomOffset), str);
 }
 
 void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
@@ -2686,8 +2704,7 @@ void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
 void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                              Register outHash,
                                              Label* cacheMiss) {
-  Label isString, isSymbol, isNull, isUndefined, done, nonAtom, atom,
-      lastLookupAtom;
+  Label isString, isSymbol, isNull, isUndefined, done, nonAtom, atom;
 
   {
     ScratchTagScope tag(*this, value);
@@ -2723,26 +2740,7 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   loadAtomHash(outId, outHash, &done);
 
   bind(&nonAtom);
-  loadStringToAtomCacheLastLookups(outHash);
-
-  // Compare each entry in the StringToAtomCache's lastLookups_ array
-  size_t stringOffset = StringToAtomCache::LastLookup::offsetOfString();
-  branchPtr(Assembler::Equal, Address(outHash, stringOffset), outId,
-            &lastLookupAtom);
-  for (size_t i = 0; i < StringToAtomCache::NumLastLookups - 1; ++i) {
-    addPtr(Imm32(sizeof(StringToAtomCache::LastLookup)), outHash);
-    branchPtr(Assembler::Equal, Address(outHash, stringOffset), outId,
-              &lastLookupAtom);
-  }
-
-  // Couldn't find us in the cache, so fall back to the C++ call
-  jump(cacheMiss);
-
-  // We found a hit in the lastLookups_ array! Load the associated atom
-  // and jump back up to our usual atom handling code
-  bind(&lastLookupAtom);
-  size_t atomOffset = StringToAtomCache::LastLookup::offsetOfAtom();
-  loadPtr(Address(outHash, atomOffset), outId);
+  lookupStringInAtomCacheLastLookups(outId, outHash, cacheMiss);
   jump(&atom);
 
   bind(&done);

@@ -578,6 +578,14 @@
     str: StringId
     result: NumberId
 
+- name: StringToAtom
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    str: StringId
+    result: StringId
+
 - name: BooleanToNumber
   shared: true
   transpile: true
