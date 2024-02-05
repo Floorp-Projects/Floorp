@@ -665,7 +665,6 @@ namespace mozilla::dom {
 
 const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
   static constexpr struct {
-    UseCounter counter;
     const char* name;
     glean::impl::CounterMetric doc_metric;
     glean::impl::CounterMetric page_metric;
@@ -679,62 +678,65 @@ const char* IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
     assert len(ops_page) == len(ops_doc)
     assert len(css_page) == len(css_doc)
 
+    index = 0;
+    static_asserts = []
     for pc, dc in zip(page, doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
         f.write(
             f"""\
         {{
-          UseCounter::{pc[0]},
           "{pc[1]}",
           glean::use_counter_doc::{pc[1]},
           glean::use_counter_page::{pc[1]},
         }},
 """
         )
+        index += 1;
 
     for pc, dc in zip(ops_page, ops_doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
         f.write(
             f"""\
         {{
-          UseCounter::{pc[0]},
           "deprecated_ops.{pc[1]}",
           glean::use_counter_deprecated_ops_doc::{pc[1]},
           glean::use_counter_deprecated_ops_page::{pc[1]},
         }},
 """
         )
+        index += 1
 
     for pc, dc in zip(css_page, css_doc):
         assert pc[0] == dc[0]
         assert pc[1] == dc[1]
+        static_asserts.append(f"static_assert({index} == size_t(UseCounter::{pc[0]}));");
         f.write(
             f"""\
         {{
-          UseCounter::{pc[0]},
           "css.{pc[1]}",
           glean::use_counter_css_doc::{pc[1]},
           glean::use_counter_css_page::{pc[1]},
         }},
 """
         )
+        index += 1
 
+    f.write("};\n");
+    f.write("\n".join(static_asserts));
     f.write(
         """\
-  };
-
   MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
   const auto& entry = kEntries[size_t(aUseCounter)];
-  MOZ_ASSERT(entry.counter == aUseCounter, "Wrongly ordered array");
   (aIsPage ? entry.page_metric : entry.doc_metric).Add();
   return entry.name;
 }
 
 const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind aKind) {
   static constexpr struct {
-    UseCounterWorker counter;
     const char* name;
     glean::impl::CounterMetric dedicated_metric;
     glean::impl::CounterMetric shared_metric;
@@ -744,15 +746,17 @@ const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind a
     )
     assert len(dedicated) == len(shared)
     assert len(dedicated) == len(service)
+    index = 0
+    static_asserts = []
     for dc, sc, servicec in zip(dedicated, shared, service):
         assert dc[0] == sc[0]
         assert dc[1] == sc[1]
         assert dc[0] == servicec[0]
         assert dc[1] == servicec[1]
+        static_asserts.append(f"static_assert({index} == size_t(UseCounterWorker::{dc[0]}));");
         f.write(
             f"""\
         {{
-          UseCounterWorker::{dc[0]},
           "{dc[1]}",
           glean::use_counter_worker_dedicated::{dc[1]},
           glean::use_counter_worker_shared::{dc[1]},
@@ -760,13 +764,13 @@ const char* IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind a
         }},
 """
         )
+        index += 1
+    f.write("};\n");
+    f.write("\n".join(static_asserts));
     f.write(
         """\
-  };
-
   MOZ_ASSERT(size_t(aUseCounter) < ArrayLength(kEntries));
   const auto& entry = kEntries[size_t(aUseCounter)];
-  MOZ_ASSERT(entry.counter == aUseCounter, "Wrongly ordered array");
   switch (aKind) {
     case WorkerKind::WorkerKindDedicated:
       entry.dedicated_metric.Add();
