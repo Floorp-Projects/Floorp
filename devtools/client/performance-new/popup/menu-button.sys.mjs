@@ -2,16 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-"use strict";
 
 /**
  * This file controls the enabling and disabling of the menu button for the profiler.
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
-
-// Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */
-var exports = {};
 
 const { createLazyLoaders } = ChromeUtils.import(
   "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
@@ -112,7 +107,7 @@ function initialize(toggleProfilerKeyShortcuts) {
   /**
    * This is mutable state that will be shared between panel displays.
    *
-   * @type {import("devtools/client/performance-new/popup/logic.jsm.js").State}
+   * @type {import("devtools/client/performance-new/popup/logic.sys.mjs").State}
    */
   const panelState = {
     cleanup: [],
@@ -318,16 +313,10 @@ function initialize(toggleProfilerKeyShortcuts) {
   CustomizableWidgets.push(item);
 }
 
-const ProfilerMenuButton = {
+export const ProfilerMenuButton = {
   initialize,
   addToNavbar,
   isInNavbar,
   openPopup,
   remove,
 };
-
-exports.ProfilerMenuButton = ProfilerMenuButton;
-
-// Object.keys() confuses the linting which expects a static array expression.
-// eslint-disable-next-line
-var EXPORTED_SYMBOLS = Object.keys(exports);

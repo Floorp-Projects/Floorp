@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "background.jsm.js",
+    "background.sys.mjs",
     "browser.js",
     "profiler_get_symbols.js",
-    "symbolication.jsm.js",
+    "symbolication.sys.mjs",
     "symbolication.worker.js",
-    "typescript-lazy-load.jsm.js",
+    "typescript-lazy-load.sys.mjs",
     "utils.js",
 )
 
