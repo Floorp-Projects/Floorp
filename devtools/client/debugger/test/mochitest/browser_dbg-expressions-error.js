@@ -21,11 +21,11 @@ add_task(async function () {
   info(`Adding location`);
   await addExpression(dbg, "location");
   await addExpression(dbg, "foo.bar");
-  await addExpression(dbg, "foo.batt");
+  await addExpression(dbg, "foo)(");
   await addExpression(dbg, "2");
   // check the value of
   is(getWatchExpressionValue(dbg, 2), "(unavailable)");
-  is(getWatchExpressionValue(dbg, 3), "(unavailable)");
+  is(getWatchExpressionValue(dbg, 3), "\"SyntaxError: unexpected token: ')'\"");
   is(getWatchExpressionValue(dbg, 4), "2");
 
   await toggleExpressionNode(dbg, 1);

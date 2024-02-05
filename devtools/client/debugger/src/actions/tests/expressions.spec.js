@@ -58,12 +58,11 @@ describe("expressions", () => {
     expect(selectors.getExpressions(getState())).toHaveLength(0);
   });
 
-  it("should not add invalid expressions", async () => {
+  it("should add invalid expressions", async () => {
     const { dispatch, getState } = createStore(mockThreadFront);
     await dispatch(actions.addExpression("foo#"));
     const state = getState();
-    expect(selectors.getExpressions(state)).toHaveLength(0);
-    expect(selectors.getExpressionError(state)).toBe(true);
+    expect(selectors.getExpressions(state)).toHaveLength(1);
   });
 
   it("should update an expression", async () => {

@@ -27,8 +27,3 @@ export function getAutocompleteMatchset(state) {
   }
   return getAutocompleteMatches(state)[input];
 }
-
-export const getExpressionError = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.expressionError
-);

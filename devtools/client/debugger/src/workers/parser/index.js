@@ -32,8 +32,6 @@ export class ParserDispatcher extends WorkerDispatcher {
     return this.invoke("setSource", astSource);
   }
 
-  hasSyntaxError = this.task("hasSyntaxError");
-
   mapExpression = this.task("mapExpression");
 
   clearSources = this.task("clearSources");

@@ -28,14 +28,12 @@ export function addExpression(input) {
       return null;
     }
 
-    const expressionError = await parserWorker.hasSyntaxError(input);
-
     // If the expression already exists, only update its evaluation
     let expression = getExpression(getState(), input);
     if (!expression) {
       // This will only display the expression input,
       // evaluateExpression will update its value.
-      dispatch({ type: "ADD_EXPRESSION", input, expressionError });
+      dispatch({ type: "ADD_EXPRESSION", input });
 
       expression = getExpression(getState(), input);
       // When there is an expression error, we won't store the expression
@@ -65,22 +63,16 @@ export function clearAutocomplete() {
   return { type: "CLEAR_AUTOCOMPLETE" };
 }
 
-export function clearExpressionError() {
-  return { type: "CLEAR_EXPRESSION_ERROR" };
-}
-
 export function updateExpression(input, expression) {
   return async ({ getState, dispatch, parserWorker }) => {
     if (!input) {
       return;
     }
 
-    const expressionError = await parserWorker.hasSyntaxError(input);
     dispatch({
       type: "UPDATE_EXPRESSION",
       expression,
-      input: expressionError ? expression.input : input,
-      expressionError,
+      input,
     });
 
     await dispatch(evaluateExpressionsForCurrentContext());

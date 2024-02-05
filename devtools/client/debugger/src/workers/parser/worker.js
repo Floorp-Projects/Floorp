@@ -14,7 +14,6 @@ import getScopes, { clearScopes } from "./getScopes";
 import { setSource, clearSources } from "./sources";
 import findOutOfScopeLocations from "./findOutOfScopeLocations";
 import findBestMatchExpression from "./findBestMatchExpression";
-import { hasSyntaxError } from "./validate";
 import mapExpression from "./mapExpression";
 
 import { workerHandler } from "../../../../shared/worker-utils";
@@ -35,7 +34,6 @@ self.onmessage = workerHandler({
   getClosestFunctionName,
   getScopes,
   clearSources: clearAllHelpersForSources,
-  hasSyntaxError,
   mapExpression,
   setSource,
 });
