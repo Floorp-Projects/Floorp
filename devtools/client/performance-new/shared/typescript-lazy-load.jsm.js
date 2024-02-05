@@ -22,7 +22,7 @@
  * const moduleA = lazy.moduleA();
  * const { objectInModuleB } = lazy.moduleB();
  *
- * @template T
+ * @template {{ [key: string]: () => any }} T
  * @param {T} definition - An object where each property has a function that loads a module.
  * @returns {T} - The load memoized version of T.
  */
