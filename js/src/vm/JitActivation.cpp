@@ -251,6 +251,8 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   wasmTrapData_->unwoundPC = pc;
   wasmTrapData_->trap = trap;
   wasmTrapData_->bytecodeOffset = bytecodeOffset;
+  wasmTrapData_->failedUnwindSignatureMismatch =
+      !unwound && trap == wasm::Trap::IndirectCallBadSig;
 
   MOZ_ASSERT(isWasmTrapping());
 }
