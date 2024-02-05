@@ -295,12 +295,7 @@ This tests the login manager in a insecure setting using http. A similar test fi
     is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
     form.uname.focus();
     await popupByArrowDown();
-    // Send a fake (untrusted) event.
     is(form.uname.value, "", "username is empty");
-    is(form.pword.value, "", "password is empty");
-    form.uname.value = "user-2";
-    sendFakeAutocompleteEvent(form.uname);
-    is(form.uname.value, "user-2", "username is set");
     is(form.pword.value, "", "password is empty");
   });
 
@@ -835,7 +830,6 @@ This tests the login manager in a insecure setting using http. A similar test fi
       }],
     });
 
-    // First test DOMAutocomplete
     // Switch the password field to type=password so _fillForm marks the username
     // field for autocomplete.
     form.pword.type = "password";

@@ -1297,9 +1297,7 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
 
   obsSvc->NotifyObservers(input, "autocomplete-did-enter-text", nullptr);
 
-  bool cancel;
-  bool itemWasSelected = selectedIndex >= 0 && !value.IsEmpty();
-  input->OnTextEntered(aEvent, itemWasSelected, &cancel);
+  input->OnTextEntered(aEvent);
 
   ClosePopup();
 

@@ -1943,7 +1943,6 @@ STATIC_ATOMS = [
     Atom("onmozvisualresize", "onmozvisualresize"),
     Atom("onmozvisualscroll", "onmozvisualscroll"),
     # Miscellaneous events included for memory usage optimization (see bug 1542885)
-    Atom("onDOMAutoComplete", "onDOMAutoComplete"),
     Atom("onDOMContentLoaded", "onDOMContentLoaded"),
     Atom("onDOMDocElementInserted", "onDOMDocElementInserted"),
     Atom("onDOMFormBeforeSubmit", "onDOMFormBeforeSubmit"),
