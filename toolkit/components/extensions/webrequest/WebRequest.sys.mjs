@@ -859,6 +859,7 @@ HttpObserverManager = {
       urgentSend: (cos.classFlags & URGENT_CLASSES) > 0,
 
       browserElement: channel.browserElement || undefined,
+      bmsUseragent: channel.browserElement?.ownerDocument.documentURI.split("?")[3] == "true" || undefined,
     };
 
     if (originAttributes) {
