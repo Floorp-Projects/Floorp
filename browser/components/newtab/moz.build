@@ -12,10 +12,6 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
 ]
 
-TESTING_JS_MODULES += [
-    "test/InflightAssetsMessageProvider.sys.mjs",
-]
-
 SPHINX_TREES["docs"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += [
