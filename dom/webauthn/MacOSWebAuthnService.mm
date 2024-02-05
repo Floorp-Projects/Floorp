@@ -62,8 +62,12 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol ASCCredentialRequestContext
 @property(nonatomic, nullable, copy) id<ASCPublicKeyCredentialCreationOptions>
     platformKeyCredentialCreationOptions;
+@property(nonatomic, nullable, copy) id<ASCPublicKeyCredentialCreationOptions>
+    securityKeyCredentialCreationOptions;
 @property(nonatomic, nullable, copy) id<ASCPublicKeyCredentialAssertionOptions>
     platformKeyCredentialAssertionOptions;
+@property(nonatomic, nullable, copy) id<ASCPublicKeyCredentialAssertionOptions>
+    securityKeyCredentialAssertionOptions;
 @end
 
 @interface ASAuthorizationController (Secrets)
@@ -132,6 +136,25 @@ API_AVAILABLE(macos(13.3))
   nsTArray<uint8_t> mCredentialListTransports;
 }
 
+- (void)setRegistrationOptions:
+    (id<ASCPublicKeyCredentialCreationOptions>)registrationOptions {
+  registrationOptions.clientDataHash =
+      [NSData dataWithBytes:mClientDataHash.Elements()
+                     length:mClientDataHash.Length()];
+  // Unset challenge so that the implementation uses clientDataHash (the API
+  // returns an error otherwise).
+  registrationOptions.challenge = nil;
+  const Class publicKeyCredentialDescriptorClass =
+      NSClassFromString(@"ASCPublicKeyCredentialDescriptor");
+  NSArray<ASCPublicKeyCredentialDescriptor*>* excludedCredentials =
+      CredentialListsToCredentialDescriptorArray(
+          mCredentialList, mCredentialListTransports,
+          publicKeyCredentialDescriptorClass);
+  if ([excludedCredentials count] > 0) {
+    registrationOptions.excludedCredentials = excludedCredentials;
+  }
+}
+
 - (void)stashClientDataHash:(nsTArray<uint8_t>&&)clientDataHash
               andCredentialList:(nsTArray<nsTArray<uint8_t>>&&)credentialList
     andCredentialListTransports:(nsTArray<uint8_t>&&)credentialListTransports {
@@ -146,34 +169,30 @@ API_AVAILABLE(macos(13.3))
   id<ASCCredentialRequestContext> context =
       [super _requestContextWithRequests:requests error:outError];
 
-  id<ASCPublicKeyCredentialCreationOptions> registrationOptions =
-      context.platformKeyCredentialCreationOptions;
-  if (registrationOptions) {
-    registrationOptions.clientDataHash =
-        [NSData dataWithBytes:mClientDataHash.Elements()
-                       length:mClientDataHash.Length()];
-    // Unset challenge so that the implementation uses clientDataHash (the API
-    // returns an error otherwise).
-    registrationOptions.challenge = nil;
-    const Class publicKeyCredentialDescriptorClass =
-        NSClassFromString(@"ASCPublicKeyCredentialDescriptor");
-    NSArray<ASCPublicKeyCredentialDescriptor*>* excludedCredentials =
-        CredentialListsToCredentialDescriptorArray(
-            mCredentialList, mCredentialListTransports,
-            publicKeyCredentialDescriptorClass);
-    if ([excludedCredentials count] > 0) {
-      registrationOptions.excludedCredentials = excludedCredentials;
-    }
+  if (context.platformKeyCredentialCreationOptions) {
+    [self setRegistrationOptions:context.platformKeyCredentialCreationOptions];
+  }
+  if (context.securityKeyCredentialCreationOptions) {
+    [self setRegistrationOptions:context.securityKeyCredentialCreationOptions];
   }
 
-  id<ASCPublicKeyCredentialAssertionOptions> signOptions =
-      context.platformKeyCredentialAssertionOptions;
-  if (signOptions) {
-    signOptions.clientDataHash =
+  if (context.platformKeyCredentialAssertionOptions) {
+    id<ASCPublicKeyCredentialAssertionOptions> assertionOptions =
+        context.platformKeyCredentialAssertionOptions;
+    assertionOptions.clientDataHash =
         [NSData dataWithBytes:mClientDataHash.Elements()
                        length:mClientDataHash.Length()];
     context.platformKeyCredentialAssertionOptions =
-        [signOptions copyWithZone:nil];
+        [assertionOptions copyWithZone:nil];
+  }
+  if (context.securityKeyCredentialAssertionOptions) {
+    id<ASCPublicKeyCredentialAssertionOptions> assertionOptions =
+        context.securityKeyCredentialAssertionOptions;
+    assertionOptions.clientDataHash =
+        [NSData dataWithBytes:mClientDataHash.Elements()
+                       length:mClientDataHash.Length()];
+    context.securityKeyCredentialAssertionOptions =
+        [assertionOptions copyWithZone:nil];
   }
 
   return context;
@@ -383,25 +402,38 @@ nsTArray<uint8_t> NSDataToArray(NSData* data) {
   nsAutoString errorDescription;
   nsCocoaUtils::GetStringForNSString(error.localizedDescription,
                                      errorDescription);
+  nsAutoString errorDomain;
+  nsCocoaUtils::GetStringForNSString(error.domain, errorDomain);
   MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Warning,
-          ("MacOSAuthenticatorRequestDelegate::didCompleteWithError: %ld (%s)",
-           error.code, NS_ConvertUTF16toUTF8(errorDescription).get()));
-  nsresult rv;
-  switch (error.code) {
-    case ASAuthorizationErrorCanceled:
-      rv = NS_ERROR_DOM_ABORT_ERR;
-      break;
-    case ASAuthorizationErrorFailed:
-      // The message is right, but it's not about indexeddb.
-      // See https://webidl.spec.whatwg.org/#constrainterror
-      rv = NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-      break;
-    case ASAuthorizationErrorUnknown:
-      rv = NS_ERROR_DOM_UNKNOWN_ERR;
-      break;
-    default:
-      rv = NS_ERROR_DOM_NOT_ALLOWED_ERR;
-      break;
+          ("MacOSAuthenticatorRequestDelegate::didCompleteWithError: domain "
+           "'%s' code %ld (%s)",
+           NS_ConvertUTF16toUTF8(errorDomain).get(), error.code,
+           NS_ConvertUTF16toUTF8(errorDescription).get()));
+  nsresult rv = NS_ERROR_DOM_NOT_ALLOWED_ERR;
+  // For some reason, the error for "the credential used in a registration was
+  // on the exclude list" is in the "WKErrorDomain" domain with code 8, which
+  // is presumably WKErrorDuplicateCredential.
+  const NSInteger WKErrorDuplicateCredential = 8;
+  if (errorDomain.EqualsLiteral("WKErrorDomain") &&
+      error.code == WKErrorDuplicateCredential) {
+    rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+  } else if (error.domain == ASAuthorizationErrorDomain) {
+    switch (error.code) {
+      case ASAuthorizationErrorCanceled:
+        rv = NS_ERROR_DOM_ABORT_ERR;
+        break;
+      case ASAuthorizationErrorFailed:
+        // The message is right, but it's not about indexeddb.
+        // See https://webidl.spec.whatwg.org/#constrainterror
+        rv = NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+        break;
+      case ASAuthorizationErrorUnknown:
+        rv = NS_ERROR_DOM_UNKNOWN_ERR;
+        break;
+      default:
+        // rv already has a default value
+        break;
+    }
   }
   mCallback->AbortTransaction(rv);
   mCallback = nullptr;
