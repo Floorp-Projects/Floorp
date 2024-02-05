@@ -21,8 +21,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsGkAtoms.h"
 #include "nsIConsoleService.h"
-#include "nsIGfxInfo.h"
-#include "mozilla/Components.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsUnicodeProperties.h"
@@ -1673,18 +1671,6 @@ void gfxFcPlatformFontList::ReadSystemFontList(dom::SystemFontList* retValue) {
   }
 }
 
-static nsIGfxInfo::FontVisibilityDeviceDetermination sFontVisibilityDevice =
-    nsIGfxInfo::FontVisibilityDeviceDetermination::Unassigned;
-
-void AssignFontVisibilityDevice() {
-  if (sFontVisibilityDevice ==
-      nsIGfxInfo::FontVisibilityDeviceDetermination::Unassigned) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-    NS_ENSURE_SUCCESS_VOID(
-        gfxInfo->GetFontVisibilityDetermination(&sFontVisibilityDevice));
-  }
-}
-
 // Per family array of faces.
 class FacesData {
   using FaceInitArray = AutoTArray<fontlist::Face::InitData, 8>;
@@ -1971,10 +1957,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
   auto numBaseFamilies = addFontSetFamilies(systemFonts, policy.get(),
                                             /* aAppFonts = */ false);
-  AssignFontVisibilityDevice();
-  if (numBaseFamilies < 3 &&
-      sFontVisibilityDevice !=
-          nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Unknown) {
+  if (GetDistroID() != DistroID::Unknown && numBaseFamilies < 3) {
     // If we found fewer than 3 known FontVisibility::Base families in the
     // system (ignoring app-bundled fonts), we must be dealing with a very
     // non-standard configuration; disable the distro-specific font
@@ -2000,27 +1983,72 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   }
 }
 
+gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
+  // Helper called to initialize sResult the first time this is used.
+  auto getDistroID = []() {
+    DistroID result = DistroID::Unknown;
+    int versionMajor = 0;
+    FILE* fp = fopen("/etc/os-release", "r");
+    if (fp) {
+      char buf[512];
+      while (fgets(buf, sizeof(buf), fp)) {
+        if (strncmp(buf, "VERSION_ID=\"", 12) == 0) {
+          versionMajor = strtol(buf + 12, nullptr, 10);
+          if (result != DistroID::Unknown) {
+            break;
+          }
+        }
+        if (strncmp(buf, "ID=", 3) == 0) {
+          if (strncmp(buf + 3, "ubuntu", 6) == 0) {
+            result = DistroID::Ubuntu_any;
+          } else if (strncmp(buf + 3, "fedora", 6) == 0) {
+            result = DistroID::Fedora_any;
+          }
+          if (versionMajor) {
+            break;
+          }
+        }
+      }
+      fclose(fp);
+    }
+    if (result == DistroID::Ubuntu_any) {
+      if (versionMajor == 20) {
+        result = DistroID::Ubuntu_20;
+      } else if (versionMajor == 22) {
+        result = DistroID::Ubuntu_22;
+      }
+    } else if (result == DistroID::Fedora_any) {
+      if (versionMajor == 38) {
+        result = DistroID::Fedora_38;
+      } else if (versionMajor == 39) {
+        result = DistroID::Fedora_39;
+      }
+    }
+    return result;
+  };
+  static DistroID sResult = getDistroID();
+  return sResult;
+}
+
 FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
     const nsACString& aName) const {
-  AssignFontVisibilityDevice();
-
-  switch (sFontVisibilityDevice) {
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Ubuntu_any:
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Ubuntu_22:
+  auto distro = GetDistroID();
+  switch (distro) {
+    case DistroID::Ubuntu_any:
+    case DistroID::Ubuntu_22:
       if (FamilyInList(aName, kBaseFonts_Ubuntu_22_04)) {
         return FontVisibility::Base;
       }
       if (FamilyInList(aName, kLangFonts_Ubuntu_22_04)) {
         return FontVisibility::LangPack;
       }
-      if (sFontVisibilityDevice ==
-          nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Ubuntu_22) {
+      if (distro == DistroID::Ubuntu_22) {
         return FontVisibility::User;
       }
       // For Ubuntu_any, we fall through to also check the 20_04 lists.
       [[fallthrough]];
 
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Ubuntu_20:
+    case DistroID::Ubuntu_20:
       if (FamilyInList(aName, kBaseFonts_Ubuntu_20_04)) {
         return FontVisibility::Base;
       }
@@ -2029,19 +2057,18 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
       }
       return FontVisibility::User;
 
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Fedora_any:
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Fedora_39:
+    case DistroID::Fedora_any:
+    case DistroID::Fedora_39:
       if (FamilyInList(aName, kBaseFonts_Fedora_39)) {
         return FontVisibility::Base;
       }
-      if (sFontVisibilityDevice ==
-          nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Fedora_39) {
+      if (distro == DistroID::Fedora_39) {
         return FontVisibility::User;
       }
       // For Fedora_any, fall through to also check Fedora 38 list.
       [[fallthrough]];
 
-    case nsIGfxInfo::FontVisibilityDeviceDetermination::Linux_Fedora_38:
+    case DistroID::Fedora_38:
       if (FamilyInList(aName, kBaseFonts_Fedora_38)) {
         return FontVisibility::Base;
       }

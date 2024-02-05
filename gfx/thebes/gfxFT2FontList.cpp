@@ -32,12 +32,9 @@
 #include "gfxUserFontSet.h"
 #include "gfxFontUtils.h"
 #include "SharedFontList-impl.h"
-#include "StandardFonts-android.inc"
 #include "harfbuzz/hb-ot.h"  // for name ID constants
 
 #include "nsServiceManagerUtils.h"
-#include "nsIGfxInfo.h"
-#include "mozilla/Components.h"
 #include "nsIObserverService.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
@@ -689,9 +686,8 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
       .LookupOrInsertWith(
           key,
           [&] {
-            mFamilyInitData.AppendElement(fontlist::Family::InitData{
-                key, aFLE.familyName(), fontlist::Family::kNoIndex,
-                aFLE.visibility()});
+            mFamilyInitData.AppendElement(
+                fontlist::Family::InitData{key, aFLE.familyName()});
             return MakeUnique<nsTArray<fontlist::Face::InitData>>();
           })
       ->AppendElement(fontlist::Face::InitData{
@@ -973,12 +969,6 @@ WillShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 gfxFT2FontList::gfxFT2FontList() : mJarModifiedTime(0) {
-  CheckFamilyList(kBaseFonts_Android);
-  CheckFamilyList(kBaseFonts_Android5_8);
-  CheckFamilyList(kBaseFonts_Android9_Higher);
-  CheckFamilyList(kBaseFonts_Android9_11);
-  CheckFamilyList(kBaseFonts_Android12_Higher);
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     mObserver = new WillShutdownObserver(this);
@@ -1267,60 +1257,6 @@ void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
   }
 }
 
-using Device = nsIGfxInfo::FontVisibilityDeviceDetermination;
-FontVisibility gfxFT2FontList::GetVisibilityForFamily(
-    const nsACString& aName) const {
-  static Device fontVisibilityDevice = Device::Unassigned;
-  if (fontVisibilityDevice == Device::Unassigned) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-    NS_ENSURE_SUCCESS(
-        gfxInfo->GetFontVisibilityDetermination(&fontVisibilityDevice),
-        FontVisibility::Unknown);
-  }
-
-  if (fontVisibilityDevice == Device::Android_Unknown_Release_Version ||
-      fontVisibilityDevice == Device::Android_Unknown_Peloton ||
-      fontVisibilityDevice == Device::Android_Unknown_vbox ||
-      fontVisibilityDevice == Device::Android_Unknown_mitv ||
-      fontVisibilityDevice == Device::Android_Chromebook ||
-      fontVisibilityDevice == Device::Android_Amazon) {
-    return FontVisibility::Unknown;
-  }
-
-  // Sanity Check
-  if (fontVisibilityDevice != Device::Android_sub_9 &&
-      fontVisibilityDevice != Device::Android_9_11 &&
-      fontVisibilityDevice != Device::Android_12_plus) {
-    return FontVisibility::Unknown;
-  }
-
-  if (FamilyInList(aName, kBaseFonts_Android)) {
-    return FontVisibility::Base;
-  }
-
-  if (fontVisibilityDevice == Device::Android_sub_9) {
-    if (FamilyInList(aName, kBaseFonts_Android5_8)) {
-      return FontVisibility::Base;
-    }
-  } else {
-    if (FamilyInList(aName, kBaseFonts_Android9_Higher)) {
-      return FontVisibility::Base;
-    }
-
-    if (fontVisibilityDevice == Device::Android_9_11) {
-      if (FamilyInList(aName, kBaseFonts_Android9_11)) {
-        return FontVisibility::Base;
-      }
-    } else {
-      if (FamilyInList(aName, kBaseFonts_Android12_Higher)) {
-        return FontVisibility::Base;
-      }
-    }
-  }
-
-  return FontVisibility::User;
-}
-
 static void GetName(hb_face_t* aFace, hb_ot_name_id_t aNameID,
                     nsACString& aName) {
   unsigned int n = 0;
@@ -1378,7 +1314,7 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
     nsAutoCString familyKey(familyName);
     BuildKeyNameFromFontName(familyKey);
 
-    FontVisibility visibility = GetVisibilityForFamily(familyName);
+    FontVisibility visibility = FontVisibility::Unknown;
 
     nsAutoCString psname;
     GetName(aFace, HB_OT_NAME_ID_POSTSCRIPT_NAME, psname);

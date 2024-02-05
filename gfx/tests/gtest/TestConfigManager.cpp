@@ -144,15 +144,6 @@ class MockGfxInfo final : public nsIGfxInfo {
                                   JS::MutableHandle<JS::Value>) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD GetFontVisibilityDetermination(
-      nsIGfxInfo::FontVisibilityDeviceDetermination*
-          aFontVisibilityDetermination) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetFontVisibilityDeterminationStr(
-      nsAString& aFontVisibilityDeterminationStr) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   NS_IMETHOD GetContentBackend(nsAString& aContentBackend) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
