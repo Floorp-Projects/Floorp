@@ -750,6 +750,9 @@ bool shell::enableSymbolsAsWeakMapKeys = false;
 // Pref for resizable ArrayBuffers and growable SharedArrayBuffers.
 bool shell::enableArrayBufferResizable = false;
 #endif
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+bool shell::enableJSONParseWithSource = false;
+#endif
 bool shell::enableArrayBufferTransfer = true;
 bool shell::enableImportAttributes = false;
 bool shell::enableImportAttributesAssertSyntax = false;
@@ -4146,6 +4149,9 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setSymbolsAsWeakMapKeysEnabled(enableSymbolsAsWeakMapKeys)
       .setArrayBufferResizableEnabled(enableArrayBufferResizable)
       .setSharedArrayBufferGrowableEnabled(enableArrayBufferResizable)
+#endif
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+      .setJSONParseWithSource(enableJSONParseWithSource)
 #endif
       ;
 }
@@ -11706,6 +11712,10 @@ bool InitOptionParser(OptionParser& op) {
                         "property of null or undefined") ||
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+      !op.addBoolOption('\0', "enable-json-parse-with-source",
+                        "Enable JSON.parse with source") ||
+#endif
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
       !op.addBoolOption('\0', "disable-array-grouping",
                         "Disable Object.groupBy and Map.groupBy") ||
@@ -12251,6 +12261,9 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableSymbolsAsWeakMapKeys =
       op.getBoolOption("enable-symbols-as-weakmap-keys");
   enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");
+#endif
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  enableJSONParseWithSource = op.getBoolOption("enable-json-parse-with-source");
 #endif
   enableArrayBufferTransfer = !op.getBoolOption("disable-arraybuffer-transfer");
   enableImportAttributesAssertSyntax =
