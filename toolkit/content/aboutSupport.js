@@ -714,6 +714,9 @@ var snapshotFormatters = {
       compositor = "BasicLayers (" + noOMTCString + ")";
     }
     addRow("features", "compositing", [new Text(compositor)]);
+    addRow("features", "supportFontDetermination", [
+      new Text(data.fontDetermination),
+    ]);
     delete data.windowLayerManagerRemote;
     delete data.windowLayerManagerType;
     delete data.numTotalWindows;
