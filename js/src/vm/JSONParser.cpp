@@ -714,6 +714,12 @@ inline bool JSONFullParseHandler<CharT>::setNullValue(
 }
 
 template <typename CharT>
+void JSONFullParseHandler<CharT>::trace(JSTracer* trc) {
+  Base::trace(trc);
+  parseRecord.trace(trc);
+}
+
+template <typename CharT>
 inline bool JSONFullParseHandler<CharT>::createJSONParseRecord(
     const Value& value, mozilla::Span<const CharT>& source) {
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
@@ -1087,16 +1093,14 @@ bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp) {
 
 template <typename CharT>
 bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp,
-                              ParseRecordObject* pro) {
+                              JS::MutableHandle<ParseRecordObject> pro) {
   JS::Rooted<JS::Value> tempValue(this->handler.cx);
 
   vp.setUndefined();
 
   bool result = this->parseImpl(
       tempValue, [&](JS::Handle<JS::Value> value) { vp.set(value); });
-  if (pro) {
-    *pro = std::move(this->handler.parseRecord);
-  }
+  pro.get() = std::move(this->handler.parseRecord);
   return result;
 }
 
