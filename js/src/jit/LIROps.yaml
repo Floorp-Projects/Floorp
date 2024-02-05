@@ -2910,6 +2910,13 @@
   call_instruction: true
   mir_op: true
 
+- name: SmallObjectVariableKeyHasProp
+  result_type: WordSized
+  operands:
+    id: WordSized
+  num_temps: 0
+  mir_op: true
+
 - name: GuardIsNotArrayBufferMaybeShared
   operands:
     object: WordSized

@@ -4565,6 +4565,33 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitSmallObjectVariableKeyHasProp(
+    LSmallObjectVariableKeyHasProp* lir) {
+  Register id = ToRegister(lir->id());
+  Register output = ToRegister(lir->output());
+
+#ifdef DEBUG
+  Label isAtom;
+  masm.branchTest32(Assembler::NonZero, Address(id, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), &isAtom);
+  masm.assumeUnreachable("Expected atom input");
+  masm.bind(&isAtom);
+#endif
+
+  SharedShape* shape = &lir->mir()->shape()->asShared();
+
+  Label done, success;
+  for (SharedShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
+    masm.branchPtr(Assembler::Equal, id, ImmGCPtr(iter->key().toAtom()),
+                   &success);
+  }
+  masm.move32(Imm32(0), output);
+  masm.jump(&done);
+  masm.bind(&success);
+  masm.move32(Imm32(1), output);
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());
@@ -19710,7 +19737,6 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
                     Imm32(JSString::ATOM_BIT), &isAtom);
 
   masm.lookupStringInAtomCacheLastLookups(input, output, ool->entry());
-  masm.jump(ool->rejoin());
   masm.bind(&isAtom);
   masm.movePtr(input, output);
   masm.bind(ool->rejoin());

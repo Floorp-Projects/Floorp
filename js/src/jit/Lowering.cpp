@@ -5147,6 +5147,15 @@ void LIRGenerator::visitMegamorphicHasProp(MMegamorphicHasProp* ins) {
   defineReturn(lir, ins);
 }
 
+void LIRGenerator::visitSmallObjectVariableKeyHasProp(
+    MSmallObjectVariableKeyHasProp* ins) {
+  MOZ_ASSERT(ins->idStr()->type() == MIRType::String);
+  auto* lir = new (alloc())
+      LSmallObjectVariableKeyHasProp(useRegisterAtStart(ins->idStr()));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
     MGuardIsNotArrayBufferMaybeShared* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

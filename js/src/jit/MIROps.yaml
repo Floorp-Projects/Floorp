@@ -1915,6 +1915,15 @@
   alias_set: custom
   possibly_calls: true
 
+- name: SmallObjectVariableKeyHasProp
+  operands:
+    idStr: String
+  arguments:
+    shape: Shape*
+  congruent_to: custom
+  result_type: Boolean
+  alias_set: custom
+
 - name: GuardIsNotArrayBufferMaybeShared
   operands:
     object: Object
