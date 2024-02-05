@@ -19704,8 +19704,14 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
   auto* ool = oolCallVM<Fn, js::AtomizeString>(ins, ArgList(input),
                                                StoreRegisterTo(output));
 
-  masm.branchTest32(Assembler::Zero, Address(input, JSString::offsetOfFlags()),
-                    Imm32(JSString::ATOM_BIT), ool->entry());
+  Label isAtom;
+  masm.branchTest32(Assembler::NonZero,
+                    Address(input, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), &isAtom);
+
+  masm.lookupStringInAtomCacheLastLookups(input, output, ool->entry());
+  masm.jump(ool->rejoin());
+  masm.bind(&isAtom);
   masm.movePtr(input, output);
   masm.bind(ool->rejoin());
 }

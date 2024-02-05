@@ -2782,6 +2782,49 @@ bool CacheIRCompiler::emitDoubleParseIntResult(NumberOperandId numId) {
   return true;
 }
 
+bool CacheIRCompiler::emitStringToAtom(StringOperandId stringId,
+                                       StringOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register str = allocator.useRegister(masm, stringId);
+  Register output = allocator.defineRegister(masm, resultId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label done, isAtom, vmCall;
+  masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), &isAtom);
+
+  masm.lookupStringInAtomCacheLastLookups(str, output, &vmCall);
+  masm.jump(&done);
+
+  masm.bind(&vmCall);
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  using Fn = JSAtom* (*)(JSContext* cx, JSString* str);
+  masm.setupUnalignedABICall(output);
+  masm.loadJSContext(output);
+  masm.passABIArg(output);
+  masm.passABIArg(str);
+  masm.callWithABI<Fn, jit::AtomizeStringNoGC>();
+  masm.storeCallPointerResult(output);
+
+  LiveRegisterSet ignore;
+  ignore.add(output);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.branchPtr(Assembler::Equal, output, Imm32(0), failure->label());
+
+  masm.jump(&done);
+  masm.bind(&isAtom);
+  masm.movePtr(str, output);
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitBooleanToNumber(BooleanOperandId booleanId,
                                           NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -10082,6 +10125,10 @@ struct ReturnTypeToJSValueType<int32_t*> {
 };
 template <>
 struct ReturnTypeToJSValueType<JSString*> {
+  static constexpr JSValueType result = JSVAL_TYPE_STRING;
+};
+template <>
+struct ReturnTypeToJSValueType<JSAtom*> {
   static constexpr JSValueType result = JSVAL_TYPE_STRING;
 };
 template <>
