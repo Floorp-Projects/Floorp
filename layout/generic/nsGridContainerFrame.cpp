@@ -9776,12 +9776,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
     // No item in this fragment - synthesize a baseline from our border-box.
     return ::SynthesizeBaselineFromBorderBox(aGroup, aCBWM, aAxis, aCBSize);
   }
-  auto GetBBaseline = [](BaselineSharingGroup aGroup, WritingMode aWM,
-                         const nsIFrame* aFrame, nscoord* aBaseline) {
-    return aGroup == BaselineSharingGroup::First
-               ? nsLayoutUtils::GetFirstLineBaseline(aWM, aFrame, aBaseline)
-               : nsLayoutUtils::GetLastLineBaseline(aWM, aFrame, aBaseline);
-  };
+
   nsIFrame* child = aGridOrderItem.mItem->mFrame;
   nsGridContainerFrame* grid = do_QueryFrame(child);
   auto childWM = child->GetWritingMode();
@@ -9790,6 +9785,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
   nscoord baseline;
   nscoord start;
   nscoord size;
+
   if (aAxis == eLogicalAxisBlock) {
     start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).B(aCBWM);
     size = child->BSize(aCBWM);
@@ -9823,11 +9819,14 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
     if (grid && aGridOrderItem.mIsInEdgeTrack) {
       baseline = isOrthogonal ? grid->GetBBaseline(aGroup)
                               : grid->GetIBaseline(aGroup);
-    } else if (isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
-               GetBBaseline(aGroup, childWM, child, &baseline)) {
-      if (aGroup == BaselineSharingGroup::Last) {
-        baseline = size - baseline;  // convert to distance from border-box end
-      }
+    } else if (isOrthogonal && aGridOrderItem.mIsInEdgeTrack) {
+      baseline = child
+                     ->GetNaturalBaselineBOffset(childWM, aGroup,
+                                                 BaselineExportContext::Other)
+                     .valueOrFrom([aGroup, childWM, childAxis, size]() {
+                       return ::SynthesizeBaselineFromBorderBox(
+                           aGroup, childWM, childAxis, size);
+                     });
     } else {
       baseline =
           ::SynthesizeBaselineFromBorderBox(aGroup, childWM, childAxis, size);
