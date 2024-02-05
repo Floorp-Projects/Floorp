@@ -92,7 +92,7 @@ export var UrlbarUtils = {
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
     TIP: 7,
-    // A type of result created at runtime, for example by an extension.
+    // A type of result which layout is defined at runtime.
     DYNAMIC: 8,
 
     // When you add a new type, also add its schema to
@@ -1424,6 +1424,8 @@ export var UrlbarUtils = {
       return selType === "oneoff" ? "search_shortcut_button" : "input_field";
     }
 
+    // While product doesn't use experimental addons anymore, tests may still do
+    // for testing purposes.
     if (
       result.providerType === UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
       result.providerName != "Omnibox"

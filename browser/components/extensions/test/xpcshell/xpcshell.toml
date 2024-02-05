@@ -67,9 +67,3 @@ skip-if = ["condprof"] # Bug 1769184 - by design for now
 ["test_ext_url_overrides_newtab.js"]
 
 ["test_ext_url_overrides_newtab_update.js"]
-
-["test_ext_urlbar.js"]
-skip-if = [
-  "tsan", # Unreasonably slow, bug 1612707
-  "condprof", # Bug 1769184 - by design for now
-]

@@ -23,5 +23,4 @@ browser.jar:
     content/browser/schemas/tabs.json
     content/browser/schemas/top_sites.json
     content/browser/schemas/url_overrides.json
-    content/browser/schemas/urlbar.json
     content/browser/schemas/windows.json

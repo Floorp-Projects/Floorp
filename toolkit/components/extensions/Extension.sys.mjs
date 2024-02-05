@@ -220,7 +220,6 @@ const PRIVILEGED_PERMS = new Set([
   "networkStatus",
   "normandyAddonStudy",
   "telemetry",
-  "urlbar",
 ]);
 
 const PRIVILEGED_PERMS_ANDROID_ONLY = new Set([
@@ -229,7 +228,7 @@ const PRIVILEGED_PERMS_ANDROID_ONLY = new Set([
   "nativeMessaging",
 ]);
 
-const PRIVILEGED_PERMS_DESKTOP_ONLY = new Set(["normandyAddonStudy", "urlbar"]);
+const PRIVILEGED_PERMS_DESKTOP_ONLY = new Set(["normandyAddonStudy"]);
 
 if (AppConstants.platform == "android") {
   for (const perm of PRIVILEGED_PERMS_ANDROID_ONLY) {
