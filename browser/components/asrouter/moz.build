@@ -32,6 +32,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/MessagingExperimentConstants.sys.mjs",
     "modules/MomentsPageHub.sys.mjs",
     "modules/OnboardingMessageProvider.jsm",
+    "modules/PageEventManager.sys.mjs",
     "modules/PanelTestProvider.sys.mjs",
     "modules/RemoteL10n.sys.mjs",
     "modules/Spotlight.sys.mjs",
