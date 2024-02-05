@@ -892,11 +892,17 @@ async function handleWebChannelMessage(channel, id, message, target) {
       target
     );
   } catch (error) {
+    let errorMessage;
+    if (error instanceof Error) {
+      errorMessage = `${error.name}: ${error.message}`;
+    } else {
+      errorMessage = `${error}`;
+    }
     channel.send(
       {
         type: "ERROR_RESPONSE",
         requestId,
-        error: `${error.name}: ${error.message}`,
+        error: errorMessage,
       },
       target
     );
