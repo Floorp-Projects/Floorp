@@ -51,6 +51,9 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
             ["--no-first-run", "--no-experiments", "--disable-site-isolation-trials"]
         )
 
+        # Disable finch experiments
+        chrome_args += ["--enable-benchmarking"]
+
         btime_chrome_args = []
         for arg in chrome_args:
             btime_chrome_args.extend(["--chrome.args=" + str(arg.replace("'", '"'))])
