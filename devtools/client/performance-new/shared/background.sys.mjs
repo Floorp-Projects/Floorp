@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-"use strict";
 
 /**
  * This file contains all of the background logic for controlling the state and
@@ -122,7 +121,7 @@ const lazy = createLazyLoaders({
 // https://github.com/mozilla-mobile/firefox-android/blob/1d177e7e78d027e8ab32cedf0fc68316787d7454/fenix/app/src/main/java/org/mozilla/fenix/perf/ProfilerUtils.kt
 
 /** @type {Presets} */
-const presets = {
+export const presets = {
   "web-developer": {
     entries: 128 * 1024 * 1024,
     interval: 1,
@@ -311,7 +310,7 @@ const presets = {
  * @param {PageContext} pageContext
  * @return {ProfilerViewMode | undefined}
  */
-function getProfilerViewModeForCurrentPreset(pageContext) {
+export function getProfilerViewModeForCurrentPreset(pageContext) {
   const prefPostfix = getPrefPostfix(pageContext);
   const presetName = Services.prefs.getCharPref(PRESET_PREF + prefPostfix);
 
@@ -334,7 +333,7 @@ function getProfilerViewModeForCurrentPreset(pageContext) {
  * @param {PageContext} pageContext
  * @return {Promise<void>}
  */
-async function captureProfile(pageContext) {
+export async function captureProfile(pageContext) {
   if (!Services.profiler.IsActive()) {
     // The profiler is not active, ignore.
     return;
@@ -397,7 +396,7 @@ async function captureProfile(pageContext) {
  * popup.
  * @param {PageContext} pageContext
  */
-function startProfiler(pageContext) {
+export function startProfiler(pageContext) {
   const { entries, interval, features, threads, duration } =
     getRecordingSettings(pageContext, Services.profiler.GetFeatures());
 
@@ -420,7 +419,7 @@ function startProfiler(pageContext) {
  * using the shortcut keys to capture a profile.
  * @type {() => void}
  */
-function stopProfiler() {
+export function stopProfiler() {
   Services.profiler.StopProfiler();
 }
 
@@ -430,7 +429,7 @@ function stopProfiler() {
  * @param {PageContext} pageContext
  * @return {void}
  */
-function toggleProfiler(pageContext) {
+export function toggleProfiler(pageContext) {
   if (Services.profiler.IsPaused()) {
     // The profiler is currently paused, which means that the user is already
     // attempting to capture a profile. Ignore this request.
@@ -446,7 +445,7 @@ function toggleProfiler(pageContext) {
 /**
  * @param {PageContext} pageContext
  */
-function restartProfiler(pageContext) {
+export function restartProfiler(pageContext) {
   stopProfiler();
   startProfiler(pageContext);
 }
@@ -528,7 +527,7 @@ function getObjdirPrefValue() {
  * @param {string[]} supportedFeatures
  * @returns {RecordingSettings}
  */
-function getRecordingSettings(pageContext, supportedFeatures) {
+export function getRecordingSettings(pageContext, supportedFeatures) {
   const objdirs = getObjdirPrefValue();
   const prefPostfix = getPrefPostfix(pageContext);
   const presetName = Services.prefs.getCharPref(PRESET_PREF + prefPostfix);
@@ -616,7 +615,7 @@ function getRecordingSettingsFromPrefs(
  * @param {PageContext} pageContext
  * @param {RecordingSettings} prefs
  */
-function setRecordingSettings(pageContext, prefs) {
+export function setRecordingSettings(pageContext, prefs) {
   const prefPostfix = getPrefPostfix(pageContext);
   Services.prefs.setCharPref(PRESET_PREF + prefPostfix, prefs.presetName);
   Services.prefs.setIntPref(ENTRIES_PREF + prefPostfix, prefs.entries);
@@ -637,13 +636,13 @@ function setRecordingSettings(pageContext, prefs) {
   setObjdirPrefValue(prefs.objdirs);
 }
 
-const platform = AppConstants.platform;
+export const platform = AppConstants.platform;
 
 /**
  * Revert the recording prefs for both local and remote profiling.
  * @return {void}
  */
-function revertRecordingSettings() {
+export function revertRecordingSettings() {
   for (const prefPostfix of ["", ".remote"]) {
     Services.prefs.clearUserPref(PRESET_PREF + prefPostfix);
     Services.prefs.clearUserPref(ENTRIES_PREF + prefPostfix);
@@ -664,7 +663,7 @@ function revertRecordingSettings() {
  * @param {string[]} supportedFeatures
  * @return {void}
  */
-function changePreset(pageContext, presetName, supportedFeatures) {
+export function changePreset(pageContext, presetName, supportedFeatures) {
   const prefPostfix = getPrefPostfix(pageContext);
   const objdirs = getObjdirPrefValue();
   let recordingSettings = getRecordingSettingsFromPreset(
@@ -689,7 +688,7 @@ function changePreset(pageContext, presetName, supportedFeatures) {
  * @param {PrefObserver} observer
  * @return {void}
  */
-function addPrefObserver(observer) {
+export function addPrefObserver(observer) {
   Services.prefs.addObserver(PREF_PREFIX, observer);
 }
 
@@ -698,7 +697,7 @@ function addPrefObserver(observer) {
  * @param {PrefObserver} observer
  * @return {void}
  */
-function removePrefObserver(observer) {
+export function removePrefObserver(observer) {
   Services.prefs.removeObserver(PREF_PREFIX, observer);
 }
 
@@ -867,7 +866,7 @@ function getSymbolicationServiceForBrowser(browser) {
  * @param {any} message
  * @param {MockedExports.WebChannelTarget} target
  */
-async function handleWebChannelMessage(channel, id, message, target) {
+export async function handleWebChannelMessage(channel, id, message, target) {
   if (typeof message !== "object" || typeof message.type !== "string") {
     console.error(
       "An malformed message was received by the profiler's WebChannel handler.",
@@ -918,7 +917,7 @@ async function handleWebChannelMessage(channel, id, message, target) {
  *   method should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
  */
-function registerProfileCaptureForBrowser(
+export function registerProfileCaptureForBrowser(
   browser,
   profileCaptureResult,
   symbolicationService
@@ -928,30 +927,3 @@ function registerProfileCaptureForBrowser(
     symbolicationService,
   });
 }
-
-// Provide a fake module.exports for the JSM to be properly read by TypeScript.
-/** @type {any} */
-var module = { exports: {} };
-
-module.exports = {
-  presets,
-  captureProfile,
-  startProfiler,
-  stopProfiler,
-  restartProfiler,
-  toggleProfiler,
-  platform,
-  getRecordingSettings,
-  setRecordingSettings,
-  revertRecordingSettings,
-  changePreset,
-  handleWebChannelMessage,
-  registerProfileCaptureForBrowser,
-  addPrefObserver,
-  removePrefObserver,
-  getProfilerViewModeForCurrentPreset,
-};
-
-// Object.keys() confuses the linting which expects a static array expression.
-// eslint-disable-next-line
-var EXPORTED_SYMBOLS = Object.keys(module.exports);

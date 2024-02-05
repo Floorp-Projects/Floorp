@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "logic.jsm.js",
-    "menu-button.jsm.js",
+    "logic.sys.mjs",
+    "menu-button.sys.mjs",
 )
 
 with Files("**"):

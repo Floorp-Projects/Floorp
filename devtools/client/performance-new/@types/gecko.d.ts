@@ -26,12 +26,12 @@ declare namespace MockedExports {
     "resource:///modules/CustomizableUI.sys.mjs": typeof import("resource:///modules/CustomizableUI.sys.mjs");
     "resource:///modules/CustomizableWidgets.sys.mjs": typeof import("resource:///modules/CustomizableWidgets.sys.mjs");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
-    "resource://devtools/client/performance-new/shared/background.jsm.js": typeof import("resource://devtools/client/performance-new/shared/background.jsm.js");
-    "resource://devtools/client/performance-new/shared/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/shared/symbolication.jsm.js");
+    "resource://devtools/client/performance-new/shared/background.sys.mjs": typeof import("resource://devtools/client/performance-new/shared/background.sys.mjs");
+    "resource://devtools/client/performance-new/shared/symbolication.sys.mjs": typeof import("resource://devtools/client/performance-new/shared/symbolication.sys.mjs");
     "resource://devtools/shared/loader/browser-loader.js": any;
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
-    "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js");
-    "resource://devtools/client/performance-new/popup/logic.jsm.js": typeof import("resource://devtools/client/performance-new/popup/logic.jsm.js");
+    "resource://devtools/client/performance-new/popup/menu-button.sys.mjs": typeof import("resource://devtools/client/performance-new/popup/menu-button.sys.mjs");
+    "resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs": typeof import("resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs");
+    "resource://devtools/client/performance-new/popup/logic.sys.mjs": typeof import("resource://devtools/client/performance-new/popup/logic.sys.mjs");
     "resource:///modules/PanelMultiView.sys.mjs": typeof import("resource:///modules/PanelMultiView.sys.mjs");
   }
 
@@ -339,13 +339,13 @@ declare module "resource://gre/modules/AppConstants.sys.mjs" {
   export = MockedExports.AppConstantsSYSMJS;
 }
 
-declare module "resource://devtools/client/performance-new/shared/background.jsm.js" {
-  import * as Background from "devtools/client/performance-new/shared/background.jsm.js";
+declare module "resource://devtools/client/performance-new/shared/background.sys.mjs" {
+  import * as Background from "devtools/client/performance-new/shared/background.sys.mjs";
   export = Background;
 }
 
-declare module "resource://devtools/client/performance-new/shared/symbolication.jsm.js" {
-  import * as PerfSymbolication from "devtools/client/performance-new/shared/symbolication.jsm.js";
+declare module "resource://devtools/client/performance-new/shared/symbolication.sys.mjs" {
+  import * as PerfSymbolication from "devtools/client/performance-new/shared/symbolication.sys.mjs";
   export = PerfSymbolication;
 }
 

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-"use strict";
 
 /**
  * This file controls the logic of the profiler popup view.
@@ -309,21 +308,9 @@ function addPopupEventHandlers(state, elements, view) {
  * @param {State} panelState
  * @param {XULElement} panelview
  */
-function initializePopup(panelState, panelview) {
+export function initializePopup(panelState, panelview) {
   const panelElements = selectElementsInPanelview(panelview);
   const panelviewControllers = createViewControllers(panelState, panelElements);
   addPopupEventHandlers(panelState, panelElements, panelviewControllers);
   initializeView(panelState, panelElements, panelviewControllers);
 }
-
-// Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */
-var module = {};
-
-module.exports = {
-  initializePopup,
-};
-
-// Object.keys() confuses the linting which expects a static array expression.
-// eslint-disable-next-line
-var EXPORTED_SYMBOLS = Object.keys(module.exports);

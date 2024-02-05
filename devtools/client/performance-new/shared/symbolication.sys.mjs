@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-"use strict";
 
 /** @type {any} */
 const lazy = {};
@@ -346,7 +345,11 @@ class LocalSymbolicationServiceWithRemoteSymbolTableFallback {
  *   tables from remote targets
  * @return {SymbolicationService}
  */
-function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
+export function createLocalSymbolicationService(
+  sharedLibraries,
+  objdirs,
+  perfFront
+) {
   const service = new LocalSymbolicationService(sharedLibraries, objdirs);
   if (perfFront) {
     return new LocalSymbolicationServiceWithRemoteSymbolTableFallback(
@@ -357,15 +360,3 @@ function createLocalSymbolicationService(sharedLibraries, objdirs, perfFront) {
   }
   return service;
 }
-
-// Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */
-var module = {};
-
-module.exports = {
-  createLocalSymbolicationService,
-};
-
-// Object.keys() confuses the linting which expects a static array expression.
-// eslint-disable-next-line
-var EXPORTED_SYMBOLS = Object.keys(module.exports);
