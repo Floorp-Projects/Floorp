@@ -4,6 +4,9 @@ support-files = [
   "data/worker.js",
   "data/worker_fileReader.js",
   "data/chrome.manifest",
+  "data/base_uri_worker.js",
+  "data/base_uri_module.mjs",
+  "data/base_uri_module2.mjs",
 ]
 
 ["test_ext_redirects_sw_scripts.js"]
@@ -17,6 +20,8 @@ firefox-appdir = "browser"
 firefox-appdir = "browser"
 
 ["test_fileReader.js"]
+
+["test_import_base_uri.js"]
 
 ["test_remoteworker_launch_new_process.js"]
 # The following firefox-appdir make sure that this xpcshell test will run

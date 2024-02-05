@@ -188,7 +188,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   rv = channel->GetOriginalURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  channel->GetURI(getter_AddRefs(loadContext->mRequest->mBaseURL));
+  loadContext->mRequest->SetBaseURLFromChannelAndOriginalURI(channel, uri);
 
   // Figure out what we actually loaded.
   nsCOMPtr<nsIURI> finalURI;

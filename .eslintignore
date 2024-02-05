@@ -156,6 +156,11 @@ dom/workers/test/importScripts_worker_imported3.js
 dom/workers/test/invalid.js
 dom/workers/test/threadErrors_worker1.js
 
+# Tests the module loader's path handling.
+# Dynamic imports contains non-optimal paths.
+dom/workers/test/xpcshell/data/base_uri_worker.js
+dom/workers/test/xpcshell/data/base_uri_module.mjs
+
 # Bug 1527075: This directory is linted in github repository
 intl/l10n/
 

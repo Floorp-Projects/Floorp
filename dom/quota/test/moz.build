@@ -82,5 +82,5 @@ TESTING_JS_MODULES.dom.quota.test.modules.worker += [
     "modules/system/worker/head.js",
     "modules/system/worker/ModuleLoader.js",
     "modules/system/worker/Utils.js",
-    "modules/system/worker/UtilsChild.js",
+    "modules/system/worker/UtilsChild.mjs",
 ]
