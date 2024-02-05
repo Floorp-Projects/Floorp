@@ -8,6 +8,10 @@
   background-color: var(--fxview-background-color-secondary);
   margin-block-end: 24px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+  &[isOpenTabsView] {
+    margin-block-end: 0;
+  }
 }
 
 @media (prefers-contrast) {

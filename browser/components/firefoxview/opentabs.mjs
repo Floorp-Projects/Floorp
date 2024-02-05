@@ -459,6 +459,7 @@ class OpenTabsInViewCard extends ViewPageContent {
         ?preserveCollapseState=${this.recentBrowsing}
         shortPageName=${this.recentBrowsing ? "opentabs" : null}
         ?showViewAll=${this.recentBrowsing}
+        ?removeBlockEndMargin=${!this.recentBrowsing}
       >
         ${when(
           this.recentBrowsing,

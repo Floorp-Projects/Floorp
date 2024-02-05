@@ -21,6 +21,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {string} shortPageName - Page name that the 'View all' link will navigate to and the preserveCollapseState pref will use
  * @property {boolean} showViewAll - True if you need to display a 'View all' header link to navigate
  * @property {boolean} toggleDisabled - Optional property given if the card container should not be collapsible
+ * @property {boolean} removeBlockEndMargin - True if you need to remove the block end margin on the card container
  */
 class CardContainer extends MozLitElement {
   constructor() {
@@ -40,6 +41,7 @@ class CardContainer extends MozLitElement {
     shortPageName: { type: String },
     showViewAll: { type: Boolean },
     toggleDisabled: { type: Boolean },
+    removeBlockEndMargin: { type: Boolean },
     visible: { type: Boolean },
   };
 
@@ -170,6 +172,7 @@ class CardContainer extends MozLitElement {
               "empty-state": this.isEmptyState && !this.isInnerCard,
             })}
             ?open=${this.isExpanded}
+            ?isOpenTabsView=${this.removeBlockEndMargin}
             @toggle=${this.onToggleContainer}
           >
             <summary
