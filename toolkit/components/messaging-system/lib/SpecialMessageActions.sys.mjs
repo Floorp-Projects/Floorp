@@ -11,7 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
-  Spotlight: "resource://activity-stream/lib/Spotlight.sys.mjs",
+  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+  Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
   UITour: "resource:///modules/UITour.sys.mjs",
 });
