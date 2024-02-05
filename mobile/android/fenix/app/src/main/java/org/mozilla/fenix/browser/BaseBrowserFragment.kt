@@ -942,9 +942,12 @@ abstract class BaseBrowserFragment :
         binding.swipeRefresh.isEnabled = shouldPullToRefreshBeEnabled(false)
 
         if (binding.swipeRefresh.isEnabled) {
-            val primaryTextColor =
-                ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-            binding.swipeRefresh.setColorSchemeColors(primaryTextColor)
+            val primaryTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
+            val primaryBackgroundColor = ThemeManager.resolveAttribute(R.attr.layer2, context)
+            binding.swipeRefresh.apply {
+                setColorSchemeResources(primaryTextColor)
+                setProgressBackgroundColorSchemeResource(primaryBackgroundColor)
+            }
             swipeRefreshFeature.set(
                 feature = SwipeRefreshFeature(
                     requireComponents.core.store,
