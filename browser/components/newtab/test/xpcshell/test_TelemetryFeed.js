@@ -21,6 +21,8 @@ const { TelemetryFeed, USER_PREFS_ENCODING } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  AboutWelcomeTelemetry:
+    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
@@ -34,10 +36,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
 });
-
-const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm"
-);
 
 const FAKE_UUID = "{foo-123-foo}";
 const PREF_IMPRESSION_ID = "browser.newtabpage.activity-stream.impressionId";

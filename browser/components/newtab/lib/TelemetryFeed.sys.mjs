@@ -25,6 +25,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  AboutWelcomeTelemetry:
+    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionSettingsStore:
@@ -36,10 +38,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
-});
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutWelcomeTelemetry:
-    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm",
 });
 ChromeUtils.defineLazyGetter(
   lazy,

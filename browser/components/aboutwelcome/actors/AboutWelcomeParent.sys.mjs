@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutWelcomeTelemetry:
+    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
@@ -18,8 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutWelcomeTelemetry:
-    "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.jsm",
   AboutWelcomeDefaults:
     "resource:///modules/aboutwelcome/AboutWelcomeDefaults.jsm",
   AWScreenUtils: "resource:///modules/aboutwelcome/AWScreenUtils.jsm",
