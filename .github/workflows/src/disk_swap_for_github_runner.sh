@@ -34,7 +34,7 @@ sudo rm -rf /usr/share/java
 sudo rm -rf /usr/share/miniconda
 sudo rm -rf /usr/local/share/vcpkg
 
-sudo fallocate -l 20G /home/runner/swapfile2
+sudo fallocate -l 10G /home/runner/swapfile2
 
 sudo chmod 600 /home/runner/swapfile2
 sudo mkswap /home/runner/swapfile2
