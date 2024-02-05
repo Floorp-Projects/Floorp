@@ -2,7 +2,7 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { ToolbarBadgeHub } = ChromeUtils.import(
-  "resource://activity-stream/lib/ToolbarBadgeHub.jsm"
+  "resource:///modules/asrouter/ToolbarBadgeHub.jsm"
 );
 
 add_task(async function test_setup() {
