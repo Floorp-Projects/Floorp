@@ -155,8 +155,8 @@ async function makeSureProfilerPopupIsEnabled() {
   info("Make sure the profiler popup is enabled.");
 
   info("> Load the profiler menu button.");
-  const { ProfilerMenuButton } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+  const { ProfilerMenuButton } = ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/popup/menu-button.sys.mjs"
   );
 
   if (!ProfilerMenuButton.isInNavbar()) {
@@ -524,8 +524,8 @@ async function withDevToolsPanel(url, callback, aWindow = window) {
  * @returns {Object}
  */
 function getActiveConfiguration() {
-  const BackgroundJSM = ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  const BackgroundJSM = ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 
   const { startProfiler, stopProfiler } = BackgroundJSM;
@@ -737,8 +737,8 @@ async function makeSureProfilerPopupIsDisabled() {
   info("Make sure the profiler popup is dsiabled.");
 
   info("> Load the profiler menu button module.");
-  const { ProfilerMenuButton } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+  const { ProfilerMenuButton } = ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/popup/menu-button.sys.mjs"
   );
 
   const isOriginallyInNavBar = ProfilerMenuButton.isInNavbar();

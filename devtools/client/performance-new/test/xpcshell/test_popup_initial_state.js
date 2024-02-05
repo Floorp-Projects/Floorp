@@ -8,8 +8,8 @@
  */
 
 function setupBackgroundJsm() {
-  return ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  return ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 }
 

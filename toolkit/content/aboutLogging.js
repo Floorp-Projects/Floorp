@@ -13,16 +13,16 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
   Ci.nsIDirectoryServiceProvider
 );
 
-const { ProfilerMenuButton } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+const { ProfilerMenuButton } = ChromeUtils.importESModule(
+  "resource://devtools/client/performance-new/popup/menu-button.sys.mjs"
 );
 const { CustomizableUI } = ChromeUtils.importESModule(
   "resource:///modules/CustomizableUI.sys.mjs"
 );
 
 ChromeUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
-  return ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  return ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 });
 

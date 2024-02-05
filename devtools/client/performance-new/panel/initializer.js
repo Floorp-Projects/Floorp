@@ -69,15 +69,15 @@ const {
   openProfilerTab,
   sharedLibrariesFromProfile,
 } = require("resource://devtools/client/performance-new/shared/browser.js");
-const { createLocalSymbolicationService } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
+const { createLocalSymbolicationService } = ChromeUtils.importESModule(
+  "resource://devtools/client/performance-new/shared/symbolication.sys.mjs"
 );
 const {
   presets,
   getProfilerViewModeForCurrentPreset,
   registerProfileCaptureForBrowser,
-} = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/background.jsm.js"
+} = ChromeUtils.importESModule(
+  "resource://devtools/client/performance-new/shared/background.sys.mjs"
 );
 
 /**

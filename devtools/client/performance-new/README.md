@@ -41,6 +41,6 @@ Some code about the popup is also present in `devtools/startup/DevToolsStartup.s
 ## Injecting profiles into [profiler.firefox.com]
 
 After a profile has been collected, it needs to be sent to [profiler.firefox.com] for analysis. This is done by using browser APIs to open a new tab, and then setting up a web channel for the communication between the unprivileged page and the privileged chrome code. The page requests the profile data (as well as symbolication requests in some cases) through this Web Channel.
-See `handleWebChannelMessage` in `background.jsm.js` as well as related code in `devtools/startup/DevToolsStartup.sys.mjs` for implementation details. Both the DevTools Panel and the Popup use this channel.
+See `handleWebChannelMessage` in `background.sys.mjs` as well as related code in `devtools/startup/DevToolsStartup.sys.mjs` for implementation details. Both the DevTools Panel and the Popup use this channel.
 
 [profiler.firefox.com]: https://profiler.firefox.com

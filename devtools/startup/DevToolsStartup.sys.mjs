@@ -35,13 +35,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  ProfilerMenuButton:
+    "resource://devtools/client/performance-new/popup/menu-button.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ProfilerMenuButton",
-  "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-);
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
@@ -304,8 +301,8 @@ export function validateProfilerWebChannelUrl(targetUrl) {
 }
 
 ChromeUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function () {
-  return ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  return ChromeUtils.importESModule(
+    "resource://devtools/client/performance-new/shared/background.sys.mjs"
   );
 });
 

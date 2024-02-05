@@ -6,9 +6,10 @@
 add_task(async function test() {
   info("Test what happens when a recording is interrupted by another tool.");
 
-  const { stopProfiler: stopProfilerByAnotherTool } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/shared/background.jsm.js"
-  );
+  const { stopProfiler: stopProfilerByAnotherTool } =
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/shared/background.sys.mjs"
+    );
 
   await withDevToolsPanel(async document => {
     const getRecordingState = setupGetRecordingState(document);

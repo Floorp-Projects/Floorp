@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const BackgroundJSM = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/background.jsm.js"
+const BackgroundJSM = ChromeUtils.importESModule(
+  "resource://devtools/client/performance-new/shared/background.sys.mjs"
 );
 
 registerCleanupFunction(() => {

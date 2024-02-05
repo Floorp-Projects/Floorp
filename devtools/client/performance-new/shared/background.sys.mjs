@@ -12,9 +12,8 @@
 
 // The following are not lazily loaded as they are needed during initialization.
 
-const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
-);
+import { createLazyLoaders } from "resource://devtools/client/performance-new/shared/typescript-lazy-load.sys.mjs";
+
 // For some reason TypeScript was giving me an error when de-structuring AppConstants. I
 // suspect a bug in TypeScript was at play.
 const AppConstants = ChromeUtils.importESModule(
@@ -95,12 +94,12 @@ const lazy = createLazyLoaders({
   CustomizableUI: () =>
     ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs"),
   PerfSymbolication: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/shared/symbolication.sys.mjs"
     ),
   ProfilerMenuButton: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+    ChromeUtils.importESModule(
+      "resource://devtools/client/performance-new/popup/menu-button.sys.mjs"
     ),
 });
 

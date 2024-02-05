@@ -37,13 +37,13 @@
 }
 
 /**
- * The background.jsm.js manages the profiler state, and can be loaded multiple time
+ * The background.sys.mjs manages the profiler state, and can be loaded multiple time
  * for various components. This page needs a copy, and it is also used by the
  * profiler shortcuts. In order to do this, the background code needs to live in a
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
  */
-const { presets } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/shared/background.jsm.js"
+const { presets } = ChromeUtils.importESModule(
+  "resource://devtools/client/performance-new/shared/background.sys.mjs"
 );
 
 const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
