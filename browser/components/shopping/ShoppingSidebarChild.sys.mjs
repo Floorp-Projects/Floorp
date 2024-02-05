@@ -165,6 +165,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
         ShoppingProduct.sendAttributionEvent("impression", aid);
         Glean.shopping.surfaceAdsImpression.record();
         break;
+      case "DisableShopping":
+        this.sendAsyncMessage("DisableShopping");
+        break;
     }
   }
 
