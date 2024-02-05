@@ -344,6 +344,10 @@ class MessagingSystemListItem extends React.Component {
           { className: "study-header" },
           r("span", { className: "study-name" }, userFacingName),
           r("span", {}, "\u2022"), // &bullet;
+          !study.isRollout && [
+            r("span", { className: "study-branch-slug" }, study.branch.slug),
+            r("span", {}, "\u2022"), // &bullet;
+          ],
           r(
             "span",
             { className: "study-status" },
