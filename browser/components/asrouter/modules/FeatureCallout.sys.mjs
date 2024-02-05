@@ -201,7 +201,7 @@ export class FeatureCallout {
     }
   }
 
-  async _maybeAdvanceScreens() {
+  _maybeAdvanceScreens() {
     if (this.doc.visibilityState === "hidden" || !this.featureTourProgress) {
       return;
     }
@@ -213,7 +213,7 @@ export class FeatureCallout {
     // the next message in the tour.
     if (
       this.config?.screens.length === 1 ||
-      this.currentScreen == "spotlight"
+      this.currentScreen === "spotlight"
     ) {
       this.showFeatureCallout();
       return;
@@ -407,7 +407,7 @@ export class FeatureCallout {
       this.win.MozXULElement.insertFTLIfNeeded(path);
     }
 
-    const addChromeSheet = async href => {
+    const addChromeSheet = href => {
       try {
         this.win.windowUtils.loadSheetUsingURIString(
           href,
@@ -623,7 +623,7 @@ export class FeatureCallout {
       if (
         this.context === "chrome" &&
         element.id &&
-        anchor.selector.includes("#" + element.id)
+        anchor.selector.includes(`#${element.id}`)
       ) {
         let widget = lazy.CustomizableUI.getWidget(element.id);
         if (
@@ -714,15 +714,15 @@ export class FeatureCallout {
         case "end": {
           // Inline arrow, i.e. arrow is on one of the left/right edges.
           let isRTL =
-            this.ownerGlobal.getComputedStyle(this).direction == "rtl";
-          let isRight = isRTL ^ (positionParts[1] == "start");
+            this.ownerGlobal.getComputedStyle(this).direction === "rtl";
+          let isRight = isRTL ^ (positionParts[1] === "start");
           let side = isRight ? "end" : "start";
           arrowPosition = `inline-${side}`;
           if (popupAlignment?.includes("center")) {
             arrowPosition = `inline-${side}`;
-          } else if (positionParts[2] == "before") {
+          } else if (positionParts[2] === "before") {
             arrowPosition = `inline-${side}-top`;
-          } else if (positionParts[2] == "after") {
+          } else if (positionParts[2] === "after") {
             arrowPosition = `inline-${side}-bottom`;
           }
           break;
@@ -730,13 +730,13 @@ export class FeatureCallout {
         case "before":
         case "after": {
           // Block arrow, i.e. arrow is on one of the top/bottom edges.
-          let side = positionParts[1] == "before" ? "bottom" : "top";
+          let side = positionParts[1] === "before" ? "bottom" : "top";
           arrowPosition = side;
           if (popupAlignment?.includes("center")) {
             arrowPosition = side;
-          } else if (positionParts[2] == "end") {
+          } else if (positionParts[2] === "end") {
             arrowPosition = `${side}-end`;
-          } else if (positionParts[2] == "start") {
+          } else if (positionParts[2] === "start") {
             arrowPosition = `${side}-start`;
           }
           break;
@@ -859,7 +859,7 @@ export class FeatureCallout {
       return;
     }
     const parentEl = anchor.element;
-    const doc = this.doc;
+    const { doc } = this;
     const arrowPosition = anchor.arrow_position || "top";
     const arrowWidth = anchor.arrow_width || 33.94113;
     const arrowHeight = arrowWidth / 2;
@@ -879,103 +879,77 @@ export class FeatureCallout {
       };
     };
 
-    const clearPosition = () => {
-      Object.keys(positioners).forEach(position => {
-        container.style[position] = "unset";
-      });
-      container.removeAttribute("arrow-position");
+    const centerVertically = () => {
+      let topOffset =
+        (container.getBoundingClientRect().height -
+          parentEl.getBoundingClientRect().height) /
+        2;
+      container.style.top = `${getOffset(parentEl).top - topOffset}px`;
     };
 
-    const setArrowPosition = position => {
-      let val;
+    /**
+     * Horizontally align a top/bottom-positioned callout according to the
+     * passed position.
+     * @param {String} position one of...
+     *   - "center": for use with top/bottom. arrow is in the center, and the
+     *       center of the callout aligns with the parent center.
+     *   - "center-arrow-start": for use with center-arrow-top-start. arrow is
+     *       on the start (left) side of the callout, and the callout is aligned
+     *       so that the arrow points to the center of the parent element.
+     *   - "center-arrow-end": for use with center-arrow-top-end. arrow is on
+     *       the end, and the arrow points to the center of the parent.
+     *   - "start": currently unused. align the callout's starting edge with the
+     *       parent's starting edge.
+     *   - "end": currently unused. same as start but for the ending edge.
+     */
+    const alignHorizontally = position => {
       switch (position) {
-        case "bottom":
-          val = "bottom";
+        case "center": {
+          const sideOffset =
+            (parentEl.getBoundingClientRect().width -
+              container.getBoundingClientRect().width) /
+            2;
+          const containerSide = RTL
+            ? doc.documentElement.clientWidth -
+              getOffset(parentEl).right +
+              sideOffset
+            : getOffset(parentEl).left + sideOffset;
+          container.style[RTL ? "right" : "left"] = `${Math.max(
+            containerSide,
+            0
+          )}px`;
           break;
-        case "left":
-          val = "inline-start";
-          break;
-        case "right":
-          val = "inline-end";
-          break;
-        case "top-start":
-        case "top-center-arrow-start":
-          val = RTL ? "top-end" : "top-start";
-          break;
-        case "top-end":
-        case "top-center-arrow-end":
-          val = RTL ? "top-start" : "top-end";
-          break;
-        case "top":
-        default:
-          val = "top";
-          break;
-      }
-
-      container.setAttribute("arrow-position", val);
-    };
-
-    const addValueToPixelValue = (value, pixelValue) => {
-      return `${parseFloat(pixelValue) + value}px`;
-    };
-
-    const subtractPixelValueFromValue = (pixelValue, value) => {
-      return `${value - parseFloat(pixelValue)}px`;
-    };
-
-    const overridePosition = () => {
-      // We override _every_ positioner here, because we want to manually set
-      // all container.style.positions in every positioner's "position" function
-      // regardless of the actual arrow position
-
-      // Note: We override the position functions with new functions here, but
-      // they don't actually get executed until the respective position
-      // functions are called and this function is not executed unless the
-      // message has a custom position property.
-
-      // We're positioning relative to a parent element's bounds, if that parent
-      // element exists.
-
-      for (const position in positioners) {
-        positioners[position].position = () => {
-          if (customPosition.top) {
-            container.style.top = addValueToPixelValue(
-              parentEl.getBoundingClientRect().top,
-              customPosition.top
-            );
-          }
-
-          if (customPosition.left) {
-            const leftPosition = addValueToPixelValue(
-              parentEl.getBoundingClientRect().left,
-              customPosition.left
-            );
-
-            RTL
-              ? (container.style.right = leftPosition)
-              : (container.style.left = leftPosition);
-          }
-
-          if (customPosition.right) {
-            const rightPosition = subtractPixelValueFromValue(
-              customPosition.right,
-              parentEl.getBoundingClientRect().right -
+        }
+        case "end":
+        case "start": {
+          const containerSide =
+            RTL ^ (position === "end")
+              ? parentEl.getBoundingClientRect().left +
+                parentEl.getBoundingClientRect().width -
                 container.getBoundingClientRect().width
-            );
-
-            RTL
-              ? (container.style.right = rightPosition)
-              : (container.style.left = rightPosition);
-          }
-
-          if (customPosition.bottom) {
-            container.style.top = subtractPixelValueFromValue(
-              customPosition.bottom,
-              parentEl.getBoundingClientRect().bottom -
-                container.getBoundingClientRect().height
-            );
-          }
-        };
+              : parentEl.getBoundingClientRect().left;
+          container.style.left = `${Math.max(containerSide, 0)}px`;
+          break;
+        }
+        case "center-arrow-end":
+        case "center-arrow-start": {
+          const parentRect = parentEl.getBoundingClientRect();
+          const containerWidth = container.getBoundingClientRect().width;
+          const containerSide =
+            RTL ^ position.endsWith("end")
+              ? parentRect.left +
+                parentRect.width / 2 +
+                12 +
+                arrowWidth / 2 -
+                containerWidth
+              : parentRect.left + parentRect.width / 2 - 12 - arrowWidth / 2;
+          const maxContainerSide =
+            doc.documentElement.clientWidth - containerWidth;
+          container.style.left = `${Math.min(
+            maxContainerSide,
+            Math.max(containerSide, 0)
+          )}px`;
+        }
       }
     };
 
@@ -1144,13 +1118,121 @@ export class FeatureCallout {
       },
     };
 
+    const clearPosition = () => {
+      Object.keys(positioners).forEach(position => {
+        container.style[position] = "unset";
+      });
+      container.removeAttribute("arrow-position");
+    };
+
+    const setArrowPosition = position => {
+      let val;
+      switch (position) {
+        case "bottom":
+          val = "bottom";
+          break;
+        case "left":
+          val = "inline-start";
+          break;
+        case "right":
+          val = "inline-end";
+          break;
+        case "top-start":
+        case "top-center-arrow-start":
+          val = RTL ? "top-end" : "top-start";
+          break;
+        case "top-end":
+        case "top-center-arrow-end":
+          val = RTL ? "top-start" : "top-end";
+          break;
+        case "top":
+        default:
+          val = "top";
+          break;
+      }
+
+      container.setAttribute("arrow-position", val);
+    };
+
+    const addValueToPixelValue = (value, pixelValue) => {
+      return `${parseFloat(pixelValue) + value}px`;
+    };
+
+    const subtractPixelValueFromValue = (pixelValue, value) => {
+      return `${value - parseFloat(pixelValue)}px`;
+    };
+
+    const overridePosition = () => {
+      // We override _every_ positioner here, because we want to manually set
+      // all container.style.positions in every positioner's "position" function
+      // regardless of the actual arrow position
+
+      // Note: We override the position functions with new functions here, but
+      // they don't actually get executed until the respective position
+      // functions are called and this function is not executed unless the
+      // message has a custom position property.
+
+      // We're positioning relative to a parent element's bounds, if that parent
+      // element exists.
+
+      for (const position in positioners) {
+        if (!Object.prototype.hasOwnProperty.call(positioners, position)) {
+          continue;
+        }
+
+        positioners[position].position = () => {
+          if (customPosition.top) {
+            container.style.top = addValueToPixelValue(
+              parentEl.getBoundingClientRect().top,
+              customPosition.top
+            );
+          }
+
+          if (customPosition.left) {
+            const leftPosition = addValueToPixelValue(
+              parentEl.getBoundingClientRect().left,
+              customPosition.left
+            );
+
+            if (RTL) {
+              container.style.right = leftPosition;
+            } else {
+              container.style.left = leftPosition;
+            }
+          }
+
+          if (customPosition.right) {
+            const rightPosition = subtractPixelValueFromValue(
+              customPosition.right,
+              parentEl.getBoundingClientRect().right -
+                container.getBoundingClientRect().width
+            );
+
+            if (RTL) {
+              container.style.right = rightPosition;
+            } else {
+              container.style.left = rightPosition;
+            }
+          }
+
+          if (customPosition.bottom) {
+            container.style.top = subtractPixelValueFromValue(
+              customPosition.bottom,
+              parentEl.getBoundingClientRect().bottom -
+                container.getBoundingClientRect().height
+            );
+          }
+        };
+      }
+    };
+
     const calloutFits = position => {
       // Does callout element fit in this position relative
       // to the parent element without going off screen?
 
       // Only consider which edge of the callout the arrow points from,
       // not the alignment of the arrow along the edge of the callout
-      let edgePosition = position.split("-")[0];
+      let [edgePosition] = position.split("-");
       return (
         positioners[edgePosition].availableSpace() >
         positioners[edgePosition].neededSpace
@@ -1188,80 +1270,6 @@ export class FeatureCallout {
       // The callout will be adjusted to overlap the parent element so that
       // the former doesn't go off screen.
       return sortedPositions[0] || position;
-    };
-
-    const centerVertically = () => {
-      let topOffset =
-        (container.getBoundingClientRect().height -
-          parentEl.getBoundingClientRect().height) /
-        2;
-      container.style.top = `${getOffset(parentEl).top - topOffset}px`;
-    };
-
-    /**
-     * Horizontally align a top/bottom-positioned callout according to the
-     * passed position.
-     * @param {String} position one of...
-     *   - "center": for use with top/bottom. arrow is in the center, and the
-     *       center of the callout aligns with the parent center.
-     *   - "center-arrow-start": for use with center-arrow-top-start. arrow is
-     *       on the start (left) side of the callout, and the callout is aligned
-     *       so that the arrow points to the center of the parent element.
-     *   - "center-arrow-end": for use with center-arrow-top-end. arrow is on
-     *       the end, and the arrow points to the center of the parent.
-     *   - "start": currently unused. align the callout's starting edge with the
-     *       parent's starting edge.
-     *   - "end": currently unused. same as start but for the ending edge.
-     */
-    const alignHorizontally = position => {
-      switch (position) {
-        case "center": {
-          const sideOffset =
-            (parentEl.getBoundingClientRect().width -
-              container.getBoundingClientRect().width) /
-            2;
-          const containerSide = RTL
-            ? doc.documentElement.clientWidth -
-              getOffset(parentEl).right +
-              sideOffset
-            : getOffset(parentEl).left + sideOffset;
-          container.style[RTL ? "right" : "left"] = `${Math.max(
-            containerSide,
-            0
-          )}px`;
-          break;
-        }
-        case "end":
-        case "start": {
-          const containerSide =
-            RTL ^ (position === "end")
-              ? parentEl.getBoundingClientRect().left +
-                parentEl.getBoundingClientRect().width -
-                container.getBoundingClientRect().width
-              : parentEl.getBoundingClientRect().left;
-          container.style.left = `${Math.max(containerSide, 0)}px`;
-          break;
-        }
-        case "center-arrow-end":
-        case "center-arrow-start": {
-          const parentRect = parentEl.getBoundingClientRect();
-          const containerWidth = container.getBoundingClientRect().width;
-          const containerSide =
-            RTL ^ position.endsWith("end")
-              ? parentRect.left +
-                parentRect.width / 2 +
-                12 +
-                arrowWidth / 2 -
-                containerWidth
-              : parentRect.left + parentRect.width / 2 - 12 - arrowWidth / 2;
-          const maxContainerSide =
-            doc.documentElement.clientWidth - containerWidth;
-          container.style.left = `${Math.min(
-            maxContainerSide,
-            Math.max(containerSide, 0)
-          )}px`;
-        }
-      }
     };
 
     clearPosition(container);
@@ -1407,7 +1415,7 @@ export class FeatureCallout {
     const reactSrc = "resource://activity-stream/vendor/react.js";
     const domSrc = "resource://activity-stream/vendor/react-dom.js";
     // Add React script
-    const getReactReady = async () => {
+    const getReactReady = () => {
       return new Promise(resolve => {
         let reactScript = this.doc.createElement("script");
         reactScript.src = reactSrc;
@@ -1416,7 +1424,7 @@ export class FeatureCallout {
       });
     };
     // Add ReactDom script
-    const getDomReady = async () => {
+    const getDomReady = () => {
       return new Promise(resolve => {
         let domScript = this.doc.createElement("script");
         domScript.src = domSrc;
@@ -1529,7 +1537,7 @@ export class FeatureCallout {
     if (container) {
       // This results in rendering the Feature Callout
       await this._addScriptsAndRender();
-      this._observeRender(container.querySelector("#" + CONTENT_BOX_ID));
+      this._observeRender(container.querySelector(`#${CONTENT_BOX_ID}`));
       if (container.localName === "div") {
         this._addPositionListeners();
       }

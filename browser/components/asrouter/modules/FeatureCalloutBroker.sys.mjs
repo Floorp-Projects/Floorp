@@ -5,7 +5,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FeatureCallout: "resource:///modules/FeatureCallout.sys.mjs",
+  FeatureCallout: "resource:///modules/asrouter/FeatureCallout.sys.mjs",
 });
 
 /**
@@ -28,7 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @property {FeatureCalloutTheme} [theme] optional dynamic color theme.
  */
 
-/** @typedef {import("resource:///modules/FeatureCallout.sys.mjs").FeatureCalloutTheme} FeatureCalloutTheme */
+/** @typedef {import("resource:///modules/asrouter/FeatureCallout.sys.mjs").FeatureCalloutTheme} FeatureCalloutTheme */
 
 /**
  * @typedef {Object} FeatureCalloutItem

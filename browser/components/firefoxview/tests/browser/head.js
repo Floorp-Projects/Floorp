@@ -26,7 +26,7 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 const { FeatureCalloutMessages } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
+  "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
@@ -334,7 +334,7 @@ async function tearDown(sandbox) {
 const featureTourPref = "browser.firefox-view.feature-tour";
 const launchFeatureTourIn = win => {
   const { FeatureCallout } = ChromeUtils.importESModule(
-    "resource:///modules/FeatureCallout.sys.mjs"
+    "resource:///modules/asrouter/FeatureCallout.sys.mjs"
   );
   let callout = new FeatureCallout({
     win,

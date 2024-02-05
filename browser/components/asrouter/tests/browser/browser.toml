@@ -32,5 +32,13 @@ tags = "remote-settings"
 tags = "remote-settings"
 skip-if = ["a11y_checks"] # Bug 1854515 and 1858041 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
+["browser_feature_callout_in_chrome.js"]
+skip-if = [
+  "os == 'mac' && debug", # Bug 1804349
+  "win11_2009", # Bug 1804349
+]
+
+["browser_feature_callout_panel.js"]
+
 ["browser_trigger_listeners.js"]
 https_first_disabled = true

@@ -12,7 +12,7 @@ const { ASRouter } = ChromeUtils.import(
 );
 
 const { FeatureCalloutMessages } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
+  "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs"
 );
 
 const OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";
