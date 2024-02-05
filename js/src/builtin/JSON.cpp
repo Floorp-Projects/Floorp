@@ -19,6 +19,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
+#include "builtin/ParseRecordObject.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Object.h"                // JS::GetBuiltinClass
@@ -1720,6 +1721,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 /* https://262.ecma-international.org/14.0/#sec-internalizejsonproperty */
 static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
                                     HandleId name, HandleValue reviver,
+                                    ParseRecordObject* parseRecord,
                                     MutableHandleValue vp) {
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {
@@ -1761,7 +1763,9 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
         }
 
         /* Step 2a(iii)(1). */
-        if (!InternalizeJSONProperty(cx, obj, id, reviver, &newElement)) {
+        ParseRecordObject* elementRecord(nullptr);
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, elementRecord,
+                                     &newElement)) {
           return false;
         }
 
@@ -1800,7 +1804,9 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
 
         /* Step 2c(ii)(1). */
         id = keys[i];
-        if (!InternalizeJSONProperty(cx, obj, id, reviver, &newElement)) {
+        ParseRecordObject* entryRecord(nullptr);
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, entryRecord,
+                                     &newElement)) {
           return false;
         }
 
@@ -1833,9 +1839,17 @@ static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
 
   RootedValue keyVal(cx, StringValue(key));
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
-    RootedValue parseRecord(cx, JS::UndefinedValue());
-    return js::Call(cx, reviver, holder, keyVal, val, parseRecord, vp);
+  if (cx->realm()->creationOptions().getJSONParseWithSource() && parseRecord) {
+    RootedObject context(cx, NewPlainObject(cx));
+    if (!context) {
+      return false;
+    }
+    Rooted<Value> parseNode(cx, StringValue(parseRecord->parseNode));
+    if (!DefineDataProperty(cx, context, cx->names().source, parseNode)) {
+      return false;
+    }
+    RootedValue contextVal(cx, ObjectValue(*context));
+    return js::Call(cx, reviver, holder, keyVal, val, contextVal, vp);
   }
 #endif
   return js::Call(cx, reviver, holder, keyVal, val, vp);
@@ -1852,7 +1866,19 @@ static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
   }
 
   Rooted<jsid> id(cx, NameToId(cx->names().empty_));
-  return InternalizeJSONProperty(cx, obj, id, reviver, vp);
+  ParseRecordObject snapshot;
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  // TODO: get parseNode value somehow!
+  Rooted<JSString*> parseNode(cx, JS_NewStringCopyZ(cx, "1"));
+  if (!parseNode) {
+    return false;
+  }
+  Rooted<Value> val(cx, ObjectValue(*obj));
+  snapshot.parseNode = parseNode;
+  snapshot.key = id;
+  snapshot.value = vp;
+#endif
+  return InternalizeJSONProperty(cx, obj, id, reviver, &snapshot, vp);
 }
 
 template <typename CharT>
