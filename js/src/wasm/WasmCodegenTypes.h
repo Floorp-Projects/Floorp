@@ -298,6 +298,11 @@ struct TrapData {
 
   Trap trap;
   uint32_t bytecodeOffset;
+
+  // A return_call_indirect from the first function in an activation into
+  // a signature mismatch may leave us with only one frame. This frame is
+  // validly constructed, but has no debug frame yet.
+  bool failedUnwindSignatureMismatch;
 };
 
 // The (,Callable,Func)Offsets classes are used to record the offsets of
