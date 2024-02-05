@@ -39,6 +39,32 @@ interface nsIGfxInfo : nsISupports
 
   // XXX: Switch to a list of devices, rather than explicitly numbering them.
 
+  // Present on all platforms, but only useful on Android
+  cenum FontVisibilityDeviceDetermination : 8 {
+    Unassigned = 0,
+    Unknown_Platform = 1,
+    Windows_Platform = 2,
+    MacOS_Platform = 3,
+    Android_Unknown_Release_Version = 4,
+    Android_Unknown_Peloton = 5,
+    Android_Unknown_vbox = 6,
+    Android_Unknown_mitv = 7,
+    Android_Chromebook = 8,
+    Android_Amazon = 9,
+    Android_sub_9 = 10,
+    Android_9_11 = 11,
+    Android_12_plus = 12,
+    Linux_Unknown = 13,
+    Linux_Ubuntu_any = 14,
+    Linux_Ubuntu_20 = 15,
+    Linux_Ubuntu_22 = 16,
+    Linux_Fedora_any = 17,
+    Linux_Fedora_38 = 18,
+    Linux_Fedora_39 = 19
+  };
+  readonly attribute nsIGfxInfo_FontVisibilityDeviceDetermination fontVisibilityDetermination;
+  readonly attribute AString fontVisibilityDeterminationStr;
+
   /**
    * The name of the display adapter.
    */
