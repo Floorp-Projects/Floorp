@@ -23,7 +23,6 @@
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/FunctionRef.h"
 #include "mozilla/widget/InitData.h"
 #include "mozilla/widget/NativeMenu.h"
 
@@ -552,13 +551,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   void UpdatePopupPositions(nsRefreshDriver* aRefreshDriver);
 
   /**
-   * Get the first nsMenuChainItem that is matched by the matching callback
-   * function provided.
-   */
-  nsMenuChainItem* FirstMatchingPopup(
-      mozilla::FunctionRef<bool(nsMenuChainItem*)> aMatcher) const;
-
-  /**
    * Enable or disable anchor following on the popup if needed.
    */
   void UpdateFollowAnchor(nsMenuPopupFrame* aPopup);
@@ -740,9 +732,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   nsMenuChainItem* GetTopVisibleMenu() {
     return GetRollupItem(RollupKind::Menu);
   }
-
-  // Add the chain item to the chain and update mPopups to point to it.
-  void AddMenuChainItem(mozilla::UniquePtr<nsMenuChainItem>);
 
   // Removes the chain item from the chain and deletes it.
   void RemoveMenuChainItem(nsMenuChainItem*);

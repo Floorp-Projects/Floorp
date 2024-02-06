@@ -187,7 +187,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   bool IsFullyOccluded() const override { return mIsFullyOccluded; }
 
   void SetCursor(const Cursor&) override;
-  void SetCustomCursorAllowed(bool) override;
   void ClearCachedCursor() final {
     mCursor = {};
     mUpdateCursor = true;
@@ -695,7 +694,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
   Cursor mCursor;
-  bool mCustomCursorAllowed = true;
   BorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
   bool mIsTiled;

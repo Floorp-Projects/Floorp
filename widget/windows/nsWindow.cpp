@@ -3279,10 +3279,7 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
   sCurrentHCursorIsCustom = false;
   sCurrentCursor = aCursor;
 
-  HCURSOR cursor = nullptr;
-  if (mCustomCursorAllowed) {
-    cursor = CursorForImage(aCursor, GetDefaultScale());
-  }
+  HCURSOR cursor = CursorForImage(aCursor, GetDefaultScale());
   bool custom = false;
   if (cursor) {
     custom = true;

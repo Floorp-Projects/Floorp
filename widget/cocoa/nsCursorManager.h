@@ -35,8 +35,7 @@
 // As above, but returns an error if the cursor isn't custom or we couldn't set
 // it for some reason.
 - (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
-          widgetScaleFactor:(CGFloat)aWidgetScaleFactor
-                forceUpdate:(bool)aForceUpdate;
+          widgetScaleFactor:(CGFloat)aWidgetScaleFactor;
 
 /*! @method     sharedInstance
     @abstract   Get the Singleton instance of the cursor manager.
