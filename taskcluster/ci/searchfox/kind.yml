@@ -138,6 +138,7 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
                 - vs
+                - windows-rs
             fetch:
                 - upx-3.95-win
 

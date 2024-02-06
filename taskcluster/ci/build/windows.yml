@@ -5,6 +5,9 @@
 job-defaults:
     run:
         using: mozharness
+    fetches:
+        toolchain:
+            - windows-rs
 
 win32/debug:
     description: "Win32 Debug"

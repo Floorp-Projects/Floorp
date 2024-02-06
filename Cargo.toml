@@ -108,6 +108,9 @@ windows-targets_0_48 = { package = "windows-targets", path = "build/rust/windows
 # Patch windows-sys from 0.48.0 to 0.52.0
 windows-sys = { path = "build/rust/windows-sys" }
 
+# Patch windows to use a non-vendored local copy of the crate.
+windows = { path = "build/rust/windows" }
+
 # Dummy oslog replacement. It's only used by glean in code that is not actually used.
 oslog = { path = "build/rust/oslog" }
 

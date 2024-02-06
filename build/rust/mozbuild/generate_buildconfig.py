@@ -65,6 +65,26 @@ def generate(output):
         )
     )
 
+    windows_rs_dir = buildconfig.substs.get("MOZ_WINDOWS_RS_DIR")
+    if windows_rs_dir:
+        output.write(
+            textwrap.dedent(
+                f"""
+                /// Macro used to name a path in the srcdir for use with macros like `include!`
+                #[macro_export]
+                macro_rules! windows_rs_path {{
+                    ($path:literal) => {{
+                        concat!({escape_rust_string(windows_rs_dir + "/")}, $path)
+                    }}
+                }}
+
+                /// The path to the windows-rs crate, for use in build scripts
+                pub const WINDOWS_RS_DIR: &str = {escape_rust_string(windows_rs_dir)};
+
+                """
+            )
+        )
+
     # Finally, write out some useful booleans from the buildconfig.
     output.write(generate_bool("MOZ_FOLD_LIBS"))
     output.write(generate_bool("NIGHTLY_BUILD"))

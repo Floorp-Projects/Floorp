@@ -75,14 +75,13 @@ Cargo.lock to the HEAD version, run `git checkout -- Cargo.lock` or
 """
 
 
-PACKAGES_WE_DONT_WANT = {
-    "windows": "The windows crate is too big to vendor.",
-}
+PACKAGES_WE_DONT_WANT = {}
 
 PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
     "autocfg",
     "cmake",
     "vcpkg",
+    "windows",
     "windows-targets",
 ]
 
