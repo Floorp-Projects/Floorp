@@ -124,7 +124,6 @@ module.exports = {
     "block-scoped-var": "error",
     "consistent-this": ["error", "use-bind"],
     eqeqeq: "error",
-    "for-direction": "error",
     "func-name-matching": "error",
     "getter-return": "error",
     "guard-for-in": "error",
