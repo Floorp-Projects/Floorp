@@ -53,7 +53,7 @@ def main():
 
     # Release information
     # release_version = get_release_version() # disable for testing
-    release_version = "125.0b3"
+    release_version = "125.0b4"
     release_type = get_release_type(release_version)
 
     # Build milestone information

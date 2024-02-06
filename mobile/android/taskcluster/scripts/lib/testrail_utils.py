@@ -28,7 +28,7 @@ import textwrap
 
 
 def build_milestone_name(product_type, release_type, version_number):
-    return f"Automated smoke testing sign-off - {product_type} {release_type} {version_number}"
+    return f"Build Validation sign-off - {product_type} {release_type} {version_number}"
 
 
 def build_milestone_description(milestone_name):
