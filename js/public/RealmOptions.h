@@ -194,14 +194,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  bool getPropertyErrorMessageFixEnabled() const {
-    return propertyErrorMessageFix_;
-  }
-  RealmCreationOptions& setPropertyErrorMessageFixEnabled(bool flag) {
-    propertyErrorMessageFix_ = flag;
-    return *this;
-  }
-
   bool getIteratorHelpersEnabled() const { return iteratorHelpers_; }
   RealmCreationOptions& setIteratorHelpersEnabled(bool flag) {
     iteratorHelpers_ = flag;
@@ -305,7 +297,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
   bool toSource_ = false;
-  bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD

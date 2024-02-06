@@ -737,7 +737,6 @@ bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
-bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
@@ -4133,7 +4132,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               ? JS::WeakRefSpecifier::EnabledWithCleanupSome
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
-      .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
       .setIteratorHelpersEnabled(enableIteratorHelpers)
       .setShadowRealmsEnabled(enableShadowRealms)
 #ifdef NIGHTLY_BUILD
@@ -12152,6 +12150,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
 #endif
 
+  JS::Prefs::setAtStartup_property_error_message_fix(
+      !op.getBoolOption("disable-property-error-message-fix"));
+
   if (op.getBoolOption("list-prefs")) {
     ListJSPrefs();
     return false;
@@ -12344,8 +12345,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
-  enablePropertyErrorMessageFix =
-      !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
 #ifdef NIGHTLY_BUILD
