@@ -873,9 +873,13 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
   }
 
   ffi::WGPUShaderModuleCompilationMessage message;
+  ErrorBuffer error;
 
   bool ok = ffi::wgpu_server_device_create_shader_module(
-      mContext.get(), aDeviceId, aModuleId, label, &aCode, &message);
+      mContext.get(), aDeviceId, aModuleId, label, &aCode, &message,
+      error.ToFFI());
+
+  ForwardError(aDeviceId, error);
 
   nsTArray<WebGPUCompilationMessage> messages;
 
