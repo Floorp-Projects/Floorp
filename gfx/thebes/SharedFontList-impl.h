@@ -200,12 +200,6 @@ class FontList {
    */
   Pointer Alloc(uint32_t aSize);
 
-  /**
-   * Convert a native pointer to a shared-memory Pointer record that can be
-   * passed between processes.
-   */
-  Pointer ToSharedPointer(const void* aPtr);
-
   uint32_t GetGeneration() { return GetHeader().mGeneration; }
 
   /**

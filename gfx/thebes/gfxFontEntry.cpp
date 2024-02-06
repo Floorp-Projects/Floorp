@@ -129,12 +129,13 @@ gfxFontEntry::~gfxFontEntry() {
 // the entry, so locking not required.
 void gfxFontEntry::InitializeFrom(fontlist::Face* aFace,
                                   const fontlist::Family* aFamily) {
+  mShmemFace = aFace;
+  mShmemFamily = aFamily;
   mStyleRange = aFace->mStyle;
   mWeightRange = aFace->mWeight;
   mStretchRange = aFace->mStretch;
   mFixedPitch = aFace->mFixedPitch;
   mIsBadUnderlineFont = aFamily->IsBadUnderlineFamily();
-  mShmemFace = aFace;
   auto* list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
   mFamilyName = aFamily->DisplayName().AsString(list);
   mHasCmapTable = TrySetShmemCharacterMap();
