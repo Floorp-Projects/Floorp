@@ -29,13 +29,14 @@
 # -----------
 # A pref definition looks like this:
 #
-#   - name: <pref-name>                    # mandatory
-#     type: <cpp-type>                     # mandatory
-#     value: <default-value>               # mandatory
-#     mirror: <never | once | always>      # mandatory
-#     do_not_use_directly: <true | false>  # optional
-#     include: <header-file>               # optional
-#     rust: <true | false>                 # optional
+#   - name: <pref-name>                                 # mandatory
+#     type: <cpp-type>                                  # mandatory
+#     value: <default-value>                            # mandatory
+#     mirror: <never | once | always>                   # mandatory
+#     do_not_use_directly: <true | false>               # optional
+#     include: <header-file>                            # optional
+#     rust: <true | false>                              # optional
+#     set_spidermonkey_pref: <false | startup | always> # optional
 #
 # - `name` is the name of the pref, without double-quotes, as it appears
 #   in about:config. It is used in most libpref API functions (from both C++
@@ -97,6 +98,13 @@
 # - `rust` indicates if the mirror variable is used by Rust code. If so, it
 #   will be usable via the `static_prefs::pref!` macro, e.g.
 #   `static_prefs::pref!("layout.css.cross-fade.enabled")`.
+#
+# - `set_spidermonkey_pref` indicates whether SpiderMonkey boilerplate code
+#   should be generated for this pref. If this is set to 'startup', the
+#   pref on the SpiderMonkey side is only set during process startup. If set to
+#   'always', the SpiderMonkey pref value is also updated when this pref is
+#   changed at runtime.
+#   This option is only valid for javascript.options.* prefs.
 #
 # The getter function's base name is the same as the pref's name, but with
 # '.' or '-' chars converted to '_', to make a valid identifier. For example,

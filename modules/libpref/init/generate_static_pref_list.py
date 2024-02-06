@@ -20,6 +20,7 @@ VALID_KEYS = {
     "do_not_use_directly",
     "include",
     "rust",
+    "set_spidermonkey_pref",
 }
 
 # Each key is a C++ type; its value is the equivalent non-atomic C++ type.

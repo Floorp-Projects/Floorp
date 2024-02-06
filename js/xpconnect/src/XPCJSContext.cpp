@@ -45,6 +45,7 @@
 #include "js/HelperThreadAPI.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
+#include "js/Prefs.h"
 #include "js/WasmFeatures.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
@@ -877,6 +878,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   //
   // 'Live' prefs are handled by ReloadPrefsCallback below.
 
+  // Set all JS::Prefs.
+  SET_JS_PREFS_FROM_BROWSER_PREFS;
+
   JSContext* cx = xpccx->Context();
 
   // Some prefs are unlisted in all.js / StaticPrefs (and thus are invisible in
@@ -1007,6 +1011,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 
 static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   // Note: Prefs that require a restart are handled in LoadStartupJSPrefs above.
+
+  // Update all non-startup JS::Prefs.
+  SET_NON_STARTUP_JS_PREFS_FROM_BROWSER_PREFS;
 
   auto xpccx = static_cast<XPCJSContext*>(aXpccx);
   JSContext* cx = xpccx->Context();

@@ -119,6 +119,7 @@ EXPORTS += [
 ]
 
 EXPORTS.js += [
+    "!../public/PrefsGenerated.h",
     "../public/AllocationLogging.h",
     "../public/AllocationRecording.h",
     "../public/AllocPolicy.h",
@@ -170,6 +171,7 @@ EXPORTS.js += [
     "../public/MemoryMetrics.h",
     "../public/Modules.h",
     "../public/Object.h",
+    "../public/Prefs.h",
     "../public/Principals.h",
     "../public/Printer.h",
     "../public/Printf.h",
@@ -396,6 +398,7 @@ UNIFIED_SOURCES += [
     "vm/OffThreadPromiseRuntimeState.cpp",
     "vm/PIC.cpp",
     "vm/PlainObject.cpp",
+    "vm/Prefs.cpp",
     "vm/Printer.cpp",
     "vm/Probes.cpp",
     "vm/PromiseLookup.cpp",
@@ -624,6 +627,13 @@ GeneratedFile(
     script="builtin/embedjs.py",
     entry_point="generate_selfhosted",
     inputs=selfhosted_inputs,
+)
+
+GeneratedFile(
+    "../public/PrefsGenerated.h",
+    script="GeneratePrefs.py",
+    entry_point="generate_prefs_header",
+    inputs=["../../modules/libpref/init/StaticPrefList.yaml"],
 )
 
 if CONFIG["JS_HAS_CTYPES"]:
