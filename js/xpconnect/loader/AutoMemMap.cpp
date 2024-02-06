@@ -34,7 +34,7 @@ Result<Ok, nsresult> AutoMemMap::init(nsIFile* file, int flags, int mode,
                                       PRFileMapProtect prot) {
   MOZ_ASSERT(!fd);
 
-  MOZ_TRY(file->OpenNSPRFileDesc(flags, mode, &fd.rwget()));
+  MOZ_TRY(file->OpenNSPRFileDesc(flags, mode, getter_Transfers(fd)));
 
   return initInternal(prot);
 }
@@ -48,7 +48,7 @@ Result<Ok, nsresult> AutoMemMap::init(const FileDescriptor& file,
 
   auto handle = file.ClonePlatformHandle();
 
-  fd = PR_ImportFile(PROsfd(handle.get()));
+  fd.reset(PR_ImportFile(PROsfd(handle.get())));
   if (!fd) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -79,7 +79,7 @@ Result<Ok, nsresult> AutoMemMap::initInternal(PRFileMapProtect prot,
     size_ = fileInfo.size;
   }
 
-  fileMap = PR_CreateFileMap(fd, 0, prot);
+  fileMap = PR_CreateFileMap(fd.get(), 0, prot);
   if (!fileMap) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -151,7 +151,7 @@ void AutoMemMap::reset() {
     handle_ = nullptr;
   }
 #endif
-  fd.dispose();
+  fd = nullptr;
 }
 
 }  // namespace loader

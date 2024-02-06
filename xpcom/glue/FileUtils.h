@@ -17,7 +17,7 @@
 #include "prio.h"
 #include "prlink.h"
 
-#include "mozilla/Scoped.h"
+#include <memory>  // unique_ptr
 #include "nsIFile.h"
 #include <errno.h>
 #include <limits.h>
@@ -32,51 +32,26 @@ typedef int filedesc_t;
 typedef const char* pathstr_t;
 #endif
 
-/**
- * ScopedCloseFD is a RAII wrapper for POSIX file descriptors
- *
- * Instances |close()| their fds when they go out of scope.
- */
-struct ScopedCloseFDTraits {
-  typedef int type;
-  static type empty() { return -1; }
-  static void release(type aFd) {
-    if (aFd != -1) {
-      close(aFd);
-    }
-  }
-};
-typedef Scoped<ScopedCloseFDTraits> ScopedClose;
-
 #if defined(MOZILLA_INTERNAL_API)
 
-/**
- * AutoFDClose is a RAII wrapper for PRFileDesc.
- *
- * Instances |PR_Close| their fds when they go out of scope.
- **/
-struct ScopedClosePRFDTraits {
-  typedef PRFileDesc* type;
-  static type empty() { return nullptr; }
-  static void release(type aFd) {
+struct PRCloseDeleter {
+  void operator()(PRFileDesc* aFd) {
     if (aFd) {
       PR_Close(aFd);
     }
   }
 };
-typedef Scoped<ScopedClosePRFDTraits> AutoFDClose;
+using AutoFDClose = UniquePtr<PRFileDesc, PRCloseDeleter>;
 
 /* RAII wrapper for FILE descriptors */
-struct ScopedCloseFileTraits {
-  typedef FILE* type;
-  static type empty() { return nullptr; }
-  static void release(type aFile) {
-    if (aFile) {
-      fclose(aFile);
+struct FCloseDeleter {
+  void operator()(FILE* p) {
+    if (p) {
+      fclose(p);
     }
   }
 };
-typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
+using ScopedCloseFile = UniquePtr<FILE, FCloseDeleter>;
 
 /**
  * Fallocate efficiently and continuously allocates files via fallocate-type

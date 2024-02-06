@@ -176,14 +176,14 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
       return false;
     }
 
-    if (fseek(file, 0, SEEK_END)) {
+    if (fseek(file.get(), 0, SEEK_END)) {
       // If we can't seek for some reason, better to just not limit the log at
       // all and hope to sort out large logs upon further analysis.
       return false;
     }
 
     // `ftell` returns a positive `long`, which might be more than 32 bits.
-    uint64_t fileSize = static_cast<uint64_t>(ftell(file));
+    uint64_t fileSize = static_cast<uint64_t>(ftell(file.get()));
 
     if (fileSize <= aSize) {
       return true;
@@ -192,7 +192,7 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
     uint64_t minBytesToDrop = fileSize - aSize;
     uint64_t numBytesDropped = 0;
 
-    if (fseek(file, 0, SEEK_SET)) {
+    if (fseek(file.get(), 0, SEEK_SET)) {
       // Same as above: if we can't seek, hope for the best.
       return false;
     }
@@ -250,11 +250,12 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
     // `fgets` always null terminates.  If the line is too long, it won't
     // include a trailing '\n' but will be null-terminated.
     UniquePtr<char[]> line = MakeUnique<char[]>(aLongLineSize + 1);
-    while (fgets(line.get(), aLongLineSize + 1, file)) {
+    while (fgets(line.get(), aLongLineSize + 1, file.get())) {
       if (numBytesDropped >= minBytesToDrop) {
-        if (fputs(line.get(), temp) < 0) {
+        if (fputs(line.get(), temp.get()) < 0) {
           NS_WARNING(
-              nsPrintfCString("fputs failed: ferror %d\n", ferror(temp)).get());
+              nsPrintfCString("fputs failed: ferror %d\n", ferror(temp.get()))
+                  .get());
           failedToWrite = true;
           break;
         }

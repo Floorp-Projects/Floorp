@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "mozilla/FileUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -166,18 +167,6 @@ inline FILE* TS_tfopen(const char* aPath, const char* aMode) {
 }
 #endif
 
-/* RAII wrapper for FILE descriptors */
-struct ScopedCloseFileTraits {
-  typedef FILE* type;
-  static type empty() { return nullptr; }
-  static void release(type aFile) {
-    if (aFile) {
-      fclose(aFile);
-    }
-  }
-};
-typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
-
 #if !defined(MOZ_LINKER) && !defined(__ANDROID__)
 static void XPCOMGlueUnload() {
   while (sTop) {
@@ -275,8 +264,12 @@ static XPCOMGlueLoadResult XPCOMGlueLoad(
     strcat(xpcomDir, ".gtest");
   }
 
-  ScopedCloseFile flist;
-  flist = TS_tfopen(xpcomDir, READ_TEXTMODE);
+  const auto flist = TS_tfopen(xpcomDir, READ_TEXTMODE);
+  const auto cleanup = MakeScopeExit([&]() {
+    if (flist) {
+      fclose(flist);
+    }
+  });
   if (!flist) {
     return Err(AsVariant(NS_ERROR_FAILURE));
   }

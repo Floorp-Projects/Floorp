@@ -4175,12 +4175,12 @@ nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
     uint32_t offset = zip->GetDataOffset(zipItem);
     uint32_t size = zipItem->RealSize();
     mozilla::AutoFDClose pr_fd;
-    rv = aJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, &pr_fd.rwget());
+    rv = aJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, getter_Transfers(pr_fd));
     if (NS_FAILED(rv)) {
       return rv;
     }
     mMapPtr = JS::CreateMappedArrayBufferContents(
-        PR_FileDesc2NativeHandle(pr_fd), offset, size);
+        PR_FileDesc2NativeHandle(pr_fd.get()), offset, size);
     if (mMapPtr) {
       mLength = size;
       return NS_OK;

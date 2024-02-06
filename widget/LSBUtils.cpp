@@ -122,7 +122,7 @@ bool GetLSBRelease(nsACString& aDistributor, nsACString& aDescription,
   }
 
   char dist[256], desc[256], release[256], codename[256];
-  if (fscanf(stream,
+  if (fscanf(stream.get(),
              "Distributor ID:\t%255[^\n]\n"
              "Description:\t%255[^\n]\n"
              "Release:\t%255[^\n]\n"
