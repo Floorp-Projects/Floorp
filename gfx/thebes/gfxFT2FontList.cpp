@@ -427,7 +427,7 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
     fontlist::FontList* sharedFontList = pfl->SharedFontList();
     if (!IsUserFont() && mShmemFace) {
-      mShmemFace->SetCharacterMap(sharedFontList, charmap);  // async
+      mShmemFace->SetCharacterMap(sharedFontList, charmap, mShmemFamily);
       if (TrySetShmemCharacterMap()) {
         setCharMap = false;
       }

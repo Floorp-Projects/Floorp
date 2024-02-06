@@ -131,7 +131,6 @@ using mozilla::dom::PermitUnloadResult from "nsIDocumentViewer.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
 [MoveOnly] using base::SharedMemoryHandle from "base/shared_memory.h";
-using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
 using FontVisibility from "gfxFontEntry.h";
 using mozilla::dom::MediaControlAction from "mozilla/dom/MediaControlKeySource.h";
@@ -1438,24 +1437,27 @@ parent:
      * @param aGeneration
      *   Font-list generation, so requests relating to an obsolete list can be
      *   ignored (see comments for GetFontListShmBlock).
-     * @param aFacePtr
-     *   Font-list shared-memory "pointer" to the Face record to be updated.
-     *   A Pointer is a record of a shared-memory block index and an offset
-     *   within that block, which each process that maps the block can convert
-     *   into a real pointer in its address space.
+     * @param aFamilyIndex
+     *   Index of the font family in the font list (see aAlias for which list).
+     * @param aAlias
+     *   Whether aFamilyIndex refers to the Families() or AliasFamilies() list.
+     * @param aFaceIndex
+     *   Index of the face within the family's Faces() list.
      * @param aMap
      *   The character coverage map of the face. (This will be stored as a
      *   SharedBitSet record within the shared font list, and the Face record
      *   will be updated to reference it.)
      */
-    async SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
+    async SetCharacterMap(uint32_t aGeneration, uint32_t aFamilyIndex, bool aAlias,
+                          uint32_t aFaceIndex, gfxSparseBitSet aMap);
 
     /**
      * Ask the parent to set up the merged charmap for a family, to accelerate
      * future fallback searches.
-     * aFamilyPtr may refer to an element of either the Families() or AliasFamilies().
+     * aFamilyIndex may refer to an element in either Families() or AliasFamilies(),
+     * with aAlias determining which.
      */
-    async SetupFamilyCharMap(uint32_t aGeneration, Pointer aFamilyPtr);
+    async SetupFamilyCharMap(uint32_t aGeneration, uint32_t aFamilyIndex, bool aAlias);
 
     /**
      * Ask the parent to try and complete the InitOtherFamilyNames task, because

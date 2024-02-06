@@ -1140,17 +1140,19 @@ class ContentParent final : public PContentParent,
                                                const uint32_t& aFamilyIndex,
                                                const bool& aLoadCmaps);
 
-  mozilla::ipc::IPCResult RecvSetCharacterMap(
-      const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFacePtr,
-      const gfxSparseBitSet& aMap);
+  mozilla::ipc::IPCResult RecvSetCharacterMap(const uint32_t& aGeneration,
+                                              const uint32_t& aFamilyIndex,
+                                              const bool& aAlias,
+                                              const uint32_t& aFaceIndex,
+                                              const gfxSparseBitSet& aMap);
 
   mozilla::ipc::IPCResult RecvInitOtherFamilyNames(const uint32_t& aGeneration,
                                                    const bool& aDefer,
                                                    bool* aLoaded);
 
-  mozilla::ipc::IPCResult RecvSetupFamilyCharMap(
-      const uint32_t& aGeneration,
-      const mozilla::fontlist::Pointer& aFamilyPtr);
+  mozilla::ipc::IPCResult RecvSetupFamilyCharMap(const uint32_t& aGeneration,
+                                                 const uint32_t& aIndex,
+                                                 const bool& aAlias);
 
   mozilla::ipc::IPCResult RecvStartCmapLoading(const uint32_t& aGeneration,
                                                const uint32_t& aStartIndex);
