@@ -99,6 +99,10 @@ PER_PROJECT_PARAMETERS = {
         "target_tasks_method": "default",
         "release_type": "nightly-pine",
     },
+    "larch": {
+        "target_tasks_method": "default",
+        "release_type": "nightly-larch",
+    },
     "kaios": {
         "target_tasks_method": "kaios_tasks",
     },

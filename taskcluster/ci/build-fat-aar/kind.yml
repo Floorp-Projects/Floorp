@@ -71,6 +71,7 @@ job-defaults:
                     by-project:
                         try: nightly-try
                         default: nightly
+                nightly-larch: nightly-larch
                 nightly-oak: nightly-oak
                 nightly-pine: nightly-pine
                 beta:
