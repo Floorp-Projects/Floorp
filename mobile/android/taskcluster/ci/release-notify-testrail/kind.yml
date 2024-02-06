@@ -14,9 +14,6 @@ task-defaults:
     worker:
         docker-image: {in-tree: ui-tests}
         max-run-time: 120
-        env:
-            TESTRAIL_PROJECT_ID: '59' # Fenix Browser
-            TESTRAIL_TEST_SUITE_ID: '49319' # Test Automation Release Milestone
     run:
         use-caches: false
         using: run-commands
@@ -35,29 +32,36 @@ task-defaults:
 
 tasks:
     create-milestone-focus:
-        dependencies:
-            ui-test-apk: ui-test-apk-focus-arm-beta
+        # disable for testing
+        # dependencies:
+            # ui-test-apk: ui-test-apk-focus-arm-beta
         description: Create Testrail Milestone for Focus
-        run-on-tasks-for: [github-push]
-        run-on-git-branches: [releases_v]
+        # run-on-tasks-for: [github-push]
+        # run-on-git-branches: [releases_v]
+        run-on-tasks-for: [github-pull-request] # use this for testing
+        run-on-git-branches: [mte-2053]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work
                 - ["cd", "focus-android"]
             commands:
                 - [python3, "../taskcluster/scripts/testrail_main.py"]
-
         worker:
             env:
                 SHIPPING_PRODUCT: focus
                 TESTRAIL_PRODUCT_TYPE: Focus
+                TESTRAIL_PROJECT_ID: '48' # Fenix Browser
+                TESTRAIL_TEST_SUITE_ID: '49386' # Test Automation Release Milestone - Focus
     
     create-milestone-fenix:
-        dependencies:
-            ui-test-apk: ui-test-apk-fenix-arm-beta
+        # disable for testing
+        # dependencies:
+            # ui-test-apk: ui-test-apk-fenix-arm-beta
         description: Create Testrail Milestone for Fenix
-        run-on-tasks-for: [github-push]
-        run-on-git-branches: [releases_v]
+        # run-on-tasks-for: [github-push]
+        # run-on-git-branches: [releases_v]
+        run-on-tasks-for: [github-pull-request] # use this for testing
+        run-on-git-branches: [mte-2053]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work
@@ -68,4 +72,5 @@ tasks:
             env:
                 SHIPPING_PRODUCT: fenix
                 TESTRAIL_PRODUCT_TYPE: Firefox
-            
+                TESTRAIL_PROJECT_ID: '59' # Fenix Browser
+                TESTRAIL_TEST_SUITE_ID: '49319' # Test Automation Release Milestone - Fenix
