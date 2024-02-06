@@ -31,6 +31,7 @@
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo, JS::XrayJitInfo
 #include "js/GCAPI.h"               // JS::AutoSuppressGCAnalysis
+#include "js/Prefs.h"               // JS::Prefs
 #include "js/RegExpFlags.h"         // JS::RegExpFlags
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "js/Utility.h"             // JS::AutoEnterOOMUnsafeRegion
@@ -14155,7 +14156,7 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   //
   // This assignment pops the fuse, however we can still use the dynamic check
   // version of this IC, as the actual -value- is still correct.
-  bool useDynamicCheck = !intact || !cx_->options().enableDestructuringFuse();
+  bool useDynamicCheck = !intact || !JS::Prefs::destructuring_fuse();
   if (useDynamicCheck) {
     // Guard on Array.prototype[@@iterator].
     ObjOperandId arrProtoId = writer.loadObject(arrProto);

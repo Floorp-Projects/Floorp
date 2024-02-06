@@ -746,7 +746,6 @@ bool shell::enableJSONParseWithSource = false;
 #endif
 bool shell::enableImportAttributes = false;
 bool shell::enableImportAttributesAssertSyntax = false;
-bool shell::enableDestructuringFuse = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -12149,6 +12148,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
 #endif
 
+  JS::Prefs::setAtStartup_destructuring_fuse(
+      !op.getBoolOption("disable-destructuring-fuse"));
   JS::Prefs::setAtStartup_property_error_message_fix(
       !op.getBoolOption("disable-property-error-message-fix"));
 
@@ -12354,7 +12355,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("enable-import-assertions");
   enableImportAttributes = op.getBoolOption("enable-import-attributes") ||
                            enableImportAttributesAssertSyntax;
-  enableDestructuringFuse = !op.getBoolOption("disable-destructuring-fuse");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
@@ -12362,8 +12362,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setImportAttributes(enableImportAttributes)
-      .setImportAttributesAssertSyntax(enableImportAttributesAssertSyntax)
-      .setEnableDestructuringFuse(enableDestructuringFuse);
+      .setImportAttributesAssertSyntax(enableImportAttributesAssertSyntax);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
