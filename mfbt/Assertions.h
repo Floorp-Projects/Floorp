@@ -480,6 +480,21 @@ struct AssertionConditionType {
 #endif
 
 /*
+ * MOZ_ASSERT_DEBUG_OR_FUZZING is like a MOZ_ASSERT but also enabled in builds
+ * that are non-DEBUG but FUZZING. This is useful for checks that are too
+ * expensive for Nightly in general but are still indicating potentially
+ * critical bugs.
+ * In fuzzing builds, the assert is rewritten to be a diagnostic assert because
+ * we already use this in other sensitive places and fuzzing automation is
+ * set to act on these under all circumstances.
+ */
+#ifdef FUZZING
+#  define MOZ_ASSERT_DEBUG_OR_FUZZING(...) MOZ_DIAGNOSTIC_ASSERT(__VA_ARGS__)
+#else
+#  define MOZ_ASSERT_DEBUG_OR_FUZZING(...) MOZ_ASSERT(__VA_ARGS__)
+#endif
+
+/*
  * MOZ_ASSERT_IF(cond1, cond2) is equivalent to MOZ_ASSERT(cond2) if cond1 is
  * true.
  *
