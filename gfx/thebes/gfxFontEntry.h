@@ -555,6 +555,7 @@ class gfxFontEntry {
   gfxCharacterMap* GetCharacterMap() const { return mCharacterMap; }
 
   mozilla::fontlist::Face* mShmemFace = nullptr;
+  const mozilla::fontlist::Family* mShmemFamily = nullptr;
 
   mozilla::Atomic<const SharedBitSet*> mShmemCharacterMap;
   const SharedBitSet* GetShmemCharacterMap() const {
