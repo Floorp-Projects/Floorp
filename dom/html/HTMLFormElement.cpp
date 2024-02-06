@@ -170,7 +170,8 @@ void HTMLFormElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
 
 nsDOMTokenList* HTMLFormElement::RelList() {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+    mRelList =
+        new nsDOMTokenList(this, nsGkAtoms::rel, sAnchorAndFormRelValues);
   }
   return mRelList;
 }

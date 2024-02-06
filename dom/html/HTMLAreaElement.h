@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLAreaElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -18,9 +17,7 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
-class HTMLAreaElement final : public nsGenericHTMLElement,
-                              public Link,
-                              public AnchorAreaFormRelValues {
+class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
  public:
   explicit HTMLAreaElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

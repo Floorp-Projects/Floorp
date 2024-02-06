@@ -146,7 +146,6 @@ EXPORTS.mozilla.dom += [
     "!UseCounterWorkerList.h",
     "AbstractRange.h",
     "AncestorIterator.h",
-    "AnchorAreaFormRelValues.h",
     "AnimationFrameProvider.h",
     "AnonymousContent.h",
     "Attr.h",
@@ -311,7 +310,6 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 UNIFIED_SOURCES += [
     "!UseCounterMetrics.cpp",
     "AbstractRange.cpp",
-    "AnchorAreaFormRelValues.cpp",
     "AnimationFrameProvider.cpp",
     "AnonymousContent.cpp",
     "Attr.cpp",

@@ -10,18 +10,13 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/RadioGroupContainer.h"
-#include "nsCOMPtr.h"
 #include "nsIFormControl.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 #include "nsInterfaceHashtable.h"
-#include "nsRefPtrHashtable.h"
-#include "nsTHashMap.h"
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 
 class nsIMutableArray;
@@ -37,8 +32,7 @@ class HTMLFormSubmission;
 class HTMLImageElement;
 class FormData;
 
-class HTMLFormElement final : public nsGenericHTMLElement,
-                              public AnchorAreaFormRelValues {
+class HTMLFormElement final : public nsGenericHTMLElement {
   friend class HTMLFormControlsCollection;
 
  public:

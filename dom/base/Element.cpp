@@ -1107,6 +1107,9 @@ already_AddRefed<DOMRectList> Element::GetClientRects() {
   return rectList.forget();
 }
 
+const DOMTokenListSupportedToken Element::sAnchorAndFormRelValues[] = {
+    "noreferrer", "noopener", "opener", nullptr};
+
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attribute
 static constexpr nsAttrValue::EnumTable kLoadingTable[] = {
     {"eager", Element::Loading::Eager},
