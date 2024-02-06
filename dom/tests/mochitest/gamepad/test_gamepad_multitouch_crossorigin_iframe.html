@@ -18,9 +18,7 @@ let tests = [
   touchAdd,
   touchcheck1,
   touchAdd,
-  touchcheck2,
-  touchAdd,
-  touchcheck3
+  touchcheck2
 ];
 
 let gamepad_index;
@@ -29,13 +27,10 @@ let touchData1 = [{touchId: 0, surfaceId: 0, pos: new Float32Array([-0.5, 0.5]),
                   {touchId: 1, surfaceId: 0, pos: new Float32Array([-0.1, 1.0]), surf: new Float32Array([100, 100])}];
 let touchData2 = [{touchId: 2, surfaceId: 0, pos: new Float32Array([-0.2, 0.3]), surf: new Float32Array([120, 200])},
                   {touchId: 3, surfaceId: 0, pos: new Float32Array([-0.4, 0.7]), surf: new Float32Array([120, 200])}];
-let touchData3 = [{touchId: 4, surfaceId: 0, pos: new Float32Array([-0.5, 0.6]), surf: new Float32Array([150, 100])},
-                  {touchId: 5, surfaceId: 0, pos: new Float32Array([-0.3, 0.8]), surf: new Float32Array([150, 100])}];
 
 let data = [
   touchData1,
-  touchData2,
-  touchData3
+  touchData2
 ];
 let dataNum = 0;
 
@@ -108,10 +103,6 @@ function checkValueInFloat32Array(array1, array2) {
   return true;
 }
 
-function setFrameVisible(f, visible) {
-  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
-}
-
 async function touchAdd() {
   for(let count = 0; count < data[dataNum].length; count++) {
     const touch = data[dataNum][count];
@@ -125,7 +116,7 @@ async function touchAdd() {
 
 async function touchcheck1() {
   let touches = f1.contentWindow.gamepad.touchEvents;
-  is(touches.length, touchData1.length, "f1 number of touches");
+  is(touches.length, data[0].length, "f1 number of touches");
 
   let count = 0;
   touches.forEach(function(touch) {
@@ -158,8 +149,6 @@ async function touchcheck1() {
     ++count;
   });
   
-  // Making f2 to be at the background.
-  setFrameVisible(f2, false);
   pressButton();
 }
 
@@ -170,9 +159,9 @@ async function touchcheck2() {
   let count = 0;
   touches.forEach(function(touch) {
     is(touch.touchId, data[1][count].touchId,
-    "correct GamepadTouch touchId");
+      "correct GamepadTouch touchId");
     is(touch.surfaceId, data[1][count].surfaceId,
-    "correct GamepadTouch surfaceId");
+      "correct GamepadTouch surfaceId");
     is(checkValueInFloat32Array(touch.position, data[1][count].pos), true,
       "correct touch position");
     is(checkValueInFloat32Array(touch.surfaceDimensions, data[1][count].surf), true,
@@ -180,60 +169,19 @@ async function touchcheck2() {
 
     ++count;
   });
-  
-  touches = f2.contentWindow.gamepad.touchEvents;
-  is(touches.length, touchData1.length,"f2 number of touches");
-
-  // When f2 is at the background, it will use the previous status.
-  count = 0;
-  touches.forEach(function(touch) {
-    is(touch.touchId, data[0][count].touchId,
-    "correct GamepadTouch touchId");
-    is(touch.surfaceId, data[0][count].surfaceId,
-    "correct GamepadTouch surfaceId");
-    is(checkValueInFloat32Array(touch.position, data[0][count].pos), true,
-      "correct touch position");
-    is(checkValueInFloat32Array(touch.surfaceDimensions, data[0][count].surf), true,
-      "correct touch surfaceDimensions");
-
-    ++count;
-  });
-  
-  setFrameVisible(f2, true);
-  pressButton();
-}
-
-async function touchcheck3() {
-  let touches = f1.contentWindow.gamepad.touchEvents;
-  is(touches.length, touchData3.length, "f1 number of touches");
-
-  let count = 0;
-  touches.forEach(function(touch) {
-    is(touch.touchId, data[2][count].touchId,
-      "correct GamepadTouch touchId");
-    is(touch.surfaceId, data[2][count].surfaceId,
-      "correct GamepadTouch surfaceId");
-    is(checkValueInFloat32Array(touch.position, data[2][count].pos), true,
-      "correct touch position");
-    is(checkValueInFloat32Array(touch.surfaceDimensions, data[2][count].surf), true,
-      "correct touch surfaceDimensions");
-
-    ++count;
-  });
 
   touches = f2.contentWindow.gamepad.touchEvents;
-  is(touches.length, touchData3.length,"f2 number of touches");
+  is(touches.length, data[1].length,"f2 number of touches");
 
   count = 0;
   touches.forEach(function(touch) {
-    // f2 was at the background so doesn't add touch events from data[1].
-    is(touch.touchId, data[2][count].touchId - data[1].length,
+    is(touch.touchId, data[1][count].touchId,
       "correct GamepadTouch touchId");
-    is(touch.surfaceId, data[2][count].surfaceId,
+    is(touch.surfaceId, data[1][count].surfaceId,
       "correct GamepadTouch surfaceId");
-    is(checkValueInFloat32Array(touch.position, data[2][count].pos), true,
+    is(checkValueInFloat32Array(touch.position, data[1][count].pos), true,
       "correct touch position");
-    is(checkValueInFloat32Array(touch.surfaceDimensions, data[2][count].surf), true,
+    is(checkValueInFloat32Array(touch.surfaceDimensions, data[1][count].surf), true,
       "correct touch surfaceDimensions");
 
     ++count;

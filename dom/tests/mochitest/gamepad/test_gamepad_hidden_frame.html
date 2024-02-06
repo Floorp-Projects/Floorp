@@ -1,19 +1,82 @@
 <!-- Any copyright is dedicated to the Public Domain.
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test hidden frames</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body>
-<script type="text/javascript" src="mock_gamepad.js"></script>
-<script class="testbody" type="text/javascript">
-// This test loads in an iframe, to ensure that the navigator instance is
-// loaded with the correct value of the preference.
-SimpleTest.waitForExplicitFinish();
-setGamepadPreferenceAndCreateIframe("test_gamepad_hidden_frame_iframe.html");
+<title>Test hidden frames</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<script>
+const GamepadService = navigator.requestGamepadServiceTest();
+
+let index;
+async function pressButton(win) {
+  let p = new Promise(r => {
+    win.addEventListener("gamepadbuttondown", r, { once: true });
+  });
+
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  await GamepadService.newButtonEvent(index, 0, false, false);
+
+  await p;
+  // Wait to ensure that all tabs received (or didn't) the button press as
+  // well.
+  await new Promise(r => SpecialPowers.executeSoon(r));
+}
+
+async function openGamepadTab() {
+  let win = SpecialPowers.wrap(window).open("gamepad_frame.html");
+  await new Promise(r => {
+    win.addEventListener("load", r, { once: true });
+  });
+  return win.wrappedJSObject;
+}
+
+function waitForTabVisible(win, visible) {
+  if (!win.document.hidden == visible) {
+    return Promise.resolve();
+  }
+  return new Promise(r => {
+    win.document.addEventListener("visibilitychange", r, { once: true });
+  });
+}
+
+add_task(async function test_gamepad_hidden_frame() {
+  let t1 = await openGamepadTab();
+  let t2 = await openGamepadTab();
+
+  index = await GamepadService.addGamepad(
+    "test gamepad", // id
+    GamepadService.standardMapping,
+    GamepadService.noHand,
+    4, // buttons
+    2,
+    0,
+    0,
+    0
+  );
+
+  await Promise.all([
+    waitForTabVisible(t1, false),
+    waitForTabVisible(t2, true),
+  ]);
+
+  await pressButton(t2);
+
+  is(t1.buttonPresses, 0, "right number of button presses in tab 1");
+  is(t2.buttonPresses, 1, "right number of button presses in tab 2");
+
+  t1.focus(); // Switches t1 to the foreground.
+
+  await Promise.all([
+    waitForTabVisible(t1, true),
+    waitForTabVisible(t2, false),
+  ]);
+
+  await pressButton(t1);
+
+  is(t1.buttonPresses, 1, "right number of button presses in tab 1");
+  is(t2.buttonPresses, 1, "right number of button presses in tab 2");
+  await GamepadService.removeGamepad(index);
+  t1.close();
+  t2.close();
+});
 </script>
-</body>
-</html>
