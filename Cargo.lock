@@ -2257,7 +2257,6 @@ dependencies = [
  "webext_storage_bridge",
  "webrender_bindings",
  "wgpu_bindings",
- "windows",
  "wpf-gpu-raster",
  "xpcom",
 ]
