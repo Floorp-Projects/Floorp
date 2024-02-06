@@ -490,7 +490,10 @@ class BrowsingContextModule extends Module {
 
     let internalUserContextId = lazy.UserContextManager.DEFAULT_INTERNAL_ID;
     if (referenceContext !== null) {
-      internalUserContextId = referenceContext.originAttributes.userContextId;
+      internalUserContextId =
+        lazy.UserContextManager.getInternalIdByBrowsingContext(
+          referenceContext
+        );
     }
 
     if (userContextId !== null) {
@@ -598,6 +601,8 @@ class BrowsingContextModule extends Module {
    *     of the to be processed browsing context tree.
    * @property {string} url
    *     The current documents location.
+   * @property {string} userContext
+   *     The id of the user context owning this browsing context.
    * @property {Array<BrowsingContextInfo>=} children
    *     List of child browsing contexts. Only set if maxDepth hasn't been
    *     reached yet.
@@ -1607,10 +1612,12 @@ class BrowsingContextModule extends Module {
       );
     }
 
+    const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
     const contextInfo = {
+      children,
       context: lazy.TabManager.getIdForBrowsingContext(context),
       url: context.currentURI.spec,
-      children,
+      userContext,
     };
 
     if (isRoot) {
