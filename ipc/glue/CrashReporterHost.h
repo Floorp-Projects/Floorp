@@ -58,12 +58,17 @@ class CrashReporterHost {
   template <typename Toplevel>
   bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
                                const nsACString& aPairName) {
-    ScopedProcessHandle childHandle;
+    auto childHandle = base::kInvalidProcessHandle;
+    const auto cleanup = MakeScopeExit([&]() {
+      if (childHandle && childHandle != base::kInvalidProcessHandle) {
+        base::CloseProcessHandle(childHandle);
+      }
+    });
 #ifdef XP_MACOSX
     childHandle = aToplevelProtocol->Process()->GetChildTask();
 #else
     if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
-                                           &childHandle.rwget())) {
+                                           &childHandle)) {
       NS_WARNING("Failed to open child process handle.");
       return false;
     }

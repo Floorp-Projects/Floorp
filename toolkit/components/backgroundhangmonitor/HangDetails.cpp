@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HangDetails.h"
+
 #include "nsIHangDetails.h"
 #include "nsPrintfCString.h"
 #include "js/Array.h"               // JS::NewArrayObject
@@ -12,6 +13,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"  // For RemoteTypePrefix
+#include "mozilla/FileUtils.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
