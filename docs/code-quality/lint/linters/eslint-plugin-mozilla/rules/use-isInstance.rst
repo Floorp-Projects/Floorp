@@ -9,7 +9,6 @@ These files are covered:
 
 - ``*.sys.mjs``
 - ``*.jsm``
-- ``*.jsm.js``
 - ``*.xhtml`` with ``there.is.only.xul``
 - ``*.js`` with a heuristic
 

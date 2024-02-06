@@ -82,9 +82,7 @@ function pointsToDOMInterface(currentScope, node) {
 function isChromeContext(context) {
   const filename = context.getFilename();
   const isChromeFileName =
-    filename.endsWith(".sys.mjs") ||
-    filename.endsWith(".jsm") ||
-    filename.endsWith(".jsm.js");
+    filename.endsWith(".sys.mjs") || filename.endsWith(".jsm");
   if (isChromeFileName) {
     return true;
   }
