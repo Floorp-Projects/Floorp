@@ -69,21 +69,6 @@ const kExpectedRequestsForNonModuleAsyncAndDeferredScripts = [
     },
 ]
 
-const kExpectedRequestsForDynamicNonModuleScripts = [
-    {   fileNameAndSuffix: "dummy.js?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
-    },
-    {   fileNameAndSuffix: "dummy.js?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
-    },
-    {   fileNameAndSuffix: "dummy.js?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
-    },
-    {   fileNameAndSuffix: "dummy.js?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
-    },
-];
-
 // Chromium's desired behavior is under discussion:
 // <https://bugs.chromium.org/p/chromium/issues/detail?id=1475635>.
 const kExpectedRequestsForModuleScripts = [
