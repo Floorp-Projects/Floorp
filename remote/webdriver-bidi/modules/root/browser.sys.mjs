@@ -107,7 +107,7 @@ class BrowserModule extends Module {
       `Expected "userContext" to be a string, got ${userContextId}`
     );
 
-    if (userContextId === lazy.UserContextManager.DEFAULT_CONTEXT_ID) {
+    if (userContextId === lazy.UserContextManager.defaultUserContextId) {
       throw new lazy.error.InvalidArgumentError(
         `Default user context cannot be removed`
       );

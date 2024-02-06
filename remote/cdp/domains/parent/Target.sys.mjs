@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
 });
 
@@ -131,7 +133,9 @@ export class Target extends Domain {
     const onTarget = targetList.once("target-created");
     const tab = await lazy.TabManager.addTab({
       focus: true,
-      userContextId: browserContextId,
+      userContextId:
+        // Bug 1878649: Use UserContextManager ids consistently in CDP.
+        lazy.UserContextManager.getIdByInternalId(browserContextId),
       window,
     });
 

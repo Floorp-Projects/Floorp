@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
 
 class TabManagerClass {
@@ -143,8 +145,8 @@ class TabManagerClass {
    *     The reference tab after which the new tab will be added. If no
    *     reference tab is provided, the new tab will be added after all the
    *     other tabs.
-   * @param {number} options.userContextId
-   *     The user context (container) id.
+   * @param {string=} options.userContextId
+   *     A user context id from UserContextManager.
    * @param {window=} options.window
    *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
    *     if no window is provided. Will be ignored if referenceTab is provided.
@@ -153,7 +155,7 @@ class TabManagerClass {
     let {
       focus = false,
       referenceTab = null,
-      userContextId,
+      userContextId = null,
       window = Services.wm.getMostRecentWindow(null),
     } = options;
 
@@ -169,10 +171,11 @@ class TabManagerClass {
     }
 
     const tabBrowser = this.getTabBrowser(window);
+
     const tab = await tabBrowser.addTab("about:blank", {
       index,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      userContextId,
+      userContextId: lazy.UserContextManager.getInternalIdById(userContextId),
     });
 
     if (focus) {

@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TimedPromise: "chrome://remote/content/marionette/sync.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
 });
 
@@ -218,7 +220,8 @@ class WindowManager {
             {
               private: isPrivate,
               resolveOnContentBrowserCreated,
-              userContextId: userContextId !== null ? userContextId : undefined,
+              userContextId:
+                lazy.UserContextManager.getInternalIdById(userContextId),
             }
           )
         );

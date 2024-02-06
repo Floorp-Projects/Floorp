@@ -13,6 +13,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
 });
 
+const DEFAULT_CONTEXT_ID = "default";
+const DEFAULT_INTERNAL_ID = 0;
+
 /**
  * A UserContextManager instance keeps track of all public user contexts and
  * maps their internal platform.
@@ -24,9 +27,6 @@ export class UserContextManagerClass {
   #contextualIdentityListener;
   #userContextIds;
 
-  DEFAULT_CONTEXT_ID = "default";
-  DEFAULT_INTERNAL_ID = 0;
-
   constructor() {
     // Map from internal ids (numbers) from the ContextualIdentityService to
     // opaque UUIDs (string).
@@ -34,7 +34,7 @@ export class UserContextManagerClass {
 
     // The default user context is always using 0 as internal user context id
     // and should be exposed as "default" instead of a randomly generated id.
-    this.#userContextIds.set(this.DEFAULT_INTERNAL_ID, this.DEFAULT_CONTEXT_ID);
+    this.#userContextIds.set(DEFAULT_INTERNAL_ID, DEFAULT_CONTEXT_ID);
 
     // Register other (non-default) public contexts.
     lazy.ContextualIdentityService.getPublicIdentities().forEach(identity =>
@@ -53,6 +53,16 @@ export class UserContextManagerClass {
     this.#contextualIdentityListener.destroy();
 
     this.#userContextIds = null;
+  }
+
+  /**
+   * Retrieve the user context id corresponding to the default user context.
+   *
+   * @returns {string}
+   *     The default user context id.
+   */
+  get defaultUserContextId() {
+    return DEFAULT_CONTEXT_ID;
   }
 
   /**
@@ -93,8 +103,14 @@ export class UserContextManagerClass {
    *     If `browsingContext` is not a CanonicalBrowsingContext instance.
    */
   getIdByBrowsingContext(browsingContext) {
+    if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
+      throw new TypeError(
+        `Expected browsingContext to be a CanonicalBrowsingContext, got ${browsingContext}`
+      );
+    }
+
     return this.getIdByInternalId(
-      this.getInternalIdByBrowsingContext(browsingContext)
+      browsingContext.originAttributes.userContextId
     );
   }
 
@@ -113,29 +129,6 @@ export class UserContextManagerClass {
       return this.#userContextIds.get(internalId);
     }
     return null;
-  }
-
-  /**
-   * Retrieve the internal user context id corresponding to the provided
-   * browsing context.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context to get the internal user context id from.
-   *
-   * @returns {string}
-   *     The corresponding internal user context id.
-   *
-   * @throws {TypeError}
-   *     If `browsingContext` is not a CanonicalBrowsingContext instance.
-   */
-  getInternalIdByBrowsingContext(browsingContext) {
-    if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
-      throw new TypeError(
-        `Expected browsingContext to be a CanonicalBrowsingContext, got ${browsingContext}`
-      );
-    }
-
-    return browsingContext.originAttributes.userContextId;
   }
 
   /**
