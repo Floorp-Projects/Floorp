@@ -51,6 +51,10 @@ export function registerNavigationListenerActor() {
       }
 
       for (const context of browser.browsingContext.getAllBrowsingContextsInSubtree()) {
+        if (!context.currentWindowGlobal) {
+          continue;
+        }
+
         context.currentWindowGlobal
           .getActor("NavigationListener")
           // Note that "createActor" is not explicitly referenced in the child
