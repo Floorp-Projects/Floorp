@@ -138,11 +138,13 @@ Family::Family(FontList* aList, const InitData& aData)
 
 class SetCharMapRunnable : public mozilla::Runnable {
  public:
-  SetCharMapRunnable(uint32_t aListGeneration, Pointer aFacePtr,
-                     gfxCharacterMap* aCharMap)
+  SetCharMapRunnable(uint32_t aListGeneration,
+                     std::pair<uint32_t, bool> aFamilyIndex,
+                     uint32_t aFaceIndex, gfxCharacterMap* aCharMap)
       : Runnable("SetCharMapRunnable"),
         mListGeneration(aListGeneration),
-        mFacePtr(aFacePtr),
+        mFamilyIndex(aFamilyIndex),
+        mFaceIndex(aFaceIndex),
         mCharMap(aCharMap) {}
 
   NS_IMETHOD Run() override {
@@ -150,26 +152,39 @@ class SetCharMapRunnable : public mozilla::Runnable {
     if (!list || list->GetGeneration() != mListGeneration) {
       return NS_OK;
     }
-    dom::ContentChild::GetSingleton()->SendSetCharacterMap(mListGeneration,
-                                                           mFacePtr, *mCharMap);
+    dom::ContentChild::GetSingleton()->SendSetCharacterMap(
+        mListGeneration, mFamilyIndex.first, mFamilyIndex.second, mFaceIndex,
+        *mCharMap);
     return NS_OK;
   }
 
  private:
   uint32_t mListGeneration;
-  Pointer mFacePtr;
+  std::pair<uint32_t, bool> mFamilyIndex;
+  uint32_t mFaceIndex;
   RefPtr<gfxCharacterMap> mCharMap;
 };
 
-void Face::SetCharacterMap(FontList* aList, gfxCharacterMap* aCharMap) {
+void Face::SetCharacterMap(FontList* aList, gfxCharacterMap* aCharMap,
+                           const Family* aFamily) {
   if (!XRE_IsParentProcess()) {
-    Pointer ptr = aList->ToSharedPointer(this);
+    std::pair<uint32_t, bool> familyIndex = aFamily->FindIndex(aList);
+    const auto* faces = aFamily->Faces(aList);
+    uint32_t faceIndex = 0;
+    while (faceIndex < aFamily->NumFaces()) {
+      if (faces[faceIndex].ToPtr<Face>(aList) == this) {
+        break;
+      }
+      ++faceIndex;
+    }
+    MOZ_RELEASE_ASSERT(faceIndex < aFamily->NumFaces(), "Face ptr not found!");
     if (NS_IsMainThread()) {
       dom::ContentChild::GetSingleton()->SendSetCharacterMap(
-          aList->GetGeneration(), ptr, *aCharMap);
+          aList->GetGeneration(), familyIndex.first, familyIndex.second,
+          faceIndex, *aCharMap);
     } else {
-      NS_DispatchToMainThread(
-          new SetCharMapRunnable(aList->GetGeneration(), ptr, aCharMap));
+      NS_DispatchToMainThread(new SetCharMapRunnable(
+          aList->GetGeneration(), familyIndex, faceIndex, aCharMap));
     }
     return;
   }
@@ -240,7 +255,7 @@ void Family::AddFaces(FontList* aList, const nsTArray<Face::InitData>& aFaces) {
       (void)new (face) Face(aList, *initData);
       facePtrs[i] = fp;
       if (initData->mCharMap) {
-        face->SetCharacterMap(aList, initData->mCharMap);
+        face->SetCharacterMap(aList, initData->mCharMap, this);
       }
     }
   }
@@ -613,16 +628,19 @@ void Family::SetupFamilyCharMap(FontList* aList) {
   }
   if (!XRE_IsParentProcess()) {
     // |this| could be a Family record in either the Families() or Aliases()
-    // arrays
+    // arrays; FindIndex will map it back to its index and which array.
+    std::pair<uint32_t, bool> index = FindIndex(aList);
     if (NS_IsMainThread()) {
       dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(
-          aList->GetGeneration(), aList->ToSharedPointer(this));
+          aList->GetGeneration(), index.first, index.second);
       return;
     }
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SetupFamilyCharMap callback",
-        [gen = aList->GetGeneration(), ptr = aList->ToSharedPointer(this)] {
-          dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(gen, ptr);
+        [gen = aList->GetGeneration(), idx = index.first,
+         alias = index.second] {
+          dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(gen, idx,
+                                                                    alias);
         }));
     return;
   }
@@ -665,6 +683,26 @@ void Family::SetupFamilyCharMap(FontList* aList) {
     // If all [usable] faces had the same cmap, we can just share it.
     mCharacterMap = firstMapShmPointer;
   }
+}
+
+std::pair<uint32_t, bool> Family::FindIndex(FontList* aList) const {
+  const auto* start = aList->Families();
+  const auto* end = start + aList->NumFamilies();
+  if (this >= start && this < end) {
+    uint32_t index = this - start;
+    MOZ_RELEASE_ASSERT(start + index == this, "misaligned Family ptr!");
+    return std::pair(index, false);
+  }
+
+  start = aList->AliasFamilies();
+  end = start + aList->NumAliases();
+  if (this >= start && this < end) {
+    uint32_t index = this - start;
+    MOZ_RELEASE_ASSERT(start + index == this, "misaligned AliasFamily ptr!");
+    return std::pair(index, true);
+  }
+
+  MOZ_CRASH("invalid font-list Family ptr!");
 }
 
 FontList::FontList(uint32_t aGeneration) {
@@ -1335,19 +1373,6 @@ void FontList::SearchForLocalFace(const nsACString& aName, Family** aFamily,
       }
     }
   }
-}
-
-Pointer FontList::ToSharedPointer(const void* aPtr) {
-  const char* p = (const char*)aPtr;
-  const uint32_t blockCount = mBlocks.Length();
-  for (uint32_t i = 0; i < blockCount; ++i) {
-    const char* blockAddr = (const char*)mBlocks[i]->Memory();
-    if (p >= blockAddr && p < blockAddr + SHM_BLOCK_SIZE) {
-      return Pointer(i, p - blockAddr);
-    }
-  }
-  MOZ_DIAGNOSTIC_ASSERT(false, "invalid shared-memory pointer");
-  return Pointer::Null();
 }
 
 size_t FontList::SizeOfIncludingThis(
