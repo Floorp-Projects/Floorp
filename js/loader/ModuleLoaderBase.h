@@ -191,9 +191,6 @@ class ModuleLoaderBase : public nsISupports {
   bool mImportMapsAllowed = true;
 
  protected:
-  // Event handler used to dispatch runnables, used internally to wait for
-  // fetches to finish and for imports to become avilable.
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
   RefPtr<ScriptLoaderInterface> mLoader;
 
   mozilla::UniquePtr<ImportMap> mImportMap;
@@ -210,9 +207,7 @@ class ModuleLoaderBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader,
-                            nsIGlobalObject* aGlobalObject,
-                            nsISerialEventTarget* aEventTarget =
-                                mozilla::GetMainThreadSerialEventTarget());
+                            nsIGlobalObject* aGlobalObject);
 
   // Called to break cycles during shutdown to prevent memory leaks.
   void Shutdown();
