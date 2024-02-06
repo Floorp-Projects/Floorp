@@ -737,7 +737,6 @@ bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
-bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
 // Pref for new Set.prototype methods.
@@ -4132,7 +4131,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               ? JS::WeakRefSpecifier::EnabledWithCleanupSome
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
-      .setIteratorHelpersEnabled(enableIteratorHelpers)
       .setShadowRealmsEnabled(enableShadowRealms)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
@@ -12146,6 +12144,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   JS::Prefs::setAtStartup_well_formed_unicode_strings(
       !op.getBoolOption("disable-well-formed-unicode-strings"));
 #ifdef NIGHTLY_BUILD
+  JS::Prefs::setAtStartup_experimental_iterator_helpers(
+      op.getBoolOption("enable-iterator-helpers"));
   JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
 #endif
@@ -12345,7 +12345,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
-  enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
 #ifdef NIGHTLY_BUILD
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
