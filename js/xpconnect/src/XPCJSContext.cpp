@@ -784,7 +784,6 @@ static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(true);
-static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
 static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
@@ -815,7 +814,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
       .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
-      .setArrayGroupingEnabled(sArrayGroupingEnabled)
       .setArrayBufferTransferEnabled(sArrayBufferTransferEnabled)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
@@ -1030,8 +1028,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.shadow_realms");
   sWellFormedUnicodeStringsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "well_formed_unicode_strings");
-  sArrayGroupingEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "array_grouping");
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");

@@ -211,14 +211,6 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #ifdef NIGHTLY_BUILD
-  bool arrayGrouping = cx->realm()->creationOptions().getArrayGroupingEnabled();
-  if (!JS_SetProperty(cx, info, "enableArrayGrouping",
-                      arrayGrouping ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
-#endif
-
-#ifdef NIGHTLY_BUILD
   bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
   if (!JS_SetProperty(cx, info, "enableNewSetMethods",
                       newSetMethods ? TrueHandleValue : FalseHandleValue)) {
