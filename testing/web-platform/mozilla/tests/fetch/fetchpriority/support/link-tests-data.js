@@ -132,6 +132,21 @@ const kExpectedRequestsOfPreloadScript = [
     },
 ];
 
+const kExpectedRequestsOfPreloadScriptDisabled = [
+    {   fileNameAndSuffix: "dummy.js?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.js?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.js?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.js?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+];
+
 const kExpectedRequestsOfLinkPreloadStyle = [
     {   fileNameAndSuffix: "dummy.css?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
@@ -148,6 +163,8 @@ const kExpectedRequestsOfLinkPreloadStyle = [
 ];
 
 const kExpectedRequestsOfModulepreload = kExpectedRequestsOfPreloadScript;
+
+const kExpectedRequestsOfModulepreloadDisabled = kExpectedRequestsOfPreloadScriptDisabled;
 
 const kExpectedRequestsOfPrefetch = [
     {   fileNameAndSuffix: "dummy.txt?1",
@@ -314,16 +331,34 @@ export const kTestDataDisabled = [
     {   testFileName: "link-initial-preload-fetch.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
     },
+    {   testFileName: "link-initial-preload-script.h2.html",
+        expectedRequests: kExpectedRequestsOfPreloadScriptDisabled
+    },
+    {   testFileName: "link-initial-modulepreload.h2.html",
+        expectedRequests: kExpectedRequestsOfModulepreloadDisabled
+    },
     {   testFileName: "link-dynamic-preload-font.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
     },
     {   testFileName: "link-dynamic-preload-fetch.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
     },
+    {   testFileName: "link-dynamic-preload-script.h2.html",
+        expectedRequests: kExpectedRequestsOfPreloadScriptDisabled
+    },
+    {   testFileName: "link-dynamic-modulepreload.h2.html",
+        expectedRequests: kExpectedRequestsOfModulepreloadDisabled
+    },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFontLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFetchLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadScriptLinks,
+        expectedRequests: kExpectedRequestsOfPreloadScriptDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderModulepreloadLinks,
+        expectedRequests: kExpectedRequestsOfModulepreloadDisabled
     },
 ];
