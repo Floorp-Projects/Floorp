@@ -1698,6 +1698,7 @@ STATIC_ATOMS = [
     Atom("csp", "csp"),
     Atom("curl_", "curl"),
     Atom("decimalpoint_", "decimalpoint"),
+    Atom("definition", "definition"),
     Atom("definitionURL_", "definitionURL"),
     Atom("degree_", "degree"),
     Atom("denomalign_", "denomalign"),
