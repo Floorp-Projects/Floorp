@@ -778,7 +778,6 @@ bool xpc::ShouldDiscardSystemSource() { return sDiscardSystemSource; }
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
 
-static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
@@ -807,7 +806,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setCoopAndCoepEnabled(
           StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
           StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
-      .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
@@ -1015,8 +1013,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-  sPropertyErrorMessageFixEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "property_error_message_fix");
   sWeakRefsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "weakrefs");
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
