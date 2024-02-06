@@ -47,7 +47,10 @@ fun FloatingActionButton(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     label: String? = null,
-    elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(defaultElevation = 5.dp),
+    elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(
+        defaultElevation = 5.dp,
+        pressedElevation = 5.dp,
+    ),
     onClick: () -> Unit,
 ) {
     FloatingActionButton(
