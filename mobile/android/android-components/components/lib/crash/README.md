@@ -106,7 +106,7 @@ CrashReporter(
 
 [Glean](https://docs.telemetry.mozilla.org/concepts/glean/glean.html) is a new way to collect telemetry by Mozilla.
 This will record crash counts as a labeled counter with each label corresponding to a specific type of crash (`fatal_native_code_crash`, `nonfatal_native_code_crash`, `caught_exception`, `uncaught_exception`, currently).
-The list of collected metrics is available in the [metrics.yaml file](metrics.yaml), with their documentation [living here](docs/metrics.md).
+The list of collected metrics is available in the [metrics.yaml file](metrics.yaml), with their documentation [living here](https://dictionary.telemetry.mozilla.org/apps/fenix/pings/crash).
 Due to the fact that Glean can only be recorded to in the main process and lib-crash runs in a separate process when it runs to handle the crash,
 lib-crash persists the data in a file format and then reads and records the data from the main process when the application is next run since the `GleanCrashReporterService`
 constructor is loaded from the main process.

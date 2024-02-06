@@ -121,5 +121,4 @@ nimbus {
             ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
 }
 
-ext.gleanGenerateMarkdownDocs = true
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"

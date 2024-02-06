@@ -90,7 +90,6 @@ dependencies {
     testImplementation ComponentsDependencies.mozilla_glean_forUnitTests
 }
 
-ext.gleanGenerateMarkdownDocs = true
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
 apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
