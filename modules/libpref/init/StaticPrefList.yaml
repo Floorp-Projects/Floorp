@@ -7457,6 +7457,8 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+  # Non-startup pref because the WPT test harness sets prefs after startup.
+  set_spidermonkey_pref: always
 
 # Support for String.prototype.{is,to}WellFormed in JavaScript.
 - name: javascript.options.well_formed_unicode_strings
