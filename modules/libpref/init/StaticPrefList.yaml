@@ -14740,13 +14740,6 @@
 #endif
   mirror: always
 
-#ifdef XP_WIN
-- name: ui.key.layout.load_when_first_needed
-  type: bool
-  value: @EARLY_BETA_OR_EARLIER@
-  mirror: always
-#endif
-
 # Does the access key by itself focus the menu bar?
 - name: ui.key.menuAccessKeyFocuses
   type: bool
