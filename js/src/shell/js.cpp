@@ -148,6 +148,7 @@
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
+#include "js/Prefs.h"
 #include "js/Principals.h"
 #include "js/Printer.h"  // QuoteString
 #include "js/Printf.h"
@@ -11341,6 +11342,78 @@ static bool WriteSelfHostedXDRFile(JSContext* cx, JS::SelfHostedCache buffer) {
   return true;
 }
 
+template <typename T>
+static bool ParsePrefValue(const char* name, const char* val, T* result) {
+  if constexpr (std::is_same_v<T, bool>) {
+    if (strcmp(val, "true") == 0) {
+      *result = true;
+      return true;
+    }
+    if (strcmp(val, "false") == 0) {
+      *result = false;
+      return true;
+    }
+    fprintf(stderr, "Invalid value for boolean pref %s: %s\n", name, val);
+    return false;
+  } else {
+    static_assert(std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>);
+    char* end;
+    long v = strtol(val, &end, 10);
+    if (end != val + strlen(val) || static_cast<long>(static_cast<T>(v)) != v) {
+      fprintf(stderr, "Invalid value for integer pref %s: %s\n", name, val);
+      return false;
+    }
+    *result = static_cast<T>(v);
+    return true;
+  }
+}
+
+static bool SetJSPref(const char* pref) {
+  const char* assign = strchr(pref, '=');
+  if (!assign) {
+    fprintf(stderr, "Missing '=' for --setpref\n");
+    return false;
+  }
+
+  size_t nameLen = assign - pref;
+  const char* valStart = assign + 1;  // Skip '='.
+
+  // Search for a matching pref and try to set it.
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER)                          \
+  if (nameLen == strlen(NAME) && memcmp(pref, NAME, strlen(NAME)) == 0) { \
+    TYPE v;                                                               \
+    if (!ParsePrefValue<TYPE>(NAME, valStart, &v)) {                      \
+      return false;                                                       \
+    }                                                                     \
+    JS::Prefs::SETTER(v);                                                 \
+    return true;                                                          \
+  }
+  FOR_EACH_JS_PREF(CHECK_PREF)
+#undef CHECK_PREF
+
+  fprintf(stderr, "Invalid pref name: %s\n", pref);
+  return false;
+}
+
+static void ListJSPrefs() {
+  auto printPref = [](const char* name, auto defaultVal) {
+    using T = decltype(defaultVal);
+    if constexpr (std::is_same_v<T, bool>) {
+      fprintf(stderr, "%s=%s\n", name, defaultVal ? "true" : "false");
+    } else if constexpr (std::is_same_v<T, int32_t>) {
+      fprintf(stderr, "%s=%d\n", name, defaultVal);
+    } else {
+      static_assert(std::is_same_v<T, uint32_t>);
+      fprintf(stderr, "%s=%u\n", name, defaultVal);
+    }
+  };
+
+#define PRINT_PREF(NAME, CPP_NAME, TYPE, SETTER) \
+  printPref(NAME, JS::Prefs::CPP_NAME());
+  FOR_EACH_JS_PREF(PRINT_PREF)
+#undef PRINT_PREF
+}
+
 static bool SetGCParameterFromArg(JSContext* cx, char* arg) {
   char* c = strchr(arg, '=');
   if (!c) {
@@ -12050,6 +12123,12 @@ bool InitOptionParser(OptionParser& op) {
 #endif
       !op.addStringOption('\0', "telemetry-dir", "[directory]",
                           "Output telemetry results in a directory") ||
+      !op.addMultiStringOption('\0', "setpref", "name=val",
+                               "Set the value of a JS pref. Use --list-prefs "
+                               "to print all pref names.") ||
+      !op.addBoolOption(
+          '\0', "list-prefs",
+          "Print list of prefs that can be set with --setpref.") ||
       !op.addBoolOption('\0', "use-fdlibm-for-sin-cos-tan",
                         "Use fdlibm for Math.sin, Math.cos, and Math.tan")) {
     return false;
@@ -12062,6 +12141,18 @@ bool InitOptionParser(OptionParser& op) {
 }
 
 bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
+  for (MultiStringRange args = op.getMultiStringOption("setpref");
+       !args.empty(); args.popFront()) {
+    if (!SetJSPref(args.front())) {
+      return false;
+    }
+  }
+
+  if (op.getBoolOption("list-prefs")) {
+    ListJSPrefs();
+    return false;
+  }
+
   // Note: DisableJitBackend must be called before JS_InitWithFailureDiagnostic.
   if (op.getBoolOption("no-jit-backend")) {
     JS::DisableJitBackend();
