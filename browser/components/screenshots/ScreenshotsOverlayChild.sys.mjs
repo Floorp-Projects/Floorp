@@ -764,7 +764,12 @@ export class ScreenshotsOverlay {
       let direction = event.shiftKey
         ? Services.focus.MOVEFOCUS_BACKWARD
         : Services.focus.MOVEFOCUS_FORWARD;
-      Services.focus.moveFocus(this.window, null, direction, 0);
+      Services.focus.moveFocus(
+        this.window,
+        null,
+        direction,
+        Services.focus.FLAG_BYKEY
+      );
     }
   }
 
