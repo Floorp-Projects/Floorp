@@ -839,31 +839,33 @@ struct VertAttribPointerCalculated final {
 
 }  // namespace webgl
 
-// TODO: s/RawBuffer/Span/
+/**
+ * Represents a block of memory that it may or may not own.  The
+ * inner data type must be trivially copyable by memcpy.
+ */
 template <typename T = uint8_t>
 class RawBuffer final {
   const T* mBegin = nullptr;
   size_t mLen = 0;
+  UniqueBuffer mOwned;
 
  public:
   using ElementType = T;
 
-  explicit RawBuffer(const Range<const T>& data)
-      : mBegin(data.begin().get()), mLen(data.length()) {
-    if (mLen) {
-      MOZ_ASSERT(mBegin);
-    }
-  }
+  /**
+   * If aTakeData is true, RawBuffer will delete[] the memory when destroyed.
+   */
+  explicit RawBuffer(const Range<const T>& data, UniqueBuffer&& owned = {})
+      : mBegin(data.begin().get()),
+        mLen(data.length()),
+        mOwned(std::move(owned)) {}
+
+  explicit RawBuffer(const size_t len) : mLen(len) {}
 
   ~RawBuffer() = default;
 
-  Range<const T> Data() const { return {begin(), mLen}; }
-  const auto& begin() const {
-    if (mLen) {
-      MOZ_RELEASE_ASSERT(mBegin);
-    }
-    return mBegin;
-  }
+  Range<const T> Data() const { return {mBegin, mLen}; }
+  const auto& begin() const { return mBegin; }
   const auto& size() const { return mLen; }
 
   void Shrink(const size_t newLen) {
