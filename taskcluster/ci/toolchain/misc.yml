@@ -584,3 +584,22 @@ linux64-cargo-apk:
             - linux64-clang-toolchain
             - linux64-rust-toolchain
             - sysroot-x86_64-linux-gnu
+
+windows-rs:
+    # Bootstrap cannot use fetches directly, so we have this task to
+    # expose the corresponding fetch as a toolchain artifact.
+    description: Source of the windows rust crate
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(windows-rs)
+    run:
+        script: dummy.sh
+        toolchain-artifact: public/build/windows-rs.tar.zst
+    dependencies:
+        fetch-windows-rs: fetch-windows-rs
+    fetches:
+        fetch-windows-rs:
+            - artifact: windows-rs.tar.zst
+              extract: false
+              dest: ../artifacts

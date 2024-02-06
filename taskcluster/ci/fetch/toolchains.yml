@@ -673,3 +673,14 @@ cpython-3.11.7.exe:
         sha256: c117c6444494bbe4cc937e8a5a61899d53f7f5c5bc573c5d130304e457d54024
         size: 26009544
         artifact-name: python-3.11.7-amd64.exe
+
+windows-rs:
+    description: Source of the windows rust crate
+    fetch:
+        type: static-url
+        url: https://crates.io/api/v1/crates/windows/0.52.0/download
+        sha256: e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be
+        size: 11843715
+        artifact-name: windows-rs.tar.zst
+        strip-components: 1
+        add-prefix: windows-rs/
