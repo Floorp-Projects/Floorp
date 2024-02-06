@@ -58,10 +58,11 @@ add_task(async function testReasonDropdown() {
       rbs = await AppMenu().openReportBrokenSite();
       await rbs.isReasonRequired();
       await rbs.isSendButtonEnabled();
-      const { reasonDropdownPopup, sendButton } = rbs;
-      await clickAndAwait(sendButton, "popupshown", reasonDropdownPopup);
-      await rbs.dismissDropdownPopup();
+      const selectPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+      EventUtils.synthesizeMouseAtCenter(rbs.sendButton, {}, window);
+      await selectPromise;
       rbs.chooseReason("media");
+      await rbs.dismissDropdownPopup();
       await rbs.isSendButtonEnabled();
       await clickSendAndCheckPing(rbs, "media");
       await rbs.clickOkay();
@@ -70,8 +71,8 @@ add_task(async function testReasonDropdown() {
 });
 
 async function getListItems(rbs) {
-  const items = Array.from(rbs.reasonInput.querySelectorAll("menuitem")).map(
-    i => i.id.replace("report-broken-site-popup-reason-", "")
+  const items = Array.from(rbs.reasonInput.querySelectorAll("option")).map(i =>
+    i.id.replace("report-broken-site-popup-reason-", "")
   );
   Assert.equal(items[0], "choose", "First option is always 'choose'");
   return items.join(",");

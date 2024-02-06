@@ -18,6 +18,9 @@
     </html:h1>
   </box>
   <toolbarseparator/>
+  <!-- This form is used purely in JS for validation. We hide it here
+       rather than nesting it in the vbox to keep our CSS simpler. -->
+  <html:form id="report-broken-site-panel-form"/>
   <vbox id="report-broken-site-panel-container"
         class="panel-subview-body">
     <html:p id="report-broken-site-panel-intro"
@@ -26,6 +29,7 @@
            control="report-broken-site-popup-url"
            data-l10n-id="report-broken-site-panel-url"/>
     <html:input id="report-broken-site-popup-url"
+                form="report-broken-site-panel-form"
                 allow-arrow-navigation="true"
                 type="url" required="required" aria-required="true" />
     <label id="report-broken-site-popup-invalid-url-msg"
@@ -42,28 +46,27 @@
            hidden="true"
            data-l10n-attrs="aria-label"
            data-l10n-id="report-broken-site-panel-reason-optional-label"/>
-    <menulist id="report-broken-site-popup-reason"
-              allow-arrow-navigation="true"
-              size="medium">
-      <menupopup>
-        <menuitem id="report-broken-site-popup-reason-choose"
-                  data-l10n-id="report-broken-site-panel-reason-choose"/>
-        <menuitem id="report-broken-site-popup-reason-slow"
-                  data-l10n-id="report-broken-site-panel-reason-slow"/>
-        <menuitem id="report-broken-site-popup-reason-media"
-                  data-l10n-id="report-broken-site-panel-reason-media"/>
-        <menuitem id="report-broken-site-popup-reason-content"
-                  data-l10n-id="report-broken-site-panel-reason-content"/>
-        <menuitem id="report-broken-site-popup-reason-account"
-                  data-l10n-id="report-broken-site-panel-reason-account"/>
-        <menuitem id="report-broken-site-popup-reason-adblockers"
-                  data-l10n-id="report-broken-site-panel-reason-adblockers"/>
-        <menuitem id="report-broken-site-popup-reason-other"
-                  data-l10n-id="report-broken-site-panel-reason-other"/>
-      </menupopup>
-    </menulist>
-    <!-- menulist does not support :invalid, so we set custom validity on this input instead -->
-    <html:input id="report-broken-site-popup-missing-reason-validation-helper"/>
+    <html:select id="report-broken-site-popup-reason"
+                 form="report-broken-site-panel-form">
+      <html:option id="report-broken-site-popup-reason-choose"
+                   value=""
+                   hidden="true"
+                   disabled="true"
+                   selected="selected"
+                   data-l10n-id="report-broken-site-panel-reason-choose"/>
+      <html:option id="report-broken-site-popup-reason-slow"
+                   data-l10n-id="report-broken-site-panel-reason-slow"/>
+      <html:option id="report-broken-site-popup-reason-media"
+                   data-l10n-id="report-broken-site-panel-reason-media"/>
+      <html:option id="report-broken-site-popup-reason-content"
+                   data-l10n-id="report-broken-site-panel-reason-content"/>
+      <html:option id="report-broken-site-popup-reason-account"
+                   data-l10n-id="report-broken-site-panel-reason-account"/>
+      <html:option id="report-broken-site-popup-reason-adblockers"
+                   data-l10n-id="report-broken-site-panel-reason-adblockers"/>
+      <html:option id="report-broken-site-popup-reason-other"
+                   data-l10n-id="report-broken-site-panel-reason-other"/>
+    </html:select>
     <label id="report-broken-site-popup-missing-reason-msg"
            class="invalid-message text-error"
            role="alert"
@@ -77,6 +80,7 @@
            hidden="true"
            data-l10n-id="report-broken-site-panel-description-optional-label"/>
     <html:textarea id="report-broken-site-popup-description"
+                   form="report-broken-site-panel-form"
                    allow-arrow-navigation="true"
                    rows="8"></html:textarea>
     <hbox>
