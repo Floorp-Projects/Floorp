@@ -162,7 +162,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsNativeAppSupportWin.h"
 #include "mozilla/browser/NimbusFeatures.h"
@@ -683,9 +682,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
     if (!WinUtils::HasPackageIdentity()) {
       mozilla::widget::WinTaskbar::RegisterAppUserModelID();
     }
-    if (!StaticPrefs::ui_key_layout_load_when_first_needed()) {
-      KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
-    }
+    KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
 #if defined(ACCESSIBILITY)
     mozilla::TIPMessageHandler::Initialize();
 #endif  // defined(ACCESSIBILITY)
@@ -5741,7 +5738,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
             sJustGotDeactivate = true;
           }
           if (mIsTopWidgetWindow) {
-            mLastKeyboardLayout = KeyboardLayout::GetLayout();
+            mLastKeyboardLayout = KeyboardLayout::GetInstance()->GetLayout();
           }
         } else {
           StopFlashing();
