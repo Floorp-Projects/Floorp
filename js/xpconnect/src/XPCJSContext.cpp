@@ -780,7 +780,6 @@ static mozilla::Atomic<bool> sStreamsEnabled(false);
 
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
-static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
@@ -807,7 +806,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
           StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
           StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
       .setWeakRefsEnabled(GetWeakRefsEnabled())
-      .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
@@ -1019,8 +1017,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sShadowRealmsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.shadow_realms");
 #ifdef NIGHTLY_BUILD
-  sIteratorHelpersEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
   sNewSetMethodsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
   sArrayBufferResizableEnabled = Preferences::GetBool(
