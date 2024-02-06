@@ -23,7 +23,7 @@
       const doesNotExist = PathUtils.join(PathUtils.tempDir, "does_not_exist.tmp");
       await Assert.rejects(
         IOUtils.read(doesNotExist),
-        /NotFoundError: Could not open `.*': file does not exist/,
+        /Could not open the file at .*/,
         "IOUtils::read rejects when file does not exist"
       );
     });
@@ -46,7 +46,7 @@
         IOUtils.write(tmpFileName, newContents, {
           mode: "create",
         }),
-        /NoModificationAllowedError: Could not write to `.*': refusing to overwrite file, `mode' is not "overwrite"/,
+        /Refusing to overwrite the file at */,
         "IOUtils::write rejects writing to existing file if overwrites are disabled"
       );
       ok(
@@ -285,7 +285,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         IOUtils.write(tmpFileName, bytes),
-        /OperationError: Could not write to `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
+        /Could not parse path/,
         "IOUtils::write only works with absolute paths"
       );
     });
@@ -296,8 +296,8 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         IOUtils.read(tmpFileName),
-        /OperationError: Could not read `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
-        "IOUtils::read only works with absolute paths"
+        /Could not parse path/,
+        "IOUtils::write only works with absolute paths"
       );
     });
 
@@ -348,7 +348,7 @@
       is(bytesWritten, 64, "Expected to write 64 bytes");
       await Assert.rejects(
         IOUtils.read(tmpFileName, { maxBytes: 4, decompress: true }),
-        /DataError: Could not read `.*': the `maxBytes' and `decompress' options are mutually exclusive/,
+        /The `maxBytes` and `decompress` options are not compatible/,
         "IOUtils::read rejects when maxBytes and decompress options are both used"
       );
 
@@ -364,7 +364,17 @@
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not read `.*': could not decompress file: invalid LZ4 header: wrong magic number: `01 01 01 01 01 01 01 01 01 01 01 01' \(NS_ERROR_FILE_CORRUPTED\)/,
+        (actual) => {
+          is(actual.constructor, DOMException,
+             "rejection reason constructor for decompress with bad header");
+          is(actual.name, "NotReadableError",
+             "rejection error name for decompress with bad header");
+          ok(/Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/
+             .test(actual.message),
+             "rejection error message for decompress with bad header. Got "
+             + actual.message);
+          return true;
+        },
         "IOUtils::read fails to decompress LZ4 data with a bad header"
       );
 
@@ -374,7 +384,7 @@
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not read `.*': could not decompress file: buffer is too small \(NS_ERROR_FILE_CORRUPTED\)/,
+        /Could not decompress file because the buffer is too short/,
         "IOUtils::read fails to decompress LZ4 data with missing header"
       );
 
@@ -386,7 +396,7 @@
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not read `.*': could not decompress file: the file may be corrupt \(NS_ERROR_FILE_CORRUPTED\)/,
+        /Could not decompress file contents, the file may be corrupt/,
         "IOUtils::read fails to read corrupt LZ4 contents with a correct header"
       );
 
@@ -401,11 +411,11 @@
       await IOUtils.makeDirectory(fileName);
       await Assert.rejects(
         IOUtils.write(fileName, bytes),
-        /NotAllowedError: Could not write to `.*': failed to open file for writing/);
+        /NotAllowedError: Could not open the file at .+ for writing/);
 
       await Assert.rejects(
         IOUtils.write(fileName, bytes, { tmpPath }),
-        /NotAllowedError: Could not write to `.*': file is a directory/);
+        /NotAllowedError: Could not open the file at .+ for writing/);
 
       ok(!await IOUtils.exists(PathUtils.join(fileName, PathUtils.filename(tmpPath))));
     });
@@ -499,7 +509,7 @@
 
       await Assert.rejects(
         IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" }),
-        /NotFoundError: Could not write to `.*': failed to open file for writing/
+        /NotFoundError: Could not open the file at .*/
       );
     });
   </script>
