@@ -97,7 +97,7 @@ class InputModule extends WindowGlobalBiDiModule {
 
     const realm = this.messageHandler.getRealm();
 
-    const element = this.deserialize(realm, sharedReference);
+    const element = this.deserialize(sharedReference, realm);
     if (!lazy.dom.isElement(element)) {
       throw new lazy.error.NoSuchElementError(
         `No element found for shared id: ${sharedReference.sharedId}`

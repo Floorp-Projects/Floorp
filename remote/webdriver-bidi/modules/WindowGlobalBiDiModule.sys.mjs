@@ -26,20 +26,20 @@ export class WindowGlobalBiDiModule extends Module {
   /**
    * Wrapper to deserialize a local / remote value.
    *
-   * @param {Realm} realm
-   *     The Realm in which the value is deserialized.
    * @param {object} serializedValue
    *     Value of any type to be deserialized.
+   * @param {Realm} realm
+   *     The Realm in which the value is deserialized.
    * @param {ExtraSerializationOptions=} extraOptions
    *     Extra Remote Value deserialization options.
    *
    * @returns {object}
    *     Deserialized representation of the value.
    */
-  deserialize(realm, serializedValue, extraOptions = {}) {
+  deserialize(serializedValue, realm, extraOptions = {}) {
     extraOptions.nodeCache = this.#nodeCache;
 
-    return lazy.deserialize(realm, serializedValue, extraOptions);
+    return lazy.deserialize(serializedValue, realm, extraOptions);
   }
 
   /**
