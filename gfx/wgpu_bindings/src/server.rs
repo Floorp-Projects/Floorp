@@ -10,7 +10,7 @@ use crate::{
 
 use nsstring::{nsACString, nsCString, nsString};
 
-use wgc::{gfx_select, id};
+use wgc::{device::DeviceError, gfx_select, id};
 use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
 #[allow(unused_imports)]
 use wgh::Instance;
@@ -372,6 +372,7 @@ pub extern "C" fn wgpu_server_device_create_shader_module(
     label: Option<&nsACString>,
     code: &nsCString,
     out_message: &mut ShaderModuleCompilationMessage,
+    mut error_buf: ErrorBuffer,
 ) -> bool {
     let utf8_label = label.map(|utf16| utf16.to_string());
     let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
@@ -393,6 +394,26 @@ pub extern "C" fn wgpu_server_device_create_shader_module(
 
     if let Some(err) = error {
         out_message.set_error(&err, &source_str[..]);
+        let err_type = match &err {
+            CreateShaderModuleError::Device(DeviceError::OutOfMemory) => ErrorBufferType::OutOfMemory,
+            CreateShaderModuleError::Device(DeviceError::Lost) => ErrorBufferType::DeviceLost,
+            _ => ErrorBufferType::Validation,
+        };
+
+        // Per spec: "User agents should not include detailed compiler error messages or
+        // shader text in the message text of validation errors arising here: these details
+        // are accessible via getCompilationInfo()"
+        let message = match &err {
+            CreateShaderModuleError::Parsing(_) => "Parsing error".to_string(),
+            CreateShaderModuleError::Validation(_) => "Shader validation error".to_string(),
+            CreateShaderModuleError::Device(device_err) => format!("{device_err:?}"),
+            _ => format!("{err:?}"),
+        };
+
+        error_buf.init(ErrMsg {
+            message: &format!("Shader module creation failed: {message}"),
+            r#type: err_type,
+        });
         return false;
     }
 
