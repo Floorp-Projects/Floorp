@@ -122,10 +122,14 @@ def generate_prefs_header(c_out, yaml_path):
             "{} JS::Prefs::{}_{{{}}};".format(field_type, cpp_name, init_value)
         )
 
+        is_startup_pref_bool = "true" if is_startup_pref else "false"
+
         # Generate a MACRO invocation like this:
-        #   MACRO("arraybuffer_transfer", arraybuffer_transfer, bool, setAtStartup_arraybuffer_transfer)
+        #   MACRO("arraybuffer_transfer", arraybuffer_transfer, bool, setAtStartup_arraybuffer_transfer, true)
         macro_entries.append(
-            'MACRO("{}", {}, {}, {})'.format(name, cpp_name, type, setter_name)
+            'MACRO("{}", {}, {}, {}, {})'.format(
+                name, cpp_name, type, setter_name, is_startup_pref_bool
+            )
         )
 
         # Generate a C++ statement to set the JS pref based on Gecko's StaticPrefs:
@@ -134,7 +138,7 @@ def generate_prefs_header(c_out, yaml_path):
         if pref.get("do_not_use_directly", False):
             browser_pref_cpp_name += "_DoNotUseDirectly"
 
-        statement = "JS::Prefs::{}(StaticPrefs::{}());".format(
+        statement = "JS::Prefs::{}(mozilla::StaticPrefs::{}());".format(
             setter_name, browser_pref_cpp_name
         )
         browser_set_statements.append(statement)

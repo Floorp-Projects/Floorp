@@ -30,6 +30,7 @@
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "NetworkConnectivityService.h"
@@ -46,6 +47,7 @@
 #include "SocketProcessBridgeParent.h"
 #include "jsapi.h"
 #include "js/Initialization.h"
+#include "js/Prefs.h"
 #include "XPCSelfHostedShmem.h"
 
 #if defined(XP_WIN)
@@ -694,6 +696,9 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
   // For parsing PAC.
   if (!sInitializedJS) {
     JS::DisableJitBackend();
+
+    // Set all JS::Prefs.
+    SET_JS_PREFS_FROM_BROWSER_PREFS;
 
     const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
     if (jsInitFailureReason) {
