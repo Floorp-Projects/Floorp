@@ -207,6 +207,9 @@ rsync_filter_list = """
 
 + /xpcom/geckoprocesstypes_generator/**
 
+# List of prefs.
++ /modules/libpref/init/StaticPrefList.yaml
+
 # SpiderMonkey itself
 
 + /js/src/**
