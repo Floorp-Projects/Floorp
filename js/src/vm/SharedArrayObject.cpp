@@ -14,6 +14,7 @@
 #include "gc/Memory.h"
 #include "jit/AtomicOperations.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Prefs.h"
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
 #include "util/Memory.h"
@@ -433,7 +434,7 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   mozilla::Maybe<uint64_t> maxByteLength;
 #ifdef NIGHTLY_BUILD
   // SharedArrayBuffer ( length [ , options ] ), step 3.
-  if (cx->realm()->creationOptions().getSharedArrayBufferGrowableEnabled()) {
+  if (JS::Prefs::experimental_sharedarraybuffer_growable()) {
     // Inline call to GetArrayBufferMaxByteLengthOption.
     if (args.get(1).isObject()) {
       Rooted<JSObject*> options(cx, &args[1].toObject());

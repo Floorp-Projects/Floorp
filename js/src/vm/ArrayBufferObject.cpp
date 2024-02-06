@@ -37,6 +37,7 @@
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/MemoryMetrics.h"
+#include "js/Prefs.h"
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
 #include "js/Wrapper.h"
@@ -756,7 +757,7 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   mozilla::Maybe<uint64_t> maxByteLength;
 #ifdef NIGHTLY_BUILD
   // Step 3.
-  if (cx->realm()->creationOptions().getArrayBufferResizableEnabled()) {
+  if (JS::Prefs::experimental_arraybuffer_resizable()) {
     // Inline call to GetArrayBufferMaxByteLengthOption.
     if (args.get(1).isObject()) {
       Rooted<JSObject*> options(cx, &args[1].toObject());

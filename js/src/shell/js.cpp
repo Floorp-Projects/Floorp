@@ -736,10 +736,6 @@ bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableToSource = false;
-#ifdef NIGHTLY_BUILD
-// Pref for resizable ArrayBuffers and growable SharedArrayBuffers.
-bool shell::enableArrayBufferResizable = false;
-#endif
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
 bool shell::enableJSONParseWithSource = false;
 #endif
@@ -4121,10 +4117,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setCoopAndCoepEnabled(false)
       .setToSourceEnabled(enableToSource)
-#ifdef NIGHTLY_BUILD
-      .setArrayBufferResizableEnabled(enableArrayBufferResizable)
-      .setSharedArrayBufferGrowableEnabled(enableArrayBufferResizable)
-#endif
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
       .setJSONParseWithSource(enableJSONParseWithSource)
 #endif
@@ -12134,6 +12126,10 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   JS::Prefs::setAtStartup_well_formed_unicode_strings(
       !op.getBoolOption("disable-well-formed-unicode-strings"));
 #ifdef NIGHTLY_BUILD
+  JS::Prefs::setAtStartup_experimental_arraybuffer_resizable(
+      op.getBoolOption("enable-arraybuffer-resizable"));
+  JS::Prefs::setAtStartup_experimental_sharedarraybuffer_growable(
+      op.getBoolOption("enable-arraybuffer-resizable"));
   JS::Prefs::setAtStartup_experimental_iterator_helpers(
       op.getBoolOption("enable-iterator-helpers"));
   JS::Prefs::setAtStartup_experimental_new_set_methods(
@@ -12343,9 +12339,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStackCaptureDebuggeeOnly =
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableToSource = !op.getBoolOption("disable-tosource");
-#ifdef NIGHTLY_BUILD
-  enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");
-#endif
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   enableJSONParseWithSource = op.getBoolOption("enable-json-parse-with-source");
 #endif
