@@ -2092,6 +2092,44 @@ panelview {
     resize: vertical;
   }
 
+  select {
+    /* copied/adapted from toolkit/themes/shared/menulist-shared.css */
+    appearance: none;
+    background-color: var(--button-bgcolor, ButtonFace);
+    color: var(--button-color, ButtonText);
+    border-radius: 4px;
+    padding: 6px 16px;
+    margin: 5px 2px 3px;
+
+    font: menu;
+    font-weight: 600;
+    border: none;
+
+    background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+    background-position: right 10px center;
+    padding-inline-end: 32px; /* 2 * 10px padding + image's 12px width */
+    background-repeat: no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+
+    &:-moz-locale-dir(rtl) {
+      background-position: left 10px center;
+    }
+
+    &:hover {
+      background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 10%, ButtonFace));
+    }
+
+    &:hover:active {
+      background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
+    }
+
+    &:focus-visible {
+      outline: var(--focus-outline);
+      outline-offset: var(--focus-outline-offset);
+    }
+  }
+
   input,
   textarea {
     appearance: none;
@@ -2103,16 +2141,16 @@ panelview {
     &:focus-visible {
       border-color: transparent;
       outline: var(--focus-outline);
-      outline-offset: -1px;
+      outline-offset: var(--focus-outline-offset);
     }
   }
 
-  /* The menulist:has hack here should go away in bug 1869823 */
-  input:invalid:not(:focus-visible),
-  menulist:has(+ input:invalid):not(:focus-visible) {
+  input:user-invalid:not(:focus-visible),
+  select:user-invalid:not(:focus-visible) {
     border-color: transparent;
-    outline: 2px solid var(--color-error-outline);
-    outline-offset: -1px;
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-offset);
+    outline-color: var(--color-error-outline);
   }
 
   > .panel-subview-body > label {
@@ -2131,8 +2169,11 @@ panelview {
         background-position-x: right;
       }
 
-      input:valid + & {
-        display: none;
+      display: none;
+
+      input:user-invalid + &,
+      select:user-invalid + & {
+        display: block;
       }
     }
   }
@@ -2176,12 +2217,4 @@ panelview {
 
 #report-broken-site-panel-container {
   padding: 8px 16px 16px;
-}
-
-/* <menulist> does not support :invalid, so we use setCustomValidity
- * on a "helper" input. We must hide it with CSS, as using the HTML
- * "hidden" attribute will also keep it from working with :invalid.
- */
-#report-broken-site-popup-missing-reason-validation-helper {
-  display: none;
 }

@@ -17,25 +17,30 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
     for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
       const rbs = await menu.openReportBrokenSite();
-      const { reasonDropdownPopup, sendButton, URLInput } = rbs;
+      const { sendButton, URLInput } = rbs;
 
       rbs.isURLInvalidMessageHidden();
       rbs.isReasonNeededMessageHidden();
 
       rbs.setURL("");
+      window.document.activeElement.blur();
       rbs.isURLInvalidMessageShown();
       rbs.isReasonNeededMessageHidden();
 
       rbs.setURL("https://asdf");
+      window.document.activeElement.blur();
       rbs.isURLInvalidMessageHidden();
       rbs.isReasonNeededMessageHidden();
 
       rbs.setURL("http:/ /asdf");
+      window.document.activeElement.blur();
       rbs.isURLInvalidMessageShown();
       rbs.isReasonNeededMessageHidden();
 
       rbs.setURL("https://asdf");
-      await clickAndAwait(sendButton, "popupshown", reasonDropdownPopup);
+      const selectPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+      EventUtils.synthesizeMouseAtCenter(sendButton, {}, window);
+      await selectPromise;
       rbs.isURLInvalidMessageHidden();
       rbs.isReasonNeededMessageShown();
       await rbs.dismissDropdownPopup();
@@ -47,7 +52,9 @@ add_task(async function test() {
       rbs.setURL("");
       rbs.chooseReason("choose");
       window.ownerGlobal.document.activeElement?.blur();
-      await clickAndAwait(sendButton, "focus", URLInput);
+      const focusPromise = BrowserTestUtils.waitForEvent(URLInput, "focus");
+      EventUtils.synthesizeMouseAtCenter(sendButton, {}, window);
+      await focusPromise;
       rbs.isURLInvalidMessageShown();
       rbs.isReasonNeededMessageShown();
 

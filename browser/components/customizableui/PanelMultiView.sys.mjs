@@ -1522,6 +1522,7 @@ export var PanelView = class extends AssociatedToNode {
     let tag = element.localName;
     return (
       tag == "menulist" ||
+      tag == "select" ||
       tag == "radiogroup" ||
       tag == "input" ||
       tag == "textarea" ||
