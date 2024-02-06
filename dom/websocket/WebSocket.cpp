@@ -766,15 +766,6 @@ WebSocketImpl::OnBinaryMessageAvailable(nsISupports* aContext,
 
 NS_IMETHODIMP
 WebSocketImpl::OnStart(nsISupports* aContext) {
-  if (!IsTargetThread()) {
-    nsCOMPtr<nsISupports> context = aContext;
-    return Dispatch(NS_NewRunnableFunction("WebSocketImpl::OnStart",
-                                           [self = RefPtr{this}, context]() {
-                                             self->OnStart(context);
-                                           }),
-                    NS_DISPATCH_NORMAL);
-  }
-
   AssertIsOnTargetThread();
 
   if (mDisconnectingOrDisconnected) {
