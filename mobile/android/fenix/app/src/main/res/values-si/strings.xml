@@ -245,6 +245,9 @@
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">පිරික්සුම් ඉතිහාසය මකන්න</string>
 
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">පිටුව පරිවර්තනය</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">තෝරාගත් භාෂාව</string>
@@ -320,9 +323,14 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">දැන් නොවේ</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">ෆයර්ෆොක්ස් රහස්‍යතා දැන්වීම</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ඔබට ආරක්‍ෂාව සලසන්නෙමු</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">අපගේ ලාභ නොලබන පිටුබලයක් සහිත අතිරික්සුව අන්තර්ජාලය පුරා ඔබව රහසින් ලුහුබඳින සමාගම් ස්වයංක්‍රීයව නවත්වයි.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">සමාගම් රහසින් අන්තර්ජාලය පුරා ඔබව ලුහුබැඳීම නැවැත්වීමට අපගේ ලාභ නොලබන පිටුබලයක් සහිත අතිරික්සුව සැමවිට උදව් කරයි.\n\nඅපගේ රහස්‍යතා දැන්වීමෙන් තව දැන ගන්න.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -427,6 +435,8 @@
 
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">දත්තකඩ පතාක අවහිරය</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">පෞද්. පිරික්සීමෙහි දත්තකඩ පතාක අවහිරය</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">මෙම අඩවියට අක්‍රියයි</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -443,8 +453,22 @@
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">සහාය ඉල්ලීම යැවිණි</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">අඩවියට සහාය නොදක්වයි</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">%1$s සඳහා දත්තකඩ පතාක අවහිරය සක්‍රිය කරන්නද?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">%1$s සඳහා දත්තකඩ පතාක අවහිරය අක්‍රිය කරන්නද?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s මඟින්  මෙම අඩවියේ දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලීමට නොහැක. ඉදිරියේ දී මෙම අඩවිය සඳහා සහාය දැක්වීමට ඉල්ලීමක් යැවීමට හැකිය.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">අක්‍රිය කරන්න සහ %1$s දත්තකඩ මකා මෙම අඩවිය නැවත පූරණය කරනු ඇත. මෙය ඔබව නික්මවීමට හෝ බඩු කරත්ත හිස් කිරීමට ඉඩ ඇත.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">සක්‍රිය කළහොත් %1$s මෙම අඩවියේ දත්තකඩ පතාක ස්වයංක්‍රීයව ඉවතලීමට උත්සාහ කරයි.</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s ඔබ වෙනුවෙන් දත්තකඩ ඉවතලිණි</string>
+
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">බාධා අවමයි, මෙම අඩවියේ ඔබව ලුහුබඳින දත්තකඩ අවමයි.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
@@ -1506,6 +1530,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">සමස්ත දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">හරස්-අඩවි දත්තකඩ හුදකලාව</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">දත්ත බෙදා විකිණීමෙන් වළකින ලෙස අඩවි වලට දන්වන්න</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ලුහුබැඳීමේ අන්තර්ගතය</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1646,6 +1672,8 @@
     <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">මුරපද සමමුහූර්තය</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">උපාංගවල පිවිසුම් සමමුහූර්තය</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">උපාංග අතර මුරපද සමමුහූර්තය</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">සුරැකි පිවිසුම්</string>
     <!-- Preference to access list of saved passwords -->
@@ -1948,16 +1976,28 @@
     <string name="saved_login_password_description">පිවිසීමේ මුරපදය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">පිවිසීමට වෙනස්කම් සුරකින්න.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">වෙනස්කම් සුරකින්න</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">සංස්කරණය</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">මුරපදය සංස්කරණය</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">නව පිවිසුමක් යොදන්න</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">මුරපදය එක් කරන්න</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">මුරපදයක් අවශ්‍යයි</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">මුරපදයක් යොදන්න</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">පරිශීලක නාමය අවශ්‍යයි</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">පරිශ්‍රීලක නාමයක් යොදන්න</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">සත්කාරක නාමය අවශ්‍යයි</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">වියමන ලිපිනයක් යොදන්න</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">හඬ සෙවුම</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2200,6 +2240,9 @@
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">තව දැන ගැනීමට සබැඳිය අරින්න</string>
 
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">සබැඳි</string>
+
     <!-- Translations feature-->
 
     <!-- Text that links to additional information about the Firefox translations feature. -->
@@ -2298,6 +2341,15 @@
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">අවලංගු</string>
 
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">දත්ත ඉතිරි කරන ප්‍රකාරයේ දී බාගන්න ද (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">පරිවර්තන පෞද්ගලිකව රැඳවීමට ඔබගේ නිහිතයට අර්ධව භාෂා බාගැනෙයි.</string>
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">සෑමවිට දත්ත ඉතිරි කරන ප්‍රකාරයේ දී බාගන්න</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">බාගන්න</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->

@@ -1314,6 +1314,8 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zapri zasebne zavihke</string>
 
+    <string name="notification_erase_text_android_14">Tapnite to obvestilo ali ga povlecite vstran, da zaprete zasebne zavihke.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Trženje</string>
 
@@ -1722,8 +1724,12 @@
     <string name="preferences_passwords_exceptions">Izjeme</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Tu bodo prikazane prijave in gesla, ki niso shranjena.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Za tukaj navedena mesta %s ne bo shranjeval gesel.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Prijave in gesla za te strani ne bodo shranjene.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Za ta spletna mesta %s ne bo shranjeval gesel.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Izbriši vse izjeme</string>
     <!-- Hint for search box in logins list -->
@@ -1758,8 +1764,12 @@
     <string name="logins_biometric_prompt_message">Odklenite za ogled shranjenih prijav</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Zavarujte svoje prijave in gesla</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zavarujte shranjena gesla</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih prijav in gesel, če vašo napravo uporablja še kdo.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih gesel, če vašo napravo uporablja še kdo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pozneje</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1794,6 +1804,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Shranjuj in izpolnjuj načine plačila</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Podatki so šifrirani</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s šifrira vse načine plačila, ki jih shranite</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinhroniziraj kartice med napravami</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -2025,8 +2037,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti gesel</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Besedilno polje za urejanje spletnega naslova prijave.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Besedilno polje za urejanje spletnega naslova.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Besedilno polje za urejanje uporabniškega imena prijave.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Besedilno polje za urejanje uporabniškega imena.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Besedilno polje za urejanje gesla prijave.</string>
     <!--  The editable text field for a login's password. -->
@@ -2430,6 +2446,8 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Nikoli ne prevajaj jezika %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Nikoli ne prevajaj tega spletnega mesta</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Preglasi vse druge nastavitve</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Nastavitve prevajanja</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
@@ -2479,6 +2497,9 @@
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
     <string name="never_translate_site_dialog_cancel_preference">Prekliči</string>
 
+    <!-- Download languages preference screen -->
+    <!-- Title of the download languages preference screen toolbar.-->
+    <string name="download_languages_toolbar_title_preference">Prenesi jezike</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Več o tem</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
@@ -2500,6 +2521,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Izbrano</string>
 
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">Če izbrišete vse jezike, bo %1$s pri prevajanju v predpomnilnik naložil delne jezike.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Izbriši</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
