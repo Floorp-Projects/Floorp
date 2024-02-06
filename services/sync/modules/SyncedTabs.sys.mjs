@@ -61,6 +61,7 @@ let SyncedTabsInternal = {
       icon,
       client: client.id,
       lastUsed: tab.lastUsed,
+      inactive: tab.inactive,
     };
   },
 

@@ -154,16 +154,16 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
           container.classList.add("PanelUI-remotetabs-clientcontainer");
           container.setAttribute("role", "group");
           container.setAttribute("aria-labelledby", labelId);
-          if (paginationInfo && paginationInfo.clientId == client.id) {
-            this._appendSyncClient(
-              client,
-              container,
-              labelId,
-              paginationInfo.maxTabs
-            );
-          } else {
-            this._appendSyncClient(client, container, labelId);
-          }
+          let clientPaginationInfo =
+            paginationInfo && paginationInfo.clientId == client.id
+              ? paginationInfo
+              : { clientId: client.id };
+          this._appendSyncClient(
+            client,
+            container,
+            labelId,
+            clientPaginationInfo
+          );
           fragment.appendChild(container);
         }
         this.tabsList.appendChild(fragment);
@@ -201,12 +201,11 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     return messageLabel;
   }
 
-  _appendSyncClient(
-    client,
-    container,
-    labelId,
-    maxTabs = SyncedTabsPanelList.sRemoteTabsPerPage
-  ) {
+  _appendSyncClient(client, container, labelId, paginationInfo) {
+    let {
+      maxTabs = SyncedTabsPanelList.sRemoteTabsPerPage,
+      showInactive = false,
+    } = paginationInfo;
     // Create the element for the remote client.
     let clientItem = document.createXULElement("label");
     clientItem.setAttribute("id", labelId);
@@ -228,29 +227,39 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       );
       label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
     } else {
+      let tabs = client.tabs.filter(t => showInactive || !t.inactive);
+      let numInactive = client.tabs.length - tabs.length;
+
       // If this page will display all tabs, show no additional buttons.
       // Otherwise, show a "Show More" button
-      let hasNextPage = client.tabs.length > maxTabs;
+      let hasNextPage = tabs.length > maxTabs;
       let nextPageIsLastPage =
         hasNextPage &&
-        maxTabs + SyncedTabsPanelList.sRemoteTabsPerPage >= client.tabs.length;
+        maxTabs + SyncedTabsPanelList.sRemoteTabsPerPage >= tabs.length;
       if (nextPageIsLastPage) {
         // When the user clicks "Show More", try to have at least sRemoteTabsNextPageMinTabs more tabs
         // to display in order to avoid user frustration
         maxTabs = Math.min(
-          client.tabs.length - SyncedTabsPanelList.sRemoteTabsNextPageMinTabs,
+          tabs.length - SyncedTabsPanelList.sRemoteTabsNextPageMinTabs,
           maxTabs
         );
       }
       if (hasNextPage) {
-        client.tabs = client.tabs.slice(0, maxTabs);
+        tabs = tabs.slice(0, maxTabs);
       }
-      for (let [index, tab] of client.tabs.entries()) {
+      for (let [index, tab] of tabs.entries()) {
         let tabEnt = this._createSyncedTabElement(tab, index);
         container.appendChild(tabEnt);
       }
+      if (numInactive) {
+        let elt = this._createShowInactiveTabsElement(
+          paginationInfo,
+          numInactive
+        );
+        container.appendChild(elt);
+      }
       if (hasNextPage) {
-        let showAllEnt = this._createShowMoreSyncedTabsElement(client.id);
+        let showAllEnt = this._createShowMoreSyncedTabsElement(paginationInfo);
         container.appendChild(showAllEnt);
       }
     }
@@ -297,9 +306,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     return item;
   }
 
-  _createShowMoreSyncedTabsElement(clientId) {
-    let showCount = Infinity;
-
+  _createShowMoreSyncedTabsElement(paginationInfo) {
     let showMoreItem = document.createXULElement("toolbarbutton");
     showMoreItem.setAttribute("itemtype", "showmorebutton");
     showMoreItem.setAttribute("closemenu", "none");
@@ -310,12 +317,34 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     );
     document.l10n.setAttributes(showMoreItem, "appmenu-remote-tabs-showmore");
 
+    paginationInfo.maxTabs = Infinity;
     showMoreItem.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
-      this._showSyncedTabs({ clientId, maxTabs: showCount });
+      this._showSyncedTabs(paginationInfo);
     });
     return showMoreItem;
+  }
+
+  _createShowInactiveTabsElement(paginationInfo, count) {
+    let showItem = document.createXULElement("toolbarbutton");
+    showItem.setAttribute("itemtype", "showmorebutton");
+    showItem.setAttribute("closemenu", "none");
+    showItem.classList.add(
+      "subviewbutton",
+      "subviewbutton-nav",
+      "subviewbutton-nav-down"
+    );
+    document.l10n.setAttributes(showItem, "appmenu-remote-tabs-showinactive");
+    document.l10n.setArgs(showItem, { count });
+
+    paginationInfo.showInactive = true;
+    showItem.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._showSyncedTabs(paginationInfo);
+    });
+    return showItem;
   }
 
   destroy() {
