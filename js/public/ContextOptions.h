@@ -41,8 +41,7 @@ class JS_PUBLIC_API ContextOptions {
         trackNotImplemented_(false),
         trySmoosh_(false),
 #endif
-        fuzzing_(false),
-        enableDestructuringFuse_(true) {
+        fuzzing_(false) {
   }
   // clang-format on
 
@@ -140,12 +139,6 @@ class JS_PUBLIC_API ContextOptions {
   }
   ContextOptions& setImportAttributesAssertSyntax(bool enabled) {
     compileOptions_.setImportAttributesAssertSyntax(enabled);
-    return *this;
-  }
-
-  bool enableDestructuringFuse() const { return enableDestructuringFuse_; }
-  ContextOptions& setEnableDestructuringFuse(bool enabled) {
-    enableDestructuringFuse_ = enabled;
     return *this;
   }
 
@@ -250,7 +243,6 @@ class JS_PUBLIC_API ContextOptions {
   bool trySmoosh_ : 1;
 #endif
   bool fuzzing_ : 1;
-  bool enableDestructuringFuse_ : 1;
 
   // Compile options.
   PrefableCompileOptions compileOptions_;

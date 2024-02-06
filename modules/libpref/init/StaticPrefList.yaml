@@ -7419,6 +7419,7 @@
   type: bool
   value: true
   mirror: always
+  set_spidermonkey_pref: startup
 
 # The default amount of time to wait from the user being idle to starting a
 # shrinking GC. Measured in milliseconds.
