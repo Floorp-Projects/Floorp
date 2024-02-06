@@ -3460,9 +3460,7 @@ void ClientWebGLContext::BufferData(GLenum target, WebGLsizeiptr rawSize,
     EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "`size` too large for platform.");
     return;
   }
-
-  const auto data = RawBuffer<>{*size};
-  Run<RPROC(BufferData)>(target, data, usage);
+  Run<RPROC(BufferData_SizeOnly)>(target, *size, usage);
 }
 
 void ClientWebGLContext::BufferData(
