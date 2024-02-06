@@ -84,6 +84,17 @@ appmenu-remote-tabs-showmore =
   .label = Show More Tabs
   .tooltiptext = Show more tabs from this device
 
+# This is shown when there are inactive tabs which are not being shown.
+# Variables
+# $count (Number) - The number of inactive tabs which are not being shown (at least 1)
+appmenu-remote-tabs-showinactive =
+  .label =
+    { $count ->
+        [one] Show one inactive tab
+       *[other] Show { $count } inactive tabs
+    }
+  .tooltiptext = Show the inactive tabs on this device
+
 # This is shown beneath the name of a device when that device has no open tabs
 appmenu-remote-tabs-notabs = No open tabs
 
