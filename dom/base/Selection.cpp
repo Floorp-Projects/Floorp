@@ -256,41 +256,6 @@ static constexpr nsLiteralCString kNoRangeExistsError =
 namespace mozilla {
 
 /******************************************************************************
- * Utility methods defined in nsISelectionController.idl
- ******************************************************************************/
-
-const char* ToChar(SelectionType aSelectionType) {
-  switch (aSelectionType) {
-    case SelectionType::eInvalid:
-      return "SelectionType::eInvalid";
-    case SelectionType::eNone:
-      return "SelectionType::eNone";
-    case SelectionType::eNormal:
-      return "SelectionType::eNormal";
-    case SelectionType::eSpellCheck:
-      return "SelectionType::eSpellCheck";
-    case SelectionType::eIMERawClause:
-      return "SelectionType::eIMERawClause";
-    case SelectionType::eIMESelectedRawClause:
-      return "SelectionType::eIMESelectedRawClause";
-    case SelectionType::eIMEConvertedClause:
-      return "SelectionType::eIMEConvertedClause";
-    case SelectionType::eIMESelectedClause:
-      return "SelectionType::eIMESelectedClause";
-    case SelectionType::eAccessibility:
-      return "SelectionType::eAccessibility";
-    case SelectionType::eFind:
-      return "SelectionType::eFind";
-    case SelectionType::eURLSecondary:
-      return "SelectionType::eURLSecondary";
-    case SelectionType::eURLStrikeout:
-      return "SelectionType::eURLStrikeout";
-    default:
-      return "Invalid SelectionType";
-  }
-}
-
-/******************************************************************************
  * Utility methods defined in nsISelectionListener.idl
  ******************************************************************************/
 

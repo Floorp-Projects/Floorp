@@ -314,17 +314,6 @@ enum class SelectionType : RawSelectionType
   eHighlight = nsISelectionController::SELECTION_HIGHLIGHT,
 };
 
-// Using anonymous enum to define constants because these constants may be
-// used at defining fixed size array in some header files (e.g.,
-// nsFrameSelection.h).  So, the values needs to be defined here, but we cannot
-// use static/const even with extern since it causes failing to link or
-// initializes them after such headers.
-enum : size_t
-{
-  // kSelectionTypeCount is number of SelectionType.
-  kSelectionTypeCount = nsISelectionController::NUM_SELECTIONTYPES,
-};
-
 // kPresentSelectionTypes is selection types which may be displayed.
 // I.e., selection types except eNone.
 static const SelectionType kPresentSelectionTypes[] = {
@@ -342,7 +331,6 @@ static const SelectionType kPresentSelectionTypes[] = {
 };
 
 // Please include mozilla/dom/Selection.h for the following APIs.
-const char* ToChar(SelectionType aSelectionType);
 inline bool IsValidRawSelectionType(RawSelectionType aRawSelectionType);
 inline SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
 inline RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
