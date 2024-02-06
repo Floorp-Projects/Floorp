@@ -283,14 +283,14 @@
           "type": "array",
           "description": "An array of methods for extracting domains from ads.",
           "items": {
-            "$ref": "/schemas/extraction"
+            "$ref": "#/definitions/extraction"
           }
         },
         "nonAds": {
           "type": "array",
           "description": "An array of methods for extracting domains from non-ads.",
           "items": {
-            "$ref": "/schemas/extraction"
+            "$ref": "#/definitions/extraction"
           }
         }
       }
@@ -316,9 +316,8 @@
       "required": ["key", "value"]
     }
   },
-  "$defs": {
+  "definitions": {
     "extraction": {
-      "$id": "/schemas/extraction",
       "anyOf": [
         {
           "type": "object",
