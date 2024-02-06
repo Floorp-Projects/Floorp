@@ -23,9 +23,8 @@ WebAuthnService::MakeCredential(uint64_t aTransactionId,
                                 uint64_t browsingContextId,
                                 nsIWebAuthnRegisterArgs* aArgs,
                                 nsIWebAuthnRegisterPromise* aPromise) {
-  mSelectedService = DefaultService();
-  return SelectedService()->MakeCredential(aTransactionId, browsingContextId,
-                                           aArgs, aPromise);
+  return DefaultService()->MakeCredential(aTransactionId, browsingContextId,
+                                          aArgs, aPromise);
 }
 
 NS_IMETHODIMP
@@ -33,7 +32,7 @@ WebAuthnService::GetAssertion(uint64_t aTransactionId,
                               uint64_t browsingContextId,
                               nsIWebAuthnSignArgs* aArgs,
                               nsIWebAuthnSignPromise* aPromise) {
-  mSelectedService = DefaultService();
+  nsIWebAuthnService* service = DefaultService();
   nsresult rv;
 
 #if defined(XP_MACOSX)
@@ -56,13 +55,13 @@ WebAuthnService::GetAssertion(uint64_t aTransactionId,
         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID;
     if (allowListTransports.Length() > 0 &&
         (transportSet & passkeyTransportMask) == 0) {
-      mSelectedService = AuthrsService();
+      service = AuthrsService();
     }
   }
 #endif
 
-  rv = SelectedService()->GetAssertion(aTransactionId, browsingContextId, aArgs,
-                                       aPromise);
+  rv =
+      service->GetAssertion(aTransactionId, browsingContextId, aArgs, aPromise);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -94,58 +93,50 @@ NS_IMETHODIMP
 WebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
                                           const nsAString& aOrigin,
                                           uint64_t* aRv) {
-  return SelectedService()->HasPendingConditionalGet(aBrowsingContextId,
-                                                     aOrigin, aRv);
+  return DefaultService()->HasPendingConditionalGet(aBrowsingContextId, aOrigin,
+                                                    aRv);
 }
 
 NS_IMETHODIMP
 WebAuthnService::GetAutoFillEntries(
     uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
-  return SelectedService()->GetAutoFillEntries(aTransactionId, aRv);
+  return DefaultService()->GetAutoFillEntries(aTransactionId, aRv);
 }
 
 NS_IMETHODIMP
 WebAuthnService::SelectAutoFillEntry(uint64_t aTransactionId,
                                      const nsTArray<uint8_t>& aCredentialId) {
-  return SelectedService()->SelectAutoFillEntry(aTransactionId, aCredentialId);
+  return DefaultService()->SelectAutoFillEntry(aTransactionId, aCredentialId);
 }
 
 NS_IMETHODIMP
 WebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
-  return SelectedService()->ResumeConditionalGet(aTransactionId);
+  return DefaultService()->ResumeConditionalGet(aTransactionId);
 }
 
 NS_IMETHODIMP
-WebAuthnService::Reset() {
-  nsresult rv;
-  rv = SelectedService()->Reset();
-  mSelectedService = nullptr;
-  return rv;
-}
+WebAuthnService::Reset() { return DefaultService()->Reset(); }
 
 NS_IMETHODIMP
 WebAuthnService::Cancel(uint64_t aTransactionId) {
-  nsresult rv;
-  rv = SelectedService()->Cancel(aTransactionId);
-  mSelectedService = nullptr;
-  return rv;
+  return DefaultService()->Cancel(aTransactionId);
 }
 
 NS_IMETHODIMP
 WebAuthnService::PinCallback(uint64_t aTransactionId, const nsACString& aPin) {
-  return SelectedService()->PinCallback(aTransactionId, aPin);
+  return DefaultService()->PinCallback(aTransactionId, aPin);
 }
 
 NS_IMETHODIMP
 WebAuthnService::ResumeMakeCredential(uint64_t aTransactionId,
                                       bool aForceNoneAttestation) {
-  return SelectedService()->ResumeMakeCredential(aTransactionId,
-                                                 aForceNoneAttestation);
+  return DefaultService()->ResumeMakeCredential(aTransactionId,
+                                                aForceNoneAttestation);
 }
 
 NS_IMETHODIMP
 WebAuthnService::SelectionCallback(uint64_t aTransactionId, uint64_t aIndex) {
-  return SelectedService()->SelectionCallback(aTransactionId, aIndex);
+  return DefaultService()->SelectionCallback(aTransactionId, aIndex);
 }
 
 NS_IMETHODIMP
@@ -153,14 +144,14 @@ WebAuthnService::AddVirtualAuthenticator(
     const nsACString& protocol, const nsACString& transport,
     bool hasResidentKey, bool hasUserVerification, bool isUserConsenting,
     bool isUserVerified, uint64_t* retval) {
-  return SelectedService()->AddVirtualAuthenticator(
+  return DefaultService()->AddVirtualAuthenticator(
       protocol, transport, hasResidentKey, hasUserVerification,
       isUserConsenting, isUserVerified, retval);
 }
 
 NS_IMETHODIMP
 WebAuthnService::RemoveVirtualAuthenticator(uint64_t authenticatorId) {
-  return SelectedService()->RemoveVirtualAuthenticator(authenticatorId);
+  return DefaultService()->RemoveVirtualAuthenticator(authenticatorId);
 }
 
 NS_IMETHODIMP
@@ -171,41 +162,41 @@ WebAuthnService::AddCredential(uint64_t authenticatorId,
                                const nsACString& privateKey,
                                const nsACString& userHandle,
                                uint32_t signCount) {
-  return SelectedService()->AddCredential(authenticatorId, credentialId,
-                                          isResidentCredential, rpId,
-                                          privateKey, userHandle, signCount);
+  return DefaultService()->AddCredential(authenticatorId, credentialId,
+                                         isResidentCredential, rpId, privateKey,
+                                         userHandle, signCount);
 }
 
 NS_IMETHODIMP
 WebAuthnService::GetCredentials(
     uint64_t authenticatorId,
     nsTArray<RefPtr<nsICredentialParameters>>& retval) {
-  return SelectedService()->GetCredentials(authenticatorId, retval);
+  return DefaultService()->GetCredentials(authenticatorId, retval);
 }
 
 NS_IMETHODIMP
 WebAuthnService::RemoveCredential(uint64_t authenticatorId,
                                   const nsACString& credentialId) {
-  return SelectedService()->RemoveCredential(authenticatorId, credentialId);
+  return DefaultService()->RemoveCredential(authenticatorId, credentialId);
 }
 
 NS_IMETHODIMP
 WebAuthnService::RemoveAllCredentials(uint64_t authenticatorId) {
-  return SelectedService()->RemoveAllCredentials(authenticatorId);
+  return DefaultService()->RemoveAllCredentials(authenticatorId);
 }
 
 NS_IMETHODIMP
 WebAuthnService::SetUserVerified(uint64_t authenticatorId,
                                  bool isUserVerified) {
-  return SelectedService()->SetUserVerified(authenticatorId, isUserVerified);
+  return DefaultService()->SetUserVerified(authenticatorId, isUserVerified);
 }
 
 NS_IMETHODIMP
-WebAuthnService::Listen() { return SelectedService()->Listen(); }
+WebAuthnService::Listen() { return DefaultService()->Listen(); }
 
 NS_IMETHODIMP
 WebAuthnService::RunCommand(const nsACString& cmd) {
-  return SelectedService()->RunCommand(cmd);
+  return DefaultService()->RunCommand(cmd);
 }
 
 }  // namespace mozilla::dom
