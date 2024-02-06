@@ -163,12 +163,16 @@ bool WGLLibrary::EnsureInitialized() {
   const auto curCtx = mSymbols.fGetCurrentContext();
   const auto curDC = mSymbols.fGetCurrentDC();
 
+  GLContext::ResetTLSCurrentContext();
+
   if (!mSymbols.fMakeCurrent(mRootDc, mDummyGlrc)) {
     NS_WARNING("wglMakeCurrent failed");
     return false;
   }
-  const auto resetContext =
-      MakeScopeExit([&]() { mSymbols.fMakeCurrent(curDC, curCtx); });
+  const auto resetContext = MakeScopeExit([&]() {
+    GLContext::ResetTLSCurrentContext();
+    mSymbols.fMakeCurrent(curDC, curCtx);
+  });
 
   const auto loader = GetSymbolLoader();
 
@@ -302,6 +306,8 @@ GLContextWGL::~GLContextWGL() {
 }
 
 bool GLContextWGL::MakeCurrentImpl() const {
+  GLContext::ResetTLSCurrentContext();
+
   const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
   NS_ASSERTION(succeeded, "Failed to make GL context current!");
   return succeeded;

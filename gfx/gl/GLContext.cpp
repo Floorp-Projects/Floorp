@@ -2401,6 +2401,12 @@ uint32_t GetBytesPerTexel(GLenum format, GLenum type) {
   return 0;
 }
 
+void GLContext::ResetTLSCurrentContext() {
+  if (sCurrentContext.init()) {
+    sCurrentContext.set(nullptr);
+  }
+}
+
 bool GLContext::MakeCurrent(bool aForce) const {
   if (MOZ_UNLIKELY(IsContextLost())) return false;
 
