@@ -73,7 +73,7 @@ class ThreadLocalPointer {
  private:
   ThreadLocalStorage::Slot slot_;
 
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer<T>);
+  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer);
 };
 
 // A ThreadLocalOwnedPointer<T> is like a ThreadLocalPointer<T> except that
@@ -112,7 +112,7 @@ class ThreadLocalOwnedPointer {
 
   ThreadLocalStorage::Slot slot_{&DeleteTlsPtr};
 
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalOwnedPointer<T>);
+  DISALLOW_COPY_AND_ASSIGN(ThreadLocalOwnedPointer);
 };
 #endif  // DCHECK_IS_ON()
 

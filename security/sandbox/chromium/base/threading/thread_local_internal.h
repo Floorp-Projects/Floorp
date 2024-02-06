@@ -69,7 +69,7 @@ class CheckedThreadLocalOwnedPointer {
 
   std::atomic_int num_assigned_threads_{0};
 
-  DISALLOW_COPY_AND_ASSIGN(CheckedThreadLocalOwnedPointer<T>);
+  DISALLOW_COPY_AND_ASSIGN(CheckedThreadLocalOwnedPointer);
 };
 
 }  // namespace internal
