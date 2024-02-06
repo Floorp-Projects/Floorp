@@ -163,6 +163,13 @@ def check_build_id_sha1(developer_options):
 check_and_add_linker_flag("-Wl,--build-id=uuid", when=check_build_id_uuid)
 check_and_add_linker_flag("-Wl,--build-id=sha1", when=check_build_id_uuid)
 
+check_and_add_linker_flag("-Wl,-z,noexecstack", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,text", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,relro", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,now", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-Bsymbolic-functions", when=is_gnu_cc)
+
 # Please keep these last in this file.
 add_old_configure_assignment("_COMPILATION_LDFLAGS", linker_flags.ldflags)
 add_old_configure_assignment("_COMPILATION_HOST_LDFLAGS", linker_flags.host_ldflags)
