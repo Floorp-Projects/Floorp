@@ -43,7 +43,7 @@ async function teardown(pref) {
 async function runTest({ aLocationURI, aFlags, expected }) {
   async function _run() {
     Assert.equal(undefined, Glean.shopping.productPageVisits.testGetValue());
-    ShoppingUtils.maybeRecordExposure(aLocationURI, aFlags);
+    ShoppingUtils.onLocationChange(aLocationURI, aFlags);
     await Services.fog.testFlushAllChildren();
     Assert.equal(expected, Glean.shopping.productPageVisits.testGetValue());
   }
@@ -108,9 +108,9 @@ add_task(async function test_shopping_exposure_ignore_pushstate_repeats() {
     // to be roughly the observed behavior when navigating between walmart
     // product pages.
     ShoppingUtils.lastWalmartURI = WALMART_PAGE;
-    ShoppingUtils.maybeRecordExposure(WALMART_PAGE, aFlags);
-    ShoppingUtils.maybeRecordExposure(WALMART_OTHER_PAGE, aFlags);
-    ShoppingUtils.maybeRecordExposure(WALMART_OTHER_PAGE, aFlags);
+    ShoppingUtils.onLocationChange(WALMART_PAGE, aFlags);
+    ShoppingUtils.onLocationChange(WALMART_OTHER_PAGE, aFlags);
+    ShoppingUtils.onLocationChange(WALMART_OTHER_PAGE, aFlags);
     await Services.fog.testFlushAllChildren();
     Assert.equal(1, Glean.shopping.productPageVisits.testGetValue());
   }
