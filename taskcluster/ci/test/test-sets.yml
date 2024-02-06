@@ -493,3 +493,7 @@ android-hw-browsertime:
 
 android-hw-browsertime-profiling:
     - browsertime-tp6m-profiling
+
+android-hw-speedometer-tests:
+    - browsertime-benchmark-speedometer-mobile
+    - browsertime-benchmark-speedometer3-mobile
