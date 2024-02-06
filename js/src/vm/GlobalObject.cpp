@@ -232,8 +232,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
 
     case JSProto_WeakRef:
     case JSProto_FinalizationRegistry:
-      return cx->realm()->creationOptions().getWeakRefsEnabled() ==
-             JS::WeakRefSpecifier::Disabled;
+      return JS::GetWeakRefsEnabled() == JS::WeakRefSpecifier::Disabled;
 
     case JSProto_Iterator:
     case JSProto_AsyncIterator:

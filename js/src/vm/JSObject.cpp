@@ -2190,7 +2190,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 
   if (key == JSProto_FinalizationRegistry &&
-      cx->realm()->creationOptions().getWeakRefsEnabled() ==
+      JS::GetWeakRefsEnabled() ==
           JS::WeakRefSpecifier::EnabledWithoutCleanupSome &&
       id == NameToId(cx->names().cleanupSome)) {
     return true;

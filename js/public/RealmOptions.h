@@ -52,16 +52,6 @@ enum class CompartmentSpecifier {
   ExistingCompartment,
 };
 
-/**
- * Specification for whether weak refs should be enabled and if so whether the
- * FinalizationRegistry.cleanupSome method should be present.
- */
-enum class WeakRefSpecifier {
-  Disabled,
-  EnabledWithCleanupSome,
-  EnabledWithoutCleanupSome
-};
-
 struct LocaleString : js::RefCounted<LocaleString> {
   const char* chars_;
 
@@ -182,12 +172,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool getCoopAndCoepEnabled() const;
   RealmCreationOptions& setCoopAndCoepEnabled(bool flag);
 
-  WeakRefSpecifier getWeakRefsEnabled() const { return weakRefs_; }
-  RealmCreationOptions& setWeakRefsEnabled(WeakRefSpecifier spec) {
-    weakRefs_ = spec;
-    return *this;
-  }
-
   bool getToSourceEnabled() const { return toSource_; }
   RealmCreationOptions& setToSourceEnabled(bool flag) {
     toSource_ = flag;
@@ -272,7 +256,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   };
   uint64_t profilerRealmID_ = 0;
   RefPtr<LocaleString> locale_;
-  WeakRefSpecifier weakRefs_ = WeakRefSpecifier::Disabled;
   bool invisibleToDebugger_ = false;
   bool preserveJitCode_ = false;
   bool sharedMemoryAndAtomics_ = false;

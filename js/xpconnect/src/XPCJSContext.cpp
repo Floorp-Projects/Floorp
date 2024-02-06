@@ -778,24 +778,10 @@ bool xpc::ShouldDiscardSystemSource() { return sDiscardSystemSource; }
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
 
-static mozilla::Atomic<bool> sWeakRefsEnabled(false);
-static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
 static mozilla::Atomic<bool> sSharedArrayBufferGrowableEnabled(false);
 #endif
-
-static JS::WeakRefSpecifier GetWeakRefsEnabled() {
-  if (!sWeakRefsEnabled) {
-    return JS::WeakRefSpecifier::Disabled;
-  }
-
-  if (sWeakRefsExposeCleanupSome) {
-    return JS::WeakRefSpecifier::EnabledWithCleanupSome;
-  }
-
-  return JS::WeakRefSpecifier::EnabledWithoutCleanupSome;
-}
 
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
@@ -803,7 +789,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setCoopAndCoepEnabled(
           StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
           StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
-      .setWeakRefsEnabled(GetWeakRefsEnabled())
 #ifdef NIGHTLY_BUILD
       .setArrayBufferResizableEnabled(sArrayBufferResizableEnabled)
       .setSharedArrayBufferGrowableEnabled(sSharedArrayBufferGrowableEnabled)
@@ -1005,9 +990,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-  sWeakRefsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "weakrefs");
-  sWeakRefsExposeCleanupSome = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
 #ifdef NIGHTLY_BUILD
   sArrayBufferResizableEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.arraybuffer_resizable");
