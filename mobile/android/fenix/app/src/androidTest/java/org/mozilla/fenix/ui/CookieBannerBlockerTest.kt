@@ -12,13 +12,14 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the new Cookie banner blocker option and functionality.
  */
-class CookieBannerBlockerTest {
+class CookieBannerBlockerTest : TestSetup() {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 

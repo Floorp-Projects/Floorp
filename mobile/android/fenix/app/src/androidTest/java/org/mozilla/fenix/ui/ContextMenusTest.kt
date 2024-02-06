@@ -5,15 +5,8 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -22,7 +15,9 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.downloadRobot
@@ -44,31 +39,14 @@ import org.mozilla.fenix.ui.robots.shareOverlay
  *
  */
 
-class ContextMenusTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
+class ContextMenusTest : TestSetup() {
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+    val activityIntentTestRule = HomeActivityIntentTestRule(isJumpBackInCFREnabled = false)
 
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        activityIntentTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243837
     @Test
