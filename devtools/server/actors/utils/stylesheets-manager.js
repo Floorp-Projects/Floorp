@@ -68,8 +68,8 @@ const modifiedStyleSheets = new WeakMap();
  */
 class StyleSheetsManager extends EventEmitter {
   #abortController;
-  // List of all watched media queries. Change listeners are being registered from getStyleSheetRuleCountAndAtRules.
-  #mqlList = [];
+  // Map<resourceId, AbortController>
+  #mqlChangeAbortControllerMap = new Map();
   #styleSheetCount = 0;
   #styleSheetMap = new Map();
   #styleSheetCreationData;
@@ -446,12 +446,6 @@ class StyleSheetsManager extends EventEmitter {
     InspectorUtils.parseStyleSheet(styleSheet, text);
     modifiedStyleSheets.set(styleSheet, text);
 
-    // Remove event handler from all media query list we set to. We are going to re-set
-    // those handler properly from getStyleSheetRuleCountAndAtRules.
-    for (const mql of this.#mqlList) {
-      mql.onchange = null;
-    }
-
     const { atRules, ruleCount } =
       this.getStyleSheetRuleCountAndAtRules(styleSheet);
 
@@ -631,7 +625,10 @@ class StyleSheetsManager extends EventEmitter {
       return [];
     }
 
-    this.#mqlList = [];
+    if (this.#mqlChangeAbortControllerMap.has(resourceId)) {
+      this.#mqlChangeAbortControllerMap.get(resourceId).abort();
+      this.#mqlChangeAbortControllerMap.delete(resourceId);
+    }
 
     // Accessing the stylesheet associated window might be slow due to cross compartment
     // wrappers, so only retrieve it if it's needed.
@@ -654,16 +651,24 @@ class StyleSheetsManager extends EventEmitter {
         let matches = false;
 
         try {
-          const mql = getStyleSheetAssociatedWindow().matchMedia(
-            rule.media.mediaText
-          );
+          const associatedWin = getStyleSheetAssociatedWindow();
+          const mql = associatedWin.matchMedia(rule.media.mediaText);
           matches = mql.matches;
-          mql.onchange = this.#onMatchesChange.bind(
-            this,
-            resourceId,
-            atRules.length
+
+          let ac = this.#mqlChangeAbortControllerMap.get(resourceId);
+          if (!ac) {
+            ac = new associatedWin.AbortController();
+            this.#mqlChangeAbortControllerMap.set(resourceId, ac);
+          }
+
+          const index = atRules.length;
+          mql.addEventListener(
+            "change",
+            () => this.#onMatchesChange(resourceId, index, mql),
+            {
+              signal: ac.signal,
+            }
           );
-          this.#mqlList.push(mql);
         } catch (e) {
           // Ignored
         }
@@ -943,6 +948,10 @@ class StyleSheetsManager extends EventEmitter {
 
     this.#styleSheetMap.delete(existingResourceId);
     this.#styleSheetCreationData?.delete(styleSheet);
+    if (this.#mqlChangeAbortControllerMap.has(existingResourceId)) {
+      this.#mqlChangeAbortControllerMap.get(existingResourceId).abort();
+      this.#mqlChangeAbortControllerMap.delete(existingResourceId);
+    }
 
     for (const onDestroyed of this.#watchListeners.onDestroyed) {
       onDestroyed({
@@ -988,6 +997,11 @@ class StyleSheetsManager extends EventEmitter {
     if (this.#abortController) {
       this.#abortController.abort();
     }
+    if (this.#mqlChangeAbortControllerMap) {
+      for (const ac of this.#mqlChangeAbortControllerMap.values()) {
+        ac.abort();
+      }
+    }
 
     try {
       this.#unwatchStyleSheetChangeEvents();
@@ -1002,7 +1016,7 @@ class StyleSheetsManager extends EventEmitter {
 
     this.#styleSheetMap.clear();
     this.#abortController = null;
-    this.#mqlList = null;
+    this.#mqlChangeAbortControllerMap = null;
     this.#styleSheetCreationData = null;
     this.#styleSheetMap = null;
     this.#targetActor = null;
