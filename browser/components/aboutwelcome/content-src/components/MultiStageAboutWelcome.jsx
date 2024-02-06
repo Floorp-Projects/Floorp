@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
-import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
 import { useLanguageSwitcher } from "./LanguageSwitcher";
 import { SubmenuButton } from "./SubmenuButton";

@@ -6,7 +6,7 @@ import React from "react";
 import {
   AboutWelcomeUtils,
   DEFAULT_RTAMO_CONTENT,
-} from "../lib/aboutwelcome-utils";
+} from "../lib/aboutwelcome-utils.mjs";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
 import { BASE_PARAMS } from "asrouter/content-src/templates/FirstRun/addUtmParams";
 
