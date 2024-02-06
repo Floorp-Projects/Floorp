@@ -26,4 +26,6 @@ support-files = [
 
 ["browser_shopping_integration.js"]
 
+["browser_shopping_request_telemetry.js"]
+
 ["browser_shopping_sidebar_messages.js"]
