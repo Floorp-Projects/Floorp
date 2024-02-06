@@ -143,3 +143,7 @@ def file_prefix_map_flags(path_remapping, path_remappings, compiler):
 
 
 set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)
+
+# Please keep these last in this file.
+add_old_configure_assignment("_COMPILATION_LDFLAGS", linker_flags.ldflags)
+add_old_configure_assignment("_COMPILATION_HOST_LDFLAGS", linker_flags.host_ldflags)
