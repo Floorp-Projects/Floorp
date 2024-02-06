@@ -88,7 +88,6 @@ module.exports = {
       rules: {
         "func-name-matching": 0,
         "lines-between-class-members": 0,
-        "require-await": 0,
       },
     },
   ],
@@ -185,7 +184,6 @@ module.exports = {
     "prefer-spread": "error",
     "prefer-template": "error",
     radix: ["error", "always"],
-    "require-await": "error",
     "sort-vars": "error",
     "symbol-description": "error",
     "vars-on-top": "error",
