@@ -53,6 +53,8 @@ def old_configure(old_configure, build_project):
 @imports(_from="__builtin__", _import="print")
 @imports(_from="mozbuild.shellutil", _import="quote")
 def prepare_configure(mozconfig, old_configure_assignments):
+    assignments = {}
+
     with open("old-configure.vars", "w") as out:
         log.debug("Injecting the following to old-configure:")
 
@@ -67,11 +69,15 @@ def prepare_configure(mozconfig, old_configure_assignments):
                     inject("unset %s # from %s" % (key, action[len("removed ") :]))
                 else:
                     inject("%s=%s # %s" % (key, quote(value), action))
+                    assignments[key] = value
 
             inject("# end of mozconfig values")
 
         for k, v in old_configure_assignments:
             inject("%s=%s" % (k, quote(v)))
+            assignments[k] = v
+
+    return namespace(assignments=assignments)
 
 
 @template
@@ -130,6 +136,7 @@ def old_configure_for(old_configure_path, extra_env=None):
         awk,
         m4,
         shell,
+        "--cache-file",
     )
     @imports(_from="__builtin__", _import="compile")
     @imports(_from="__builtin__", _import="open")
@@ -138,6 +145,7 @@ def old_configure_for(old_configure_path, extra_env=None):
     @imports("itertools")
     @imports("logging")
     @imports("os")
+    @imports("re")
     @imports("subprocess")
     @imports("sys")
     @imports(_from="mozbuild.shellutil", _import="quote")
@@ -156,14 +164,42 @@ def old_configure_for(old_configure_path, extra_env=None):
         awk,
         m4,
         shell,
+        cache_file_option,
     ):
-        # Use prepare_configure to make lint happy
-        prepare_configure
-
         if altered_path:
             path = altered_path
         else:
             path = os.pathsep.join(prefer_mozillabuild_path)
+
+        cxx = prepare_configure.assignments.get("CXX")
+        cc = prepare_configure.assignments.get("CC")
+
+        if cc and cxx:
+            if cache_file_option:
+                config_cache = cache_file_option[0]
+            else:
+                config_cache = "config.cache"
+
+            if os.path.exists(config_cache):
+                remove = False
+                with open(config_cache, "r") as cfg_cache:
+                    cxx_pattern = re.compile(
+                        r"^ac_cv_prog_CXX=\${ac_cv_prog_CXX='(.*)'}$"
+                    )
+                    cc_pattern = re.compile(r"^ac_cv_prog_CC=\${ac_cv_prog_CC='(.*)'}$")
+                    for line in cfg_cache:
+                        m = cc_pattern.match(line)
+                        if m and m.group(1) != cc:
+                            remove = True
+                            break
+                        m = cxx_pattern.match(line)
+                        if m and m.group(1) != cxx:
+                            remove = True
+                            break
+
+                if remove:
+                    log.info("invalidating config.cache")
+                    os.remove(config_cache)
 
         refresh = True
         if os.path.exists(old_configure):
