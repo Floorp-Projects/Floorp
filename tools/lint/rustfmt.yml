@@ -5,6 +5,7 @@ rust:
     include:
         - '.'
     exclude:
+        - build/rust/windows/src/lib.rs
         - dom/webauthn/libudev-sys/
         - gfx/wr/peek-poke/
         - gfx/wr/webrender_build/

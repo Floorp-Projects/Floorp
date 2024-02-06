@@ -12,6 +12,9 @@ job-defaults:
         script: mozharness/scripts/fx_desktop_build.py
     optimization:
         skip-unless-expanded: null
+    fetches:
+        toolchain:
+            - windows-rs
 
 win32-mingwclang/opt:
     description: "Win32 MinGW-Clang Opt"

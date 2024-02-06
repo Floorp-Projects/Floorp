@@ -14,6 +14,9 @@ license:
         - toolkit/components/pdfjs/content/web/images/
         # We probably want a specific license
         - browser/extensions/webcompat/injections/
+        # Copied mostly verbatim from upstream. License is documented in
+        # Cargo.toml.
+        - build/rust/windows/src/lib.rs
         # Different license
         - build/pgo/blueprint/print.css
         # Different license
