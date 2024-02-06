@@ -80,13 +80,6 @@ partial interface PublicKeyCredential {
 
 [SecureContext]
 partial interface PublicKeyCredential {
-    // isExternalCTAP2SecurityKeySupported will be removed in Bug 1819713.
-    [NewObject, Deprecated="IsExternalCTAP2SecurityKeySupported"]
-    static Promise<boolean> isExternalCTAP2SecurityKeySupported();
-};
-
-[SecureContext]
-partial interface PublicKeyCredential {
     [Throws, Pref="security.webauthn.enable_json_serialization_methods"] static PublicKeyCredentialCreationOptions parseCreationOptionsFromJSON(PublicKeyCredentialCreationOptionsJSON options);
 };
 
