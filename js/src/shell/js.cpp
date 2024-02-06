@@ -757,8 +757,6 @@ bool shell::compileOnly = false;
 bool shell::disableOOMFunctions = false;
 bool shell::defaultToSameCompartment = true;
 
-bool shell::useFdlibmForSinCosTan = false;
-
 #ifdef DEBUG
 bool shell::dumpEntrainedVariables = false;
 bool shell::OOM_printAllocationCount = false;
@@ -12149,6 +12147,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
 
   JS::Prefs::setAtStartup_destructuring_fuse(
       !op.getBoolOption("disable-destructuring-fuse"));
+  JS::Prefs::setAtStartup_use_fdlibm_for_sin_cos_tan(
+      op.getBoolOption("use-fdlibm-for-sin-cos-tan"));
   JS::Prefs::setAtStartup_property_error_message_fix(
       !op.getBoolOption("disable-property-error-message-fix"));
 
@@ -12353,7 +12353,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("enable-import-assertions");
   enableImportAttributes = op.getBoolOption("enable-import-attributes") ||
                            enableImportAttributesAssertSyntax;
-  useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
       .setSourcePragmas(enableSourcePragmas)
@@ -12361,8 +12360,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setImportAttributes(enableImportAttributes)
       .setImportAttributesAssertSyntax(enableImportAttributesAssertSyntax);
-
-  JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
   if (const char* str = op.getStringOption("shared-memory")) {
     if (strcmp(str, "off") == 0) {

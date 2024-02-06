@@ -1016,9 +1016,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setDumpStackOnDebuggeeWouldRun(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "dump_stack_on_debuggee_would_run"));
 
-  JS::SetUseFdlibmForSinCosTan(
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "use_fdlibm_for_sin_cos_tan"));
-
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
     bool safeMode = false;

@@ -24,6 +24,7 @@
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
+#include "js/Prefs.h"
 #include "js/PropertySpec.h"
 #include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
@@ -47,16 +48,12 @@ using mozilla::NumberEqualsInt64;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
-static mozilla::Atomic<bool, mozilla::Relaxed> sUseFdlibmForSinCosTan;
-
-JS_PUBLIC_API void JS::SetUseFdlibmForSinCosTan(bool value) {
-  sUseFdlibmForSinCosTan = value;
+bool js::math_use_fdlibm_for_sin_cos_tan() {
+  return JS::Prefs::use_fdlibm_for_sin_cos_tan();
 }
 
-bool js::math_use_fdlibm_for_sin_cos_tan() { return sUseFdlibmForSinCosTan; }
-
 static inline bool UseFdlibmForSinCosTan(const CallArgs& args) {
-  return sUseFdlibmForSinCosTan ||
+  return math_use_fdlibm_for_sin_cos_tan() ||
          args.callee().nonCCWRealm()->creationOptions().alwaysUseFdlibm();
 }
 
@@ -204,7 +201,7 @@ double js::math_cos_fdlibm_impl(double x) {
 }
 
 double js::math_cos_native_impl(double x) {
-  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
+  MOZ_ASSERT(!math_use_fdlibm_for_sin_cos_tan());
   AutoUnsafeCallWithABI unsafe;
   return std::cos(x);
 }
@@ -599,7 +596,7 @@ double js::math_sin_fdlibm_impl(double x) {
 }
 
 double js::math_sin_native_impl(double x) {
-  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
+  MOZ_ASSERT(!math_use_fdlibm_for_sin_cos_tan());
   AutoUnsafeCallWithABI unsafe;
   return std::sin(x);
 }
@@ -628,7 +625,7 @@ double js::math_tan_fdlibm_impl(double x) {
 }
 
 double js::math_tan_native_impl(double x) {
-  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
+  MOZ_ASSERT(!math_use_fdlibm_for_sin_cos_tan());
   AutoUnsafeCallWithABI unsafe;
   return std::tan(x);
 }
