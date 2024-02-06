@@ -12,6 +12,7 @@
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "jit/Invalidation.h"
+#include "js/Prefs.h"
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSScript-inl.h"
@@ -65,15 +66,9 @@ AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
 JSScript* const AllocSite::WasmScript =
     reinterpret_cast<JSScript*>(AllocSite::STATE_MASK + 1);
 
-static bool SiteBasedPretenuringEnabled = true;
-
-JS_PUBLIC_API void JS::SetSiteBasedPretenuringEnabled(bool enable) {
-  SiteBasedPretenuringEnabled = enable;
-}
-
 bool PretenuringNursery::canCreateAllocSite() {
   MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
-  return SiteBasedPretenuringEnabled &&
+  return JS::Prefs::site_based_pretenuring() &&
          allocSitesCreated < MaxAllocSitesPerMinorGC;
 }
 
