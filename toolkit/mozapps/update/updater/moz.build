@@ -62,6 +62,7 @@ elif CONFIG["MOZ_UPDATE_CHANNEL"] in (
     "nightly-profiling",
     "nightly-oak",
     "nightly-ux",
+    "nightly-larch",
 ):
     primary_cert.inputs += ["nightly_aurora_level3_primary.der"]
     secondary_cert.inputs += ["nightly_aurora_level3_secondary.der"]
