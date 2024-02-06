@@ -498,12 +498,15 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         }
 
         // Drop the exception instead of leaking cross compartment data.
-        if (!cx->getPendingException(
-                MutableHandleValue::fromMarkedLocation(&rfe->exception)) ||
-            !cx->getPendingExceptionStack(
-                MutableHandleValue::fromMarkedLocation(&rfe->exceptionStack))) {
+        RootedValue exception(cx);
+        RootedValue exceptionStack(cx);
+        if (!cx->getPendingException(&exception) ||
+            !cx->getPendingExceptionStack(&exceptionStack)) {
           rfe->exception = UndefinedValue();
           rfe->exceptionStack = NullValue();
+        } else {
+          rfe->exception = exception;
+          rfe->exceptionStack = exceptionStack;
         }
         cx->clearPendingException();
         return true;
