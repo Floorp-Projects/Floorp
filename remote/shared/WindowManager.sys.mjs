@@ -180,11 +180,19 @@ class WindowManager {
    * @param {ChromeWindow=} options.openerWindow
    *     Use this window as the opener of the new window. Defaults to the
    *     topmost window.
+   * @param {string=} options.userContextId
+   *     The id of the user context which should own the initial tab of the new
+   *     window.
    * @returns {Promise}
    *     A promise resolving to the newly created chrome window.
    */
   async openBrowserWindow(options = {}) {
-    let { focus = false, isPrivate = false, openerWindow = null } = options;
+    let {
+      focus = false,
+      isPrivate = false,
+      openerWindow = null,
+      userContextId = null,
+    } = options;
 
     switch (lazy.AppInfo.name) {
       case "Firefox":
@@ -210,6 +218,7 @@ class WindowManager {
             {
               private: isPrivate,
               resolveOnContentBrowserCreated,
+              userContextId: userContextId !== null ? userContextId : undefined,
             }
           )
         );
