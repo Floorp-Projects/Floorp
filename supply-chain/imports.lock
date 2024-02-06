@@ -407,6 +407,12 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.presser]]
+version = "0.3.1"
+when = "2022-10-16"
+user-id = 52553
+user-login = "embark-studios"
+
 [[publisher.prio]]
 version = "0.15.3"
 when = "2023-10-03"
@@ -1200,6 +1206,19 @@ it as correct. This crate's size comes in large part due to the generated
 unicode tables that it contains. This crate is additionally widely used
 throughout the ecosystem and skimming the crate shows no usage of `std::*` APIs
 and nothing suspicious.
+"""
+
+[[audits.embark-studios.wildcard-audits.presser]]
+who = "Gray Olson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+user-id = 52553 # embark-studios
+start = "2021-01-01"
+end = "2024-05-23"
+notes = """
+Small crate with no dependencies and no ambient capabilities. The safe interface of the crate
+is gated behind unsafe implementation of a core trait, and care must be taken to ensure that
+the relevant invariants are guaranteed when doing so. Maintained by the Ark team at Embark
+and used in production.
 """
 
 [[audits.embark-studios.audits.anyhow]]

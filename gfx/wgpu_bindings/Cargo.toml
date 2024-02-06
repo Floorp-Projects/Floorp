@@ -52,6 +52,7 @@ rev = "32e70bc1635905c508d408eb1cf22b2aa062ffe1"
 package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
 rev = "32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+features = ["windows_rs"]
 
 [target.'cfg(windows)'.dependencies.d3d12]
 git = "https://github.com/gfx-rs/wgpu"
