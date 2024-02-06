@@ -166,15 +166,6 @@ pub fn isolating_run_sequences(
 }
 
 impl IsolatingRunSequence {
-    /// Returns the full range of text represented by this isolating run sequence
-    pub(crate) fn text_range(&self) -> Range<usize> {
-        if let (Some(start), Some(end)) = (self.runs.first(), self.runs.last()) {
-            start.start..end.end
-        } else {
-            return 0..0;
-        }
-    }
-
     /// Given a text-relative position `pos` and an index of the level run it is in,
     /// produce an iterator of all characters after and pos (`pos..`) that are in this
     /// run sequence
