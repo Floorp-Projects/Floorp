@@ -240,7 +240,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
       return !IsIteratorHelpersEnabled();
 
     case JSProto_ShadowRealm:
-      return !cx->realm()->creationOptions().getShadowRealmsEnabled();
+      return !JS::Prefs::experimental_shadow_realms();
 
     default:
       MOZ_CRASH("unexpected JSProtoKey");

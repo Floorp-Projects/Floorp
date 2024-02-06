@@ -737,7 +737,6 @@ bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
-bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
 // Pref for new Set.prototype methods.
 bool shell::enableNewSetMethods = false;
@@ -4131,7 +4130,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               ? JS::WeakRefSpecifier::EnabledWithCleanupSome
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
-      .setShadowRealmsEnabled(enableShadowRealms)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
       .setArrayBufferResizableEnabled(enableArrayBufferResizable)
@@ -12141,6 +12139,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
       !op.getBoolOption("disable-array-grouping"));
   JS::Prefs::setAtStartup_arraybuffer_transfer(
       !op.getBoolOption("disable-arraybuffer-transfer"));
+  JS::Prefs::set_experimental_shadow_realms(
+      op.getBoolOption("enable-shadow-realms"));
   JS::Prefs::setAtStartup_well_formed_unicode_strings(
       !op.getBoolOption("disable-well-formed-unicode-strings"));
 #ifdef NIGHTLY_BUILD
@@ -12345,7 +12345,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
-  enableShadowRealms = op.getBoolOption("enable-shadow-realms");
 #ifdef NIGHTLY_BUILD
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
   enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");

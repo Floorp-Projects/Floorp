@@ -194,12 +194,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  bool getShadowRealmsEnabled() const { return shadowRealms_; }
-  RealmCreationOptions& setShadowRealmsEnabled(bool flag) {
-    shadowRealms_ = flag;
-    return *this;
-  }
-
 #ifdef NIGHTLY_BUILD
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
   RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
@@ -291,7 +285,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
   bool toSource_ = false;
-  bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   // Pref for new Set.prototype methods.
   bool newSetMethods_ = false;
