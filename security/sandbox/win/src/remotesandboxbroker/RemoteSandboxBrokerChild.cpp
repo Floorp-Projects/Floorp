@@ -51,13 +51,14 @@ mozilla::ipc::IPCResult RemoteSandboxBrokerChild::RecvLaunchApp(
 
   // We need to add our parent as a target peer, so that the sandboxed child can
   // duplicate handles to it for crash reporting. AddTargetPeer duplicates the
-  // handle, so we use a ScopedProcessHandle to automatically close ours.
-  ipc::ScopedProcessHandle parentProcHandle;
-  if (!base::OpenProcessHandle(OtherPid(), &parentProcHandle.rwget())) {
+  // handle, so we use UniqueFileHandle to automatically close ours.
+  UniqueFileHandle parentProcHandle;
+  if (!base::OpenProcessHandle(OtherPid(),
+                               getter_Transfers(parentProcHandle))) {
     *aOutOk = false;
     return IPC_OK();
   }
-  mSandboxBroker.AddTargetPeer(parentProcHandle);
+  mSandboxBroker.AddTargetPeer(parentProcHandle.get());
 
   if (!mSandboxBroker.SetSecurityLevelForGMPlugin(
           AbstractSandboxBroker::SandboxLevel(aParams.sandboxLevel()),

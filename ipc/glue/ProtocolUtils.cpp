@@ -47,17 +47,6 @@ using base::ProcessHandle;
 using base::ProcessId;
 
 namespace mozilla {
-
-#if defined(XP_WIN)
-// Generate RAII classes for LPTSTR and PSECURITY_DESCRIPTOR.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedLPTStr,
-                                          std::remove_pointer_t<LPTSTR>,
-                                          ::LocalFree)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(
-    ScopedPSecurityDescriptor, std::remove_pointer_t<PSECURITY_DESCRIPTOR>,
-    ::LocalFree)
-#endif
-
 namespace ipc {
 
 /* static */
