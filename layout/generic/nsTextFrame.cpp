@@ -9842,7 +9842,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     aLineLayout.SetFirstLetterStyleOK(false);
     aStatus.SetFirstLetterComplete();
   }
-  if (breakPriority == gfxBreakPriority::eWordWrapBreak) {
+  if (brokeText && breakPriority == gfxBreakPriority::eWordWrapBreak) {
     aLineLayout.SetUsedOverflowWrap();
   }
 
