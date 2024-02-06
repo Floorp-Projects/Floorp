@@ -18,8 +18,13 @@ module.exports = {
   extends: ["plugin:jsx-a11y/recommended"],
   overrides: [
     {
-      // Only mark the files as modules which are actually modules.
-      files: ["content-src/**", "test/schemas/**", "test/unit/**"],
+      // TODO: Bug 1773467 - Move these to .mjs or figure out a generic way
+      // to identify these as modules.
+      files: [
+        "content-src/**/*.js",
+        "test/schemas/**/*.js",
+        "test/unit/**/*.js",
+      ],
       parserOptions: {
         sourceType: "module",
       },
