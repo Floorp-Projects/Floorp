@@ -332,8 +332,8 @@ nsresult CTFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   if (NS_SUCCEEDED(rv)) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
     fontlist::FontList* sharedFontList = pfl->SharedFontList();
-    if (!IsUserFont() && mShmemFace) {
-      mShmemFace->SetCharacterMap(sharedFontList, charmap);  // async
+    if (!IsUserFont() && mShmemFace && mShmemFamily) {
+      mShmemFace->SetCharacterMap(sharedFontList, charmap, mShmemFamily);
       if (TrySetShmemCharacterMap()) {
         setCharMap = false;
       }
