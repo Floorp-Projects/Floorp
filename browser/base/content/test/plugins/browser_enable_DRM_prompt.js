@@ -244,3 +244,55 @@ add_task(async function test_drm_prompt_shows_for_cross_origin_iframe() {
     );
   });
 });
+
+add_task(async function test_drm_prompt_only_shows_one_notification() {
+  await BrowserTestUtils.withNewTab(TEST_URL, async function (browser) {
+    // Turn off EME and Widevine CDM.
+    Services.prefs.setBoolPref("media.eme.enabled", false);
+    Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", false);
+    let notificationShownPromise = BrowserTestUtils.waitForNotificationBar(
+      gBrowser,
+      browser,
+      "drmContentDisabled"
+    );
+
+    // Send three EME requests to ensure only one instance of the
+    // "Enable DRM" notification appears in the chrome
+    for (let i = 0; i < 3; i++) {
+      await SpecialPowers.spawn(browser, [], async function () {
+        try {
+          let config = [
+            {
+              initDataTypes: ["webm"],
+              videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+            },
+          ];
+          await content.navigator.requestMediaKeySystemAccess(
+            "com.widevine.alpha",
+            config
+          );
+        } catch (ex) {
+          return { rejected: true };
+        }
+        return { rejected: false };
+      });
+    }
+
+    // Verify the UI prompt showed.
+    let box = gBrowser.getNotificationBox(browser);
+    await notificationShownPromise;
+    let notification = box.currentNotification;
+
+    ok(notification, "Notification should be visible");
+    is(
+      notification.getAttribute("value"),
+      "drmContentDisabled",
+      "Should be showing the right notification"
+    );
+    is(
+      box.allNotifications.length,
+      1,
+      "There should only be one notification shown"
+    );
+  });
+});
