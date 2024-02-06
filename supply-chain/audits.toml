@@ -2146,6 +2146,24 @@ criteria = "safe-to-deploy"
 version = "1.4.0"
 notes = "This crate doesn't contain network and file access. Although this has unsafe block, the reason is added in the comment block. I audited code."
 
+[[audits.icu_locid_transform_data]]
+who = "Jonathan Kew <jkew@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.4.0"
+notes = "Compile-time static for the icu_locid_transform crate."
+
+[[audits.icu_properties]]
+who = "Jonathan Kew <jkew@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.4.0"
+notes = "This is used by ICU4X for character property lookup. The few (4) usages of unsafe have comments clarifying their safety."
+
+[[audits.icu_properties_data]]
+who = "Jonathan Kew <jkew@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.4.0"
+notes = "Compile-time static data for the icu_properties crate."
+
 [[audits.icu_provider]]
 who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
 criteria = "safe-to-deploy"
