@@ -21,6 +21,7 @@ sm-plain-win64/debug:
         spidermonkey-platform: win64
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
@@ -40,6 +41,7 @@ sm-plain-win32/debug:
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
@@ -57,6 +59,7 @@ sm-plain-win64/opt:
         spidermonkey-platform: win64
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
@@ -76,6 +79,7 @@ sm-plain-win32/opt:
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
@@ -93,6 +97,7 @@ sm-compacting-win64/debug:
         spidermonkey-platform: win64
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
@@ -112,6 +117,7 @@ sm-compacting-win32/debug:
     run-on-projects: []
     fetches:
         toolchain:
+            - win64-cbindgen
             - win64-clang
             - win64-rust
             - win64-mozmake
