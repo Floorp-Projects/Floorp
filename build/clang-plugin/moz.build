@@ -45,7 +45,6 @@ HOST_SOURCES += [
     "RefCountedThisInsideConstructorChecker.cpp",
     "ScopeChecker.cpp",
     "SprintfLiteralChecker.cpp",
-    "TemporaryLifetimeBoundChecker.cpp",
     "TrivialCtorDtorChecker.cpp",
     "TrivialDtorChecker.cpp",
     "VariableUsageHelpers.cpp",
