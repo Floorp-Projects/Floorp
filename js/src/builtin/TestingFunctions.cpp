@@ -89,6 +89,7 @@
 #include "js/HashTable.h"
 #include "js/Interrupt.h"
 #include "js/LocaleSensitive.h"
+#include "js/Prefs.h"
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperties, JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetElement, JS_SetProperty
 #include "js/PropertySpec.h"
@@ -8409,6 +8410,74 @@ static bool PopAllFusesInRealm(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetAllPrefNames(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedValueVector values(cx);
+
+  auto addPref = [cx, &values](const char* name) {
+    JSString* s = JS_NewStringCopyZ(cx, name);
+    if (!s) {
+      return false;
+    }
+    return values.append(StringValue(s));
+  };
+
+#define ADD_NAME(NAME, CPP_NAME, TYPE, SETTER) \
+  if (!addPref(NAME)) {                        \
+    return false;                              \
+  }
+  FOR_EACH_JS_PREF(ADD_NAME)
+#undef ADD_NAME
+
+  ArrayObject* arr = NewDenseCopiedArray(cx, values.length(), values.begin());
+  if (!arr) {
+    return false;
+  }
+
+  args.rval().setObject(*arr);
+  return true;
+}
+
+static bool GetPrefValue(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "getPrefValue", 1)) {
+    return false;
+  }
+
+  if (!args[0].isString()) {
+    JS_ReportErrorASCII(cx, "expected string argument");
+    return false;
+  }
+
+  Rooted<JSLinearString*> name(cx, args[0].toString()->ensureLinear(cx));
+  if (!name) {
+    return false;
+  }
+
+  auto setReturnValue = [&args](auto value) {
+    using T = decltype(value);
+    if constexpr (std::is_same_v<T, bool>) {
+      args.rval().setBoolean(value);
+    } else {
+      static_assert(std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>);
+      args.rval().setNumber(value);
+    }
+  };
+
+  // Search for a matching pref and return its value.
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER) \
+  if (StringEqualsAscii(name, NAME)) {           \
+    setReturnValue(JS::Prefs::CPP_NAME());       \
+    return true;                                 \
+  }
+  FOR_EACH_JS_PREF(CHECK_PREF)
+#undef CHECK_PREF
+
+  JS_ReportErrorASCII(cx, "invalid pref name");
+  return false;
+}
+
 static bool GetErrorNotes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "getErrorNotes", 1)) {
@@ -10159,6 +10228,14 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
   JS_FN_HELP("popAllFusesInRealm", PopAllFusesInRealm, 0, 0,
   "popAllFusesInRealm()",
   " Pops all the fuses in the current realm"),
+
+    JS_FN_HELP("getAllPrefNames", GetAllPrefNames, 0, 0,
+"getAllPrefNames()",
+"  Returns an array containing the names of all JS prefs."),
+
+    JS_FN_HELP("getPrefValue", GetPrefValue, 1, 0,
+"getPrefValue(name)",
+"  Return the value of the JS pref with the given name."),
 
   JS_FS_HELP_END
 };
