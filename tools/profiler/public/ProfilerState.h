@@ -255,7 +255,7 @@ class RacyFeatures {
 
   static void SetSamplingUnpaused() { sActiveAndFeatures &= ~SamplingPaused; }
 
-  [[nodiscard]] static mozilla::Maybe<uint32_t> FeaturesIfActive() {
+  [[nodiscard]] static Maybe<uint32_t> FeaturesIfActive() {
     if (uint32_t af = sActiveAndFeatures; af & Active) {
       // Active, remove the Active&Paused bits to get all features.
       return Some(af & ~(Active | Paused | SamplingPaused));
@@ -263,7 +263,7 @@ class RacyFeatures {
     return Nothing();
   }
 
-  [[nodiscard]] static mozilla::Maybe<uint32_t> FeaturesIfActiveAndUnpaused() {
+  [[nodiscard]] static Maybe<uint32_t> FeaturesIfActiveAndUnpaused() {
     if (uint32_t af = sActiveAndFeatures; (af & (Active | Paused)) == Active) {
       // Active but not fully paused, remove the Active and sampling-paused bits
       // to get all features.
@@ -330,10 +330,8 @@ class RacyFeatures {
 #  undef NO_OVERLAP
 
   // We combine the active bit with the feature bits so they can be read or
-  // written in a single atomic operation. Accesses to this atomic are not
-  // recorded by web replay as they may occur at non-deterministic points.
-  static mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed>
-      sActiveAndFeatures;
+  // written in a single atomic operation.
+  static Atomic<uint32_t, MemoryOrdering::Relaxed> sActiveAndFeatures;
 };
 
 }  // namespace mozilla::profiler::detail
