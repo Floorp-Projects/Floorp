@@ -12,7 +12,6 @@ Network Security Services (NSS)
    build_artifacts.rst
    releases/index.rst
    community.rst
-   error_codes.rst
 
 .. warning::
    This NSS documentation was just imported from our legacy MDN repository. It
@@ -46,8 +45,6 @@ Network Security Services (NSS)
    :ref:`mozilla_projects_nss_community`
       This page contains information about the community and how to reach out.
 
-   :ref:`mozilla_projects_nss_error_codes`
-      This page lists error codes used by NSS.
 
 .. warning::
    References below this point are part of the deprecated documentation and will
