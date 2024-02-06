@@ -17,13 +17,38 @@ Key Features:
 Usage:
 The module is intended to be integrated into automated testing and release workflows, where Slack notifications are required to report the status of various processes, such as test executions or release milestones.
 
-Example:
-To send a success notification:
-    success_values = {'RELEASE_VERSION': '1.0', 'SHIPPING_PRODUCT': 'ExampleProduct'}
-    send_success_notification(success_values, 'channel_id', taskcluster_options)
+Required Values for Notifications:
 
-To send an error notification:
-    send_error_notification('Error details', 'channel_id', taskcluster_options)
+These values are required when calling the `send_success_notification` and `send_slack_notification` functions. 
+They must be passed as an object with the following keys and their respective values.
+
+Required Keys and Expected Values:
+- RELEASE_TYPE: <string> Release Type or Stage (e.g., Alpha, Beta, RC).
+- RELEASE_VERSION: <string> Release Version from versions.txt (e.g., '124.0b5').
+- SHIPPING_PRODUCT: <string> Release Tag Name (e.g., fennec, focus).
+- TESTRAIL_PROJECT_ID: <int> Project ID for TestRail Project (e.g., Fenix Browser).
+- TESTRAIL_PRODUCT_TYPE: <string> Name for the official release product (e.g., Firefox, not fennec).
+
+These values are used as arguments for `success_values` and `values` when calling the respective functions.
+
+Example Usage:
+
+success_values = {
+    "RELEASE_TYPE": "Beta",
+    "RELEASE_VERSION": "124.0b5",
+    "SHIPPING_PRODUCT": "fennec",
+    "TESTRAIL_PROJECT_ID": 59, # Fenix Browser
+    "TESTRAIL_PRODUCT_TYPE": "Firefox"
+}
+
+send_success_notification(success_values, 'channel_id', taskcluster_options)
+
+values = {
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        "error_message": error_message,
+}
+
+send_error_notification(values, 'channel_id', taskcluster_options)
 """
 
 import json
@@ -51,7 +76,7 @@ SLACK_SUCCESS_MESSAGE_TEMPLATE = Template(
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": "*Testrail Release*: $TESTRAIL_PRODUCT_TYPE $RELEASE_TYPE $RELEASE_VERSION <https://testrail.stage.mozaws.net/index.php?/projects/overview/59|Milestone> has been created:testrail:"
+            "text": "*Testrail Release*: $TESTRAIL_PRODUCT_TYPE $RELEASE_TYPE $RELEASE_VERSION <https://testrail.stage.mozaws.net/index.php?/projects/overview/$TESTRAIL_PROJECT_ID|Milestone> has been created:testrail:"
         }
     },
     {
@@ -65,7 +90,7 @@ SLACK_SUCCESS_MESSAGE_TEMPLATE = Template(
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": " :white_check_mark: Automated smoke test - Google Pixel 3a(Android 11)"
+            "text": " :white_check_mark: Automated smoke test - Google Pixel 3(Android 11)"
         }
     },
     {
