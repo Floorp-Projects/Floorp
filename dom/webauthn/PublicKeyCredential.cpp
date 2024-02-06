@@ -18,10 +18,6 @@
 #include "mozilla/dom/WebAuthnManager.h"
 #include "nsCycleCollectionParticipant.h"
 
-#ifdef XP_WIN
-#  include "WinWebAuthnService.h"
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/java/GeckoResultNatives.h"
@@ -144,31 +140,6 @@ already_AddRefed<Promise> PublicKeyCredential::IsConditionalMediationAvailable(
   promise->MaybeResolve(
       StaticPrefs::security_webauthn_enable_conditional_mediation());
 #endif
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise>
-PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(GlobalObject& aGlobal,
-                                                         ErrorResult& aError) {
-  RefPtr<Promise> promise =
-      Promise::Create(xpc::CurrentNativeGlobal(aGlobal.Context()), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-#ifdef XP_WIN
-  if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
-    promise->MaybeResolve(true);
-  } else {
-    promise->MaybeResolve(StaticPrefs::security_webauthn_ctap2());
-  }
-#elif defined(MOZ_WIDGET_ANDROID)
-  promise->MaybeResolve(false);
-#else
-  promise->MaybeResolve(StaticPrefs::security_webauthn_ctap2());
-#endif
-
   return promise.forget();
 }
 
