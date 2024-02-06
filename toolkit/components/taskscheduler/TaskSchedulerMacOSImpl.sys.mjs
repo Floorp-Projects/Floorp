@@ -51,7 +51,7 @@ export var MacOSImpl = {
     let uid = await this._uid();
     lazy.log.debug(`registerTask: uid=${uid}`);
 
-    let label = this._formatLabelForThisApp(id, options);
+    let label = this._formatLabelForThisApp(id);
 
     // We ignore `options.disabled`, which is test only.
     //
@@ -126,10 +126,10 @@ export var MacOSImpl = {
     return true;
   },
 
-  async deleteTask(id, options) {
+  async deleteTask(id) {
     lazy.log.info(`deleteTask(${id})`);
 
-    let label = this._formatLabelForThisApp(id, options);
+    let label = this._formatLabelForThisApp(id);
     return this._deleteTaskByLabel(label);
   },
 
@@ -207,8 +207,8 @@ export var MacOSImpl = {
     lazy.log.debug(`deleteAllTasks: returning ${JSON.stringify(result)}`);
   },
 
-  async taskExists(id, options) {
-    const label = this._formatLabelForThisApp(id, options);
+  async taskExists(id) {
+    const label = this._formatLabelForThisApp(id);
     const path = this._formatPlistPath(label);
     return IOUtils.exists(path);
   },
@@ -292,12 +292,12 @@ export var MacOSImpl = {
     return serializer.serializeToString(doc);
   },
 
-  _formatLabelForThisApp(id, options) {
+  _formatLabelForThisApp(id) {
     let installHash = lazy.XreDirProvider.getInstallHash();
     return `${AppConstants.MOZ_MACBUNDLE_ID}.${installHash}.${id}`;
   },
 
-  _labelMatchesThisApp(label, options) {
+  _labelMatchesThisApp(label) {
     let installHash = lazy.XreDirProvider.getInstallHash();
     return (
       label &&
