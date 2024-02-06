@@ -14,6 +14,7 @@
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/GlobalObject.h"              // JS_NewGlobalObject
 #include "js/Initialization.h"
+#include "js/Prefs.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunction
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
@@ -119,11 +120,7 @@ JSObject* JSAPIRuntimeTest::createGlobal(JSPrincipals* principals) {
   JS::RealmOptions options;
   options.creationOptions()
       .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithCleanupSome)
-      .setSharedMemoryAndAtomicsEnabled(true)
-#ifdef NIGHTLY_BUILD
-      .setSymbolsAsWeakMapKeysEnabled(true)
-#endif
-      ;
+      .setSharedMemoryAndAtomicsEnabled(true);
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
                                  JS::FireOnNewGlobalHook, options);
   if (!newGlobal) {
@@ -252,6 +249,11 @@ int main(int argc, char* argv[]) {
     PrintTests(JSAPIFrontendTest::list);
     return 0;
   }
+
+  // Override prefs for jsapi-tests.
+#ifdef NIGHTLY_BUILD
+  JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(true);
+#endif
 
   // Reinitializing the global for every test is quite slow, due to having to
   // recompile all self-hosted builtins. Allow tests to opt-in to reusing the

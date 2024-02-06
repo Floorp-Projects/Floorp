@@ -7482,11 +7482,12 @@
     value: false
     mirror: always
 
-      # Experimental support for Symbols as WeakMap keys in JavaScript.
+  # Experimental support for Symbols as WeakMap keys in JavaScript.
 -   name: javascript.options.experimental.symbols_as_weakmap_keys
     type: bool
     value: false
     mirror: always
+    set_spidermonkey_pref: startup
 
   # Experimental support for resizable ArrayBuffers in JavaScript.
 -   name: javascript.options.experimental.arraybuffer_resizable
