@@ -2226,7 +2226,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 
   if (key == JSProto_ArrayBuffer &&
-      !cx->realm()->creationOptions().getArrayBufferResizableEnabled() &&
+      !JS::Prefs::experimental_arraybuffer_resizable() &&
       (id == NameToId(cx->names().maxByteLength) ||
        id == NameToId(cx->names().resizable) ||
        id == NameToId(cx->names().resize))) {
@@ -2234,7 +2234,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 
   if (key == JSProto_SharedArrayBuffer &&
-      !cx->realm()->creationOptions().getSharedArrayBufferGrowableEnabled() &&
+      !JS::Prefs::experimental_sharedarraybuffer_growable() &&
       (id == NameToId(cx->names().maxByteLength) ||
        id == NameToId(cx->names().growable) ||
        id == NameToId(cx->names().grow))) {

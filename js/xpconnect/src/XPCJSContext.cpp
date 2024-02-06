@@ -778,22 +778,12 @@ bool xpc::ShouldDiscardSystemSource() { return sDiscardSystemSource; }
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
 
-#ifdef NIGHTLY_BUILD
-static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
-static mozilla::Atomic<bool> sSharedArrayBufferGrowableEnabled(false);
-#endif
-
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled)
       .setCoopAndCoepEnabled(
           StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
-          StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
-#ifdef NIGHTLY_BUILD
-      .setArrayBufferResizableEnabled(sArrayBufferResizableEnabled)
-      .setSharedArrayBufferGrowableEnabled(sSharedArrayBufferGrowableEnabled)
-#endif
-      ;
+          StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy());
 }
 
 void xpc::SetPrefableCompileOptions(JS::PrefableCompileOptions& options) {
@@ -986,12 +976,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-#ifdef NIGHTLY_BUILD
-  sArrayBufferResizableEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.arraybuffer_resizable");
-  sSharedArrayBufferGrowableEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.sharedarraybuffer_growable");
-#endif
 
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal", -1);

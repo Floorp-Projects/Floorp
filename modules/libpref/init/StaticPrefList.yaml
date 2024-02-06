@@ -7504,12 +7504,14 @@
     type: bool
     value: false
     mirror: always
+    set_spidermonkey_pref: startup
 
   # Experimental support for growable SharedArrayBuffers in JavaScript.
 -   name: javascript.options.experimental.sharedarraybuffer_growable
     type: bool
     value: false
     mirror: always
+    set_spidermonkey_pref: startup
 #endif  // NIGHTLY_BUILD
 
 # Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.

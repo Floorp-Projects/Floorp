@@ -178,22 +178,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-#ifdef NIGHTLY_BUILD
-  bool getArrayBufferResizableEnabled() const { return arrayBufferResizable_; }
-  RealmCreationOptions& setArrayBufferResizableEnabled(bool flag) {
-    arrayBufferResizable_ = flag;
-    return *this;
-  }
-
-  bool getSharedArrayBufferGrowableEnabled() const {
-    return sharedArrayBufferGrowable_;
-  }
-  RealmCreationOptions& setSharedArrayBufferGrowableEnabled(bool flag) {
-    sharedArrayBufferGrowable_ = flag;
-    return *this;
-  }
-#endif
-
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   bool getJSONParseWithSource() const { return jsonParseWithSource; }
   RealmCreationOptions& setJSONParseWithSource(bool flag) {
@@ -262,12 +246,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
   bool toSource_ = false;
-#ifdef NIGHTLY_BUILD
-  // Pref for resizable ArrayBuffers.
-  bool arrayBufferResizable_ = false;
-  // Pref for growable SharedArrayBuffers.
-  bool sharedArrayBufferGrowable_ = false;
-#endif
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   bool jsonParseWithSource = false;
 #endif
