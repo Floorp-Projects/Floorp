@@ -5220,10 +5220,9 @@ mozilla::ipc::IPCResult ContentParent::RecvBackUpXResources(
 #ifndef MOZ_X11
   MOZ_CRASH("This message only makes sense on X11 platforms");
 #else
-  MOZ_ASSERT(0 > mChildXSocketFdDup.get(), "Already backed up X resources??");
+  MOZ_ASSERT(!mChildXSocketFdDup, "Already backed up X resources??");
   if (aXSocketFd.IsValid()) {
-    auto rawFD = aXSocketFd.ClonePlatformHandle();
-    mChildXSocketFdDup.reset(rawFD.release());
+    mChildXSocketFdDup = aXSocketFd.ClonePlatformHandle();
   }
 #endif
   return IPC_OK();
