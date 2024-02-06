@@ -1494,7 +1494,7 @@ export var Bookmarks = Object.freeze({
    * @note Any unknown property in the info object is ignored.  Known properties
    *       may be overwritten.
    */
-  fetch(guidOrInfo, onResult = null, options = {}) {
+  async fetch(guidOrInfo, onResult = null, options = {}) {
     if (onResult && typeof onResult != "function") {
       throw new Error("onResult callback must be a valid function");
     }
@@ -1557,67 +1557,65 @@ export var Bookmarks = Object.freeze({
       behavior
     );
 
-    return (async () => {
-      let results;
-      if (fetchInfo.hasOwnProperty("url")) {
-        results = await fetchBookmarksByURL(fetchInfo, options);
-      } else if (fetchInfo.hasOwnProperty("guid")) {
-        results = await fetchBookmark(fetchInfo, options);
-      } else if (fetchInfo.hasOwnProperty("parentGuid")) {
-        if (fetchInfo.hasOwnProperty("index")) {
-          results = await fetchBookmarkByPosition(fetchInfo, options);
-        } else {
-          results = await fetchBookmarksByParentGUID(fetchInfo, options);
-        }
-      } else if (fetchInfo.hasOwnProperty("guidPrefix")) {
-        results = await fetchBookmarksByGUIDPrefix(fetchInfo, options);
-      } else if (fetchInfo.hasOwnProperty("tags")) {
-        results = await fetchBookmarksByTags(fetchInfo, options);
+    let results;
+    if (fetchInfo.hasOwnProperty("url")) {
+      results = await fetchBookmarksByURL(fetchInfo, options);
+    } else if (fetchInfo.hasOwnProperty("guid")) {
+      results = await fetchBookmark(fetchInfo, options);
+    } else if (fetchInfo.hasOwnProperty("parentGuid")) {
+      if (fetchInfo.hasOwnProperty("index")) {
+        results = await fetchBookmarkByPosition(fetchInfo, options);
+      } else {
+        results = await fetchBookmarksByParentGUID(fetchInfo, options);
       }
+    } else if (fetchInfo.hasOwnProperty("guidPrefix")) {
+      results = await fetchBookmarksByGUIDPrefix(fetchInfo, options);
+    } else if (fetchInfo.hasOwnProperty("tags")) {
+      results = await fetchBookmarksByTags(fetchInfo, options);
+    }
 
-      if (!results) {
-        return null;
+    if (!results) {
+      return null;
+    }
+
+    if (!Array.isArray(results)) {
+      results = [results];
+    }
+    // Remove non-enumerable properties.
+    results = results.map(r => {
+      if (r.type == this.TYPE_FOLDER) {
+        r.childCount = r._childCount;
       }
-
-      if (!Array.isArray(results)) {
-        results = [results];
+      if (options.includeItemIds) {
+        r.itemId = r._id;
+        r.parentId = r._parentId;
       }
-      // Remove non-enumerable properties.
-      results = results.map(r => {
-        if (r.type == this.TYPE_FOLDER) {
-          r.childCount = r._childCount;
-        }
-        if (options.includeItemIds) {
-          r.itemId = r._id;
-          r.parentId = r._parentId;
-        }
-        return Object.assign({}, r);
-      });
+      return Object.assign({}, r);
+    });
 
-      if (options.includePath) {
-        for (let result of results) {
-          let folderPath = await retrieveFullBookmarkPath(result.parentGuid);
-          if (folderPath) {
-            result.path = folderPath;
-          }
+    if (options.includePath) {
+      for (let result of results) {
+        let folderPath = await retrieveFullBookmarkPath(result.parentGuid);
+        if (folderPath) {
+          result.path = folderPath;
         }
       }
+    }
 
-      // Ideally this should handle an incremental behavior and thus be invoked
-      // while we fetch.  Though, the likelihood of 2 or more bookmarks for the
-      // same match is very low, so it's not worth the added code complication.
-      if (onResult) {
-        for (let result of results) {
-          try {
-            onResult(result);
-          } catch (ex) {
-            console.error(ex);
-          }
+    // Ideally this should handle an incremental behavior and thus be invoked
+    // while we fetch.  Though, the likelihood of 2 or more bookmarks for the
+    // same match is very low, so it's not worth the added code complication.
+    if (onResult) {
+      for (let result of results) {
+        try {
+          onResult(result);
+        } catch (ex) {
+          console.error(ex);
         }
       }
+    }
 
-      return results[0];
-    })();
+    return results[0];
   },
 
   /**

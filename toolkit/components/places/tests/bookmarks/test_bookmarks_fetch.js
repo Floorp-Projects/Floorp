@@ -9,140 +9,125 @@ var gAccumulator = {
 };
 
 add_task(async function invalid_input_throws() {
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch(),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch(),
     /Input should be a valid object/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch(null),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch(null),
     /Input should be a valid object/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guid: "123456789012", index: 0 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guid: "123456789012", index: 0 }),
     /The following properties were expected: parentGuid/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({}),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({}),
     /Unexpected number of conditions provided: 0/
   );
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    }),
     /Unexpected number of conditions provided: 0/
   );
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({
-        guid: "123456789012",
-        parentGuid: "012345678901",
-        index: 0,
-      }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({
+      guid: "123456789012",
+      parentGuid: "012345678901",
+      index: 0,
+    }),
     /Unexpected number of conditions provided: 2/
   );
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({
-        guid: "123456789012",
-        url: "http://example.com",
-      }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({
+      guid: "123456789012",
+      url: "http://example.com",
+    }),
     /Unexpected number of conditions provided: 2/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch("test"),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch("test"),
     /Invalid value for property 'guid'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch(123),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch(123),
     /Invalid value for property 'guid'/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guid: "test" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guid: "test" }),
     /Invalid value for property 'guid'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guid: null }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guid: null }),
     /Invalid value for property 'guid'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guid: 123 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guid: 123 }),
     /Invalid value for property 'guid'/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guidPrefix: "" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guidPrefix: "" }),
     /Invalid value for property 'guidPrefix'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guidPrefix: null }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guidPrefix: null }),
     /Invalid value for property 'guidPrefix'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guidPrefix: 123 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guidPrefix: 123 }),
     /Invalid value for property 'guidPrefix'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guidPrefix: "123456789012" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guidPrefix: "123456789012" }),
     /Invalid value for property 'guidPrefix'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ guidPrefix: "@" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ guidPrefix: "@" }),
     /Invalid value for property 'guidPrefix'/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ parentGuid: "test", index: 0 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: "test", index: 0 }),
     /Invalid value for property 'parentGuid'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ parentGuid: null, index: 0 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: null, index: 0 }),
     /Invalid value for property 'parentGuid'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ parentGuid: 123, index: 0 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: 123, index: 0 }),
     /Invalid value for property 'parentGuid'/
   );
-
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: "0" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: "0" }),
     /Invalid value for property 'index'/
   );
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: null }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: null }),
     /Invalid value for property 'index'/
   );
-  Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: -10 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012", index: -10 }),
     /Invalid value for property 'index'/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ url: "http://te st/" }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ url: "http://te st/" }),
     /Invalid value for property 'url'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ url: null }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ url: null }),
     /Invalid value for property 'url'/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch({ url: -10 }),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch({ url: -10 }),
     /Invalid value for property 'url'/
   );
-
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch("123456789012", "test"),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch("123456789012", "test"),
     /onResult callback must be a valid function/
   );
-  Assert.throws(
-    () => PlacesUtils.bookmarks.fetch("123456789012", {}),
+  await Assert.rejects(
+    PlacesUtils.bookmarks.fetch("123456789012", {}),
     /onResult callback must be a valid function/
   );
 });
