@@ -309,7 +309,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not decompress file: invalid LZ4 header: wrong magic number: `01 01 01 01 01 01 01 01 01 01 01 01'/,
+        /NotReadableError: Could not read `.*': could not decompress file: invalid LZ4 header: wrong magic number: `01 01 01 01 01 01 01 01 01 01 01 01' \(NS_ERROR_FILE_CORRUPTED\)/,
         "IOUtils::readUTF8 fails to decompress LZ4 data with a bad header"
       );
 
@@ -319,7 +319,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not decompress file: buffer is too small/,
+        /NotReadableError: Could not read `.*': could not decompress file: buffer is too small \(NS_ERROR_FILE_CORRUPTED\)/,
         "IOUtils::readUTF8 fails to decompress LZ4 data with missing header"
       );
 
@@ -331,7 +331,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not decompress file: the file may be corrupt/,
+        /NotReadableError: Could not read `.*': could not decompress file: the file may be corrupt \(NS_ERROR_FILE_CORRUPTED\)/,
         "IOUtils::readUTF8 fails to read corrupt LZ4 contents with a correct header"
       );
 
@@ -342,7 +342,7 @@
       }
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /NotReadableError: Could not decompress file: buffer is too small/,
+        /NotReadableError: Could not read `.*': could not decompress file: buffer is too small \(NS_ERROR_FILE_CORRUPTED\)/,
         "IOUtils::readUTF8 fails to decompress empty files"
       );
 
