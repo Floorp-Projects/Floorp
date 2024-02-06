@@ -34,6 +34,7 @@
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::IsWindow, js::ToWindowProxyIfWindow
 #include "js/MemoryMetrics.h"
+#include "js/Prefs.h"               // JS::Prefs
 #include "js/Printer.h"             // js::GenericPrinter, js::Fprinter
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "js/PropertySpec.h"        // JSPropertySpec
@@ -2198,8 +2199,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   // It's gently surprising that this is JSProto_Function, but the trick
   // to realize is that this is a -constructor function-, not a function
   // on the prototype; and the proto of the constructor is JSProto_Function.
-  if (key == JSProto_Function &&
-      !cx->realm()->creationOptions().getArrayGroupingEnabled() &&
+  if (key == JSProto_Function && !JS::Prefs::array_grouping() &&
       (id == NameToId(cx->names().groupBy))) {
     return true;
   }

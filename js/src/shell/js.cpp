@@ -742,7 +742,6 @@ bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
 bool shell::enableWellFormedUnicodeStrings = true;
-bool shell::enableArrayGrouping = false;
 #ifdef NIGHTLY_BUILD
 // Pref for new Set.prototype methods.
 bool shell::enableNewSetMethods = false;
@@ -4142,7 +4141,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setIteratorHelpersEnabled(enableIteratorHelpers)
       .setShadowRealmsEnabled(enableShadowRealms)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
-      .setArrayGroupingEnabled(enableArrayGrouping)
       .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
@@ -12149,6 +12147,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   // Override pref values for prefs that have a custom shell flag.
   // If you're adding a new feature, consider using --setpref instead.
 
+  JS::Prefs::setAtStartup_array_grouping(
+      !op.getBoolOption("disable-array-grouping"));
 #ifdef NIGHTLY_BUILD
   JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
@@ -12352,7 +12352,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
   enableWellFormedUnicodeStrings =
       !op.getBoolOption("disable-well-formed-unicode-strings");
-  enableArrayGrouping = !op.getBoolOption("disable-array-grouping");
 #ifdef NIGHTLY_BUILD
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
   enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");
