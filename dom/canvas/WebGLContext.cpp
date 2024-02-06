@@ -149,6 +149,7 @@ WebGLContext::WebGLContext(HostWebGLContext* host,
     host->mContext = this;
   }
   const FuncScope funcScope(*this, "<Create>");
+  WebGLMemoryTracker::EnsureRegistered();
 }
 
 WebGLContext::~WebGLContext() { DestroyResourcesAndContext(); }

@@ -15,6 +15,14 @@ namespace mozilla {
 
 MOZ_DEFINE_MALLOC_SIZE_OF(WebGLShaderMallocSizeOf)
 
+void WebGLMemoryTracker::EnsureRegistered() {
+  static bool sIsRegistered = []() {
+    RegisterStrongMemoryReporter(new WebGLMemoryTracker);
+    return true;
+  }();
+  (void)sIsRegistered;
+}
+
 NS_IMETHODIMP
 WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData, bool) {
