@@ -380,7 +380,7 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
 
         case lazy.ClipRectangleType.Element: {
           const realm = this.messageHandler.getRealm();
-          const element = this.deserialize(realm, clip.element);
+          const element = this.deserialize(clip.element, realm);
           const viewportRect = this.#getOriginRectangle(
             lazy.OriginType.viewport
           );
@@ -417,7 +417,7 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
       contextNodes.push(this.messageHandler.window.document.documentElement);
     } else {
       for (const serializedStartNode of startNodes) {
-        const startNode = this.deserialize(realm, serializedStartNode);
+        const startNode = this.deserialize(serializedStartNode, realm);
         lazy.assert.that(
           startNode =>
             Node.isInstance(startNode) &&

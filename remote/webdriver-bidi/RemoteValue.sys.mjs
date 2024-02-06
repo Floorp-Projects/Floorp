@@ -121,10 +121,10 @@ function buildSerialized(type, handle = null) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-value-list
  *
- * @param {Realm} realm
- *     The Realm in which the value is deserialized.
  * @param {Array} serializedValueList
  *     List of serialized values.
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {ExtraDeserializationOptions} extraOptions
  *     Extra Remote Value deserialization options.
  *
@@ -133,7 +133,7 @@ function buildSerialized(type, handle = null) {
  * @throws {InvalidArgumentError}
  *     If <var>serializedValueList</var> is not an array.
  */
-function deserializeValueList(realm, serializedValueList, extraOptions) {
+function deserializeValueList(serializedValueList, realm, extraOptions) {
   lazy.assert.array(
     serializedValueList,
     `Expected "serializedValueList" to be an array, got ${serializedValueList}`
@@ -142,7 +142,7 @@ function deserializeValueList(realm, serializedValueList, extraOptions) {
   const deserializedValues = [];
 
   for (const item of serializedValueList) {
-    deserializedValues.push(deserialize(realm, item, extraOptions));
+    deserializedValues.push(deserialize(item, realm, extraOptions));
   }
 
   return deserializedValues;
@@ -153,10 +153,10 @@ function deserializeValueList(realm, serializedValueList, extraOptions) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-key-value-list
  *
- * @param {Realm} realm
- *     The Realm in which the value is deserialized.
  * @param {Array} serializedKeyValueList
  *     List of serialized key-value.
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {ExtraDeserializationOptions} extraOptions
  *     Extra Remote Value deserialization options.
  *
@@ -166,7 +166,7 @@ function deserializeValueList(realm, serializedValueList, extraOptions) {
  *     If <var>serializedKeyValueList</var> is not an array or
  *     not an array of key-value arrays.
  */
-function deserializeKeyValueList(realm, serializedKeyValueList, extraOptions) {
+function deserializeKeyValueList(serializedKeyValueList, realm, extraOptions) {
   lazy.assert.array(
     serializedKeyValueList,
     `Expected "serializedKeyValueList" to be an array, got ${serializedKeyValueList}`
@@ -184,8 +184,8 @@ function deserializeKeyValueList(realm, serializedKeyValueList, extraOptions) {
     const deserializedKey =
       typeof serializedKey == "string"
         ? serializedKey
-        : deserialize(realm, serializedKey, extraOptions);
-    const deserializedValue = deserialize(realm, serializedValue, extraOptions);
+        : deserialize(serializedKey, realm, extraOptions);
+    const deserializedValue = deserialize(serializedValue, realm, extraOptions);
 
     deserializedKeyValueList.push([deserializedKey, deserializedValue]);
   }
@@ -252,16 +252,16 @@ function deserializeSharedReference(sharedRef, realm, extraOptions) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-local-value
  *
- * @param {Realm} realm
- *     The Realm in which the value is deserialized.
  * @param {object} serializedValue
  *     Value of any type to be deserialized.
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {ExtraDeserializationOptions} extraOptions
  *     Extra Remote Value deserialization options.
  *
  * @returns {object} Deserialized representation of the value.
  */
-export function deserialize(realm, serializedValue, extraOptions) {
+export function deserialize(serializedValue, realm, extraOptions) {
   const { handle, sharedId, type, value } = serializedValue;
 
   // With a shared id present deserialize as node reference.
@@ -347,7 +347,7 @@ export function deserialize(realm, serializedValue, extraOptions) {
     // Non-primitive protocol values
     case "array":
       const array = realm.cloneIntoRealm([]);
-      deserializeValueList(realm, value, extraOptions).forEach(v =>
+      deserializeValueList(value, realm, extraOptions).forEach(v =>
         array.push(v)
       );
       return array;
@@ -363,14 +363,14 @@ export function deserialize(realm, serializedValue, extraOptions) {
       return realm.cloneIntoRealm(new Date(value));
     case "map":
       const map = realm.cloneIntoRealm(new Map());
-      deserializeKeyValueList(realm, value, extraOptions).forEach(([k, v]) =>
+      deserializeKeyValueList(value, realm, extraOptions).forEach(([k, v]) =>
         map.set(k, v)
       );
 
       return map;
     case "object":
       const object = realm.cloneIntoRealm({});
-      deserializeKeyValueList(realm, value, extraOptions).forEach(
+      deserializeKeyValueList(value, realm, extraOptions).forEach(
         ([k, v]) => (object[k] = v)
       );
       return object;
@@ -399,7 +399,7 @@ export function deserialize(realm, serializedValue, extraOptions) {
       }
     case "set":
       const set = realm.cloneIntoRealm(new Set());
-      deserializeValueList(realm, value, extraOptions).forEach(v => set.add(v));
+      deserializeValueList(value, realm, extraOptions).forEach(v => set.add(v));
       return set;
   }
 

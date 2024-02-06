@@ -15,7 +15,7 @@ add_task(async function test_deserializeSharedIdInvalidTypes() {
       };
 
       Assert.throws(
-        () => deserialize(realm, serializedValue, { nodeCache }),
+        () => deserialize(serializedValue, realm, { nodeCache }),
         /InvalidArgumentError:/,
         `Got expected error for type ${invalidType}`
       );
@@ -30,7 +30,7 @@ add_task(async function test_deserializeSharedIdInvalidValue() {
     };
 
     Assert.throws(
-      () => deserialize(realm, serializedValue, { nodeCache }),
+      () => deserialize(serializedValue, realm, { nodeCache }),
       /NoSuchNodeError:/,
       "Got expected error for unknown 'sharedId'"
     );
@@ -48,7 +48,7 @@ add_task(async function test_deserializeSharedId() {
       sharedId: domElRef,
     };
 
-    const node = deserialize(realm, serializedValue, { nodeCache });
+    const node = deserialize(serializedValue, realm, { nodeCache });
 
     Assert.equal(node, domEl);
   });
@@ -66,7 +66,7 @@ add_task(async function test_deserializeSharedIdPrecedenceOverHandle() {
       sharedId: domElRef,
     };
 
-    const node = deserialize(realm, serializedValue, { nodeCache });
+    const node = deserialize(serializedValue, realm, { nodeCache });
 
     Assert.equal(node, domEl);
   });
@@ -84,7 +84,7 @@ add_task(async function test_deserializeSharedIdNoWindowRealm() {
     };
 
     Assert.throws(
-      () => deserialize(new Realm(), serializedValue, { nodeCache }),
+      () => deserialize(serializedValue, new Realm(), { nodeCache }),
       /NoSuchNodeError/,
       `Got expected error for a non-window realm`
     );
@@ -106,7 +106,7 @@ add_task(async function test_deserializeSharedIdOtherBrowsingContext() {
       sharedId: domElRef,
     };
 
-    const node = deserialize(realm, serializedValue, { nodeCache });
+    const node = deserialize(serializedValue, realm, { nodeCache });
 
     Assert.equal(node, null);
   });
