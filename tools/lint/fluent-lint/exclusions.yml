@@ -39,7 +39,6 @@ ID01:
         - update-checkForUpdatesButton
         - update-updateButton
         - update-checkingForUpdates
-        - update-adminDisabled
         - update-noUpdatesFound
         - update-otherInstanceHandlingUpdates
         - warningDesc-version

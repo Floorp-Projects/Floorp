@@ -549,7 +549,7 @@ var gXPInstallObserver = {
       case "addon-install-disabled": {
         let msgId, action, secondaryActions;
         if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
-          msgId = "xpinstall-disabled-locked";
+          msgId = "xpinstall-disabled-by-policy";
           action = null;
           secondaryActions = null;
         } else {
@@ -585,7 +585,7 @@ var gXPInstallObserver = {
       case "addon-install-origin-blocked": {
         const msgId =
           aTopic == "addon-install-policy-blocked"
-            ? "addon-domain-blocked-by-policy"
+            ? "addon-install-domain-blocked-by-policy"
             : "xpinstall-prompt";
         let messageString = await lazy.l10n.formatValue(msgId);
         if (Services.policies) {
@@ -856,7 +856,7 @@ var gXPInstallObserver = {
             !Services.policies.mayInstallAddon(install.addon)
           ) {
             messageString = lazy.l10n.formatValueSync(
-              "addon-install-blocked-by-policy",
+              "addon-installation-blocked-by-policy",
               { addonName: install.name, addonId: install.addon.id }
             );
             let extensionSettings = Services.policies.getExtensionSettings(

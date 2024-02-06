@@ -479,7 +479,7 @@ add_task(async function test_permissions_and_policy() {
     ".popup-notification-description"
   ).textContent;
   ok(
-    description.startsWith("Your system administrator"),
+    description.startsWith("Your organization"),
     "Policy specific error is shown."
   );
   ok(
