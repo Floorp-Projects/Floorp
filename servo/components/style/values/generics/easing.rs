@@ -134,4 +134,10 @@ impl<Integer, Number, LinearStops> TimingFunction<Integer, Number, LinearStops> 
     pub fn ease() -> Self {
         TimingFunction::Keyword(TimingKeyword::Ease)
     }
+
+    /// Returns true if it is `ease`.
+    #[inline]
+    pub fn is_ease(&self) -> bool {
+        matches!(*self, TimingFunction::Keyword(TimingKeyword::Ease))
+    }
 }
