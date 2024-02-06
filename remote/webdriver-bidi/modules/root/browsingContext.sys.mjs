@@ -488,12 +488,10 @@ class BrowsingContextModule extends Module {
       }
     }
 
-    let internalUserContextId = lazy.UserContextManager.DEFAULT_INTERNAL_ID;
+    let userContext = lazy.UserContextManager.defaultUserContextId;
     if (referenceContext !== null) {
-      internalUserContextId =
-        lazy.UserContextManager.getInternalIdByBrowsingContext(
-          referenceContext
-        );
+      userContext =
+        lazy.UserContextManager.getIdByBrowsingContext(referenceContext);
     }
 
     if (userContextId !== null) {
@@ -502,18 +500,17 @@ class BrowsingContextModule extends Module {
         lazy.pprint`Expected "userContext" to be a string, got ${userContextId}`
       );
 
-      internalUserContextId =
-        lazy.UserContextManager.getInternalIdById(userContextId);
-
-      if (internalUserContextId === null) {
+      if (!lazy.UserContextManager.hasUserContextId(userContextId)) {
         throw new lazy.error.NoSuchUserContextError(
           `User Context with id ${userContextId} was not found`
         );
       }
 
+      userContext = userContextId;
+
       if (
         lazy.AppInfo.isAndroid &&
-        userContextId != lazy.UserContextManager.DEFAULT_CONTEXT_ID
+        userContext != lazy.UserContextManager.defaultUserContextId
       ) {
         throw new lazy.error.UnsupportedOperationError(
           `browsingContext.create with non-default "userContext" not supported for ${lazy.AppInfo.name}`
@@ -538,7 +535,7 @@ class BrowsingContextModule extends Module {
       case "window":
         const newWindow = await lazy.windowManager.openBrowserWindow({
           focus: !background,
-          userContextId: internalUserContextId,
+          userContextId: userContext,
         });
         browser = lazy.TabManager.getTabBrowser(newWindow).selectedBrowser;
         break;
@@ -559,7 +556,7 @@ class BrowsingContextModule extends Module {
         const tab = await lazy.TabManager.addTab({
           focus: !background,
           referenceTab,
-          userContextId: internalUserContextId,
+          userContextId: userContext,
         });
         browser = lazy.TabManager.getBrowserForTab(tab);
     }
