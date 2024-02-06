@@ -477,9 +477,12 @@ class HostWebGLContext final : public SupportsWeakPtr {
     return GetWebGL2Context()->GetBufferSubData(target, srcByteOffset, dest);
   }
 
-  void BufferData(GLenum target, const RawBuffer<>& data, GLenum usage) const {
-    const auto& beginOrNull = data.begin();
-    mContext->BufferData(target, data.size(), beginOrNull, usage);
+  void BufferData(GLenum target, const RawBuffer<>& srcData, GLenum usage) const {
+    mContext->BufferData(target, srcData.size(), srcData.begin(), usage);
+  }
+
+  void BufferData_SizeOnly(GLenum target, size_t byteSize, GLenum usage) const {
+    mContext->BufferData(target, byteSize, nullptr, usage);
   }
 
   void BufferSubData(GLenum target, uint64_t dstByteOffset,
