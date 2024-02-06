@@ -35,7 +35,7 @@ const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
 
 // The name of in built engines that support trending results.
-const TRENDING_ENGINES = ["Google"];
+const TRENDING_ENGINES = ["Google", "Bing"];
 
 var gEngineView = null;
 
