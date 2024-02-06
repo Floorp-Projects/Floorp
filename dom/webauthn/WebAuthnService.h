@@ -61,18 +61,10 @@ class WebAuthnService final : public nsIWebAuthnService {
     return mPlatformService;
   }
 
-  nsIWebAuthnService* SelectedService() {
-    if (mSelectedService) {
-      return mSelectedService;
-    }
-    return DefaultService();
-  }
-
   nsIWebAuthnService* AuthrsService() { return mAuthrsService; }
 
   nsCOMPtr<nsIWebAuthnService> mAuthrsService;
   nsCOMPtr<nsIWebAuthnService> mPlatformService;
-  nsCOMPtr<nsIWebAuthnService> mSelectedService;
 };
 
 }  // namespace mozilla::dom
