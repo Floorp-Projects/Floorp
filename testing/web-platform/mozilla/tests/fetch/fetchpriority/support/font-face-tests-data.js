@@ -17,3 +17,5 @@ export const kTestData = [
         expectedRequests: kExpectedRequests
     },
 ];
+
+export const kTestDataDisabled = kTestData;
