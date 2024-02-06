@@ -446,6 +446,23 @@
 #  define MOZ_NO_STACK_PROTECTOR /* no support */
 #endif
 
+/**
+ * MOZ_LIFETIME_BOUND indicates that objects that are referred to by that
+ * parameter may also be referred to by the return value of the annotated
+ * function (or, for a parameter of a constructor, by the value of the
+ * constructed object).
+ * See: https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
+ */
+#if defined(__clang__) && defined(__has_cpp_attribute)
+#  if __has_cpp_attribute(clang::lifetimebound)
+#    define MOZ_LIFETIME_BOUND [[clang::lifetimebound]]
+#  else
+#    define MOZ_LIFETIME_BOUND /* nothing */
+#  endif
+#else
+#  define MOZ_LIFETIME_BOUND /* nothing */
+#endif
+
 #ifdef __cplusplus
 
 /**
@@ -745,9 +762,6 @@
  * MOZ_MAY_CALL_AFTER_MUST_RETURN: Applies to function or method declarations.
  *   Calls to these methods may be made in functions after calls a
  *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG method.
- * MOZ_LIFETIME_BOUND: Applies to method declarations.
- *   The result of calling these functions on temporaries may not be returned as
- *   a reference or bound to a reference variable.
  * MOZ_UNANNOTATED/MOZ_ANNOTATED: Applies to Mutexes/Monitors and variations on
  *   them. MOZ_UNANNOTATED indicates that the Mutex/Monitor/etc hasn't been
  *   examined and annotated using macros from mfbt/ThreadSafety --
@@ -838,7 +852,6 @@
       __attribute__((annotate("moz_must_return_from_caller_if_this_is_arg")))
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN \
       __attribute__((annotate("moz_may_call_after_must_return")))
-#    define MOZ_LIFETIME_BOUND __attribute__((annotate("moz_lifetime_bound")))
 #    define MOZ_KNOWN_LIVE __attribute__((annotate("moz_known_live")))
 #    ifndef XGILL_PLUGIN
 #      define MOZ_UNANNOTATED __attribute__((annotate("moz_unannotated")))
@@ -898,7 +911,6 @@
 #    define MOZ_REQUIRED_BASE_METHOD                        /* nothing */
 #    define MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG      /* nothing */
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN                  /* nothing */
-#    define MOZ_LIFETIME_BOUND                              /* nothing */
 #    define MOZ_KNOWN_LIVE                                  /* nothing */
 #    define MOZ_UNANNOTATED                                 /* nothing */
 #    define MOZ_ANNOTATED                                   /* nothing */
