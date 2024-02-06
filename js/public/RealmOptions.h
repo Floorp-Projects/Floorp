@@ -195,12 +195,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   }
 
 #ifdef NIGHTLY_BUILD
-  bool getNewSetMethodsEnabled() const { return newSetMethods_; }
-  RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
-    newSetMethods_ = flag;
-    return *this;
-  }
-
   bool getArrayBufferResizableEnabled() const { return arrayBufferResizable_; }
   RealmCreationOptions& setArrayBufferResizableEnabled(bool flag) {
     arrayBufferResizable_ = flag;
@@ -286,8 +280,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool coopAndCoep_ = false;
   bool toSource_ = false;
 #ifdef NIGHTLY_BUILD
-  // Pref for new Set.prototype methods.
-  bool newSetMethods_ = false;
   // Pref for resizable ArrayBuffers.
   bool arrayBufferResizable_ = false;
   // Pref for growable SharedArrayBuffers.
