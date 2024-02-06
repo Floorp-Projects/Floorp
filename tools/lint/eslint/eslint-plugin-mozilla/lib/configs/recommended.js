@@ -10,6 +10,11 @@
  * be found here:
  *
  * https://eslint.org/docs/rules/
+ *
+ * Rules that we've explicitly decided not to enable:
+ *
+ *   require-await - bug 1381030.
+ *   no-prototype-builtins - bug 1551829.
  */
 module.exports = {
   env: {
