@@ -1282,6 +1282,14 @@ HOST_CXXFLAGS=`echo \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
 
+LDFLAGS=`echo \
+    $LDFLAGS \
+    $_COMPILATION_LDFLAGS`
+
+HOST_LDFLAGS=`echo \
+    $HOST_LDFLAGS \
+    $_COMPILATION_HOST_LDFLAGS`
+
 HOST_CMFLAGS="-x objective-c -fobjc-exceptions"
 HOST_CMMFLAGS="-x objective-c++ -fobjc-exceptions"
 OS_COMPILE_CMFLAGS="-x objective-c -fobjc-exceptions"

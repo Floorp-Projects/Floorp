@@ -12,6 +12,51 @@ def compiler_class(compiler, host_or_target):
     is_target = host_or_target is target
 
     class Compiler(SandboxDependsFunction):
+        def _try_compile_or_link(
+            self,
+            includes,
+            body,
+            flags,
+            ldflags,
+            check_msg,
+            when,
+            onerror,
+        ):
+            if ldflags is None:
+
+                @depends(dependable(flags))
+                def flags(flags):
+                    flags = list(flags or [])
+                    flags.append("-c")
+                    return flags
+
+            else:
+
+                @depends(compiler, dependable(ldflags), dependable(flags), when=when)
+                def flags(compiler, ldflags, flags):
+                    if compiler.type == "clang-cl":
+                        configure_error(
+                            "checking linker flags for clang-cl is not supported yet"
+                        )
+
+                    flags = list(flags or [])
+                    flags.extend(ldflags)
+                    return flags
+
+            @depends(dependable(includes))
+            def header(includes):
+                includes = includes or []
+                return ["#include <%s>" % f for f in includes]
+
+            return self.try_run(
+                header=header,
+                body=body,
+                flags=flags,
+                check_msg=check_msg,
+                when=when,
+                onerror=onerror,
+            )
+
         # Generates a test program and attempts to compile it. In case of
         # failure, the resulting check will return None. If the test program
         # succeeds, it will return the output of the test program.
@@ -33,21 +78,32 @@ def compiler_class(compiler, host_or_target):
             when=None,
             onerror=lambda: None,
         ):
-            @depends(dependable(flags))
-            def flags(flags):
-                flags = list(flags or [])
-                flags.append("-c")
-                return flags
-
-            @depends(dependable(includes))
-            def header(includes):
-                includes = includes or []
-                return ["#include <%s>" % f for f in includes]
-
-            return self.try_run(
-                header=header,
+            return self._try_compile_or_link(
+                includes=includes,
                 body=body,
                 flags=flags,
+                ldflags=None,
+                check_msg=check_msg,
+                when=when,
+                onerror=onerror,
+            )
+
+        # Same steps as try_compile but doesn't add "-c"
+        def try_link(
+            self,
+            ldflags,
+            includes=None,
+            body="",
+            flags=None,
+            check_msg=None,
+            when=None,
+            onerror=lambda: None,
+        ):
+            return self._try_compile_or_link(
+                includes=includes,
+                body=body,
+                flags=flags,
+                ldflags=ldflags,
                 check_msg=check_msg,
                 when=when,
                 onerror=onerror,
