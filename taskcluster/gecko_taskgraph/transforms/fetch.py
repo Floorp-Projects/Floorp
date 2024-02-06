@@ -117,6 +117,7 @@ def make_task(config, jobs):
         env = job.get("env", {})
         env.update({"UPLOAD_DIR": "/builds/worker/artifacts"})
         attributes = job.get("attributes", {})
+        attributes["artifact_prefix"] = artifact_prefix
         attributes["fetch-artifact"] = mozpath.join(
             artifact_prefix, job["artifact_name"]
         )
