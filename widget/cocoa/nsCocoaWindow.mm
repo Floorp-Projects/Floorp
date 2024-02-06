@@ -178,16 +178,10 @@ void nsCocoaWindow::DestroyNativeWindow() {
   MOZ_ASSERT(mWindowMadeHere,
              "We shouldn't be trying to destroy a window we didn't create.");
 
-  // Clear our current and pending transitions. This simplifies our
-  // reasoning about what happens next, and ensures that whatever is
-  // currently happening won't trigger another call to
-  // ProcessTransitions().
-  mTransitionCurrent.reset();
-  mIsTransitionCurrentAdded = false;
-  std::queue<TransitionType>().swap(mTransitionsPending);
-
-  // Clear our class state, which will ensure that other nsCocoaWindow
-  // instances are not waiting for us to finish a native transition.
+  // Clear our class state that is keyed off of mWindow. It's our last
+  // chance! This ensures that other nsCocoaWindow instances are not waiting
+  // for us to finish a native transition that will have no listener once
+  // we clear our delegate.
   EndOurNativeTransition();
 
   [mWindow releaseJSObjects];
@@ -224,6 +218,7 @@ nsCocoaWindow::~nsCocoaWindow() {
   }
 
   if (mWindow && mWindowMadeHere) {
+    CancelAllTransitions();
     DestroyNativeWindow();
   }
 
@@ -653,6 +648,7 @@ void nsCocoaWindow::Destroy() {
   // at least one object holding a reference to ourselves is usually waiting
   // to be garbage-collected.
   if (mWindow && mWindowMadeHere) {
+    CancelAllTransitions();
     DestroyNativeWindow();
   }
 }
@@ -1956,6 +1952,16 @@ void nsCocoaWindow::ProcessTransitions() {
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
+void nsCocoaWindow::CancelAllTransitions() {
+  // Clear our current and pending transitions. This simplifies our
+  // reasoning about what happens next, and ensures that whatever is
+  // currently happening won't trigger another call to
+  // ProcessTransitions().
+  mTransitionCurrent.reset();
+  mIsTransitionCurrentAdded = false;
+  std::queue<TransitionType>().swap(mTransitionsPending);
 }
 
 void nsCocoaWindow::FinishCurrentTransitionIfMatching(
