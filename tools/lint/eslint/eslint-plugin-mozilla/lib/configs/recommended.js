@@ -36,7 +36,7 @@ module.exports = {
         browser: false,
         "mozilla/jsm": true,
       },
-      files: ["**/*.sys.mjs", "**/*.jsm", "**/*.jsm.js"],
+      files: ["**/*.sys.mjs", "**/*.jsm"],
       rules: {
         "mozilla/lazy-getter-object-name": "error",
         "mozilla/reject-eager-module-in-lazy-getter": "error",
@@ -94,7 +94,7 @@ module.exports = {
       },
     },
     {
-      files: ["**/*.jsm", "**/*.jsm.js"],
+      files: ["**/*.jsm"],
       rules: {
         "mozilla/mark-exported-symbols-as-used": "error",
       },
