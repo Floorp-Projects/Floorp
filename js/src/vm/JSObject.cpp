@@ -2219,8 +2219,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
 #endif
 
 #ifdef NIGHTLY_BUILD
-  if (key == JSProto_ArrayBuffer &&
-      !cx->realm()->creationOptions().getArrayBufferTransferEnabled() &&
+  if (key == JSProto_ArrayBuffer && !JS::Prefs::arraybuffer_transfer() &&
       (id == NameToId(cx->names().transfer) ||
        id == NameToId(cx->names().transferToFixedLength) ||
        id == NameToId(cx->names().detached))) {

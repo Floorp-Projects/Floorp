@@ -789,7 +789,6 @@ static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
 static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
 static mozilla::Atomic<bool> sSharedArrayBufferGrowableEnabled(false);
 #endif
-static mozilla::Atomic<bool> sArrayBufferTransferEnabled(false);
 
 static JS::WeakRefSpecifier GetWeakRefsEnabled() {
   if (!sWeakRefsEnabled) {
@@ -814,7 +813,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
       .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
-      .setArrayBufferTransferEnabled(sArrayBufferTransferEnabled)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
       .setArrayBufferResizableEnabled(sArrayBufferResizableEnabled)
@@ -1038,8 +1036,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedArrayBufferGrowableEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.sharedarraybuffer_growable");
 #endif
-  sArrayBufferTransferEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "arraybuffer_transfer");
 
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal", -1);

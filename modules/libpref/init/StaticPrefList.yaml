@@ -7508,6 +7508,7 @@
     type: bool
     value: true
     mirror: always
+    set_spidermonkey_pref: startup
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for Import Assertions in JavaScript.
