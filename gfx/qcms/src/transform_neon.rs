@@ -11,9 +11,6 @@ use core::arch::arm::{
 };
 use std::mem::zeroed;
 
-static mut floatScale: f32 = FLOATSCALE;
-static mut clampMaxValue: f32 = CLAMPMAXVAL;
-
 #[target_feature(enable = "neon")]
 #[cfg_attr(target_arch = "arm", target_feature(enable = "v7"))]
 unsafe fn qcms_transform_data_template_lut_neon<F: Format>(
@@ -51,9 +48,9 @@ unsafe fn qcms_transform_data_template_lut_neon<F: Format>(
     let mat1: float32x4_t = vld1q_f32((*mat.offset(1isize)).as_ptr());
     let mat2: float32x4_t = vld1q_f32((*mat.offset(2isize)).as_ptr());
     /* these values don't change, either */
-    let max: float32x4_t = vld1q_dup_f32(&clampMaxValue);
+    let max: float32x4_t = vld1q_dup_f32(&CLAMPMAXVAL);
     let min: float32x4_t = zeroed();
-    let scale: float32x4_t = vld1q_dup_f32(&floatScale);
+    let scale: float32x4_t = vld1q_dup_f32(&FLOATSCALE);
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
     /* working variables */
     let mut vec_r: float32x4_t;
