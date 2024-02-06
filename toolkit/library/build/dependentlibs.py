@@ -90,7 +90,7 @@ def dependentlibs_mac_objdump(lib):
         if tmp[0] == "cmd":
             cmd = tmp[1]
         elif cmd == "LC_LOAD_DYLIB" and tmp[0] == "name":
-            deps.append(re.sub("^@executable_path/", "", tmp[1]))
+            deps.append(re.sub("@(?:rpath|executable_path)/", "", tmp[1]))
     proc.wait()
     return deps
 
