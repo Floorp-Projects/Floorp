@@ -40,6 +40,7 @@
 #if !JS_HAS_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif
+#include "js/Prefs.h"
 #include "js/Printer.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
@@ -4304,7 +4305,7 @@ static bool StringClassFinish(JSContext* cx, HandleObject ctor,
   }
 
   // Define isWellFormed/toWellFormed functions.
-  if (cx->realm()->creationOptions().getWellFormedUnicodeStringsEnabled() &&
+  if (JS::Prefs::well_formed_unicode_strings() &&
       !JS_DefineFunctions(cx, nativeProto, wellFormed_functions)) {
     return false;
   }

@@ -740,8 +740,6 @@ bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
-// Pref for String.prototype.{is,to}WellFormed() methods.
-bool shell::enableWellFormedUnicodeStrings = true;
 #ifdef NIGHTLY_BUILD
 // Pref for new Set.prototype methods.
 bool shell::enableNewSetMethods = false;
@@ -4138,7 +4136,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
       .setIteratorHelpersEnabled(enableIteratorHelpers)
       .setShadowRealmsEnabled(enableShadowRealms)
-      .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
       .setArrayBufferResizableEnabled(enableArrayBufferResizable)
@@ -12148,6 +12145,8 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
       !op.getBoolOption("disable-array-grouping"));
   JS::Prefs::setAtStartup_arraybuffer_transfer(
       !op.getBoolOption("disable-arraybuffer-transfer"));
+  JS::Prefs::setAtStartup_well_formed_unicode_strings(
+      !op.getBoolOption("disable-well-formed-unicode-strings"));
 #ifdef NIGHTLY_BUILD
   JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
@@ -12349,8 +12348,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
-  enableWellFormedUnicodeStrings =
-      !op.getBoolOption("disable-well-formed-unicode-strings");
 #ifdef NIGHTLY_BUILD
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
   enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");
