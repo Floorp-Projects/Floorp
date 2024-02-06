@@ -86,6 +86,7 @@ class TestRail:
         ]:  # check last 10 api responses
             if milestone_name == milestone["name"]:
                 return True
+        return False
 
     def update_test_cases_to_passed(
         self, testrail_project_id, testrail_run_id, testrail_suite_id
@@ -97,7 +98,6 @@ class TestRail:
             ]
         }
         return self._update_test_run_results(testrail_run_id, data)
-        return False
 
     # Private Methods
 

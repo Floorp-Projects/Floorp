@@ -71,7 +71,7 @@ def main():
             sys.exit()
 
         # Create milestone and test runs
-        devices = ["Google Pixel 32(Android11)", "Google Pixel2(Android9)"]
+        devices = ["Google Pixel 3(Android11)", "Google Pixel 2(Android11)"]
         testrail.create_milestone_and_test_runs(
             testrail_project_id,
             milestone_name,
