@@ -119,6 +119,9 @@ macro_rules! try_parse_one {
 
     impl<'a> ToCss for LonghandsToSerialize<'a>  {
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            use crate::Zero;
+            use style_traits::values::SequenceWriter;
+
             let property_len = self.transition_property.0.len();
 
             // There are two cases that we can do shorthand serialization:
@@ -145,15 +148,32 @@ macro_rules! try_parse_one {
                 if i != 0 {
                     dest.write_str(", ")?;
                 }
+
+                let has_duration = !self.transition_duration.0[i].is_zero();
+                let has_timing = !self.transition_timing_function.0[i].is_ease();
+                let has_delay = !self.transition_delay.0[i].is_zero();
+                let has_any = has_duration || has_timing || has_delay;
+
+                let mut writer = SequenceWriter::new(dest, " ");
+
                 if property_len == 0 {
-                    dest.write_str("none")?;
-                } else {
-                    self.transition_property.0[i].to_css(dest)?;
+                    writer.raw_item("none")?;
+                } else if !self.transition_property.0[i].is_all() || !has_any {
+                    writer.item(&self.transition_property.0[i])?;
                 }
-                % for name in "duration timing_function delay".split():
-                    dest.write_char(' ')?;
-                    self.transition_${name}.0[i].to_css(dest)?;
-                % endfor
+
+                // In order to avoid ambiguity, we have to serialize duration if we have delay.
+                if has_duration || has_delay {
+                    writer.item(&self.transition_duration.0[i])?;
+                }
+
+                if has_timing {
+                    writer.item(&self.transition_timing_function.0[i])?;
+                }
+
+                if has_delay {
+                    writer.item(&self.transition_delay.0[i])?;
+                }
             }
             Ok(())
         }

@@ -9,6 +9,7 @@ use crate::values::computed::time::Time as ComputedTime;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::specified::calc::CalcNode;
 use crate::values::CSSFloat;
+use crate::Zero;
 use cssparser::{Parser, Token};
 use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;
@@ -47,11 +48,6 @@ impl Time {
     /// Returns a time value that represents `seconds` seconds.
     pub fn from_seconds(seconds: CSSFloat) -> Self {
         Self::from_seconds_with_calc_clamping_mode(seconds, None)
-    }
-
-    /// Returns `0s`.
-    pub fn zero() -> Self {
-        Self::from_seconds(0.0)
     }
 
     /// Returns the time in fractional seconds.
@@ -125,6 +121,19 @@ impl Time {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         Self::parse_with_clamping_mode(context, input, AllowedNumericType::NonNegative)
+    }
+}
+
+impl Zero for Time {
+    #[inline]
+    fn zero() -> Self {
+        Self::from_seconds(0.0)
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        // The unit doesn't matter, i.e. `s` and `ms` are the same for zero.
+        self.seconds == 0.0 && self.calc_clamping_mode.is_none()
     }
 }
 
