@@ -2295,8 +2295,12 @@ bool JSStructuredCloneWriter::transferOwnership() {
         if (bufContents.kind() == ArrayBufferObject::MAPPED) {
           ownership = JS::SCTAG_TMO_MAPPED_DATA;
         } else {
-          MOZ_ASSERT(bufContents.kind() == ArrayBufferObject::MALLOCED,
-                     "failing to handle new ArrayBuffer kind?");
+          MOZ_ASSERT(
+              bufContents.kind() ==
+                      ArrayBufferObject::MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+                  bufContents.kind() ==
+                      ArrayBufferObject::MALLOCED_UNKNOWN_ARENA,
+              "failing to handle new ArrayBuffer kind?");
           ownership = JS::SCTAG_TMO_ALLOC_DATA;
         }
         extraData = nbytes;
