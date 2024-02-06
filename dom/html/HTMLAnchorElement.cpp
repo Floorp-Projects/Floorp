@@ -152,7 +152,8 @@ void HTMLAnchorElement::GetTarget(nsAString& aValue) const {
 
 nsDOMTokenList* HTMLAnchorElement::RelList() {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+    mRelList =
+        new nsDOMTokenList(this, nsGkAtoms::rel, sAnchorAndFormRelValues);
   }
   return mRelList;
 }

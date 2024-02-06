@@ -107,7 +107,8 @@ void SVGAElement::SetReferrerPolicy(const nsAString& aPolicy,
 
 nsDOMTokenList* SVGAElement::RelList() {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+    mRelList =
+        new nsDOMTokenList(this, nsGkAtoms::rel, sAnchorAndFormRelValues);
   }
   return mRelList;
 }

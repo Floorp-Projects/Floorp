@@ -35,6 +35,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/DOMString.h"
+#include "mozilla/dom/DOMTokenListSupportedTokens.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/NameSpaceConstants.h"
@@ -1819,6 +1820,9 @@ class Element : public FragmentOrElement {
   }
 
  protected:
+  // Supported rel values for <form> and anchors.
+  static const DOMTokenListSupportedToken sAnchorAndFormRelValues[];
+
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
    * read.
