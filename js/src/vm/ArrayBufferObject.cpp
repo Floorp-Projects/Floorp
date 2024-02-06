@@ -1105,7 +1105,8 @@ bool ArrayBufferObject::prepareForAsmJS() {
              "prior size checking should have excluded empty buffers");
 
   switch (bufferKind()) {
-    case MALLOCED:
+    case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+    case MALLOCED_UNKNOWN_ARENA:
     case MAPPED:
     case EXTERNAL:
       // It's okay if this uselessly sets the flag a second time.
@@ -1133,10 +1134,6 @@ bool ArrayBufferObject::prepareForAsmJS() {
     // wasm buffers can be detached at any time.
     case WASM:
       MOZ_ASSERT(!isPreparedForAsmJS());
-      return false;
-
-    case BAD1:
-      MOZ_ASSERT_UNREACHABLE("invalid bufferKind() encountered");
       return false;
   }
 
@@ -1173,7 +1170,8 @@ void ArrayBufferObject::releaseData(JS::GCContext* gcx) {
     case INLINE_DATA:
       // Inline data doesn't require releasing.
       break;
-    case MALLOCED:
+    case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+    case MALLOCED_UNKNOWN_ARENA:
       gcx->free_(this, dataPointer(), byteLength(),
                  MemoryUse::ArrayBufferContents);
       break;
@@ -1204,9 +1202,6 @@ void ArrayBufferObject::releaseData(JS::GCContext* gcx) {
         freeInfo()->freeFunc(dataPointer(), freeInfo()->freeUserData);
       }
       break;
-    case BAD1:
-      MOZ_CRASH("invalid BufferKind encountered");
-      break;
   }
 }
 
@@ -1226,10 +1221,10 @@ size_t ArrayBufferObject::byteLength() const {
 }
 
 inline size_t ArrayBufferObject::associatedBytes() const {
-  if (bufferKind() == MALLOCED) {
+  if (isMalloced()) {
     return byteLength();
   }
-  if (bufferKind() == MAPPED) {
+  if (isMapped()) {
     return RoundUp(byteLength(), js::gc::SystemPageSize());
   }
   MOZ_CRASH("Unexpected buffer kind");
@@ -1547,7 +1542,8 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
     if (contents.kind() == MAPPED) {
       nAllocated = RoundUp(nbytes, js::gc::SystemPageSize());
     } else {
-      MOZ_ASSERT(contents.kind() == MALLOCED,
+      MOZ_ASSERT(contents.kind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+                     contents.kind() == MALLOCED_UNKNOWN_ARENA,
                  "should have handled all possible callers' kinds");
     }
   }
@@ -1567,7 +1563,9 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
 
   buffer->initialize(nbytes, contents);
 
-  if (contents.kind() == MAPPED || contents.kind() == MALLOCED) {
+  if (contents.kind() == MAPPED ||
+      contents.kind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+      contents.kind() == MALLOCED_UNKNOWN_ARENA) {
     AddCellMemory(buffer, nAllocated, MemoryUse::ArrayBufferContents);
   }
 
@@ -1615,7 +1613,8 @@ ArrayBufferObject::createBufferAndData(
   uint8_t* toFill;
   if (data) {
     toFill = data.release();
-    buffer->initialize(nbytes, BufferContents::createMalloced(toFill));
+    buffer->initialize(
+        nbytes, BufferContents::createMallocedArrayBufferContentsArena(toFill));
     AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
   } else {
     auto contents =
@@ -1674,11 +1673,14 @@ ArrayBufferObject::createBufferAndData(
              "caller must validate the byte count it passes");
 
   if (newByteLength > ArrayBufferObject::MaxInlineBytes &&
-      source->bufferKind() == ArrayBufferObject::MALLOCED) {
+      source->isMalloced()) {
     if (newByteLength == source->byteLength()) {
       return copyAndDetachSteal(cx, source);
     }
-    return copyAndDetachRealloc(cx, newByteLength, source);
+    if (source->bufferKind() ==
+        ArrayBufferObject::MALLOCED_ARRAYBUFFER_CONTENTS_ARENA) {
+      return copyAndDetachRealloc(cx, newByteLength, source);
+    }
   }
 
   auto* newBuffer = ArrayBufferObject::copy(cx, newByteLength, source);
@@ -1693,7 +1695,7 @@ ArrayBufferObject::createBufferAndData(
 /* static */ ArrayBufferObject* ArrayBufferObject::copyAndDetachSteal(
     JSContext* cx, JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
-  MOZ_ASSERT(source->bufferKind() == MALLOCED);
+  MOZ_ASSERT(source->isMalloced());
 
   size_t byteLength = source->byteLength();
   MOZ_ASSERT(byteLength > ArrayBufferObject::MaxInlineBytes,
@@ -1707,7 +1709,8 @@ ArrayBufferObject::createBufferAndData(
   // Extract the contents from |source|.
   BufferContents contents = source->contents();
   MOZ_ASSERT(contents);
-  MOZ_ASSERT(contents.kind() == MALLOCED);
+  MOZ_ASSERT(contents.kind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+             contents.kind() == MALLOCED_UNKNOWN_ARENA);
 
   // Overwrite |source|'s data pointer *without* releasing the data.
   source->setDataPointer(BufferContents::createNoData());
@@ -1727,7 +1730,7 @@ ArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
-  MOZ_ASSERT(source->bufferKind() == MALLOCED);
+  MOZ_ASSERT(source->bufferKind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
   MOZ_ASSERT(newByteLength > ArrayBufferObject::MaxInlineBytes,
              "prefer copying small buffers");
   MOZ_ASSERT(newByteLength <= ArrayBufferObject::MaxByteLength,
@@ -1745,7 +1748,7 @@ ArrayBufferObject::createBufferAndData(
   // Extract the contents from |source|.
   BufferContents contents = source->contents();
   MOZ_ASSERT(contents);
-  MOZ_ASSERT(contents.kind() == MALLOCED);
+  MOZ_ASSERT(contents.kind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
 
   // Reallocate the data pointer.
   auto newData = ReallocateArrayBufferContents(cx, contents.data(),
@@ -1754,7 +1757,8 @@ ArrayBufferObject::createBufferAndData(
     // If reallocation failed, the old pointer is still valid, so just return.
     return nullptr;
   }
-  auto newContents = BufferContents::createMalloced(newData.release());
+  auto newContents =
+      BufferContents::createMallocedArrayBufferContentsArena(newData.release());
 
   // Overwrite |source|'s data pointer *without* releasing the data.
   source->setDataPointer(BufferContents::createNoData());
@@ -1828,7 +1832,8 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   CheckStealPreconditions(buffer, cx);
 
   switch (buffer->bufferKind()) {
-    case MALLOCED: {
+    case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+    case MALLOCED_UNKNOWN_ARENA: {
       uint8_t* stolenData = buffer->dataPointer();
       MOZ_ASSERT(stolenData);
 
@@ -1867,10 +1872,6 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
           "memory.grow operation that shouldn't call this "
           "function");
       return nullptr;
-
-    case BAD1:
-      MOZ_ASSERT_UNREACHABLE("bad kind when stealing malloc'd data");
-      return nullptr;
   }
 
   MOZ_ASSERT_UNREACHABLE("garbage kind computed");
@@ -1900,10 +1901,12 @@ ArrayBufferObject::extractStructuredCloneContents(
       }
 
       ArrayBufferObject::detach(cx, buffer);
-      return BufferContents::createMalloced(copiedData.release());
+      return BufferContents::createMallocedArrayBufferContentsArena(
+          copiedData.release());
     }
 
-    case MALLOCED:
+    case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+    case MALLOCED_UNKNOWN_ARENA:
     case MAPPED: {
       MOZ_ASSERT(contents);
 
@@ -1927,10 +1930,6 @@ ArrayBufferObject::extractStructuredCloneContents(
       MOZ_ASSERT_UNREACHABLE(
           "external ArrayBuffer shouldn't have passed the "
           "structured-clone preflighting");
-      break;
-
-    case BAD1:
-      MOZ_ASSERT_UNREACHABLE("bad kind when stealing malloc'd data");
       break;
   }
 
@@ -1962,7 +1961,7 @@ bool ArrayBufferObject::ensureNonInline(JSContext* cx,
     return false;
   }
   BufferContents outOfLineContents =
-      BufferContents::createMalloced(copy.release());
+      BufferContents::createMallocedArrayBufferContentsArena(copy.release());
   buffer->setDataPointer(outOfLineContents);
   AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
 
@@ -1995,7 +1994,8 @@ void ArrayBufferObject::addSizeOfExcludingThis(
       // Inline data's size should be reported by this object's size-class
       // reporting.
       break;
-    case MALLOCED:
+    case MALLOCED_ARRAYBUFFER_CONTENTS_ARENA:
+    case MALLOCED_UNKNOWN_ARENA:
       if (buffer.isPreparedForAsmJS()) {
         info->objectsMallocHeapElementsAsmJS +=
             mallocSizeOf(buffer.dataPointer());
@@ -2028,8 +2028,6 @@ void ArrayBufferObject::addSizeOfExcludingThis(
         }
       }
       break;
-    case BAD1:
-      MOZ_CRASH("bad bufferKind()");
   }
 }
 
@@ -2377,7 +2375,7 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents contents = BufferContents::createMalloced(data);
+  BufferContents contents = BufferContents::createMallocedUnknownArena(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 

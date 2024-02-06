@@ -196,8 +196,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     /** Inline data kept in the repurposed slots of this ArrayBufferObject. */
     INLINE_DATA = 0b000,
 
-    /* Data allocated using the SpiderMonkey allocator. */
-    MALLOCED = 0b001,
+    /*
+     * Data allocated using the SpiderMonkey allocator, created within
+     * js::ArrayBufferContentsArena.
+     */
+    MALLOCED_ARRAYBUFFER_CONTENTS_ARENA = 0b001,
 
     /**
      * No bytes are associated with this buffer.  (This could be because the
@@ -218,9 +221,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     MAPPED = 0b101,
     EXTERNAL = 0b110,
 
-    // These kind-values are currently invalid.  We intend to expand valid
-    // BufferKinds in the future to either partly or fully use these values.
-    BAD1 = 0b111,
+    /**
+     * Data allocated using the SpiderMonkey allocator, created within an
+     * unknown memory arena.
+     */
+    MALLOCED_UNKNOWN_ARENA = 0b111,
 
     KIND_MASK = 0b111
   };
@@ -285,8 +290,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       return BufferContents(static_cast<uint8_t*>(data), INLINE_DATA);
     }
 
-    static BufferContents createMalloced(void* data) {
-      return BufferContents(static_cast<uint8_t*>(data), MALLOCED);
+    static BufferContents createMallocedArrayBufferContentsArena(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data),
+                            MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
+    }
+
+    static BufferContents createMallocedUnknownArena(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data),
+                            MALLOCED_UNKNOWN_ARENA);
     }
 
     static BufferContents createNoData() {
@@ -314,10 +325,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     }
 
     static BufferContents createFailed() {
-      // There's no harm in tagging this as MALLOCED, even tho obviously it
-      // isn't.  And adding an extra tag purely for this case is a complication
-      // that presently appears avoidable.
-      return BufferContents(nullptr, MALLOCED);
+      // There's no harm in tagging this as MALLOCED_ARRAYBUFFER_CONTENTS_ARENA,
+      // even tho obviously it isn't. And adding an extra tag purely for this
+      // case is a complication that presently appears avoidable.
+      return BufferContents(nullptr, MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
     }
 
     uint8_t* data() const { return data_; }
@@ -461,7 +472,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 
   bool isInlineData() const { return bufferKind() == INLINE_DATA; }
-  bool isMalloced() const { return bufferKind() == MALLOCED; }
+  bool isMalloced() const {
+    return bufferKind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA ||
+           bufferKind() == MALLOCED_UNKNOWN_ARENA;
+  }
   bool isNoData() const { return bufferKind() == NO_DATA; }
   bool hasUserOwnedData() const { return bufferKind() == USER_OWNED; }
 
