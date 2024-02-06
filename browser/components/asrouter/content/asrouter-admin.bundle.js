@@ -1429,17 +1429,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }, isBlocked ? "Unblock" : "Block"),
     // eslint-disable-next-line no-nested-ternary
     isBlocked ? null : isModified ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
-      className: "button restore"
-      // eslint-disable-next-line react/jsx-no-bind
-      ,
+      className: "button restore",
       onClick: e => this.resetJSON(msg)
     }, "Reset") : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "button show",
       onClick: this.handleOverride(msg.id)
     }, "Show"), isBlocked ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
-      className: "button modify"
-      // eslint-disable-next-line react/jsx-no-bind
-      ,
+      className: "button modify",
       onClick: e => this.modifyJson(msg)
     }, "Modify"), aboutMessagePreviewSupported ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_CopyButton__WEBPACK_IMPORTED_MODULE_4__.CopyButton, {
       transformer: text => `about:messagepreview?json=${encodeURIComponent(btoa(text))}`,
@@ -1455,9 +1451,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       id: `${msg.id}-textarea`,
       name: msg.id,
       className: "general-textarea",
-      disabled: isBlocked
-      // eslint-disable-next-line react/jsx-no-bind
-      ,
+      disabled: isBlocked,
       onChange: e => this.handleChange(msg.id)
     }, JSON.stringify(msg, null, 2))))));
   }
@@ -1547,9 +1541,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     }
     const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter && message.template !== "pb_newtab");
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
-      className: "ASRouterButton slim"
-      // eslint-disable-next-line react/jsx-no-bind
-      ,
+      className: "ASRouterButton slim",
       onClick: e => this.toggleAllMessages(messagesToShow)
     }, "Collapse/Expand All"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", {
       className: "helpLink"
@@ -1851,9 +1843,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
         display: "none"
       }
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h2", null, "Messages"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
-      className: "ASRouterButton slim button"
-      // eslint-disable-next-line react/jsx-no-bind
-      ,
+      className: "ASRouterButton slim button",
       onClick: e => this.toggleAllMessages(messagesToShow)
     }, "Collapse/Expand All"), this.renderPBMessages()));
   }
