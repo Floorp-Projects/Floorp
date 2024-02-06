@@ -406,11 +406,17 @@
       obj = {
         role: ROLE_PARAGRAPH,
         textAttrs: {
-          0: { "font-style": "italic" },
-          12: { },
+          0: { },
+          1: { },
         },
         children: [
-          { role: ROLE_TEXT_LEAF }, // HTML:dfn text
+          {
+            role: ROLE_TERM, // HTML:dfn
+            textAttrs: { 0: { }, },
+            children: [
+              { role: ROLE_TEXT_LEAF },
+            ],
+          },
           { role: ROLE_TEXT_LEAF }, // plain text
         ],
       };
