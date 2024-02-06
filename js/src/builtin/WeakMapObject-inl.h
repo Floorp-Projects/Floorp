@@ -10,6 +10,7 @@
 #include "builtin/WeakMapObject.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Prefs.h"
 #include "js/Wrapper.h"
 #include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
@@ -78,7 +79,7 @@ static MOZ_ALWAYS_INLINE bool CanBeHeldWeakly(JSContext* cx,
 
 #ifdef NIGHTLY_BUILD
   bool symbolsAsWeakMapKeysEnabled =
-      cx->realm()->creationOptions().getSymbolsAsWeakMapKeysEnabled();
+      JS::Prefs::experimental_symbols_as_weakmap_keys();
 
   // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
   if (symbolsAsWeakMapKeysEnabled && value.isSymbol() &&
