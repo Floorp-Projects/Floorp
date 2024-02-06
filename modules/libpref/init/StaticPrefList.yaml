@@ -7414,6 +7414,13 @@
   value: true
   mirror: always
 
+# No-op pref for testing the SpiderMonkey pref system.
+- name: javascript.options.tests.uint32-pref
+  type: uint32_t
+  value: 1
+  mirror: always
+  set_spidermonkey_pref: always
+
 # Enable fuse based destructuring
 - name: javascript.options.destructuring_fuse
   type: bool
