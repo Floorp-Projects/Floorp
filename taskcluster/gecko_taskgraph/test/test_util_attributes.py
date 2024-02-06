@@ -62,7 +62,7 @@ class MatchRunOnProjects(unittest.TestCase):
 
     def test_release(self):
         self.assertFalse(match_run_on_projects("birch", ["release"]))
-        self.assertFalse(match_run_on_projects("larch", ["release"]))
+        self.assertTrue(match_run_on_projects("larch", ["release"]))
         self.assertFalse(match_run_on_projects("autoland", ["release"]))
         self.assertTrue(match_run_on_projects("mozilla-central", ["release"]))
         self.assertTrue(match_run_on_projects("mozilla-beta", ["release"]))
@@ -78,7 +78,7 @@ class MatchRunOnProjects(unittest.TestCase):
 
     def test_combo(self):
         self.assertTrue(match_run_on_projects("birch", ["release", "birch", "maple"]))
-        self.assertFalse(match_run_on_projects("larch", ["release", "birch", "maple"]))
+        self.assertTrue(match_run_on_projects("larch", ["release", "birch", "maple"]))
         self.assertTrue(match_run_on_projects("maple", ["release", "birch", "maple"]))
         self.assertFalse(
             match_run_on_projects("autoland", ["release", "birch", "maple"])

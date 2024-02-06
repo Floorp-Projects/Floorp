@@ -48,7 +48,7 @@ def _generate_task_output_files(job, filenames, locale=None):
 
 
 def identify_desired_signing_keys(project, product):
-    if project in ["mozilla-central", "comm-central", "pine"]:
+    if project in ["mozilla-central", "comm-central", "larch", "pine"]:
         return "nightly"
     if project == "mozilla-beta":
         if product == "devedition":

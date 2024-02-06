@@ -23,6 +23,8 @@ RELEASE_PROJECTS = {
     # bug 1845368: pine is a permanent project branch used for testing
     # nightly updates
     "pine",
+    # bug 1877483: larch has similar needs for nightlies
+    "larch",
 }
 
 RELEASE_PROMOTION_PROJECTS = {

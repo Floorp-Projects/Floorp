@@ -54,6 +54,8 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [
             # bug 1845368: pine is a permanent project branch used for testing
             # nightly updates
             "pine",
+            # bug 1877483: larch has similar needs for nightlies
+            "larch",
         },
     ],
     [
@@ -102,6 +104,8 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [
             # bug 1845368: pine is a permanent project branch used for testing
             # nightly updates
             "pine",
+            # bug 1877483: larch has similar needs for nightlies
+            "larch",
         },
     ],
     [
@@ -141,6 +145,8 @@ BEETMOVER_ACTION_SCOPES = {
     # bug 1845368: pine is a permanent project branch used for testing
     # nightly updates
     "nightly-pine": "beetmover:action:push-to-nightly",
+    # bug 1877483: larch has similar needs for nightlies
+    "nightly-larch": "beetmover:action:push-to-nightly",
     "default": "beetmover:action:push-to-candidates",
 }
 
@@ -173,6 +179,8 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [
             # bug 1845368: pine is a permanent project branch used for testing
             # nightly updates
             "pine",
+            # bug 1877483: larch has similar needs for nightlies
+            "larch",
         },
     ],
     [
