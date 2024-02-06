@@ -7487,6 +7487,7 @@
     type: bool
     value: false
     mirror: always
+    set_spidermonkey_pref: startup
 
   # Experimental support for Symbols as WeakMap keys in JavaScript.
 -   name: javascript.options.experimental.symbols_as_weakmap_keys

@@ -210,14 +210,6 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef NIGHTLY_BUILD
-  bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
-  if (!JS_SetProperty(cx, info, "enableNewSetMethods",
-                      newSetMethods ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
-#endif
-
   if (args.length() == 1) {
     RootedString str(cx, ToString(cx, args[0]));
     if (!str) {

@@ -2205,8 +2205,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 
 #ifdef NIGHTLY_BUILD
-  if (key == JSProto_Set &&
-      !cx->realm()->creationOptions().getNewSetMethodsEnabled() &&
+  if (key == JSProto_Set && !JS::Prefs::experimental_new_set_methods() &&
       (id == NameToId(cx->names().union_) ||
        id == NameToId(cx->names().difference) ||
        id == NameToId(cx->names().intersection) ||

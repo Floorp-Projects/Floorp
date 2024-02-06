@@ -781,7 +781,6 @@ static mozilla::Atomic<bool> sStreamsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 #ifdef NIGHTLY_BUILD
-static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
 static mozilla::Atomic<bool> sArrayBufferResizableEnabled(false);
 static mozilla::Atomic<bool> sSharedArrayBufferGrowableEnabled(false);
 #endif
@@ -806,7 +805,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
           StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
       .setWeakRefsEnabled(GetWeakRefsEnabled())
 #ifdef NIGHTLY_BUILD
-      .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
       .setArrayBufferResizableEnabled(sArrayBufferResizableEnabled)
       .setSharedArrayBufferGrowableEnabled(sSharedArrayBufferGrowableEnabled)
 #endif
@@ -1013,8 +1011,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
 #ifdef NIGHTLY_BUILD
-  sNewSetMethodsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
   sArrayBufferResizableEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.arraybuffer_resizable");
   sSharedArrayBufferGrowableEnabled = Preferences::GetBool(
