@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 unicode-bidi = "0.3.14"
+icu_properties = { version = "1.4.0", features = ["bidi"] }
