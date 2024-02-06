@@ -408,23 +408,6 @@ class _QuickSuggest {
   }
 
   /**
-   * Records the Nimbus exposure event if it hasn't already been recorded during
-   * the app session. This method actually queues the recording on idle because
-   * it's potentially an expensive operation.
-   */
-  ensureExposureEventRecorded() {
-    // `recordExposureEvent()` makes sure only one event is recorded per app
-    // session even if it's called many times, but since it may be expensive, we
-    // also keep `_recordedExposureEvent`.
-    if (!this._recordedExposureEvent) {
-      this._recordedExposureEvent = true;
-      Services.tm.idleDispatchToMainThread(() =>
-        lazy.NimbusFeatures.urlbar.recordExposureEvent({ once: true })
-      );
-    }
-  }
-
-  /**
    * An onboarding dialog can be shown to the users who are enrolled into
    * the QuickSuggest experiments or rollouts. This behavior is controlled
    * by the pref `browser.urlbar.quicksuggest.shouldShowOnboardingDialog`
@@ -469,10 +452,6 @@ class _QuickSuggest {
     // Don't show the dialog on top of about:welcome for new users.
     if (win.gBrowser?.currentURI?.spec == "about:welcome") {
       return false;
-    }
-
-    if (lazy.UrlbarPrefs.get("experimentType") === "modal") {
-      this.ensureExposureEventRecorded();
     }
 
     if (
