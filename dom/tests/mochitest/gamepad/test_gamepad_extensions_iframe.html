@@ -122,10 +122,6 @@ async function posecheck() {
   await pressButton();
 }
 
-function setFrameVisible(f, visible) {
-  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
-}
-
 function haptictest() {
   var gamepads = navigator.getGamepads();
   var hapticActuators = gamepads[0].hapticActuators[0];
@@ -134,10 +130,6 @@ function haptictest() {
     await GamepadService.removeGamepad(gamepad_index);
     SimpleTest.finish();
   });
-  // When page is background, we should stop our haptics and still
-  // can get the promise.
-  var f1 = document.getElementById('f1');
-  setFrameVisible(f1, false);
 }
 
 async function touchadd() {

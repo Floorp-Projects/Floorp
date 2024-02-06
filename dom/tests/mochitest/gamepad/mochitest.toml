@@ -1,5 +1,8 @@
 [DEFAULT]
 scheme = "https"
+prefs = [
+  "dom.gamepad.test.enabled=true",
+]
 support-files = [
   "gamepad_frame.html",
   "gamepad_frame_state.html",
@@ -22,7 +25,8 @@ support-files = ["test_gamepad_extensions_iframe.html"]
 support-files = ["test_gamepad_frame_state_sync_iframe.html"]
 
 ["test_gamepad_hidden_frame.html"]
-support-files = ["test_gamepad_hidden_frame_iframe.html"]
+# Android doesn't switch tabs on window.focus()
+skip-if = ["os == 'android'"]
 
 ["test_gamepad_multitouch_crossorigin.html"]
 support-files = ["test_gamepad_multitouch_crossorigin_iframe.html"]
