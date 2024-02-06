@@ -74,8 +74,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase, mFetchingModules, mFetchedModules,
-                         mDynamicImportRequests, mGlobalObject, mEventTarget,
-                         mLoader)
+                         mDynamicImportRequests, mGlobalObject, mLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase)
@@ -977,13 +976,9 @@ void ModuleLoaderBase::FinishDynamicImport(
 }
 
 ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader,
-                                   nsIGlobalObject* aGlobalObject,
-                                   nsISerialEventTarget* aEventTarget)
-    : mGlobalObject(aGlobalObject),
-      mEventTarget(aEventTarget),
-      mLoader(aLoader) {
+                                   nsIGlobalObject* aGlobalObject)
+    : mGlobalObject(aGlobalObject), mLoader(aLoader) {
   MOZ_ASSERT(mGlobalObject);
-  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mLoader);
 
   EnsureModuleHooksInitialized();
@@ -1014,7 +1009,6 @@ void ModuleLoaderBase::Shutdown() {
   mFetchingModules.Clear();
   mFetchedModules.Clear();
   mGlobalObject = nullptr;
-  mEventTarget = nullptr;
   mLoader = nullptr;
 }
 
