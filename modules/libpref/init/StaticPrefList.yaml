@@ -7444,12 +7444,14 @@
   type: bool
   value: true
   mirror: always
+  set_spidermonkey_pref: startup
 
 # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
 - name: javascript.options.experimental.weakrefs.expose_cleanupSome
   type: bool
   value: false
   mirror: always
+  set_spidermonkey_pref: startup
 
 # ShadowRealms: https://github.com/tc39/proposal-shadowrealm
 - name: javascript.options.experimental.shadow_realms

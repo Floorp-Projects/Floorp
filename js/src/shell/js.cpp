@@ -735,7 +735,6 @@ bool shell::enableTestWasmAwaitTier2 = false;
 bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
-bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
 #ifdef NIGHTLY_BUILD
 // Pref for resizable ArrayBuffers and growable SharedArrayBuffers.
@@ -4123,9 +4122,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setCoopAndCoepEnabled(false)
-      .setWeakRefsEnabled(enableWeakRefs
-                              ? JS::WeakRefSpecifier::EnabledWithCleanupSome
-                              : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
 #ifdef NIGHTLY_BUILD
       .setArrayBufferResizableEnabled(enableArrayBufferResizable)
@@ -12148,6 +12144,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
       op.getBoolOption("enable-symbols-as-weakmap-keys"));
 #endif
 
+  JS::Prefs::setAtStartup_weakrefs(!op.getBoolOption("disable-weak-refs"));
+  JS::Prefs::setAtStartup_experimental_weakrefs_expose_cleanupSome(true);
+
   JS::Prefs::setAtStartup_destructuring_fuse(
       !op.getBoolOption("disable-destructuring-fuse"));
   JS::Prefs::setAtStartup_property_error_message_fix(
@@ -12343,7 +12342,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableAsyncStackCaptureDebuggeeOnly =
       op.getBoolOption("async-stacks-capture-debuggee-only");
-  enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
 #ifdef NIGHTLY_BUILD
   enableArrayBufferResizable = op.getBoolOption("enable-arraybuffer-resizable");

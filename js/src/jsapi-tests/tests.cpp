@@ -118,9 +118,7 @@ JSObject* JSAPIRuntimeTest::createGlobal(JSPrincipals* principals) {
   /* Create the global object. */
   JS::RootedObject newGlobal(cx);
   JS::RealmOptions options;
-  options.creationOptions()
-      .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithCleanupSome)
-      .setSharedMemoryAndAtomicsEnabled(true);
+  options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
                                  JS::FireOnNewGlobalHook, options);
   if (!newGlobal) {
@@ -251,6 +249,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Override prefs for jsapi-tests.
+  JS::Prefs::setAtStartup_weakrefs(true);
+  JS::Prefs::setAtStartup_experimental_weakrefs_expose_cleanupSome(true);
 #ifdef NIGHTLY_BUILD
   JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(true);
 #endif

@@ -95,6 +95,26 @@ class Prefs {
 #undef DEF_GETSET
 };
 
+/**
+ * Specification for whether weak refs should be enabled and if so whether the
+ * FinalizationRegistry.cleanupSome method should be present.
+ */
+enum class WeakRefSpecifier {
+  Disabled,
+  EnabledWithCleanupSome,
+  EnabledWithoutCleanupSome
+};
+
+inline WeakRefSpecifier GetWeakRefsEnabled() {
+  if (!Prefs::weakrefs()) {
+    return WeakRefSpecifier::Disabled;
+  }
+  if (Prefs::experimental_weakrefs_expose_cleanupSome()) {
+    return WeakRefSpecifier::EnabledWithCleanupSome;
+  }
+  return WeakRefSpecifier::EnabledWithoutCleanupSome;
+}
+
 };  // namespace JS
 
 #endif /* js_Prefs_h */
