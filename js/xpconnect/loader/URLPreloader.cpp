@@ -222,10 +222,9 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
   }
 
   {
-    AutoFDClose raiiFd;
+    AutoFDClose fd;
     MOZ_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644,
-                                        getter_Transfers(raiiFd)));
-    const auto fd = raiiFd.get();
+                                        &fd.rwget()));
 
     nsTArray<URLEntry*> entries;
     for (const auto& entry : mCachedURLs.Values()) {

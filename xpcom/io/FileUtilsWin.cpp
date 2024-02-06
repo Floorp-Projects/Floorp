@@ -11,9 +11,24 @@
 
 #include "base/process_util.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "nsWindowsHelpers.h"
+
+namespace {
+
+// Scoped type used by HandleToFilename
+struct ScopedMappedViewTraits {
+  typedef void* type;
+  static void* empty() { return nullptr; }
+  static void release(void* aPtr) {
+    if (aPtr) {
+      mozilla::Unused << UnmapViewOfFile(aPtr);
+    }
+  }
+};
+typedef mozilla::Scoped<ScopedMappedViewTraits> ScopedMappedView;
+
+}  // namespace
 
 namespace mozilla {
 
@@ -29,14 +44,11 @@ bool HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
   if (!fileMapping) {
     return false;
   }
-  const auto view = MapViewOfFile(fileMapping, FILE_MAP_READ, aOffset.HighPart,
-                                  aOffset.LowPart, 1);
+  ScopedMappedView view(MapViewOfFile(fileMapping, FILE_MAP_READ,
+                                      aOffset.HighPart, aOffset.LowPart, 1));
   if (!view) {
     return false;
   }
-  const auto cleanup =
-      MakeScopeExit([&]() { mozilla::Unused << UnmapViewOfFile(view); });
-
   nsAutoString mappedFilename;
   DWORD len = 0;
   SetLastError(ERROR_SUCCESS);

@@ -522,10 +522,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  AutoFDClose raiiFd;
+  AutoFDClose fd;
   MOZ_TRY(mFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                  0644, getter_Transfers(raiiFd)));
-  const auto fd = raiiFd.get();
+                                  0644, &fd.rwget()));
 
   nsTArray<StartupCacheEntry::KeyValuePair> entries(mTable.count());
   for (auto iter = mTable.iter(); !iter.done(); iter.next()) {

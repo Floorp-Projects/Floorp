@@ -712,10 +712,9 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
   }
 
   {
-    AutoFDClose raiiFd;
+    AutoFDClose fd;
     MOZ_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644,
-                                        getter_Transfers(raiiFd)));
-    const auto fd = raiiFd.get();
+                                        &fd.rwget()));
 
     // We also need to hold mMonitor while we're touching scripts in
     // mScripts, or they may be freed before we're done with them.
