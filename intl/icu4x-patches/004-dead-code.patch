@@ -1,0 +1,13 @@
+diff --git a/intl/icu_capi/src/data_struct.rs b/intl/icu_capi/src/data_struct.rs
+index d66e20b117b58..60765cec2419a 100644
+--- a/intl/icu_capi/src/data_struct.rs
++++ b/intl/icu_capi/src/data_struct.rs
+@@ -20,7 +20,7 @@ pub mod ffi {
+     ///
+     /// This can be used to construct a StructDataProvider.
+     #[diplomat::attr(dart, disable)]
+-    pub struct ICU4XDataStruct(pub(crate) AnyPayload);
++    pub struct ICU4XDataStruct(#[allow(dead_code)] AnyPayload);
+ 
+     impl ICU4XDataStruct {
+         /// Construct a new DecimalSymbolsV1 data struct.

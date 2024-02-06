@@ -10,6 +10,10 @@ A patch for icu_capi for clang and static analysis.
 
 A patch for icu_capi to add explicit keyword
 
+### 004-dead-code.patch
+
+A patch for icu_capi to mark the ICU4XDataStruct as dead code as it's never read from Rust.
+
 ### empty.toml
 
 Empty toml data for trie_data for icu_segmenter_data.
