@@ -632,6 +632,7 @@ if CONFIG["JS_HAS_CTYPES"]:
 
 if CONFIG["JS_HAS_INTL_API"]:
     DIRS += [
+        "../../intl/bidi",
         "../../intl/components",
     ]
 

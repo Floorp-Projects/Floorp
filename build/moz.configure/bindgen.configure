@@ -5,17 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends(build_project, "--enable-smoosh")
-def cbindgen_is_needed(build_project, js_enable_smoosh):
-    if build_project != "js":
-        # cbindgen is needed by the style system build and webrender.
-        return True
-
-    # cbindgen is needed by SmooshMonkey.
-    return js_enable_smoosh
-
-
-option(env="CBINDGEN", nargs=1, when=cbindgen_is_needed, help="Path to cbindgen")
+option(env="CBINDGEN", nargs=1, help="Path to cbindgen")
 
 
 @imports(_from="textwrap", _import="dedent")
@@ -48,17 +38,14 @@ def check_cbindgen_version(cbindgen, fatal=False):
 
 
 # Similar behavior to what check_prog does.
-has_cbindgen_input = depends("CBINDGEN", when=cbindgen_is_needed)(lambda x: x)
-bootstrap_cbindgen = depends(cbindgen_is_needed, has_cbindgen_input)(
-    lambda n, i: n and not i
-)
+has_cbindgen_input = depends("CBINDGEN")(lambda x: x)
+bootstrap_cbindgen = depends(has_cbindgen_input)(lambda i: not i)
 
 
 @depends_if(
     "CBINDGEN",
     bootstrap_search_path("cbindgen", when=bootstrap_cbindgen),
     rust_search_path,
-    when=cbindgen_is_needed,
 )
 @checking("for cbindgen")
 @imports(_from="textwrap", _import="dedent")

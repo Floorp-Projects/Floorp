@@ -137,6 +137,8 @@ rsync_filter_list = """
 + /mfbt/**
 + /nsprpub/**
 
++ /intl/bidi/**
+
 - /intl/icu/source/data
 - /intl/icu/source/test
 - /intl/icu/source/tools

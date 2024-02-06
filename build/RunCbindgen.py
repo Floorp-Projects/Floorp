@@ -41,18 +41,24 @@ def _run_process(args):
 
 
 def generate_metadata(output, cargo_config):
-    stdout, returncode = _run_process(
-        [
-            buildconfig.substs["CARGO"],
-            "metadata",
-            "--frozen",
-            "--all-features",
-            "--format-version",
-            "1",
-            "--manifest-path",
-            CARGO_TOML,
-        ]
-    )
+    args = [
+        buildconfig.substs["CARGO"],
+        "metadata",
+        "--all-features",
+        "--format-version",
+        "1",
+        "--manifest-path",
+        CARGO_TOML,
+    ]
+
+    # The Spidermonkey library can be built from a package tarball outside the
+    # tree, so we want to let Cargo create lock files in this case. When built
+    # within a tree, the Rust dependencies have been vendored in so Cargo won't
+    # touch the lock file.
+    if not buildconfig.substs.get("JS_STANDALONE"):
+        args.append("--frozen")
+
+    stdout, returncode = _run_process(args)
 
     if returncode != 0:
         return returncode
