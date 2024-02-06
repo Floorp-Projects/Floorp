@@ -9,19 +9,17 @@ TEST_DIRS += [
 ]
 
 DIRS += [
+    "bidi",
+    "build",
     "components",
     "hyphenation/glue",
+    "l10n",
     "locale",
     "locales",
     "lwbrk",
     "strres",
-    "unicharutil",
-    "l10n",
-]
-
-DIRS += [
     "uconv",
-    "build",
+    "unicharutil",
 ]
 
 EXPORTS.mozilla += [
