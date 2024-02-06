@@ -743,10 +743,11 @@ def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_conf
             return False
 
         # Desktop and Android selection for CaR
-        if "browsertime" in try_name and (
-            "custom-car" in try_name or "cstm-car-m" in try_name
-        ):
-            return True
+        if "android" not in platform or accept_raptor_android_build(platform):
+            if "browsertime" in try_name and (
+                "custom-car" in try_name or "cstm-car-m" in try_name
+            ):
+                return True
         return False
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
@@ -887,7 +888,10 @@ def target_tasks_speedometer_tests(full_task_graph, parameters, graph_config):
         attributes = task.attributes
         if attributes.get("unittest_suite") != "raptor":
             return False
-        if "windows10-32" not in platform:
+
+        if (
+            "android" not in platform and "windows10-32" not in platform
+        ) or accept_raptor_android_build(platform):
             try_name = attributes.get("raptor_try_name")
             if (
                 "browsertime" in try_name
