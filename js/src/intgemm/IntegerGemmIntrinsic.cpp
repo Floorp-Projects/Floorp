@@ -21,7 +21,12 @@
 #include "wasm/WasmLog.h"
 
 #if defined(USE_AVX512BW)
-#  if defined(USE_AVXVNNI)
+#  if defined(USE_AVX512VNNI)
+#    define SUPPORTED_ARCHS                                          \
+      xsimd::arch_list<xsimd::avx512vnni<xsimd::avx512bw>, \
+                       xsimd::avx512bw, xsimd::avx2, \
+                       xsimd::ssse3, xsimd::sse2>
+#  elif defined(USE_AVXVNNI)
 #    define SUPPORTED_ARCHS                                          \
       xsimd::arch_list<xsimd::avx512bw, xsimd::avxvnni, xsimd::avx2, \
                        xsimd::ssse3, xsimd::sse2>
