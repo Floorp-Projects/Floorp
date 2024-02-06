@@ -38,6 +38,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     @Suppress("LongParameterList")
     class AddonViewHolder(
         view: View,
+        val contentWrapperView: View,
         val iconView: ImageView,
         val titleView: TextView,
         val summaryView: TextView,

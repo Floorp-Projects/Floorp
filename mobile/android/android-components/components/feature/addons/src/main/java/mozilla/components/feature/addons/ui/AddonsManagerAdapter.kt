@@ -144,6 +144,7 @@ class AddonsManagerAdapter(
         val context = parent.context
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.mozac_feature_addons_item, parent, false)
+        val contentWrapperView = view.findViewById<View>(R.id.add_on_content_wrapper)
         val iconView = view.findViewById<ImageView>(R.id.add_on_icon)
         val titleView = view.findViewById<TextView>(R.id.add_on_name)
         val summaryView = view.findViewById<TextView>(R.id.add_on_description)
@@ -155,6 +156,7 @@ class AddonsManagerAdapter(
         val statusErrorView = view.findViewById<View>(R.id.add_on_status_error)
         return AddonViewHolder(
             view,
+            contentWrapperView,
             iconView,
             titleView,
             summaryView,
@@ -281,7 +283,8 @@ class AddonsManagerAdapter(
         }
 
         holder.itemView.tag = addon
-        holder.itemView.setOnClickListener {
+        // Attach the on click listener to the content wrapper so that it doesn't overlap with the install button.
+        holder.contentWrapperView.setOnClickListener {
             addonsManagerDelegate.onAddonItemClicked(addon)
         }
 

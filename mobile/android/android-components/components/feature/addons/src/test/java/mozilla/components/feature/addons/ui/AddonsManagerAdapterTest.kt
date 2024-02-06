@@ -121,6 +121,7 @@ class AddonsManagerAdapterTest {
 
     @Test
     fun `bind add-on`() {
+        val contentWrapperView = View(testContext)
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val ratingAccessibleView: TextView = mock()
@@ -133,6 +134,7 @@ class AddonsManagerAdapterTest {
         whenever(iconView.context).thenReturn(testContext)
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
+            contentWrapperView = contentWrapperView,
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -175,7 +177,7 @@ class AddonsManagerAdapterTest {
         verify(summaryView).setTextColor(ContextCompat.getColor(testContext, style.addonSummaryTextColor!!))
         assertNotNull(addonViewHolder.itemView.tag)
 
-        addonViewHolder.itemView.performClick()
+        addonViewHolder.contentWrapperView.performClick()
         verify(addonsManagerAdapterDelegate).onAddonItemClicked(addon)
         addButton.performClick()
         verify(addonsManagerAdapterDelegate).onInstallAddonButtonClicked(addon)
@@ -307,6 +309,7 @@ class AddonsManagerAdapterTest {
         whenever(iconView.context).thenReturn(testContext)
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -560,6 +563,7 @@ class AddonsManagerAdapterTest {
         whenever(iconView.context).thenReturn(testContext)
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -606,6 +610,7 @@ class AddonsManagerAdapterTest {
         whenever(iconView.context).thenReturn(testContext)
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -645,6 +650,7 @@ class AddonsManagerAdapterTest {
         whenever(iconView.context).thenReturn(testContext)
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -693,6 +699,7 @@ class AddonsManagerAdapterTest {
 
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -734,6 +741,7 @@ class AddonsManagerAdapterTest {
 
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
@@ -776,6 +784,7 @@ class AddonsManagerAdapterTest {
 
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = View(testContext),
+            contentWrapperView = mock(),
             iconView = iconView,
             titleView = titleView,
             summaryView = summaryView,
