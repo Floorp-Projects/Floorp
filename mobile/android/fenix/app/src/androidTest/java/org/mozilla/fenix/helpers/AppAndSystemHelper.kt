@@ -14,11 +14,11 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.provider.Settings
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.IdlingRegistry
@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import junit.framework.AssertionFailedError
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.Config
@@ -60,45 +61,87 @@ object AppAndSystemHelper {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    /**
+     * Checks if a specific download file is inside the device storage and deletes it.
+     * Different implementation needed for newer API levels,
+     * as Environment.getExternalStorageDirectory() is deprecated starting with API 29.
+     *
+     */
     fun deleteDownloadedFileOnStorage(fileName: String) {
-        val storageManager: StorageManager? = TestHelper.appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager?
-        val storageVolumes = storageManager!!.storageVolumes
-        val storageVolume: StorageVolume = storageVolumes[0]
-        val file = File(storageVolume.directory!!.path + "/Download/" + fileName)
-        try {
-            if (file.exists()) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            val storageManager: StorageManager? =
+                TestHelper.appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager?
+            val storageVolumes = storageManager!!.storageVolumes
+            val storageVolume: StorageVolume = storageVolumes[0]
+            val file = File(storageVolume.directory!!.path + "/Download/" + fileName)
+            try {
+                if (file.exists()) {
+                    file.delete()
+                    Log.d("TestLog", "File delete try 1")
+                    Assert.assertFalse("The file was not deleted", file.exists())
+                }
+            } catch (e: AssertionError) {
                 file.delete()
-                Log.d("TestLog", "File delete try 1")
+                Log.d("TestLog", "File delete retried")
                 Assert.assertFalse("The file was not deleted", file.exists())
             }
-        } catch (e: AssertionError) {
-            file.delete()
-            Log.d("TestLog", "File delete retried")
-            Assert.assertFalse("The file was not deleted", file.exists())
+        } else {
+            runBlocking {
+                val downloadedFile = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    fileName,
+                )
+
+                if (downloadedFile.exists()) {
+                    Log.i(TAG, "deleteDownloadedFileOnStorage: Verifying if $downloadedFile exists.")
+                    downloadedFile.delete()
+                    Log.i(TAG, "deleteDownloadedFileOnStorage: $downloadedFile deleted.")
+                }
+            }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    /**
+     * Checks if there are download files inside the device storage and deletes all of them.
+     * Different implementation needed for newer API levels, as
+     * Environment.getExternalStorageDirectory() is deprecated starting with API 29.
+     */
     fun clearDownloadsFolder() {
-        val storageManager: StorageManager? = TestHelper.appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager?
-        val storageVolumes = storageManager!!.storageVolumes
-        val storageVolume: StorageVolume = storageVolumes[0]
-        val downloadsFolder = File(storageVolume.directory!!.path + "/Download/")
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            Log.i(TAG, "clearDownloadsFolder: API > 29")
+            val storageManager: StorageManager? =
+                TestHelper.appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager?
+            val storageVolumes = storageManager!!.storageVolumes
+            val storageVolume: StorageVolume = storageVolumes[0]
+            val downloadsFolder = File(storageVolume.directory!!.path + "/Download/")
 
-        // Check if the downloads folder exists
-        if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
-            Log.i(TAG, "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder exists")
-            val files = downloadsFolder.listFiles()
+            // Check if the downloads folder exists
+            if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
+                Log.i(TAG, "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder exists")
+                val files = downloadsFolder.listFiles()
 
-            // Check if the folder is not empty
-            if (files != null && files.isNotEmpty()) {
-                Log.i(TAG, "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder is not empty")
-                // Delete all files in the folder
-                for (file in files) {
-                    file.delete()
-                    Log.i(TAG, "clearDownloadsFolder: Deleted $file from \"DOWNLOADS\" folder")
+                // Check if the folder is not empty
+                if (files != null && files.isNotEmpty()) {
+                    Log.i(
+                        TAG,
+                        "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder is not empty",
+                    )
+                    // Delete all files in the folder
+                    for (file in files) {
+                        file.delete()
+                        Log.i(TAG, "clearDownloadsFolder: Deleted $file from \"DOWNLOADS\" folder")
+                    }
                 }
+            }
+        } else {
+            runBlocking {
+                Log.i(TAG, "clearDownloadsFolder: API <= 29")
+                Log.i(TAG, "clearDownloadsFolder: Verifying if any download files exist.")
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    .listFiles()?.forEach {
+                        it.delete()
+                        Log.i(TAG, "clearDownloadsFolder: Download file $it deleted.")
+                    }
             }
         }
     }
