@@ -190,13 +190,13 @@ nsresult nsZipHandle::Init(nsIFile* file, nsZipHandle** ret, PRFileDesc** aFd) {
   flags |= nsIFile::OS_READAHEAD;
 #endif
   LOG(("ZipHandle::Init %s", file->HumanReadablePath().get()));
-  nsresult rv = file->OpenNSPRFileDesc(flags, 0000, getter_Transfers(fd));
+  nsresult rv = file->OpenNSPRFileDesc(flags, 0000, &fd.rwget());
   if (NS_FAILED(rv)) return rv;
 
-  int64_t size = PR_Available64(fd.get());
+  int64_t size = PR_Available64(fd);
   if (size >= INT32_MAX) return NS_ERROR_FILE_TOO_BIG;
 
-  PRFileMap* map = PR_CreateFileMap(fd.get(), size, PR_PROT_READONLY);
+  PRFileMap* map = PR_CreateFileMap(fd, size, PR_PROT_READONLY);
   if (!map) return NS_ERROR_FAILURE;
 
   uint8_t* buf = (uint8_t*)PR_MemMap(map, 0, (uint32_t)size);
@@ -216,10 +216,10 @@ nsresult nsZipHandle::Init(nsIFile* file, nsZipHandle** ret, PRFileDesc** aFd) {
 
 #if defined(XP_WIN)
   if (aFd) {
-    *aFd = fd.release();
+    *aFd = fd.forget();
   }
 #else
-  handle->mNSPRFileDesc = std::move(fd);
+  handle->mNSPRFileDesc = fd.forget();
 #endif
   handle->mFile.Init(file);
   handle->mTotalLen = (uint32_t)size;
@@ -344,7 +344,7 @@ nsresult nsZipHandle::GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  *aNSPRFileDesc = mNSPRFileDesc.get();
+  *aNSPRFileDesc = mNSPRFileDesc;
   if (!mNSPRFileDesc) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -387,8 +387,7 @@ already_AddRefed<nsZipArchive> nsZipArchive::OpenArchive(nsIFile* aFile) {
   RefPtr<nsZipHandle> handle;
 #if defined(XP_WIN)
   mozilla::AutoFDClose fd;
-  nsresult rv =
-      nsZipHandle::Init(aFile, getter_AddRefs(handle), getter_Transfers(fd));
+  nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle), &fd.rwget());
 #else
   nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle));
 #endif

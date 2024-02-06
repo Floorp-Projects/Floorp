@@ -6,6 +6,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 
 #include <algorithm>
@@ -37,17 +38,40 @@ inline mozilla::Maybe<intptr_t> FileDescriptorToHandle(int aFd) {
 
 namespace {
 
-class DebugFilesAutoLock final {
+struct DebugFilesAutoLockTraits {
+  typedef PRLock* type;
+  typedef const PRLock* const_type;
+  static const_type empty() { return nullptr; }
+  static void release(type aL) { PR_Unlock(aL); }
+};
+
+class DebugFilesAutoLock : public mozilla::Scoped<DebugFilesAutoLockTraits> {
+  static PRLock* Lock;
+
  public:
   static PRLock* getDebugFileIDsLock() {
-    static PRLock* sLock = PR_NewLock();
-    return sLock;
+    // On windows this static is not thread safe, but we know that the first
+    // call is from
+    // * An early registration of a debug FD or
+    // * The call to InitWritePoisoning.
+    // Since the early debug FDs are logs created early in the main thread
+    // and no writes are trapped before InitWritePoisoning, we are safe.
+    if (!Lock) {
+      Lock = PR_NewLock();
+    }
+
+    // We have to use something lower level than a mutex. If we don't, we
+    // can get recursive in here when called from logging a call to free.
+    return Lock;
   }
 
-  DebugFilesAutoLock() { PR_Lock(getDebugFileIDsLock()); }
-
-  ~DebugFilesAutoLock() { PR_Unlock(getDebugFileIDsLock()); }
+  DebugFilesAutoLock()
+      : mozilla::Scoped<DebugFilesAutoLockTraits>(getDebugFileIDsLock()) {
+    PR_Lock(get());
+  }
 };
+
+PRLock* DebugFilesAutoLock::Lock;
 
 // The ChunkedList<T> class implements, at the high level, a non-iterable
 // list of instances of T. Its goal is to be somehow minimalist for the

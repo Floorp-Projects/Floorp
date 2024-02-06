@@ -268,7 +268,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader* aLoader,
 
   mozilla::AutoFDClose fd;
   rv = canberraFile->OpenNSPRFileDesc(PR_WRONLY, PR_IRUSR | PR_IWUSR,
-                                      getter_Transfers(fd));
+                                      &fd.rwget());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader* aLoader,
   // XXX: Should we do this on another thread?
   uint32_t length = dataLen;
   while (length > 0) {
-    int32_t amount = PR_Write(fd.get(), data, length);
+    int32_t amount = PR_Write(fd, data, length);
     if (amount < 0) {
       return NS_ERROR_FAILURE;
     }

@@ -9,6 +9,7 @@
 
 #include <windows.h>
 
+#include "mozilla/Scoped.h"
 #include "nsString.h"
 
 namespace mozilla {

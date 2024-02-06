@@ -186,16 +186,15 @@ class ExtensionJARFileOpener final : public nsISupports {
     MOZ_ASSERT(winFile);
     if (NS_SUCCEEDED(rv)) {
       rv = winFile->OpenNSPRFileDescShareDelete(PR_RDONLY, 0,
-                                                getter_Transfers(prFileDesc));
+                                                &prFileDesc.rwget());
     }
 #else
-    nsresult rv =
-        mFile->OpenNSPRFileDesc(PR_RDONLY, 0, getter_Transfers(prFileDesc));
+    nsresult rv = mFile->OpenNSPRFileDesc(PR_RDONLY, 0, &prFileDesc.rwget());
 #endif /* XP_WIN */
 
     if (NS_SUCCEEDED(rv)) {
       mFD = FileDescriptor(FileDescriptor::PlatformHandleType(
-          PR_FileDesc2NativeHandle(prFileDesc.get())));
+          PR_FileDesc2NativeHandle(prFileDesc)));
     }
 
     nsCOMPtr<nsIRunnable> event =
