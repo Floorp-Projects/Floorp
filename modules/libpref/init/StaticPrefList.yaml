@@ -7462,6 +7462,7 @@
   type: bool
   value: true
   mirror: always
+  set_spidermonkey_pref: startup
 
 # Support for Object.groupBy/Map.groupBy in JavaScript.
 -  name: javascript.options.array_grouping
