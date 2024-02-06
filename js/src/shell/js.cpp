@@ -11345,7 +11345,7 @@ static bool SetJSPref(const char* pref) {
   const char* valStart = assign + 1;  // Skip '='.
 
   // Search for a matching pref and try to set it.
-#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER)                          \
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)         \
   if (nameLen == strlen(NAME) && memcmp(pref, NAME, strlen(NAME)) == 0) { \
     TYPE v;                                                               \
     if (!ParsePrefValue<TYPE>(NAME, valStart, &v)) {                      \
@@ -11374,7 +11374,7 @@ static void ListJSPrefs() {
     }
   };
 
-#define PRINT_PREF(NAME, CPP_NAME, TYPE, SETTER) \
+#define PRINT_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF) \
   printPref(NAME, JS::Prefs::CPP_NAME());
   FOR_EACH_JS_PREF(PRINT_PREF)
 #undef PRINT_PREF

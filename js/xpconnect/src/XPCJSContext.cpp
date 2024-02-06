@@ -835,8 +835,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   //
   // 'Live' prefs are handled by ReloadPrefsCallback below.
 
-  // Set all JS::Prefs.
-  SET_JS_PREFS_FROM_BROWSER_PREFS;
+  // Note: JS::Prefs are set earlier in startup, in InitializeJS in
+  // XPCOMInit.cpp.
 
   JSContext* cx = xpccx->Context();
 

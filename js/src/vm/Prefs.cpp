@@ -6,5 +6,18 @@
 
 #include "js/Prefs.h"
 
+#include "js/Initialization.h"
+#include "vm/Runtime.h"
+
 // Set all static JS::Prefs fields to the default pref values.
 JS_PREF_CLASS_FIELDS_INIT;
+
+#ifdef DEBUG
+// static
+void JS::Prefs::assertCanSetStartupPref() {
+  MOZ_ASSERT(detail::libraryInitState == detail::InitState::Uninitialized,
+             "startup prefs must be set before calling JS_Init");
+  MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
+             "startup prefs must be set before creating a JSContext");
+}
+#endif
