@@ -194,10 +194,9 @@ urlbar:
       description: This value assumes float expression like "0.47". Threshold for use count of input history that we handle as adaptive history autofill. If the use count is this value or more, it will be a candidate.
     experimentType:
       type: string
-      description: The type of the experiment (or rollout). If "best-match", then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If "modal", the event will be recorded when the user first triggers to show the onbording dialog. If empty, the event will be recorded when the user first triggers any type of Suggest suggestion.
+      description: The type of the experiment (or rollout). If "best-match", then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If empty, the event will be recorded when the user first triggers any type of Suggest suggestion.
       enum:
         - best-match
-        - modal
         - ""
     mdnFeatureGate:
       type: boolean
@@ -428,13 +427,6 @@ urlbar:
       description: >-
         Feature gate that controls whether all aspects of the Yelp suggestion
         feature are exposed to the user.
-
-frecency:
-  description: "The address bar ranking algorithm"
-  owner: search-and-suggest-program@mozilla.com
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
     originsAlternativeEnable:
       description: >-
         Use an alternative ranking algorithm for autofilling origins, that is

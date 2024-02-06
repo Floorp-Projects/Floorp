@@ -1288,6 +1288,7 @@ exposure events are recorded.
   shown an opt-in modal. If the user is in the control branch, the event is
   recorded every time they would have been shown a modal, which is on every
   startup where another non-Suggest modal does not appear.
+  NOTE: This has been removed in Firefox 124.
 :isBestMatchExperiment = true:
   This is a deprecated version of ``experimentType == "best-match"``.
 :All other experiments:
@@ -1307,6 +1308,9 @@ Changelog
     The ``experimentType = "modal"`` case is added.
     ``isBestMatchExperiment = true`` is deprecated in favor of
     ``experimentType = "best-match"``. [Bug 1760596_]
+
+  Firefox 124.0
+    The ``experimentType = "modal"`` case is removed.
 
 .. _Nimbus exposure event: https://experimenter.info/jetstream/jetstream/#enrollment-vs-exposure
 

@@ -736,60 +736,6 @@ class _QuickSuggestTestUtils {
   }
 
   /**
-   * Clears the Nimbus exposure event.
-   */
-  async clearExposureEvent() {
-    // Exposure event recording is queued to the idle thread, so wait for idle
-    // before we start so any events from previous tasks will have been recorded
-    // and won't interfere with this task.
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-
-    Services.telemetry.clearEvents();
-    lazy.NimbusFeatures.urlbar._didSendExposureEvent = false;
-    lazy.QuickSuggest._recordedExposureEvent = false;
-  }
-
-  /**
-   * Asserts the Nimbus exposure event is recorded or not as expected.
-   *
-   * @param {boolean} expectedRecorded
-   *   Whether the event is expected to be recorded.
-   */
-  async assertExposureEvent(expectedRecorded) {
-    this.Assert.equal(
-      lazy.QuickSuggest._recordedExposureEvent,
-      expectedRecorded,
-      "_recordedExposureEvent is correct"
-    );
-
-    let filter = {
-      category: "normandy",
-      method: "expose",
-      object: "nimbus_experiment",
-    };
-
-    let expectedEvents = [];
-    if (expectedRecorded) {
-      expectedEvents.push({
-        ...filter,
-        extra: {
-          branchSlug: "control",
-          featureId: "urlbar",
-        },
-      });
-    }
-
-    // The event recording is queued to the idle thread when the search starts,
-    // so likewise queue the assert to idle instead of doing it immediately.
-    await new Promise(resolve => {
-      Services.tm.idleDispatchToMainThread(() => {
-        lazy.TelemetryTestUtils.assertEvents(expectedEvents, filter);
-        resolve();
-      });
-    });
-  }
-
-  /**
    * Sets the app's locales, calls your callback, and resets locales.
    *
    * @param {Array} locales
