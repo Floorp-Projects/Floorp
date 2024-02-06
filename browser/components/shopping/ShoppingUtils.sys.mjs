@@ -157,11 +157,8 @@ export const ShoppingUtils = {
 
   // For users in either the nimbus control or treatment groups, increment a
   // counter when they visit supported product pages.
-  maybeRecordExposure(aLocationURI, aFlags) {
-    if (
-      (this.nimbusEnabled || this.nimbusControl) &&
-      ShoppingUtils.isProductPageNavigation(aLocationURI, aFlags)
-    ) {
+  recordExposure() {
+    if (this.nimbusEnabled || this.nimbusControl) {
       Glean.shopping.productPageVisits.add(1);
     }
   },
@@ -248,12 +245,19 @@ export const ShoppingUtils = {
   },
 
   onLocationChange(aLocationURI, aFlags) {
-    this.maybeRecordExposure(aLocationURI, aFlags);
+    let isProductPageNavigation = this.isProductPageNavigation(
+      aLocationURI,
+      aFlags
+    );
+
+    if (isProductPageNavigation) {
+      this.recordExposure(aLocationURI, aFlags);
+    }
 
     if (
       this._isAutoOpenEligible() &&
       this.resetActiveOnNextProductPage &&
-      this.isProductPageNavigation(aLocationURI, aFlags)
+      isProductPageNavigation
     ) {
       this.resetActiveOnNextProductPage = false;
       Services.prefs.setBoolPref(ACTIVE_PREF, true);
