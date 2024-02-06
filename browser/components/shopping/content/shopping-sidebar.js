@@ -22,6 +22,7 @@
           disablehistory="true"
           flex="1"
           message="true"
+          manualactiveness="true"
           remoteType="privilegedabout"
           maychangeremoteness="true"
           remote="true"

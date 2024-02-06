@@ -422,14 +422,12 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   fields.Get<IDX_HistoryID>() = nsID::GenerateUUID();
   fields.Get<IDX_ExplicitActive>() = [&] {
-    if (parentBC) {
+    if (parentBC || aType == Type::Content) {
       // Non-root browsing-contexts inherit their status from its parent.
+      // Top-content either gets managed by the top chrome, or gets manually
+      // managed by the front-end (see ManuallyManagesActiveness). In any case
+      // we want to start off as inactive.
       return ExplicitActiveStatus::None;
-    }
-    if (aType == Type::Content) {
-      // Content gets managed by the chrome front-end / embedder element and
-      // starts as inactive.
-      return ExplicitActiveStatus::Inactive;
     }
     // Chrome starts as active.
     return ExplicitActiveStatus::Active;
@@ -739,21 +737,24 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
       txn.SetEmbedderInnerWindowId(inner->WindowID());
     }
     txn.SetFullscreenAllowedByOwner(OwnerAllowsFullscreen(*aEmbedder));
-    if (XRE_IsParentProcess() && IsTopContent()) {
+    if (XRE_IsParentProcess() && aEmbedder->IsXULElement() && IsTopContent()) {
       nsAutoString messageManagerGroup;
-      if (aEmbedder->IsXULElement()) {
-        aEmbedder->GetAttr(nsGkAtoms::messagemanagergroup, messageManagerGroup);
-        if (!aEmbedder->AttrValueIs(kNameSpaceID_None,
-                                    nsGkAtoms::initiallyactive,
-                                    nsGkAtoms::_false, eIgnoreCase)) {
-          txn.SetExplicitActive(ExplicitActiveStatus::Active);
+      aEmbedder->GetAttr(nsGkAtoms::messagemanagergroup, messageManagerGroup);
+      txn.SetMessageManagerGroup(messageManagerGroup);
+      txn.SetUseGlobalHistory(
+          !aEmbedder->HasAttr(nsGkAtoms::disableglobalhistory));
+      if (!aEmbedder->HasAttr(nsGkAtoms::manualactiveness)) {
+        // We're active iff the parent cross-chrome-boundary is active. Note we
+        // can't just use this->Canonical()->GetParentCrossChromeBoundary here,
+        // since mEmbedderElement is still null at this point.
+        RefPtr bc = aEmbedder->OwnerDoc()->GetBrowsingContext();
+        const bool isActive = bc && bc->IsActive();
+        txn.SetExplicitActive(isActive ? ExplicitActiveStatus::Active
+                                       : ExplicitActiveStatus::Inactive);
+        if (auto* bp = Canonical()->GetBrowserParent()) {
+          bp->SetRenderLayers(isActive);
         }
       }
-      txn.SetMessageManagerGroup(messageManagerGroup);
-
-      bool useGlobalHistory =
-          !aEmbedder->HasAttr(nsGkAtoms::disableglobalhistory);
-      txn.SetUseGlobalHistory(useGlobalHistory);
     }
 
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(this));
@@ -2634,8 +2635,16 @@ void BrowsingContext::DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>) {
              "browsing context");
 }
 
+bool BrowsingContext::CanSet(FieldIndex<IDX_ExplicitActive>,
+                             const ExplicitActiveStatus&,
+                             ContentParent* aSource) {
+  return XRE_IsParentProcess() && IsTop() && !aSource;
+}
+
 void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
                              ExplicitActiveStatus aOldValue) {
+  MOZ_ASSERT(IsTop());
+
   const bool isActive = IsActive();
   const bool wasActive = [&] {
     if (aOldValue != ExplicitActiveStatus::None) {
@@ -2648,32 +2657,43 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
     return;
   }
 
-  if (IsTop()) {
-    Group()->UpdateToplevelsSuspendedIfNeeded();
-
-    if (XRE_IsParentProcess()) {
-      auto* bc = Canonical();
-      if (BrowserParent* bp = bc->GetBrowserParent()) {
-        bp->RecomputeProcessPriority();
+  Group()->UpdateToplevelsSuspendedIfNeeded();
+  if (XRE_IsParentProcess()) {
+    if (BrowserParent* bp = Canonical()->GetBrowserParent()) {
+      bp->RecomputeProcessPriority();
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-        if (a11y::Compatibility::IsDolphin()) {
-          // update active accessible documents on windows
-          if (a11y::DocAccessibleParent* tabDoc =
-                  bp->GetTopLevelDocAccessible()) {
-            HWND window = tabDoc->GetEmulatedWindowHandle();
-            MOZ_ASSERT(window);
-            if (window) {
-              if (isActive) {
-                a11y::nsWinUtils::ShowNativeWindow(window);
-              } else {
-                a11y::nsWinUtils::HideNativeWindow(window);
-              }
+      if (a11y::Compatibility::IsDolphin()) {
+        // update active accessible documents on windows
+        if (a11y::DocAccessibleParent* tabDoc =
+                bp->GetTopLevelDocAccessible()) {
+          HWND window = tabDoc->GetEmulatedWindowHandle();
+          MOZ_ASSERT(window);
+          if (window) {
+            if (isActive) {
+              a11y::nsWinUtils::ShowNativeWindow(window);
+            } else {
+              a11y::nsWinUtils::HideNativeWindow(window);
             }
           }
         }
-#endif
       }
+#endif
     }
+
+    // NOTE(emilio): Ideally we'd want to reuse the ExplicitActiveStatus::None
+    // set-up, but that's non-trivial to do because in content processes we
+    // can't access the top-cross-chrome-boundary bc.
+    auto manageTopDescendant = [&](auto* aChild) {
+      if (!aChild->ManuallyManagesActiveness()) {
+        aChild->SetIsActiveInternal(isActive, IgnoreErrors());
+        if (BrowserParent* bp = aChild->GetBrowserParent()) {
+          bp->SetRenderLayers(isActive);
+        }
+      }
+      return CallState::Continue;
+    };
+    Canonical()->CallOnAllTopDescendants(manageTopDescendant,
+                                         /* aIncludeNestedBrowsers = */ false);
   }
 
   PreOrderWalk([&](BrowsingContext* aContext) {
