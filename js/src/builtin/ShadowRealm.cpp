@@ -161,6 +161,11 @@ static ShadowRealmObject* ValidateShadowRealmObject(JSContext* cx,
 void js::ReportPotentiallyDetailedMessage(JSContext* cx,
                                           const unsigned detailedError,
                                           const unsigned genericError) {
+  // Return for non-catchable exceptions like interrupt requests.
+  if (!cx->isExceptionPending()) {
+    return;
+  }
+
   Rooted<Value> exception(cx);
   if (!cx->getPendingException(&exception)) {
     return;
@@ -284,6 +289,10 @@ static bool PerformShadowRealmEval(JSContext* cx, Handle<JSString*> sourceText,
   } while (false);  // AutoRealm
 
   if (!compileSuccess) {
+    if (!cx->isExceptionPending()) {
+      return false;
+    }
+
     // Clone the exception into the current global and re-throw, as the
     // exception has to come from the current global.
     Rooted<Value> exception(cx);
