@@ -30,21 +30,25 @@ import java.util.regex.Pattern
 class AddToHomeScreenRobot {
 
     fun verifyAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyAddPrivateBrowsingShortcutButton: Trying to verify \"Add to Home screen\" private browsing shortcut dialog button is displayed")
         composeTestRule.onNodeWithTag("private.add").assertIsDisplayed()
         Log.i(TAG, "verifyAddPrivateBrowsingShortcutButton: Verified \"Add to Home screen\" private browsing shortcut dialog button is displayed")
     }
 
     fun verifyNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyNoThanksPrivateBrowsingShortcutButton: Trying to verify \"No thanks\" private browsing shortcut dialog button is displayed")
         composeTestRule.onNodeWithTag("private.cancel").assertIsDisplayed()
         Log.i(TAG, "verifyNoThanksPrivateBrowsingShortcutButton: Verified \"No thanks\" private browsing shortcut dialog button is displayed")
     }
 
     fun clickAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickAddPrivateBrowsingShortcutButton: Trying to click \"Add to Home screen\" private browsing shortcut dialog button")
         composeTestRule.onNodeWithTag("private.add").performClick()
         Log.i(TAG, "clickAddPrivateBrowsingShortcutButton: Clicked \"Add to Home screen\" private browsing shortcut dialog button")
     }
 
     fun addShortcutName(title: String) {
+        Log.i(TAG, "addShortcutName: Trying to set shortcut name to: $title")
         shortcutTextField().setText(title)
         Log.i(TAG, "addShortcutName: Set shortcut name to: $title")
     }
@@ -52,17 +56,20 @@ class AddToHomeScreenRobot {
     fun verifyShortcutTextFieldTitle(title: String) = assertUIObjectExists(shortcutTitle(title))
 
     fun clickAddShortcutButton() {
+        Log.i(TAG, "clickAddShortcutButton: Trying to click \"Add\" button from \"Add to home screen\" dialog and wait for $waitingTime ms for a new window")
         confirmAddToHomeScreenButton().clickAndWaitForNewWindow(waitingTime)
-        Log.i(TAG, "clickAddShortcutButton: Clicked \"Add\" button from \"Add to home screen\" dialog")
+        Log.i(TAG, "clickAddShortcutButton: Clicked \"Add\" button from \"Add to home screen\" dialog and waited for $waitingTime ms for a new window")
     }
 
     fun clickCancelShortcutButton() {
+        Log.i(TAG, "clickCancelShortcutButton: Trying to click \"Cancel\" button from \"Add to home screen\" dialog")
         cancelAddToHomeScreenButton().click()
         Log.i(TAG, "clickCancelShortcutButton: Clicked \"Cancel\" button from \"Add to home screen\" dialog")
     }
 
     fun clickAddAutomaticallyButton() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.i(TAG, "clickAddAutomaticallyButton: Waiting for $waitingTime ms until finding \"Add automatically\" system dialog button")
             mDevice.wait(
                 Until.findObject(
                     By.text(
@@ -71,7 +78,8 @@ class AddToHomeScreenRobot {
                 ),
                 waitingTime,
             )
-            Log.i(TAG, "clickAddAutomaticallyButton: Waited for \"Add automatically\" system dialog button")
+            Log.i(TAG, "clickAddAutomaticallyButton: Waited for $waitingTime ms until \"Add automatically\" system dialog button was found")
+            Log.i(TAG, "clickAddAutomaticallyButton: Trying to click \"Add automatically\" system dialog button")
             addAutomaticallyButton().click()
             Log.i(TAG, "clickAddAutomaticallyButton: Clicked \"Add automatically\" system dialog button")
         }
@@ -82,32 +90,37 @@ class AddToHomeScreenRobot {
 
     class Transition {
         fun openHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "openHomeScreenShortcut: Waiting for $waitingTime ms until finding $title home screen shortcut")
             mDevice.wait(
                 Until.findObject(By.text(title)),
                 waitingTime,
             )
-            Log.i(TAG, "openHomeScreenShortcut: Waited for $title home screen shortcut")
+            Log.i(TAG, "openHomeScreenShortcut: Waited for $waitingTime ms until $title home screen shortcut was found")
+            Log.i(TAG, "openHomeScreenShortcut: Trying to click $title home screen shortcut and wait for $waitingTime ms for a new window")
             mDevice.findObject((UiSelector().text(title))).clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "openHomeScreenShortcut: Clicked $title home screen shortcut")
+            Log.i(TAG, "openHomeScreenShortcut: Clicked $title home screen shortcut and waited for $waitingTime ms for a new window")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun searchAndOpenHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Trying to press device home button")
             mDevice.pressHome()
             Log.i(TAG, "searchAndOpenHomeScreenShortcut: Pressed device home button")
 
             fun homeScreenView() = UiScrollable(UiSelector().scrollable(true))
+            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Waiting for $waitingTime ms for home screen view to exist")
             homeScreenView().waitForExists(waitingTime)
-            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Waiting for home screen view")
+            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Waited for $waitingTime ms for home screen view to exist")
 
             fun shortcut() =
                 homeScreenView()
                     .setAsHorizontalList()
                     .getChildByText(UiSelector().textContains(title), title, true)
+            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Trying to click home screen shortcut: $title and wait for a new window")
             shortcut().clickAndWaitForNewWindow()
-            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Clicked home screen shortcut: $title")
+            Log.i(TAG, "searchAndOpenHomeScreenShortcut: Clicked home screen shortcut: $title and waited for a new window")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
