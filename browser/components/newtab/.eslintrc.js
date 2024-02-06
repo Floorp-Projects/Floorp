@@ -52,7 +52,6 @@ module.exports = {
       files: [
         "bin/**",
         "content-src/**",
-        "./*.js",
         "loaders/**",
         "tools/**",
         "test/unit/**",

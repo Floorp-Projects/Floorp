@@ -26,7 +26,7 @@ module.exports = {
       },
     },
     {
-      files: ["bin/**", "./*.js", "content-src/**", "tests/unit/**"],
+      files: ["bin/**", "content-src/**", "tests/unit/**"],
       env: {
         node: true,
       },
