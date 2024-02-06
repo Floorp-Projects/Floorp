@@ -81,6 +81,24 @@ export class UserContextManagerClass {
   }
 
   /**
+   * Retrieve the user context id corresponding to the provided browsing context.
+   *
+   * @param {BrowsingContext} browsingContext
+   *     The browsing context to get the user context id from.
+   *
+   * @returns {string}
+   *     The corresponding user context id.
+   *
+   * @throws {TypeError}
+   *     If `browsingContext` is not a CanonicalBrowsingContext instance.
+   */
+  getIdByBrowsingContext(browsingContext) {
+    return this.getIdByInternalId(
+      this.getInternalIdByBrowsingContext(browsingContext)
+    );
+  }
+
+  /**
    * Retrieve the user context id corresponding to the provided internal id.
    *
    * @param {number} internalId
@@ -95,6 +113,29 @@ export class UserContextManagerClass {
       return this.#userContextIds.get(internalId);
     }
     return null;
+  }
+
+  /**
+   * Retrieve the internal user context id corresponding to the provided
+   * browsing context.
+   *
+   * @param {BrowsingContext} browsingContext
+   *     The browsing context to get the internal user context id from.
+   *
+   * @returns {string}
+   *     The corresponding internal user context id.
+   *
+   * @throws {TypeError}
+   *     If `browsingContext` is not a CanonicalBrowsingContext instance.
+   */
+  getInternalIdByBrowsingContext(browsingContext) {
+    if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
+      throw new TypeError(
+        `Expected browsingContext to be a CanonicalBrowsingContext, got ${browsingContext}`
+      );
+    }
+
+    return browsingContext.originAttributes.userContextId;
   }
 
   /**
