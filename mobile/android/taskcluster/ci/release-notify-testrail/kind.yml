@@ -32,14 +32,11 @@ task-defaults:
 
 tasks:
     create-milestone-focus:
-        # disable for testing
-        # dependencies:
-            # ui-test-apk: ui-test-apk-focus-arm-beta
+        dependencies:
+            ui-test-apk: ui-test-apk-focus-arm-beta
         description: Create Testrail Milestone for Focus
-        # run-on-tasks-for: [github-push]
-        # run-on-git-branches: [releases_v]
-        run-on-tasks-for: [github-pull-request] # use this for testing
-        run-on-git-branches: [mte-2053]
+        run-on-tasks-for: [github-push]
+        run-on-git-branches: [releases_v]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work
@@ -54,14 +51,11 @@ tasks:
                 TESTRAIL_TEST_SUITE_ID: '49386' # Test Automation Release Milestone - Focus
     
     create-milestone-fenix:
-        # disable for testing
-        # dependencies:
-            # ui-test-apk: ui-test-apk-fenix-arm-beta
+        dependencies:
+            ui-test-apk: ui-test-apk-fenix-arm-beta
         description: Create Testrail Milestone for Fenix
-        # run-on-tasks-for: [github-push]
-        # run-on-git-branches: [releases_v]
-        run-on-tasks-for: [github-pull-request] # use this for testing
-        run-on-git-branches: [mte-2053]
+        run-on-tasks-for: [github-push]
+        run-on-git-branches: [releases_v]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work

@@ -52,8 +52,7 @@ def main():
         raise ValueError(f"ERROR: Missing Environment Variable: {e}")
 
     # Release information
-    # release_version = get_release_version() # disable for testing
-    release_version = "125.0b6"
+    release_version = get_release_version()
     release_type = get_release_type(release_version)
 
     # Build milestone information
@@ -89,9 +88,7 @@ def main():
             "TESTRAIL_PROJECT_ID": testrail_project_id,
             "TESTRAIL_PRODUCT_TYPE": testrail_product_type,
         }
-        # disable for testing
-        # send_success_notification(success_values, SUCCESS_CHANNEL_ID, options)
-        send_success_notification(success_values, ERROR_CHANNEL_ID, options)
+        send_success_notification(success_values, SUCCESS_CHANNEL_ID, options)
 
     except Exception as error_message:
         send_error_notification(str(error_message), ERROR_CHANNEL_ID, options)
