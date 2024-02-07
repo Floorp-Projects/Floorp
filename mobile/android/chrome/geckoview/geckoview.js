@@ -89,6 +89,9 @@ var ModuleManager = {
     // visible. To avoid flickering when changing tabs, we preserve layers for
     // all loaded tabs.
     aBrowser.preserveLayers(true);
+    // GeckoView browsers start off as active (for now at least).
+    // See bug 1815015 for an attempt at making them start off inactive.
+    aBrowser.docShellIsActive = true;
 
     WindowEventDispatcher.registerListener(this, [
       "GeckoView:UpdateModuleState",
@@ -541,6 +544,7 @@ function createBrowser() {
   browser.setAttribute("remote", "true");
   browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
   browser.setAttribute("messagemanagergroup", "browsers");
+  browser.setAttribute("manualactiveness", "true");
 
   // This is only needed for mochitests, so that they honor the
   // prefers-color-scheme.content-override pref. GeckoView doesn't set this

@@ -22,6 +22,8 @@
       // Enable bfcache
       enableBFCache(8);
 
+      TestWindow.getBrowser().docShellIsActive = true;
+
       // Load something for a start
       doPageNavigation({
         uri: 'data:text/html,<title>initial load</title>',
@@ -167,5 +169,5 @@
     }
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" remote="true" maychangeremoteness="true" />
+  <browser type="content" primary="true" flex="1" id="content" remote="true" maychangeremoteness="true" manualactiveness="true" />
 </window>
