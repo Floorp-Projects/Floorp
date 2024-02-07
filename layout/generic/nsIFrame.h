@@ -375,6 +375,15 @@ struct IntrinsicSize {
     return width && height ? Some(nsSize(*width, *height)) : Nothing();
   }
 
+  void Zoom(const StyleZoom& aZoom) {
+    if (width) {
+      *width = aZoom.ZoomCoord(*width);
+    }
+    if (height) {
+      *height = aZoom.ZoomCoord(*height);
+    }
+  }
+
   bool operator==(const IntrinsicSize& rhs) const {
     return width == rhs.width && height == rhs.height;
   }
@@ -4092,7 +4101,9 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::ContainSizeAxes& aAxes,
       const mozilla::IntrinsicSize& aUncontainedSize) const {
     MOZ_ASSERT(aAxes == GetContainSizeAxes());
-    return aAxes.ContainIntrinsicSize(aUncontainedSize, *this);
+    auto result = aAxes.ContainIntrinsicSize(aUncontainedSize, *this);
+    result.Zoom(Style()->EffectiveZoom());
+    return result;
   }
 
   Maybe<nscoord> ContainIntrinsicBSize(nscoord aNoneValue = 0) const {
