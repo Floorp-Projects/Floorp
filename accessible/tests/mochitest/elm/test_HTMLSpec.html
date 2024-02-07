@@ -452,11 +452,18 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-style": "italic" },
+          6: { },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:em text
+          { role: ROLE_EMPHASIS, // HTML:em text
+            children: [
+              { role: ROLE_TEXT_LEAF, },
+            ],
+            textAttrs: {
+              0: { },
+            },
+          },
         ],
       };
       testElm("em_container", obj);

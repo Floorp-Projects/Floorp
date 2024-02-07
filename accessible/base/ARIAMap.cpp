@@ -650,6 +650,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     kNoReqStates,
     eReadonlyUntilEditable
   },
+  { // emphasis
+    nsGkAtoms::emphasis,
+    roles::EMPHASIS,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
   { // feed
     nsGkAtoms::feed,
     roles::GROUPING,
