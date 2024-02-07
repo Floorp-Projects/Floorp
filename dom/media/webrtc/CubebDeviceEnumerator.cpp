@@ -58,9 +58,8 @@ CubebDeviceEnumerator::CubebDeviceEnumerator()
   // before the MTA thread gets shutdown.
   mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
-    RefPtr<CubebHandle> handle = GetCubeb();
     int rv = cubeb_register_device_collection_changed(
-        handle->Context(), CUBEB_DEVICE_TYPE_OUTPUT,
+        GetCubebContext(), CUBEB_DEVICE_TYPE_OUTPUT,
         &OutputAudioDeviceListChanged_s, this);
     if (rv != CUBEB_OK) {
       NS_WARNING(
@@ -69,7 +68,7 @@ CubebDeviceEnumerator::CubebDeviceEnumerator()
       mManualOutputInvalidation = true;
     }
     rv = cubeb_register_device_collection_changed(
-        handle->Context(), CUBEB_DEVICE_TYPE_INPUT,
+        GetCubebContext(), CUBEB_DEVICE_TYPE_INPUT,
         &InputAudioDeviceListChanged_s, this);
     if (rv != CUBEB_OK) {
       NS_WARNING(
@@ -94,22 +93,19 @@ CubebDeviceEnumerator::~CubebDeviceEnumerator() {
 #ifdef XP_WIN
   mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
-    RefPtr<CubebHandle> handle = GetCubeb();
-    if (handle) {
-      int rv = cubeb_register_device_collection_changed(
-          handle->Context(), CUBEB_DEVICE_TYPE_OUTPUT, nullptr, this);
-      if (rv != CUBEB_OK) {
-        NS_WARNING(
-            "Could not unregister the audio output"
-            " device collection changed callback.");
-      }
-      rv = cubeb_register_device_collection_changed(
-          handle->Context(), CUBEB_DEVICE_TYPE_INPUT, nullptr, this);
-      if (rv != CUBEB_OK) {
-        NS_WARNING(
-            "Could not unregister the audio input"
-            " device collection changed callback.");
-      }
+    int rv = cubeb_register_device_collection_changed(
+        GetCubebContext(), CUBEB_DEVICE_TYPE_OUTPUT, nullptr, this);
+    if (rv != CUBEB_OK) {
+      NS_WARNING(
+          "Could not unregister the audio output"
+          " device collection changed callback.");
+    }
+    rv = cubeb_register_device_collection_changed(
+        GetCubebContext(), CUBEB_DEVICE_TYPE_INPUT, nullptr, this);
+    if (rv != CUBEB_OK) {
+      NS_WARNING(
+          "Could not unregister the audio input"
+          " device collection changed callback.");
     }
 #ifdef XP_WIN
   });
@@ -185,13 +181,13 @@ static uint16_t ConvertCubebFormat(cubeb_device_fmt aFormat) {
 
 static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
   RefPtr set = new AudioDeviceSet();
-  RefPtr<CubebHandle> handle = GetCubeb();
-  if (handle) {
+  cubeb* context = GetCubebContext();
+  if (context) {
     cubeb_device_collection collection = {nullptr, 0};
 #  ifdef XP_WIN
     mozilla::mscom::EnsureMTA([&]() -> void {
 #  endif
-      if (cubeb_enumerate_devices(handle->Context(),
+      if (cubeb_enumerate_devices(context,
                                   aSide == Input ? CUBEB_DEVICE_TYPE_INPUT
                                                  : CUBEB_DEVICE_TYPE_OUTPUT,
                                   &collection) == CUBEB_OK) {
@@ -213,7 +209,7 @@ static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
           set->AppendElement(std::move(info));
         }
       }
-      cubeb_device_collection_destroy(handle->Context(), &collection);
+      cubeb_device_collection_destroy(context, &collection);
 #  ifdef XP_WIN
     });
 #  endif
@@ -238,7 +234,8 @@ RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
     manualInvalidation = mManualOutputInvalidation;
   }
 
-  if (!GetCubeb()) {
+  cubeb* context = GetCubebContext();
+  if (!context) {
     return new AudioDeviceSet();
   }
   if (!manualInvalidation) {
