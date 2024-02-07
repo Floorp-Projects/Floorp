@@ -567,7 +567,7 @@ _ContextualIdentityService.prototype = {
     return count;
   },
 
-  closeContainerTabs(userContextId = 0) {
+  closeContainerTabs(userContextId = 0, removeTabOptions = {}) {
     return new Promise(resolve => {
       let remoteTabIds = new Set();
       this._forEachContainerTab((tab, tabbrowser) => {
@@ -578,7 +578,7 @@ _ContextualIdentityService.prototype = {
           remoteTabIds.add(frameLoader.remoteTab.tabId);
         }
 
-        tabbrowser.removeTab(tab);
+        tabbrowser.removeTab(tab, removeTabOptions);
       }, userContextId);
 
       if (remoteTabIds.size == 0) {
