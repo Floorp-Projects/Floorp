@@ -4,6 +4,7 @@
 
 "use strict";
 
+/* global __dirname */
 const path = require("path");
 
 module.exports = (env, argv) => {

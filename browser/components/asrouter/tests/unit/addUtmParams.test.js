@@ -1,4 +1,7 @@
-import { addUtmParams, BASE_PARAMS } from "content-src/lib/addUtmParams.mjs";
+import {
+  addUtmParams,
+  BASE_PARAMS,
+} from "content-src/templates/FirstRun/addUtmParams";
 
 describe("addUtmParams", () => {
   it("should convert a string URL", () => {
