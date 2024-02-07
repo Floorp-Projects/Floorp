@@ -86,6 +86,7 @@ categories:
 
 redirects:
     browser/browser: browser
+    browser/components/newtab/content-src/asrouter/docs: browser/components/newtab/docs
     contributing/how_to_contribute_firefox.html: contributing/contribution_quickref.html
     contributing/artifact_builds.html: contributing/build/artifact_builds.html
     contributing/linux_build.html: setup/linux_build.html
