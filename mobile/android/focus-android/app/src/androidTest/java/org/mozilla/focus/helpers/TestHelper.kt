@@ -20,7 +20,6 @@ import android.os.storage.StorageVolume
 import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.InputMethodManager
-import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.SHARE_STATE_ON
@@ -34,6 +33,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.sugar.Web
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
@@ -175,7 +175,7 @@ object TestHelper {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.R)
     fun verifyDownloadedFileOnStorage(fileName: String) {
         val storageManager =
             getInstrumentation().targetContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
