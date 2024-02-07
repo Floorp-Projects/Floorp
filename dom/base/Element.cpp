@@ -276,6 +276,9 @@ nsIFrame* nsIContent::GetPrimaryFrame(mozilla::FlushType aType) {
 
 namespace mozilla::dom {
 
+const DOMTokenListSupportedToken Element::sSupportedBlockingValues[] = {
+    "render", nullptr};
+
 nsDOMAttributeMap* Element::Attributes() {
   nsDOMSlots* slots = DOMSlots();
   if (!slots->mAttributeMap) {

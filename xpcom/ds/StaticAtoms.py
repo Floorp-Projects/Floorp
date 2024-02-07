@@ -189,6 +189,7 @@ STATIC_ATOMS = [
     Atom("black", "black"),
     Atom("block", "block"),
     Atom("block_size", "block-size"),
+    Atom("blocking", "blocking"),
     Atom("blockquote", "blockquote"),
     Atom("blur", "blur"),
     Atom("body", "body"),

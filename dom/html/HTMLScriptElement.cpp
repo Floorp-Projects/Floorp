@@ -21,6 +21,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
+#include "nsDOMTokenList.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
@@ -47,9 +48,14 @@ HTMLScriptElement::HTMLScriptElement(
 
 HTMLScriptElement::~HTMLScriptElement() = default;
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
-                            nsIScriptLoaderObserver, nsIScriptElement,
-                            nsIMutationObserver)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLScriptElement,
+                                             nsGenericHTMLElement,
+                                             nsIScriptLoaderObserver,
+                                             nsIScriptElement,
+                                             nsIMutationObserver)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
+                                   mBlocking)
 
 nsresult HTMLScriptElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
@@ -235,6 +241,14 @@ bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
   return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module") ||
 
          aType.EqualsLiteral("importmap");
+}
+
+nsDOMTokenList* HTMLScriptElement::Blocking() {
+  if (!mBlocking) {
+    mBlocking =
+        new nsDOMTokenList(this, nsGkAtoms::blocking, sSupportedBlockingValues);
+  }
+  return mBlocking;
 }
 
 }  // namespace mozilla::dom
