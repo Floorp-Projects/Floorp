@@ -14862,8 +14862,9 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
                                   sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {
-    MOZ_ASSERT(stackMap->getBit(stackMap->header.numMappedWords -
-                                stackMap->header.frameOffsetFromTop + i) == 0);
+    MOZ_ASSERT(stackMap->get(stackMap->header.numMappedWords -
+                             stackMap->header.frameOffsetFromTop + i) ==
+               wasm::StackMap::Kind::POD);
   }
 #endif
 

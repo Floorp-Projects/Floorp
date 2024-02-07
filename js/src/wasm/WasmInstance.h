@@ -254,6 +254,7 @@ class alignas(16) Instance {
   uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
+  void updateFrameForMovingGC(const wasm::WasmFrameIter& wfi, uint8_t* nextPC);
 
   static constexpr size_t offsetOfMemory0Base() {
     return offsetof(Instance, memory0Base_);
@@ -571,7 +572,7 @@ class alignas(16) Instance {
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 
   static void* stringFromWTF16Array(Instance* instance, void* arrayArg,
-                                    uint32_t start, uint32_t len);
+                                    uint32_t arrayStart, uint32_t arrayCount);
   static int32_t stringToWTF16Array(Instance* instance, void* stringArg,
                                     void* arrayArg, uint32_t start);
   static void* stringFromCharCode(Instance* instance, uint32_t charCode);

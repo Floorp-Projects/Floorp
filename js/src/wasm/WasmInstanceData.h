@@ -70,6 +70,7 @@ struct TypeDefInstanceData {
   const JSClass* clasp;
   // The allocation site for GC types. This is used for pre-tenuring.
   alignas(8) gc::AllocSite allocSite;
+  // Only valid for structs.
   gc::AllocKind allocKind;
 
   // This union is only meaningful for structs and arrays, and should
