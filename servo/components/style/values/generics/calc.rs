@@ -55,6 +55,30 @@ pub enum ModRemOp {
     Rem,
 }
 
+impl ModRemOp {
+    fn apply(self, dividend: f32, divisor: f32) -> f32 {
+        // In mod(A, B) only, if B is infinite and A has opposite sign to B
+        // (including an oppositely-signed zero), the result is NaN.
+        // https://drafts.csswg.org/css-values/#round-infinities
+        if matches!(self, Self::Mod) &&
+            divisor.is_infinite() &&
+            dividend.is_sign_negative() != divisor.is_sign_negative()
+        {
+            return f32::NAN;
+        }
+
+        let (r, same_sign_as) = match self {
+            Self::Mod => (dividend - divisor * (dividend / divisor).floor(), divisor),
+            Self::Rem => (dividend - divisor * (dividend / divisor).trunc(), dividend),
+        };
+        if r == 0.0 && same_sign_as.is_sign_negative() {
+            -0.0
+        } else {
+            r
+        }
+    }
+}
+
 /// The strategy used in `round()`
 #[derive(
     Clone,
@@ -1032,24 +1056,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
 
                 let divisor = divisor.unitless_value();
-
-                dividend.map(|dividend| {
-                    // In mod(A, B) only, if B is infinite and A has opposite sign to B
-                    // (including an oppositely-signed zero), the result is NaN.
-                    // https://drafts.csswg.org/css-values/#round-infinities
-                    if matches!(op, ModRemOp::Mod) &&
-                        divisor.is_infinite() &&
-                        dividend.is_sign_negative() != divisor.is_sign_negative()
-                    {
-                        f32::NAN
-                    } else {
-                        match op {
-                            ModRemOp::Mod => dividend - divisor * (dividend / divisor).floor(),
-                            ModRemOp::Rem => dividend - divisor * (dividend / divisor).trunc(),
-                        }
-                    }
-                });
-
+                dividend.map(|dividend| op.apply(dividend, divisor));
                 Ok(dividend)
             },
             Self::Hypot(children) => {
@@ -1363,29 +1370,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 ref divisor,
                 op,
             } => {
-                let mut result = dividend.clone();
-
-                // In mod(A, B) only, if B is infinite and A has opposite sign to B
-                // (including an oppositely-signed zero), the result is NaN.
-                // https://drafts.csswg.org/css-values/#round-infinities
-                if matches!(op, ModRemOp::Mod) &&
-                    divisor.is_infinite_leaf() &&
-                    dividend.is_negative_leaf() != divisor.is_negative_leaf()
-                {
-                    result.coerce_to_value(f32::NAN);
-                    replace_self_with!(&mut *result);
-                    return;
-                }
-
-                let mut result = value_or_stop!(match op {
-                    ModRemOp::Mod => {
-                        dividend.try_op(divisor, |a, b| a - b * (a / b).floor())
-                    },
-                    ModRemOp::Rem => {
-                        dividend.try_op(divisor, |a, b| a - b * (a / b).trunc())
-                    },
-                });
-
+                let mut result = value_or_stop!(dividend.try_op(divisor, |a, b| op.apply(a, b)));
                 replace_self_with!(&mut result);
             },
             Self::MinMax(ref mut children, op) => {
