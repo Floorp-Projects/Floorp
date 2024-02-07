@@ -14570,6 +14570,8 @@ nsresult FactoryOp::Open() {
         return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
       }
     }
+  } else {
+    MOZ_ASSERT(false);
   }
 
   QM_TRY_INSPECT(const auto& permission, CheckPermission());
@@ -14728,19 +14730,14 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission() {
   MOZ_ASSERT(mState == State::Initial);
 
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
-  if (principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-  }
-
-  MOZ_ASSERT(principalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
+  MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
+             principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     MOZ_ASSERT(mState == State::Initial);
 
     return PermissionValue::kPermissionAllowed;
   }
-
-  MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
   QM_TRY_INSPECT(
       const auto& permission,
