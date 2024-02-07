@@ -14548,6 +14548,12 @@ nsresult FactoryOp::Open() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    MOZ_ASSERT(mCommonParams.metadata().persistenceType() ==
+               PERSISTENCE_TYPE_PERSISTENT);
+  }
+
   QM_TRY_INSPECT(const auto& permission, CheckPermission());
 
   MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed ||
@@ -14728,13 +14734,10 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission() {
     }
   }
 
-  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
-
   MOZ_ASSERT(principalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     MOZ_ASSERT(mState == State::Initial);
-    MOZ_ASSERT(persistenceType == PERSISTENCE_TYPE_PERSISTENT);
 
     return PermissionValue::kPermissionAllowed;
   }
@@ -14743,7 +14746,7 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission() {
 
   QM_TRY_INSPECT(
       const auto& permission,
-      ([persistenceType,
+      ([persistenceType = mCommonParams.metadata().persistenceType(),
         origin = QuotaManager::GetOriginFromValidatedPrincipalInfo(
             principalInfo)]() -> mozilla::Result<PermissionValue, nsresult> {
         if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
