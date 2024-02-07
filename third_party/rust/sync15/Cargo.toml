@@ -68,7 +68,7 @@ path = "../viaduct"
 optional = true
 
 [dev-dependencies.env_logger]
-version = "0.7"
+version = "0.10"
 default-features = false
 
 [build-dependencies.uniffi]

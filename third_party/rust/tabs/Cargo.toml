@@ -60,12 +60,8 @@ features = ["sync-engine"]
 tempfile = "3.1"
 
 [dev-dependencies.env_logger]
-version = "0.8.0"
-features = [
-    "termcolor",
-    "atty",
-    "humantime",
-]
+version = "0.10.0"
+features = ["humantime"]
 default-features = false
 
 [build-dependencies.uniffi]

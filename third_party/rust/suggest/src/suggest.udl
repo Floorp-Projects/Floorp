@@ -14,6 +14,11 @@ boolean raw_suggestion_url_matches([ByRef] string raw_url, [ByRef] string url);
 
 [Error]
 interface SuggestApiError {
+    // An operation was interrupted by calling `SuggestStore.interrupt()`
+    Interrupted();
+    // The server requested a backoff after too many requests
+    Backoff(u64 seconds);
+    Network(string reason);
     Other(string reason);
 };
 
@@ -22,7 +27,9 @@ enum SuggestionProvider {
     "Pocket",
     "Wikipedia",
     "Amo",
-    "Yelp"
+    "Yelp",
+    "Mdn",
+    "Weather",
 };
 
 [Enum]
@@ -38,7 +45,8 @@ interface Suggestion {
         string iab_category,
         string impression_url,
         string click_url,
-        string raw_click_url
+        string raw_click_url,
+        f64 score
     );
     Pocket(
         string title,
@@ -64,7 +72,17 @@ interface Suggestion {
     );
     Yelp(
         string url,
-        string title
+        string title,
+        boolean is_top_pick
+    );
+    Mdn(
+        string title,
+        string url,
+        string description,
+        f64 score
+    );
+    Weather(
+        f64 score
     );
 };
 
@@ -76,6 +94,17 @@ dictionary SuggestionQuery {
 
 dictionary SuggestIngestionConstraints {
     u64? max_suggestions = null;
+};
+
+dictionary SuggestGlobalConfig {
+    i32 show_less_frequently_cap;
+};
+
+[Enum]
+interface SuggestProviderConfig {
+    Weather(
+        i32 min_keyword_length
+    );
 };
 
 interface SuggestStore {
@@ -92,4 +121,26 @@ interface SuggestStore {
 
     [Throws=SuggestApiError]
     void clear();
+
+    [Throws=SuggestApiError]
+    SuggestGlobalConfig fetch_global_config();
+
+    [Throws=SuggestApiError]
+    SuggestProviderConfig? fetch_provider_config(SuggestionProvider provider);
+};
+
+interface SuggestStoreBuilder {
+    constructor();
+
+    [Self=ByArc]
+    SuggestStoreBuilder data_path(string path);
+
+    [Self=ByArc]
+    SuggestStoreBuilder cache_path(string path);
+
+    [Self=ByArc]
+    SuggestStoreBuilder remote_settings_config(RemoteSettingsConfig config);
+
+    [Throws=SuggestApiError]
+    SuggestStore build();
 };
