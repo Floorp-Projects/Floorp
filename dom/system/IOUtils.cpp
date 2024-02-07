@@ -361,6 +361,15 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
 
         Maybe<uint32_t> toRead = Nothing();
         if (!aOptions.mMaxBytes.IsNull()) {
+          if (aOptions.mDecompress) {
+            RejectJSPromise(
+                promise, IOError(NS_ERROR_ILLEGAL_INPUT,
+                                 "Could not read `%s': the `maxBytes' and "
+                                 "`decompress' options are mutually exclusive",
+                                 file->HumanReadablePath().get()));
+            return;
+          }
+
           if (aOptions.mMaxBytes.Value() == 0) {
             // Resolve with an empty buffer.
             nsTArray<uint8_t> arr(0);
@@ -1232,13 +1241,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     nsIFile* aFile, const uint64_t aOffset, const Maybe<uint32_t> aMaxBytes,
     const bool aDecompress, IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  if (aMaxBytes.isSome() && aDecompress) {
-    return Err(IOError(NS_ERROR_ILLEGAL_INPUT,
-                       "Could not read `%s': the `maxBytes' and `decompress' "
-                       "options are mutually exclusive",
-                       aFile->HumanReadablePath().get()));
-  }
+  // This is checked in IOUtils::Read.
+  MOZ_ASSERT(aMaxBytes.isNothing() || !aDecompress,
+             "maxBytes and decompress are mutually exclusive");
 
   if (aOffset > static_cast<uint64_t>(INT64_MAX)) {
     return Err(
