@@ -680,3 +680,39 @@ shopping:
           Whether the toggle was used to enable or disable auto-open. Possible values
           are `enabled` and `disabled`.
         type: string
+
+  surface_no_thanks_button_clicked:
+    type: event
+    description: |
+      The user clicks the 'No thanks' button when asked if they want to
+      disable auto-open behavior.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879127
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879127
+    data_sensitivity:
+      - interaction
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
+  surface_yes_keep_closed_button_clicked:
+    type: event
+    description: |
+      The user clicks the 'Yes, keep closed' button when asked if they want to
+      disable auto-open behavior.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879127
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879127
+    data_sensitivity:
+      - interaction
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
