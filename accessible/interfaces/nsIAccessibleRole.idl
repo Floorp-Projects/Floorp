@@ -794,4 +794,9 @@ interface nsIAccessibleRole : nsISupports
    * Represents content that is important, serious, or urgent.
    */
   const unsigned long ROLE_STRONG = 136;
+
+  /**
+   * Represents a specific point in time.
+   */
+  const unsigned long ROLE_TIME = 137;
 };
