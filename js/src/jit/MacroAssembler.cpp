@@ -46,7 +46,6 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmCodegenTypes.h"
-#include "wasm/WasmGcObject.h"
 #include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmTypeDef.h"
@@ -56,6 +55,7 @@
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
+#include "wasm/WasmGcObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -6717,8 +6717,243 @@ void MacroAssembler::wasmNewStructObject(Register instance, Register result,
   }
 }
 
-// This function handles nursery allocations for wasm. For JS, see
-// MacroAssembler::bumpPointerAllocate.
+void MacroAssembler::wasmNewArrayObject(Register instance, Register result,
+                                        Register numElements,
+                                        Register typeDefData, Register temp,
+                                        Label* fail, uint32_t elemSize,
+                                        bool zeroFields) {
+  // Don't execute the inline path if GC probes are built in.
+#ifdef JS_GC_PROBES
+  jump(fail);
+#endif
+
+#ifdef JS_GC_ZEAL
+  // Don't execute the inline path if gc zeal or tracing are active.
+  loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
+          temp);
+  loadPtr(Address(temp, 0), temp);
+  branch32(Assembler::NotEqual, temp, Imm32(0), fail);
+#endif
+
+  // If the alloc site is long lived, immediately fall back to the OOL path,
+  // which will handle that.
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+          temp);
+  branchTestPtr(Assembler::NonZero,
+                Address(temp, gc::AllocSite::offsetOfScriptAndState()),
+                Imm32(gc::AllocSite::LONG_LIVED_BIT), fail);
+
+  // Push numElements for later; numElements will be used as a temp in the
+  // meantime. Make sure that all exit paths pop the value again!
+  Label popAndFail;
+#ifdef JS_CODEGEN_ARM64
+  // On arm64, we must maintain 16-alignment of both the actual and pseudo stack
+  // pointers.
+  push(numElements, xzr);
+  syncStackPtr();
+#else
+  push(numElements);
+#endif
+
+  // TODO: Compute the maximum number of elements for each elemSize, then do a
+  // single branch up front rather than checking overflow constantly.
+
+  // Compute the size of the allocation in bytes, checking for overflow. In case
+  // of overflow, we'll just fall back to the OOL path in C++, which will trap
+  // and all that. The final size must correspond to an AllocKind. (Signed
+  // overflow vs. unsigned overflow doesn't matter; any overflow indicates that
+  // we are too big and must bail to C++.)
+  //
+  // See WasmArrayObject::calcStorageBytes and WasmArrayObject::allocKindForIL.
+  //
+  // We start with elemSize * numElements and go from there.
+  move32(Imm32(elemSize), temp);
+  branchMul32(Assembler::Overflow, temp, numElements, &popAndFail);
+  // Add the data header
+  branchAdd32(Assembler::Overflow, Imm32(sizeof(WasmArrayObject::DataHeader)),
+              numElements, &popAndFail);
+  // Round up to gc::CellAlignBytes to play nice with the GC and to simplify the
+  // zeroing logic below.
+  branchAdd32(Assembler::Overflow, Imm32(gc::CellAlignBytes - 1), numElements,
+              &popAndFail);
+  and32(Imm32(~int32_t(gc::CellAlignBytes - 1)), numElements);
+  // Fall back to OOL code if the array size is too large for inline data
+  branch32(Assembler::Above, numElements, Imm32(WasmArrayObject_MaxInlineBytes),
+           &popAndFail);
+  // Add the size of the WasmArrayObject to get the full allocation size.
+  // Overflow checks are no longer necessary.
+  static_assert(WasmArrayObject_MaxInlineBytes + sizeof(WasmArrayObject) <
+                INT32_MAX);
+  add32(Imm32(sizeof(WasmArrayObject)), numElements);
+  // Per gc::slotsToAllocKindBytes, subtract sizeof(NativeObject),
+  // divide by sizeof(js::Value), then look up the final AllocKind-based
+  // allocation size from a table.
+  movePtr(wasm::SymbolicAddress::SlotsToAllocKindBytesTable, temp);
+  move32ZeroExtendToPtr(numElements, numElements);
+  subPtr(Imm32(sizeof(NativeObject)), numElements);
+  static_assert(sizeof(js::Value) == 8);
+  rshiftPtr(Imm32(3), numElements);
+  static_assert(sizeof(gc::slotsToAllocKindBytes[0]) == 4);
+  load32(BaseIndex(temp, numElements, Scale::TimesFour), numElements);
+
+  wasmBumpPointerAllocateDynamic(instance, result, typeDefData,
+                                 /*size=*/numElements, temp, &popAndFail);
+
+  // Initialize the shape and STV
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfShape()),
+          temp);
+  storePtr(temp, Address(result, WasmArrayObject::offsetOfShape()));
+  loadPtr(Address(typeDefData,
+                  wasm::TypeDefInstanceData::offsetOfSuperTypeVector()),
+          temp);
+  storePtr(temp, Address(result, WasmArrayObject::offsetOfSuperTypeVector()));
+
+  // Store inline data header and data pointer
+  storePtr(ImmWord(WasmArrayObject::DataIsIL),
+           Address(result, WasmArrayObject::offsetOfInlineStorage()));
+  computeEffectiveAddress(
+      Address(result, WasmArrayObject::offsetOfInlineArrayData()), temp);
+  // temp now points at the base of the array data; this will be used later
+  storePtr(temp, Address(result, WasmArrayObject::offsetOfData()));
+  // numElements will be saved to the array object later; for now we want to
+  // continue using numElements as a temp.
+
+  // Zero the array elements. This loop depends on the size of the array data
+  // being a multiple of the machine word size. This is currently always the
+  // case since WasmArrayObject::calcStorageBytes rounds up to
+  // gc::CellAlignBytes.
+  static_assert(gc::CellAlignBytes % sizeof(void*) == 0);
+  Label zeroed;
+  if (zeroFields) {
+    // numElements currently stores the total size of the allocation. temp
+    // points at the base of the inline array data. We will zero the memory by
+    // advancing numElements to the end of the allocation, then counting down
+    // toward temp, zeroing one word at a time. The following aliases make this
+    // clearer.
+    Register current = numElements;
+    Register inlineArrayData = temp;
+
+    // We first need to update current to actually point at the end of the
+    // allocation. We can compute this from the data pointer, since the data
+    // pointer points at a known offset within the array.
+    //
+    // It is easier to understand the code below as first subtracting the offset
+    // (to get back to the start of the allocation), then adding the total size
+    // of the allocation (using Scale::TimesOne).
+    computeEffectiveAddress(
+        BaseIndex(inlineArrayData, current, Scale::TimesOne,
+                  -int32_t(WasmArrayObject::offsetOfInlineArrayData())),
+        current);
+
+    // Exit immediately if the array has zero elements.
+    branchPtr(Assembler::Equal, current, inlineArrayData, &zeroed);
+
+    // Loop, counting down until current == inlineArrayData.
+    Label loop;
+    bind(&loop);
+    subPtr(Imm32(sizeof(void*)), current);
+    storePtr(ImmWord(0), Address(current, 0));
+    branchPtr(Assembler::NotEqual, current, inlineArrayData, &loop);
+  }
+  bind(&zeroed);
+
+  // Finally, store the actual numElements in the array object.
+#ifdef JS_CODEGEN_ARM64
+  pop(xzr, numElements);
+  syncStackPtr();
+#else
+  pop(numElements);
+#endif
+  store32(numElements, Address(result, WasmArrayObject::offsetOfNumElements()));
+
+  Label done;
+  jump(&done);
+
+  bind(&popAndFail);
+#ifdef JS_CODEGEN_ARM64
+  pop(xzr, numElements);
+  syncStackPtr();
+#else
+  pop(numElements);
+#endif
+  jump(fail);
+
+  bind(&done);
+}
+
+void MacroAssembler::wasmNewArrayObjectFixed(Register instance, Register result,
+                                             Register typeDefData,
+                                             Register temp1, Register temp2,
+                                             Label* fail, uint32_t numElements,
+                                             uint32_t storageBytes,
+                                             bool zeroFields) {
+  MOZ_ASSERT(storageBytes <= WasmArrayObject_MaxInlineBytes);
+
+  // Don't execute the inline path if GC probes are built in.
+#ifdef JS_GC_PROBES
+  jump(fail);
+#endif
+
+#ifdef JS_GC_ZEAL
+  // Don't execute the inline path if gc zeal or tracing are active.
+  loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
+          temp1);
+  loadPtr(Address(temp1, 0), temp1);
+  branch32(Assembler::NotEqual, temp1, Imm32(0), fail);
+#endif
+
+  // If the alloc site is long lived, immediately fall back to the OOL path,
+  // which will handle that.
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+          temp1);
+  branchTestPtr(Assembler::NonZero,
+                Address(temp1, gc::AllocSite::offsetOfScriptAndState()),
+                Imm32(gc::AllocSite::LONG_LIVED_BIT), fail);
+
+  gc::AllocKind allocKind = WasmArrayObject::allocKindForIL(storageBytes);
+  uint32_t totalSize = gc::Arena::thingSize(allocKind);
+  wasmBumpPointerAllocate(instance, result, typeDefData, temp1, temp2, fail,
+                          totalSize);
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfShape()),
+          temp1);
+  loadPtr(Address(typeDefData,
+                  wasm::TypeDefInstanceData::offsetOfSuperTypeVector()),
+          temp2);
+  storePtr(temp1, Address(result, WasmArrayObject::offsetOfShape()));
+  storePtr(temp2, Address(result, WasmArrayObject::offsetOfSuperTypeVector()));
+  store32(Imm32(numElements),
+          Address(result, WasmArrayObject::offsetOfNumElements()));
+
+  // Store inline data header and data pointer
+  storePtr(ImmWord(WasmArrayObject::DataIsIL),
+           Address(result, WasmArrayObject::offsetOfInlineStorage()));
+  computeEffectiveAddress(
+      Address(result, WasmArrayObject::offsetOfInlineArrayData()), temp2);
+  // temp2 now points at the base of the array data; this will be used later
+  storePtr(temp2, Address(result, WasmArrayObject::offsetOfData()));
+
+  if (zeroFields) {
+    MOZ_ASSERT(storageBytes % sizeof(void*) == 0);
+
+    // Advance temp1 to the end of the allocation
+    // (note that temp2 is already past the data header)
+    Label done;
+    computeEffectiveAddress(
+        Address(temp2, -sizeof(WasmArrayObject::DataHeader) + storageBytes),
+        temp1);
+    branchPtr(Assembler::Equal, temp1, temp2, &done);
+
+    // Count temp2 down toward temp1, zeroing one word at a time
+    Label loop;
+    bind(&loop);
+    subPtr(Imm32(sizeof(void*)), temp1);
+    storePtr(ImmWord(0), Address(temp1, 0));
+    branchPtr(Assembler::NotEqual, temp1, temp2, &loop);
+
+    bind(&done);
+  }
+}
+
 void MacroAssembler::wasmBumpPointerAllocate(Register instance, Register result,
                                              Register typeDefData,
                                              Register temp1, Register temp2,
@@ -6758,6 +6993,56 @@ void MacroAssembler::wasmBumpPointerAllocate(Register instance, Register result,
   // Because JS::TraceKind::Object is zero, there is no need to explicitly set
   // it in the nursery cell header.
   static_assert(int(JS::TraceKind::Object) == 0);
+  storePtr(temp1, Address(result, -js::Nursery::nurseryCellHeaderSize()));
+}
+
+void MacroAssembler::wasmBumpPointerAllocateDynamic(
+    Register instance, Register result, Register typeDefData, Register size,
+    Register temp1, Label* fail) {
+#ifdef DEBUG
+  // Replaces MOZ_ASSERT(size >= gc::MinCellSize);
+  Label ok1;
+  branch32(Assembler::AboveOrEqual, size, Imm32(gc::MinCellSize), &ok1);
+  breakpoint();
+  bind(&ok1);
+
+  Label ok2;
+  branch32(Assembler::BelowOrEqual, size, Imm32(JSObject::MAX_BYTE_SIZE), &ok2);
+  breakpoint();
+  bind(&ok2);
+#endif
+
+  int32_t endOffset = Nursery::offsetOfCurrentEndFromPosition();
+
+  // Bail to OOL code if the alloc site needs to be initialized.
+  load32(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite() +
+                                  gc::AllocSite::offsetOfNurseryAllocCount()),
+         temp1);
+  branch32(Assembler::Equal, temp1, Imm32(0), fail);
+
+  // Bump allocate in the nursery, bailing if there is not enough room.
+  loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfNurseryPosition()),
+          temp1);
+  loadPtr(Address(temp1, 0), result);
+  computeEffectiveAddress(BaseIndex(result, size, Scale::TimesOne,
+                                    Nursery::nurseryCellHeaderSize()),
+                          result);
+  branchPtr(Assembler::Below, Address(temp1, endOffset), result, fail);
+  storePtr(result, Address(temp1, 0));
+  subPtr(size, result);
+
+  // Increment the alloc count in the allocation site and store pointer in the
+  // nursery cell header. See NurseryCellHeader::MakeValue.
+  int32_t offsetOfNurseryAllocCount =
+      wasm::TypeDefInstanceData::offsetOfAllocSite() +
+      gc::AllocSite::offsetOfNurseryAllocCount();
+  add32(Imm32(1), Address(typeDefData, offsetOfNurseryAllocCount));
+  // Because JS::TraceKind::Object is zero, there is no need to explicitly set
+  // it in the nursery cell header.
+  static_assert(int(JS::TraceKind::Object) == 0);
+  computeEffectiveAddress(
+      Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+      temp1);
   storePtr(temp1, Address(result, -js::Nursery::nurseryCellHeaderSize()));
 }
 

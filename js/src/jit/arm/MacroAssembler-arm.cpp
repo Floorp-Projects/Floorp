@@ -2152,8 +2152,9 @@ FaultingCodeOffset MacroAssemblerARMCompat::storePtr(Register src,
   return ma_str(src, address, scratch2);
 }
 
-void MacroAssemblerARMCompat::storePtr(Register src, const BaseIndex& address) {
-  store32(src, address);
+FaultingCodeOffset MacroAssemblerARMCompat::storePtr(Register src,
+                                                     const BaseIndex& address) {
+  return store32(src, address);
 }
 
 void MacroAssemblerARMCompat::storePtr(Register src, AbsoluteAddress dest) {

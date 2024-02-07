@@ -331,6 +331,15 @@
   result_type: WordSized
   num_temps: 2
 
+- name: WasmNewArrayObject
+  mir_op: true
+  operands:
+    instance: WordSized
+    numElements: WordSized
+    typeDefData: WordSized
+  result_type: WordSized
+  num_temps: 2
+
 - name: WasmReinterpret
   gen_boilerplate: false
 

@@ -1477,6 +1477,8 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneralInt32GeneralInt32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayCopy));
       return FuncCast(Instance::arrayCopy, *abiType);
+    case SymbolicAddress::SlotsToAllocKindBytesTable:
+      return (void*)gc::slotsToAllocKindBytes;
     case SymbolicAddress::ExceptionNew:
       *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
@@ -1570,6 +1572,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PrintText:
       return false;
 #endif
+
+    // No thunk because they're just data
+    case SymbolicAddress::SlotsToAllocKindBytesTable:
+      return false;
 
     // Everyone else gets a thunk to handle the exit from the activation
     case SymbolicAddress::ToInt32:

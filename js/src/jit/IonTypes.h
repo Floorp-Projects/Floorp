@@ -522,7 +522,7 @@ enum class MIRType : uint8_t {
   // Types above are specialized.
   Value,
   None,          // Invalid, used as a placeholder.
-  Slots,         // A slots vector
+  Slots,         // A slots vector, or a wasm array object data pointer
   Elements,      // An elements vector
   Pointer,       // An opaque pointer that receives no special treatment
   WasmAnyRef,    // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0

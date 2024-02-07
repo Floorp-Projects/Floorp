@@ -99,6 +99,9 @@ struct TypeDefInstanceData {
   static constexpr size_t offsetOfAllocSite() {
     return offsetof(TypeDefInstanceData, allocSite);
   }
+  static constexpr size_t offsetOfArrayElemSize() {
+    return offsetof(TypeDefInstanceData, arrayElemSize);
+  }
 };
 
 // FuncImportInstanceData describes the region of wasm global memory allocated

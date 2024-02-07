@@ -3926,15 +3926,15 @@ class FunctionCompiler {
   // barrier.  `keepAlive` will be referenced by the instruction so as to hold
   // it live (from the GC's point of view).
   [[nodiscard]] bool writeGcValueAtBasePlusOffset(
-      uint32_t lineOrBytecode, StorageType fieldType, MDefinition* keepAlive,
+      uint32_t lineOrBytecode, StorageType type, MDefinition* keepAlive,
       AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
       uint32_t offset, bool needsTrapInfo, WasmPreBarrierKind preBarrierKind) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::WasmAnyRef);
-    MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
-    MNarrowingOp narrowingOp = fieldStoreInfoToMIR(fieldType);
+    MOZ_ASSERT(type.widenToValType().toMIRType() == value->type());
+    MNarrowingOp narrowingOp = fieldStoreInfoToMIR(type);
 
-    if (!fieldType.isRefRepr()) {
+    if (!type.isRefRepr()) {
       MaybeTrapSiteInfo maybeTrap;
       if (needsTrapInfo) {
         maybeTrap.emplace(getTrapSiteInfo());
@@ -3957,7 +3957,7 @@ class FunctionCompiler {
     // a suitable zero constant rather than reading it from the object.  See
     // also bug 1799999.
     MOZ_ASSERT(narrowingOp == MNarrowingOp::None);
-    MOZ_ASSERT(fieldType.widenToValType() == fieldType.valType());
+    MOZ_ASSERT(type.widenToValType() == type.valType());
 
     // Store the new value
     auto* store = MWasmStoreFieldRefKA::New(
@@ -3979,12 +3979,12 @@ class FunctionCompiler {
   // to the post-write barrier.  `keepAlive` will be referenced by the
   // instruction so as to hold it live (from the GC's point of view).
   [[nodiscard]] bool writeGcValueAtBasePlusScaledIndex(
-      uint32_t lineOrBytecode, StorageType fieldType, MDefinition* keepAlive,
+      uint32_t lineOrBytecode, StorageType type, MDefinition* keepAlive,
       AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
       uint32_t scale, MDefinition* index, WasmPreBarrierKind preBarrierKind) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::WasmAnyRef);
-    MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
+    MOZ_ASSERT(type.widenToValType().toMIRType() == value->type());
     MOZ_ASSERT(scale == 1 || scale == 2 || scale == 4 || scale == 8 ||
                scale == 16);
 
@@ -4001,24 +4001,23 @@ class FunctionCompiler {
     }
 
     return writeGcValueAtBasePlusOffset(
-        lineOrBytecode, fieldType, keepAlive, aliasBitset, value, finalAddr,
-        /*offset=*/0,
-        /*needsTrapInfo=*/false, preBarrierKind);
+        lineOrBytecode, type, keepAlive, aliasBitset, value, finalAddr,
+        /*offset=*/0, /*needsTrapInfo=*/false, preBarrierKind);
   }
 
   // Generate a read from address `base + offset`, where `offset` is known at
-  // JIT time.  The loaded value will be widened as described by `fieldType`
-  // and `fieldWideningOp`.  `keepAlive` will be referenced by the instruction
-  // so as to hold it live (from the GC's point of view).
+  // JIT time.  The loaded value will be widened as described by `type` and
+  // `fieldWideningOp`.  `keepAlive` will be referenced by the instruction so as
+  // to hold it live (from the GC's point of view).
   [[nodiscard]] MDefinition* readGcValueAtBasePlusOffset(
-      StorageType fieldType, FieldWideningOp fieldWideningOp,
-      MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
-      uint32_t offset, bool needsTrapInfo) {
+      StorageType type, FieldWideningOp fieldWideningOp, MDefinition* keepAlive,
+      AliasSet::Flag aliasBitset, MDefinition* base, uint32_t offset,
+      bool needsTrapInfo) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::WasmAnyRef);
     MIRType mirType;
     MWideningOp mirWideningOp;
-    fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
+    fieldLoadInfoToMIR(type, fieldWideningOp, &mirType, &mirWideningOp);
     MaybeTrapSiteInfo maybeTrap;
     if (needsTrapInfo) {
       maybeTrap.emplace(getTrapSiteInfo());
@@ -4034,13 +4033,13 @@ class FunctionCompiler {
   }
 
   // Generate a read from address `base + index * scale`, where `scale` is
-  // known at JIT-time.  The loaded value will be widened as described by
-  // `fieldType` and `fieldWideningOp`.  `keepAlive` will be referenced by the
-  // instruction so as to hold it live (from the GC's point of view).
+  // known at JIT-time.  The loaded value will be widened as described by `type`
+  // and `fieldWideningOp`.  `keepAlive` will be referenced by the instruction
+  // so as to hold it live (from the GC's point of view).
   [[nodiscard]] MDefinition* readGcValueAtBasePlusScaledIndex(
-      StorageType fieldType, FieldWideningOp fieldWideningOp,
-      MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
-      uint32_t scale, MDefinition* index) {
+      StorageType type, FieldWideningOp fieldWideningOp, MDefinition* keepAlive,
+      AliasSet::Flag aliasBitset, MDefinition* base, uint32_t scale,
+      MDefinition* index) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::WasmAnyRef);
     MOZ_ASSERT(scale == 1 || scale == 2 || scale == 4 || scale == 8 ||
@@ -4060,7 +4059,7 @@ class FunctionCompiler {
 
     MIRType mirType;
     MWideningOp mirWideningOp;
-    fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
+    fieldLoadInfoToMIR(type, fieldWideningOp, &mirType, &mirWideningOp);
     auto* load = MWasmLoadFieldKA::New(alloc(), keepAlive, finalAddr,
                                        /*offset=*/0, mirType, mirWideningOp,
                                        AliasSet::Load(aliasBitset),
@@ -4351,47 +4350,26 @@ class FunctionCompiler {
   }
 
   // Given a JIT-time-known type index `typeIndex` and a run-time known number
-  // of elements `numElements`, create MIR to call `Instance::arrayNew<true>`,
-  // producing an array with the relevant type and size and initialized with
-  // `typeIndex`s default value.
-  [[nodiscard]] MDefinition* createDefaultInitializedArrayObject(
-      uint32_t lineOrBytecode, uint32_t typeIndex, MDefinition* numElements) {
+  // of elements `numElements`, create MIR to allocate a new wasm array,
+  // possibly initialized with `typeIndex`s default value.
+  [[nodiscard]] MDefinition* createArrayObject(uint32_t lineOrBytecode,
+                                               uint32_t typeIndex,
+                                               MDefinition* numElements,
+                                               uint32_t elemSize,
+                                               bool zeroFields) {
     // Get the type definition for the array as a whole.
     MDefinition* typeDefData = loadTypeDefInstanceData(typeIndex);
     if (!typeDefData) {
       return nullptr;
     }
 
-    // Create call:
-    //   arrayObject = Instance::arrayNew<true>(numElements, typeDefData)
-    // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated
-    // by this call will trap.
-    MDefinition* arrayObject;
-    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew_true, numElements,
-                           typeDefData, &arrayObject)) {
+    auto* arrayObject = MWasmNewArrayObject::New(
+        alloc(), instancePointer_, numElements, typeDefData, elemSize,
+        zeroFields, bytecodeOffset());
+    if (!arrayObject) {
       return nullptr;
     }
-
-    return arrayObject;
-  }
-
-  [[nodiscard]] MDefinition* createUninitializedArrayObject(
-      uint32_t lineOrBytecode, uint32_t typeIndex, MDefinition* numElements) {
-    // Get the type definition for the array as a whole.
-    MDefinition* typeDefData = loadTypeDefInstanceData(typeIndex);
-    if (!typeDefData) {
-      return nullptr;
-    }
-
-    // Create call:
-    //   arrayObject = Instance::arrayNew<false>(numElements, typeDefData)
-    // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated
-    // by this call will trap.
-    MDefinition* arrayObject;
-    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew_false, numElements,
-                           typeDefData, &arrayObject)) {
-      return nullptr;
-    }
+    curBlock_->add(arrayObject);
 
     return arrayObject;
   }
@@ -4581,7 +4559,8 @@ class FunctionCompiler {
 
     // Create the array object, uninitialized.
     MDefinition* arrayObject =
-        createUninitializedArrayObject(lineOrBytecode, typeIndex, numElements);
+        createArrayObject(lineOrBytecode, typeIndex, numElements,
+                          arrayType.elementType_.size(), /*zeroFields=*/false);
     if (!arrayObject) {
       return nullptr;
     }
@@ -7442,8 +7421,10 @@ static bool EmitArrayNewDefault(FunctionCompiler& f) {
   }
 
   // Create the array object, default-initialized.
-  MDefinition* arrayObject = f.createDefaultInitializedArrayObject(
-      lineOrBytecode, typeIndex, numElements);
+  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
+  MDefinition* arrayObject =
+      f.createArrayObject(lineOrBytecode, typeIndex, numElements,
+                          arrayType.elementType_.size(), /*zeroFields=*/true);
   if (!arrayObject) {
     return false;
   }
@@ -7472,9 +7453,13 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
     return false;
   }
 
-  // Create the array object, default-initialized.
-  MDefinition* arrayObject = f.createDefaultInitializedArrayObject(
-      lineOrBytecode, typeIndex, numElementsDef);
+  // Create the array object, uninitialized.
+  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
+  StorageType elemType = arrayType.elementType_;
+  uint32_t elemSize = elemType.size();
+  MDefinition* arrayObject =
+      f.createArrayObject(lineOrBytecode, typeIndex, numElementsDef, elemSize,
+                          /*zeroFields=*/false);
   if (!arrayObject) {
     return false;
   }
@@ -7486,9 +7471,6 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
   }
 
   // Write each element in turn.
-  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
-  StorageType elemType = arrayType.elementType_;
-  uint32_t elemSize = elemType.size();
 
   // How do we know that the offset expression `i * elemSize` below remains
   // within 2^31 (signed-i32) range?  In the worst case we will have 16-byte
