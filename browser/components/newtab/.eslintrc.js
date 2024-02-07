@@ -4,11 +4,6 @@
 
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
   plugins: ["import", "react", "jsx-a11y"],
   settings: {
     react: {
