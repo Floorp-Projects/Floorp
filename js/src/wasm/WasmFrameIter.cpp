@@ -1803,6 +1803,9 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
+    case SymbolicAddress::SlotsToAllocKindBytesTable:
+      MOZ_CRASH(
+          "symbolic address was not code and should not have appeared here");
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) \
   case SymbolicAddress::sa_name:                     \
     return "call to native " #op " builtin (in wasm)";

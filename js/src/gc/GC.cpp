@@ -273,6 +273,29 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
+// A table converting an object size in "slots" (increments of
+// sizeof(js::Value)) to the total number of bytes in the corresponding
+// AllocKind. See gc::slotsToThingKind. This primarily allows wasm jit code to
+// remain compliant with the AllocKind system.
+//
+// To use this table, subtract sizeof(NativeObject) from your desired allocation
+// size, divide by sizeof(js::Value) to get the number of "slots", and then
+// index into this table. See gc::GetGCObjectKindForBytes.
+const constexpr uint32_t gc::slotsToAllocKindBytes[] = {
+    // These entries correspond exactly to gc::slotsToThingKind. The numeric
+    // comments therefore indicate the number of slots that the "bytes" would
+    // correspond to.
+    // clang-format off
+    /*  0 */ sizeof(JSObject_Slots0), sizeof(JSObject_Slots2), sizeof(JSObject_Slots2), sizeof(JSObject_Slots4),
+    /*  4 */ sizeof(JSObject_Slots4), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8),
+    /*  8 */ sizeof(JSObject_Slots8), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12),
+    /* 12 */ sizeof(JSObject_Slots12), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16),
+    /* 16 */ sizeof(JSObject_Slots16)
+    // clang-format on
+};
+
+static_assert(std::size(slotsToAllocKindBytes) == SLOTS_TO_THING_KIND_LIMIT);
+
 MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
 JS::GCContext::GCContext(JSRuntime* runtime) : runtime_(runtime) {}

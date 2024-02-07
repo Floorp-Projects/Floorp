@@ -193,6 +193,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::MacroAssembler::Push(ARMRegister(r0, 64), ARMRegister(r1, 64),
                                ARMRegister(r2, 64), ARMRegister(r3, 64));
   }
+  void push(Register r0, ARMRegister r1) {
+    vixl::MacroAssembler::Push(ARMRegister(r0, 64), r1);
+  }
   void push(ARMFPRegister r0, ARMFPRegister r1, ARMFPRegister r2,
             ARMFPRegister r3) {
     vixl::MacroAssembler::Push(r0, r1, r2, r3);
@@ -214,6 +217,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void pop(ARMFPRegister r0, ARMFPRegister r1, ARMFPRegister r2,
            ARMFPRegister r3) {
     vixl::MacroAssembler::Pop(r0, r1, r2, r3);
+  }
+  void pop(ARMRegister r0, Register r1) {
+    vixl::MacroAssembler::Pop(r0, ARMRegister(r1, 64));
   }
 
   void pop(const ValueOperand& v) { pop(v.valueReg()); }

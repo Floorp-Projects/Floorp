@@ -446,6 +446,7 @@ class AliasSet {
   inline AliasSet operator&(const AliasSet& other) const {
     return AliasSet(flags_ & other.flags_);
   }
+  inline AliasSet operator~() const { return AliasSet(~flags_); }
   static AliasSet None() { return AliasSet(None_); }
   static AliasSet Load(uint32_t flags) {
     MOZ_ASSERT(flags && !(flags & Store_));
@@ -10595,6 +10596,15 @@ class MWasmCallBase {
 
   bool inTry() const { return inTry_; }
   size_t tryNoteIndex() const { return tryNoteIndex_; }
+
+  static AliasSet wasmCallAliasSet() {
+    // This is ok because:
+    // - numElements is immutable
+    // - the GC will rewrite any array data pointers on move
+    AliasSet exclude = AliasSet(AliasSet::WasmArrayNumElements) |
+                       AliasSet(AliasSet::WasmArrayDataPointer);
+    return AliasSet::Store(AliasSet::Any) & ~exclude;
+  }
 };
 
 // A wasm call that is catchable. This instruction is a control instruction,
@@ -10630,6 +10640,7 @@ class MWasmCallCatchable final : public MVariadicControlInstruction<2>,
       uint32_t stackArgAreaSizeUnaligned, const MWasmCallTryDesc& tryDesc);
 
   bool possiblyCalls() const override { return true; }
+  AliasSet getAliasSet() const override { return wasmCallAliasSet(); }
 
   static const size_t FallthroughBranchIndex = 0;
   static const size_t PrePadBranchIndex = 1;
@@ -10663,6 +10674,7 @@ class MWasmCallUncatchable final : public MVariadicInstruction,
       uint32_t stackArgAreaSizeUnaligned);
 
   bool possiblyCalls() const override { return true; }
+  AliasSet getAliasSet() const override { return wasmCallAliasSet(); }
 };
 
 class MWasmReturnCall final : public MVariadicControlInstruction<0>,
@@ -11294,9 +11306,7 @@ class MWasmLoadField : public MUnaryInstruction, public NoTypePolicy::Data {
     const MWasmLoadField* other = ins->toWasmLoadField();
     return ins->isWasmLoadField() && congruentIfOperandsEqual(ins) &&
            offset() == other->offset() && wideningOp() == other->wideningOp() &&
-           getAliasSet().flags() == other->getAliasSet().flags() &&
-           getAliasSet().flags() ==
-               AliasSet::Load(AliasSet::WasmStructOutlineDataPointer).flags();
+           getAliasSet().flags() == other->getAliasSet().flags();
   }
 
 #ifdef JS_JITSPEW
@@ -11599,9 +11609,38 @@ class MWasmNewStructObject : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, instance), (1, typeDefData))
 
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool isOutline() const { return isOutline_; }
   bool zeroFields() const { return zeroFields_; }
   gc::AllocKind allocKind() const { return allocKind_; }
+};
+
+class MWasmNewArrayObject : public MTernaryInstruction,
+                            public NoTypePolicy::Data {
+ private:
+  uint32_t elemSize_;
+  bool zeroFields_;
+  wasm::BytecodeOffset bytecodeOffset_;
+
+  MWasmNewArrayObject(MDefinition* instance, MDefinition* numElements,
+                      MDefinition* typeDefData, uint32_t elemSize,
+                      bool zeroFields, wasm::BytecodeOffset bytecodeOffset)
+      : MTernaryInstruction(classOpcode, instance, numElements, typeDefData),
+        elemSize_(elemSize),
+        zeroFields_(zeroFields),
+        bytecodeOffset_(bytecodeOffset) {
+    setResultType(MIRType::WasmAnyRef);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmNewArrayObject)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, instance), (1, numElements), (2, typeDefData))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  uint32_t elemSize() const { return elemSize_; }
+  bool zeroFields() const { return zeroFields_; }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 
 #ifdef FUZZING_JS_FUZZILLI

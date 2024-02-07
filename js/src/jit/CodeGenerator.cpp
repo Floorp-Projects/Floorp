@@ -14855,6 +14855,20 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     stackMap->setExitStubWords(trapExitLayoutNumWords);
   }
 
+  // Patch up the stack map to track array data pointers
+  const LSafepoint::SlotList& slots = safepoint.slotsOrElementsSlots();
+  for (SafepointSlotEntry slot : slots) {
+    MOZ_ASSERT(slot.stack);
+
+    // It's a slot in the body allocation, so .slot is interpreted
+    // as an index downwards from the Frame*
+    MOZ_ASSERT(slot.slot <= nBodyBytes);
+    uint32_t offsetInBytes = nBodyBytes - slot.slot;
+    MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
+    stackMap->set(wordsSoFar + offsetInBytes / sizeof(void*),
+                  wasm::StackMap::Kind::ArrayDataPointer);
+  }
+
   // Record in the map, how far down from the highest address the Frame* is.
   // Take the opportunity to check that we haven't marked any part of the
   // Frame itself as a pointer.
@@ -18710,6 +18724,149 @@ void CodeGenerator::visitWasmNewStructObject(LWasmNewStructObject* lir) {
     Register temp2 = ToRegister(lir->temp1());
     masm.wasmNewStructObject(instance, output, typeDefData, temp1, temp2,
                              ool->entry(), mir->allocKind(), mir->zeroFields());
+
+    masm.bind(ool->rejoin());
+  }
+}
+
+void CodeGenerator::callWasmArrayAllocFun(LInstruction* lir,
+                                          wasm::SymbolicAddress fun,
+                                          Register numElements,
+                                          Register typeDefData, Register output,
+                                          wasm::BytecodeOffset bytecodeOffset) {
+  masm.Push(InstanceReg);
+  int32_t framePushedAfterInstance = masm.framePushed();
+  saveLive(lir);
+
+  masm.setupWasmABICall();
+  masm.passABIArg(InstanceReg);
+  masm.passABIArg(numElements);
+  masm.passABIArg(typeDefData);
+  int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
+  CodeOffset offset = masm.callWithABI(
+      bytecodeOffset, fun, mozilla::Some(instanceOffset), ABIType::General);
+  masm.storeCallPointerResult(output);
+
+  markSafepointAt(offset.offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushedAfterInstance);
+  lir->safepoint()->setWasmSafepointKind(WasmSafepointKind::CodegenCall);
+
+  restoreLive(lir);
+  masm.Pop(InstanceReg);
+#if JS_CODEGEN_ARM64
+  masm.syncStackPtr();
+#endif
+
+  Label ok;
+  masm.branchPtr(Assembler::NonZero, output, ImmWord(0), &ok);
+  masm.wasmTrap(wasm::Trap::ThrowReported, bytecodeOffset);
+  masm.bind(&ok);
+}
+
+// Out-of-line path to allocate wasm GC arrays
+class OutOfLineWasmNewArray : public OutOfLineCodeBase<CodeGenerator> {
+  LInstruction* lir_;
+  wasm::SymbolicAddress fun_;
+  Register numElementsReg_;
+  mozilla::Maybe<uint32_t> numElements_;
+  Register typeDefData_;
+  Register output_;
+  wasm::BytecodeOffset bytecodeOffset_;
+
+ public:
+  OutOfLineWasmNewArray(LInstruction* lir, wasm::SymbolicAddress fun,
+                        Register numElementsReg,
+                        mozilla::Maybe<uint32_t> numElements,
+                        Register typeDefData, Register output,
+                        wasm::BytecodeOffset bytecodeOffset)
+      : lir_(lir),
+        fun_(fun),
+        numElementsReg_(numElementsReg),
+        numElements_(numElements),
+        typeDefData_(typeDefData),
+        output_(output),
+        bytecodeOffset_(bytecodeOffset) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineWasmNewArray(this);
+  }
+
+  LInstruction* lir() const { return lir_; }
+  wasm::SymbolicAddress fun() const { return fun_; }
+  Register numElementsReg() const { return numElementsReg_; }
+  mozilla::Maybe<uint32_t> numElements() const { return numElements_; }
+  Register typeDefData() const { return typeDefData_; }
+  Register output() const { return output_; }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+};
+
+void CodeGenerator::visitOutOfLineWasmNewArray(OutOfLineWasmNewArray* ool) {
+  if (ool->numElements().isSome()) {
+    masm.move32(Imm32(ool->numElements().value()), ool->numElementsReg());
+  }
+  callWasmArrayAllocFun(ool->lir(), ool->fun(), ool->numElementsReg(),
+                        ool->typeDefData(), ool->output(),
+                        ool->bytecodeOffset());
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitWasmNewArrayObject(LWasmNewArrayObject* lir) {
+  MOZ_ASSERT(gen->compilingWasm());
+
+  MWasmNewArrayObject* mir = lir->mir();
+
+  Register typeDefData = ToRegister(lir->typeDefData());
+  Register output = ToRegister(lir->output());
+  Register temp1 = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+
+  wasm::SymbolicAddress fun = mir->zeroFields()
+                                  ? wasm::SymbolicAddress::ArrayNew_true
+                                  : wasm::SymbolicAddress::ArrayNew_false;
+
+  if (lir->numElements()->isConstant()) {
+    // numElements is constant, so we can do optimized code generation.
+    uint32_t numElements = lir->numElements()->toConstant()->toInt32();
+    uint32_t storageBytes =
+        WasmArrayObject::calcStorageBytes(mir->elemSize(), numElements);
+    if (storageBytes > WasmArrayObject_MaxInlineBytes) {
+      // Too much array data to store inline. Immediately perform an instance
+      // call to handle the out-of-line storage.
+      masm.move32(Imm32(numElements), temp1);
+      callWasmArrayAllocFun(lir, fun, temp1, typeDefData, output,
+                            mir->bytecodeOffset());
+    } else {
+      // storageBytes is small enough to be stored inline in WasmArrayObject.
+      // Attempt a nursery allocation and fall back to an instance call if it
+      // fails.
+      Register instance = ToRegister(lir->instance());
+      MOZ_ASSERT(instance == InstanceReg);
+
+      auto ool = new (alloc())
+          OutOfLineWasmNewArray(lir, fun, temp1, mozilla::Some(numElements),
+                                typeDefData, output, mir->bytecodeOffset());
+      addOutOfLineCode(ool, lir->mir());
+
+      masm.wasmNewArrayObjectFixed(instance, output, typeDefData, temp1, temp2,
+                                   ool->entry(), numElements, storageBytes,
+                                   mir->zeroFields());
+
+      masm.bind(ool->rejoin());
+    }
+  } else {
+    // numElements is dynamic. Attempt a dynamic inline-storage nursery
+    // allocation and fall back to an instance call if it fails.
+    Register instance = ToRegister(lir->instance());
+    MOZ_ASSERT(instance == InstanceReg);
+    Register numElements = ToRegister(lir->numElements());
+
+    auto ool = new (alloc())
+        OutOfLineWasmNewArray(lir, fun, numElements, mozilla::Nothing(),
+                              typeDefData, output, mir->bytecodeOffset());
+    addOutOfLineCode(ool, lir->mir());
+
+    masm.wasmNewArrayObject(instance, output, numElements, typeDefData, temp1,
+                            ool->entry(), mir->elemSize(), mir->zeroFields());
 
     masm.bind(ool->rejoin());
   }

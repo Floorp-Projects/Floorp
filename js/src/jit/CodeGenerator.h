@@ -83,6 +83,7 @@ class OutOfLineArrayPush;
 class OutOfLineAtomizeSlot;
 class OutOfLineWasmCallPostWriteBarrier;
 class OutOfLineWasmNewStruct;
+class OutOfLineWasmNewArray;
 
 class CodeGenerator final : public CodeGeneratorSpecific {
   [[nodiscard]] bool generateBody();
@@ -192,6 +193,12 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void callWasmStructAllocFun(LInstruction* lir, wasm::SymbolicAddress fun,
                               Register typeDefData, Register output);
   void visitOutOfLineWasmNewStruct(OutOfLineWasmNewStruct* ool);
+
+  void callWasmArrayAllocFun(LInstruction* lir, wasm::SymbolicAddress fun,
+                             Register numElements, Register typeDefData,
+                             Register output,
+                             wasm::BytecodeOffset bytecodeOffset);
+  void visitOutOfLineWasmNewArray(OutOfLineWasmNewArray* ool);
 
  private:
   void emitPostWriteBarrier(const LAllocation* obj);
