@@ -954,7 +954,9 @@ nsresult nsHttpChannel::ContinueConnect() {
   }
 
   // hit the net...
-  return DoConnect(mTransactionSticky);
+  nsresult rv = DoConnect(mTransactionSticky);
+  mTransactionSticky = nullptr;
+  return rv;
 }
 
 nsresult nsHttpChannel::DoConnect(HttpTransactionShell* aTransWithStickyConn) {
@@ -8193,8 +8195,6 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   // The prefetch needs to be released on the main thread
   mDNSPrefetch = nullptr;
-
-  mTransactionSticky = nullptr;
 
   mRedirectChannel = nullptr;
 
