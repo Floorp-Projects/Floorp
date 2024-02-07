@@ -62,7 +62,13 @@ static_assert(Simd128DataSize == 4 * sizeof(float),
 static_assert(Simd128DataSize == 2 * sizeof(double),
               "SIMD data should be able to contain float64x2");
 
-enum Scale { TimesOne = 0, TimesTwo = 1, TimesFour = 2, TimesEight = 3, Invalid = -1 };
+enum Scale {
+  TimesOne = 0,
+  TimesTwo = 1,
+  TimesFour = 2,
+  TimesEight = 3,
+  Invalid = -1
+};
 
 static_assert(sizeof(JS::Value) == 8,
               "required for TimesEight and 3 below to be correct");
