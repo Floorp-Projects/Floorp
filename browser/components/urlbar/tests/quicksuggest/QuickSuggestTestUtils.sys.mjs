@@ -215,9 +215,9 @@ class _QuickSuggestTestUtils {
     // Tell the Rust backend to use the local remote setting server.
     lazy.SuggestBackendRust._test_remoteSettingsConfig =
       new lazy.RemoteSettingsConfig(
-        this.#remoteSettingsServer.url.toString(),
+        "quicksuggest",
         "main",
-        "quicksuggest"
+        this.#remoteSettingsServer.url.toString()
       );
 
     // Finally, init Suggest and set prefs. Do this after setting up remote
