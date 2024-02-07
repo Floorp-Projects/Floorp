@@ -179,6 +179,7 @@ void TraceJitActivations(JSContext* cx, JSTracer* trc);
 void TraceWeakJitActivationsInSweepingZones(JSContext* cx, JSTracer* trc);
 
 void UpdateJitActivationsForMinorGC(JSRuntime* rt);
+void UpdateJitActivationsForCompactingGC(JSRuntime* rt);
 
 static inline uint32_t MakeFrameDescriptor(FrameType type) {
   return uint32_t(type);

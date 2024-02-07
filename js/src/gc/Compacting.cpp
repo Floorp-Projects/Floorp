@@ -266,8 +266,12 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
   JSObject* srcObj = IsObjectAllocKind(thingKind)
                          ? static_cast<JSObject*>(static_cast<Cell*>(src))
                          : nullptr;
-  if (!srcObj || !srcObj->is<NativeObject>() ||
-      !srcObj->as<NativeObject>().hasFixedElements()) {
+  bool doNotPoison =
+      srcObj && ((srcObj->is<NativeObject>() &&
+                  srcObj->as<NativeObject>().hasFixedElements()) ||
+                 (srcObj->is<WasmArrayObject>() &&
+                  srcObj->as<WasmArrayObject>().isDataInline()));
+  if (!doNotPoison) {
     AlwaysPoison(reinterpret_cast<uint8_t*>(src) + sizeof(uintptr_t),
                  JS_MOVED_TENURED_PATTERN, thingSize - sizeof(uintptr_t),
                  MemCheckKind::MakeNoAccess);
@@ -802,6 +806,8 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Mark roots to update them.
 
   traceRuntimeForMajorGC(&trc, session);
+
+  jit::UpdateJitActivationsForCompactingGC(rt);
 
   {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_ROOTS);

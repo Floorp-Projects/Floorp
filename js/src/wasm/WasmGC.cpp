@@ -37,7 +37,7 @@ wasm::StackMap* wasm::ConvertStackMapBoolVectorToStackMap(
   size_t i = 0;
   for (bool b : vec) {
     if (b) {
-      stackMap->setBit(i);
+      stackMap->set(i, StackMap::Kind::AnyRef);
       hasRefsObserved = true;
     }
     i++;
@@ -165,8 +165,9 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
                                   numStackArgWords);
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {
-    MOZ_ASSERT(stackMap->getBit(stackMap->header.numMappedWords -
-                                stackMap->header.frameOffsetFromTop + i) == 0);
+    MOZ_ASSERT(stackMap->get(stackMap->header.numMappedWords -
+                             stackMap->header.frameOffsetFromTop + i) ==
+               StackMap::Kind::POD);
   }
 #endif
 
