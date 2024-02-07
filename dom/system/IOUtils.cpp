@@ -187,7 +187,7 @@ static void ResolveJSPromise(Promise* aPromise, T&& aValue) {
 }
 
 static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
-  const auto& errMsg = aError.Message();
+  const auto errMsg = FormatErrorMessage(aError.Code(), aError.Message());
 
   switch (aError.Code()) {
     case NS_ERROR_FILE_UNRESOLVABLE_SYMLINK:
@@ -257,8 +257,7 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
       break;
 
     default:
-      aPromise->MaybeRejectWithUnknownError(
-          FormatErrorMessage(aError.Code(), errMsg));
+      aPromise->MaybeRejectWithUnknownError(errMsg);
   }
 }
 
