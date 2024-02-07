@@ -3215,12 +3215,32 @@
     wideningOp: MWideningOp
     maybeTrap: MaybeTrapSiteInfo
 
+- name: WasmLoadElement
+  result_type: WordSized
+  operands:
+    base: WordSized
+    index: WordSized
+  arguments:
+    type: MIRType
+    wideningOp: MWideningOp
+    scale: Scale
+    maybeTrap: MaybeTrapSiteInfo
+  num_temps: 1
+
 - name: WasmLoadSlotI64
   result_type: Int64
   operands:
     containerRef: WordSized
   arguments:
     offset: size_t
+    maybeTrap: MaybeTrapSiteInfo
+
+- name: WasmLoadElementI64
+  result_type: Int64
+  operands:
+    base: WordSized
+    index: WordSized
+  arguments:
     maybeTrap: MaybeTrapSiteInfo
 
 - name: WasmStoreSlot
@@ -3240,6 +3260,37 @@
   arguments:
     offset: size_t
     maybeTrap: MaybeTrapSiteInfo
+
+- name: WasmStoreElement
+  operands:
+    base: WordSized
+    index: WordSized
+    value: WordSized
+  arguments:
+    type: MIRType
+    narrowingOp: MNarrowingOp
+    scale: Scale
+    maybeTrap: MaybeTrapSiteInfo
+  num_temps: 1
+
+- name: WasmStoreElementI64
+  operands:
+    base: WordSized
+    index: WordSized
+    value: Int64
+  arguments:
+    maybeTrap: MaybeTrapSiteInfo
+
+- name: WasmStoreElementRef
+  operands:
+    instance: WordSized
+    base: WordSized
+    index: WordSized
+    value: WordSized
+  arguments:
+    maybeTrap: MaybeTrapSiteInfo
+    preBarrierKind: WasmPreBarrierKind
+  num_temps: 2
 
 - name: WasmLoadTableElement
   result_type: WordSized
@@ -3266,7 +3317,7 @@
   mir_op: true
 
 # Generational write barrier used when writing an object to another object.
-- name: WasmPostWriteBarrier
+- name: WasmPostWriteBarrierImmediate
   operands:
     instance: WordSized
     object: WordSized
@@ -3274,6 +3325,19 @@
     value: WordSized
   arguments:
     valueOffset: uint32_t
+  num_temps: 1
+  mir_op: true
+
+# Ditto, but with a scaled index instead of a constant offset.
+- name: WasmPostWriteBarrierIndex
+  operands:
+    instance: WordSized
+    object: WordSized
+    valueBase: WordSized
+    index: WordSized
+    value: WordSized
+  arguments:
+    elemSize: uint32_t
   num_temps: 1
   mir_op: true
 

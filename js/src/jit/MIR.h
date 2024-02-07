@@ -10268,27 +10268,57 @@ class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
 
 // Given a value being written to another object, update the generational store
 // buffer if the value is in the nursery and object is in the tenured heap.
-class MWasmPostWriteBarrier : public MQuaternaryInstruction,
-                              public NoTypePolicy::Data {
+class MWasmPostWriteBarrierImmediate : public MQuaternaryInstruction,
+                                       public NoTypePolicy::Data {
   uint32_t valueOffset_;
 
-  MWasmPostWriteBarrier(MDefinition* instance, MDefinition* object,
-                        MDefinition* valueBase, uint32_t valueOffset,
-                        MDefinition* value)
+  MWasmPostWriteBarrierImmediate(MDefinition* instance, MDefinition* object,
+                                 MDefinition* valueBase, uint32_t valueOffset,
+                                 MDefinition* value)
       : MQuaternaryInstruction(classOpcode, instance, object, valueBase, value),
         valueOffset_(valueOffset) {
     setGuard();
   }
 
  public:
-  INSTRUCTION_HEADER(WasmPostWriteBarrier)
+  INSTRUCTION_HEADER(WasmPostWriteBarrierImmediate)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, instance), (1, object), (2, valueBase), (3, value))
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   uint32_t valueOffset() const { return valueOffset_; }
 
-  ALLOW_CLONE(MWasmPostWriteBarrier)
+  ALLOW_CLONE(MWasmPostWriteBarrierImmediate)
+};
+
+// Given a value being written to another object, update the generational store
+// buffer if the value is in the nursery and object is in the tenured heap.
+class MWasmPostWriteBarrierIndex : public MAryInstruction<5>,
+                                   public NoTypePolicy::Data {
+  uint32_t elemSize_;
+
+  MWasmPostWriteBarrierIndex(MDefinition* instance, MDefinition* object,
+                             MDefinition* valueBase, MDefinition* index,
+                             uint32_t scale, MDefinition* value)
+      : MAryInstruction<5>(classOpcode), elemSize_(scale) {
+    initOperand(0, instance);
+    initOperand(1, object);
+    initOperand(2, valueBase);
+    initOperand(3, index);
+    initOperand(4, value);
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmPostWriteBarrierIndex)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, instance), (1, object), (2, valueBase), (3, index),
+                 (4, value))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  uint32_t elemSize() const { return elemSize_; }
+
+  ALLOW_CLONE(MWasmPostWriteBarrierIndex)
 };
 
 class MWasmParameter : public MNullaryInstruction {
@@ -11380,6 +11410,62 @@ class MWasmLoadFieldKA : public MBinaryInstruction, public NoTypePolicy::Data {
 #endif
 };
 
+// Loads a value from base pointer, given an index and element size. This field
+// may be any value type, including references. No barriers are performed.
+//
+// The element size is implicitly defined by MIRType and MWideningOp. For
+// example, MIRType::Float32 indicates an element size of 32 bits, and
+// MIRType::Int32 and MWideningOp::FromU16 together indicate an element size of
+// 16 bits.
+//
+// This instruction takes a second object `ka` that must be kept alive, as
+// described for MWasmLoadFieldKA above.
+class MWasmLoadElementKA : public MTernaryInstruction,
+                           public NoTypePolicy::Data {
+  MWideningOp wideningOp_;
+  Scale scale_;
+  AliasSet aliases_;
+  MaybeTrapSiteInfo maybeTrap_;
+
+  MWasmLoadElementKA(MDefinition* ka, MDefinition* base, MDefinition* index,
+                     MIRType type, MWideningOp wideningOp, Scale scale,
+                     AliasSet aliases,
+                     MaybeTrapSiteInfo maybeTrap = mozilla::Nothing())
+      : MTernaryInstruction(classOpcode, ka, base, index),
+        wideningOp_(wideningOp),
+        scale_(scale),
+        aliases_(aliases),
+        maybeTrap_(maybeTrap) {
+    MOZ_ASSERT(base->type() == MIRType::WasmArrayData);
+    MOZ_ASSERT(aliases.flags() ==
+                   AliasSet::Load(AliasSet::WasmArrayDataArea).flags() ||
+               aliases.flags() == AliasSet::Load(AliasSet::Any).flags());
+    setResultType(type);
+    if (maybeTrap_) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmLoadElementKA)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, ka), (1, base), (2, index))
+
+  MWideningOp wideningOp() const { return wideningOp_; }
+  Scale scale() const { return scale_; }
+  AliasSet getAliasSet() const override { return aliases_; }
+  MaybeTrapSiteInfo maybeTrap() const { return maybeTrap_; }
+
+#ifdef JS_JITSPEW
+  void getExtras(ExtrasCollector* extras) override {
+    char buf[96];
+    SprintfLiteral(buf, "(wideningOp=%s, scale=%s)",
+                   StringFromMWideningOp(wideningOp_), StringFromScale(scale_));
+    extras->add(buf);
+  }
+#endif
+};
+
 // Stores a non-reference value to anlocation, denoted as a fixed offset from
 // a base pointer, which (it is assumed) is within a wasm object.  This field
 // may be any value type, _excluding_ references.  References _must_ use the
@@ -11468,7 +11554,8 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
         preBarrierKind_(preBarrierKind) {
     MOZ_ASSERT(obj->type() == TargetWordMIRType() ||
                obj->type() == MIRType::Pointer ||
-               obj->type() == MIRType::WasmAnyRef);
+               obj->type() == MIRType::WasmAnyRef ||
+               obj->type() == MIRType::WasmArrayData);
     MOZ_ASSERT(offset <= INT32_MAX);
     MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
     MOZ_ASSERT(
@@ -11505,6 +11592,117 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
     extras->add(buf);
   }
 #endif
+};
+
+// Stores a non-reference value to a base pointer, given an index and element
+// size. This field may be any value type, excluding references. References MUST
+// use the 'Ref' variant of this instruction.
+//
+// The element size is implicitly defined by MIRType and MNarrowingOp. For
+// example, MIRType::Float32 indicates an element size of 32 bits, and
+// MIRType::Int32 and MNarrowingOp::To16 together indicate an element size of 16
+// bits.
+//
+// This instruction takes a second object `ka` that must be kept alive, as
+// described for MWasmLoadFieldKA above.
+class MWasmStoreElementKA : public MQuaternaryInstruction,
+                            public NoTypePolicy::Data {
+  MNarrowingOp narrowingOp_;
+  Scale scale_;
+  AliasSet aliases_;
+  MaybeTrapSiteInfo maybeTrap_;
+
+  MWasmStoreElementKA(MDefinition* ka, MDefinition* base, MDefinition* index,
+                      MDefinition* value, MNarrowingOp narrowingOp, Scale scale,
+                      AliasSet aliases,
+                      MaybeTrapSiteInfo maybeTrap = mozilla::Nothing())
+      : MQuaternaryInstruction(classOpcode, ka, base, index, value),
+        narrowingOp_(narrowingOp),
+        scale_(scale),
+        aliases_(aliases),
+        maybeTrap_(maybeTrap) {
+    MOZ_ASSERT(base->type() == MIRType::WasmArrayData);
+    MOZ_ASSERT(value->type() != MIRType::WasmAnyRef);
+    // "if you want to narrow the value when it is stored, the source type
+    // must be Int32".
+    MOZ_ASSERT_IF(narrowingOp != MNarrowingOp::None,
+                  value->type() == MIRType::Int32);
+    MOZ_ASSERT(aliases.flags() ==
+                   AliasSet::Store(AliasSet::WasmArrayDataArea).flags() ||
+               aliases.flags() == AliasSet::Store(AliasSet::Any).flags());
+    if (maybeTrap_) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreElementKA)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, ka), (1, base), (2, index), (3, value))
+
+  MNarrowingOp narrowingOp() const { return narrowingOp_; }
+  Scale scale() const { return scale_; }
+  AliasSet getAliasSet() const override { return aliases_; }
+  MaybeTrapSiteInfo maybeTrap() const { return maybeTrap_; }
+
+#ifdef JS_JITSPEW
+  void getExtras(ExtrasCollector* extras) override {
+    char buf[96];
+    SprintfLiteral(buf, "(narrowingOp=%s, scale=%s)",
+                   StringFromMNarrowingOp(narrowingOp_),
+                   StringFromScale(scale_));
+    extras->add(buf);
+  }
+#endif
+};
+
+// Stores a reference value to a base pointer, given an index and element size.
+// This instruction emits a pre-barrier. A post barrier MUST be performed
+// separately.
+//
+// The element size is implicitly defined by MIRType and MNarrowingOp, as
+// described for MWasmStoreElementKA above.
+//
+// This instruction takes a second object `ka` that must be kept alive, as
+// described for MWasmLoadFieldKA above.
+class MWasmStoreElementRefKA : public MAryInstruction<5>,
+                               public NoTypePolicy::Data {
+  AliasSet aliases_;
+  MaybeTrapSiteInfo maybeTrap_;
+  WasmPreBarrierKind preBarrierKind_;
+
+  MWasmStoreElementRefKA(MDefinition* instance, MDefinition* ka,
+                         MDefinition* base, MDefinition* index,
+                         MDefinition* value, AliasSet aliases,
+                         MaybeTrapSiteInfo maybeTrap,
+                         WasmPreBarrierKind preBarrierKind)
+      : MAryInstruction<5>(classOpcode),
+        aliases_(aliases),
+        maybeTrap_(maybeTrap),
+        preBarrierKind_(preBarrierKind) {
+    MOZ_ASSERT(base->type() == MIRType::WasmArrayData);
+    MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
+    MOZ_ASSERT(aliases.flags() ==
+                   AliasSet::Store(AliasSet::WasmArrayDataArea).flags() ||
+               aliases.flags() == AliasSet::Store(AliasSet::Any).flags());
+    initOperand(0, instance);
+    initOperand(1, ka);
+    initOperand(2, base);
+    initOperand(3, index);
+    initOperand(4, value);
+    if (maybeTrap_) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreElementRefKA)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, instance), (1, ka), (2, base), (3, index), (4, value))
+
+  AliasSet getAliasSet() const override { return aliases_; }
+  MaybeTrapSiteInfo maybeTrap() const { return maybeTrap_; }
+  WasmPreBarrierKind preBarrierKind() const { return preBarrierKind_; }
 };
 
 class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,

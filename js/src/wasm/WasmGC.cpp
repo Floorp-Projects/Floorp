@@ -207,9 +207,10 @@ bool wasm::GenerateStackmapEntriesForTrapExit(
   return true;
 }
 
+template <class Addr>
 void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
-                                   Register scratch, Register valueAddr,
-                                   size_t valueOffset, Label* skipBarrier,
+                                   Register scratch, Addr addr,
+                                   Label* skipBarrier,
                                    BytecodeOffset* trapOffset) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
@@ -219,8 +220,7 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
                     skipBarrier);
 
   // If the previous value is not a GC thing, we don't need the barrier.
-  FaultingCodeOffset fco =
-      masm.loadPtr(Address(valueAddr, valueOffset), scratch);
+  FaultingCodeOffset fco = masm.loadPtr(addr, scratch);
   masm.branchWasmAnyRefIsGCThing(false, scratch, skipBarrier);
 
   // Emit metadata for a potential null access when reading the previous value.
@@ -230,9 +230,17 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
   }
 }
 
-void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
-                                  Register scratch, Register valueAddr,
-                                  size_t valueOffset) {
+template void wasm::EmitWasmPreBarrierGuard<Address>(
+    MacroAssembler& masm, Register instance, Register scratch, Address addr,
+    Label* skipBarrier, BytecodeOffset* trapOffset);
+template void wasm::EmitWasmPreBarrierGuard<BaseIndex>(
+    MacroAssembler& masm, Register instance, Register scratch, BaseIndex addr,
+    Label* skipBarrier, BytecodeOffset* trapOffset);
+
+void wasm::EmitWasmPreBarrierCallImmediate(MacroAssembler& masm,
+                                           Register instance, Register scratch,
+                                           Register valueAddr,
+                                           size_t valueOffset) {
   MOZ_ASSERT(valueAddr == PreBarrierReg);
 
   // Add the offset to the PreBarrierReg, if any.
@@ -258,6 +266,36 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
   if (valueOffset != 0) {
     masm.subPtr(Imm32(valueOffset), valueAddr);
   }
+}
+
+void wasm::EmitWasmPreBarrierCallIndex(MacroAssembler& masm, Register instance,
+                                       Register scratch1, Register scratch2,
+                                       BaseIndex addr) {
+  MOZ_ASSERT(addr.base == PreBarrierReg);
+
+  // Save the original base so we can restore it later.
+  masm.movePtr(AsRegister(addr.base), scratch2);
+
+  // Compute the final address into PrebarrierReg, as the barrier expects it
+  // there.
+  masm.computeEffectiveAddress(addr, PreBarrierReg);
+
+#if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
+  // The prebarrier assumes that x28 == sp.
+  Label ok;
+  masm.Cmp(sp, vixl::Operand(x28));
+  masm.B(&ok, Assembler::Equal);
+  masm.breakpoint();
+  masm.bind(&ok);
+#endif
+
+  // Load and call the pre-write barrier code. It will preserve all volatile
+  // registers.
+  masm.loadPtr(Address(instance, Instance::offsetOfPreBarrierCode()), scratch1);
+  masm.call(scratch1);
+
+  // Restore the original base
+  masm.movePtr(scratch2, AsRegister(addr.base));
 }
 
 void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,

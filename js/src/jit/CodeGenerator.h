@@ -81,7 +81,8 @@ class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
 class OutOfLineArrayPush;
 class OutOfLineAtomizeSlot;
-class OutOfLineWasmCallPostWriteBarrier;
+class OutOfLineWasmCallPostWriteBarrierImmediate;
+class OutOfLineWasmCallPostWriteBarrierIndex;
 class OutOfLineWasmNewStruct;
 class OutOfLineWasmNewArray;
 
@@ -187,8 +188,10 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void visitOutOfLineAtomizeSlot(OutOfLineAtomizeSlot* ool);
 
-  void visitOutOfLineWasmCallPostWriteBarrier(
-      OutOfLineWasmCallPostWriteBarrier* ool);
+  void visitOutOfLineWasmCallPostWriteBarrierImmediate(
+      OutOfLineWasmCallPostWriteBarrierImmediate* ool);
+  void visitOutOfLineWasmCallPostWriteBarrierIndex(
+      OutOfLineWasmCallPostWriteBarrierIndex* ool);
 
   void callWasmStructAllocFun(LInstruction* lir, wasm::SymbolicAddress fun,
                               Register typeDefData, Register output);
@@ -316,6 +319,15 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   IonScriptCounts* maybeCreateScriptCounts();
 
   void emitWasmCompareAndSelect(LWasmCompareAndSelect* ins);
+
+  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+  void emitWasmValueLoad(InstructionWithMaybeTrapSite* ins, MIRType type,
+                         MWideningOp wideningOp, AddressOrBaseIndex addr,
+                         AnyRegister dst);
+  template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+  void emitWasmValueStore(InstructionWithMaybeTrapSite* ins, MIRType type,
+                          MNarrowingOp narrowingOp, AnyRegister src,
+                          AddressOrBaseIndex addr);
 
   void testValueTruthyForType(JSValueType type, ScratchTagScope& tag,
                               const ValueOperand& value, Register tempToUnbox,
