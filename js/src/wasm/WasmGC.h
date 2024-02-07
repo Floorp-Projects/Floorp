@@ -400,14 +400,6 @@ static inline size_t AlignStackArgAreaSize(size_t unalignedSize) {
   return AlignBytes(unalignedSize, jit::WasmStackAlignment);
 }
 
-// A stackmap creation helper.  Create a stackmap from a vector of booleans.
-// The caller owns the resulting stackmap.
-
-using StackMapBoolVector = Vector<bool, 128, SystemAllocPolicy>;
-
-wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
-    const StackMapBoolVector& vec, bool hasRefs);
-
 // Generate a stackmap for a function's stack-overflow-at-entry trap, with
 // the structure:
 //

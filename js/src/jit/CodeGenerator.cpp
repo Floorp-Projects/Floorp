@@ -14962,27 +14962,38 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
           : nRegisterDumpBytes;
 
   // This is the total number of bytes covered by the map.
-  const DebugOnly<size_t> nTotalBytes = nNonRegisterBytes + nRegisterBytes;
+  const size_t nTotalBytes = nNonRegisterBytes + nRegisterBytes;
 
-  // Create the stackmap initially in this vector.  Since most frames will
-  // contain 128 or fewer words, heap allocation is avoided in the majority of
-  // cases.  vec[0] is for the lowest address in the map, vec[N-1] is for the
-  // highest address in the map.
-  wasm::StackMapBoolVector vec;
+#ifndef DEBUG
+  bool needStackMap = !(safepoint.wasmAnyRefRegs().empty() &&
+                        safepoint.wasmAnyRefSlots().empty() &&
+                        safepoint.slotsOrElementsSlots().empty());
 
-  // Keep track of whether we've actually seen any refs.
-  bool hasRefs = false;
+  // There are no references, and this is a non-debug build, so don't bother
+  // building the stackmap.
+  if (!needStackMap) {
+    return true;
+  }
+#endif
+
+  wasm::StackMap* stackMap =
+      wasm::StackMap::create(nTotalBytes / sizeof(void*));
+  if (!stackMap) {
+    return false;
+  }
+  if (safepoint.wasmSafepointKind() == WasmSafepointKind::Trap) {
+    stackMap->setExitStubWords(trapExitLayoutNumWords);
+  }
 
   // REG DUMP AREA, if any.
+  size_t regDumpWords = 0;
   const LiveGeneralRegisterSet wasmAnyRefRegs = safepoint.wasmAnyRefRegs();
   GeneralRegisterForwardIterator wasmAnyRefRegsIter(wasmAnyRefRegs);
   switch (safepoint.wasmSafepointKind()) {
     case WasmSafepointKind::LirCall:
     case WasmSafepointKind::CodegenCall: {
       size_t spilledNumWords = nRegisterDumpBytes / sizeof(void*);
-      if (!vec.appendN(false, spilledNumWords)) {
-        return false;
-      }
+      regDumpWords += spilledNumWords;
 
       for (; wasmAnyRefRegsIter.more(); ++wasmAnyRefRegsIter) {
         Register reg = *wasmAnyRefRegsIter;
@@ -14991,10 +15002,9 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
             sizeof(void*);
         MOZ_ASSERT(0 < offsetFromSpillBase &&
                    offsetFromSpillBase <= spilledNumWords);
-        size_t offsetInVector = spilledNumWords - offsetFromSpillBase;
+        size_t index = spilledNumWords - offsetFromSpillBase;
 
-        vec[offsetInVector] = true;
-        hasRefs = true;
+        stackMap->set(index, wasm::StackMap::AnyRef);
       }
 
       // Float and vector registers do not have to be handled; they cannot
@@ -15003,9 +15013,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
       // offset calculation does not need to account for other spills.
     } break;
     case WasmSafepointKind::Trap: {
-      if (!vec.appendN(false, trapExitLayoutNumWords)) {
-        return false;
-      }
+      regDumpWords += trapExitLayoutNumWords;
+
       for (; wasmAnyRefRegsIter.more(); ++wasmAnyRefRegsIter) {
         Register reg = *wasmAnyRefRegsIter;
         size_t offsetFromTop = trapExitLayout.getOffset(reg);
@@ -15020,8 +15029,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
         // offset up from the bottom of the (integer register) save area.
         size_t offsetFromBottom = trapExitLayoutNumWords - 1 - offsetFromTop;
 
-        vec[offsetFromBottom] = true;
-        hasRefs = true;
+        stackMap->set(offsetFromBottom, wasm::StackMap::AnyRef);
       }
     } break;
     default:
@@ -15030,10 +15038,6 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 
   // BODY (GENERAL SPILL) AREA and FRAME and INCOMING ARGS
   // Deal with roots on the stack.
-  size_t wordsSoFar = vec.length();
-  if (!vec.appendN(false, nNonRegisterBytes / sizeof(void*))) {
-    return false;
-  }
   const LSafepoint::SlotList& wasmAnyRefSlots = safepoint.wasmAnyRefSlots();
   for (SafepointSlotEntry wasmAnyRefSlot : wasmAnyRefSlots) {
     // The following needs to correspond with JitFrameLayout::slotRef
@@ -15044,37 +15048,19 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
       MOZ_ASSERT(wasmAnyRefSlot.slot <= nBodyBytes);
       uint32_t offsetInBytes = nBodyBytes - wasmAnyRefSlot.slot;
       MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
-      vec[wordsSoFar + offsetInBytes / sizeof(void*)] = true;
+      stackMap->set(regDumpWords + offsetInBytes / sizeof(void*),
+                    wasm::StackMap::AnyRef);
     } else {
       // It's an argument slot
       MOZ_ASSERT(wasmAnyRefSlot.slot < nInboundStackArgBytes);
       uint32_t offsetInBytes = nBodyBytes + nFrameBytes + wasmAnyRefSlot.slot;
       MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
-      vec[wordsSoFar + offsetInBytes / sizeof(void*)] = true;
+      stackMap->set(regDumpWords + offsetInBytes / sizeof(void*),
+                    wasm::StackMap::AnyRef);
     }
-    hasRefs = true;
   }
 
-#ifndef DEBUG
-  // We saw no references, and this is a non-debug build, so don't bother
-  // building the stackmap.
-  if (!hasRefs) {
-    return true;
-  }
-#endif
-
-  // Convert vec into a wasm::StackMap.
-  MOZ_ASSERT(vec.length() * sizeof(void*) == nTotalBytes);
-  wasm::StackMap* stackMap =
-      wasm::ConvertStackMapBoolVectorToStackMap(vec, hasRefs);
-  if (!stackMap) {
-    return false;
-  }
-  if (safepoint.wasmSafepointKind() == WasmSafepointKind::Trap) {
-    stackMap->setExitStubWords(trapExitLayoutNumWords);
-  }
-
-  // Patch up the stack map to track array data pointers
+  // Track array data pointers on the stack
   const LSafepoint::SlotList& slots = safepoint.slotsOrElementsSlots();
   for (SafepointSlotEntry slot : slots) {
     MOZ_ASSERT(slot.stack);
@@ -15084,7 +15070,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     MOZ_ASSERT(slot.slot <= nBodyBytes);
     uint32_t offsetInBytes = nBodyBytes - slot.slot;
     MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
-    stackMap->set(wordsSoFar + offsetInBytes / sizeof(void*),
+    stackMap->set(regDumpWords + offsetInBytes / sizeof(void*),
                   wasm::StackMap::Kind::ArrayDataPointer);
   }
 
