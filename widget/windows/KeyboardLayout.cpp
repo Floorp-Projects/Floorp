@@ -9,6 +9,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MiscEvents.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/widget/WinRegistry.h"
 
@@ -848,7 +849,7 @@ void ModifierKeyState::Update() {
   // MODIFIER_ALTGRAPH should be set.  Otherwise, i.e., if both Ctrl and Alt
   // keys are pressed to emulate AltGr key, MODIFIER_CONTROL and MODIFIER_ALT
   // keys should be set separately.
-  if (KeyboardLayout::GetInstance()->HasAltGr() && IS_VK_DOWN(VK_RMENU)) {
+  if (IS_VK_DOWN(VK_RMENU) && KeyboardLayout::GetInstance()->HasAltGr()) {
     mModifiers |= MODIFIER_ALTGRAPH;
   } else {
     if (IS_VK_DOWN(VK_CONTROL)) {
@@ -1278,10 +1279,10 @@ NativeKey::NativeKey(nsWindow* aWidget, const MSG& aMessage,
   MOZ_ASSERT(mDispatcher);
   sLatestInstance = this;
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
-  mKeyboardLayout = keyboardLayout->GetLayout();
+  mKeyboardLayout = KeyboardLayout::GetLayout();
   if (aOverrideKeyboardLayout && mKeyboardLayout != aOverrideKeyboardLayout) {
     keyboardLayout->OverrideLayout(aOverrideKeyboardLayout);
-    mKeyboardLayout = keyboardLayout->GetLayout();
+    mKeyboardLayout = keyboardLayout->GetLoadedLayout();
     MOZ_ASSERT(mKeyboardLayout == aOverrideKeyboardLayout);
     mIsOverridingKeyboardLayout = true;
   } else {
@@ -3229,9 +3230,10 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
           "\nWM_NULL has been removed: %d, "
           "\nNext key message in all windows: %s, "
           "time=%ld, ",
-          KeyboardLayout::GetActiveLayout(),
-          KeyboardLayout::GetActiveLayoutName().get(), ToString(mMsg).get(),
-          GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get(), i,
+          KeyboardLayout::GetInstance()->GetLoadedLayout(),
+          KeyboardLayout::GetInstance()->GetLoadedLayoutName().get(),
+          ToString(mMsg).get(), GetResultOfInSendMessageEx().get(),
+          ToString(kFoundCharMsg).get(), i,
           ToString(nextKeyMsgInAllWindows).get(), nextKeyMsgInAllWindows.time);
       CrashReporter::AppendAppNotesToCrashReport(info);
       MSG nextMsg;
@@ -3375,10 +3377,10 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
         "\nHandling message: %s, InSendMessageEx()=%s, "
         "\nFound message: %s, "
         "\nRemoved message: %s, ",
-        KeyboardLayout::GetActiveLayout(),
-        KeyboardLayout::GetActiveLayoutName().get(), ToString(mMsg).get(),
-        GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get(),
-        ToString(removedMsg).get());
+        KeyboardLayout::GetInstance()->GetLoadedLayout(),
+        KeyboardLayout::GetInstance()->GetLoadedLayoutName().get(),
+        ToString(mMsg).get(), GetResultOfInSendMessageEx().get(),
+        ToString(kFoundCharMsg).get(), ToString(removedMsg).get());
     CrashReporter::AppendAppNotesToCrashReport(info);
     // What's the next key message?
     MSG nextKeyMsgAfter;
@@ -3417,9 +3419,10 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       "\nActive keyboard layout=0x%p (%s), "
       "\nHandling message: %s, InSendMessageEx()=%s, \n"
       "Found message: %s, removed a lot of WM_NULL",
-      KeyboardLayout::GetActiveLayout(),
-      KeyboardLayout::GetActiveLayoutName().get(), ToString(mMsg).get(),
-      GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get());
+      KeyboardLayout::GetInstance()->GetLoadedLayout(),
+      KeyboardLayout::GetInstance()->GetLoadedLayoutName().get(),
+      ToString(mMsg).get(), GetResultOfInSendMessageEx().get(),
+      ToString(kFoundCharMsg).get());
   CrashReporter::AppendAppNotesToCrashReport(info);
   MOZ_CRASH("We lost the following char message");
   return false;
@@ -3814,16 +3817,12 @@ void NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
  *****************************************************************************/
 
 KeyboardLayout* KeyboardLayout::sInstance = nullptr;
-nsIUserIdleServiceInternal* KeyboardLayout::sIdleService = nullptr;
+StaticRefPtr<nsIUserIdleServiceInternal> KeyboardLayout::sIdleService;
 
 // static
 KeyboardLayout* KeyboardLayout::GetInstance() {
   if (!sInstance) {
     sInstance = new KeyboardLayout();
-    nsCOMPtr<nsIUserIdleServiceInternal> idleService =
-        do_GetService("@mozilla.org/widget/useridleservice;1");
-    // The refcount will be decreased at shut down.
-    sIdleService = idleService.forget().take();
   }
   return sInstance;
 }
@@ -3832,19 +3831,23 @@ KeyboardLayout* KeyboardLayout::GetInstance() {
 void KeyboardLayout::Shutdown() {
   delete sInstance;
   sInstance = nullptr;
-  NS_IF_RELEASE(sIdleService);
+  sIdleService = nullptr;
 }
 
 // static
 void KeyboardLayout::NotifyIdleServiceOfUserActivity() {
+  if (!sIdleService) {
+    sIdleService = nsCOMPtr<nsIUserIdleServiceInternal>(
+                       do_GetService("@mozilla.org/widget/useridleservice;1"))
+                       .forget();
+    if (NS_WARN_IF(!sIdleService)) {
+      return;
+    }
+  }
   sIdleService->ResetIdleTimeOut(0);
 }
 
-KeyboardLayout::KeyboardLayout()
-    : mKeyboardLayout(0),
-      mIsOverridden(false),
-      mIsPendingToRestoreKeyboardLayout(false),
-      mHasAltGr(false) {
+KeyboardLayout::KeyboardLayout() {
   mDeadKeyTableListHead = nullptr;
   // A dead key sequence should be made from up to 5 keys.  Therefore, 4 is
   // enough and makes sense because the item is uint8_t.
@@ -3853,7 +3856,12 @@ KeyboardLayout::KeyboardLayout()
   mActiveDeadKeys.SetCapacity(4);
   mDeadKeyShiftStates.SetCapacity(4);
 
-  // NOTE: LoadLayout() should be called via OnLayoutChange().
+  // If we put it off to load active keyboard layout when first needed, we need
+  // to load it at instanciation.  That makes us save the cost of a call of
+  // GetKeyboardLayout() API.
+  if (StaticPrefs::ui_key_layout_load_when_first_needed()) {
+    OnLayoutChange(::GetKeyboardLayout(0));
+  }
 }
 
 KeyboardLayout::~KeyboardLayout() { ReleaseDeadKeyTables(); }
@@ -3864,8 +3872,8 @@ bool KeyboardLayout::IsPrintableCharKey(uint8_t aVirtualKey) {
 
 WORD KeyboardLayout::ComputeScanCodeForVirtualKeyCode(
     uint8_t aVirtualKeyCode) const {
-  return static_cast<WORD>(
-      ::MapVirtualKeyEx(aVirtualKeyCode, MAPVK_VK_TO_VSC, GetLayout()));
+  return static_cast<WORD>(::MapVirtualKeyEx(aVirtualKeyCode, MAPVK_VK_TO_VSC,
+                                             KeyboardLayout::GetLayout()));
 }
 
 bool KeyboardLayout::IsDeadKey(uint8_t aVirtualKey,
@@ -4245,14 +4253,6 @@ char16_t KeyboardLayout::GetCompositeChar(char16_t aBaseChar) const {
   return mVirtualKeys[key].GetCompositeChar(mDeadKeyShiftStates[0], aBaseChar);
 }
 
-// static
-HKL KeyboardLayout::GetActiveLayout() { return GetInstance()->mKeyboardLayout; }
-
-// static
-nsCString KeyboardLayout::GetActiveLayoutName() {
-  return GetInstance()->GetLayoutName(GetActiveLayout());
-}
-
 static bool IsValidKeyboardLayoutsChild(const nsAString& aChildName) {
   if (aChildName.Length() != 8) {
     return false;
@@ -4268,7 +4268,8 @@ static bool IsValidKeyboardLayoutsChild(const nsAString& aChildName) {
   return true;
 }
 
-nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
+// static
+nsCString KeyboardLayout::GetLayoutName(HKL aLayout) {
   constexpr auto kKeyboardLayouts =
       u"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"_ns;
   uint16_t language = reinterpret_cast<uintptr_t>(aLayout) & 0xFFFF;
@@ -5076,7 +5077,7 @@ KeyNameIndex KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(
       break;
   }
 
-  HKL layout = GetLayout();
+  HKL layout = KeyboardLayout::GetLayout();
   WORD langID = LOWORD(static_cast<HKL>(layout));
   WORD primaryLangID = PRIMARYLANGID(langID);
 
