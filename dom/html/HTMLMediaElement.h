@@ -554,6 +554,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   bool IsEncrypted() const override { return mIsEncrypted; }
 
+#ifdef MOZ_WMF_CDM
+  bool IsUsingWMFCDM() const override;
+#endif
+
   bool Paused() const { return mPaused; }
 
   double DefaultPlaybackRate() const {
@@ -1922,6 +1926,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Return true if we should queue a 'timeupdate' event runner to main thread.
   bool ShouldQueueTimeupdateAsyncTask(TimeupdateType aType) const;
+
+#ifdef MOZ_WMF_CDM
+  // It's used to record telemetry probe for WMFCDM playback.
+  bool mIsUsingWMFCDM = false;
+#endif
 };
 
 // Check if the context is chrome or has the debugger or tabs permission
