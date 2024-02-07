@@ -26,12 +26,21 @@ pub mod data_type;
 #[derive(Debug, Clone, Default, MallocSizeOf, PartialEq)]
 pub struct Descriptor {
     /// The parsed components, if any.
-    pub components: Box<[Component]>,
+    /// TODO: Could be a Box<[]> if that supported const construction.
+    pub components: Vec<Component>,
     /// The specified css syntax, if any.
     specified: Option<Box<str>>,
 }
 
 impl Descriptor {
+    /// Returns the universal descriptor.
+    pub const fn universal() -> Self {
+        Self {
+            components: Vec::new(),
+            specified: None,
+        }
+    }
+
     /// Returns whether this is the universal syntax descriptor.
     #[inline]
     pub fn is_universal(&self) -> bool {
@@ -82,10 +91,7 @@ impl Descriptor {
             // 5. Repeatedly consume the next input code point from stream.
             parser.parse()?;
         }
-        Ok(Self {
-            components: components.into_boxed_slice(),
-            specified,
-        })
+        Ok(Self { components, specified })
     }
 
     /// Returns true if the syntax permits the value to be computed as a length.

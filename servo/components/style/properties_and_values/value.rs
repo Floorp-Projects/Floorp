@@ -7,7 +7,7 @@
 use std::fmt::{self, Write};
 
 use super::{
-    registry::PropertyRegistration,
+    registry::PropertyRegistrationData,
     syntax::{
         data_type::DataType, Component as SyntaxComponent, ComponentName, Descriptor, Multiplier,
     },
@@ -213,7 +213,7 @@ impl SpecifiedValue {
     /// Convert a Computed custom property value to a VariableValue.
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
-        registration: &PropertyRegistration,
+        registration: &PropertyRegistrationData,
         url_data: &UrlExtraData,
         context: &computed::Context,
         allow_computationally_dependent: AllowComputationallyDependent,
@@ -233,7 +233,7 @@ impl SpecifiedValue {
     /// property registration.
     fn get_computed_value<'i, 't>(
         input: &mut CSSParser<'i, 't>,
-        registration: &PropertyRegistration,
+        registration: &PropertyRegistrationData,
         url_data: &UrlExtraData,
         context: &computed::Context,
         allow_computationally_dependent: AllowComputationallyDependent,
@@ -586,10 +586,12 @@ impl CustomAnimatedValue {
             "Need a Stylist to get property registration!"
         );
         let registration =
-            context.builder.stylist.and_then(|s| s.get_custom_property_registration(&declaration.name));
+            context.builder.stylist.unwrap().get_custom_property_registration(&declaration.name);
 
         // FIXME: Do we need to perform substitution here somehow?
-        let computed_value = registration.and_then(|registration| {
+        let computed_value = if registration.syntax.is_universal() {
+            None
+        } else {
             let mut input = cssparser::ParserInput::new(&value.css);
             let mut input = CSSParser::new(&mut input);
             SpecifiedValue::get_computed_value(
@@ -599,7 +601,7 @@ impl CustomAnimatedValue {
                 context,
                 AllowComputationallyDependent::Yes,
             ).ok()
-        });
+        };
 
         let url_data = value.url_data.clone();
         let value = computed_value.unwrap_or_else(|| ComputedValue::Universal(Arc::clone(value)));
