@@ -656,3 +656,27 @@ shopping:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - events
+
+  surface_auto_open_setting_toggled:
+    type: event
+    description: |
+      The user clicked the settings toggle to enable or disable auto-open in the
+      sidebar settings component.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879125
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879125
+    data_sensitivity:
+      - interaction
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      action:
+        description: >
+          Whether the toggle was used to enable or disable auto-open. Possible values
+          are `enabled` and `disabled`.
+        type: string
