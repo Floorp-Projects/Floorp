@@ -26,7 +26,7 @@ add_setup(async function () {
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     prefs: [
       ["quicksuggest.rustEnabled", true],
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.sponsored", true],
       ["suggest.yelp", true],
       ["yelp.featureGate", true],
     ],
@@ -74,10 +74,10 @@ add_task(async function telemetryType() {
   );
 });
 
-// When non-sponsored suggestions are disabled, Yelp suggestions should be
+// When sponsored suggestions are disabled, Yelp suggestions should be
 // disabled.
-add_task(async function nonsponsoredDisabled() {
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+add_task(async function sponsoredDisabled() {
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
 
   // First make sure the suggestion is added when non-sponsored
   // suggestions are enabled, if the rust is enabled.
@@ -95,7 +95,7 @@ add_task(async function nonsponsoredDisabled() {
   });
 
   // Now disable the pref.
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   await check_results({
     context: createContext("ramen", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -104,8 +104,8 @@ add_task(async function nonsponsoredDisabled() {
     matches: [],
   });
 
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
   await QuickSuggestTestUtils.forceSync();
 });
 

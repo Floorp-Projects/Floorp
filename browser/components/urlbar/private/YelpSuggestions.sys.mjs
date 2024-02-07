@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class YelpSuggestions extends BaseFeature {
   get shouldEnable() {
     return (
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored") &&
       lazy.UrlbarPrefs.get("yelpFeatureGate") &&
       lazy.UrlbarPrefs.get("suggest.yelp")
     );
