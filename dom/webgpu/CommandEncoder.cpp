@@ -230,7 +230,7 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
   return pass.forget();
 }
 
-void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass) {
+void CommandEncoder::EndComputePass(ffi::WGPURecordedComputePass& aPass) {
   if (!mBridge->IsOpen()) {
     return;
   }
