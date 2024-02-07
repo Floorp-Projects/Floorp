@@ -392,7 +392,11 @@ load 836990-1.html
 load 840480.html
 load 842114.html
 load 847242.html
-skip-if(ThreadSanitizer) load 852293.html
+# This test is slow, because it uses setTimeout a lot.
+# After bug 1875100, on windows, it times out because there's a left-over
+# window or so, and that bug causes us to throttle timers. Disable window
+# occlusion to work around this for now, see bug 1864255.
+pref(widget.windows.window_occlusion_tracking.enabled,false) skip-if(ThreadSanitizer) load 852293.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 860579-1.html
