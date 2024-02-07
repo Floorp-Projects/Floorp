@@ -21,6 +21,7 @@
 #include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
+#include "nsFrameSelection.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "nsContainerFrame.h"
@@ -764,29 +765,66 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
 }
 
 void nsRange::NotifySelectionListenersAfterRangeSet() {
-  if (!mSelections.IsEmpty()) {
-    // Our internal code should not move focus with using this instance while
-    // it's calling Selection::NotifySelectionListeners() which may move focus
-    // or calls selection listeners.  So, let's set mCalledByJS to false here
-    // since non-*JS() methods don't set it to false.
-    AutoCalledByJSRestore calledByJSRestorer(*this);
-    mCalledByJS = false;
+  if (mSelections.IsEmpty()) {
+    return;
+  }
 
-    // Notify all Selections. This may modify the range,
-    // remove it from the selection, or the selection itself may have gone after
-    // the call. Also, new selections may be added.
-    // To ensure that listeners are notified for all *current* selections,
-    // create a copy of the list of selections and use that for iterating. This
-    // way selections can be added or removed safely during iteration.
-    // To save allocation cost, the copy is only created if there is more than
-    // one Selection present  (which will barely ever be the case).
+  // Our internal code should not move focus with using this instance while
+  // it's calling Selection::NotifySelectionListeners() which may move focus
+  // or calls selection listeners.  So, let's set mCalledByJS to false here
+  // since non-*JS() methods don't set it to false.
+  AutoCalledByJSRestore calledByJSRestorer(*this);
+  mCalledByJS = false;
+
+  // If this instance is not a proper range for selection, we need to remove
+  // this from selections.
+  const Document* const docForSelf =
+      mStart.Container() ? mStart.Container()->GetComposedDoc() : nullptr;
+  const nsFrameSelection* const frameSelection =
+      mSelections[0]->GetFrameSelection();
+  const Document* const docForSelection =
+      frameSelection && frameSelection->GetPresShell()
+          ? frameSelection->GetPresShell()->GetDocument()
+          : nullptr;
+  if (!IsPositioned() || docForSelf != docForSelection) {
+    // XXX Why Selection::RemoveRangeAndUnselectFramesAndNotifyListeners() does
+    // not set whether the caller is JS or not?
     if (IsPartOfOneSelectionOnly()) {
       RefPtr<Selection> selection = mSelections[0].get();
-      selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
+      selection->RemoveRangeAndUnselectFramesAndNotifyListeners(*this,
+                                                                IgnoreErrors());
     } else {
       nsTArray<WeakPtr<Selection>> copiedSelections = mSelections.Clone();
       for (const auto& weakSelection : copiedSelections) {
         RefPtr<Selection> selection = weakSelection.get();
+        if (MOZ_LIKELY(selection)) {
+          selection->RemoveRangeAndUnselectFramesAndNotifyListeners(
+              *this, IgnoreErrors());
+        }
+      }
+    }
+    // FYI: NotifySelectionListeners() should be called by
+    // RemoveRangeAndUnselectFramesAndNotifyListeners() if it's required.
+    // Therefore, we need to do nothing anymore.
+    return;
+  }
+
+  // Notify all Selections. This may modify the range,
+  // remove it from the selection, or the selection itself may have gone after
+  // the call. Also, new selections may be added.
+  // To ensure that listeners are notified for all *current* selections,
+  // create a copy of the list of selections and use that for iterating. This
+  // way selections can be added or removed safely during iteration.
+  // To save allocation cost, the copy is only created if there is more than
+  // one Selection present  (which will barely ever be the case).
+  if (IsPartOfOneSelectionOnly()) {
+    RefPtr<Selection> selection = mSelections[0].get();
+    selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
+  } else {
+    nsTArray<WeakPtr<Selection>> copiedSelections = mSelections.Clone();
+    for (const auto& weakSelection : copiedSelections) {
+      RefPtr<Selection> selection = weakSelection.get();
+      if (MOZ_LIKELY(selection)) {
         selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
       }
     }
