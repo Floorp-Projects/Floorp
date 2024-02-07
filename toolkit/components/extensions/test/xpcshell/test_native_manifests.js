@@ -313,7 +313,7 @@ add_task(async function test_manifest_with_invalid_utf_8() {
   );
   equal(result, null, "lookupApplication should reject file with invalid UTF8");
   let errorPattern =
-    /NotReadableError: Could not read `.*': file is not UTF-8 encoded/;
+    /NotReadableError: Could not read file.* because it is not UTF-8 encoded/;
   let utf8Errors = messages.filter(({ message }) => errorPattern.test(message));
   equal(utf8Errors.length, 1, "lookupApplication logs error about UTF-8");
 });
