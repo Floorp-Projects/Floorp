@@ -307,8 +307,6 @@ skip-if = [
   "verify && !debug && os == 'mac'",
 ]
 
-["browser_ext_optionsPage_activity.js"]
-
 ["browser_ext_optionsPage_browser_style.js"]
 
 ["browser_ext_optionsPage_links_open_in_tabs.js"]

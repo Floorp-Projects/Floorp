@@ -43,6 +43,7 @@ export class FullscreenFrameChild extends JSWindowActorChild {
       case "ExitFullscreen":
         return this.contentWindow.document.exitFullscreen();
       case "RequestFullscreen":
+        this.browsingContext.isActive = true;
         return Promise.all([this.changed(), this.requestFullscreen()]);
       case "CreateChild":
         let child = msg.data;

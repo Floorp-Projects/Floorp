@@ -116,7 +116,8 @@ static void DecreasePrivateCount() {
   }
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 extern mozilla::LazyLogModule gUserInteractionPRLog;
 
@@ -817,21 +818,12 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::Print(
 }
 
 void CanonicalBrowsingContext::CallOnAllTopDescendants(
-    const FunctionRef<CallState(CanonicalBrowsingContext*)>& aCallback,
-    bool aIncludeNestedBrowsers) {
-  MOZ_ASSERT(IsTop(), "Should only call on top BC");
-  MOZ_ASSERT(
-      !aIncludeNestedBrowsers ||
-          (IsChrome() && !GetParentCrossChromeBoundary()),
-      "If aIncludeNestedBrowsers is set, should only call on top chrome BC");
+    const FunctionRef<CallState(CanonicalBrowsingContext*)>& aCallback) {
+  MOZ_ASSERT(IsChrome(), "Should only call in chrome BC");
+  MOZ_ASSERT(!GetParentCrossChromeBoundary(),
+             "Should only call on top chrome BC");
 
-  if (!IsInProcess()) {
-    // We rely on top levels having to be embedded in the parent process, so
-    // we can only have top level descendants if embedded here..
-    return;
-  }
-
-  AutoTArray<RefPtr<BrowsingContextGroup>, 32> groups;
+  nsTArray<RefPtr<BrowsingContextGroup>> groups;
   BrowsingContextGroup::GetAllGroups(groups);
   for (auto& browsingContextGroup : groups) {
     for (auto& bc : browsingContextGroup->Toplevels()) {
@@ -840,19 +832,12 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
         continue;
       }
 
-      if (aIncludeNestedBrowsers) {
-        if (this != bc->Canonical()->TopCrossChromeBoundary()) {
-          continue;
+      RefPtr<CanonicalBrowsingContext> top =
+          bc->Canonical()->TopCrossChromeBoundary();
+      if (top == this) {
+        if (aCallback(bc->Canonical()) == CallState::Stop) {
+          return;
         }
-      } else {
-        auto* parent = bc->Canonical()->GetParentCrossChromeBoundary();
-        if (!parent || this != parent->Top()) {
-          continue;
-        }
-      }
-
-      if (aCallback(bc->Canonical()) == CallState::Stop) {
-        return;
       }
     }
   }
@@ -1372,7 +1357,7 @@ void CanonicalBrowsingContext::RecomputeAppWindowVisibility() {
     return;
   }
 
-  SetIsActiveInternal(isNowActive, IgnoreErrors());
+  SetIsActive(isNowActive, IgnoreErrors());
   if (widget) {
     // Pause if we are not active, resume if we are active.
     widget->PauseOrResumeCompositor(!isNowActive);
@@ -1982,16 +1967,7 @@ void CanonicalBrowsingContext::SetCurrentBrowserParent(
       GetParentWindowContext() &&
           GetParentWindowContext()->Manager() == aBrowserParent);
 
-  if (aBrowserParent && IsTopContent() && !ManuallyManagesActiveness()) {
-    aBrowserParent->SetRenderLayers(IsActive());
-  }
-
   mCurrentBrowserParent = aBrowserParent;
-}
-
-bool CanonicalBrowsingContext::ManuallyManagesActiveness() const {
-  auto* el = GetEmbedderElement();
-  return el && el->IsXULElement() && el->HasAttr(nsGkAtoms::manualactiveness);
 }
 
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
@@ -3101,4 +3077,5 @@ NS_IMPL_RELEASE_INHERITED(CanonicalBrowsingContext, BrowsingContext)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanonicalBrowsingContext)
 NS_INTERFACE_MAP_END_INHERITING(BrowsingContext)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

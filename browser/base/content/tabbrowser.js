@@ -2094,6 +2094,7 @@
       uriIsAboutBlank,
       userContextId,
       skipLoad,
+      initiallyActive,
     } = {}) {
       let b = document.createXULElement("browser");
       // Use the JSM global to create the permanentKey, so that if the
@@ -2119,7 +2120,6 @@
         messagemanagergroup: "browsers",
         tooltip: "aHTMLTooltip",
         type: "content",
-        manualactiveness: "true",
       };
       for (let attribute in defaultBrowserAttributes) {
         b.setAttribute(attribute, defaultBrowserAttributes[attribute]);
@@ -2127,6 +2127,10 @@
 
       if (gMultiProcessBrowser || remoteType) {
         b.setAttribute("maychangeremoteness", "true");
+      }
+
+      if (!initiallyActive) {
+        b.setAttribute("initiallyactive", "false");
       }
 
       if (userContextId) {
