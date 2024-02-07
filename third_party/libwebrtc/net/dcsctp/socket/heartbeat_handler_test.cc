@@ -30,6 +30,7 @@ using ::testing::IsEmpty;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
+using ::webrtc::TimeDelta;
 
 constexpr DurationMs kHeartbeatInterval = DurationMs(30'000);
 
@@ -136,7 +137,7 @@ TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
   // Respond a while later. This RTT will be measured by the handler
   constexpr DurationMs rtt(313);
 
-  EXPECT_CALL(context_, ObserveRTT(rtt)).Times(1);
+  EXPECT_CALL(context_, ObserveRTT(rtt.ToTimeDelta())).Times(1);
 
   callbacks_.AdvanceTime(rtt);
   handler_.HandleHeartbeatAck(std::move(ack));

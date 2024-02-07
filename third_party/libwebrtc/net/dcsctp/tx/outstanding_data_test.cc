@@ -37,6 +37,7 @@ using ::testing::Property;
 using ::testing::Return;
 using ::testing::StrictMock;
 using ::testing::UnorderedElementsAre;
+using ::webrtc::TimeDelta;
 
 constexpr TimeMs kNow(42);
 constexpr OutgoingMessageId kMessageId = OutgoingMessageId(17);
@@ -365,12 +366,11 @@ TEST_F(OutstandingDataTest, MeasureRTT) {
   buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + DurationMs(1));
   buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + DurationMs(2));
 
-  static constexpr DurationMs kDuration(123);
-  ASSERT_HAS_VALUE_AND_ASSIGN(
-      DurationMs duration,
-      buf_.MeasureRTT(kNow + kDuration, unwrapper_.Unwrap(TSN(11))));
+  static constexpr TimeDelta kDuration = TimeDelta::Millis(123);
+  TimeDelta duration =
+      buf_.MeasureRTT(kNow + DurationMs(kDuration), unwrapper_.Unwrap(TSN(11)));
 
-  EXPECT_EQ(duration, kDuration - DurationMs(1));
+  EXPECT_EQ(duration, kDuration - TimeDelta::Millis(1));
 }
 
 TEST_F(OutstandingDataTest, MustRetransmitBeforeGettingNackedAgain) {

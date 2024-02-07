@@ -103,6 +103,7 @@ rtc_library("outstanding_data") {
     ":retransmission_timeout",
     ":send_queue",
     "../../../api:array_view",
+    "../../../api/units:time_delta",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base/containers:flat_set",

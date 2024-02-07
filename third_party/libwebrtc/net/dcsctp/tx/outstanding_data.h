@@ -147,8 +147,8 @@ class OutstandingData {
 
   // Given the current time and a TSN, it returns the measured RTT between when
   // the chunk was sent and now. It takes into acccount Karn's algorithm, so if
-  // the chunk has ever been retransmitted, it will return absl::nullopt.
-  absl::optional<DurationMs> MeasureRTT(TimeMs now, UnwrappedTSN tsn) const;
+  // the chunk has ever been retransmitted, it will return `PlusInfinity()`.
+  webrtc::TimeDelta MeasureRTT(TimeMs now, UnwrappedTSN tsn) const;
 
   // Returns the internal state of all queued chunks. This is only used in
   // unit-tests.
