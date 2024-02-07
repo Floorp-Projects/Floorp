@@ -132,6 +132,7 @@ const ROLE_TERM = nsIAccessibleRole.ROLE_TERM;
 const ROLE_TEXT = nsIAccessibleRole.ROLE_TEXT;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
+const ROLE_TIME = nsIAccessibleRole.ROLE_TIME;
 const ROLE_TIME_EDITOR = nsIAccessibleRole.ROLE_TIME_EDITOR;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
 const ROLE_TOOLBAR = nsIAccessibleRole.ROLE_TOOLBAR;
