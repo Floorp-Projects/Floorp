@@ -32,6 +32,7 @@ const ROLE_DIAGRAM = nsIAccessibleRole.ROLE_DIAGRAM;
 const ROLE_DIALOG = nsIAccessibleRole.ROLE_DIALOG;
 const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
 const ROLE_EDITCOMBOBOX = nsIAccessibleRole.ROLE_EDITCOMBOBOX;
+const ROLE_EMPHASIS = nsIAccessibleRole.ROLE_EMPHASIS;
 const ROLE_ENTRY = nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_FIGURE = nsIAccessibleRole.ROLE_FIGURE;
 const ROLE_FOOTNOTE = nsIAccessibleRole.ROLE_FOOTNOTE;
