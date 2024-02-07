@@ -73,26 +73,6 @@ class NetworkEventActor extends Actor {
     // Store the channelId which will act as resource id.
     this._channelId = channel.channelId;
 
-    this._timings = {};
-    this._serverTimings = [];
-
-    this._discardRequestBody = !!networkEventOptions.discardRequestBody;
-    this._discardResponseBody = !!networkEventOptions.discardResponseBody;
-
-    this._response = {
-      headers: [],
-      cookies: [],
-      content: {},
-    };
-
-    if (channel instanceof Ci.nsIFileChannel) {
-      this._innerWindowId = null;
-      this._isNavigationRequest = false;
-
-      this._resource = this._createResource(networkEventOptions, channel);
-      return;
-    }
-
     // innerWindowId and isNavigationRequest are used to check if the actor
     // should be destroyed when a window is destroyed. See network-events.js.
     this._innerWindowId = lazy.NetworkUtils.getChannelInnerWindowId(channel);
@@ -108,6 +88,18 @@ class NetworkEventActor extends Actor {
       postData: {},
       rawHeaders: networkEventOptions.rawHeaders,
     };
+
+    this._response = {
+      headers: [],
+      cookies: [],
+      content: {},
+    };
+
+    this._timings = {};
+    this._serverTimings = [];
+
+    this._discardRequestBody = !!networkEventOptions.discardRequestBody;
+    this._discardResponseBody = !!networkEventOptions.discardResponseBody;
 
     this._resource = this._createResource(networkEventOptions, channel);
   }
@@ -127,18 +119,8 @@ class NetworkEventActor extends Actor {
    * Create the resource corresponding to this actor.
    */
   _createResource(networkEventOptions, channel) {
-    let wsChannel;
-    let method;
-    if (channel instanceof Ci.nsIFileChannel) {
-      channel = channel.QueryInterface(Ci.nsIFileChannel);
-      channel.QueryInterface(Ci.nsIChannel);
-      wsChannel = null;
-      method = "GET";
-    } else {
-      channel = channel.QueryInterface(Ci.nsIHttpChannel);
-      wsChannel = lazy.NetworkUtils.getWebSocketChannel(channel);
-      method = channel.requestMethod;
-    }
+    channel = channel.QueryInterface(Ci.nsIHttpChannel);
+    const wsChannel = lazy.NetworkUtils.getWebSocketChannel(channel);
 
     // Use the WebSocket channel URL for websockets.
     const url = wsChannel ? wsChannel.URI.spec : channel.URI.spec;
@@ -206,11 +188,10 @@ class NetworkEventActor extends Actor {
       fromServiceWorker: networkEventOptions.fromServiceWorker,
       innerWindowId: this._innerWindowId,
       isNavigationRequest: this._isNavigationRequest,
-      isFileRequest: channel instanceof Ci.nsIFileChannel,
       isThirdPartyTrackingResource:
         lazy.NetworkUtils.isThirdPartyTrackingResource(channel),
       isXHR,
-      method,
+      method: channel.requestMethod,
       priority: lazy.NetworkUtils.getChannelPriority(channel),
       private: lazy.NetworkUtils.isChannelPrivate(channel),
       referrerPolicy: lazy.NetworkUtils.getReferrerPolicy(channel),
@@ -470,7 +451,7 @@ class NetworkEventActor extends Actor {
     // Read response headers and cookies.
     let responseHeaders = [];
     let responseCookies = [];
-    if (!this._blockedReason && !(channel instanceof Ci.nsIFileChannel)) {
+    if (!this._blockedReason) {
       const { cookies, headers } =
         lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
       responseCookies = cookies;
@@ -500,13 +481,10 @@ class NetworkEventActor extends Actor {
       mimeType = contentTypeHeader.value;
     }
 
-    let waitingTime = null;
-    if (!(channel instanceof Ci.nsIFileChannel)) {
-      const timedChannel = channel.QueryInterface(Ci.nsITimedChannel);
-      waitingTime = Math.round(
-        (timedChannel.responseStartTime - timedChannel.requestStartTime) / 1000
-      );
-    }
+    const timedChannel = channel.QueryInterface(Ci.nsITimedChannel);
+    const waitingTime = Math.round(
+      (timedChannel.responseStartTime - timedChannel.requestStartTime) / 1000
+    );
 
     let proxyInfo = [];
     if (proxyResponseRawHeaders) {
@@ -515,16 +493,13 @@ class NetworkEventActor extends Actor {
       proxyInfo = proxyResponseRawHeaders.split("\r\n")[0].split(" ");
     }
 
-    const isFileChannel = channel instanceof Ci.nsIFileChannel;
     this._onEventUpdate("responseStart", {
-      httpVersion: isFileChannel
-        ? null
-        : lazy.NetworkUtils.getHttpVersion(channel),
+      httpVersion: lazy.NetworkUtils.getHttpVersion(channel),
       mimeType,
       remoteAddress: fromCache ? "" : channel.remoteAddress,
       remotePort: fromCache ? "" : channel.remotePort,
-      status: isFileChannel ? "200" : channel.responseStatus,
-      statusText: isFileChannel ? "0K" : channel.responseStatusText,
+      status: channel.responseStatus + "",
+      statusText: channel.responseStatusText,
       waitingTime,
       isResolvedByTRR: channel.isResolvedByTRR,
       proxyHttpVersion: proxyInfo[0],

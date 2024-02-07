@@ -21,7 +21,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "../protocol/http/nsHttpHandler.h"
 
 #include "nsIFileURL.h"
 #include "nsIURIMutator.h"
@@ -240,9 +239,6 @@ nsFileChannel::nsFileChannel(nsIURI* uri) : mUploadLength(0), mFileURI(uri) {}
 
 nsresult nsFileChannel::Init() {
   NS_ENSURE_STATE(mLoadInfo);
-
-  RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
-  MOZ_ALWAYS_SUCCEEDS(handler->NewChannelId(mChannelId));
 
   // If we have a link file, we should resolve its target right away.
   // This is to protect against a same origin attack where the same link file
@@ -475,7 +471,7 @@ nsresult nsFileChannel::FixupContentLength(bool async) {
 // nsFileChannel::nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED(nsFileChannel, nsBaseChannel, nsIUploadChannel,
-                            nsIFileChannel, nsIIdentChannel)
+                            nsIFileChannel)
 
 //-----------------------------------------------------------------------------
 // nsFileChannel::nsIFileChannel
@@ -515,7 +511,7 @@ nsresult nsFileChannel::MaybeSendFileOpenNotification() {
 
   if ((browsingContextID != 0 && isTopLevel) ||
       !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
-    obsService->NotifyObservers(static_cast<nsIIdentChannel*>(this),
+    obsService->NotifyObservers(static_cast<nsIChannel*>(this),
                                 "file-channel-opened", nullptr);
   }
   return NS_OK;
@@ -550,20 +546,5 @@ nsFileChannel::SetUploadStream(nsIInputStream* stream,
 NS_IMETHODIMP
 nsFileChannel::GetUploadStream(nsIInputStream** result) {
   *result = do_AddRef(mUploadStream).take();
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsFileChannel::nsIIdentChannel
-
-NS_IMETHODIMP
-nsFileChannel::GetChannelId(uint64_t* aChannelId) {
-  *aChannelId = mChannelId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::SetChannelId(uint64_t aChannelId) {
-  mChannelId = aChannelId;
   return NS_OK;
 }

@@ -466,7 +466,7 @@ function fetchResponseHeadersAndCookies(channel) {
  * Check if a given network request should be logged by a network monitor
  * based on the specified filters.
  *
- * @param {(nsIHttpChannel|nsIFileChannel)} channel
+ * @param nsIHttpChannel channel
  *        Request to check.
  * @param filters
  *        NetworkObserver filters to match against. An object with one of the following attributes:
@@ -662,11 +662,6 @@ function getBlockedReason(channel, fromCache = false) {
   return { blockingExtension, blockedReason };
 }
 
-function getCharset(channel) {
-  const win = lazy.NetworkHelper.getWindowForRequest(channel);
-  return win ? win.document.characterSet : null;
-}
-
 export const NetworkUtils = {
   causeTypeToString,
   fetchRequestHeadersAndCookies,
@@ -689,5 +684,4 @@ export const NetworkUtils = {
   matchRequest,
   stringToCauseType,
   getBlockedReason,
-  getCharset,
 };
