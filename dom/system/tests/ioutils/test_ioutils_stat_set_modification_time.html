@@ -76,7 +76,7 @@
 
       await Assert.rejects(
         IOUtils.stat(notExistsFile),
-        /Could not stat file\(.*\) because it does not exist/,
+        /NotFoundError: Could not stat `.*': file does not exist/,
         "IOUtils::stat throws if the target file does not exist"
       );
     });
@@ -214,7 +214,7 @@
 
       await Assert.rejects(
         IOUtils.setModificationTime(notExistsFile),
-        /Could not set modification time of file\(.*\) because it does not exist/,
+        /Could not set modification time of `.*': file does not exist/,
         "IOUtils::setModificationTime throws if the target file does not exist"
       );
 
@@ -224,7 +224,7 @@
 
       await Assert.rejects(
         IOUtils.setModificationTime(tempFileName, 0),
-        /Refusing to set the modification time of file\(.*\) to 0/,
+        /DataError: Refusing to set modification time of `.*' to 0: to use the current system time, call `setModificationTime' with no arguments/,
         "IOUtils::setModificationTime cannot set the file modification time to Epoch"
       );
 
