@@ -78,6 +78,7 @@ class ShoppingMessageBar extends MozLitElement {
         composed: true,
       })
     );
+    Glean.shopping.surfaceNoThanksButtonClicked.record();
   }
 
   handleKeepClosedClick() {
@@ -90,6 +91,7 @@ class ShoppingMessageBar extends MozLitElement {
         composed: true,
       })
     );
+    Glean.shopping.surfaceYesKeepClosedButtonClicked.record();
   }
 
   getStaleWarningTemplate() {

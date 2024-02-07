@@ -475,6 +475,80 @@ add_task(async function test_auto_open_settings_toggle() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function test_auto_open_no_thanks_button_click() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
+      ["browser.shopping.experience2023.autoOpen.userEnabled", true],
+      ["browser.shopping.experience2023.showKeepSidebarClosedMessage", true],
+    ],
+  });
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let mockArgs = {
+        mockData: MOCK_ANALYZED_PRODUCT_RESPONSE,
+      };
+
+      await clickNoThanksButton(browser, mockArgs);
+
+      await Services.fog.testFlushAllChildren();
+
+      let noThanksButtonEvents =
+        Glean.shopping.surfaceNoThanksButtonClicked.testGetValue();
+
+      assertEventMatches(noThanksButtonEvents[0], {
+        category: "shopping",
+        name: "surface_no_thanks_button_clicked",
+      });
+    }
+  );
+});
+
+add_task(async function test_auto_open_yes_keep_closed_button() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
+      ["browser.shopping.experience2023.autoOpen.userEnabled", true],
+      ["browser.shopping.experience2023.showKeepSidebarClosedMessage", true],
+    ],
+  });
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let mockArgs = {
+        mockData: MOCK_ANALYZED_PRODUCT_RESPONSE,
+      };
+
+      await clickYesKeepClosedButton(browser, mockArgs);
+
+      await Services.fog.testFlushAllChildren();
+
+      let yesKeepClosedButtonEvents =
+        Glean.shopping.surfaceYesKeepClosedButtonClicked.testGetValue();
+
+      assertEventMatches(yesKeepClosedButtonEvents[0], {
+        category: "shopping",
+        name: "surface_yes_keep_closed_button_clicked",
+      });
+    }
+  );
+});
+
 function clickAdsToggle(browser, data) {
   return SpecialPowers.spawn(browser, [data], async args => {
     const { mockData, mockRecommendationData } = args;
@@ -625,5 +699,39 @@ function clickReviewQualityExplainerLink(browser, data) {
     await reviewQualityLink.updateComplete;
 
     reviewQualityLink.click();
+  });
+}
+
+function clickNoThanksButton(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    // Force the "keep closed" to appear
+    shoppingContainer.showingKeepClosedMessage = true;
+    await shoppingContainer.updateComplete;
+
+    let shoppingMessageBar = shoppingContainer.keepClosedMessageBarEl;
+    await shoppingMessageBar.updateComplete;
+
+    let button = shoppingMessageBar.noThanksButtonEl;
+    button.click();
+  });
+}
+
+function clickYesKeepClosedButton(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    // Force the "keep closed" to appear
+    shoppingContainer.showingKeepClosedMessage = true;
+    await shoppingContainer.updateComplete;
+
+    let shoppingMessageBar = shoppingContainer.keepClosedMessageBarEl;
+    await shoppingMessageBar.updateComplete;
+
+    let button = shoppingMessageBar.yesKeepClosedButtonEl;
+    button.click();
   });
 }
