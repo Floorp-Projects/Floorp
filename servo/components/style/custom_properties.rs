@@ -7,6 +7,7 @@
 //! [custom]: https://drafts.csswg.org/css-variables/
 
 use crate::applicable_declarations::CascadePriority;
+use crate::custom_properties_map::CustomPropertiesMap;
 use crate::media_queries::Device;
 use crate::properties::{
     CSSWideKeyword, CustomDeclaration, CustomDeclarationValue, LonghandId, LonghandIdSet,
@@ -16,7 +17,6 @@ use crate::properties_and_values::{
     registry::PropertyRegistrationData,
     value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
 };
-use crate::custom_properties_map::CustomPropertiesMap;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet};
 use crate::stylesheets::UrlExtraData;
 use crate::stylist::Stylist;
@@ -248,7 +248,8 @@ impl ComputedCustomProperties {
     pub fn property_at(&self, index: usize) -> Option<(&Name, &Option<Arc<VariableValue>>)> {
         // Just expose the custom property items from custom_properties.inherited, followed
         // by custom property items from custom_properties.non_inherited.
-        self.inherited.get_index(index)
+        self.inherited
+            .get_index(index)
             .or_else(|| self.non_inherited.get_index(index - self.inherited.len()))
     }
 
@@ -265,11 +266,7 @@ impl ComputedCustomProperties {
 
     /// Remove a custom property from the corresponding inherited/non_inherited
     /// map, depending on whether the inherit flag is set or unset.
-    fn remove(
-        &mut self,
-        registration: &PropertyRegistrationData,
-        name: &Name,
-    ) {
+    fn remove(&mut self, registration: &PropertyRegistrationData, name: &Name) {
         self.map_mut(registration).remove(name);
     }
 
@@ -404,7 +401,6 @@ pub enum DeferFontRelativeCustomPropertyResolution {
     Yes,
     No,
 }
-
 
 /// A struct holding information about the external references to that a custom
 /// property value may have.
@@ -688,11 +684,7 @@ fn parse_declaration_value_block<'i, 't>(
         macro_rules! nested {
             () => {
                 input.parse_nested_block(|input| {
-                    parse_declaration_value_block(
-                        input,
-                        references,
-                        missing_closing_characters,
-                    )
+                    parse_declaration_value_block(input, references, missing_closing_characters)
                 })?
             };
         }
@@ -739,15 +731,11 @@ fn parse_declaration_value_block<'i, 't>(
             Token::Function(ref name) => {
                 if name.eq_ignore_ascii_case("var") {
                     let args_start = input.state();
-                    input.parse_nested_block(|input| {
-                        parse_var_function(input, references)
-                    })?;
+                    input.parse_nested_block(|input| parse_var_function(input, references))?;
                     input.reset(&args_start);
                 } else if name.eq_ignore_ascii_case("env") {
                     let args_start = input.state();
-                    input.parse_nested_block(|input| {
-                        parse_env_function(input, references)
-                    })?;
+                    input.parse_nested_block(|input| parse_env_function(input, references))?;
                     input.reset(&args_start);
                 }
                 nested!();
@@ -787,7 +775,9 @@ fn parse_declaration_value_block<'i, 't>(
             Token::Dimension {
                 unit: ref value, ..
             } => {
-                references.non_custom_references.insert(NonCustomReferences::from_unit(value));
+                references
+                    .non_custom_references
+                    .insert(NonCustomReferences::from_unit(value));
                 let serialization_type = token.serialization_type();
                 let is_unquoted_url = matches!(token, Token::UnquotedUrl(_));
                 if value.ends_with("�") && input.slice_from(token_start).ends_with("\\") {
@@ -960,7 +950,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             CustomDeclarationValue::Value(ref unparsed_value) => {
                 let has_custom_property_references =
                     !unparsed_value.references.custom_properties.is_empty();
-                let registered_length_property = registration.syntax.may_reference_font_relative_length();
+                let registered_length_property =
+                    registration.syntax.may_reference_font_relative_length();
                 // Non-custom dependency is really relevant for registered custom properties
                 // that require computed value of such dependencies.
                 let has_non_custom_dependencies = registered_length_property &&
@@ -983,11 +974,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         self.computed_context,
                     );
                 }
-                map.insert(
-                    registration,
-                    name,
-                    Arc::clone(unparsed_value),
-                );
+                map.insert(registration, name, Arc::clone(unparsed_value));
             },
             CustomDeclarationValue::CSSWideKeyword(keyword) => match keyword {
                 CSSWideKeyword::RevertLayer | CSSWideKeyword::Revert => {
@@ -1545,7 +1532,8 @@ fn substitute_all(
 
         if let Some(ref v) = value.as_ref() {
             let registration = context.stylist.get_custom_property_registration(&name);
-            let registered_length_property = registration.syntax.may_reference_font_relative_length();
+            let registered_length_property =
+                registration.syntax.may_reference_font_relative_length();
             let mut defer = false;
             if !context.non_custom_references.is_empty() && registered_length_property {
                 if let Some(deferred) = &mut context.deferred_properties {
@@ -1628,11 +1616,7 @@ fn handle_invalid_at_computed_value_time(
             }
         } else {
             if let Some(ref initial_value) = registration.initial_value {
-                custom_properties.insert(
-                    registration,
-                    name,
-                    Arc::clone(initial_value),
-                );
+                custom_properties.insert(registration, name, Arc::clone(initial_value));
                 return;
             }
         }
@@ -1684,7 +1668,10 @@ fn substitute_references_if_needed_and_apply(
             },
         };
 
-        if substituted.push_from(&input, position, last_token_type).is_err() {
+        if substituted
+            .push_from(&input, position, last_token_type)
+            .is_err()
+        {
             handle_invalid_at_computed_value_time(
                 name,
                 custom_properties,
@@ -1716,11 +1703,7 @@ fn substitute_references_if_needed_and_apply(
                     (CSSWideKeyword::Inherit, _, true) => {
                         custom_properties.remove(registration, name);
                         if let Some(ref initial_value) = registration.initial_value {
-                            custom_properties.insert(
-                                registration,
-                                name,
-                                Arc::clone(initial_value),
-                            );
+                            custom_properties.insert(registration, name, Arc::clone(initial_value));
                         }
                     },
                     (CSSWideKeyword::Revert, true, false) |
@@ -1729,11 +1712,7 @@ fn substitute_references_if_needed_and_apply(
                     (CSSWideKeyword::Unset, true, false) => {
                         match inherited.get(stylist, name) {
                             Some(value) => {
-                                custom_properties.insert(
-                                    registration,
-                                    name,
-                                    Arc::clone(value),
-                                );
+                                custom_properties.insert(registration, name, Arc::clone(value));
                             },
                             None => {
                                 custom_properties.remove(registration, name);
