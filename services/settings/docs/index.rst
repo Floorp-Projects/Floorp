@@ -387,7 +387,7 @@ In order to enable verbose logging, set the log level preference to ``debug``.
 
 .. code-block:: javascript
 
-    Services.prefs.setCharPref("services.settings.loglevel", "debug");
+    Services.prefs.setStringPref("services.settings.loglevel", "debug");
 
 Remote Settings Dev Tools
 -------------------------

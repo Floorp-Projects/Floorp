@@ -510,7 +510,7 @@ export var CommonUtils = {
       throw new Error("Default value is not a number: " + def);
     }
 
-    let valueStr = branch.getCharPref(pref, null);
+    let valueStr = branch.getStringPref(pref, null);
 
     if (valueStr !== null) {
       let valueInt = parseInt(valueStr, 10);
@@ -614,7 +614,7 @@ export var CommonUtils = {
       );
     }
 
-    branch.setCharPref(pref, "" + date.getTime());
+    branch.setStringPref(pref, "" + date.getTime());
   },
 
   /**

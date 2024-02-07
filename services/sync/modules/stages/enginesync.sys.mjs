@@ -111,7 +111,7 @@ EngineSynchronizer.prototype = {
     // a first sync.
     let allowEnginesHint = false;
     // Wipe data in the desired direction if necessary
-    switch (Svc.PrefBranch.getCharPref("firstSync", null)) {
+    switch (Svc.PrefBranch.getStringPref("firstSync", null)) {
       case "resetClient":
         await this.service.resetClient(engineManager.enabledEngineNames);
         break;
@@ -227,7 +227,7 @@ EngineSynchronizer.prototype = {
         this.service.status.service == SYNC_FAILED_PARTIAL ||
         this.service.status.service == STATUS_OK
       ) {
-        Svc.PrefBranch.setCharPref("lastSync", new Date().toString());
+        Svc.PrefBranch.setStringPref("lastSync", new Date().toString());
       }
     } finally {
       Svc.PrefBranch.clearUserPref("firstSync");

@@ -647,7 +647,7 @@ EngineManager.prototype = {
   },
 
   persistDeclined() {
-    Svc.PrefBranch.setCharPref(
+    Svc.PrefBranch.setStringPref(
       "declinedEngines",
       [...this._declined].join(",")
     );
@@ -1007,7 +1007,7 @@ SyncEngine.prototype = {
     );
     await this.resetClient();
     Svc.PrefBranch.setStringPref(this.name + ".syncID", newSyncID);
-    Svc.PrefBranch.setCharPref(this.name + ".lastSync", "0");
+    Svc.PrefBranch.setStringPref(this.name + ".lastSync", "0");
     return newSyncID;
   },
 
@@ -1052,7 +1052,7 @@ SyncEngine.prototype = {
   },
   async setLastSync(lastSync) {
     // Store the value as a string to keep floating point precision
-    Svc.PrefBranch.setCharPref(this.name + ".lastSync", lastSync.toString());
+    Svc.PrefBranch.setStringPref(this.name + ".lastSync", lastSync.toString());
   },
   async resetLastSync() {
     this._log.debug("Resetting " + this.name + " last sync time");

@@ -23,9 +23,9 @@ let maybeSyncBackup;
 
 async function clear_state() {
   // Disable logging output.
-  Services.prefs.setCharPref("services.settings.loglevel", "critical");
+  Services.prefs.setStringPref("services.settings.loglevel", "critical");
   // Pull data from the test server.
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     PREF_SETTINGS_SERVER,
     `http://localhost:${server.identity.primaryPort}/v1`
   );

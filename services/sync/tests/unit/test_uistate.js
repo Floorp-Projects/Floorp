@@ -34,7 +34,7 @@ add_task(async function test_isReady_unconfigured() {
 
 add_task(async function test_isReady_signedin() {
   UIState.reset();
-  Services.prefs.setCharPref("services.sync.username", "foo");
+  Services.prefs.setStringPref("services.sync.username", "foo");
 
   let refreshState = sinon.spy(UIStateInternal, "refreshState");
 
@@ -58,7 +58,7 @@ add_task(async function test_refreshState_signedin() {
   const fxAccountsOrig = UIStateInternal.fxAccounts;
 
   const now = new Date().toString();
-  Services.prefs.setCharPref("services.sync.lastSync", now);
+  Services.prefs.setStringPref("services.sync.lastSync", now);
   UIStateInternal.syncing = false;
 
   UIStateInternal.fxAccounts = {
@@ -119,7 +119,7 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
   const fxAccountsOrig = UIStateInternal.fxAccounts;
 
   const now = new Date().toString();
-  Services.prefs.setCharPref("services.sync.lastSync", now);
+  Services.prefs.setStringPref("services.sync.lastSync", now);
   Services.prefs.setStringPref("services.sync.username", "test@test.com");
   UIStateInternal.syncing = false;
 
@@ -251,7 +251,7 @@ async function configureUIState(syncing, lastSync = new Date()) {
   const fxAccountsOrig = UIStateInternal.fxAccounts;
 
   UIStateInternal._syncing = syncing;
-  Services.prefs.setCharPref("services.sync.lastSync", lastSync.toString());
+  Services.prefs.setStringPref("services.sync.lastSync", lastSync.toString());
   Services.prefs.setStringPref("services.sync.username", "test@test.com");
 
   UIStateInternal.fxAccounts = {
@@ -286,7 +286,7 @@ add_task(async function test_syncFinished() {
   ok(oldState.syncing);
 
   let uiUpdateObserved = observeUIUpdate();
-  Services.prefs.setCharPref("services.sync.lastSync", new Date().toString());
+  Services.prefs.setStringPref("services.sync.lastSync", new Date().toString());
   Services.obs.notifyObservers(null, "weave:service:sync:finish");
   await uiUpdateObserved;
 

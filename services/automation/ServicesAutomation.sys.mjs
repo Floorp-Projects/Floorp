@@ -392,7 +392,7 @@ export var Sync = {
 };
 
 export function initConfig(autoconfig) {
-  Services.prefs.setCharPref(AUTOCONFIG_PREF, autoconfig);
+  Services.prefs.setStringPref(AUTOCONFIG_PREF, autoconfig);
 }
 
 export async function triggerSync(username, password, autoconfig) {

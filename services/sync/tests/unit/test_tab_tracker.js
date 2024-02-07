@@ -275,7 +275,7 @@ add_task(async function run_sync_on_tab_change_test() {
   await tracker.clearChangedIDs();
   clearQuickWriteTimer(tracker);
 
-  Svc.PrefBranch.setCharPref(
+  Svc.PrefBranch.setStringPref(
     "engine.tabs.filteredSchemes",
     // Removing the about scheme for this test
     "resource|chrome|file|blob|moz-extension"

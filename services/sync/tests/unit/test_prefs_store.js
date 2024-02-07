@@ -66,7 +66,7 @@ add_task(async function run_test() {
   try {
     _("Expect the compact light theme to be active");
     Assert.strictEqual(
-      Services.prefs.getCharPref("extensions.activeThemeID"),
+      Services.prefs.getStringPref("extensions.activeThemeID"),
       COMPACT_THEME_ID
     );
 
@@ -152,12 +152,12 @@ add_task(async function run_test() {
     _("Update some prefs, including one that's to be reset/deleted.");
     // This pref is not going to be reset or deleted as there's no "control pref"
     // in either the incoming record or locally.
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "testing.deleted-without-control-pref",
       "I'm deleted-without-control-pref"
     );
     // Another pref with only a local control pref.
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "testing.deleted-with-local-control-pref",
       "I'm deleted-with-local-control-pref"
     );
@@ -166,7 +166,7 @@ add_task(async function run_test() {
       true
     );
     // And a pref without a local control pref but one that's incoming.
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "testing.deleted-with-incoming-control-pref",
       "I'm deleted-with-incoming-control-pref"
     );
@@ -197,12 +197,12 @@ add_task(async function run_test() {
     await store.update(record);
     Assert.strictEqual(Services.prefs.getIntPref("testing.int"), 42);
     Assert.strictEqual(
-      Services.prefs.getCharPref("testing.string"),
+      Services.prefs.getStringPref("testing.string"),
       "im in ur prefs"
     );
     Assert.strictEqual(Services.prefs.getBoolPref("testing.bool"), false);
     Assert.strictEqual(
-      Services.prefs.getCharPref("testing.deleted-without-control-pref"),
+      Services.prefs.getStringPref("testing.deleted-without-control-pref"),
       "I'm deleted-without-control-pref"
     );
     Assert.strictEqual(
@@ -210,11 +210,13 @@ add_task(async function run_test() {
       Ci.nsIPrefBranch.PREF_INVALID
     );
     Assert.strictEqual(
-      Services.prefs.getCharPref("testing.deleted-with-incoming-control-pref"),
+      Services.prefs.getStringPref(
+        "testing.deleted-with-incoming-control-pref"
+      ),
       "I'm deleted-with-incoming-control-pref"
     );
     Assert.strictEqual(
-      Services.prefs.getCharPref("testing.dont.change"),
+      Services.prefs.getStringPref("testing.dont.change"),
       "Please don't change me."
     );
     Assert.strictEqual(
@@ -319,7 +321,7 @@ add_task(async function test_incoming_sets_seen() {
     do_get_file("prefs_test_prefs_store.js")
   );
   const defaultValue = "the value";
-  Assert.equal(Services.prefs.getCharPref("testing.seen"), defaultValue);
+  Assert.equal(Services.prefs.getStringPref("testing.seen"), defaultValue);
 
   let record = await store.createRecord(PREFS_GUID, "prefs");
   // Haven't seen a non-default value before, so remains null.
@@ -358,25 +360,28 @@ add_task(async function test_outgoing_when_changed() {
     do_get_file("prefs_test_prefs_store.js")
   );
   const defaultValue = "the value";
-  Assert.equal(Services.prefs.getCharPref("testing.seen"), defaultValue);
+  Assert.equal(Services.prefs.getStringPref("testing.seen"), defaultValue);
 
   let record = await store.createRecord(PREFS_GUID, "prefs");
   // Haven't seen a non-default value before, so remains null.
   Assert.strictEqual(record.value["testing.seen"], null);
 
   // Change the value.
-  Services.prefs.setCharPref("testing.seen", "new value");
+  Services.prefs.setStringPref("testing.seen", "new value");
   record = await store.createRecord(PREFS_GUID, "prefs");
   // creating the record toggled that "seen" pref.
   Assert.strictEqual(
     Services.prefs.getBoolPref("services.sync.prefs.sync-seen.testing.seen"),
     true
   );
-  Assert.strictEqual(Services.prefs.getCharPref("testing.seen"), "new value");
+  Assert.strictEqual(Services.prefs.getStringPref("testing.seen"), "new value");
 
   // Resetting the pref does not change that seen value.
   Services.prefs.clearUserPref("testing.seen");
-  Assert.strictEqual(Services.prefs.getCharPref("testing.seen"), defaultValue);
+  Assert.strictEqual(
+    Services.prefs.getStringPref("testing.seen"),
+    defaultValue
+  );
 
   record = await store.createRecord(PREFS_GUID, "prefs");
   Assert.strictEqual(

@@ -41,7 +41,7 @@ function triggerRedirect() {
 
   let prefs = Services.prefs.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);
-  prefs.setCharPref("autoconfig_url", "data:text/plain," + PROXY_FUNCTION);
+  prefs.setStringPref("autoconfig_url", "data:text/plain," + PROXY_FUNCTION);
 }
 
 add_task(async function test_headers_copied() {

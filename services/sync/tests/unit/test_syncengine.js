@@ -110,17 +110,17 @@ add_task(async function test_lastSync() {
     // Floats are properly stored as floats and synced with the preference
     await engine.setLastSync(123.45);
     Assert.equal(await engine.getLastSync(), 123.45);
-    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "123.45");
+    Assert.equal(Svc.PrefBranch.getStringPref("steam.lastSync"), "123.45");
 
     // Integer is properly stored
     await engine.setLastSync(67890);
     Assert.equal(await engine.getLastSync(), 67890);
-    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "67890");
+    Assert.equal(Svc.PrefBranch.getStringPref("steam.lastSync"), "67890");
 
     // resetLastSync() resets the value (and preference) to 0
     await engine.resetLastSync();
     Assert.equal(await engine.getLastSync(), 0);
-    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "0");
+    Assert.equal(Svc.PrefBranch.getStringPref("steam.lastSync"), "0");
   } finally {
     for (const pref of Svc.PrefBranch.getChildList("")) {
       Svc.PrefBranch.clearUserPref(pref);
