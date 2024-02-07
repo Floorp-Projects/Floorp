@@ -391,10 +391,11 @@ bool NativeObject::growSlotsForNewSlot(JSContext* cx, uint32_t numFixed,
 bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
   uint32_t count = ObjectSlots::allocCount(capacity);
   HeapSlot* allocation = AllocateCellBuffer<HeapSlot>(cx, this, count);
-  if (!allocation) {
-    // The new object will be unreachable, but we still have to make it safe
-    // for finalization. Also we must check for it during GC compartment
-    // checks (see IsPartiallyInitializedObject).
+  if (MOZ_UNLIKELY(!allocation)) {
+    // The new object will be unreachable, but we have to make it safe for
+    // finalization. It can also be observed with dumpHeap().
+    // Give it a dummy shape that has no dynamic slots.
+    setShape(GlobalObject::getEmptyPlainObjectShape(cx));
     initEmptyDynamicSlots();
     return false;
   }
