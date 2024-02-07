@@ -156,7 +156,7 @@ export class NetworkObserver {
    */
   #onNetworkEvent;
   /**
-   * Object that holds the HTTP activity objects for ongoing requests.
+   * Object that holds the activity objects for ongoing requests.
    *
    * @type {ChannelMap}
    */
@@ -221,6 +221,10 @@ export class NetworkObserver {
       Services.obs.addObserver(
         this.#httpModifyExaminer,
         "http-on-modify-request"
+      );
+      Services.obs.addObserver(
+        this.#fileChannelExaminer,
+        "file-channel-opened"
       );
       Services.obs.addObserver(this.#httpStopRequest, "http-on-stop-request");
     } else {
@@ -501,6 +505,48 @@ export class NetworkObserver {
   });
 
   /**
+   * Observe notifications for the file-channel-opened topic
+   *
+   * @private
+   * @param nsIFileChannel subject
+   * @param string topic
+   * @returns void
+   */
+  #fileChannelExaminer = DevToolsInfaillibleUtils.makeInfallible(
+    (subject, topic) => {
+      if (
+        this.#isDestroyed ||
+        topic != "file-channel-opened" ||
+        !(subject instanceof Ci.nsIFileChannel)
+      ) {
+        return;
+      }
+      const channel = subject.QueryInterface(Ci.nsIFileChannel);
+      channel.QueryInterface(Ci.nsIIdentChannel);
+      channel.QueryInterface(Ci.nsIChannel);
+
+      if (this.#ignoreChannelFunction(channel)) {
+        return;
+      }
+
+      logPlatformEvent(topic, channel);
+
+      const fileActivity = this.#createOrGetActivityObject(channel);
+
+      this.#createNetworkEvent(subject, {});
+
+      if (fileActivity.owner) {
+        fileActivity.owner.addResponseStart({
+          channel: fileActivity.channel,
+          fromCache: fileActivity.fromCache || fileActivity.fromServiceWorker,
+          rawHeaders: fileActivity.responseRawHeaders,
+          proxyResponseRawHeaders: fileActivity.proxyResponseRawHeaders,
+        });
+      }
+    }
+  );
+
+  /**
    * A helper function for observeActivity.  This does whatever work
    * is required by a particular http activity event.  Arguments are
    * the same as for observeActivity.
@@ -666,6 +712,7 @@ export class NetworkObserver {
    * - Cancel requests blocked by DevTools
    * - Fetch request headers/cookies
    * - Set a few attributes on http activity object
+   * - Set a few attributes on file activity object
    * - Register listener to record response content
    */
   #createNetworkEvent(
@@ -680,6 +727,21 @@ export class NetworkObserver {
       inProgressRequest,
     }
   ) {
+    if (channel instanceof Ci.nsIFileChannel) {
+      const fileActivity = this.#createOrGetActivityObject(channel);
+
+      if (timestamp) {
+        fileActivity.timings.REQUEST_HEADER = {
+          first: timestamp,
+          last: timestamp,
+        };
+      }
+
+      fileActivity.owner = this.#onNetworkEvent({}, channel);
+
+      return fileActivity;
+    }
+
     const httpActivity = this.#createOrGetActivityObject(channel);
 
     if (timestamp) {
@@ -777,7 +839,7 @@ export class NetworkObserver {
   }
 
   /**
-   * Find an existing HTTP activity object, or create a new one. This
+   * Find an existing activity object, or create a new one. This
    * object is used for storing all the request and response
    * information.
    *
@@ -785,26 +847,29 @@ export class NetworkObserver {
    * this point.
    *
    * @see http://www.softwareishard.com/blog/har-12-spec
-   * @param nsIHttpChannel channel
+   * @param {(nsIHttpChannel|nsIFileChannel)} channel
    *        The HTTP channel for which the HTTP activity object is created.
    * @return object
    *         The new HTTP activity object.
    */
   #createOrGetActivityObject(channel) {
-    let httpActivity = this.#findActivityObject(channel);
-    if (!httpActivity) {
-      const win = lazy.NetworkHelper.getWindowForRequest(channel);
-      const charset = win ? win.document.characterSet : null;
+    let activity = this.#findActivityObject(channel);
+    if (!activity) {
+      const isHttpChannel = channel instanceof Ci.nsIHttpChannel;
 
-      // Most of the data needed from the channel is only available via the
-      // nsIHttpChannelInternal interface.
-      channel.QueryInterface(Ci.nsIHttpChannelInternal);
+      if (isHttpChannel) {
+        // Most of the data needed from the channel is only available via the
+        // nsIHttpChannelInternal interface.
+        channel.QueryInterface(Ci.nsIHttpChannelInternal);
+      } else {
+        channel.QueryInterface(Ci.nsIChannel);
+      }
 
-      httpActivity = {
+      activity = {
         // The nsIChannel for which this activity object was created.
         channel,
         // See #prepareRequestBody()
-        charset,
+        charset: isHttpChannel ? lazy.NetworkUtils.getCharset(channel) : null,
         // The postData sent by this request.
         sentBody: null,
         // The URL for the current channel.
@@ -813,20 +878,24 @@ export class NetworkObserver {
         bodySize: 0,
         // The response headers size.
         headersSize: 0,
-        // needed for host specific security info
-        hostname: channel.URI.host,
-        discardRequestBody: !this.#saveRequestAndResponseBodies,
-        discardResponseBody: !this.#saveRequestAndResponseBodies,
+        // needed for host specific security info but file urls do not have hostname
+        hostname: isHttpChannel ? channel.URI.host : null,
+        discardRequestBody: isHttpChannel
+          ? !this.#saveRequestAndResponseBodies
+          : false,
+        discardResponseBody: isHttpChannel
+          ? !this.#saveRequestAndResponseBodies
+          : false,
         // internal timing information, see observeActivity()
         timings: {},
         // the activity owner which is notified when changes happen
         owner: null,
       };
 
-      this.#openRequests.set(channel, httpActivity);
+      this.#openRequests.set(channel, activity);
     }
 
-    return httpActivity;
+    return activity;
   }
 
   /**
@@ -1431,6 +1500,10 @@ export class NetworkObserver {
       Services.obs.removeObserver(
         this.#httpModifyExaminer,
         "http-on-modify-request"
+      );
+      Services.obs.removeObserver(
+        this.#fileChannelExaminer,
+        "file-channel-opened"
       );
       Services.obs.removeObserver(
         this.#httpStopRequest,

@@ -275,7 +275,7 @@ class NetworkEventWatcher {
   }
 
   onNetworkEvent(networkEventOptions, channel) {
-    if (this.networkEvents.has(channel.channelId)) {
+    if (channel.channelId && this.networkEvents.has(channel.channelId)) {
       throw new Error(
         `Got notified about channel ${channel.channelId} more than once.`
       );
@@ -301,6 +301,7 @@ class NetworkEventWatcher {
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
       isBlocked,
+      isFileRequest: resource.isFileRequest,
       receivedUpdates: [],
       resourceUpdates: {
         // Requests already come with request cookies and headers, so those
@@ -375,10 +376,11 @@ class NetworkEventWatcher {
     resourceUpdates[`${updateResource.updateType}Available`] = true;
     receivedUpdates.push(updateResource.updateType);
 
-    const isComplete =
-      receivedUpdates.includes("eventTimings") &&
-      receivedUpdates.includes("responseContent") &&
-      receivedUpdates.includes("securityInfo");
+    const isComplete = networkEvent.isFileRequest
+      ? receivedUpdates.includes("responseStart")
+      : receivedUpdates.includes("eventTimings") &&
+        receivedUpdates.includes("responseContent") &&
+        receivedUpdates.includes("securityInfo");
 
     if (isComplete) {
       this._emitUpdate(networkEvent);
