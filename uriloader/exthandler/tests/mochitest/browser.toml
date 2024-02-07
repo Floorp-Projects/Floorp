@@ -145,6 +145,12 @@ support-files = [
   "file_txt_attachment_test.txt^headers^",
 ]
 
+["browser_standalone_application_chooser_window_fallback.js"]
+support-files = [
+  "FTPprotocolHandler.html",
+  "blank.html",
+]
+
 ["browser_txt_download_save_as.js"]
 support-files = [
   "file_txt_attachment_test.txt",
