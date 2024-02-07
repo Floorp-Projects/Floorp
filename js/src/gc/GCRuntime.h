@@ -624,6 +624,14 @@ class GCRuntime {
   void updateHelperThreadCount();
   size_t parallelWorkerCount() const;
 
+  // GC parallel task dispatch infrastructure.
+  size_t getMaxParallelThreads() const;
+  void dispatchOrQueueParallelTask(GCParallelTask* task,
+                                   const AutoLockHelperThreadState& lock);
+  void maybeDispatchParallelTasks(const AutoLockHelperThreadState& lock);
+  void onParallelTaskEnd(bool wasDispatched,
+                         const AutoLockHelperThreadState& lock);
+
   // Parallel marking.
   bool initOrDisableParallelMarking();
   [[nodiscard]] bool updateMarkersVector();
@@ -1009,6 +1017,12 @@ class GCRuntime {
   MainThreadData<size_t> maxHelperThreads;
   MainThreadOrGCTaskData<size_t> helperThreadCount;
   MainThreadData<size_t> markingThreadCount;
+
+  // Per-runtime helper thread task queue. Can be accessed from helper threads
+  // in maybeDispatchParallelTasks().
+  HelperThreadLockData<size_t> maxParallelThreads;
+  HelperThreadLockData<size_t> dispatchedParallelTasks;
+  HelperThreadLockData<GCParallelTaskList> queuedParallelTasks;
 
   // State used for managing atom mark bitmaps in each zone.
   AtomMarkingRuntime atomMarking;

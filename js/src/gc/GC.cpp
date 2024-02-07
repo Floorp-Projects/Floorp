@@ -899,6 +899,13 @@ void GCRuntime::finish() {
   freeTask.join();
   allocTask.cancelAndWait();
   decommitTask.cancelAndWait();
+#ifdef DEBUG
+  {
+    MOZ_ASSERT(dispatchedParallelTasks == 0);
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(queuedParallelTasks.ref().isEmpty(lock));
+  }
+#endif
 
 #ifdef JS_GC_ZEAL
   // Free memory associated with GC verification.
@@ -1252,6 +1259,10 @@ void GCRuntime::updateHelperThreadCount() {
   if (!CanUseExtraThreads()) {
     // startTask will run the work on the main thread if the count is 1.
     MOZ_ASSERT(helperThreadCount == 1);
+    markingThreadCount = 1;
+
+    AutoLockHelperThreadState lock;
+    maxParallelThreads = 1;
     return;
   }
 
@@ -1261,13 +1272,6 @@ void GCRuntime::updateHelperThreadCount() {
   // marking. In real configurations there will be enough threads that this
   // won't affect anything.
   static constexpr size_t SpareThreadsDuringParallelMarking = 2;
-
-  // The count of helper threads used for GC tasks is process wide. Don't set it
-  // for worker JS runtimes.
-  if (rt->parentRuntime) {
-    helperThreadCount = rt->parentRuntime->gc.helperThreadCount;
-    return;
-  }
 
   // Calculate the target thread count for GC parallel tasks.
   size_t cpuCount = GetHelperThreadCPUCount();
@@ -1298,7 +1302,7 @@ void GCRuntime::updateHelperThreadCount() {
                availableThreadCount - SpareThreadsDuringParallelMarking);
 
   // Update the maximum number of threads that will be used for GC work.
-  HelperThreadState().setGCParallelThreadCount(targetCount, lock);
+  maxParallelThreads = targetCount;
 }
 
 size_t GCRuntime::markingWorkerCount() const {
@@ -1336,9 +1340,9 @@ bool GCRuntime::initOrDisableParallelMarking() {
   return true;
 }
 
-static size_t GetGCParallelThreadCount() {
+size_t GCRuntime::getMaxParallelThreads() const {
   AutoLockHelperThreadState lock;
-  return HelperThreadState().getGCParallelThreadCount(lock);
+  return maxParallelThreads.ref();
 }
 
 bool GCRuntime::updateMarkersVector() {
@@ -1349,8 +1353,7 @@ bool GCRuntime::updateMarkersVector() {
 
   // Limit worker count to number of GC parallel tasks that can run
   // concurrently, otherwise one thread can deadlock waiting on another.
-  size_t targetCount =
-      std::min(markingWorkerCount(), GetGCParallelThreadCount());
+  size_t targetCount = std::min(markingWorkerCount(), getMaxParallelThreads());
 
   if (markers.length() > targetCount) {
     return markers.resize(targetCount);
