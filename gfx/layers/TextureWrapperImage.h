@@ -25,6 +25,8 @@ class TextureWrapperImage final : public Image {
   gfx::IntRect GetPictureRect() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
   TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
+  void OnPrepareForwardToHost() override;
+  void OnAbandonForwardToHost() override;
 
  private:
   gfx::IntRect mPictureRect;

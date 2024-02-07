@@ -319,6 +319,9 @@ void ImageContainer::SetCurrentImageInternal(
     if (aImages[0].mProducerID != mCurrentProducerID) {
       mCurrentProducerID = aImages[0].mProducerID;
     }
+    for (auto& img : mCurrentImages) {
+      img.mImage->OnAbandonForwardToHost();
+    }
   }
 
   nsTArray<OwningImage> newImages;
@@ -347,6 +350,7 @@ void ImageContainer::SetCurrentImageInternal(
         break;
       }
     }
+    img->mImage->OnPrepareForwardToHost();
   }
 
   mCurrentImages = std::move(newImages);

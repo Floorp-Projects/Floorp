@@ -46,8 +46,9 @@ LayersIPCActor* KnowsCompositorMediaProxy::GetLayersIPCActor() {
   return mThreadSafeAllocator->GetLayersIPCActor();
 }
 
-void KnowsCompositorMediaProxy::SyncWithCompositor() {
-  mThreadSafeAllocator->SyncWithCompositor();
+void KnowsCompositorMediaProxy::SyncWithCompositor(
+    const Maybe<uint64_t>& aWindowID) {
+  mThreadSafeAllocator->SyncWithCompositor(aWindowID);
 }
 
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface) {

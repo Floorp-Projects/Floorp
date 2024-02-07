@@ -45,5 +45,13 @@ TextureClient* TextureWrapperImage::GetTextureClient(
   return mTextureClient;
 }
 
+void TextureWrapperImage::OnPrepareForwardToHost() {
+  mTextureClient->OnPrepareForwardToHost();
+}
+
+void TextureWrapperImage::OnAbandonForwardToHost() {
+  mTextureClient->OnAbandonForwardToHost();
+}
+
 }  // namespace layers
 }  // namespace mozilla

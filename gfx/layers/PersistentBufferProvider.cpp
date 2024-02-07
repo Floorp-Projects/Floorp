@@ -266,7 +266,8 @@ already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
                                        KnowsCompositor* aKnowsCompositor,
-                                       bool aWillReadFrequently) {
+                                       bool aWillReadFrequently,
+                                       const Maybe<uint64_t>& aWindowID) {
   if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder() ||
       !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
@@ -290,19 +291,21 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
 
   RefPtr<PersistentBufferProviderShared> provider =
       new PersistentBufferProviderShared(aSize, aFormat, aKnowsCompositor,
-                                         texture, aWillReadFrequently);
+                                         texture, aWillReadFrequently,
+                                         aWindowID);
   return provider.forget();
 }
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     KnowsCompositor* aKnowsCompositor, RefPtr<TextureClient>& aTexture,
-    bool aWillReadFrequently)
+    bool aWillReadFrequently, const Maybe<uint64_t>& aWindowID)
     : mSize(aSize),
       mFormat(aFormat),
       mKnowsCompositor(aKnowsCompositor),
       mFront(Nothing()),
-      mWillReadFrequently(aWillReadFrequently) {
+      mWillReadFrequently(aWillReadFrequently),
+      mWindowID(aWindowID) {
   MOZ_ASSERT(aKnowsCompositor);
   if (mTextures.append(aTexture)) {
     mBack = Some<uint32_t>(0);
@@ -481,7 +484,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
       // especially when switching between layer managers (during tab-switch).
       // To make sure we don't get too far ahead of the compositor, we send a
       // sync ping to the compositor thread...
-      mKnowsCompositor->SyncWithCompositor();
+      mKnowsCompositor->SyncWithCompositor(mWindowID);
       // ...and try again.
       for (uint32_t i = 0; i < mTextures.length(); ++i) {
         if (!mTextures[i]->IsReadLocked()) {

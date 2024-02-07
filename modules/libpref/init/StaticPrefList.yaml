@@ -6195,6 +6195,11 @@
   value: true
   mirror: always
 
+- name: gfx.offscreencanvas.shared-provider
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: gfx.omta.background-color
   type: bool
   value: true

@@ -166,6 +166,9 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   base::ProcessId GetParentPid() const override { return OtherPid(); }
 
+  void SyncWithCompositor(
+      const Maybe<uint64_t>& aWindowID = Nothing()) override;
+
   PTextureChild* AllocPTextureChild(
       const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,

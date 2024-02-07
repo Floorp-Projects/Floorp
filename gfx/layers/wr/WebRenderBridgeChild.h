@@ -93,7 +93,8 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   // KnowsCompositor
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
-  void SyncWithCompositor() override;
+  void SyncWithCompositor(
+      const Maybe<uint64_t>& aWindowID = Nothing()) override;
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                     const CompositableHandle& aHandle,
