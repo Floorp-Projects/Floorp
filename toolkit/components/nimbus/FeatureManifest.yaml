@@ -427,6 +427,14 @@ urlbar:
       description: >-
         Feature gate that controls whether all aspects of the Yelp suggestion
         feature are exposed to the user.
+    yelpSuggestPriority:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.yelpPriority
+      description: >-
+        Whether or not showing yelp suggestion as priority.
+        If this variable is true, the following things are processed.
+        * Change the suggested index to 1.
+        * Handle as top pick.
     originsAlternativeEnable:
       description: >-
         Use an alternative ranking algorithm for autofilling origins, that is
