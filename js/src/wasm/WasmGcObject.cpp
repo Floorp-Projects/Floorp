@@ -306,7 +306,7 @@ bool WasmGcObject::loadValue(JSContext* cx, Handle<WasmGcObject*> obj, jsid id,
   if (obj->is<WasmStructObject>()) {
     // `offset` is the field offset, without regard to the in/out-line split.
     // That is handled by the call to `fieldOffsetToAddress`.
-    const WasmStructObject& structObj = obj->as<WasmStructObject>();
+    WasmStructObject& structObj = obj->as<WasmStructObject>();
     // Ensure no out-of-range access possible
     MOZ_RELEASE_ASSERT(structObj.kind() == TypeDefKind::Struct);
     MOZ_RELEASE_ASSERT(offset.get() + type.size() <=
@@ -673,7 +673,7 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
   const auto& structType = structObj.typeDef().structType();
   for (uint32_t offset : structType.inlineTraceOffsets_) {
     AnyRef* fieldPtr =
-        reinterpret_cast<AnyRef*>(&structObj.inlineData_[0] + offset);
+        reinterpret_cast<AnyRef*>(structObj.inlineData() + offset);
     TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
   }
   for (uint32_t offset : structType.outlineTraceOffsets_) {
@@ -743,7 +743,7 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   if (areaIsOutline) {
     data = outlineData_ + areaOffset;
   } else {
-    data = inlineData_ + areaOffset;
+    data = inlineData() + areaOffset;
   }
 
   WriteValTo(val, fieldType, data);

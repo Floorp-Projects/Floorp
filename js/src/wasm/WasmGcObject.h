@@ -217,7 +217,8 @@ class WasmArrayObject : public WasmGcObject {
 // Computing the field offsets is somewhat tricky; see block comment on `class
 // StructLayout` for background.
 
-class WasmStructObject : public WasmGcObject {
+class WasmStructObject : public WasmGcObject,
+                         public TrailingArray<WasmStructObject> {
  public:
   static const JSClass classInline_;
   static const JSClass classOutline_;
@@ -228,17 +229,20 @@ class WasmStructObject : public WasmGcObject {
   // See MWasmLoadObjectField::congruentTo.
   uint8_t* outlineData_;
 
-  // The inline (wasm-struct-level) data fields.  This must be a multiple of
-  // 16 bytes long in order to ensure that no field gets split across the
-  // inline-outline boundary.  As a refinement, we request this field to begin
-  // at an 8-aligned offset relative to the start of the object, so as to
-  // guarantee that `double` typed fields are not subject to misaligned-access
-  // penalties on any target, whilst wasting at maximum 4 bytes of space.
+  // The inline (wasm-struct-level) data fields, stored as a trailing array.
+  // This must be a multiple of 16 bytes long in order to ensure that no field
+  // gets split across the inline-outline boundary.  As a refinement, we request
+  // this field to begin at an 8-aligned offset relative to the start of the
+  // object, so as to guarantee that `double` typed fields are not subject to
+  // misaligned-access penalties on any target, whilst wasting at maximum 4
+  // bytes of space.
   //
-  // `inlineData_` is in reality a variable length block with maximum size
-  // WasmStructObject_MaxInlineBytes bytes.  Do not add any (C++-level) fields
-  // after this point!
-  alignas(8) uint8_t inlineData_[0];
+  // Remember that `inlineData` is in reality a variable length block with
+  // maximum size WasmStructObject_MaxInlineBytes bytes.  Do not add any
+  // (C++-level) fields after this point!
+  uint8_t* inlineData() {
+    return offsetToPointer<uint8_t>(offsetOfInlineData());
+  }
 
   // This tells us how big the object is if we know the number of inline bytes
   // it was created with.
@@ -279,7 +283,7 @@ class WasmStructObject : public WasmGcObject {
   // *outlineBytes to a non-zero value.
   static inline bool requiresOutlineBytes(uint32_t totalBytes);
 
-  // Given the offset of a field, produce the offset in `inlineData_` or
+  // Given the offset of a field, produce the offset in `inlineData` or
   // `*outlineData_` to use, plus a bool indicating which area it is.
   // `fieldType` is for assertional purposes only.
   static inline void fieldOffsetToAreaAndOffset(StorageType fieldType,
@@ -290,14 +294,15 @@ class WasmStructObject : public WasmGcObject {
   // Given the offset of a field, return its actual address.  `fieldType` is
   // for assertional purposes only.
   inline uint8_t* fieldOffsetToAddress(StorageType fieldType,
-                                       uint32_t fieldOffset) const;
+                                       uint32_t fieldOffset);
 
   // JIT accessors
+  static const uint32_t inlineDataAlignment = 8;
   static constexpr size_t offsetOfOutlineData() {
     return offsetof(WasmStructObject, outlineData_);
   }
   static constexpr size_t offsetOfInlineData() {
-    return offsetof(WasmStructObject, inlineData_);
+    return AlignBytes(sizeof(WasmStructObject), inlineDataAlignment);
   }
 
   // Tracing and finalization
@@ -308,8 +313,7 @@ class WasmStructObject : public WasmGcObject {
   void storeVal(const wasm::Val& val, uint32_t fieldIndex);
 };
 
-// This is ensured by the use of `alignas` on `WasmStructObject::inlineData_`.
-static_assert((offsetof(WasmStructObject, inlineData_) % 8) == 0);
+static_assert((WasmStructObject::offsetOfInlineData() % 8) == 0);
 
 // MaxInlineBytes must be a multiple of 16 for reasons described in the
 // comment on `class StructLayout`.  This unfortunately can't be defined
@@ -359,14 +363,13 @@ inline void WasmStructObject::fieldOffsetToAreaAndOffset(StorageType fieldType,
       ((fieldOffset + fieldType.size() - 1) < WasmStructObject_MaxInlineBytes));
 }
 
-inline uint8_t* WasmStructObject::fieldOffsetToAddress(
-    StorageType fieldType, uint32_t fieldOffset) const {
+inline uint8_t* WasmStructObject::fieldOffsetToAddress(StorageType fieldType,
+                                                       uint32_t fieldOffset) {
   bool areaIsOutline;
   uint32_t areaOffset;
   fieldOffsetToAreaAndOffset(fieldType, fieldOffset, &areaIsOutline,
                              &areaOffset);
-  return ((uint8_t*)(areaIsOutline ? outlineData_ : &inlineData_[0])) +
-         areaOffset;
+  return (areaIsOutline ? outlineData_ : inlineData()) + areaOffset;
 }
 
 // Ensure that faulting loads/stores for WasmStructObject and WasmArrayObject
