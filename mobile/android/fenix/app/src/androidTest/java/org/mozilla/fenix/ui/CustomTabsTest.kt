@@ -7,20 +7,25 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
+import androidx.test.uiautomator.UiDevice
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.openAppFromExternalLink
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
+import org.mozilla.fenix.helpers.FeatureSettingsHelperDelegate
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
@@ -31,7 +36,9 @@ import org.mozilla.fenix.ui.robots.notificationShade
 import org.mozilla.fenix.ui.robots.openEditURLView
 import org.mozilla.fenix.ui.robots.searchScreen
 
-class CustomTabsTest : TestSetup() {
+class CustomTabsTest {
+    private lateinit var mDevice: UiDevice
+    private lateinit var mockWebServer: MockWebServer
     private val customMenuItem = "TestMenuItem"
     private val customTabActionButton = "CustomActionButton"
 
@@ -50,6 +57,23 @@ class CustomTabsTest : TestSetup() {
         true,
         false,
     )
+
+    private val featureSettingsHelper = FeatureSettingsHelperDelegate()
+
+    @Before
+    fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mockWebServer = MockWebServer().apply {
+            dispatcher = AndroidAssetDispatcher()
+            start()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
+    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/249659
     @SmokeTest
