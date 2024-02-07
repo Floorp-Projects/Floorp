@@ -68,10 +68,15 @@ module.exports = {
   plugins: ["mozilla", "import", "json"],
   overrides: [
     {
-      // All .eslintrc.js files are in the node environment, so turn that
-      // on here.
-      // https://github.com/eslint/eslint/issues/13008
-      files: [".eslintrc.js"],
+      files: [
+        // All .eslintrc.js files are in the node environment, so turn that
+        // on here.
+        // https://github.com/eslint/eslint/issues/13008
+        ".eslintrc.js",
+        // *.config.js files are generally assumed to be configuration files
+        // based for node.
+        "*.config.?(m)js",
+      ],
       env: {
         node: true,
         browser: false,

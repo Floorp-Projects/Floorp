@@ -10,8 +10,8 @@
 function removePrivateAndStaticFields() {
   return {
     packageLinkPhase({ customElementsManifest }) {
-      customElementsManifest?.modules?.forEach(module => {
-        module?.declarations?.forEach(declaration => {
+      customElementsManifest?.modules?.forEach(m => {
+        m?.declarations?.forEach(declaration => {
           if (declaration.members != null) {
             declaration.members = declaration.members.filter(member => {
               return (
