@@ -10,6 +10,7 @@
 #include "nsPrintfCString.h"
 #include "js/Array.h"               // JS::NewArrayObject
 #include "js/PropertyAndElement.h"  // JS_DefineElement
+#include "mozilla/FileUtils.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"  // For RemoteTypePrefix
@@ -576,8 +577,10 @@ Result<Ok, nsresult> ReadEntry(PRFileDesc* aFile, HangStack& aStack) {
 }
 
 Result<HangDetails, nsresult> ReadHangDetailsFromFile(nsIFile* aFile) {
-  AutoFDClose fd;
-  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0644, &fd.rwget());
+  AutoFDClose raiiFd;
+  nsresult rv =
+      aFile->OpenNSPRFileDesc(PR_RDONLY, 0644, getter_Transfers(raiiFd));
+  const auto fd = raiiFd.get();
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -650,9 +653,11 @@ Result<Ok, nsresult> WriteHangDetailsToFile(HangDetails& aDetails,
     return Err(NS_ERROR_INVALID_POINTER);
   }
 
-  AutoFDClose fd;
+  AutoFDClose raiiFd;
   nsresult rv = aFile->OpenNSPRFileDesc(
-      PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0644, &fd.rwget());
+      PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0644, getter_Transfers(raiiFd));
+  const auto fd = raiiFd.get();
+
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
