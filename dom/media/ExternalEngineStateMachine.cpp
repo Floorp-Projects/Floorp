@@ -15,7 +15,9 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsThreadUtils.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -248,6 +250,7 @@ void ExternalEngineStateMachine::OnEngineInitFailure() {
   state->mEngineInitRequest.Complete();
   state->mInitPromise = nullptr;
   // TODO : Should fallback to the normal playback with media engine.
+  ReportTelemetry(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
 }
 
@@ -276,14 +279,16 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
 
   if (!IsFormatSupportedByExternalEngine(*mInfo)) {
     // The external engine doesn't support the type, try to notify the decoder
-    // to use our own state machine again.
+    // to use our own state machine again. Not a real "error", because it would
+    // fallback to another state machine.
     DecodeError(
         MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
     return;
   }
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  // Only support encrypted playback.
+  // Only support encrypted playback. Not a real "error", because it would
+  // fallback to another state machine.
   if (!mInfo->IsEncrypted() &&
       StaticPrefs::media_wmf_media_engine_enabled() == 2) {
     LOG("External engine only supports encrypted playback by the pref");
@@ -331,6 +336,7 @@ void ExternalEngineStateMachine::OnMetadataNotRead(const MediaResult& aError) {
   MOZ_ASSERT(mState.IsReadingMetadata());
   LOGE("Decode metadata failed, shutting down decoder");
   mState.AsReadingMetadata()->mMetadataRequest.Complete();
+  ReportTelemetry(aError);
   DecodeError(aError);
 }
 
@@ -466,6 +472,7 @@ void ExternalEngineStateMachine::OnSeekRejected(
   MOZ_ASSERT(NS_FAILED(aReject.mError),
              "Cancels should also disconnect mSeekRequest");
   state->RejectIfExists(__func__);
+  ReportTelemetry(aReject.mError);
   DecodeError(aReject.mError);
 }
 
@@ -838,6 +845,7 @@ void ExternalEngineStateMachine::OnRequestAudio() {
                 // so here just silently ignore this.
                 break;
               default:
+                ReportTelemetry(aError);
                 DecodeError(aError);
             }
           })
@@ -914,6 +922,7 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                 // so here just silently ignore this.
                 break;
               default:
+                ReportTelemetry(aError);
                 DecodeError(aError);
             }
           })
@@ -1100,11 +1109,14 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
   if (aError == NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR) {
     // The external engine doesn't support the type, try to notify the decoder
     // to use our own state machine again.
+    ReportTelemetry(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR);
     DecodeError(
         MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
   } else if (aError == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR) {
+    ReportTelemetry(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR);
     RecoverFromCDMProcessCrashIfNeeded();
   } else {
+    ReportTelemetry(aError);
     DecodeError(aError);
   }
 }
@@ -1190,7 +1202,8 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
   }
 
   // TODO : set CDM proxy again if we recreate the media engine after crash.
-  LOG("SetCDMProxy=%p", aProxy);
+  mKeySystem = NS_ConvertUTF16toUTF8(aProxy->KeySystem());
+  LOG("SetCDMProxy=%p (key-system=%s)", aProxy, mKeySystem.get());
   MOZ_DIAGNOSTIC_ASSERT(mEngine);
   if (!mEngine->SetCDMProxy(aProxy)) {
     LOG("Failed to set CDM proxy on the engine");
@@ -1214,6 +1227,45 @@ bool ExternalEngineStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
 #else
   return false;
 #endif
+}
+
+void ExternalEngineStateMachine::ReportTelemetry(const MediaResult& aError) {
+  glean::mfcdm::ErrorExtra extraData;
+  extraData.errorName = Some(aError.ErrorName());
+  nsAutoCString resolution;
+  if (mInfo) {
+    if (mInfo->HasAudio()) {
+      extraData.audioCodec = Some(mInfo->mAudio.mMimeType);
+    }
+    if (mInfo->HasVideo()) {
+      extraData.videoCodec = Some(mInfo->mVideo.mMimeType);
+      DetermineResolutionForTelemetry(*mInfo, resolution);
+      extraData.resolution = Some(resolution);
+    }
+  }
+  if (!mKeySystem.IsEmpty()) {
+    extraData.keySystem = Some(mKeySystem);
+  }
+  glean::mfcdm::error.Record(Some(extraData));
+  if (MOZ_LOG_TEST(gMediaDecoderLog, LogLevel::Debug)) {
+    nsPrintfCString logMessage{"MFCDM Error event, error=%s",
+                               aError.ErrorName().get()};
+    if (mInfo) {
+      if (mInfo->HasAudio()) {
+        logMessage.Append(
+            nsPrintfCString{", audio=%s", mInfo->mAudio.mMimeType.get()});
+      }
+      if (mInfo->HasVideo()) {
+        logMessage.Append(nsPrintfCString{", video=%s, resolution=%s",
+                                          mInfo->mVideo.mMimeType.get(),
+                                          resolution.get()});
+      }
+    }
+    if (!mKeySystem.IsEmpty()) {
+      logMessage.Append(nsPrintfCString{", keySystem=%s", mKeySystem.get()});
+    }
+    LOG("%s", logMessage.get());
+  }
 }
 
 #undef FMT

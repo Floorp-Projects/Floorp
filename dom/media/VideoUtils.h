@@ -578,6 +578,9 @@ inline gfx::YUVColorSpace DefaultColorSpace(const gfx::IntSize& aSize) {
 
 bool IsWaveMimetype(const nsACString& aMimeType);
 
+void DetermineResolutionForTelemetry(const MediaInfo& aInfo,
+                                     nsCString& aResolutionOut);
+
 }  // end namespace mozilla
 
 #endif
