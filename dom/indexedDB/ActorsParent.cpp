@@ -3022,7 +3022,7 @@ class FactoryOp
   // Must be released on the background thread!
   SafeRefPtr<Factory> mFactory;
 
-  RefPtr<ThreadsafeContentParentHandle> mContentHandle;
+  Maybe<ContentParentId> mContentParentId;
 
   // Must be released on the main thread!
   RefPtr<DirectoryLock> mDirectoryLock;
@@ -3075,7 +3075,7 @@ class FactoryOp
 
  protected:
   FactoryOp(SafeRefPtr<Factory> aFactory,
-            RefPtr<ThreadsafeContentParentHandle> aContentHandle,
+            const Maybe<ContentParentId>& aContentParentId,
             const CommonFactoryRequestParams& aCommonParams, bool aDeleting);
 
   ~FactoryOp() override {
@@ -3130,8 +3130,7 @@ class FactoryOp
   virtual void SendBlockedNotification() = 0;
 
  private:
-  mozilla::Result<PermissionValue, nsresult> CheckPermission(
-      ContentParent* aContentParent);
+  mozilla::Result<PermissionValue, nsresult> CheckPermission();
 
   nsresult FinishOpen();
 
@@ -3162,7 +3161,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
  public:
   OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
-                 RefPtr<ThreadsafeContentParentHandle> aContentHandle,
+                 const Maybe<ContentParentId>& aContentParentId,
                  const CommonFactoryRequestParams& aParams);
 
  private:
@@ -3250,9 +3249,9 @@ class DeleteDatabaseOp final : public FactoryOp {
 
  public:
   DeleteDatabaseOp(SafeRefPtr<Factory> aFactory,
-                   RefPtr<ThreadsafeContentParentHandle> aContentHandle,
+                   const Maybe<ContentParentId>& aContentParentId,
                    const CommonFactoryRequestParams& aParams)
-      : FactoryOp(std::move(aFactory), std::move(aContentHandle), aParams,
+      : FactoryOp(std::move(aFactory), aContentParentId, aParams,
                   /* aDeleting */ true),
         mPreviousVersion(0) {}
 
@@ -9047,16 +9046,26 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     return nullptr;
   }
 
-  RefPtr<ThreadsafeContentParentHandle> contentHandle =
-      BackgroundParent::GetContentParentHandle(Manager());
+  Maybe<ContentParentId> contentParentId;
+
+  uint64_t childID = BackgroundParent::GetChildID(Manager());
+  if (childID) {
+    // If childID is not zero we are dealing with an other-process actor. We
+    // want to initialize OpenDatabaseOp/DeleteDatabaseOp here with the ID
+    // (and later also Database) in that case, so Database::IsOwnedByProcess
+    // can find Databases belonging to a particular content process when
+    // QuotaClient::AbortOperationsForProcess is called which is currently used
+    // to abort operations for content processes only.
+    contentParentId = Some(ContentParentId(childID));
+  }
 
   auto actor = [&]() -> RefPtr<FactoryOp> {
     if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
-      return MakeRefPtr<OpenDatabaseOp>(
-          SafeRefPtrFromThis(), std::move(contentHandle), *commonParams);
+      return MakeRefPtr<OpenDatabaseOp>(SafeRefPtrFromThis(), contentParentId,
+                                        *commonParams);
     } else {
-      return MakeRefPtr<DeleteDatabaseOp>(
-          SafeRefPtrFromThis(), std::move(contentHandle), *commonParams);
+      return MakeRefPtr<DeleteDatabaseOp>(SafeRefPtrFromThis(), contentParentId,
+                                          *commonParams);
     }
   }();
 
@@ -14372,13 +14381,13 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
 }
 
 FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
-                     RefPtr<ThreadsafeContentParentHandle> aContentHandle,
+                     const Maybe<ContentParentId>& aContentParentId,
                      const CommonFactoryRequestParams& aCommonParams,
                      bool aDeleting)
     : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
                             aFactory->GetLoggingInfo()->NextRequestSN()),
       mFactory(std::move(aFactory)),
-      mContentHandle(std::move(aContentHandle)),
+      mContentParentId(aContentParentId),
       mCommonParams(aCommonParams),
       mDirectoryLockId(-1),
       mState(State::Initial),
@@ -14533,16 +14542,13 @@ nsresult FactoryOp::Open() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mState == State::Initial);
 
-  RefPtr<ContentParent> contentParent =
-      mContentHandle ? mContentHandle->GetContentParent() : nullptr;
-
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QM_TRY_INSPECT(const auto& permission, CheckPermission(contentParent));
+  QM_TRY_INSPECT(const auto& permission, CheckPermission());
 
   MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed ||
              permission == PermissionValue::kPermissionDenied);
@@ -14693,8 +14699,7 @@ void FactoryOp::FinishSendResults() {
   mFactory = nullptr;
 }
 
-Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
-    ContentParent* aContentParent) {
+Result<PermissionValue, nsresult> FactoryOp::CheckPermission() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Initial);
 
@@ -14994,11 +14999,10 @@ void FactoryOp::ActorDestroy(ActorDestroyReason aWhy) {
   NoteActorDestroyed();
 }
 
-OpenDatabaseOp::OpenDatabaseOp(
-    SafeRefPtr<Factory> aFactory,
-    RefPtr<ThreadsafeContentParentHandle> aContentHandle,
-    const CommonFactoryRequestParams& aParams)
-    : FactoryOp(std::move(aFactory), std::move(aContentHandle), aParams,
+OpenDatabaseOp::OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
+                               const Maybe<ContentParentId>& aContentParentId,
+                               const CommonFactoryRequestParams& aParams)
+    : FactoryOp(std::move(aFactory), aContentParentId, aParams,
                 /* aDeleting */ false),
       mMetadata(MakeSafeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
       mRequestedVersion(aParams.metadata().version()),
@@ -15841,11 +15845,9 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   mDatabase = MakeSafeRefPtr<Database>(
       SafeRefPtr{static_cast<Factory*>(Manager()),
                  AcquireStrongRefFromRawPtr{}},
-      mCommonParams.principalInfo(),
-      mContentHandle ? Some(mContentHandle->ChildID()) : Nothing(),
-      mOriginMetadata, mTelemetryId, mMetadata.clonePtr(),
-      mFileManager.clonePtr(), std::move(mDirectoryLock), mInPrivateBrowsing,
-      maybeKey);
+      mCommonParams.principalInfo(), mContentParentId, mOriginMetadata,
+      mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
+      std::move(mDirectoryLock), mInPrivateBrowsing, maybeKey);
 
   if (info) {
     info->mLiveDatabases.AppendElement(
