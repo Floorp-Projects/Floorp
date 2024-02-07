@@ -1440,8 +1440,6 @@ class Element : public FragmentOrElement {
   // DO NOT USE THIS FUNCTION directly in C++. This function is supposed to be
   // called from JS. Use PresShell::ScrollContentIntoView instead.
   void ScrollIntoView(const BooleanOrScrollIntoViewOptions& aObject);
-  MOZ_CAN_RUN_SCRIPT void Scroll(double aXScroll, double aYScroll);
-  MOZ_CAN_RUN_SCRIPT void Scroll(const ScrollToOptions& aOptions);
   MOZ_CAN_RUN_SCRIPT void ScrollTo(double aXScroll, double aYScroll);
   MOZ_CAN_RUN_SCRIPT void ScrollTo(const ScrollToOptions& aOptions);
   MOZ_CAN_RUN_SCRIPT void ScrollBy(double aXScrollDif, double aYScrollDif);
@@ -1891,18 +1889,6 @@ class Element : public FragmentOrElement {
                             const mozAutoDocUpdate& aGuard);
 
   /**
-   * Scroll to a new position using behavior evaluated from CSS and
-   * a CSSOM-View DOM method ScrollOptions dictionary.  The scrolling may
-   * be performed asynchronously or synchronously depending on the resolved
-   * scroll-behavior.
-   *
-   * @param aScroll       Destination of scroll, in CSS pixels
-   * @param aOptions      Dictionary of options to be evaluated
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void Scroll(const CSSIntPoint& aScroll, const ScrollOptions& aOptions);
-
-  /**
    * Convert an attribute string value to attribute type based on the type of
    * attribute.  Called by SetAttr().  Note that at the moment we only do this
    * for attributes in the null namespace (kNameSpaceID_None).
@@ -2153,6 +2139,10 @@ class Element : public FragmentOrElement {
 
   /** Gets the scroll size as for the scroll{Width,Height} APIs */
   MOZ_CAN_RUN_SCRIPT nsSize GetScrollSize();
+  /** Gets the scroll position as for the scroll{Top,Left} APIs */
+  MOZ_CAN_RUN_SCRIPT nsPoint GetScrollOrigin();
+  /** Gets the scroll range as for the scroll{Top,Left}{Min,Max} APIs */
+  MOZ_CAN_RUN_SCRIPT nsRect GetScrollRange();
 
   /**
    * GetCustomInterface is somewhat like a GetInterface, but it is expected

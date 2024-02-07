@@ -805,161 +805,121 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
       ScrollAxis(inline_, WhenToScroll::Always), scrollFlags);
 }
 
-void Element::Scroll(const CSSIntPoint& aScroll,
-                     const ScrollOptions& aOptions) {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                                ? ScrollMode::SmoothMsd
-                                : ScrollMode::Instant;
-
-    sf->ScrollToCSSPixels(aScroll, scrollMode);
-  }
-}
-
-void Element::Scroll(double aXScroll, double aYScroll) {
-  // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
-  auto scrollPos = CSSIntPoint::Truncate(mozilla::ToZeroIfNonfinite(aXScroll),
-                                         mozilla::ToZeroIfNonfinite(aYScroll));
-
-  Scroll(scrollPos, ScrollOptions());
-}
-
-void Element::Scroll(const ScrollToOptions& aOptions) {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
-    if (aOptions.mLeft.WasPassed()) {
-      scrollPos.x = static_cast<int32_t>(
-          mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
-    }
-    if (aOptions.mTop.WasPassed()) {
-      scrollPos.y = static_cast<int32_t>(
-          mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
-    }
-    Scroll(scrollPos, aOptions);
-  }
-}
-
 void Element::ScrollTo(double aXScroll, double aYScroll) {
-  Scroll(aXScroll, aYScroll);
+  ScrollToOptions options;
+  options.mLeft.Construct(aXScroll);
+  options.mTop.Construct(aYScroll);
+  ScrollTo(options);
 }
 
-void Element::ScrollTo(const ScrollToOptions& aOptions) { Scroll(aOptions); }
+void Element::ScrollTo(const ScrollToOptions& aOptions) {
+  // When the scroll top is 0, we don't need to flush layout to scroll to that
+  // point; we know 0 is always in range.  At least we think so...  But we do
+  // need to flush frames so we ensure we find the right scrollable frame if
+  // there is one. If it's nonzero, we need to flush layout because we need to
+  // figure out what our real scrollTopMax is.
+  //
+  // If we have a left value, we can't assume things based on it's value,
+  // depending on our direction and layout 0 may or may not be in our scroll
+  // range.  So we need to flush layout no matter what then.
+  const bool needsLayoutFlush =
+      aOptions.mLeft.WasPassed() ||
+      (aOptions.mTop.WasPassed() && aOptions.mTop.Value() != 0.0);
+
+  nsIScrollableFrame* sf = GetScrollFrame(
+      nullptr, needsLayoutFlush ? FlushType::Layout : FlushType::Frames);
+  if (!sf) {
+    return;
+  }
+  CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
+  if (aOptions.mLeft.WasPassed()) {
+    scrollPos.x = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
+  }
+  if (aOptions.mTop.WasPassed()) {
+    scrollPos.y = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
+  }
+  ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
+                              ? ScrollMode::SmoothMsd
+                              : ScrollMode::Instant;
+  sf->ScrollToCSSPixels(scrollPos, scrollMode);
+}
 
 void Element::ScrollBy(double aXScrollDif, double aYScrollDif) {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    ScrollToOptions options;
-    options.mLeft.Construct(aXScrollDif);
-    options.mTop.Construct(aYScrollDif);
-    ScrollBy(options);
-  }
+  ScrollToOptions options;
+  options.mLeft.Construct(aXScrollDif);
+  options.mTop.Construct(aYScrollDif);
+  ScrollBy(options);
 }
 
 void Element::ScrollBy(const ScrollToOptions& aOptions) {
   nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    CSSIntPoint scrollDelta;
-    if (aOptions.mLeft.WasPassed()) {
-      scrollDelta.x = static_cast<int32_t>(
-          mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
-    }
-    if (aOptions.mTop.WasPassed()) {
-      scrollDelta.y = static_cast<int32_t>(
-          mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
-    }
-
-    ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                                ? ScrollMode::SmoothMsd
-                                : ScrollMode::Instant;
-
-    sf->ScrollByCSSPixels(scrollDelta, scrollMode);
+  if (!sf) {
+    return;
   }
+
+  CSSIntPoint scrollDelta;
+  if (aOptions.mLeft.WasPassed()) {
+    scrollDelta.x = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
+  }
+
+  if (aOptions.mTop.WasPassed()) {
+    scrollDelta.y = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
+  }
+
+  auto scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
+                        ? ScrollMode::SmoothMsd
+                        : ScrollMode::Instant;
+  sf->ScrollByCSSPixels(scrollDelta, scrollMode);
 }
 
 int32_t Element::ScrollTop() {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetRoundedScrollPositionCSSPixels().y.value : 0;
+  return CSSPixel::FromAppUnitsRounded(GetScrollOrigin().y);
 }
 
 void Element::SetScrollTop(int32_t aScrollTop) {
-  // When aScrollTop is 0, we don't need to flush layout to scroll to that
-  // point; we know 0 is always in range.  At least we think so...  But we do
-  // need to flush frames so we ensure we find the right scrollable frame if
-  // there is one.
-  //
-  // If aScrollTop is nonzero, we need to flush layout because we need to figure
-  // out what our real scrollTopMax is.
-  FlushType flushType = aScrollTop == 0 ? FlushType::Frames : FlushType::Layout;
-  nsIScrollableFrame* sf = GetScrollFrame(nullptr, flushType);
-  if (sf) {
-    ScrollMode scrollMode =
-        sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
-
-    sf->ScrollToCSSPixels(
-        CSSIntPoint(sf->GetRoundedScrollPositionCSSPixels().x, aScrollTop),
-        scrollMode);
-  }
+  ScrollToOptions options;
+  options.mTop.Construct(aScrollTop);
+  ScrollTo(options);
 }
 
 int32_t Element::ScrollLeft() {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  return sf ? sf->GetRoundedScrollPositionCSSPixels().x.value : 0;
+  return CSSPixel::FromAppUnitsRounded(GetScrollOrigin().x);
 }
 
 void Element::SetScrollLeft(int32_t aScrollLeft) {
-  // We can't assume things here based on the value of aScrollLeft, because
-  // depending on our direction and layout 0 may or may not be in our scroll
-  // range.  So we need to flush layout no matter what.
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    ScrollMode scrollMode =
-        sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
-
-    sf->ScrollToCSSPixels(
-        CSSIntPoint(aScrollLeft, sf->GetRoundedScrollPositionCSSPixels().y),
-        scrollMode);
-  }
+  ScrollToOptions options;
+  options.mLeft.Construct(aScrollLeft);
+  ScrollTo(options);
 }
 
 void Element::MozScrollSnap() {
-  nsIScrollableFrame* sf = GetScrollFrame(nullptr, FlushType::None);
-  if (sf) {
+  if (nsIScrollableFrame* sf = GetScrollFrame(nullptr, FlushType::None)) {
     sf->ScrollSnap();
   }
 }
 
-int32_t Element::ScrollTopMin() {
+nsRect Element::GetScrollRange() {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
-    return 0;
+    return nsRect();
   }
-  return CSSPixel::FromAppUnits(sf->GetScrollRange().y).Rounded();
+  return sf->GetScrollRange();
+}
+
+int32_t Element::ScrollTopMin() {
+  return CSSPixel::FromAppUnitsRounded(GetScrollRange().Y());
 }
 
 int32_t Element::ScrollTopMax() {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return 0;
-  }
-  return CSSPixel::FromAppUnits(sf->GetScrollRange().YMost()).Rounded();
+  return CSSPixel::FromAppUnitsRounded(GetScrollRange().YMost());
 }
 
 int32_t Element::ScrollLeftMin() {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return 0;
-  }
-  return CSSPixel::FromAppUnits(sf->GetScrollRange().x).Rounded();
+  return CSSPixel::FromAppUnitsRounded(GetScrollRange().X());
 }
 
 int32_t Element::ScrollLeftMax() {
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return 0;
-  }
-  return CSSPixel::FromAppUnits(sf->GetScrollRange().XMost()).Rounded();
+  return CSSPixel::FromAppUnitsRounded(GetScrollRange().XMost());
 }
 
 static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame) {
@@ -993,6 +953,14 @@ nsSize Element::GetScrollSize() {
     size = GetScrollRectSizeForOverflowVisibleFrame(frame);
   }
   return size;
+}
+
+nsPoint Element::GetScrollOrigin() {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return nsPoint();
+  }
+  return sf->GetScrollPosition();
 }
 
 int32_t Element::ScrollHeight() {
@@ -1831,7 +1799,7 @@ void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
 
 bool Element::HasVisibleScrollbars() {
   nsIScrollableFrame* scrollFrame = GetScrollFrame();
-  return scrollFrame && (!scrollFrame->GetScrollbarVisibility().isEmpty());
+  return scrollFrame && !scrollFrame->GetScrollbarVisibility().isEmpty();
 }
 
 nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
