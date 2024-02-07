@@ -14,6 +14,7 @@ edition = "2021"
 name = "webext-storage"
 version = "0.1.0"
 authors = ["sync-team@mozilla.com"]
+exclude = ["/android"]
 readme = "README.md"
 license = "MPL-2.0"
 
@@ -67,7 +68,7 @@ libsqlite3-sys = "0.27.0"
 tempfile = "3"
 
 [dev-dependencies.env_logger]
-version = "0.7"
+version = "0.10"
 default-features = false
 
 [dev-dependencies.sql-support]

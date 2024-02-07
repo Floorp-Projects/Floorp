@@ -47,6 +47,9 @@ const MAX_QUERY_LENGTH: usize = 150;
 /// "keyword=:modifier" (please see is_modifier()), define this how many words we should check.
 const MAX_MODIFIER_WORDS_NUMBER: usize = 2;
 
+/// The threshold that enables prefix-match.
+const PREFIX_MATCH_THRESHOLD: usize = 6;
+
 impl<'a> SuggestDao<'a> {
     /// Inserts the suggestions for Yelp attachment into the database.
     pub fn insert_yelp_suggestions(
@@ -117,35 +120,36 @@ impl<'a> SuggestDao<'a> {
     }
 
     /// Fetch Yelp suggestion from given user's query.
-    pub fn fetch_yelp_suggestion(&self, query: &SuggestionQuery) -> Result<Option<Suggestion>> {
+    pub fn fetch_yelp_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
         if !query.providers.contains(&SuggestionProvider::Yelp) {
-            return Ok(None);
+            return Ok(vec![]);
         }
 
         if query.keyword.len() > MAX_QUERY_LENGTH {
-            return Ok(None);
+            return Ok(vec![]);
         }
 
         let query_string = &query.keyword.trim();
         if !query_string.contains(' ') {
-            if !self.is_subject(query_string)? {
-                return Ok(None);
-            }
-
+            let Some((subject, subject_exact_match)) = self.find_subject(query_string)? else {
+                return Ok(vec![]);
+            };
             let builder = SuggestionBuilder {
-                query,
-                subject: query_string,
+                subject: &subject,
+                subject_exact_match,
                 pre_modifier: None,
                 post_modifier: None,
                 location_sign: None,
                 location: None,
                 need_location: false,
+                pre_yelp_modifier: None,
+                post_yelp_modifier: None,
             };
-            return Ok(Some(builder.into()));
+            return Ok(vec![builder.into()]);
         }
 
         // Find the yelp keyword modifier and remove them from the query.
-        let (query_without_yelp_modifiers, _, _) =
+        let (query_without_yelp_modifiers, pre_yelp_modifier, post_yelp_modifier) =
             self.find_modifiers(query_string, Modifier::Yelp, Modifier::Yelp)?;
 
         // Find the location sign and the location.
@@ -154,32 +158,33 @@ impl<'a> SuggestDao<'a> {
 
         if let (Some(_), false) = (&location, need_location) {
             // The location sign does not need the specific location, but user is setting something.
-            return Ok(None);
+            return Ok(vec![]);
         }
 
         if query_without_location.is_empty() {
             // No remained query.
-            return Ok(None);
+            return Ok(vec![]);
         }
 
         // Find the modifiers.
         let (subject_candidate, pre_modifier, post_modifier) =
             self.find_modifiers(&query_without_location, Modifier::Pre, Modifier::Post)?;
 
-        if !self.is_subject(&subject_candidate)? {
-            return Ok(None);
-        }
-
+        let Some((subject, subject_exact_match)) = self.find_subject(&subject_candidate)? else {
+            return Ok(vec![]);
+        };
         let builder = SuggestionBuilder {
-            query,
-            subject: &subject_candidate,
+            subject: &subject,
+            subject_exact_match,
             pre_modifier,
             post_modifier,
             location_sign,
             location,
             need_location,
+            pre_yelp_modifier,
+            post_yelp_modifier,
         };
-        Ok(Some(builder.into()))
+        Ok(vec![builder.into()])
     }
 
     /// Find the location information from the given query string.
@@ -296,6 +301,46 @@ impl<'a> SuggestDao<'a> {
         ))
     }
 
+    /// Find the subject from the given string.
+    /// It returns the Option. If it is not none, it contains the tuple as follows:
+    /// (
+    ///   String: Subject.
+    ///   bool: Whether the subject matched exactly with the paramter.
+    /// )
+    fn find_subject(&self, candidate: &str) -> Result<Option<(String, bool)>> {
+        if candidate.is_empty() {
+            return Ok(None);
+        }
+
+        // If the length of subject candidate is less than PREFIX_MATCH_THRESHOLD,
+        // should exact match.
+        if candidate.len() < PREFIX_MATCH_THRESHOLD {
+            return Ok(if self.is_subject(candidate)? {
+                Some((candidate.to_string(), true))
+            } else {
+                None
+            });
+        }
+
+        // Otherwise, apply prefix-match.
+        Ok(
+            match self.conn.query_row_and_then_cachable(
+                "SELECT keyword FROM yelp_subjects WHERE keyword BETWEEN :candidate AND :candidate || x'FFFF' ORDER BY LENGTH(keyword) ASC LIMIT 1",
+                named_params! {
+                    ":candidate": candidate.to_lowercase(),
+                },
+                |row| row.get::<_, String>(0),
+                true,
+            ) {
+                Ok(keyword) => {
+                    debug_assert!(candidate.len() <= keyword.len());
+                    Some((format!("{}{}", candidate, &keyword[candidate.len()..]), candidate.len() == keyword.len()))
+                },
+                Err(_) => None
+            }
+        )
+    }
+
     fn is_modifier(&self, word: &str, modifier_type: Modifier) -> Result<bool> {
         let result = self.conn.query_row_and_then_cachable(
             "
@@ -315,10 +360,6 @@ impl<'a> SuggestDao<'a> {
     }
 
     fn is_subject(&self, word: &str) -> Result<bool> {
-        if word.is_empty() {
-            return Ok(false);
-        }
-
         let result = self.conn.query_row_and_then_cachable(
             "
         SELECT EXISTS (
@@ -337,32 +378,34 @@ impl<'a> SuggestDao<'a> {
 }
 
 struct SuggestionBuilder<'a> {
-    query: &'a SuggestionQuery,
     subject: &'a str,
+    subject_exact_match: bool,
     pre_modifier: Option<String>,
     post_modifier: Option<String>,
     location_sign: Option<String>,
     location: Option<String>,
     need_location: bool,
+    pre_yelp_modifier: Option<String>,
+    post_yelp_modifier: Option<String>,
 }
 
 impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
     fn from(builder: SuggestionBuilder<'a>) -> Suggestion {
         // This location sign such the 'near by' needs to add as a description parameter.
         let location_modifier = if !builder.need_location {
-            builder.location_sign
+            builder.location_sign.as_deref()
         } else {
             None
         };
         let description = [
-            builder.pre_modifier,
-            Some(builder.subject.to_string()),
-            builder.post_modifier,
+            builder.pre_modifier.as_deref(),
+            Some(builder.subject),
+            builder.post_modifier.as_deref(),
             location_modifier,
         ]
         .iter()
         .flatten()
-        .map(|s| s.as_str())
+        .copied()
         .collect::<Vec<_>>()
         .join(" ");
 
@@ -375,10 +418,25 @@ impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
         }
         url.push_str(&parameters.finish());
 
+        let title = [
+            builder.pre_yelp_modifier.as_deref(),
+            builder.pre_modifier.as_deref(),
+            Some(builder.subject),
+            builder.post_modifier.as_deref(),
+            builder.location_sign.as_deref(),
+            builder.location.as_deref(),
+            builder.post_yelp_modifier.as_deref(),
+        ]
+        .iter()
+        .flatten()
+        .copied()
+        .collect::<Vec<_>>()
+        .join(" ");
+
         Suggestion::Yelp {
             url,
-            // Use user’s query as title as it is.
-            title: builder.query.keyword.clone(),
+            title,
+            is_top_pick: builder.subject_exact_match,
         }
     }
 }

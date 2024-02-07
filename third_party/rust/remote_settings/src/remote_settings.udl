@@ -8,9 +8,9 @@ typedef string RsJsonObject;
 namespace remote_settings {};
 
 dictionary RemoteSettingsConfig {
-    string? server_url = null;
-    string? bucket_name = null;
     string collection_name;
+    string? bucket_name = null;
+    string? server_url = null;
 };
 
 dictionary RemoteSettingsResponse {
@@ -54,7 +54,7 @@ interface RemoteSettings {
     [Throws=RemoteSettingsError]
     RemoteSettingsResponse get_records();
 
-    // Fetch all records added to the server since the provided timestamp, 
+    // Fetch all records added to the server since the provided timestamp,
     // using the configuration this client was initialized with.
     [Throws=RemoteSettingsError]
     RemoteSettingsResponse get_records_since(u64 timestamp);

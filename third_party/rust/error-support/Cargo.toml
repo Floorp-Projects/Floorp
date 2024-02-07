@@ -14,6 +14,7 @@ edition = "2021"
 name = "error-support"
 version = "0.1.0"
 authors = ["Thom Chiovoloni <tchiovoloni@mozilla.com>"]
+exclude = ["/android"]
 autotests = false
 readme = "README.md"
 license = "MPL-2.0"

@@ -17,7 +17,10 @@ authors = [
     "The Android Mobile Team <firefox-android-team@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
 ]
-exclude = ["/android"]
+exclude = [
+    "/android",
+    "/ios",
+]
 description = "A Remote Settings client intended for application layer platforms."
 license = "MPL-2.0"
 

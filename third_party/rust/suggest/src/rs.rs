@@ -79,7 +79,7 @@ impl SuggestRemoteSettingsClient for remote_settings::Client {
 ///
 /// Except for the type, Suggest records don't carry additional fields. All
 /// suggestions are stored in each record's attachment.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type")]
 pub(crate) enum SuggestRecord {
     #[serde(rename = "icon")]
@@ -92,6 +92,12 @@ pub(crate) enum SuggestRecord {
     Pocket,
     #[serde(rename = "yelp-suggestions")]
     Yelp,
+    #[serde(rename = "mdn-suggestions")]
+    Mdn,
+    #[serde(rename = "weather")]
+    Weather(DownloadedWeatherData),
+    #[serde(rename = "configuration")]
+    GlobalConfig(DownloadedGlobalConfig),
 }
 
 /// Represents either a single value, or a list of values. This is used to
@@ -148,15 +154,16 @@ where
 }
 
 /// Fields that are common to all downloaded suggestions.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct DownloadedSuggestionCommonDetails {
     pub keywords: Vec<String>,
     pub title: String,
     pub url: String,
+    pub score: Option<f64>,
 }
 
 /// An AMP suggestion to ingest from an AMP-Wikipedia attachment.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct DownloadedAmpSuggestion {
     #[serde(flatten)]
     pub common_details: DownloadedSuggestionCommonDetails,
@@ -171,7 +178,7 @@ pub(crate) struct DownloadedAmpSuggestion {
 }
 
 /// A Wikipedia suggestion to ingest from an AMP-Wikipedia attachment.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct DownloadedWikipediaSuggestion {
     #[serde(flatten)]
     pub common_details: DownloadedSuggestionCommonDetails,
@@ -181,7 +188,7 @@ pub(crate) struct DownloadedWikipediaSuggestion {
 
 /// A suggestion to ingest from an AMP-Wikipedia attachment downloaded from
 /// Remote Settings.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub(crate) enum DownloadedAmpWikipediaSuggestion {
     Amp(DownloadedAmpSuggestion),
     Wikipedia(DownloadedWikipediaSuggestion),
@@ -287,4 +294,48 @@ pub(crate) struct DownloadedYelpSuggestion {
     pub location_signs: Vec<DownloadedYelpLocationSign>,
     #[serde(rename = "yelpModifiers")]
     pub yelp_modifiers: Vec<String>,
+}
+
+/// An MDN suggestion to ingest from an attachment
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedMdnSuggestion {
+    pub url: String,
+    pub title: String,
+    pub description: String,
+    pub keywords: Vec<String>,
+    pub score: f64,
+}
+
+/// Weather data to ingest from a weather record
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedWeatherData {
+    pub weather: DownloadedWeatherDataInner,
+}
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedWeatherDataInner {
+    pub min_keyword_length: i32,
+    pub keywords: Vec<String>,
+    // Remote settings doesn't support floats in record JSON so we use a
+    // stringified float instead. If a float can't be parsed, this will be None.
+    #[serde(default, deserialize_with = "de_stringified_f64")]
+    pub score: Option<f64>,
+}
+
+/// Global Suggest configuration data to ingest from a configuration record
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedGlobalConfig {
+    pub configuration: DownloadedGlobalConfigInner,
+}
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedGlobalConfigInner {
+    /// The maximum number of times the user can click "Show less frequently"
+    /// for a suggestion in the UI.
+    pub show_less_frequently_cap: i32,
+}
+
+fn de_stringified_f64<'de, D>(deserializer: D) -> std::result::Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(|s| s.parse().ok())
 }
