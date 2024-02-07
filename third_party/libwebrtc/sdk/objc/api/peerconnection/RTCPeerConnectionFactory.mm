@@ -32,12 +32,12 @@
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/enable_media.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #import "components/video_codec/RTCVideoDecoderFactoryH264.h"
 #import "components/video_codec/RTCVideoEncoderFactoryH264.h"
-#include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
@@ -195,21 +195,17 @@
     dependencies.trials = std::make_unique<webrtc::FieldTrialBasedConfig>();
     dependencies.task_queue_factory =
         webrtc::CreateDefaultTaskQueueFactory(dependencies.trials.get());
-    cricket::MediaEngineDependencies media_deps;
-    media_deps.adm = std::move(audioDeviceModule);
-    media_deps.task_queue_factory = dependencies.task_queue_factory.get();
-    media_deps.audio_encoder_factory = std::move(audioEncoderFactory);
-    media_deps.audio_decoder_factory = std::move(audioDecoderFactory);
-    media_deps.video_encoder_factory = std::move(videoEncoderFactory);
-    media_deps.video_decoder_factory = std::move(videoDecoderFactory);
+    dependencies.adm = std::move(audioDeviceModule);
+    dependencies.audio_encoder_factory = std::move(audioEncoderFactory);
+    dependencies.audio_decoder_factory = std::move(audioDecoderFactory);
+    dependencies.video_encoder_factory = std::move(videoEncoderFactory);
+    dependencies.video_decoder_factory = std::move(videoDecoderFactory);
     if (audioProcessingModule) {
-      media_deps.audio_processing = std::move(audioProcessingModule);
+      dependencies.audio_processing = std::move(audioProcessingModule);
     } else {
-      media_deps.audio_processing = webrtc::AudioProcessingBuilder().Create();
+      dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
     }
-    media_deps.trials = dependencies.trials.get();
-    dependencies.media_engine = cricket::CreateMediaEngine(std::move(media_deps));
-    dependencies.call_factory = webrtc::CreateCallFactory();
+    webrtc::EnableMedia(dependencies);
     dependencies.event_log_factory =
         std::make_unique<webrtc::RtcEventLogFactory>(dependencies.task_queue_factory.get());
     dependencies.network_controller_factory = std::move(networkControllerFactory);
