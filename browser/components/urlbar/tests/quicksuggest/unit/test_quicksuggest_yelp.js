@@ -146,7 +146,7 @@ add_task(async function yelpSpecificPrefsDisabled() {
 
 // Check wheather the Yelp suggestions will be shown by the setup of Nimbus
 // variable.
-add_task(async function nimbus() {
+add_task(async function featureGate() {
   // Disable the fature gate.
   UrlbarPrefs.set("yelp.featureGate", false);
   await check_results({
@@ -198,6 +198,47 @@ add_task(async function nimbus() {
   await QuickSuggestTestUtils.forceSync();
 });
 
+// Check wheather the Yelp suggestions will be shown as top_pick by the Nimbus
+// variable.
+add_task(async function yelpSuggestPriority() {
+  // Enable by Nimbus.
+  const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
+    yelpSuggestPriority: true,
+  });
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen",
+        title: "ramen",
+        isTopPick: true,
+      }),
+    ],
+  });
+
+  await cleanUpNimbusEnable();
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen",
+        title: "ramen",
+        isTopPick: false,
+      }),
+    ],
+  });
+});
+
 // The `Yelp` Rust provider should be passed to the Rust component when
 // querying depending on whether Yelp suggestions are enabled.
 add_task(async function rustProviders() {
@@ -227,7 +268,7 @@ function makeExpectedResult(expected) {
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    isBestMatch: true,
+    isBestMatch: expected.isTopPick ?? false,
     heuristic: false,
     payload: {
       source: "rust",
