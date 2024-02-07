@@ -48,7 +48,7 @@ var server;
 
 async function clear_state() {
   // set up prefs so the kinto updater talks to the test server
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     PREF_SETTINGS_SERVER,
     `http://localhost:${server.identity.primaryPort}/v1`
   );
@@ -203,7 +203,7 @@ add_task(async function test_check_success() {
   Assert.ok(maybeSyncCalled, "maybeSync was called");
   Assert.ok(notificationObserved, "a notification should have been observed");
   // Last timestamp was saved. An ETag header value is a quoted string.
-  Assert.equal(Services.prefs.getCharPref(PREF_LAST_ETAG), '"1100"');
+  Assert.equal(Services.prefs.getStringPref(PREF_LAST_ETAG), '"1100"');
   // check the last_update is updated
   Assert.equal(Services.prefs.getIntPref(PREF_LAST_UPDATE), serverTime / 1000);
 
@@ -268,7 +268,7 @@ add_task(async function test_update_timer_interface() {
   });
 
   // Everything went fine.
-  Assert.equal(Services.prefs.getCharPref(PREF_LAST_ETAG), '"42"');
+  Assert.equal(Services.prefs.getStringPref(PREF_LAST_ETAG), '"42"');
   Assert.equal(Services.prefs.getIntPref(PREF_LAST_UPDATE), serverTime / 1000);
 });
 add_task(clear_state);
@@ -283,7 +283,7 @@ add_task(async function test_check_up_to_date() {
   const serverTime = 4000;
   server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, []));
 
-  Services.prefs.setCharPref(PREF_LAST_ETAG, '"1100"');
+  Services.prefs.setStringPref(PREF_LAST_ETAG, '"1100"');
 
   // Ensure that the remote-settings:changes-poll-end notification is sent.
   let notificationObserved = false;
@@ -764,7 +764,7 @@ add_task(async function test_server_error_4xx() {
   }
   server.registerPathHandler(CHANGES_PATH, simulateErrorResponse);
 
-  Services.prefs.setCharPref(PREF_LAST_ETAG, '"abc"');
+  Services.prefs.setStringPref(PREF_LAST_ETAG, '"abc"');
 
   let error;
   try {
@@ -1113,7 +1113,7 @@ add_task(async function test_backoff() {
       },
     ])
   );
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     PREF_SETTINGS_SERVER_BACKOFF,
     `${Date.now() - 1000}`
   );
@@ -1144,7 +1144,7 @@ add_task(async function test_network_error() {
   );
 
   // Simulate a network error (to check telemetry report).
-  Services.prefs.setCharPref(PREF_SETTINGS_SERVER, "http://localhost:42/v1");
+  Services.prefs.setStringPref(PREF_SETTINGS_SERVER, "http://localhost:42/v1");
   try {
     await RemoteSettings.pollChanges();
   } catch (e) {}

@@ -2125,6 +2125,8 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable {
   nsresult Result() { return mRv; }
 };
 
+// Step 2, 5, 6 of
+// https://notifications.spec.whatwg.org/#dom-serviceworkerregistration-shownotification
 /* static */
 already_AddRefed<Promise> Notification::ShowPersistentNotification(
     JSContext* aCx, nsIGlobalObject* aGlobal, const nsAString& aScope,
@@ -2184,6 +2186,7 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
     }
   }
 
+  // Step 2: Let promise be a new promise in this’s relevant Realm.
   RefPtr<Promise> p = Promise::Create(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -2191,12 +2194,14 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
 
   // We check permission here rather than pass the Promise to NotificationTask
   // which leads to uglier code.
+  // XXX: GetPermission is a synchronous blocking function on workers.
   NotificationPermission permission = GetPermission(aGlobal, aRv);
 
-  // "If permission for notification's origin is not "granted", reject promise
-  // with a TypeError exception, and terminate these substeps."
+  // Step 6.1: If the result of getting the notifications permission state is
+  // not "granted", then queue a global task on the DOM manipulation task source
+  // given global to reject promise with a TypeError, and abort these steps.
   if (NS_WARN_IF(aRv.Failed()) ||
-      permission == NotificationPermission::Denied) {
+      permission != NotificationPermission::Granted) {
     p->MaybeRejectWithTypeError("Permission to show Notification denied.");
     return p.forget();
   }
@@ -2206,6 +2211,13 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
   // is not concerned with those.
   p->MaybeResolveWithUndefined();
 
+  // Step 5: Let notification be the result of creating a notification given
+  // title, options, this’s relevant settings object, and
+  // serviceWorkerRegistration. If this threw an exception, then reject promise
+  // with that exception and return promise.
+  //
+  // XXX: This should happen before the permission check per the spec, as this
+  // can throw errors too. This should be split into create and show.
   RefPtr<Notification> notification =
       CreateAndShow(aCx, aGlobal, aTitle, aOptions, aScope, aRv);
   if (NS_WARN_IF(aRv.Failed())) {

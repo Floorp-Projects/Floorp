@@ -198,7 +198,7 @@ SyncAuthManager.prototype = {
           !Svc.PrefBranch.getStringPref("client.syncID", null);
         if (isFirstSync) {
           this._log.info("Doing initial sync actions");
-          Svc.PrefBranch.setCharPref("firstSync", "resetClient");
+          Svc.PrefBranch.setStringPref("firstSync", "resetClient");
           Services.obs.notifyObservers(null, "weave:service:setup-complete");
         }
         // There's no need to wait for sync to complete and it would deadlock
@@ -361,7 +361,7 @@ SyncAuthManager.prototype = {
     // all services.sync prefs. So if that still exists, it wins.
     let url = Svc.PrefBranch.getStringPref("tokenServerURI", null); // Svc.PrefBranch "root" is services.sync
     if (!url) {
-      url = Services.prefs.getCharPref("identity.sync.tokenserver.uri");
+      url = Services.prefs.getStringPref("identity.sync.tokenserver.uri");
     }
     while (url.endsWith("/")) {
       // trailing slashes cause problems...

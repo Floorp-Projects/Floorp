@@ -16,7 +16,7 @@ add_test(function test_set_basic() {
   let now = new Date();
 
   CommonUtils.setDatePref(prefs, "test00", now);
-  let value = prefs.getCharPref("test00");
+  let value = prefs.getStringPref("test00");
   Assert.equal(value, "" + now.getTime());
 
   let now2 = CommonUtils.getDatePref(prefs, "test00");
@@ -42,7 +42,7 @@ add_test(function test_set_bounds_checking() {
 });
 
 add_test(function test_get_bounds_checking() {
-  prefs.setCharPref("test_bounds_checking", "13241431");
+  prefs.setStringPref("test_bounds_checking", "13241431");
 
   let log = new DummyLogger();
   let d = CommonUtils.getDatePref(prefs, "test_bounds_checking", 0, log);
@@ -66,7 +66,7 @@ add_test(function test_get_bad_default() {
 });
 
 add_test(function test_get_invalid_number() {
-  prefs.setCharPref("get_invalid_number", "hello world");
+  prefs.setStringPref("get_invalid_number", "hello world");
 
   let log = new DummyLogger();
   let d = CommonUtils.getDatePref(prefs, "get_invalid_number", 42, log);

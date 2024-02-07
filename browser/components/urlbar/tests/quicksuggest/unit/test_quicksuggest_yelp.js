@@ -26,7 +26,7 @@ add_setup(async function () {
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     prefs: [
       ["quicksuggest.rustEnabled", true],
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.sponsored", true],
       ["suggest.yelp", true],
       ["yelp.featureGate", true],
     ],
@@ -74,10 +74,10 @@ add_task(async function telemetryType() {
   );
 });
 
-// When non-sponsored suggestions are disabled, Yelp suggestions should be
+// When sponsored suggestions are disabled, Yelp suggestions should be
 // disabled.
-add_task(async function nonsponsoredDisabled() {
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+add_task(async function sponsoredDisabled() {
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
 
   // First make sure the suggestion is added when non-sponsored
   // suggestions are enabled, if the rust is enabled.
@@ -95,7 +95,7 @@ add_task(async function nonsponsoredDisabled() {
   });
 
   // Now disable the pref.
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   await check_results({
     context: createContext("ramen", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -104,8 +104,8 @@ add_task(async function nonsponsoredDisabled() {
     matches: [],
   });
 
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
   await QuickSuggestTestUtils.forceSync();
 });
 
@@ -146,7 +146,7 @@ add_task(async function yelpSpecificPrefsDisabled() {
 
 // Check wheather the Yelp suggestions will be shown by the setup of Nimbus
 // variable.
-add_task(async function nimbus() {
+add_task(async function featureGate() {
   // Disable the fature gate.
   UrlbarPrefs.set("yelp.featureGate", false);
   await check_results({
@@ -198,6 +198,47 @@ add_task(async function nimbus() {
   await QuickSuggestTestUtils.forceSync();
 });
 
+// Check wheather the Yelp suggestions will be shown as top_pick by the Nimbus
+// variable.
+add_task(async function yelpSuggestPriority() {
+  // Enable by Nimbus.
+  const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
+    yelpSuggestPriority: true,
+  });
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen",
+        title: "ramen",
+        isTopPick: true,
+      }),
+    ],
+  });
+
+  await cleanUpNimbusEnable();
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen",
+        title: "ramen",
+        isTopPick: false,
+      }),
+    ],
+  });
+});
+
 // The `Yelp` Rust provider should be passed to the Rust component when
 // querying depending on whether Yelp suggestions are enabled.
 add_task(async function rustProviders() {
@@ -227,7 +268,7 @@ function makeExpectedResult(expected) {
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    isBestMatch: true,
+    isBestMatch: expected.isTopPick ?? false,
     heuristic: false,
     payload: {
       source: "rust",

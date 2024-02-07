@@ -370,15 +370,20 @@ already_AddRefed<PushManager> ServiceWorkerRegistration::GetPushManager(
   return ret.forget();
 }
 
+// https://notifications.spec.whatwg.org/#dom-serviceworkerregistration-shownotification
 already_AddRefed<Promise> ServiceWorkerRegistration::ShowNotification(
     JSContext* aCx, const nsAString& aTitle,
     const NotificationOptions& aOptions, ErrorResult& aRv) {
+  // Step 1: Let global be this’s relevant global object.
   nsIGlobalObject* global = GetParentObject();
   if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
+  // Step 3: If this’s active worker is null, then reject promise with a
+  // TypeError and return promise.
+  //
   // Until we ship ServiceWorker objects on worker threads the active
   // worker will always be nullptr.  So limit this check to main
   // thread for now.
@@ -389,12 +394,14 @@ already_AddRefed<Promise> ServiceWorkerRegistration::ShowNotification(
 
   NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
 
+  // Step 2, 5, 6
   RefPtr<Promise> p = Notification::ShowPersistentNotification(
       aCx, global, scope, aTitle, aOptions, mDescriptor, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
+  // Step 7: Return promise.
   return p.forget();
 }
 

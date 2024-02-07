@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 // Enable logging from jwcrypto.jsm.
-Services.prefs.setCharPref("services.crypto.jwcrypto.log.level", "Debug");
+Services.prefs.setStringPref("services.crypto.jwcrypto.log.level", "Debug");
 
 add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
   const plaintext = crypto.getRandomValues(new Uint8Array(123));

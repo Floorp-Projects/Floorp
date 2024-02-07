@@ -1,5 +1,3 @@
-"use strict";
-
 import {
   ImpressionStats,
   INTERSECTION_RATIO,

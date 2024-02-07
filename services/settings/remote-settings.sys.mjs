@@ -223,7 +223,7 @@ function remoteSettingsFunction() {
 
     // Check if the server backoff time is elapsed.
     if (lazy.gPrefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
-      const backoffReleaseTime = lazy.gPrefs.getCharPref(
+      const backoffReleaseTime = lazy.gPrefs.getStringPref(
         PREF_SETTINGS_SERVER_BACKOFF
       );
       const remainingMilliseconds =
@@ -288,7 +288,7 @@ function remoteSettingsFunction() {
     // Every time we register a new client, we have to fetch the whole list again.
     const lastEtag = _invalidatePolling
       ? ""
-      : lazy.gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, "");
+      : lazy.gPrefs.getStringPref(PREF_SETTINGS_LAST_ETAG, "");
 
     let pollResult;
     try {
@@ -352,7 +352,10 @@ function remoteSettingsFunction() {
         "Server asks clients to backoff for ${backoffSeconds} seconds"
       );
       const backoffReleaseTime = Date.now() + backoffSeconds * 1000;
-      lazy.gPrefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, backoffReleaseTime);
+      lazy.gPrefs.setStringPref(
+        PREF_SETTINGS_SERVER_BACKOFF,
+        backoffReleaseTime
+      );
     }
 
     // Record new update time and the difference between local and server time.
@@ -450,7 +453,7 @@ function remoteSettingsFunction() {
     }
 
     // Save current Etag for next poll.
-    lazy.gPrefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
+    lazy.gPrefs.setStringPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
 
     // Report the global synchronization success.
     const status = lazy.UptakeTelemetry.STATUS.SUCCESS;
@@ -523,7 +526,7 @@ function remoteSettingsFunction() {
       serverURL: lazy.Utils.SERVER_URL,
       pollingEndpoint: lazy.Utils.SERVER_URL + lazy.Utils.CHANGES_PATH,
       serverTimestamp,
-      localTimestamp: lazy.gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
+      localTimestamp: lazy.gPrefs.getStringPref(PREF_SETTINGS_LAST_ETAG, null),
       lastCheck: lazy.gPrefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
       mainBucket: lazy.Utils.actualBucketName(
         AppConstants.REMOTE_SETTINGS_DEFAULT_BUCKET

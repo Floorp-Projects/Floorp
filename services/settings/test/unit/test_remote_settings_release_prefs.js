@@ -38,7 +38,7 @@ add_task(
     skip_if: () => !AppConstants.RELEASE_OR_BETA,
   },
   async function test_server_url_cannot_be_toggled_in_release() {
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -58,7 +58,7 @@ add_task(
     skip_if: () => AppConstants.RELEASE_OR_BETA,
   },
   async function test_server_url_cannot_be_toggled_in_dev_nightly() {
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -107,7 +107,7 @@ add_task(
     skip_if: () => !AppConstants.RELEASE_OR_BETA,
   },
   async function test_load_dumps_will_always_be_loaded_in_release() {
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -128,7 +128,7 @@ add_task(
     skip_if: () => AppConstants.RELEASE_OR_BETA,
   },
   async function test_load_dumps_can_be_disabled_in_dev_nightly() {
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -148,7 +148,7 @@ add_task(clear_state);
 add_task(
   async function test_server_url_can_be_changed_in_all_versions_if_running_for_devtools() {
     Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "1");
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -179,7 +179,7 @@ add_task(clear_state);
 add_task(
   async function test_dumps_are_not_loaded_if_server_is_not_prod_if_running_for_devtools() {
     Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "1");
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       "http://localhost:8888/v1"
     );
@@ -193,7 +193,7 @@ add_task(clear_state);
 add_task(
   async function test_dumps_are_loaded_if_server_is_prod_if_running_for_devtools() {
     Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "1");
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "services.settings.server",
       AppConstants.REMOTE_SETTINGS_SERVER_URL
     );

@@ -19,6 +19,9 @@ let gResponses = new Map(
     ABCDEFG123: { needs_analysis: false, grade: "B", adjusted_rating: 4.1 },
     HIJKLMN456: { needs_analysis: false, grade: "F", adjusted_rating: 1.0 },
     OPQRSTU789: { needs_analysis: true },
+    INVALID123: { needs_analysis: false, grade: 0.85, adjusted_rating: 1.0 },
+    HTTPERR503: { status: 503, error: "Service Unavailable" },
+    HTTPERR429: { status: 429, error: "Too Many Requests" },
   })
 );
 
@@ -32,6 +35,13 @@ function handleRequest(request, response) {
       status: 400,
       error: "Bad Request",
     };
+  }
+  if (productDetails?.status) {
+    response.setStatusLine(
+      request.httpVersion,
+      productDetails.status,
+      productDetails.error
+    );
   }
   response.write(JSON.stringify(productDetails));
 }

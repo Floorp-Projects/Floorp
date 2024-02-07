@@ -25,7 +25,7 @@ add_setup(async function () {
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     prefs: [
       ["quicksuggest.rustEnabled", true],
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.sponsored", true],
       ["suggest.yelp", true],
       ["yelp.featureGate", true],
     ],

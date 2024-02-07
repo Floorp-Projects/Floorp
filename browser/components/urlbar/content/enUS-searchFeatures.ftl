@@ -145,7 +145,7 @@ firefox-suggest-pocket-bottom-text = { -pocket-brand-name } · Related to <stron
 
 # This string is shown in Yelp suggestions and indicates the suggestion is for
 # Yelp.
-firefox-suggest-yelp-bottom-text = Yelp
+firefox-suggest-yelp-bottom-text = Yelp · Sponsored
 
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.

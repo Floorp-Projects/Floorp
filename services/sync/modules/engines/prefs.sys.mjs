@@ -262,7 +262,7 @@ PrefStore.prototype = {
 
   _setAllPrefs(values) {
     const selectedThemeIDPref = "extensions.activeThemeID";
-    let selectedThemeIDBefore = this._prefs.getCharPref(
+    let selectedThemeIDBefore = this._prefs.getStringPref(
       selectedThemeIDPref,
       null
     );

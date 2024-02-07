@@ -17,7 +17,7 @@ var fhs = Cc["@mozilla.org/satchel/form-history-startup;1"].getService(
 fhs.observe(null, "profile-after-change", null);
 
 // An app is going to have some prefs set which xpcshell tests don't.
-Services.prefs.setCharPref(
+Services.prefs.setStringPref(
   "identity.sync.tokenserver.uri",
   "http://token-server"
 );

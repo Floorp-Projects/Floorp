@@ -460,6 +460,10 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void QueueTransition(const TransitionType& aTransition);
   void ProcessTransitions();
 
+  // Call this to stop all transition processing, which is useful during
+  // window closing and shutdown.
+  void CancelAllTransitions();
+
   bool mInProcessTransitions = false;
 
   // While running an emulated fullscreen transition, we want to suppress

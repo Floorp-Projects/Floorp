@@ -102,6 +102,14 @@ impl TransitionProperty {
     pub fn all() -> Self {
         TransitionProperty::NonCustom(NonCustomPropertyId::from_shorthand(ShorthandId::All))
     }
+
+    /// Returns true if it is `all`.
+    #[inline]
+    pub fn is_all(&self) -> bool {
+        self == &TransitionProperty::NonCustom(NonCustomPropertyId::from_shorthand(
+            ShorthandId::All,
+        ))
+    }
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count

@@ -920,7 +920,7 @@ add_task(async function test_command_sync() {
 
     notEqual(clientWBO(remoteId).payload, undefined);
 
-    Svc.PrefBranch.setCharPref("client.GUID", remoteId);
+    Svc.PrefBranch.setStringPref("client.GUID", remoteId);
     await engine._resetClient();
     equal(engine.localID, remoteId);
     _("Performing sync on resetted client.");

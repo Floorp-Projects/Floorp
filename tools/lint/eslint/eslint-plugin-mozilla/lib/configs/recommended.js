@@ -10,6 +10,11 @@
  * be found here:
  *
  * https://eslint.org/docs/rules/
+ *
+ * Rules that we've explicitly decided not to enable:
+ *
+ *   require-await - bug 1381030.
+ *   no-prototype-builtins - bug 1551829.
  */
 module.exports = {
   env: {
@@ -53,7 +58,7 @@ module.exports = {
       },
     },
     {
-      files: ["**/*.mjs", "**/*.jsm", "**/?(*.)worker.?(m)js"],
+      files: ["**/*.mjs", "**/*.jsx", "**/*.jsm", "**/?(*.)worker.?(m)js"],
       rules: {
         // Modules and workers are far easier to check for no-unused-vars on a
         // global scope, than our content files. Hence we turn that on here.
@@ -67,12 +72,6 @@ module.exports = {
       },
     },
     {
-      files: ["**/*.sys.mjs"],
-      rules: {
-        "mozilla/use-static-import": "error",
-      },
-    },
-    {
       excludedFiles: ["**/*.sys.mjs"],
       files: ["**/*.mjs"],
       rules: {
@@ -82,7 +81,7 @@ module.exports = {
       },
     },
     {
-      files: ["**/*.mjs"],
+      files: ["**/*.mjs", "**/*.jsx"],
       parserOptions: {
         sourceType: "module",
       },
