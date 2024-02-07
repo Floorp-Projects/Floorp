@@ -233,7 +233,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         IOUtils.writeUTF8(tmpFileName, "foo"),
-        /Could not parse path/,
+        /OperationError: Could not write to `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
         "IOUtils::writeUTF8 only works with absolute paths"
       );
     });
@@ -244,7 +244,7 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName),
-        /Could not parse path/,
+        /OperationError: Could not read `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
         "IOUtils::readUTF8 only works with absolute paths"
       );
     });
