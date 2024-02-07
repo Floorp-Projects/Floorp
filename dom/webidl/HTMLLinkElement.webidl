@@ -39,6 +39,8 @@ interface HTMLLinkElement : HTMLElement {
            attribute USVString imageSrcset;
   [CEReactions, SetterThrows, Pure]
            attribute USVString imageSizes;
+  [Pref="dom.element.blocking.enabled", SameObject, PutForwards=value]
+           readonly attribute DOMTokenList blocking;
   [Pref="network.fetchpriority.enabled", CEReactions]
            attribute DOMString fetchPriority;
 };

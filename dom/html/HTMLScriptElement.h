@@ -13,6 +13,8 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStringFwd.h"
 
+class nsDOMTokenList;
+
 namespace mozilla::dom {
 
 class HTMLScriptElement final : public nsGenericHTMLElement,
@@ -25,6 +27,10 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLScriptElement,
+                                           nsGenericHTMLElement)
 
   void GetInnerHTML(nsAString& aInnerHTML, OOMReporter& aError) override;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
@@ -131,6 +137,8 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
     GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrerPolicy);
   }
 
+  nsDOMTokenList* Blocking();
+
   // Required for the webidl-binding because `GetFetchPriority` is overloaded.
   using nsGenericHTMLElement::GetFetchPriority;
 
@@ -150,6 +158,8 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
 
   // ScriptElement
   virtual bool HasScriptContent() override;
+
+  RefPtr<nsDOMTokenList> mBlocking;
 };
 
 }  // namespace mozilla::dom

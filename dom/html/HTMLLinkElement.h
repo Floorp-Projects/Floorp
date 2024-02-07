@@ -166,6 +166,8 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
   }
 
+  nsDOMTokenList* Blocking();
+
   void NodeInfoChanged(Document* aOldDoc) final {
     mCachedURI = nullptr;
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
@@ -197,6 +199,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
 
   RefPtr<nsDOMTokenList> mRelList;
   RefPtr<nsDOMTokenList> mSizes;
+  RefPtr<nsDOMTokenList> mBlocking;
 
   // A weak reference to our preload is held only to cancel the preload when
   // this node updates or unbounds from the tree.  We want to prevent cycles,

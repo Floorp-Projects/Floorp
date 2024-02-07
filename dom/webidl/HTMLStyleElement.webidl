@@ -18,6 +18,8 @@ interface HTMLStyleElement : HTMLElement {
            attribute DOMString media;
            [CEReactions, SetterThrows, Pure]
            attribute DOMString type;
+           [Pref="dom.element.blocking.enabled", SameObject, PutForwards=value]
+           readonly attribute DOMTokenList blocking;
 };
 HTMLStyleElement includes LinkStyle;
 

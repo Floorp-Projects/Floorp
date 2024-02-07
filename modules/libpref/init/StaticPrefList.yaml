@@ -2343,6 +2343,13 @@
   mirror: always
   rust: true
 
+# Whether the blocking attribute implementation is enabled,
+# see https://html.spec.whatwg.org/#blocking-attributes
+- name: dom.element.blocking.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether CustomStateSet is enabled
 - name: dom.element.customstateset.enabled
   type: RelaxedAtomicBool

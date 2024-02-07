@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsStubMutationObserver.h"
+#include "nsDOMTokenList.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 
@@ -32,11 +33,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLStyleElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLStyleElement,
                                                   nsGenericHTMLElement)
   tmp->LinkStyle::Traverse(cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlocking)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLStyleElement,
                                                 nsGenericHTMLElement)
   tmp->LinkStyle::Unlink();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlocking)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLStyleElement,
@@ -186,6 +189,14 @@ Maybe<LinkStyle::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
 JSObject* HTMLStyleElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
   return HTMLStyleElement_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsDOMTokenList* HTMLStyleElement::Blocking() {
+  if (!mBlocking) {
+    mBlocking =
+        new nsDOMTokenList(this, nsGkAtoms::blocking, sSupportedBlockingValues);
+  }
+  return mBlocking;
 }
 
 }  // namespace mozilla::dom
