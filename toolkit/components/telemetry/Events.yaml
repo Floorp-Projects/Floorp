@@ -3506,6 +3506,26 @@ mfcdm:
       played_time: The amount of time the EME content has been played (in seconds)
       rendered_frames: The amount of video frames has been rendered
       dropped_frames: The amount of video frames don't get rendered but dropped
+  error:
+    objects: ["gecko"]
+    bug_numbers: [1873394]
+    description:
+      Record the error or crash happened while using the media engine playback.
+      The value of this event is the name of error.
+    products:
+      - firefox
+    record_in_processes: ["all"]
+    release_channel_collection: opt-out
+    expiry_version: "130"
+    notification_emails:
+      - media-alerts@mozilla.com
+    extra_keys:
+      error_name: The name of the error
+      current_state: The state of the external state machine was being used when the error or crash happened
+      video_codec: The video codec was being used when the error or crash happened
+      audio_codec: The audio codec was being used when the error or crash happened
+      resolution: The video resolution was being used when the error or crash happened
+      key_system: The key system was being used when the error or crash happened
 
 installation:
   first_seen:
