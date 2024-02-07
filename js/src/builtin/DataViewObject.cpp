@@ -72,13 +72,6 @@ ResizableDataViewObject* ResizableDataViewObject::create(
   MOZ_ASSERT(!autoLength || byteLength == 0,
              "byte length is zero for 'auto' length views");
 
-  size_t bufferByteLength = arrayBuffer->byteLength();
-  if (byteOffset + byteLength > bufferByteLength) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OFFSET_OUT_OF_BUFFER);
-    return nullptr;
-  }
-
   auto* obj = NewObjectWithClassProto<ResizableDataViewObject>(cx, proto);
   if (!obj || !obj->init(cx, arrayBuffer, byteOffset, byteLength,
                          /* bytesPerElement = */ 1)) {
@@ -283,6 +276,27 @@ bool DataViewObject::getAndCheckConstructorArgs(
   return true;
 }
 
+static bool CheckConstructorArgs(JSContext* cx,
+                                 Handle<ArrayBufferObjectMaybeShared*> buffer,
+                                 size_t byteOffset, size_t byteLength) {
+  if (buffer->isDetached()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_DETACHED);
+    return false;
+  }
+
+  if (buffer->isResizable()) {
+    size_t bufferByteLength = buffer->byteLength();
+    if (byteOffset + byteLength > bufferByteLength) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_OFFSET_OUT_OF_BUFFER);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool DataViewObject::constructSameCompartment(JSContext* cx,
                                               HandleObject bufobj,
                                               const CallArgs& args) {
@@ -304,9 +318,9 @@ bool DataViewObject::constructSameCompartment(JSContext* cx,
 
   auto buffer = bufobj.as<ArrayBufferObjectMaybeShared>();
 
-  if (buffer->isDetached()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_DETACHED);
+  // GetPrototypeFromBuiltinConstructor may have detached or resized the buffer,
+  // so we have to revalidate the arguments.
+  if (!CheckConstructorArgs(cx, buffer, byteOffset, byteLength)) {
     return false;
   }
 
@@ -364,9 +378,11 @@ bool DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj,
     return false;
   }
 
-  if (unwrapped->as<ArrayBufferObjectMaybeShared>().isDetached()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_DETACHED);
+  auto unwrappedBuffer = unwrapped.as<ArrayBufferObjectMaybeShared>();
+
+  // GetPrototypeFromBuiltinConstructor may have detached or resized the buffer,
+  // so we have to revalidate the arguments.
+  if (!CheckConstructorArgs(cx, unwrappedBuffer, byteOffset, byteLength)) {
     return false;
   }
 
@@ -382,20 +398,18 @@ bool DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj,
   {
     JSAutoRealm ar(cx, unwrapped);
 
-    Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-    buffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
-
     RootedObject wrappedProto(cx, proto);
     if (!cx->compartment()->wrap(cx, &wrappedProto)) {
       return false;
     }
 
-    if (!buffer->isResizable()) {
-      dv = DataViewObject::create(cx, byteOffset, byteLength, buffer,
+    if (!unwrappedBuffer->isResizable()) {
+      dv = DataViewObject::create(cx, byteOffset, byteLength, unwrappedBuffer,
                                   wrappedProto);
     } else {
       dv = ResizableDataViewObject::create(cx, byteOffset, byteLength,
-                                           autoLength, buffer, wrappedProto);
+                                           autoLength, unwrappedBuffer,
+                                           wrappedProto);
     }
     if (!dv) {
       return false;

@@ -321,7 +321,8 @@ export class nsContentDispatchChooser {
 
   /**
    * Opens a dialog as a SubDialog on tab level.
-   * If we don't have a BrowsingContext we will fallback to a standalone window.
+   * If we don't have a BrowsingContext or tab level dialogs are not supported,
+   * we will fallback to a standalone window.
    * @param {string} aDialogURL - URL of the dialog to open.
    * @param {Object} aDialogArgs - Arguments passed to the dialog.
    * @param {BrowsingContext} [aBrowsingContext] - BrowsingContext associated
@@ -348,16 +349,20 @@ export class nsContentDispatchChooser {
         );
       }
 
-      let tabDialogBox = window.gBrowser.getTabDialogBox(topFrameElement);
-      return tabDialogBox.open(
-        aDialogURL,
-        {
-          features: resizable,
-          allowDuplicateDialogs: false,
-          keepOpenSameOriginNav: true,
-        },
-        aDialogArgs
-      ).closedPromise;
+      // If the app does not support window.gBrowser or getTabDialogBox(),
+      // fallback to the standalone application chooser window.
+      let getTabDialogBox = window.gBrowser?.getTabDialogBox;
+      if (getTabDialogBox) {
+        return getTabDialogBox(topFrameElement).open(
+          aDialogURL,
+          {
+            features: resizable,
+            allowDuplicateDialogs: false,
+            keepOpenSameOriginNav: true,
+          },
+          aDialogArgs
+        ).closedPromise;
+      }
     }
 
     // If we don't have a BrowsingContext, we need to show a standalone window.

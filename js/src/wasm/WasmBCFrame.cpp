@@ -376,7 +376,7 @@ bool StackMapGenerator::createStackMap(
     uint32_t i = 0;
     for (bool b : extras) {
       if (b) {
-        stackMap->setBit(i);
+        stackMap->set(i, StackMap::Kind::AnyRef);
       }
       i++;
     }
@@ -395,7 +395,7 @@ bool StackMapGenerator::createStackMap(
       if (i == MachineStackTracker::Iter::FINISHED) {
         break;
       }
-      stackMap->setBit(extraWords + i);
+      stackMap->set(extraWords + i, StackMap::Kind::AnyRef);
     }
   }
 
@@ -408,8 +408,9 @@ bool StackMapGenerator::createStackMap(
                                   sizeof(Frame) / sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < sizeof(Frame) / sizeof(void*); i++) {
-    MOZ_ASSERT(stackMap->getBit(stackMap->header.numMappedWords -
-                                stackMap->header.frameOffsetFromTop + i) == 0);
+    MOZ_ASSERT(stackMap->get(stackMap->header.numMappedWords -
+                             stackMap->header.frameOffsetFromTop + i) ==
+               StackMap::Kind::POD);
   }
 #endif
 
@@ -430,7 +431,9 @@ bool StackMapGenerator::createStackMap(
     uint32_t nw = stackMap->header.numMappedWords;
     uint32_t np = 0;
     for (uint32_t i = 0; i < nw; i++) {
-      np += stackMap->getBit(i);
+      if (stackMap->get(i) == StackMap::Kind::AnyRef) {
+        np += 1;
+      }
     }
     MOZ_ASSERT(size_t(np) == countedPointers);
   }

@@ -666,6 +666,13 @@ GlobalObject* GlobalObject::new_(JSContext* cx, const JSClass* clasp,
       return nullptr;
     }
 
+    // Create a shape for plain objects with zero slots. This is required to be
+    // present in case allocating dynamic slots for objects fails, so we can
+    // leave a valid object in the heap.
+    if (!createPlainObjectShapeWithDefaultProto(cx, gc::AllocKind::OBJECT0)) {
+      return nullptr;
+    }
+
     realm->clearInitializingGlobal();
     if (hookOption == JS::FireOnNewGlobalHook) {
       JS_FireOnNewGlobalObject(cx, global);

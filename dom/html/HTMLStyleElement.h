@@ -12,6 +12,8 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
 
+class nsDOMTokenList;
+
 namespace mozilla::dom {
 
 class HTMLStyleElement final : public nsGenericHTMLElement,
@@ -71,6 +73,8 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
     SetHTMLAttr(nsGkAtoms::type, aType, aError);
   }
 
+  nsDOMTokenList* Blocking();
+
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
 
@@ -87,6 +91,8 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
    * parent; we should only respond to the change if aContent is non-anonymous.
    */
   void ContentChanged(nsIContent* aContent);
+
+  RefPtr<nsDOMTokenList> mBlocking;
 };
 
 }  // namespace mozilla::dom

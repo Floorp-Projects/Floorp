@@ -1927,24 +1927,30 @@ assertErrorMessage(() => wasmEvalText(`(module
 // array.new
 assertErrorMessage(() => wasmEvalText(`(module
     (type $a (array i32))
-    (func
+    (func (export "test") (result eqref)
         ;; request exactly 2,000,000,000 bytes
         (array.new $a (i32.const 0xABCD1234) (i32.const 500000000))
-        drop
     )
-    (start 0)
+    (func $f
+      call 0
+      drop
+    )
+    (start $f)
 )
 `), WebAssembly.RuntimeError, /too many array elements/);
 
 // array.new_default
 assertErrorMessage(() => wasmEvalText(`(module
     (type $a (array f64))
-    (func
+    (func (export "test") (result eqref)
         ;; request exactly 2,000,000,000 bytes
         (array.new_default $a (i32.const 250000000))
-        drop
     )
-    (start 0)
+    (func $f
+      call 0
+      drop
+    )
+    (start $f)
 )
 `), WebAssembly.RuntimeError, /too many array elements/);
 
@@ -1963,3 +1969,59 @@ assertErrorMessage(() => wasmEvalText(`(module
 // array.new_element
 // Similarly, impossible to test because an element segment can contain at
 // most 10,000,000 (MaxElemSegmentLength) entries.
+
+// Test whether array data pointers are correctly tracked in stack maps.
+{
+  const { newArray, test } = wasmEvalText(`(module
+    (type $a (array i32))
+    (import "" "gc" (func $gc))
+    (func (export "newArray") (result (ref $a))
+      (array.new $a (i32.const 123) (i32.const 4))
+    )
+    (func (export "test") (param $arr (ref $a)) (result i32)
+      (local i32)
+      (local i32)
+
+      (array.get $a (local.get $arr) (i32.const 1))
+      local.set 1
+      call $gc
+      (array.get $a (local.get $arr) (i32.const 2))
+      local.set 2
+
+      (i32.add (local.get 1) (local.get 2))
+    )
+  )`, {"": {gc}}).exports;
+  const arr = newArray();
+  assertEq(isNurseryAllocated(arr), true);
+  const res = test(arr);
+  assertEq(res, 246);
+}
+
+// Test that zero-length arrays allocate correctly
+{
+  const { testNew, testNewDefault, testNewFixed } = wasmEvalText(`(module
+    (type $a (array f32))
+
+    (func (export "testNew") (result eqref eqref eqref eqref)
+      (array.new $a (f32.const 123) (i32.const 0))
+      (array.new $a (f32.const 123) (i32.const 0))
+      (array.new $a (f32.const 123) (i32.const 0))
+      (array.new $a (f32.const 123) (i32.const 0))
+    )
+    (func (export "testNewDefault") (result eqref eqref eqref eqref)
+      (array.new_default $a (i32.const 0))
+      (array.new_default $a (i32.const 0))
+      (array.new_default $a (i32.const 0))
+      (array.new_default $a (i32.const 0))
+    )
+    (func (export "testNewFixed") (result eqref eqref eqref eqref)
+      (array.new_fixed $a 0)
+      (array.new_fixed $a 0)
+      (array.new_fixed $a 0)
+      (array.new_fixed $a 0)
+    )
+  )`).exports;
+  testNew();
+  testNewDefault();
+  testNewFixed();
+}

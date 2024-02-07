@@ -127,6 +127,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   SessionHistoryEntry* GetActiveSessionHistoryEntry();
   void SetActiveSessionHistoryEntry(SessionHistoryEntry* aEntry);
 
+  bool ManuallyManagesActiveness() const;
+
   UniquePtr<LoadingSessionHistoryInfo> CreateLoadingSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, SessionHistoryEntry* aExistingEntry,
       nsIChannel* aChannel);
@@ -141,8 +143,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   // Call the given callback on all top-level descendant BrowsingContexts.
   // Return Callstate::Stop from the callback to stop calling further children.
+  //
+  // If aIncludeNestedBrowsers is true, then all top descendants are included,
+  // even those inside a nested top browser.
   void CallOnAllTopDescendants(
-      const FunctionRef<CallState(CanonicalBrowsingContext*)>& aCallback);
+      const FunctionRef<CallState(CanonicalBrowsingContext*)>& aCallback,
+      bool aIncludeNestedBrowsers);
 
   void SessionHistoryCommit(uint64_t aLoadId, const nsID& aChangeID,
                             uint32_t aLoadType, bool aPersist,
@@ -340,6 +346,19 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void SetPriorityActive(bool aIsActive) {
     MOZ_RELEASE_ASSERT(IsTop());
     mPriorityActive = aIsActive;
+  }
+
+  void SetIsActive(bool aIsActive, ErrorResult& aRv) {
+    MOZ_ASSERT(ManuallyManagesActiveness(),
+               "Shouldn't be setting active status of this browsing context if "
+               "not manually managed");
+    SetIsActiveInternal(aIsActive, aRv);
+  }
+
+  void SetIsActiveInternal(bool aIsActive, ErrorResult& aRv) {
+    SetExplicitActive(aIsActive ? ExplicitActiveStatus::Active
+                                : ExplicitActiveStatus::Inactive,
+                      aRv);
   }
 
   void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);

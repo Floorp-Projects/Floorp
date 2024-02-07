@@ -437,7 +437,7 @@ Assembler::Condition MacroAssemblerCompat::testBigIntTruthy(
 void MacroAssemblerCompat::breakpoint() {
   // Note, other payloads are possible, but GDB is known to misinterpret them
   // sometimes and iloop on the breakpoint instead of stopping properly.
-  Brk(0);
+  Brk(0xf000);
 }
 
 // Either `any` is valid or `sixtyfour` is valid.  Return a 32-bit ARMRegister

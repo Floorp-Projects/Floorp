@@ -6806,8 +6806,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   fr.loadInstancePtr(instance);
 #endif
 
-  EmitWasmPreBarrierGuard(masm, instance, scratch, valueAddr,
-                          /*valueOffset=*/0, &skipBarrier, nullptr);
+  EmitWasmPreBarrierGuard(masm, instance, scratch, Address(valueAddr, 0),
+                          &skipBarrier, nullptr);
 
 #ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(instance);
@@ -6820,7 +6820,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.Mov(x28, sp);
 #endif
   // The prebarrier call preserves all volatile registers
-  EmitWasmPreBarrierCall(masm, instance, scratch, valueAddr, /*valueOffset=*/0);
+  EmitWasmPreBarrierCallImmediate(masm, instance, scratch, valueAddr,
+                                  /*valueOffset=*/0);
 
   masm.bind(&skipBarrier);
 }
@@ -7244,9 +7245,6 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
   return true;
 }
 
-// Emits allocation code for a GC struct. The struct may have an out-of-line
-// data area; if so, `isOutlineStruct` will be true and `outlineBase` will be
-// allocated and must be freed.
 template <bool ZeroFields>
 bool BaseCompiler::emitStructAlloc(uint32_t typeIndex, RegRef* object,
                                    bool* isOutlineStruct, RegPtr* outlineBase) {
@@ -7546,6 +7544,116 @@ bool BaseCompiler::emitStructSet() {
   return true;
 }
 
+template <bool ZeroFields>
+bool BaseCompiler::emitArrayAlloc(uint32_t typeIndex, RegRef object,
+                                  RegI32 numElements, uint32_t elemSize) {
+  // We eagerly sync the value stack to the machine stack here so as not to
+  // confuse things with the conditional instance call below.
+  sync();
+
+  RegPtr instance;
+#  ifndef RABALDR_PIN_INSTANCE
+  // We reuse the object register for the instance. This is ok because object is
+  // not live until instance is dead.
+  instance = RegPtr(object);
+  fr.loadInstancePtr(instance);
+#  else
+  // We can use the pinned instance register.
+  instance = RegPtr(InstanceReg);
+#  endif
+
+  RegPtr typeDefData = loadTypeDefInstanceData(typeIndex);
+  RegPtr temp = needPtr();
+
+  Label success;
+  Label fail;
+  masm.wasmNewArrayObject(instance, object, numElements, typeDefData, temp,
+                          &fail, elemSize, ZeroFields);
+  freePtr(temp);
+  masm.jump(&success);
+
+  masm.bind(&fail);
+  freeRef(object);
+  pushI32(numElements);
+  pushPtr(typeDefData);
+  if (!emitInstanceCall(ZeroFields ? SASigArrayNew_true
+                                   : SASigArrayNew_false)) {
+    return false;
+  }
+  popRef(object);
+
+  masm.bind(&success);
+  return true;
+}
+
+template <bool ZeroFields>
+bool BaseCompiler::emitArrayAllocFixed(uint32_t typeIndex, RegRef object,
+                                       uint32_t numElements,
+                                       uint32_t elemSize) {
+  // The maximum number of elements for array.new_fixed enforced in validation
+  // should always prevent overflow here.
+  MOZ_ASSERT(WasmArrayObject::calcStorageBytesChecked(elemSize, numElements)
+                 .isValid());
+
+  SymbolicAddressSignature fun =
+      ZeroFields ? SASigArrayNew_true : SASigArrayNew_false;
+
+  uint32_t storageBytes =
+      WasmArrayObject::calcStorageBytes(elemSize, numElements);
+  if (storageBytes > WasmArrayObject_MaxInlineBytes) {
+    RegPtr typeDefData = loadTypeDefInstanceData(typeIndex);
+    freeRef(object);
+    pushI32(numElements);
+    pushPtr(typeDefData);
+    if (!emitInstanceCall(fun)) {
+      return false;
+    }
+    popRef(object);
+
+    return true;
+  }
+
+  // We eagerly sync the value stack to the machine stack here so as not to
+  // confuse things with the conditional instance call below.
+  sync();
+
+  RegPtr instance;
+#  ifndef RABALDR_PIN_INSTANCE
+  // We reuse the object register for the instance. This is ok because object is
+  // not live until instance is dead.
+  instance = RegPtr(object);
+  fr.loadInstancePtr(instance);
+#  else
+  // We can use the pinned instance register.
+  instance = RegPtr(InstanceReg);
+#  endif
+
+  RegPtr typeDefData = loadTypeDefInstanceData(typeIndex);
+  RegPtr temp1 = needPtr();
+  RegPtr temp2 = needPtr();
+
+  Label success;
+  Label fail;
+  masm.wasmNewArrayObjectFixed(instance, object, typeDefData, temp1, temp2,
+                               &fail, numElements, storageBytes, ZeroFields);
+  freePtr(temp1);
+  freePtr(temp2);
+  masm.jump(&success);
+
+  masm.bind(&fail);
+  freeRef(object);
+  pushI32(numElements);
+  pushPtr(typeDefData);
+  if (!emitInstanceCall(fun)) {
+    return false;
+  }
+  popRef(object);
+
+  masm.bind(&success);
+
+  return true;
+}
+
 bool BaseCompiler::emitArrayNew() {
   uint32_t typeIndex;
   Nothing nothing;
@@ -7559,27 +7667,26 @@ bool BaseCompiler::emitArrayNew() {
 
   const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
-  // Allocate an uninitialized array. This requires the type definition
-  // for the array to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigArrayNew_false)) {
-    return false;
-  }
-
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
   if (arrayType.elementType_.isRefRepr()) {
     needPtr(RegPtr(PreBarrierReg));
   }
 
-  RegRef rp = popRef();
+  RegRef object = needRef();
+  RegI32 numElements = popI32();
+  if (!emitArrayAlloc<false>(typeIndex, object, numElements,
+                             arrayType.elementType_.size())) {
+    return false;
+  }
+
   AnyReg value = popAny();
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(object);
 
-  // Acquire the number of elements
-  RegI32 numElements = emitGcArrayGetNumElements<NoNullCheck>(rp);
+  // Acquire the number of elements again
+  numElements = emitGcArrayGetNumElements<NoNullCheck>(object);
 
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isRefRepr()) {
@@ -7598,7 +7705,7 @@ bool BaseCompiler::emitArrayNew() {
   masm.sub32(Imm32(1), numElements);
 
   // Assign value to array[numElements]. All registers are preserved
-  if (!emitGcArraySet(rp, rdata, numElements, arrayType, value,
+  if (!emitGcArraySet(object, rdata, numElements, arrayType, value,
                       PreBarrierKind::None)) {
     return false;
   }
@@ -7610,7 +7717,7 @@ bool BaseCompiler::emitArrayNew() {
   freeI32(numElements);
   freeAny(value);
   freePtr(rdata);
-  pushRef(rp);
+  pushRef(object);
 
   return true;
 }
@@ -7628,16 +7735,6 @@ bool BaseCompiler::emitArrayNewFixed() {
 
   const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
-  // At this point, the top section of the value stack contains the values to
-  // be used to initialise the array, with index 0 as the topmost value.  Push
-  // the required number of elements and the required type on, since the call
-  // to SASigArrayNew_true will use them.
-  pushI32(numElements);
-  pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigArrayNew_true)) {
-    return false;
-  }
-
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
   bool avoidPreBarrierReg = arrayType.elementType_.isRefRepr();
@@ -7645,11 +7742,14 @@ bool BaseCompiler::emitArrayNewFixed() {
     needPtr(RegPtr(PreBarrierReg));
   }
 
-  // Get hold of the pointer to the array, as created by SASigArrayNew_true.
-  RegRef rp = popRef();
+  RegRef object = needRef();
+  if (!emitArrayAllocFixed<false>(typeIndex, object, numElements,
+                                  arrayType.elementType_.size())) {
+    return false;
+  }
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(object);
 
   // Free the barrier reg if we previously reserved it.
   if (avoidPreBarrierReg) {
@@ -7677,7 +7777,7 @@ bool BaseCompiler::emitArrayNewFixed() {
     if (avoidPreBarrierReg) {
       freePtr(RegPtr(PreBarrierReg));
     }
-    if (!emitGcArraySet(rp, rdata, index, arrayType, value,
+    if (!emitGcArraySet(object, rdata, index, arrayType, value,
                         PreBarrierKind::None)) {
       return false;
     }
@@ -7687,7 +7787,7 @@ bool BaseCompiler::emitArrayNewFixed() {
 
   freePtr(rdata);
 
-  pushRef(rp);
+  pushRef(object);
   return true;
 }
 
@@ -7702,10 +7802,17 @@ bool BaseCompiler::emitArrayNewDefault() {
     return true;
   }
 
-  // Allocate a default initialized array. This requires the type definition
-  // for the array to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
-  return emitInstanceCall(SASigArrayNew_true);
+  const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
+
+  RegRef object = needRef();
+  RegI32 numElements = popI32();
+  if (!emitArrayAlloc<true>(typeIndex, object, numElements,
+                            arrayType.elementType_.size())) {
+    return false;
+  }
+
+  pushRef(object);
+  return true;
 }
 
 bool BaseCompiler::emitArrayNewData() {

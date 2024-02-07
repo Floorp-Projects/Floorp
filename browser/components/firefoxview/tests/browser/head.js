@@ -649,6 +649,14 @@ async function telemetryEvent(eventDetails) {
   );
 }
 
+function setSortOption(component, value) {
+  info(`Sort by ${value}.`);
+  const el = component.optionsContainer.querySelector(
+    `input[value='${value}']`
+  );
+  EventUtils.synthesizeMouseAtCenter(el, {}, el.ownerGlobal);
+}
+
 function getOpenTabsCards(openTabs) {
   return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
 }

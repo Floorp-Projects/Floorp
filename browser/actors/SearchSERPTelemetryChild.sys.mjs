@@ -838,6 +838,9 @@ class SearchAdImpression {
           url,
           action: clickAction,
         });
+        if (clickAction == "submitted") {
+          documentToSubmitMap.set(document, true);
+        }
       };
       element.addEventListener("click", clickCallback);
 
@@ -848,6 +851,9 @@ class SearchAdImpression {
             url,
             action: keydownEnterAction,
           });
+        }
+        if (keydownEnterAction == "submitted") {
+          documentToSubmitMap.set(document, true);
         }
       };
       element.addEventListener("keydown", keydownCallback);
@@ -871,6 +877,13 @@ class SearchAdImpression {
       },
       { once: true }
     );
+
+    // The map might have entries from previous callers, so we must ensure
+    // we don't discard existing event listener callbacks.
+    if (documentToRemoveEventListenersMap.has(document)) {
+      let callbacks = documentToRemoveEventListenersMap.get(document);
+      removeListenerCallbacks = removeListenerCallbacks.concat(callbacks);
+    }
 
     documentToRemoveEventListenersMap.set(document, removeListenerCallbacks);
   }
@@ -1029,6 +1042,7 @@ const searchAdImpression = new SearchAdImpression();
 
 const documentToEventCallbackMap = new WeakMap();
 const documentToRemoveEventListenersMap = new WeakMap();
+const documentToSubmitMap = new WeakMap();
 
 /**
  * SearchTelemetryChild monitors for pages that are partner searches, and
@@ -1262,7 +1276,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
     }
   }
 
-  receiveMessage(message) {
+  async receiveMessage(message) {
     switch (message.name) {
       case "SearchSERPTelemetry:WaitForSPAPageLoad":
         lazy.setTimeout(() => {
@@ -1270,10 +1284,22 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
           this._checkForAdLink("load");
         }, Services.cpmm.sharedData.get(SEARCH_TELEMETRY_SHARED.SPA_LOAD_TIMEOUT));
         break;
-      case "SearchSERPTelemetry:RemoveEventListeners":
+      case "SearchSERPTelemetry:StopTrackingDocument":
+        this.#removeDocumentFromSubmitMap();
         this.#removeEventListeners();
         break;
+      case "SearchSERPTelemetry:DidSubmit":
+        return this.#didSubmit();
     }
+    return null;
+  }
+
+  #didSubmit() {
+    return documentToSubmitMap.get(this.document);
+  }
+
+  #removeDocumentFromSubmitMap() {
+    documentToSubmitMap.delete(this.document);
   }
 
   #urlIsSERP(url) {

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+<script>
+  const resource_url = new URL('../resources/dummy.css', location);
+  onload = function() {
+    const kData = [
+      {
+        description: 'fetch() with URL and request_init whose priority is "high" must be fetched with high load priority',
+        request_info: `${resource_url}?1`,
+        request_init: {priority: 'high'}
+      },
+      {
+        description: 'fetch() with URL and request_init whose priority is "auto" must have no effect on resource load priority',
+        request_info: `${resource_url}?2`,
+        request_init: {priority: 'auto'}
+      },
+      {
+        description: 'fetch() with URL and request_init whose priority is missing must have no effect on resource load priority',
+        request_info: `${resource_url}?3`,
+        request_init: {}
+      },
+      {
+        description: 'fetch() with URL and request_init whose priority is "low" must be fetched with low resource load priority',
+        request_info: `${resource_url}?4`,
+        request_init: {priority: 'low'}
+      },
+      {
+        description: 'fetch() with Request whose priority is "low" and request_init whose priority is "high" must have no effect on resource load priority',
+        request_info: new Request(`${resource_url}?5`, {priority: 'low'}),
+        request_init: {priority: 'high'}
+      },
+      {
+        description: 'fetch() with Request whose priority is "high" and request_init whose priority is "low" must be fetched with low resource load priority',
+        request_info: new Request(`${resource_url}?6`, {priority: 'high'}),
+        request_init: {priority: 'low'}
+      },
+      {
+        description: 'fetch() with Request whose priority is "high" and no request_init must be fetched with high resource load priority',
+        request_info: new Request(`${resource_url}?7`, {priority: 'high'})
+      },
+      {
+        description: 'fetch() with Request whose priority is "auto" and no request_init must have no effect on resource load priority',
+        request_info: new Request(`${resource_url}?8`, {priority: 'auto'})
+      },
+      {
+        description: 'fetch() with Request whose priority is missing and no request_init must have no effect on resource load priority',
+        request_info: new Request(`${resource_url}?9`)
+      },
+      {
+        description: 'fetch() with Request whose priority is "low" and no request_init must be fetched with low resource load priority',
+        request_info: new Request(`${resource_url}?10`, {priority: 'low'})
+      }
+    ];
+    for (const data of kData) {
+        const response = fetch(data.request_info, data.request_init);
+        opener.postMessage("ChildLoaded", "*");
+    }
+  }
+</script>
+</body>
+</html>

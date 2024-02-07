@@ -4,19 +4,54 @@
 "use strict";
 
 add_task(async function test_openTabs() {
-  const userContextId = 5;
+  const userContextId1 = 3;
+  const userContextId2 = 5;
   const url = "http://foo.mozilla.org/";
-  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId, false);
-  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId, false);
-  Assert.equal(
-    UrlbarProviderOpenTabs._openTabs.get(userContextId).length,
-    2,
+  const url2 = "http://foo2.mozilla.org/";
+  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId1, false);
+  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId1, false);
+  UrlbarProviderOpenTabs.registerOpenTab(url2, userContextId1, false);
+  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId2, false);
+  Assert.deepEqual(
+    [url, url2],
+    UrlbarProviderOpenTabs.getOpenTabs(userContextId1),
     "Found all the expected tabs"
   );
-  UrlbarProviderOpenTabs.unregisterOpenTab(url, userContextId, false);
-  Assert.equal(
-    UrlbarProviderOpenTabs._openTabs.get(userContextId).length,
-    1,
+  Assert.deepEqual(
+    [url],
+    UrlbarProviderOpenTabs.getOpenTabs(userContextId2),
+    "Found all the expected tabs"
+  );
+  await PlacesUtils.promiseLargeCacheDBConnection();
+  await UrlbarProviderOpenTabs.promiseDBPopulated;
+  Assert.deepEqual(
+    [
+      { url, userContextId: userContextId1, count: 2 },
+      { url: url2, userContextId: userContextId1, count: 1 },
+      { url, userContextId: userContextId2, count: 1 },
+    ],
+    await UrlbarProviderOpenTabs.getDatabaseRegisteredOpenTabsForTests(),
+    "Found all the expected tabs"
+  );
+
+  await UrlbarProviderOpenTabs.unregisterOpenTab(url2, userContextId1, false);
+  Assert.deepEqual(
+    [url],
+    UrlbarProviderOpenTabs.getOpenTabs(userContextId1),
+    "Found all the expected tabs"
+  );
+  await UrlbarProviderOpenTabs.unregisterOpenTab(url, userContextId1, false);
+  Assert.deepEqual(
+    [url],
+    UrlbarProviderOpenTabs.getOpenTabs(userContextId1),
+    "Found all the expected tabs"
+  );
+  Assert.deepEqual(
+    [
+      { url, userContextId: userContextId1, count: 1 },
+      { url, userContextId: userContextId2, count: 1 },
+    ],
+    await UrlbarProviderOpenTabs.getDatabaseRegisteredOpenTabsForTests(),
     "Found all the expected tabs"
   );
 
@@ -39,7 +74,7 @@ add_task(async function test_openTabs() {
 
   let provider = new UrlbarProviderOpenTabs();
   await provider.startQuery(context, callback);
-  Assert.equal(matchCount, 1, "Found the expected number of matches");
+  Assert.equal(matchCount, 2, "Found the expected number of matches");
   // Sanity check that this doesn't throw.
   provider.cancelQuery(context);
 });

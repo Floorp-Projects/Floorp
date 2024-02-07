@@ -337,6 +337,8 @@ class AudioStream final {
 
   const uint32_t mOutChannels;
 
+  // mCubebStream holds a bare pointer to cubeb, so we hold a ref on its behalf
+  RefPtr<CubebUtils::CubebHandle> mCubeb;
   // Owning reference to a cubeb_stream.  Set in Init(), cleared in ShutDown, so
   // no lock is needed to access.
   UniquePtr<cubeb_stream, CubebDestroyPolicy> mCubebStream;

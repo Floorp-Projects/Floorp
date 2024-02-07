@@ -127,7 +127,11 @@ interface BrowsingContext {
    */
   [SetterThrows] attribute unsigned long sandboxFlags;
 
-  [SetterThrows] attribute boolean isActive;
+  /**
+   * Whether the BrowsingContext is active. That is, whether it's in a
+   * foreground tab, and not minimized or fully occluded otherwise.
+   */
+  readonly attribute boolean isActive;
 
   /**
    * When set to true all channels in this browsing context or its children will report navigator.onLine = false,
@@ -367,6 +371,9 @@ interface CanonicalBrowsingContext : BrowsingContext {
   // Force this browsing context, which must correspond to an app window, to
   // be active regardless of the window being minimized or fully occluded.
   [SetterThrows] attribute boolean forceAppWindowActive;
+
+  // @see BrowsingContext.isActive.
+  [SetterThrows] attribute boolean isActive;
 
   /**
    * This allows chrome to override the default choice of whether touch events

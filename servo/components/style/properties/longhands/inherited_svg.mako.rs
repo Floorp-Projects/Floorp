@@ -4,8 +4,8 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-// SVG 1.1 (Second Edition)
-// https://www.w3.org/TR/SVG/
+// SVG 2
+// https://svgwg.org/svg2-draft/
 <% data.new_style_struct("InheritedSVG", inherited=True, gecko_name="SVG") %>
 
 // Section 10 - Text
@@ -26,7 +26,7 @@ ${helpers.single_keyword(
     "start middle end",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG/text.html#TextAnchorProperty",
+    spec="https://svgwg.org/svg2-draft/text.html#TextAnchorProperty",
     gecko_enum_prefix="StyleTextAnchor",
     affects="layout",
 )}
@@ -37,7 +37,7 @@ ${helpers.single_keyword(
     "srgb auto linearrgb",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#ColorInterpolationProperty",
     gecko_enum_prefix="StyleColorInterpolation",
     affects="paint",
 )}
@@ -47,7 +47,7 @@ ${helpers.single_keyword(
     "linearrgb auto srgb",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationFiltersProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#ColorInterpolationFiltersProperty",
     gecko_enum_prefix="StyleColorInterpolation",
     affects="paint",
 )}
@@ -59,7 +59,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="IntermediateSVGPaint",
     boxed=True,
-    spec="https://www.w3.org/TR/SVG2/painting.html#SpecifyingFillPaint",
+    spec="https://svgwg.org/svg2-draft/painting.html#SpecifyingFillPaint",
     affects="paint",
 )}
 
@@ -79,7 +79,7 @@ ${helpers.predefined_type(
     "Default::default()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#FillRuleProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#FillRuleProperty",
     affects="paint",
 )}
 
@@ -88,7 +88,7 @@ ${helpers.single_keyword(
     "auto optimizespeed crispedges geometricprecision",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#ShapeRenderingProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#ShapeRenderingProperty",
     gecko_enum_prefix = "StyleShapeRendering",
     affects="paint",
 )}
@@ -100,7 +100,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="IntermediateSVGPaint",
     boxed=True,
-    spec="https://www.w3.org/TR/SVG2/painting.html#SpecifyingStrokePaint",
+    spec="https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint",
     affects="paint",
 )}
 
@@ -110,7 +110,7 @@ ${helpers.predefined_type(
     "computed::SVGWidth::one()",
     engines="gecko",
     animation_value_type="crate::values::computed::SVGWidth",
-    spec="https://www.w3.org/TR/SVG2/painting.html#StrokeWidth",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeWidth",
     affects="layout",
 )}
 
@@ -119,7 +119,7 @@ ${helpers.single_keyword(
     "butt round square",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#StrokeLinecapProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeLinecapProperty",
     gecko_enum_prefix = "StyleStrokeLinecap",
     affects="layout",
 )}
@@ -129,7 +129,7 @@ ${helpers.single_keyword(
     "miter round bevel",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/painting.html#StrokeLinejoinProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeLinejoinProperty",
     gecko_enum_prefix = "StyleStrokeLinejoin",
     affects="layout",
 )}
@@ -140,7 +140,7 @@ ${helpers.predefined_type(
     "From::from(4.0)",
     engines="gecko",
     animation_value_type="crate::values::computed::NonNegativeNumber",
-    spec="https://www.w3.org/TR/SVG2/painting.html#StrokeMiterlimitProperty",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeMiterlimitProperty",
     affects="layout",
 )}
 
@@ -160,7 +160,7 @@ ${helpers.predefined_type(
     "Default::default()",
     engines="gecko",
     animation_value_type="crate::values::computed::SVGStrokeDashArray",
-    spec="https://www.w3.org/TR/SVG2/painting.html#StrokeDashing",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeDashing",
     affects="paint",
 )}
 
@@ -170,7 +170,7 @@ ${helpers.predefined_type(
     "computed::SVGLength::zero()",
     engines="gecko",
     animation_value_type="ComputedValue",
-    spec="https://www.w3.org/TR/SVG2/painting.html#StrokeDashing",
+    spec="https://svgwg.org/svg2-draft/painting.html#StrokeDashing",
     affects="paint",
 )}
 
@@ -181,7 +181,7 @@ ${helpers.predefined_type(
     "Default::default()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG11/masking.html#ClipRuleProperty",
+    spec="https://svgwg.org/svg2-draft/masking.html#ClipRuleProperty",
     affects="paint",
 )}
 
@@ -191,7 +191,7 @@ ${helpers.predefined_type(
     "computed::url::UrlOrNone::none()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties",
+    spec="https://svgwg.org/svg2-draft/painting.html#VertexMarkerProperties",
     affects="layout",
 )}
 
@@ -201,7 +201,7 @@ ${helpers.predefined_type(
     "computed::url::UrlOrNone::none()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties",
+    spec="https://svgwg.org/svg2-draft/painting.html#VertexMarkerProperties",
     affects="layout",
 )}
 
@@ -211,7 +211,7 @@ ${helpers.predefined_type(
     "computed::url::UrlOrNone::none()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties",
+    spec="https://svgwg.org/svg2-draft/painting.html#VertexMarkerProperties",
     affects="layout",
 )}
 
@@ -221,7 +221,7 @@ ${helpers.predefined_type(
     "computed::SVGPaintOrder::normal()",
     engines="gecko",
     animation_value_type="discrete",
-    spec="https://www.w3.org/TR/SVG2/painting.html#PaintOrder",
+    spec="https://svgwg.org/svg2-draft/painting.html#PaintOrder",
     affects="paint",
 )}
 

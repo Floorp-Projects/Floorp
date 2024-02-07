@@ -26,7 +26,7 @@ ${helpers.single_keyword(
     engines="gecko servo-2013 servo-2020",
     animation_value_type="discrete",
     extra_gecko_values="visiblepainted visiblefill visiblestroke visible painted fill stroke all",
-    spec="https://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty",
+    spec="https://svgwg.org/svg2-draft/interact.html#PointerEventsProperty",
     gecko_enum_prefix="StylePointerEvents",
     affects="paint",
 )}

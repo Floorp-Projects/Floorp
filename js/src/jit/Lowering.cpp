@@ -6012,11 +6012,23 @@ void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
       ins);
 }
 
-void LIRGenerator::visitWasmPostWriteBarrier(MWasmPostWriteBarrier* ins) {
-  LWasmPostWriteBarrier* lir = new (alloc()) LWasmPostWriteBarrier(
+void LIRGenerator::visitWasmPostWriteBarrierImmediate(
+    MWasmPostWriteBarrierImmediate* ins) {
+  LWasmPostWriteBarrierImmediate* lir =
+      new (alloc()) LWasmPostWriteBarrierImmediate(
+          useFixed(ins->instance(), InstanceReg), useRegister(ins->object()),
+          useRegister(ins->valueBase()), useRegister(ins->value()), temp(),
+          ins->valueOffset());
+  add(lir, ins);
+  assignWasmSafepoint(lir);
+}
+
+void LIRGenerator::visitWasmPostWriteBarrierIndex(
+    MWasmPostWriteBarrierIndex* ins) {
+  LWasmPostWriteBarrierIndex* lir = new (alloc()) LWasmPostWriteBarrierIndex(
       useFixed(ins->instance(), InstanceReg), useRegister(ins->object()),
-      useRegister(ins->valueBase()), useRegister(ins->value()), temp(),
-      ins->valueOffset());
+      useRegister(ins->valueBase()), useRegister(ins->index()),
+      useRegister(ins->value()), temp(), ins->elemSize());
   add(lir, ins);
   assignWasmSafepoint(lir);
 }
@@ -7470,6 +7482,25 @@ void LIRGenerator::visitWasmLoadFieldKA(MWasmLoadFieldKA* ins) {
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
+void LIRGenerator::visitWasmLoadElementKA(MWasmLoadElementKA* ins) {
+  LAllocation base = useRegister(ins->base());
+  LAllocation index = useRegister(ins->index());
+  MWideningOp wideningOp = ins->wideningOp();
+  Scale scale = ins->scale();
+  if (ins->type() == MIRType::Int64) {
+    MOZ_RELEASE_ASSERT(wideningOp == MWideningOp::None);
+    defineInt64(
+        new (alloc()) LWasmLoadElementI64(base, index, ins->maybeTrap()), ins);
+  } else {
+    LDefinition tmp =
+        ins->type() == MIRType::Simd128 ? temp() : LDefinition::BogusTemp();
+    define(new (alloc()) LWasmLoadElement(base, index, tmp, ins->type(),
+                                          wideningOp, scale, ins->maybeTrap()),
+           ins);
+  }
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
+}
+
 void LIRGenerator::visitWasmStoreFieldKA(MWasmStoreFieldKA* ins) {
   MDefinition* value = ins->value();
   uint32_t offs = ins->offset();
@@ -7496,6 +7527,43 @@ void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
   uint32_t offset = ins->offset();
   add(new (alloc()) LWasmStoreRef(instance, obj, value, temp(), offset,
                                   ins->maybeTrap(), ins->preBarrierKind()),
+      ins);
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
+}
+
+void LIRGenerator::visitWasmStoreElementKA(MWasmStoreElementKA* ins) {
+  LAllocation base = useRegister(ins->base());
+  LAllocation index = useRegister(ins->index());
+  MDefinition* value = ins->value();
+  MNarrowingOp narrowingOp = ins->narrowingOp();
+  Scale scale = ins->scale();
+  LInstruction* lir;
+  if (value->type() == MIRType::Int64) {
+    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
+    lir = new (alloc()) LWasmStoreElementI64(
+        base, index, useInt64Register(value), ins->maybeTrap());
+  } else {
+    LDefinition tmp =
+        value->type() == MIRType::Simd128 ? temp() : LDefinition::BogusTemp();
+    lir = new (alloc())
+        LWasmStoreElement(base, index, useRegister(value), tmp, value->type(),
+                          narrowingOp, scale, ins->maybeTrap());
+  }
+  add(lir, ins);
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
+}
+
+void LIRGenerator::visitWasmStoreElementRefKA(MWasmStoreElementRefKA* ins) {
+  LAllocation instance = useRegister(ins->instance());
+  LAllocation base = useFixed(ins->base(), PreBarrierReg);
+  LAllocation index = useRegister(ins->index());
+  LAllocation value = useRegister(ins->value());
+  bool needTemps = ins->preBarrierKind() == WasmPreBarrierKind::Normal;
+  LDefinition temp0 = needTemps ? temp() : LDefinition::BogusTemp();
+  LDefinition temp1 = needTemps ? temp() : LDefinition::BogusTemp();
+  add(new (alloc())
+          LWasmStoreElementRef(instance, base, index, value, temp0, temp1,
+                               ins->maybeTrap(), ins->preBarrierKind()),
       ins);
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
@@ -7593,6 +7661,15 @@ void LIRGenerator::visitWasmNewStructObject(MWasmNewStructObject* ins) {
   LWasmNewStructObject* lir = new (alloc())
       LWasmNewStructObject(useFixed(ins->instance(), InstanceReg),
                            useRegister(ins->typeDefData()), temp(), temp());
+  define(lir, ins);
+  assignWasmSafepoint(lir);
+}
+
+void LIRGenerator::visitWasmNewArrayObject(MWasmNewArrayObject* ins) {
+  LWasmNewArrayObject* lir = new (alloc())
+      LWasmNewArrayObject(useFixed(ins->instance(), InstanceReg),
+                          useRegisterOrConstant(ins->numElements()),
+                          useRegister(ins->typeDefData()), temp(), temp());
   define(lir, ins);
   assignWasmSafepoint(lir);
 }

@@ -1722,9 +1722,20 @@ struct BaseCompiler final {
   // Load a pointer to the SuperTypeVector for a given type index
   RegPtr loadSuperTypeVector(uint32_t typeIndex);
 
+  // Emits allocation code for a GC struct. The struct may have an out-of-line
+  // data area; if so, `isOutlineStruct` will be true and `outlineBase` will be
+  // allocated and must be freed.
   template <bool ZeroFields>
   bool emitStructAlloc(uint32_t typeIndex, RegRef* object,
                        bool* isOutlineStruct, RegPtr* outlineBase);
+  // Emits allocation code for a dynamically-sized GC array.
+  template <bool ZeroFields>
+  bool emitArrayAlloc(uint32_t typeIndex, RegRef object, RegI32 numElements,
+                      uint32_t elemSize);
+  // Emits allocation code for a fixed-size GC array.
+  template <bool ZeroFields>
+  bool emitArrayAllocFixed(uint32_t typeIndex, RegRef object,
+                           uint32_t numElements, uint32_t elemSize);
 
   template <typename NullCheckPolicy>
   RegPtr emitGcArrayGetData(RegRef rp);

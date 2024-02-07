@@ -273,6 +273,29 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
+// A table converting an object size in "slots" (increments of
+// sizeof(js::Value)) to the total number of bytes in the corresponding
+// AllocKind. See gc::slotsToThingKind. This primarily allows wasm jit code to
+// remain compliant with the AllocKind system.
+//
+// To use this table, subtract sizeof(NativeObject) from your desired allocation
+// size, divide by sizeof(js::Value) to get the number of "slots", and then
+// index into this table. See gc::GetGCObjectKindForBytes.
+const constexpr uint32_t gc::slotsToAllocKindBytes[] = {
+    // These entries correspond exactly to gc::slotsToThingKind. The numeric
+    // comments therefore indicate the number of slots that the "bytes" would
+    // correspond to.
+    // clang-format off
+    /*  0 */ sizeof(JSObject_Slots0), sizeof(JSObject_Slots2), sizeof(JSObject_Slots2), sizeof(JSObject_Slots4),
+    /*  4 */ sizeof(JSObject_Slots4), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8), sizeof(JSObject_Slots8),
+    /*  8 */ sizeof(JSObject_Slots8), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12), sizeof(JSObject_Slots12),
+    /* 12 */ sizeof(JSObject_Slots12), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16), sizeof(JSObject_Slots16),
+    /* 16 */ sizeof(JSObject_Slots16)
+    // clang-format on
+};
+
+static_assert(std::size(slotsToAllocKindBytes) == SLOTS_TO_THING_KIND_LIMIT);
+
 MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
 JS::GCContext::GCContext(JSRuntime* runtime) : runtime_(runtime) {}
@@ -899,6 +922,13 @@ void GCRuntime::finish() {
   freeTask.join();
   allocTask.cancelAndWait();
   decommitTask.cancelAndWait();
+#ifdef DEBUG
+  {
+    MOZ_ASSERT(dispatchedParallelTasks == 0);
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(queuedParallelTasks.ref().isEmpty(lock));
+  }
+#endif
 
 #ifdef JS_GC_ZEAL
   // Free memory associated with GC verification.
@@ -1252,6 +1282,10 @@ void GCRuntime::updateHelperThreadCount() {
   if (!CanUseExtraThreads()) {
     // startTask will run the work on the main thread if the count is 1.
     MOZ_ASSERT(helperThreadCount == 1);
+    markingThreadCount = 1;
+
+    AutoLockHelperThreadState lock;
+    maxParallelThreads = 1;
     return;
   }
 
@@ -1261,13 +1295,6 @@ void GCRuntime::updateHelperThreadCount() {
   // marking. In real configurations there will be enough threads that this
   // won't affect anything.
   static constexpr size_t SpareThreadsDuringParallelMarking = 2;
-
-  // The count of helper threads used for GC tasks is process wide. Don't set it
-  // for worker JS runtimes.
-  if (rt->parentRuntime) {
-    helperThreadCount = rt->parentRuntime->gc.helperThreadCount;
-    return;
-  }
 
   // Calculate the target thread count for GC parallel tasks.
   size_t cpuCount = GetHelperThreadCPUCount();
@@ -1298,7 +1325,7 @@ void GCRuntime::updateHelperThreadCount() {
                availableThreadCount - SpareThreadsDuringParallelMarking);
 
   // Update the maximum number of threads that will be used for GC work.
-  HelperThreadState().setGCParallelThreadCount(targetCount, lock);
+  maxParallelThreads = targetCount;
 }
 
 size_t GCRuntime::markingWorkerCount() const {
@@ -1336,9 +1363,9 @@ bool GCRuntime::initOrDisableParallelMarking() {
   return true;
 }
 
-static size_t GetGCParallelThreadCount() {
+size_t GCRuntime::getMaxParallelThreads() const {
   AutoLockHelperThreadState lock;
-  return HelperThreadState().getGCParallelThreadCount(lock);
+  return maxParallelThreads.ref();
 }
 
 bool GCRuntime::updateMarkersVector() {
@@ -1349,8 +1376,7 @@ bool GCRuntime::updateMarkersVector() {
 
   // Limit worker count to number of GC parallel tasks that can run
   // concurrently, otherwise one thread can deadlock waiting on another.
-  size_t targetCount =
-      std::min(markingWorkerCount(), GetGCParallelThreadCount());
+  size_t targetCount = std::min(markingWorkerCount(), getMaxParallelThreads());
 
   if (markers.length() > targetCount) {
     return markers.resize(targetCount);
@@ -2345,25 +2371,6 @@ bool CompartmentCheckTracer::edgeIsInCrossCompartmentMap(JS::GCCellPtr dst) {
          InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), dst);
 }
 
-static bool IsPartiallyInitializedObject(Cell* cell) {
-  if (!cell->is<JSObject>()) {
-    return false;
-  }
-
-  JSObject* obj = cell->as<JSObject>();
-  if (!obj->is<NativeObject>()) {
-    return false;
-  }
-
-  NativeObject* nobj = &obj->as<NativeObject>();
-
-  // Check for failed allocation of dynamic slots in
-  // NativeObject::allocateInitialSlots.
-  size_t nDynamicSlots = NativeObject::calculateDynamicSlots(
-      nobj->numFixedSlots(), nobj->slotSpan(), nobj->getClass());
-  return nDynamicSlots != 0 && !nobj->hasDynamicSlots();
-}
-
 void GCRuntime::checkForCompartmentMismatches() {
   JSContext* cx = rt->mainContextFromOwnThread();
   if (cx->disableStrictProxyCheckingCount) {
@@ -2377,12 +2384,6 @@ void GCRuntime::checkForCompartmentMismatches() {
     for (auto thingKind : AllAllocKinds()) {
       for (auto i = zone->cellIterUnsafe<TenuredCell>(thingKind, empty);
            !i.done(); i.next()) {
-        // We may encounter partially initialized objects. These are unreachable
-        // and it's safe to ignore them.
-        if (IsPartiallyInitializedObject(i.getCell())) {
-          continue;
-        }
-
         trc.src = i.getCell();
         trc.srcKind = MapAllocToTraceKind(thingKind);
         trc.compartment = MapGCThingTyped(

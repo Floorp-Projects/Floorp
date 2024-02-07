@@ -22,8 +22,7 @@
   </nav>
   <div id="searchbox-container">
     <input id="searchbox" type="text" placeholder="search" />
-    <div id="searchbox-suggestions">
-    </div>
+    <div id="searchbox-suggestions"></div>
   </div>
   <div style="margin: 10px 0;" id="results"></div>
   <div id="related-searches"></div>
@@ -33,6 +32,7 @@
     const results = document.getElementById("results");
     const related = document.getElementById("related-searches");
     const searchBox = document.getElementById("searchbox");
+    const suggestion = document.getElementById("searchbox-suggestions");
     let searchKey = "s";
 
     function getSearchTerm(){
@@ -40,11 +40,11 @@
       if (!searchTerm) {
         return "";
       }
-      return {originalSearchTerm: searchTerm, searchTerm: searchTerm.replaceAll("+", " ") };
+      return { originalSearchTerm: searchTerm, searchTerm: searchTerm.replaceAll("+", " ") };
     }
 
-    function replaceWithBasicResults(){
-      let {originalSearchTerm, searchTerm} = getSearchTerm();
+    function replaceWithBasicResults() {
+      let { originalSearchTerm, searchTerm } = getSearchTerm();
       let hasAds = !searchTerm.startsWith("no ads");
       if (!searchTerm) {
         return;
@@ -93,9 +93,17 @@
       results.innerHTML = result;
     }
 
-    function updateSearchbox(){
-      let {searchTerm} = getSearchTerm();
+    function updateSearchbox() {
+      let { searchTerm } = getSearchTerm();
       searchBox.value = searchTerm;
+    }
+
+    function updateSuggestions() {
+      let { searchTerm } = getSearchTerm();
+      let suggestions = `
+        <div id="first-suggestion" data-search="${searchTerm} suggestion">${searchTerm} suggestion</div>
+      `
+      suggestion.innerHTML = suggestions;
     }
 
     function updateNav() {
@@ -108,7 +116,7 @@
       imagesTab.href = baseUrl.href;
     }
 
-    function updatePageState({page = "", query = "" }){
+    function updatePageState({ page = "", query = "" }) {
       let url = new URL(window.location.href);
       if (page) {
         url.searchParams.set("page", page);
@@ -148,6 +156,7 @@
       replaceWithBasicResults();
       updateRelatedSearches();
       updateSearchbox();
+      updateSuggestions();
     });
 
     imagesTab.addEventListener("click", (event) => {
@@ -156,6 +165,7 @@
       replaceWithOtherResults();
       updateRelatedSearches();
       updateSearchbox();
+      updateSuggestions();
     });
 
     related.addEventListener("click", (event) => {
@@ -167,8 +177,32 @@
         updateRelatedSearches();
         updateNav();
         updateSearchbox();
+        updateSuggestions();
       }
     });
+
+    suggestion.addEventListener("click", (event) => {
+      event.preventDefault();
+      let search = event.target.dataset.search;
+      let baseUrl = new URL(window.location.href);
+      let page = baseUrl.searchParams.get("page");
+      updatePageState({ page, query: search });
+      switch (page) {
+        case "web":
+          replaceWithBasicResults();
+          updateRelatedSearches();
+          updateNav();
+          updateSearchbox();
+          updateSuggestions();
+          break;
+        case "images":
+          replaceWithOtherResults();
+          updateRelatedSearches();
+          updateSearchbox();
+          updateSuggestions();
+          break;
+      }
+    })
 
     window.addEventListener("DOMContentLoaded", (event) => {
       let url = new URL(window.location.href);
@@ -182,6 +216,7 @@
       updateNav();
       updateRelatedSearches();
       updateSearchbox();
+      updateSuggestions();
     });
 
     window.addEventListener("popstate", (event) => {
@@ -193,6 +228,7 @@
           updateNav();
           updateRelatedSearches();
           updateSearchbox();
+          updateSuggestions();
           break;
         case "images":
           replaceWithOtherResults();

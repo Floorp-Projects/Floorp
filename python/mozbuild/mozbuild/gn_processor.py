@@ -562,6 +562,16 @@ def write_mozbuild(
                     mb.write('    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]\n')
             except KeyError:
                 pass
+            try:
+                if (
+                    relsrcdir
+                    in write_mozbuild_variables["INCLUDE_SYSTEM_LIBVPX_HANDLING"]
+                ):
+                    mb.write('if not CONFIG["MOZ_SYSTEM_LIBVPX"]:\n')
+                    mb.write('    LOCAL_INCLUDES += [ "/media/libvpx/libvpx/" ]\n')
+                    mb.write('    CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]\n')
+            except KeyError:
+                pass
 
             all_args = [args for args, _ in configs]
 

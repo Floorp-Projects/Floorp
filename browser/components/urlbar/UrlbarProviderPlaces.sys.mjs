@@ -68,7 +68,7 @@ function defaultQuery(conditions = "") {
      FROM moz_places h
      LEFT JOIN moz_openpages_temp t
             ON t.url = h.url
-            AND (:userContextId IS NULL OR t.userContextId = :userContextId)
+            AND (t.userContextId = :userContextId OR (t.userContextId <> -1 AND :userContextId IS NULL))
      WHERE ${PAGES_FRECENCY_FIELD} <> 0
        AND CASE WHEN bookmarked
          THEN
@@ -95,7 +95,7 @@ const SQL_SWITCHTAB_QUERY = `SELECT :query_type, t.url, t.url, NULL, NULL, NULL,
    FROM moz_openpages_temp t
    LEFT JOIN moz_places h ON h.url_hash = hash(t.url) AND h.url = t.url
    WHERE h.id IS NULL
-     AND (:userContextId IS NULL OR t.userContextId = :userContextId)
+     AND (t.userContextId = :userContextId OR (t.userContextId <> -1 AND :userContextId IS NULL))
      AND AUTOCOMPLETE_MATCH(:searchString, t.url, t.url, NULL,
                             NULL, NULL, NULL, t.open_count,
                             :matchBehavior, :searchBehavior, NULL)
@@ -169,7 +169,8 @@ function makeMapKeyForResult(url, match) {
   return UrlbarUtils.tupleString(
     url,
     action?.type == "switchtab" &&
-      lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
+      lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+      lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(match.userContextId)
       ? match.userContextId
       : undefined
   );
@@ -468,12 +469,6 @@ function Search(queryContext, listener, provider) {
     let engine = Services.search.getEngineByName(this._searchModeEngine);
     this._filterOnHost = engine.searchUrlDomain;
   }
-
-  this._userContextId =
-    lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
-      this._userContextId,
-      this._inPrivateWindow
-    );
 
   // Use the original string here, not the stripped one, so the tokenizer can
   // properly recognize token types.
@@ -1298,7 +1293,10 @@ Search.prototype = {
     params.userContextId = lazy.UrlbarPrefs.get(
       "switchTabs.searchAllContainers"
     )
-      ? null
+      ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+          null,
+          this._inPrivateWindow
+        )
       : this._userContextId;
 
     if (this._filterOnHost) {
@@ -1325,7 +1323,10 @@ Search.prototype = {
         // original search string.
         searchString: this._keywordFilteredSearchString,
         userContextId: lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
-          ? null
+          ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+              null,
+              this._inPrivateWindow
+            )
           : this._userContextId,
         maxResults: this._maxResults,
       },

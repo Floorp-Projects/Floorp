@@ -1304,7 +1304,8 @@ static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
 // This class doesn't use the GC barrier wrapper classes. BaseScript::swapData
 // performs a manual pre-write barrier when detaching PrivateScriptData from a
 // script.
-class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
+class alignas(uintptr_t) PrivateScriptData final
+    : public TrailingArray<PrivateScriptData> {
  private:
   uint32_t ngcthings = 0;
 

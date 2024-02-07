@@ -207,8 +207,8 @@ void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
     const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
                              ? ffi::WGPUIndexFormat_Uint32
                              : ffi::WGPUIndexFormat_Uint16;
-    ffi::wgpu_render_pass_set_index_buffer(mPass.get(), aBuffer.mId, iformat, aOffset,
-                                           aSize);
+    ffi::wgpu_render_pass_set_index_buffer(mPass.get(), aBuffer.mId, iformat,
+                                           aOffset, aSize);
   }
 }
 
@@ -216,8 +216,8 @@ void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
                                         uint64_t aOffset, uint64_t aSize) {
   if (mValid) {
     mUsedBuffers.AppendElement(&aBuffer);
-    ffi::wgpu_render_pass_set_vertex_buffer(mPass.get(), aSlot, aBuffer.mId, aOffset,
-                                            aSize);
+    ffi::wgpu_render_pass_set_vertex_buffer(mPass.get(), aSlot, aBuffer.mId,
+                                            aOffset, aSize);
   }
 }
 
@@ -251,16 +251,16 @@ void RenderPassEncoder::DrawIndirect(const Buffer& aIndirectBuffer,
 void RenderPassEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
                                             uint64_t aIndirectOffset) {
   if (mValid) {
-    ffi::wgpu_render_pass_draw_indexed_indirect(mPass.get(), aIndirectBuffer.mId,
-                                                aIndirectOffset);
+    ffi::wgpu_render_pass_draw_indexed_indirect(
+        mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
   }
 }
 
 void RenderPassEncoder::SetViewport(float x, float y, float width, float height,
                                     float minDepth, float maxDepth) {
   if (mValid) {
-    ffi::wgpu_render_pass_set_viewport(mPass.get(), x, y, width, height, minDepth,
-                                       maxDepth);
+    ffi::wgpu_render_pass_set_viewport(mPass.get(), x, y, width, height,
+                                       minDepth, maxDepth);
   }
 }
 

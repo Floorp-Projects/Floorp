@@ -2335,6 +2335,14 @@ export class SearchService {
           ? [e.identifier]
           : e.identifier.split("-");
 
+        if (e.identifier == "amazon-se") {
+          identifierComponents[1] = "sweden";
+        }
+
+        if (e.identifier == "amazon-es") {
+          identifierComponents[1] = "spain";
+        }
+
         let locale = identifierComponents.slice(1).join("-") || "default";
 
         e.webExtension.id = identifierComponents[0] + "@search.mozilla.org";

@@ -183,6 +183,9 @@ support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
 ["browser_search_telemetry_spa_in_content.js"]
 support-files = ["searchTelemetrySinglePageApp.html"]
+skip-if = [
+  "(os == 'linux') && tsan && verify",
+] # Can fail on ad_count visibility
 
 ["browser_search_telemetry_spa_multi_provider.js"]
 support-files = ["searchTelemetrySinglePageApp.html"]
