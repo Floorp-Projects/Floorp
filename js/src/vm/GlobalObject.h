@@ -1086,6 +1086,14 @@ class GlobalObject : public NativeObject {
   static SharedShape* createPlainObjectShapeWithDefaultProto(
       JSContext* cx, gc::AllocKind kind);
 
+  static SharedShape* getEmptyPlainObjectShape(JSContext* cx) {
+    const PlainObjectSlotsKind kind = PlainObjectSlotsKind::Slots0;
+    SharedShape* shape =
+        cx->global()->data().plainObjectShapesWithDefaultProto[kind];
+    MOZ_ASSERT(shape);  // This is created on initialization.
+    return shape;
+  }
+
   static SharedShape* getFunctionShapeWithDefaultProto(JSContext* cx,
                                                        bool extended) {
     GlobalObjectData& data = cx->global()->data();

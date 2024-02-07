@@ -224,6 +224,8 @@ firefoxview-search-results-empty = No results for “{ $query }”
 
 firefoxview-sort-history-by-date-label = Sort by date
 firefoxview-sort-history-by-site-label = Sort by site
+firefoxview-sort-open-tabs-by-recency-label = Sort by recent activity
+firefoxview-sort-open-tabs-by-order-label = Sort by tab order
 
 # Variables:
 #   $url (string) - URL that will be opened in the new tab

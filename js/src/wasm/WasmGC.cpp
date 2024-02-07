@@ -26,27 +26,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-wasm::StackMap* wasm::ConvertStackMapBoolVectorToStackMap(
-    const StackMapBoolVector& vec, bool hasRefs) {
-  wasm::StackMap* stackMap = wasm::StackMap::create(vec.length());
-  if (!stackMap) {
-    return nullptr;
-  }
-
-  bool hasRefsObserved = false;
-  size_t i = 0;
-  for (bool b : vec) {
-    if (b) {
-      stackMap->setBit(i);
-      hasRefsObserved = true;
-    }
-    i++;
-  }
-  MOZ_RELEASE_ASSERT(hasRefs == hasRefsObserved);
-
-  return stackMap;
-}
-
 // Generate a stackmap for a function's stack-overflow-at-entry trap, with
 // the structure:
 //
@@ -80,22 +59,39 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   const size_t trapExitLayoutBytes = trapExitLayoutWords * sizeof(void*);
 
   // The stack map owns any alignment padding for incoming stack args.
+  MOZ_ASSERT(nInboundStackArgBytes % sizeof(void*) == 0);
   const size_t nInboundStackArgBytesAligned =
       AlignStackArgAreaSize(nInboundStackArgBytes);
+  const size_t numStackArgWords = nInboundStackArgBytesAligned / sizeof(void*);
 
   // This is the total number of bytes covered by the map.
-  const DebugOnly<size_t> nTotalBytes = trapExitLayoutBytes +
-                                        nBytesReservedBeforeTrap + nFrameBytes +
-                                        nInboundStackArgBytesAligned;
+  const size_t nTotalBytes = trapExitLayoutBytes + nBytesReservedBeforeTrap +
+                             nFrameBytes + nInboundStackArgBytesAligned;
 
-  // Create the stackmap initially in this vector.  Since most frames will
-  // contain 128 or fewer words, heap allocation is avoided in the majority of
-  // cases.  vec[0] is for the lowest address in the map, vec[N-1] is for the
-  // highest address in the map.
-  StackMapBoolVector vec;
-
-  // Keep track of whether we've actually seen any refs.
+#ifndef DEBUG
   bool hasRefs = false;
+  for (WasmABIArgIter i(argTypes); !i.done(); i++) {
+    if (i.mirType() == MIRType::WasmAnyRef) {
+      hasRefs = true;
+      break;
+    }
+  }
+
+  // There are no references, and this is a non-debug build, so don't bother
+  // building the stackmap.
+  if (!hasRefs) {
+    return true;
+  }
+#endif
+
+  wasm::StackMap* stackMap =
+      wasm::StackMap::create(nTotalBytes / sizeof(void*));
+  if (!stackMap) {
+    return false;
+  }
+  stackMap->setExitStubWords(trapExitLayoutWords);
+  stackMap->setFrameOffsetFromTop(nFrameBytes / sizeof(void*) +
+                                  numStackArgWords);
 
   // REG DUMP AREA
   wasm::ExitStubMapVector trapExitExtras;
@@ -105,34 +101,16 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   }
   MOZ_ASSERT(trapExitExtras.length() == trapExitLayoutWords);
 
-  if (!vec.appendN(false, trapExitLayoutWords)) {
-    return false;
-  }
   for (size_t i = 0; i < trapExitLayoutWords; i++) {
-    vec[i] = trapExitExtras[i];
-    hasRefs |= vec[i];
-  }
-
-  // SPACE RESERVED BEFORE TRAP
-  MOZ_ASSERT(nBytesReservedBeforeTrap % sizeof(void*) == 0);
-  if (!vec.appendN(false, nBytesReservedBeforeTrap / sizeof(void*))) {
-    return false;
-  }
-
-  // SPACE FOR FRAME
-  if (!vec.appendN(false, nFrameBytes / sizeof(void*))) {
-    return false;
+    if (trapExitExtras[i]) {
+      stackMap->set(i, wasm::StackMap::AnyRef);
+    }
   }
 
   // INBOUND ARG AREA
-  MOZ_ASSERT(nInboundStackArgBytesAligned % sizeof(void*) == 0);
-  const size_t numStackArgWords = nInboundStackArgBytesAligned / sizeof(void*);
-
-  const size_t wordsSoFar = vec.length();
-  if (!vec.appendN(false, numStackArgWords)) {
-    return false;
-  }
-
+  const size_t stackArgOffset =
+      (trapExitLayoutBytes + nBytesReservedBeforeTrap + nFrameBytes) /
+      sizeof(void*);
   for (WasmABIArgIter i(argTypes); !i.done(); i++) {
     ABIArg argLoc = *i;
     if (argLoc.kind() == ABIArg::Stack &&
@@ -140,33 +118,16 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
       uint32_t offset = argLoc.offsetFromArgBase();
       MOZ_ASSERT(offset < nInboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
-      vec[wordsSoFar + offset / sizeof(void*)] = true;
-      hasRefs = true;
+      stackMap->set(stackArgOffset + offset / sizeof(void*),
+                    wasm::StackMap::AnyRef);
     }
   }
 
-#ifndef DEBUG
-  // We saw no references, and this is a non-debug build, so don't bother
-  // building the stackmap.
-  if (!hasRefs) {
-    return true;
-  }
-#endif
-
-  // Convert vec into a wasm::StackMap.
-  MOZ_ASSERT(vec.length() * sizeof(void*) == nTotalBytes);
-  wasm::StackMap* stackMap = ConvertStackMapBoolVectorToStackMap(vec, hasRefs);
-  if (!stackMap) {
-    return false;
-  }
-  stackMap->setExitStubWords(trapExitLayoutWords);
-
-  stackMap->setFrameOffsetFromTop(nFrameBytes / sizeof(void*) +
-                                  numStackArgWords);
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {
-    MOZ_ASSERT(stackMap->getBit(stackMap->header.numMappedWords -
-                                stackMap->header.frameOffsetFromTop + i) == 0);
+    MOZ_ASSERT(stackMap->get(stackMap->header.numMappedWords -
+                             stackMap->header.frameOffsetFromTop + i) ==
+               StackMap::Kind::POD);
   }
 #endif
 
@@ -206,9 +167,10 @@ bool wasm::GenerateStackmapEntriesForTrapExit(
   return true;
 }
 
+template <class Addr>
 void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
-                                   Register scratch, Register valueAddr,
-                                   size_t valueOffset, Label* skipBarrier,
+                                   Register scratch, Addr addr,
+                                   Label* skipBarrier,
                                    BytecodeOffset* trapOffset) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
@@ -218,8 +180,7 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
                     skipBarrier);
 
   // If the previous value is not a GC thing, we don't need the barrier.
-  FaultingCodeOffset fco =
-      masm.loadPtr(Address(valueAddr, valueOffset), scratch);
+  FaultingCodeOffset fco = masm.loadPtr(addr, scratch);
   masm.branchWasmAnyRefIsGCThing(false, scratch, skipBarrier);
 
   // Emit metadata for a potential null access when reading the previous value.
@@ -229,9 +190,17 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
   }
 }
 
-void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
-                                  Register scratch, Register valueAddr,
-                                  size_t valueOffset) {
+template void wasm::EmitWasmPreBarrierGuard<Address>(
+    MacroAssembler& masm, Register instance, Register scratch, Address addr,
+    Label* skipBarrier, BytecodeOffset* trapOffset);
+template void wasm::EmitWasmPreBarrierGuard<BaseIndex>(
+    MacroAssembler& masm, Register instance, Register scratch, BaseIndex addr,
+    Label* skipBarrier, BytecodeOffset* trapOffset);
+
+void wasm::EmitWasmPreBarrierCallImmediate(MacroAssembler& masm,
+                                           Register instance, Register scratch,
+                                           Register valueAddr,
+                                           size_t valueOffset) {
   MOZ_ASSERT(valueAddr == PreBarrierReg);
 
   // Add the offset to the PreBarrierReg, if any.
@@ -257,6 +226,36 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
   if (valueOffset != 0) {
     masm.subPtr(Imm32(valueOffset), valueAddr);
   }
+}
+
+void wasm::EmitWasmPreBarrierCallIndex(MacroAssembler& masm, Register instance,
+                                       Register scratch1, Register scratch2,
+                                       BaseIndex addr) {
+  MOZ_ASSERT(addr.base == PreBarrierReg);
+
+  // Save the original base so we can restore it later.
+  masm.movePtr(AsRegister(addr.base), scratch2);
+
+  // Compute the final address into PrebarrierReg, as the barrier expects it
+  // there.
+  masm.computeEffectiveAddress(addr, PreBarrierReg);
+
+#if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
+  // The prebarrier assumes that x28 == sp.
+  Label ok;
+  masm.Cmp(sp, vixl::Operand(x28));
+  masm.B(&ok, Assembler::Equal);
+  masm.breakpoint();
+  masm.bind(&ok);
+#endif
+
+  // Load and call the pre-write barrier code. It will preserve all volatile
+  // registers.
+  masm.loadPtr(Address(instance, Instance::offsetOfPreBarrierCode()), scratch1);
+  masm.call(scratch1);
+
+  // Restore the original base
+  masm.movePtr(scratch2, AsRegister(addr.base));
 }
 
 void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,

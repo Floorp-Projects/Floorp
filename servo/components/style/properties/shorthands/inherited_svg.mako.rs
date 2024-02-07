@@ -8,7 +8,7 @@
     name="marker"
     engines="gecko"
     sub_properties="marker-start marker-end marker-mid"
-    spec="https://www.w3.org/TR/SVG2/painting.html#MarkerShorthand"
+    spec="https://svgwg.org/svg2-draft/painting.html#MarkerShorthand"
 >
     use crate::values::specified::url::UrlOrNone;
 

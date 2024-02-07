@@ -1048,14 +1048,19 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     }
   }
 
+  // clang-format off
+  //
   // 31   27   23   19 15 11    6  4 3
-  // cond 0111 U000 Rn Rt 00000 00 0 Rm = STR<cond>  Rt, [Rn, +/- Rm]
-  // cond 0111 U100 Rn Rt 00000 00 0 Rm = STRB<cond> Rt, [Rn, +/- Rm]
-  // cond 0111 U001 Rn Rt 00000 00 0 Rm = LDR<cond>  Rt, [Rn, +/- Rm]
-  // cond 0111 U101 Rn Rt 00000 00 0 Rm = LDRB<cond> Rt, [Rn, +/- Rm]
+  // cond 0111 U000 Rn Rt shimm 00 0 Rm = STR<cond>  Rt, [Rn, +/- Rm, [lsl #shimm]]
+  // cond 0111 U100 Rn Rt shimm 00 0 Rm = STRB<cond> Rt, [Rn, +/- Rm, [lsl #shimm]]
+  // cond 0111 U001 Rn Rt shimm 00 0 Rm = LDR<cond>  Rt, [Rn, +/- Rm, [lsl #shimm]]
+  // cond 0111 U101 Rn Rt shimm 00 0 Rm = LDRB<cond> Rt, [Rn, +/- Rm, [lsl #shimm]]
   // U = 1 for +, U = 0 for -
-  if (INSN(31, 28) == 0b1110  // unconditional
-      && INSN(27, 24) == 0b0111 && INSN(11, 4) == 0b00000'00'0) {
+  //
+  // clang-format on
+  if (INSN(31, 28) == 0b1110                             // unconditional
+      && INSN(27, 24) == 0b0111 && INSN(6, 4) == 0b00'0  // lsl
+  ) {
     switch (INSN(22, 20)) {
       case 0b000:
         return Some(TrapMachineInsn::Store32);

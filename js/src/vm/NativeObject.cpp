@@ -391,10 +391,11 @@ bool NativeObject::growSlotsForNewSlot(JSContext* cx, uint32_t numFixed,
 bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
   uint32_t count = ObjectSlots::allocCount(capacity);
   HeapSlot* allocation = AllocateCellBuffer<HeapSlot>(cx, this, count);
-  if (!allocation) {
-    // The new object will be unreachable, but we still have to make it safe
-    // for finalization. Also we must check for it during GC compartment
-    // checks (see IsPartiallyInitializedObject).
+  if (MOZ_UNLIKELY(!allocation)) {
+    // The new object will be unreachable, but we have to make it safe for
+    // finalization. It can also be observed with dumpHeap().
+    // Give it a dummy shape that has no dynamic slots.
+    setShape(GlobalObject::getEmptyPlainObjectShape(cx));
     initEmptyDynamicSlots();
     return false;
   }
@@ -1909,32 +1910,12 @@ static bool DefineNonexistentProperty(JSContext* cx, Handle<NativeObject*> obj,
       }
     }
   } else if (obj->is<TypedArrayObject>()) {
-    // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
+    // TypedArray Exotic Objects, 10.4.5.5 step 1.
+    //
+    // Indexed properties of typed arrays are special.
     if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
-      // This method is only called for non-existent properties, which
-      // means any absent indexed property must be out of range. Unless the
-      // typed array is backed by a growable SharedArrayBuffer, in which case
-      // another thread may have grown the buffer.
-      MOZ_ASSERT(index.value() >=
-                     obj->as<TypedArrayObject>().length().valueOr(0) ||
-                 (obj->as<TypedArrayObject>().isSharedMemory() &&
-                  obj->as<TypedArrayObject>().bufferShared()->isGrowable()));
-
-      // The following steps refer to 9.4.5.11 IntegerIndexedElementSet.
-
-      // Step 1 is enforced by the caller.
-
-      // Steps 2-3.
-      // We still need to call ToNumber or ToBigInt, because of its
-      // possible side effects.
-      if (!obj->as<TypedArrayObject>().convertForSideEffect(cx, v)) {
-        return false;
-      }
-
-      // Step 4 (nothing to do, the index is out of range).
-
-      // Step 5.
-      return result.succeed();
+      Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
+      return SetTypedArrayElementOutOfBounds(cx, tobj, *index, v, result);
     }
   } else if (obj->is<ArgumentsObject>()) {
     // If this method is called with either |length| or |@@iterator|, the

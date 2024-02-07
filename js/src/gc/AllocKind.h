@@ -127,6 +127,8 @@ enum class AllocKind : uint8_t {
     LIMIT,
     LAST = LIMIT - 1,
 
+    INVALID = LIMIT,
+
     FIRST = 0,
     OBJECT_FIRST = FUNCTION // Hardcoded to first object kind.
   // clang-format on

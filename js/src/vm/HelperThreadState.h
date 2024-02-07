@@ -163,9 +163,9 @@ class GlobalHelperThreadState {
   // Finished source compression tasks.
   SourceCompressionTaskVector compressionFinishedList_;
 
-  // GC tasks needing to be done in parallel.
+  // GC tasks needing to be done in parallel. These are first queued in the
+  // GCRuntime before being dispatched to the helper thread system.
   GCParallelTaskList gcParallelWorklist_;
-  size_t gcParallelThreadCount;
 
   using HelperThreadTaskVector =
       Vector<HelperThreadTask*, 0, SystemAllocPolicy>;
@@ -197,7 +197,7 @@ class GlobalHelperThreadState {
   size_t maxPromiseHelperThreads() const;
   size_t maxDelazifyThreads() const;
   size_t maxCompressionThreads() const;
-  size_t maxGCParallelThreads(const AutoLockHelperThreadState& lock) const;
+  size_t maxGCParallelThreads() const;
 
   GlobalHelperThreadState();
 
@@ -317,16 +317,6 @@ class GlobalHelperThreadState {
   }
 
   GCParallelTaskList& gcParallelWorklist() { return gcParallelWorklist_; }
-
-  size_t getGCParallelThreadCount(const AutoLockHelperThreadState& lock) const {
-    return gcParallelThreadCount;
-  }
-  void setGCParallelThreadCount(size_t count,
-                                const AutoLockHelperThreadState& lock) {
-    MOZ_ASSERT(count >= 1);
-    MOZ_ASSERT(count <= threadCount);
-    gcParallelThreadCount = count;
-  }
 
   HelperThreadTaskVector& helperTasks(const AutoLockHelperThreadState&) {
     return helperTasks_;

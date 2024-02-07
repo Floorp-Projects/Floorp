@@ -850,7 +850,6 @@ GlobalHelperThreadState::GlobalHelperThreadState()
 
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
   threadCount = ThreadCountForCPUCount(cpuCount);
-  gcParallelThreadCount = threadCount;
 
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
 }
@@ -1119,12 +1118,11 @@ size_t GlobalHelperThreadState::maxCompressionThreads() const {
   return 1;
 }
 
-size_t GlobalHelperThreadState::maxGCParallelThreads(
-    const AutoLockHelperThreadState& lock) const {
+size_t GlobalHelperThreadState::maxGCParallelThreads() const {
   if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_GCPARALLEL)) {
     return 1;
   }
-  return gcParallelThreadCount;
+  return threadCount;
 }
 
 HelperThreadTask* GlobalHelperThreadState::maybeGetWasmTier1CompileTask(
@@ -1433,8 +1431,8 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetGCParallelTask(
 bool GlobalHelperThreadState::canStartGCParallelTask(
     const AutoLockHelperThreadState& lock) {
   return !gcParallelWorklist().isEmpty(lock) &&
-         checkTaskThreadLimit(THREAD_TYPE_GCPARALLEL,
-                              maxGCParallelThreads(lock), lock);
+         checkTaskThreadLimit(THREAD_TYPE_GCPARALLEL, maxGCParallelThreads(),
+                              lock);
 }
 
 bool js::EnqueueOffThreadCompression(JSContext* cx,

@@ -1287,7 +1287,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void storePtr(ImmGCPtr imm, const Address& address);
   void storePtr(ImmGCPtr imm, const BaseIndex& address);
   FaultingCodeOffset storePtr(Register src, const Address& address);
-  void storePtr(Register src, const BaseIndex& address);
+  FaultingCodeOffset storePtr(Register src, const BaseIndex& address);
   void storePtr(Register src, AbsoluteAddress dest);
 
   void moveDouble(FloatRegister src, FloatRegister dest,

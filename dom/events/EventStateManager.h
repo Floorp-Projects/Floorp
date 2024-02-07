@@ -1233,7 +1233,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   // These variables are only relevant if we're the cursor-setting manager.
   StyleCursorKind mLockCursor;
-  bool mLastFrameConsumedSetCursor = false;
   bool mHidingCursorWhileTyping = false;
 
   // Last mouse event screen point (in device pixel) when mouse was locked, used

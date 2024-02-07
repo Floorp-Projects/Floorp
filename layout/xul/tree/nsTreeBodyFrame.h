@@ -159,7 +159,7 @@ class nsTreeBodyFrame final : public mozilla::SimpleXULLeafFrame,
             nsIFrame* aPrevInFlow) override;
   void Destroy(DestroyContext&) override;
 
-  mozilla::Maybe<Cursor> GetCursor(const nsPoint&) override;
+  Cursor GetCursor(const nsPoint&) override;
 
   nsresult HandleEvent(nsPresContext* aPresContext,
                        mozilla::WidgetGUIEvent* aEvent,

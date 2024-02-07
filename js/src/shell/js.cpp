@@ -7445,6 +7445,7 @@ struct SharedObjectMailbox {
       SharedArrayRawBuffer* buffer;
       size_t length;
       bool isHugeMemory;  // For a WasmMemory tag, otherwise false
+      bool isGrowable;    // For GrowableSharedArrayBuffer, otherwise false
     } sarb;
     JS::WasmModule* module;
     double number;
@@ -7525,8 +7526,12 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         // If the allocation fails we must decrement the refcount before
         // returning.
 
-        Rooted<ArrayBufferObjectMaybeShared*> maybesab(
-            cx, SharedArrayBufferObject::New(cx, buf, length));
+        Rooted<ArrayBufferObjectMaybeShared*> maybesab(cx);
+        if (!mbx->val.sarb.isGrowable) {
+          maybesab = SharedArrayBufferObject::New(cx, buf, length);
+        } else {
+          maybesab = SharedArrayBufferObject::NewGrowable(cx, buf, length);
+        }
         if (!maybesab) {
           buf->dropReference();
           return false;
@@ -7601,8 +7606,9 @@ static bool SetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
                                            &obj->as<SharedArrayBufferObject>());
       tag = MailboxTag::SharedArrayBuffer;
       value.sarb.buffer = sab->rawBufferObject();
-      value.sarb.length = sab->byteLength();
+      value.sarb.length = sab->byteLengthOrMaxByteLength();
       value.sarb.isHugeMemory = false;
+      value.sarb.isGrowable = sab->isGrowable();
       if (!value.sarb.buffer->addReference()) {
         JS_ReportErrorASCII(cx,
                             "Reference count overflow on SharedArrayBuffer");
@@ -7616,10 +7622,12 @@ static bool SetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
             cx, &obj->as<WasmMemoryObject>()
                      .buffer()
                      .as<SharedArrayBufferObject>());
+        MOZ_ASSERT(!sab->isGrowable(), "unexpected growable shared buffer");
         tag = MailboxTag::WasmMemory;
         value.sarb.buffer = sab->rawBufferObject();
         value.sarb.length = sab->byteLength();
         value.sarb.isHugeMemory = obj->as<WasmMemoryObject>().isHuge();
+        value.sarb.isGrowable = false;
         if (!value.sarb.buffer->addReference()) {
           JS_ReportErrorASCII(cx,
                               "Reference count overflow on SharedArrayBuffer");

@@ -15,7 +15,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/SharedThreadPool.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/StaticPtr.h"
 #include "WavDumper.h"
 
@@ -549,7 +549,8 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   class FallbackWrapper;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioCallbackDriver, override);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+      AudioCallbackDriver, mCubebOperationThread, override);
 
   /** If aInputChannelCount is zero, then this driver is output-only. */
   AudioCallbackDriver(GraphInterface* aGraphInterface,
@@ -688,6 +689,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
    * audio buffer cubeb passes us. This is only ever accessed on the audio
    * callback thread. */
   AudioCallbackBufferWrapper<AudioDataValue> mBuffer;
+  // mAudioStream (a cubeb_stream) has a bare pointer to the cubeb context, so
+  // we hold a strong reference on its behalf.
+  RefPtr<CubebUtils::CubebHandle> mCubeb;
   /* cubeb stream for this graph. This is non-null after a successful
    * cubeb_stream_init(). CubebOperation thread only. */
   nsAutoRef<cubeb_stream> mAudioStream;
@@ -710,10 +714,12 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
     AudioCallbackDriver* mDriver;
   };
 
+  static already_AddRefed<TaskQueue> CreateTaskQueue();
+
   /* Shared thread pool with up to one thread for off-main-thread
    * initialization and shutdown of the audio stream and for other tasks that
    * must run serially for access to mAudioStream. */
-  const RefPtr<SharedThreadPool> mCubebOperationThread;
+  const RefPtr<TaskQueue> mCubebOperationThread;
   cubeb_device_pref mInputDevicePreference;
   /* Contains the id of the audio thread, from profiler_current_thread_id. */
   std::atomic<ProfilerThreadId> mAudioThreadId;

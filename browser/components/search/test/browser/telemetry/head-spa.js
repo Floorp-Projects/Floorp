@@ -115,6 +115,29 @@ class SinglePageAppUtils {
     await waitForIdle();
   }
 
+  static async clickSuggestion(tab) {
+    info("Clicking the first suggestion.");
+    let adsPromise = TestUtils.topicObserved(
+      "reported-page-with-ad-impressions"
+    );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#searchbox-suggestions div",
+      {},
+      tab.linkedBrowser
+    );
+    await adsPromise;
+  }
+
+  static async clickSuggestionOnImagesTab(tab) {
+    info("Clicking the first suggestion on images tab.");
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#searchbox-suggestions div",
+      {},
+      tab.linkedBrowser
+    );
+    await promiseWaitForAdLinkCheck();
+  }
+
   static async createTabAndLoadURL(
     url = new URL(getSERPUrl("searchTelemetrySinglePageApp.html"))
   ) {

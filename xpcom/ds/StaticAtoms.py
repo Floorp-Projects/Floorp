@@ -189,6 +189,7 @@ STATIC_ATOMS = [
     Atom("black", "black"),
     Atom("block", "block"),
     Atom("block_size", "block-size"),
+    Atom("blocking", "blocking"),
     Atom("blockquote", "blockquote"),
     Atom("blur", "blur"),
     Atom("body", "body"),
@@ -2237,7 +2238,7 @@ STATIC_ATOMS = [
     Atom("forceMousewheelAutodirHonourRoot", "_force_mousewheel_autodir_honourroot"),
     Atom("forcemessagemanager", "forcemessagemanager"),
     Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),
-    Atom("initiallyactive", "initiallyactive"),
+    Atom("manualactiveness", "manualactiveness"),
     # Names for system metrics.
     Atom("_moz_bool_pref", "-moz-bool-pref"),
     Atom("_moz_scrollbar_start_backward", "-moz-scrollbar-start-backward"),

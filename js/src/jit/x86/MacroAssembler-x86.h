@@ -703,8 +703,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     movl(src, Operand(address));
     return fco;
   }
-  void storePtr(Register src, const BaseIndex& address) {
+  FaultingCodeOffset storePtr(Register src, const BaseIndex& address) {
+    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
     movl(src, Operand(address));
+    return fco;
   }
   void storePtr(Register src, const Operand& dest) { movl(src, dest); }
   void storePtr(Register src, AbsoluteAddress address) {

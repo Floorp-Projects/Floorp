@@ -318,7 +318,10 @@ def setup_node(command_context):
         if plat == "Windows":
             toolchain_job = toolchain_job.format("win64")
         elif plat == "Darwin":
-            toolchain_job = toolchain_job.format("macosx64")
+            if platform.processor() == "arm":
+                toolchain_job = toolchain_job.format("macosx64-aarch64")
+            else:
+                toolchain_job = toolchain_job.format("macosx64")
         else:
             toolchain_job = toolchain_job.format("linux64")
 

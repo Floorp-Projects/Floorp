@@ -1390,6 +1390,7 @@ class HiddenXULWindow {
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("messagemanagergroup", "webext-browsers");
+    browser.setAttribute("manualactiveness", "true");
 
     for (const [name, value] of Object.entries(xulAttributes)) {
       if (value != null) {
@@ -1408,8 +1409,12 @@ class HiddenXULWindow {
     // Forcibly flush layout so that we get a pres shell soon enough, see
     // bug 1274775.
     browser.getBoundingClientRect();
-
     await awaitFrameLoader;
+
+    // FIXME(emilio): This unconditionally active frame seems rather
+    // unfortunate, but matches previous behavior.
+    browser.docShellIsActive = true;
+
     return browser;
   }
 }

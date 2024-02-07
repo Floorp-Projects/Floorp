@@ -115,6 +115,7 @@ class ErrorObject : public NativeObject {
   // Column number in UTF-16 code units.
   inline JS::ColumnNumberOneOrigin columnNumber() const;
 
+  // Returns nullptr or a (possibly wrapped) SavedFrame object.
   inline JSObject* stack() const;
 
   JSString* getMessage() const {

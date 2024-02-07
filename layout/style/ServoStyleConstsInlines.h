@@ -1139,6 +1139,20 @@ inline float StyleZoom::Unzoom(float aValue) const {
   return aValue / ToFloat();
 }
 
+inline nscoord StyleZoom::ZoomCoord(nscoord aValue) const {
+  if (*this == ONE) {
+    return aValue;
+  }
+  return NSToCoordRoundWithClamp(Zoom(float(aValue)));
+}
+
+inline nscoord StyleZoom::UnzoomCoord(nscoord aValue) const {
+  if (*this == ONE) {
+    return aValue;
+  }
+  return NSToCoordRoundWithClamp(Unzoom(float(aValue)));
+}
+
 }  // namespace mozilla
 
 #endif

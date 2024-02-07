@@ -1834,6 +1834,11 @@ class Element : public FragmentOrElement {
   static const bool kCallAfterSetAttr = true;
   static const bool kDontCallAfterSetAttr = false;
 
+  /*
+   * The supported values of blocking attribute for use with nsDOMTokenList.
+   */
+  static const DOMTokenListSupportedToken sSupportedBlockingValues[];
+
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
    * mutation events.  This will send the AttributeChanged notification.

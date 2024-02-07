@@ -73,12 +73,17 @@ using mozilla::IsAsciiDigit;
  * the subclasses.
  */
 
-bool TypedArrayObject::convertForSideEffect(JSContext* cx,
-                                            HandleValue v) const {
+bool TypedArrayObject::convertValue(JSContext* cx, HandleValue v,
+                                    MutableHandleValue result) const {
   switch (type()) {
     case Scalar::BigInt64:
     case Scalar::BigUint64: {
-      return ToBigInt(cx, v) != nullptr;
+      BigInt* bi = ToBigInt(cx, v);
+      if (!bi) {
+        return false;
+      }
+      result.setBigInt(bi);
+      return true;
     }
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -89,8 +94,12 @@ bool TypedArrayObject::convertForSideEffect(JSContext* cx,
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped: {
-      double ignore;
-      return ToNumber(cx, v, &ignore);
+      double num;
+      if (!ToNumber(cx, v, &num)) {
+        return false;
+      }
+      result.setNumber(num);
+      return true;
     }
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
@@ -2747,9 +2756,7 @@ template mozilla::Maybe<uint64_t> js::StringToTypedArrayIndex(
 bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                               uint64_t index, HandleValue v,
                               ObjectOpResult& result) {
-  TypedArrayObject* tobj = &obj->as<TypedArrayObject>();
-
-  switch (tobj->type()) {
+  switch (obj->type()) {
 #define SET_TYPED_ARRAY_ELEMENT(_, T, N) \
   case Scalar::N:                        \
     return TypedArrayObjectTemplate<T>::setElement(cx, obj, index, v, result);
@@ -2762,6 +2769,37 @@ bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
   }
 
   MOZ_CRASH("Unsupported TypedArray type");
+}
+
+bool js::SetTypedArrayElementOutOfBounds(JSContext* cx,
+                                         Handle<TypedArrayObject*> obj,
+                                         uint64_t index, HandleValue v,
+                                         ObjectOpResult& result) {
+  // This method is only called for non-existent properties, which means any
+  // absent indexed properties must be out of range. Unless the typed array is
+  // backed by a growable SharedArrayBuffer, in which case another thread may
+  // have grown the buffer.
+  MOZ_ASSERT(index >= obj->length().valueOr(0) ||
+             (obj->isSharedMemory() && obj->bufferShared()->isGrowable()));
+
+  // The following steps refer to 10.4.5.16 TypedArraySetElement.
+
+  // Steps 1-2.
+  RootedValue converted(cx);
+  if (!obj->convertValue(cx, v, &converted)) {
+    return false;
+  }
+
+  // Step 3.
+  if (index < obj->length().valueOr(0)) {
+    // Side-effects when converting the value may have put the index in-bounds
+    // when the backing buffer is resizable.
+    MOZ_ASSERT(obj->hasResizableBuffer());
+    return SetTypedArrayElement(cx, obj, index, converted, result);
+  }
+
+  // Step 4.
+  return result.succeed();
 }
 
 // ES2021 draft rev b3f9b5089bcc3ddd8486379015cd11eb1427a5eb

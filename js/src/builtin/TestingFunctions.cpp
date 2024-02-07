@@ -4406,7 +4406,7 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
 
   FILE* dumpFile = stdout;
   auto closeFile = mozilla::MakeScopeExit([&dumpFile] {
-    if (dumpFile != stdout) {
+    if (dumpFile && dumpFile != stdout) {
       fclose(dumpFile);
     }
   });

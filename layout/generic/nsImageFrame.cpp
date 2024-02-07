@@ -825,7 +825,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
                                           const nsImageFrame& aFrame) {
   const auto containAxes = aFrame.GetContainSizeAxes();
   if (containAxes.IsBoth()) {
-    return containAxes.ContainIntrinsicSize(IntrinsicSize(0, 0), aFrame);
+    return aFrame.FinishIntrinsicSize(containAxes, IntrinsicSize(0, 0));
   }
 
   nsSize size;
@@ -853,14 +853,14 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
           intrinsicSize,
           aFrame.GetImageFromStyle()->GetResolution(*aFrame.Style()));
     }
-    return containAxes.ContainIntrinsicSize(intrinsicSize, aFrame);
+    return aFrame.FinishIntrinsicSize(containAxes, intrinsicSize);
   }
 
   if (aKind == nsImageFrame::Kind::ListStyleImage) {
     // Note: images are handled above, this handles gradients etc.
-    nscoord defaultLength = ListImageDefaultLength(aFrame);
-    return containAxes.ContainIntrinsicSize(
-        IntrinsicSize(defaultLength, defaultLength), aFrame);
+    const nscoord defaultLength = ListImageDefaultLength(aFrame);
+    return aFrame.FinishIntrinsicSize(
+        containAxes, IntrinsicSize(defaultLength, defaultLength));
   }
 
   if (aKind == nsImageFrame::Kind::XULImage && aFrame.IsThemed()) {
@@ -871,20 +871,21 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
         aFrame.StyleDisplay()->EffectiveAppearance());
     const IntrinsicSize intrinsicSize(
         LayoutDeviceIntSize::ToAppUnits(widgetSize, pc->AppUnitsPerDevPixel()));
-    return containAxes.ContainIntrinsicSize(intrinsicSize, aFrame);
+    return aFrame.FinishIntrinsicSize(containAxes, intrinsicSize);
   }
 
   if (aFrame.ShouldShowBrokenImageIcon()) {
     nscoord edgeLengthToUse = nsPresContext::CSSPixelsToAppUnits(
         ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
-    return containAxes.ContainIntrinsicSize(
-        IntrinsicSize(edgeLengthToUse, edgeLengthToUse), aFrame);
+    return aFrame.FinishIntrinsicSize(
+        containAxes, IntrinsicSize(edgeLengthToUse, edgeLengthToUse));
   }
 
   if (aUseMappedRatio && aFrame.StylePosition()->mAspectRatio.HasRatio()) {
     return IntrinsicSize();
   }
 
+  // XXX: No FinishIntrinsicSize?
   return IntrinsicSize(0, 0);
 }
 
@@ -1418,8 +1419,7 @@ void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
     // If we have 'contain:size', then we have no intrinsic aspect ratio,
     // and the intrinsic size is determined by contain-intrinsic-size,
     // regardless of what our underlying image may think.
-    mIntrinsicSize =
-        containAxes.ContainIntrinsicSize(IntrinsicSize(0, 0), *this);
+    mIntrinsicSize = FinishIntrinsicSize(containAxes, IntrinsicSize(0, 0));
     mIntrinsicRatio = AspectRatio();
     return;
   }
@@ -2773,7 +2773,7 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                                              aEventStatus);
 }
 
-Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
+nsIFrame::Cursor nsImageFrame::GetCursor(const nsPoint& aPoint) {
   nsImageMap* map = GetImageMap();
   if (!map) {
     return nsIFrame::GetCursor(aPoint);
@@ -2796,7 +2796,7 @@ Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
   if (kind == StyleCursorKind::Auto) {
     kind = StyleCursorKind::Default;
   }
-  return Some(Cursor{kind, AllowCustomCursorImage::Yes, std::move(areaStyle)});
+  return Cursor{kind, AllowCustomCursorImage::Yes, std::move(areaStyle)};
 }
 
 nsresult nsImageFrame::AttributeChanged(int32_t aNameSpaceID,

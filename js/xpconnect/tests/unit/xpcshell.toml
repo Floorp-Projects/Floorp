@@ -265,6 +265,8 @@ skip-if = [
 
 ["test_localeCompare.js"]
 
+["test_malformed_utf8.js"]
+
 ["test_messageChannel.js"]
 
 ["test_nuke_sandbox.js"]

@@ -89,7 +89,7 @@ class nsHTMLFramesetBorderFrame final : public nsLeafFrame {
                                WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  Maybe<Cursor> GetCursor(const nsPoint&) override;
+  Cursor GetCursor(const nsPoint&) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
@@ -630,13 +630,13 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-Maybe<nsIFrame::Cursor> nsHTMLFramesetFrame::GetCursor(const nsPoint&) {
+nsIFrame::Cursor nsHTMLFramesetFrame::GetCursor(const nsPoint&) {
   auto kind = StyleCursorKind::Default;
   if (mDragger) {
     kind = mDragger->mVertical ? StyleCursorKind::EwResize
                                : StyleCursorKind::NsResize;
   }
-  return Some(Cursor{kind, AllowCustomCursorImage::No});
+  return Cursor{kind, AllowCustomCursorImage::No};
 }
 
 void nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -1454,12 +1454,12 @@ nsresult nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-Maybe<nsIFrame::Cursor> nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&) {
+nsIFrame::Cursor nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&) {
   auto kind = StyleCursorKind::Default;
   if (mCanResize) {
     kind = mVertical ? StyleCursorKind::EwResize : StyleCursorKind::NsResize;
   }
-  return Some(Cursor{kind, AllowCustomCursorImage::No});
+  return Cursor{kind, AllowCustomCursorImage::No};
 }
 
 #ifdef DEBUG_FRAME_DUMP
