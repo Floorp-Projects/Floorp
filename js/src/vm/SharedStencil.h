@@ -425,7 +425,8 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
 // In general, the length of each array is computed from subtracting the start
 // offset of the array from the start offset of the subsequent array. The
 // notable exception is that bytecode length is stored explicitly.
-class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
+class alignas(uint32_t) ImmutableScriptData final
+    : public TrailingArray<ImmutableScriptData> {
  private:
   Offset optArrayOffset_ = 0;
 

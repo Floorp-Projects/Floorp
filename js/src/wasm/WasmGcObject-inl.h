@@ -45,8 +45,7 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructIL(
     return nullptr;
   }
 
-  MOZ_ASSERT((uintptr_t(&(structObj->inlineData_[0])) % sizeof(uintptr_t)) ==
-             0);
+  MOZ_ASSERT((uintptr_t(structObj->inlineData()) % sizeof(uintptr_t)) == 0);
   structObj->initShape(typeDefData->shape);
   structObj->superTypeVector_ = typeDefData->superTypeVector;
   structObj->outlineData_ = nullptr;
@@ -55,7 +54,7 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructIL(
     MOZ_ASSERT(totalBytes == typeDef->structType().size_);
     MOZ_ASSERT(totalBytes <= WasmStructObject_MaxInlineBytes);
     MOZ_ASSERT((totalBytes % sizeof(uintptr_t)) == 0);
-    memset(&(structObj->inlineData_[0]), 0, totalBytes);
+    memset(structObj->inlineData(), 0, totalBytes);
   }
 
   js::gc::gcprobes::CreateObject(structObj);
@@ -112,15 +111,14 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructOOL(
     return nullptr;
   }
 
-  MOZ_ASSERT((uintptr_t(&(structObj->inlineData_[0])) % sizeof(uintptr_t)) ==
-             0);
+  MOZ_ASSERT((uintptr_t(structObj->inlineData()) % sizeof(uintptr_t)) == 0);
   structObj->initShape(typeDefData->shape);
   structObj->superTypeVector_ = typeDefData->superTypeVector;
 
   // Initialize the outline data fields
   structObj->outlineData_ = (uint8_t*)outlineData.pointer();
   if constexpr (ZeroFields) {
-    memset(&(structObj->inlineData_[0]), 0, inlineBytes);
+    memset(structObj->inlineData(), 0, inlineBytes);
     memset(outlineData.pointer(), 0, outlineBytes);
   }
 

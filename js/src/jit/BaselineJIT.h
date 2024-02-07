@@ -186,7 +186,8 @@ class RetAddrEntry {
 //
 // Note: The arrays are arranged in order of descending alignment requires so
 // that padding is not required.
-class alignas(uintptr_t) BaselineScript final : public TrailingArray {
+class alignas(uintptr_t) BaselineScript final
+    : public TrailingArray<BaselineScript> {
  private:
   // Code pointer containing the actual method.
   HeapPtr<JitCode*> method_ = nullptr;
