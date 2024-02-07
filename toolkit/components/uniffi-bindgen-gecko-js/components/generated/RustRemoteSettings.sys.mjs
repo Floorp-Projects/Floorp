@@ -598,12 +598,12 @@ export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
 }
 
 export class RemoteSettingsConfig {
-    constructor(serverUrl = null,bucketName = null,collectionName) {
+    constructor(collectionName,bucketName = null,serverUrl = null) {
         try {
-            FfiConverterOptionalstring.checkType(serverUrl)
+            FfiConverterString.checkType(collectionName)
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("serverUrl");
+                e.addItemDescriptionPart("collectionName");
             }
             throw e;
         }
@@ -616,22 +616,22 @@ export class RemoteSettingsConfig {
             throw e;
         }
         try {
-            FfiConverterString.checkType(collectionName)
+            FfiConverterOptionalstring.checkType(serverUrl)
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("collectionName");
+                e.addItemDescriptionPart("serverUrl");
             }
             throw e;
         }
-        this.serverUrl = serverUrl;
-        this.bucketName = bucketName;
         this.collectionName = collectionName;
+        this.bucketName = bucketName;
+        this.serverUrl = serverUrl;
     }
     equals(other) {
         return (
-            this.serverUrl == other.serverUrl &&
+            this.collectionName == other.collectionName &&
             this.bucketName == other.bucketName &&
-            this.collectionName == other.collectionName
+            this.serverUrl == other.serverUrl
         )
     }
 }
@@ -640,32 +640,32 @@ export class RemoteSettingsConfig {
 export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffer {
     static read(dataStream) {
         return new RemoteSettingsConfig(
+            FfiConverterString.read(dataStream), 
             FfiConverterOptionalstring.read(dataStream), 
-            FfiConverterOptionalstring.read(dataStream), 
-            FfiConverterString.read(dataStream)
+            FfiConverterOptionalstring.read(dataStream)
         );
     }
     static write(dataStream, value) {
-        FfiConverterOptionalstring.write(dataStream, value.serverUrl);
-        FfiConverterOptionalstring.write(dataStream, value.bucketName);
         FfiConverterString.write(dataStream, value.collectionName);
+        FfiConverterOptionalstring.write(dataStream, value.bucketName);
+        FfiConverterOptionalstring.write(dataStream, value.serverUrl);
     }
 
     static computeSize(value) {
         let totalSize = 0;
-        totalSize += FfiConverterOptionalstring.computeSize(value.serverUrl);
-        totalSize += FfiConverterOptionalstring.computeSize(value.bucketName);
         totalSize += FfiConverterString.computeSize(value.collectionName);
+        totalSize += FfiConverterOptionalstring.computeSize(value.bucketName);
+        totalSize += FfiConverterOptionalstring.computeSize(value.serverUrl);
         return totalSize
     }
 
     static checkType(value) {
         super.checkType(value);
         try {
-            FfiConverterOptionalstring.checkType(value.serverUrl);
+            FfiConverterString.checkType(value.collectionName);
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".serverUrl");
+                e.addItemDescriptionPart(".collectionName");
             }
             throw e;
         }
@@ -678,10 +678,10 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
             throw e;
         }
         try {
-            FfiConverterString.checkType(value.collectionName);
+            FfiConverterOptionalstring.checkType(value.serverUrl);
         } catch (e) {
             if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".collectionName");
+                e.addItemDescriptionPart(".serverUrl");
             }
             throw e;
         }
