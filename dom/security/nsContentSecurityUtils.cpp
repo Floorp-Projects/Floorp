@@ -1308,6 +1308,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   MOZ_ASSERT(!foundScriptSrc ||
                  StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
                  StringBeginsWith(aboutSpec, "about:downloads"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:asrouter"_ns) ||
                  StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
                  StringBeginsWith(aboutSpec, "about:logins"_ns) ||
                  StringBeginsWith(aboutSpec, "about:compat"_ns) ||
