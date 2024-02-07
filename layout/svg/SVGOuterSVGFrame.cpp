@@ -182,7 +182,7 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
   if (containAxes.IsBoth()) {
     // Intrinsic size of 'contain:size' replaced elements is determined by
     // contain-intrinsic-size, defaulting to 0x0.
-    return containAxes.ContainIntrinsicSize(IntrinsicSize(0, 0), *this);
+    return FinishIntrinsicSize(containAxes, IntrinsicSize(0, 0));
   }
 
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
@@ -205,7 +205,7 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
     intrinsicSize.height.emplace(std::max(val, 0));
   }
 
-  return containAxes.ContainIntrinsicSize(intrinsicSize, *this);
+  return FinishIntrinsicSize(containAxes, intrinsicSize);
 }
 
 /* virtual */
