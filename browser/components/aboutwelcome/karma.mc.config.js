@@ -77,13 +77,13 @@ module.exports = function (config) {
           functions: 80,
           branches: 66,
           overrides: {
-            "modules/*.jsm": {
+            "modules/*.sys.mjs": {
               statements: 0,
               lines: 0,
               functions: 0,
               branches: 0,
             },
-            "content-src/lib/aboutwelcome-utils.js": {
+            "content-src/lib/aboutwelcome-utils.mjs": {
               statements: 50,
               lines: 50,
               functions: 50,
@@ -252,7 +252,7 @@ module.exports = function (config) {
           },
           {
             enforce: "post",
-            test: /\.js[mx]?$/,
+            test: /\.m?js[mx]?$/,
             loader: "@jsdevtools/coverage-istanbul-loader",
             options: { esModules: true },
             include: [path.resolve("content-src"), path.resolve("modules")],
