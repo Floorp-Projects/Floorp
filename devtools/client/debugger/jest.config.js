@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* global __dirname */
+
 const { resolve } = require("path");
 const rootDir = resolve(__dirname);
 module.exports = {

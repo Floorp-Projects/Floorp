@@ -4,11 +4,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
-import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils.mjs";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
 import { useLanguageSwitcher } from "./LanguageSwitcher";
 import { SubmenuButton } from "./SubmenuButton";
-import { BASE_PARAMS, addUtmParams } from "../lib/addUtmParams.mjs";
+import {
+  BASE_PARAMS,
+  addUtmParams,
+} from "asrouter/content-src/templates/FirstRun/addUtmParams";
 
 // Amount of milliseconds for all transitions to complete (including delays).
 const TRANSITION_OUT_TIME = 1000;

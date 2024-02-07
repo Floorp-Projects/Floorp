@@ -83,7 +83,7 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/lib/aboutwelcome-utils.mjs": {
+            "content-src/lib/aboutwelcome-utils.js": {
               statements: 50,
               lines: 50,
               functions: 50,
@@ -252,7 +252,7 @@ module.exports = function (config) {
           },
           {
             enforce: "post",
-            test: /\.m?js[mx]?$/,
+            test: /\.js[mx]?$/,
             loader: "@jsdevtools/coverage-istanbul-loader",
             options: { esModules: true },
             include: [path.resolve("content-src"), path.resolve("modules")],
