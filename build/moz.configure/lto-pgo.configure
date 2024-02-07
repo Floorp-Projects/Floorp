@@ -119,13 +119,16 @@ pgo_temporal = c_compiler.try_compile(
 @depends(
     c_compiler,
     select_linker,
+    target,
     pgo_profile_path,
     orderfile_path,
     target_is_windows,
     pgo_temporal,
 )
 @imports("multiprocessing")
-def pgo_flags(compiler, linker, profdata, orderfile, target_is_windows, pgo_temporal):
+def pgo_flags(
+    compiler, linker, target, profdata, orderfile, target_is_windows, pgo_temporal
+):
     if compiler.type == "gcc":
         return namespace(
             gen_cflags=["-fprofile-generate"],
@@ -146,6 +149,8 @@ def pgo_flags(compiler, linker, profdata, orderfile, target_is_windows, pgo_temp
         if orderfile:
             if compiler.type == "clang-cl":
                 use_ldflags += ["-ORDER:@" + orderfile]
+            elif linker.KIND == "ld64" or (linker.KIND == "lld" and target.os == "OSX"):
+                use_ldflags += ["-Wl,-order_file", orderfile]
             elif linker.KIND == "lld":
                 use_ldflags += [
                     "-Wl,--symbol-ordering-file",
