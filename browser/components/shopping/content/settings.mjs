@@ -48,6 +48,8 @@ class ShoppingSettings extends MozLitElement {
 
   onToggleAutoOpen() {
     this.autoOpenEnabledByUser = this.autoOpenToggleEl.pressed;
+    let action = this.autoOpenEnabledByUser ? "enabled" : "disabled";
+    Glean.shopping.surfaceAutoOpenSettingToggled.record({ action });
     RPMSetPref(
       "browser.shopping.experience2023.autoOpen.userEnabled",
       this.autoOpenEnabledByUser

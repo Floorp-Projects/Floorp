@@ -431,6 +431,48 @@ add_task(async function test_ads_enable_button_click() {
   );
 });
 
+add_task(async function test_auto_open_settings_toggle() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
+      ["browser.shopping.experience2023.autoOpen.userEnabled", true],
+    ],
+  });
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let mockData = MOCK_ANALYZED_PRODUCT_RESPONSE;
+      await clickAutoOpenToggle(browser, mockData);
+      await Services.fog.testFlushAllChildren();
+      let toggledEvents = Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
+      assertEventMatches(toggledEvents[0], {
+        category: "shopping",
+        name: "surface_auto_open_setting_toggled",
+        extra: { action: "disabled" },
+      });
+
+      Services.fog.testResetFOG();
+
+      // Toggle back in the other direction.
+      await clickAutoOpenToggle(browser, mockData);
+      await Services.fog.testFlushAllChildren();
+      toggledEvents = Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
+      assertEventMatches(toggledEvents[0], {
+        category: "shopping",
+        name: "surface_auto_open_setting_toggled",
+        extra: { action: "enabled" },
+      });
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
+
 function clickAdsToggle(browser, data) {
   return SpecialPowers.spawn(browser, [data], async args => {
     const { mockData, mockRecommendationData } = args;
@@ -446,6 +488,22 @@ function clickAdsToggle(browser, data) {
 
     let shoppingSettings = shoppingContainer.settingsEl;
     let toggle = shoppingSettings.recommendationsToggleEl;
+    toggle.click();
+
+    await shoppingContainer.updateComplete;
+  });
+}
+
+function clickAutoOpenToggle(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+    await shoppingContainer.updateComplete;
+
+    let shoppingSettings = shoppingContainer.settingsEl;
+    let toggle = shoppingSettings.autoOpenToggleEl;
     toggle.click();
 
     await shoppingContainer.updateComplete;
