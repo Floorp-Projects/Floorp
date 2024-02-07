@@ -3485,6 +3485,28 @@ avif:
     notification_emails:
       - media-alerts@mozilla.com
 
+mfcdm:
+  eme_playback:
+    objects: ["gecko"]
+    bug_numbers: [1873394]
+    description:
+      Record the information about the EME playback when using the media engine.
+      The value of this event is the key system name.
+    products:
+      - firefox
+    record_in_processes: ["all"]
+    release_channel_collection: opt-out
+    expiry_version: "130"
+    notification_emails:
+      - media-alerts@mozilla.com
+    extra_keys:
+      key_system: The key system used for the EME playback
+      video_codec: The video codec used for playback
+      resolution: The video resolution used for playback
+      played_time: The amount of time the EME content has been played (in seconds)
+      rendered_frames: The amount of video frames has been rendered
+      dropped_frames: The amount of video frames don't get rendered but dropped
+
 installation:
   first_seen:
     description: >

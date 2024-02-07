@@ -63,7 +63,11 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem);
 #ifdef MOZ_WMF_CDM
 bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem);
 
+bool IsPlayReadyKeySystem(const nsAString& aKeySystem);
+
 bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem);
+
+bool IsWidevineExperimentKeySystem(const nsAString& aKeySystem);
 
 bool IsWMFClearKeySystemAndSupported(const nsAString& aKeySystem);
 #endif
