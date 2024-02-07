@@ -182,6 +182,10 @@ export function OnRefTestLoad(win) {
   g.browser.setAttribute("id", "browser");
   g.browser.setAttribute("type", "content");
   g.browser.setAttribute("primary", "true");
+  // FIXME: This ideally shouldn't be needed, but on android and windows
+  // sometimes the window is occluded / hidden, which causes some crashtests
+  // to time out. Bug 1864255 might be able to help here.
+  g.browser.setAttribute("manualactiveness", "true");
   g.browser.setAttribute("remote", g.browserIsRemote ? "true" : "false");
   // Make sure the browser element is exactly 800x1000, no matter
   // what size our window is
@@ -204,6 +208,8 @@ export function OnRefTestLoad(win) {
   }
 
   g.browserMessageManager = g.browser.frameLoader.messageManager;
+  // See the comment above about manualactiveness.
+  g.browser.docShellIsActive = true;
   // The content script waits for the initial onload, then notifies
   // us.
   RegisterMessageListenersAndLoadContentScript(false);
