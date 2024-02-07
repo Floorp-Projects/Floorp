@@ -1094,7 +1094,10 @@ export class UrlbarInput {
           Services.io.newURI(url),
           true,
           loadOpts,
-          lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
+          lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+            lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(
+              result.payload.userContextId
+            )
             ? result.payload.userContextId
             : null
         );
