@@ -171,9 +171,9 @@ export class SuggestBackendRust extends BaseFeature {
         path,
         SuggestBackendRust._test_remoteSettingsConfig ??
           new lazy.RemoteSettingsConfig(
-            lazy.Utils.SERVER_URL,
+            "quicksuggest",
             lazy.Utils.actualBucketName("main"),
-            "quicksuggest"
+            lazy.Utils.SERVER_URL
           )
       );
     } catch (error) {
