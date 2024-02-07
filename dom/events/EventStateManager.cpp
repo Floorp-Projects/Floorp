@@ -4348,23 +4348,9 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     // If not locked, look for correct cursor
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
         aEvent, RelativeTo{aTargetFrame});
-    Maybe<nsIFrame::Cursor> framecursor = aTargetFrame->GetCursor(pt);
-    // Avoid setting cursor when the mouse is over a windowless plugin.
-    if (!framecursor) {
-      if (XRE_IsContentProcess()) {
-        mLastFrameConsumedSetCursor = true;
-      }
-      return;
-    }
-    // Make sure cursors get reset after the mouse leaves a
-    // windowless plugin frame.
-    if (mLastFrameConsumedSetCursor) {
-      ClearCachedWidgetCursor(aTargetFrame);
-      mLastFrameConsumedSetCursor = false;
-    }
-
+    const nsIFrame::Cursor framecursor = aTargetFrame->GetCursor(pt);
     const CursorImage customCursor =
-        ComputeCustomCursor(aPresContext, aEvent, *aTargetFrame, *framecursor);
+        ComputeCustomCursor(aPresContext, aEvent, *aTargetFrame, framecursor);
 
     // If the current cursor is from the same frame, and it is now
     // loading some new image for the cursor, we should wait for a
@@ -4375,7 +4361,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
             TimeDuration::FromMilliseconds(kCursorLoadingTimeout)) {
       return;
     }
-    cursor = framecursor->mCursor;
+    cursor = framecursor.mCursor;
     container = std::move(customCursor.mContainer);
     resolution = customCursor.mResolution;
     hotspot = Some(customCursor.mHotspot);

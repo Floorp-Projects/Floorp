@@ -2773,7 +2773,7 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                                              aEventStatus);
 }
 
-Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
+nsIFrame::Cursor nsImageFrame::GetCursor(const nsPoint& aPoint) {
   nsImageMap* map = GetImageMap();
   if (!map) {
     return nsIFrame::GetCursor(aPoint);
@@ -2796,7 +2796,7 @@ Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
   if (kind == StyleCursorKind::Auto) {
     kind = StyleCursorKind::Default;
   }
-  return Some(Cursor{kind, AllowCustomCursorImage::Yes, std::move(areaStyle)});
+  return Cursor{kind, AllowCustomCursorImage::Yes, std::move(areaStyle)};
 }
 
 nsresult nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
