@@ -4100,7 +4100,6 @@ class nsIFrame : public nsQueryFrame {
   mozilla::IntrinsicSize FinishIntrinsicSize(
       const mozilla::ContainSizeAxes& aAxes,
       const mozilla::IntrinsicSize& aUncontainedSize) const {
-    MOZ_ASSERT(aAxes == GetContainSizeAxes());
     auto result = aAxes.ContainIntrinsicSize(aUncontainedSize, *this);
     result.Zoom(Style()->EffectiveZoom());
     return result;
