@@ -87,7 +87,7 @@ enum class CubebState {
   Initialized,
   Shutdown
 } sCubebState = CubebState::Uninitialized;
-StaticRefPtr<CubebUtils::CubebHandle> sCubebHandle;
+cubeb* sCubebContext;
 double sVolumeScale = 1.0;
 uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
 uint32_t sCubebMTGLatencyInFrames = 512;
@@ -185,7 +185,7 @@ static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;
 
 namespace CubebUtils {
-RefPtr<CubebHandle> GetCubebUnlocked();
+cubeb* GetCubebContextUnlocked();
 
 void GetPrefAndSetString(const char* aPref, StaticAutoPtr<char>& aStorage) {
   nsAutoCString value;
@@ -292,19 +292,18 @@ double GetVolumeScale() {
   return sVolumeScale;
 }
 
-RefPtr<CubebHandle> GetCubeb() {
+cubeb* GetCubebContext() {
   StaticMutexAutoLock lock(sMutex);
-  return GetCubebUnlocked();
+  return GetCubebContextUnlocked();
 }
 
 // This is only exported when running tests.
 void ForceSetCubebContext(cubeb* aCubebContext) {
   StaticMutexAutoLock lock(sMutex);
-  if (aCubebContext) {
-    sCubebHandle = new CubebHandle(aCubebContext);
-  } else {
-    sCubebHandle = nullptr;
+  if (sCubebContext) {
+    cubeb_destroy(sCubebContext);
   }
+  sCubebContext = aCubebContext;
   sCubebState = CubebState::Initialized;
 }
 
@@ -327,7 +326,7 @@ void SetInCommunication(bool aInCommunication) {
 }
 
 bool InitPreferredSampleRate() {
-  sMutex.AssertCurrentThreadOwns();
+  StaticMutexAutoLock lock(sMutex);
   if (sPreferredSampleRate != 0) {
     return true;
   }
@@ -340,16 +339,13 @@ bool InitPreferredSampleRate() {
     return false;
   }
 #else
-  RefPtr<CubebHandle> handle = GetCubebUnlocked();
-  if (!handle) {
+  cubeb* context = GetCubebContextUnlocked();
+  if (!context) {
     return false;
   }
   uint32_t rate;
-  {
-    StaticMutexAutoUnlock unlock(sMutex);
-    if (cubeb_get_preferred_sample_rate(handle->Context(), &rate) != CUBEB_OK) {
-      return false;
-    }
+  if (cubeb_get_preferred_sample_rate(context, &rate) != CUBEB_OK) {
+    return false;
   }
   sPreferredSampleRate = rate;
 #endif
@@ -358,7 +354,6 @@ bool InitPreferredSampleRate() {
 }
 
 uint32_t PreferredSampleRate(bool aShouldResistFingerprinting) {
-  StaticMutexAutoLock lock(sMutex);
   if (sCubebForcedSampleRate) {
     return sCubebForcedSampleRate;
   }
@@ -478,7 +473,7 @@ ipc::FileDescriptor CreateAudioIPCConnection() {
 #endif
 }
 
-RefPtr<CubebHandle> GetCubebUnlocked() {
+cubeb* GetCubebContextUnlocked() {
   sMutex.AssertCurrentThreadOwns();
   if (sCubebForceNullContext) {
     // Pref set such that we should return a null context
@@ -490,7 +485,7 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
   if (sCubebState != CubebState::Uninitialized) {
     // If we have already passed the initialization point (below), just return
     // the current context, which may be null (e.g., after error or shutdown.)
-    return sCubebHandle;
+    return sCubebContext;
   }
 
   if (!sBrandName && NS_IsMainThread()) {
@@ -532,21 +527,14 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
     };
     initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
 
-    cubeb* temp = nullptr;
-    rv = audioipc2::audioipc2_client_init(&temp, sBrandName, &initParams);
-    if (temp) {
-      sCubebHandle = new CubebHandle(temp);
-    }
+    rv = audioipc2::audioipc2_client_init(&sCubebContext, sBrandName,
+                                          &initParams);
   } else {
 #endif  // MOZ_CUBEB_REMOTING
 #ifdef XP_WIN
     mozilla::mscom::EnsureMTA([&]() -> void {
 #endif
-      cubeb* temp = nullptr;
-      rv = cubeb_init(&temp, sBrandName, sCubebBackendName);
-      if (temp) {
-        sCubebHandle = new CubebHandle(temp);
-      }
+      rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName);
 #ifdef XP_WIN
     });
 #endif
@@ -558,22 +546,17 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
   sCubebState =
       (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
 
-  return sCubebHandle;
+  return sCubebContext;
 }
 
 void ReportCubebBackendUsed() {
-  RefPtr<CubebHandle> handle;
-  {
-    StaticMutexAutoLock lock(sMutex);
-    sAudioStreamInitEverSucceeded = true;
-    handle = sCubebHandle;
-  }
+  StaticMutexAutoLock lock(sMutex);
 
-  MOZ_RELEASE_ASSERT(handle.get());
+  sAudioStreamInitEverSucceeded = true;
 
   LABELS_MEDIA_AUDIO_BACKEND label = LABELS_MEDIA_AUDIO_BACKEND::unknown;
   auto backend =
-      kTelemetryBackendLabel.find(cubeb_get_backend_id(handle->Context()));
+      kTelemetryBackendLabel.find(cubeb_get_backend_id(sCubebContext));
   if (backend != kTelemetryBackendLabel.end()) {
     label = backend->second;
   }
@@ -622,20 +605,12 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
     return 512;
   }
 #else
-  RefPtr<CubebHandle> handle = GetCubebUnlocked();
-  if (!handle) {
+  cubeb* context = GetCubebContextUnlocked();
+  if (!context) {
     return sCubebMTGLatencyInFrames;  // default 512
   }
   uint32_t latency_frames = 0;
-  int cubeb_result = CUBEB_OK;
-
-  {
-    StaticMutexAutoUnlock unlock(sMutex);
-    cubeb_result =
-        cubeb_get_min_latency(handle->Context(), params, &latency_frames);
-  }
-
-  if (cubeb_result != CUBEB_OK) {
+  if (cubeb_get_min_latency(context, params, &latency_frames) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return sCubebMTGLatencyInFrames;  // default 512
   }
@@ -696,22 +671,16 @@ void ShutdownLibrary() {
   Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
 
-  cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
-  RefPtr<CubebHandle> trash;
   StaticMutexAutoLock lock(sMutex);
-  trash = sCubebHandle.forget();
+  cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
+  if (sCubebContext) {
+    cubeb_destroy(sCubebContext);
+    sCubebContext = nullptr;
+  }
   sBrandName = nullptr;
   sCubebBackendName = nullptr;
   // This will ensure we don't try to re-create a context.
   sCubebState = CubebState::Shutdown;
-
-  if (trash) {
-    StaticMutexAutoUnlock unlock(sMutex);
-    nsrefcnt count = trash.forget().take()->Release();
-    MOZ_RELEASE_ASSERT(!count,
-                       "ShutdownLibrary should be releasing the last reference "
-                       "to the cubeb ctx!");
-  }
 
 #ifdef MOZ_CUBEB_REMOTING
   sIPCConnection = nullptr;
@@ -729,10 +698,10 @@ bool SandboxEnabled() {
 }
 
 uint32_t MaxNumberOfChannels() {
-  RefPtr<CubebHandle> handle = GetCubeb();
+  cubeb* cubebContext = GetCubebContext();
   uint32_t maxNumberOfChannels;
-  if (handle && cubeb_get_max_channel_count(handle->Context(),
-                                            &maxNumberOfChannels) == CUBEB_OK) {
+  if (cubebContext && cubeb_get_max_channel_count(
+                          cubebContext, &maxNumberOfChannels) == CUBEB_OK) {
     return maxNumberOfChannels;
   }
 
@@ -740,9 +709,9 @@ uint32_t MaxNumberOfChannels() {
 }
 
 void GetCurrentBackend(nsAString& aBackend) {
-  RefPtr<CubebHandle> handle = GetCubeb();
-  if (handle) {
-    const char* backend = cubeb_get_backend_id(handle->Context());
+  cubeb* cubebContext = GetCubebContext();
+  if (cubebContext) {
+    const char* backend = cubeb_get_backend_id(cubebContext);
     if (backend) {
       aBackend.AssignASCII(backend);
       return;
@@ -776,7 +745,6 @@ long datacb(cubeb_stream*, void*, const void*, void* out_buffer, long nframes) {
 void statecb(cubeb_stream*, void*, cubeb_state) {}
 
 bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
-  RefPtr<CubebHandle> handle = GetCubeb();
   nsTArray<double> roundtripLatencies;
   // Create a cubeb stream with the correct latency and default input/output
   // devices (mono/stereo channels). Wait for two seconds, get the latency a few
@@ -784,7 +752,7 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
   int rv;
   uint32_t rate;
   uint32_t latencyFrames;
-  rv = cubeb_get_preferred_sample_rate(handle->Context(), &rate);
+  rv = cubeb_get_preferred_sample_rate(GetCubebContext(), &rate);
   if (rv != CUBEB_OK) {
     MOZ_LOG(gCubebLog, LogLevel::Error, ("Could not get preferred rate"));
     return false;
@@ -807,7 +775,7 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
   input_params.prefs = GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_INPUT);
 
   cubeb_stream* stm;
-  rv = cubeb_stream_init(handle->Context(), &stm,
+  rv = cubeb_stream_init(GetCubebContext(), &stm,
                          "about:support latency estimation", NULL,
                          &input_params, NULL, &output_params, latencyFrames,
                          datacb, statecb, NULL);

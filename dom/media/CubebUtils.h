@@ -11,7 +11,6 @@
 
 #  include "AudioSampleFormat.h"
 #  include "nsString.h"
-#  include "nsISupportsImpl.h"
 
 class AudioDeviceInfo;
 
@@ -33,23 +32,6 @@ struct ToCubebFormat {
 template <>
 struct ToCubebFormat<AUDIO_FORMAT_S16> {
   static const cubeb_sample_format value = CUBEB_SAMPLE_S16NE;
-};
-
-class CubebHandle {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CubebHandle)
-  explicit CubebHandle(cubeb* aCubeb) : mCubeb(aCubeb) {
-    MOZ_RELEASE_ASSERT(mCubeb);
-  };
-  CubebHandle(const CubebHandle&) = delete;
-  cubeb* Context() const { return mCubeb.get(); }
-
- private:
-  struct CubebDeletePolicy {
-    void operator()(cubeb* aCubeb) { cubeb_destroy(aCubeb); }
-  };
-  const UniquePtr<cubeb, CubebDeletePolicy> mCubeb;
-  ~CubebHandle() = default;
 };
 
 // Initialize Audio Library. Some Audio backends require initializing the
@@ -83,7 +65,7 @@ enum Side { Input, Output };
 
 double GetVolumeScale();
 bool GetFirstStream();
-RefPtr<CubebHandle> GetCubeb();
+cubeb* GetCubebContext();
 void ReportCubebStreamInitFailure(bool aIsFirstStream);
 void ReportCubebBackendUsed();
 uint32_t GetCubebPlaybackLatencyInMilliseconds();
