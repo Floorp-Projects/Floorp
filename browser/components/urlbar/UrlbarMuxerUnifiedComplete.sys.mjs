@@ -16,6 +16,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTabToSearch:
@@ -40,7 +41,10 @@ function makeMapKeyForTabResult(result) {
   return UrlbarUtils.tupleString(
     result.payload.url,
     lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
-      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH
+      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+      lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(
+        result.payload.userContextId
+      )
       ? result.payload.userContextId
       : undefined
   );

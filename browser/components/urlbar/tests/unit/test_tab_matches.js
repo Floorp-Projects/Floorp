@@ -99,6 +99,10 @@ add_task(async function test_tab_matches() {
     ],
   });
 
+  // This covers the following 3 tests. Container tests are in a dedicated
+  // test file anyway, so these are left to cover the disabled pref case.
+  UrlbarPrefs.set("switchTabs.searchAllContainers", false);
+
   info("a container tab is not visible in 'switch to tab'");
   await addOpenPages(uri5, 1, /* userContextId: */ 3);
   context = createContext("abc", { isPrivate: false });
@@ -171,6 +175,13 @@ add_task(async function test_tab_matches() {
       }),
     ],
   });
+
+  UrlbarPrefs.clear("switchTabs.searchAllContainers");
+  if (UrlbarPrefs.get("switchTabs.searchAllContainers")) {
+    // This would confuse the next tests, so remove it, containers are tested
+    // in a separate test file.
+    await removeOpenPages(uri5, 1, /* userContextId: */ 3);
+  }
 
   info(
     "three results, both normal results are tab matches, one has multiple tabs"
