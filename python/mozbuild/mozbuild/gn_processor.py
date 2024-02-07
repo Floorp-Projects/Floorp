@@ -563,7 +563,10 @@ def write_mozbuild(
             except KeyError:
                 pass
             try:
-                if relsrcdir in write_mozbuild_variables["INCLUDE_SYSTEM_LIBVPX_HANDLING"]:
+                if (
+                    relsrcdir
+                    in write_mozbuild_variables["INCLUDE_SYSTEM_LIBVPX_HANDLING"]
+                ):
                     mb.write('if not CONFIG["MOZ_SYSTEM_LIBVPX"]:\n')
                     mb.write('    LOCAL_INCLUDES += [ "/media/libvpx/libvpx/" ]\n')
                     mb.write('    CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]\n')
