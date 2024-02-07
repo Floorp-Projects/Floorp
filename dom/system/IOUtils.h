@@ -665,6 +665,25 @@ class IOUtils::IOError {
     va_end(ap);
   }
 
+  static IOError WithCause(const IOError& aCause, const nsCString& aMsg) {
+    IOError e(aCause.mCode, aMsg);
+    e.mMessage.AppendPrintf(": %s", aCause.mMessage.get());
+    return e;
+  }
+
+  static IOError WithCause(const IOError& aCause, const char* const aFmt, ...)
+      MOZ_FORMAT_PRINTF(2, 3) {
+    va_list ap;
+    va_start(ap, aFmt);
+
+    IOError e(aCause.mCode, EmptyCString());
+    e.mMessage.AppendVprintf(aFmt, ap);
+    e.mMessage.AppendPrintf(": %s", aCause.mMessage.get());
+
+    va_end(ap);
+    return e;
+  }
+
   /**
    * Returns the |nsresult| associated with this error.
    */
