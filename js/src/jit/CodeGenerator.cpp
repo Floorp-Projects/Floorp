@@ -9129,13 +9129,11 @@ void EmitSignalNullCheckTrapSite(MacroAssembler& masm,
               wasm::TrapSite(tmi, fco, trapOffset));
 }
 
-void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
-  MIRType type = ins->type();
-  MWideningOp wideningOp = ins->wideningOp();
-  Register container = ToRegister(ins->containerRef());
-  Address addr(container, ins->offset());
-  AnyRegister dst = ToAnyRegister(ins->output());
-
+template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+void CodeGenerator::emitWasmValueLoad(InstructionWithMaybeTrapSite* ins,
+                                      MIRType type, MWideningOp wideningOp,
+                                      AddressOrBaseIndex addr,
+                                      AnyRegister dst) {
   FaultingCodeOffset fco;
   switch (type) {
     case MIRType::Int32:
@@ -9166,7 +9164,7 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
                                       wasm::TrapMachineInsn::Load8);
           break;
         default:
-          MOZ_CRASH("unexpected widening op in ::visitWasmLoadSlot");
+          MOZ_CRASH("unexpected widening op in ::visitWasmLoadElement");
       }
       break;
     case MIRType::Float32:
@@ -9183,34 +9181,22 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
       break;
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
+    case MIRType::WasmArrayData:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
       fco = masm.loadPtr(addr, dst.gpr());
       EmitSignalNullCheckTrapSite(masm, ins, fco,
                                   wasm::TrapMachineInsnForLoadWord());
       break;
-#ifdef ENABLE_WASM_SIMD
-    case MIRType::Simd128:
-      MOZ_ASSERT(wideningOp == MWideningOp::None);
-      fco = masm.loadUnalignedSimd128(addr, dst.fpu());
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Load128);
-      break;
-#endif
     default:
-      MOZ_CRASH("unexpected type in ::visitWasmLoadSlot");
+      MOZ_CRASH("unexpected type in ::emitWasmValueLoad");
   }
 }
 
-void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
-  MIRType type = ins->type();
-  MNarrowingOp narrowingOp = ins->narrowingOp();
-  Register container = ToRegister(ins->containerRef());
-  Address addr(container, ins->offset());
-  AnyRegister src = ToAnyRegister(ins->value());
-  if (type != MIRType::Int32) {
-    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
-  }
-
+template <typename InstructionWithMaybeTrapSite, class AddressOrBaseIndex>
+void CodeGenerator::emitWasmValueStore(InstructionWithMaybeTrapSite* ins,
+                                       MIRType type, MNarrowingOp narrowingOp,
+                                       AnyRegister src,
+                                       AddressOrBaseIndex addr) {
   FaultingCodeOffset fco;
   switch (type) {
     case MIRType::Int32:
@@ -9246,19 +9232,102 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
       break;
     case MIRType::Pointer:
       // This could be correct, but it would be a new usage, so check carefully.
-      MOZ_CRASH("Unexpected type in visitWasmStoreSlot.");
+      MOZ_CRASH("Unexpected type in ::emitWasmValueStore.");
     case MIRType::WasmAnyRef:
-      MOZ_CRASH("Bad type in visitWasmStoreSlot. Use LWasmStoreRef.");
-#ifdef ENABLE_WASM_SIMD
-    case MIRType::Simd128:
-      fco = masm.storeUnalignedSimd128(src.fpu(), addr);
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Store128);
-      break;
-#endif
+      MOZ_CRASH("Bad type in ::emitWasmValueStore. Use LWasmStoreElementRef.");
     default:
-      MOZ_CRASH("unexpected type in StorePrimitiveValue");
+      MOZ_CRASH("unexpected type in ::emitWasmValueStore");
   }
+}
+
+void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
+  MIRType type = ins->type();
+  MWideningOp wideningOp = ins->wideningOp();
+  Register container = ToRegister(ins->containerRef());
+  Address addr(container, ins->offset());
+  AnyRegister dst = ToAnyRegister(ins->output());
+
+#ifdef ENABLE_WASM_SIMD
+  if (type == MIRType::Simd128) {
+    MOZ_ASSERT(wideningOp == MWideningOp::None);
+    FaultingCodeOffset fco = masm.loadUnalignedSimd128(addr, dst.fpu());
+    EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Load128);
+    return;
+  }
+#endif
+  emitWasmValueLoad(ins, type, wideningOp, addr, dst);
+}
+
+void CodeGenerator::visitWasmLoadElement(LWasmLoadElement* ins) {
+  MIRType type = ins->type();
+  MWideningOp wideningOp = ins->wideningOp();
+  Scale scale = ins->scale();
+  Register base = ToRegister(ins->base());
+  Register index = ToRegister(ins->index());
+  AnyRegister dst = ToAnyRegister(ins->output());
+
+#ifdef ENABLE_WASM_SIMD
+  if (type == MIRType::Simd128) {
+    MOZ_ASSERT(wideningOp == MWideningOp::None);
+    FaultingCodeOffset fco;
+    Register temp = ToRegister(ins->temp0());
+    masm.movePtr(index, temp);
+    masm.lshiftPtr(Imm32(4), temp);
+    fco = masm.loadUnalignedSimd128(BaseIndex(base, temp, Scale::TimesOne),
+                                    dst.fpu());
+    EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Load128);
+    return;
+  }
+#endif
+  emitWasmValueLoad(ins, type, wideningOp, BaseIndex(base, index, scale), dst);
+}
+
+void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
+  MIRType type = ins->type();
+  MNarrowingOp narrowingOp = ins->narrowingOp();
+  Register container = ToRegister(ins->containerRef());
+  Address addr(container, ins->offset());
+  AnyRegister src = ToAnyRegister(ins->value());
+  if (type != MIRType::Int32) {
+    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
+  }
+
+#ifdef ENABLE_WASM_SIMD
+  if (type == MIRType::Simd128) {
+    FaultingCodeOffset fco = masm.storeUnalignedSimd128(src.fpu(), addr);
+    EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                wasm::TrapMachineInsn::Store128);
+    return;
+  }
+#endif
+  emitWasmValueStore(ins, type, narrowingOp, src, addr);
+}
+
+void CodeGenerator::visitWasmStoreElement(LWasmStoreElement* ins) {
+  MIRType type = ins->type();
+  MNarrowingOp narrowingOp = ins->narrowingOp();
+  Scale scale = ins->scale();
+  Register base = ToRegister(ins->base());
+  Register index = ToRegister(ins->index());
+  AnyRegister src = ToAnyRegister(ins->value());
+  if (type != MIRType::Int32) {
+    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
+  }
+
+#ifdef ENABLE_WASM_SIMD
+  if (type == MIRType::Simd128) {
+    Register temp = ToRegister(ins->temp0());
+    masm.movePtr(index, temp);
+    masm.lshiftPtr(Imm32(4), temp);
+    FaultingCodeOffset fco = masm.storeUnalignedSimd128(
+        src.fpu(), BaseIndex(base, temp, Scale::TimesOne));
+    EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                wasm::TrapMachineInsn::Store128);
+    return;
+  }
+#endif
+  emitWasmValueStore(ins, type, narrowingOp, src,
+                     BaseIndex(base, index, scale));
 }
 
 void CodeGenerator::visitWasmLoadTableElement(LWasmLoadTableElement* ins) {
@@ -9291,9 +9360,10 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
   if (ins->preBarrierKind() == WasmPreBarrierKind::Normal) {
     Label skipPreBarrier;
     wasm::EmitWasmPreBarrierGuard(
-        masm, instance, temp, valueBase, offset, &skipPreBarrier,
+        masm, instance, temp, Address(valueBase, offset), &skipPreBarrier,
         ins->maybeTrap() ? &ins->maybeTrap()->offset : nullptr);
-    wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueBase, offset);
+    wasm::EmitWasmPreBarrierCallImmediate(masm, instance, temp, valueBase,
+                                          offset);
     masm.bind(&skipPreBarrier);
   }
 
@@ -9303,8 +9373,33 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
   // The postbarrier is handled separately.
 }
 
+void CodeGenerator::visitWasmStoreElementRef(LWasmStoreElementRef* ins) {
+  Register instance = ToRegister(ins->instance());
+  Register base = ToRegister(ins->base());
+  Register index = ToRegister(ins->index());
+  Register value = ToRegister(ins->value());
+  Register temp0 = ToTempRegisterOrInvalid(ins->temp0());
+  Register temp1 = ToTempRegisterOrInvalid(ins->temp1());
+
+  BaseIndex addr(base, index, ScalePointer);
+
+  if (ins->preBarrierKind() == WasmPreBarrierKind::Normal) {
+    Label skipPreBarrier;
+    wasm::EmitWasmPreBarrierGuard(
+        masm, instance, temp0, addr, &skipPreBarrier,
+        ins->maybeTrap() ? &ins->maybeTrap()->offset : nullptr);
+    wasm::EmitWasmPreBarrierCallIndex(masm, instance, temp0, temp1, addr);
+    masm.bind(&skipPreBarrier);
+  }
+
+  FaultingCodeOffset fco = masm.storePtr(value, addr);
+  EmitSignalNullCheckTrapSite(masm, ins, fco,
+                              wasm::TrapMachineInsnForStoreWord());
+  // The postbarrier is handled separately.
+}
+
 // Out-of-line path to update the store buffer for wasm references.
-class OutOfLineWasmCallPostWriteBarrier
+class OutOfLineWasmCallPostWriteBarrierImmediate
     : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;
   Register valueBase_;
@@ -9312,15 +9407,16 @@ class OutOfLineWasmCallPostWriteBarrier
   uint32_t valueOffset_;
 
  public:
-  OutOfLineWasmCallPostWriteBarrier(LInstruction* lir, Register valueBase,
-                                    Register temp, uint32_t valueOffset)
+  OutOfLineWasmCallPostWriteBarrierImmediate(LInstruction* lir,
+                                             Register valueBase, Register temp,
+                                             uint32_t valueOffset)
       : lir_(lir),
         valueBase_(valueBase),
         temp_(temp),
         valueOffset_(valueOffset) {}
 
   void accept(CodeGenerator* codegen) override {
-    codegen->visitOutOfLineWasmCallPostWriteBarrier(this);
+    codegen->visitOutOfLineWasmCallPostWriteBarrierImmediate(this);
   }
 
   LInstruction* lir() const { return lir_; }
@@ -9329,8 +9425,8 @@ class OutOfLineWasmCallPostWriteBarrier
   uint32_t valueOffset() const { return valueOffset_; }
 };
 
-void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
-    OutOfLineWasmCallPostWriteBarrier* ool) {
+void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrierImmediate(
+    OutOfLineWasmCallPostWriteBarrierImmediate* ool) {
   saveLiveVolatile(ool->lir());
   masm.Push(InstanceReg);
   int32_t framePushedAfterInstance = masm.framePushed();
@@ -9354,14 +9450,98 @@ void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
   masm.jump(ool->rejoin());
 }
 
-void CodeGenerator::visitWasmPostWriteBarrier(LWasmPostWriteBarrier* lir) {
+void CodeGenerator::visitWasmPostWriteBarrierImmediate(
+    LWasmPostWriteBarrierImmediate* lir) {
   Register object = ToRegister(lir->object());
   Register value = ToRegister(lir->value());
   Register valueBase = ToRegister(lir->valueBase());
   Register temp = ToRegister(lir->temp0());
   MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
-  auto ool = new (alloc()) OutOfLineWasmCallPostWriteBarrier(
+  auto* ool = new (alloc()) OutOfLineWasmCallPostWriteBarrierImmediate(
       lir, valueBase, temp, lir->valueOffset());
+  addOutOfLineCode(ool, lir->mir());
+
+  wasm::EmitWasmPostBarrierGuard(masm, mozilla::Some(object), temp, value,
+                                 ool->rejoin());
+  masm.jump(ool->entry());
+  masm.bind(ool->rejoin());
+}
+
+// Out-of-line path to update the store buffer for wasm references.
+class OutOfLineWasmCallPostWriteBarrierIndex
+    : public OutOfLineCodeBase<CodeGenerator> {
+  LInstruction* lir_;
+  Register valueBase_;
+  Register index_;
+  Register temp_;
+  uint32_t elemSize_;
+
+ public:
+  OutOfLineWasmCallPostWriteBarrierIndex(LInstruction* lir, Register valueBase,
+                                         Register index, Register temp,
+                                         uint32_t elemSize)
+      : lir_(lir),
+        valueBase_(valueBase),
+        index_(index),
+        temp_(temp),
+        elemSize_(elemSize) {
+    MOZ_ASSERT(elemSize == 1 || elemSize == 2 || elemSize == 4 ||
+               elemSize == 8 || elemSize == 16);
+  }
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineWasmCallPostWriteBarrierIndex(this);
+  }
+
+  LInstruction* lir() const { return lir_; }
+  Register valueBase() const { return valueBase_; }
+  Register index() const { return index_; }
+  Register temp() const { return temp_; }
+  uint32_t elemSize() const { return elemSize_; }
+};
+
+void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrierIndex(
+    OutOfLineWasmCallPostWriteBarrierIndex* ool) {
+  saveLiveVolatile(ool->lir());
+  masm.Push(InstanceReg);
+  int32_t framePushedAfterInstance = masm.framePushed();
+
+  // Fold the value offset into the value base
+  Register temp = ool->temp();
+  if (ool->elemSize() == 16) {
+    masm.movePtr(ool->index(), temp);
+    masm.lshiftPtr(Imm32(4), temp);
+    masm.addPtr(ool->valueBase(), temp);
+  } else {
+    masm.computeEffectiveAddress(BaseIndex(ool->valueBase(), ool->index(),
+                                           ScaleFromElemWidth(ool->elemSize())),
+                                 temp);
+  }
+
+  // Call Instance::postBarrier
+  masm.setupWasmABICall();
+  masm.passABIArg(InstanceReg);
+  masm.passABIArg(temp);
+  int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
+  masm.callWithABI(wasm::BytecodeOffset(0), wasm::SymbolicAddress::PostBarrier,
+                   mozilla::Some(instanceOffset), ABIType::General);
+
+  masm.Pop(InstanceReg);
+  restoreLiveVolatile(ool->lir());
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitWasmPostWriteBarrierIndex(
+    LWasmPostWriteBarrierIndex* lir) {
+  Register object = ToRegister(lir->object());
+  Register value = ToRegister(lir->value());
+  Register valueBase = ToRegister(lir->valueBase());
+  Register index = ToRegister(lir->index());
+  Register temp = ToRegister(lir->temp0());
+  MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
+  auto* ool = new (alloc()) OutOfLineWasmCallPostWriteBarrierIndex(
+      lir, valueBase, index, temp, lir->elemSize());
   addOutOfLineCode(ool, lir->mir());
 
   wasm::EmitWasmPostBarrierGuard(masm, mozilla::Some(object), temp, value,
@@ -9389,9 +9569,48 @@ void CodeGenerator::visitWasmLoadSlotI64(LWasmLoadSlotI64* ins) {
 #endif
 }
 
+void CodeGenerator::visitWasmLoadElementI64(LWasmLoadElementI64* ins) {
+  Register base = ToRegister(ins->base());
+  Register index = ToRegister(ins->index());
+  BaseIndex addr(base, index, Scale::TimesEight);
+  Register64 output = ToOutRegister64(ins);
+  // Either 1 or 2 words.  On a 32-bit target, it is hard to argue that one
+  // transaction will always trap before the other, so it seems safest to
+  // register both of them as potentially trapping.
+#ifdef JS_64BIT
+  FaultingCodeOffset fco = masm.load64(addr, output);
+  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Load64);
+#else
+  FaultingCodeOffsetPair fcop = masm.load64(addr, output);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
+                              wasm::TrapMachineInsn::Load32);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
+                              wasm::TrapMachineInsn::Load32);
+#endif
+}
+
 void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
+  Register64 value = ToRegister64(ins->value());
+  // Either 1 or 2 words.  As above we register both transactions in the
+  // 2-word case.
+#ifdef JS_64BIT
+  FaultingCodeOffset fco = masm.store64(value, addr);
+  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Store64);
+#else
+  FaultingCodeOffsetPair fcop = masm.store64(value, addr);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
+                              wasm::TrapMachineInsn::Store32);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
+                              wasm::TrapMachineInsn::Store32);
+#endif
+}
+
+void CodeGenerator::visitWasmStoreElementI64(LWasmStoreElementI64* ins) {
+  Register base = ToRegister(ins->base());
+  Register index = ToRegister(ins->index());
+  BaseIndex addr(base, index, Scale::TimesEight);
   Register64 value = ToRegister64(ins->value());
   // Either 1 or 2 words.  As above we register both transactions in the
   // 2-word case.

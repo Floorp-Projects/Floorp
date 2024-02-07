@@ -645,6 +645,7 @@ class LDefinition {
 #endif
       case MIRType::Slots:
       case MIRType::Elements:
+      case MIRType::WasmArrayData:
         return LDefinition::SLOTS;
       case MIRType::WasmAnyRef:
         return LDefinition::WASM_ANYREF;

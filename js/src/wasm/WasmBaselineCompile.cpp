@@ -6806,8 +6806,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   fr.loadInstancePtr(instance);
 #endif
 
-  EmitWasmPreBarrierGuard(masm, instance, scratch, valueAddr,
-                          /*valueOffset=*/0, &skipBarrier, nullptr);
+  EmitWasmPreBarrierGuard(masm, instance, scratch, Address(valueAddr, 0),
+                          &skipBarrier, nullptr);
 
 #ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(instance);
@@ -6820,7 +6820,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.Mov(x28, sp);
 #endif
   // The prebarrier call preserves all volatile registers
-  EmitWasmPreBarrierCall(masm, instance, scratch, valueAddr, /*valueOffset=*/0);
+  EmitWasmPreBarrierCallImmediate(masm, instance, scratch, valueAddr,
+                                  /*valueOffset=*/0);
 
   masm.bind(&skipBarrier);
 }

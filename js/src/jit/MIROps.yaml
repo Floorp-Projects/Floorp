@@ -3215,7 +3215,10 @@
 - name: WasmStoreRef
   gen_boilerplate: false
 
-- name: WasmPostWriteBarrier
+- name: WasmPostWriteBarrierImmediate
+  gen_boilerplate: false
+
+- name: WasmPostWriteBarrierIndex
   gen_boilerplate: false
 
 - name: WasmParameter
@@ -3342,10 +3345,19 @@
 - name: WasmLoadFieldKA
   gen_boilerplate: false
 
+- name: WasmLoadElementKA
+  gen_boilerplate: false
+
 - name: WasmStoreFieldKA
   gen_boilerplate: false
 
 - name: WasmStoreFieldRefKA
+  gen_boilerplate: false
+
+- name: WasmStoreElementKA
+  gen_boilerplate: false
+
+- name: WasmStoreElementRefKA
   gen_boilerplate: false
 
 - name: WasmRefIsSubtypeOfConcrete

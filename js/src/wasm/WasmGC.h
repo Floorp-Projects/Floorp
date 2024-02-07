@@ -472,10 +472,9 @@ wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
 // a null pointer exception will be emitted. This will only catch a null access
 // due to an incremental GC being in progress, the write that follows this
 // pre-barrier guard must also be guarded against null.
-
+template <class Addr>
 void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
-                             Register scratch, Register valueAddr,
-                             size_t valueOffset, Label* skipBarrier,
+                             Register scratch, Addr addr, Label* skipBarrier,
                              BytecodeOffset* trapOffset);
 
 // Before storing a GC pointer value in memory, call out-of-line prebarrier
@@ -485,10 +484,16 @@ void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
 // `scratch`.
 //
 // It is OK for `instance` and `scratch` to be the same register.
-
-void EmitWasmPreBarrierCall(jit::MacroAssembler& masm, Register instance,
-                            Register scratch, Register valueAddr,
-                            size_t valueOffset);
+void EmitWasmPreBarrierCallImmediate(jit::MacroAssembler& masm,
+                                     Register instance, Register scratch,
+                                     Register valueAddr, size_t valueOffset);
+// The equivalent of EmitWasmPreBarrierCallImmediate, but for a jit::BaseIndex.
+// Will clobber `scratch1` and `scratch2`.
+//
+// It is OK for `instance` and `scratch1` to be the same register.
+void EmitWasmPreBarrierCallIndex(jit::MacroAssembler& masm, Register instance,
+                                 Register scratch1, Register scratch2,
+                                 jit::BaseIndex addr);
 
 // After storing a GC pointer value in memory, skip to `skipBarrier` if a
 // postbarrier is not needed.  If the location being set is in an heap-allocated
