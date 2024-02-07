@@ -32,7 +32,7 @@ using GPUExtent3D = RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 namespace webgpu {
 namespace ffi {
 struct WGPUComputePass;
-struct WGPURenderPass;
+struct WGPURecordedRenderPass;
 struct WGPUImageDataLayout;
 struct WGPUImageCopyTexture_TextureId;
 struct WGPUExtent3d;
@@ -73,7 +73,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   const auto& GetDevice() const { return mParent; };
 
   void EndComputePass(ffi::WGPUComputePass& aPass);
-  void EndRenderPass(ffi::WGPURenderPass& aPass);
+  void EndRenderPass(ffi::WGPURecordedRenderPass& aPass);
 
   void CopyBufferToBuffer(const Buffer& aSource, BufferAddress aSourceOffset,
                           const Buffer& aDestination,
