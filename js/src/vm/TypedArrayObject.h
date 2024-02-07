@@ -129,7 +129,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool set(JSContext* cx, unsigned argc, Value* vp);
   static bool copyWithin(JSContext* cx, unsigned argc, Value* vp);
 
-  bool convertForSideEffect(JSContext* cx, HandleValue v) const;
+  bool convertValue(JSContext* cx, HandleValue v,
+                    MutableHandleValue result) const;
 
  private:
   static bool set_impl(JSContext* cx, const CallArgs& args);
@@ -292,6 +293,11 @@ inline bool CanStartTypedArrayIndex(CharT ch) {
 bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                           uint64_t index, HandleValue v,
                           ObjectOpResult& result);
+
+bool SetTypedArrayElementOutOfBounds(JSContext* cx,
+                                     Handle<TypedArrayObject*> obj,
+                                     uint64_t index, HandleValue v,
+                                     ObjectOpResult& result);
 
 /*
  * Implements [[DefineOwnProperty]] for TypedArrays when the property
