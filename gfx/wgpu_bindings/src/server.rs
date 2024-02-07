@@ -562,10 +562,9 @@ pub extern "C" fn wgpu_server_get_device_fence_handle(
     if device_id.backend() == wgt::Backend::Dx12 {
         let mut handle = ptr::null_mut();
         let dx12_device = unsafe {
-            global.device_as_hal::<wgc::api::Dx12, _, Option<d3d12::Device>>(
-                device_id,
-                |hal_device| hal_device.map(|device| device.raw_device().clone()),
-            )
+            global.device_as_hal::<wgc::api::Dx12, _, Option<d3d12::Device>>(device_id, |hal_device| {
+                hal_device.map(|device| device.raw_device().clone())
+            })
         };
         let dx12_device = match dx12_device {
             Some(device) => device,
@@ -575,10 +574,9 @@ pub extern "C" fn wgpu_server_get_device_fence_handle(
         };
 
         let dx12_fence = unsafe {
-            global.device_fence_as_hal::<wgc::api::Dx12, _, Option<d3d12::Fence>>(
-                device_id,
-                |hal_fence| hal_fence.map(|fence| fence.raw_fence().clone()),
-            )
+            global.device_fence_as_hal::<wgc::api::Dx12, _, Option<d3d12::Fence>>(device_id, |hal_fence| {
+                hal_fence.map(|fence| fence.raw_fence().clone())
+            })
         };
         let dx12_fence = match dx12_fence {
             Some(fence) => fence,
@@ -1035,32 +1033,6 @@ pub unsafe extern "C" fn wgpu_server_command_encoder_action(
 ) {
     let action = bincode::deserialize(byte_buf.as_slice()).unwrap();
     gfx_select!(self_id => global.command_encoder_action(self_id, action, error_buf));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wgpu_server_render_pass(
-    global: &Global,
-    encoder_id: id::CommandEncoderId,
-    byte_buf: &ByteBuf,
-    error_buf: ErrorBuffer,
-) {
-    let pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
-    let action = crate::command::replay_render_pass(encoder_id, &pass).into_command();
-
-    gfx_select!(encoder_id => global.command_encoder_action(encoder_id, action, error_buf));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wgpu_server_compute_pass(
-    global: &Global,
-    encoder_id: id::CommandEncoderId,
-    byte_buf: &ByteBuf,
-    error_buf: ErrorBuffer,
-) {
-    let pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
-    let action = crate::command::replay_compute_pass(encoder_id, &pass).into_command();
-
-    gfx_select!(encoder_id => global.command_encoder_action(encoder_id, action, error_buf));
 }
 
 #[no_mangle]
