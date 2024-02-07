@@ -39,15 +39,21 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
  *
  * @property {Array<Window>} windows
  *   A list of windows with the same privateness
+ * @property {string} sortOption
+ *   The sorting order of open tabs:
+ *   - "recency": Sorted by recent activity. (For recent browsing, this is the only option.)
+ *   - "tabStripOrder": Match the order in which they appear on the tab strip.
  */
 class OpenTabsInView extends ViewPage {
   static properties = {
     ...ViewPage.properties,
     windows: { type: Array },
     searchQuery: { type: String },
+    sortOption: { type: String },
   };
   static queries = {
     viewCards: { all: "view-opentabs-card" },
+    optionsContainer: ".open-tabs-options",
     searchTextbox: "fxview-search-textbox",
   };
 
@@ -66,6 +72,12 @@ class OpenTabsInView extends ViewPage {
       this.openTabsTarget = lazy.NonPrivateTabs;
     }
     this.searchQuery = "";
+    this.sortOption = this.recentBrowsing
+      ? "recency"
+      : Services.prefs.getStringPref(
+          "browser.tabs.firefox-view.ui-state.opentabs.sort-option",
+          "recency"
+        );
   }
 
   start() {
@@ -73,12 +85,7 @@ class OpenTabsInView extends ViewPage {
       return;
     }
     this._started = true;
-
-    if (this.recentBrowsing) {
-      this.openTabsTarget.addEventListener("TabRecencyChange", this);
-    } else {
-      this.openTabsTarget.addEventListener("TabChange", this);
-    }
+    this.#setupTabChangeListener();
 
     // To resolve the race between this component wanting to render all the windows'
     // tabs, while those windows are still potentially opening, flip this property
@@ -144,6 +151,16 @@ class OpenTabsInView extends ViewPage {
     this.stop();
   }
 
+  #setupTabChangeListener() {
+    if (this.sortOption === "recency") {
+      this.openTabsTarget.addEventListener("TabRecencyChange", this);
+      this.openTabsTarget.removeEventListener("TabChange", this);
+    } else {
+      this.openTabsTarget.removeEventListener("TabRecencyChange", this);
+      this.openTabsTarget.addEventListener("TabChange", this);
+    }
+  }
+
   render() {
     if (this.recentBrowsing) {
       return this.getRecentBrowsingTemplate();
@@ -152,7 +169,10 @@ class OpenTabsInView extends ViewPage {
     let index = 1;
     const otherWindows = [];
     this.windows.forEach(win => {
-      const tabs = this.openTabsTarget.getTabsForWindow(win);
+      const tabs = this.openTabsTarget.getTabsForWindow(
+        win,
+        this.sortOption === "recency"
+      );
       if (win === this.currentWindow) {
         currentWindowIndex = index++;
         currentWindowTabs = tabs;
@@ -187,18 +207,50 @@ class OpenTabsInView extends ViewPage {
           class="page-header heading-large"
           data-l10n-id="firefoxview-opentabs-header"
         ></h2>
-        ${when(
-          isSearchEnabled(),
-          () => html`<div>
-            <fxview-search-textbox
-              data-l10n-id="firefoxview-search-text-box-opentabs"
-              data-l10n-attrs="placeholder"
-              @fxview-search-textbox-query=${this.onSearchQuery}
-              .size=${this.searchTextboxSize}
-              pageName=${this.recentBrowsing ? "recentbrowsing" : "opentabs"}
-            ></fxview-search-textbox>
-          </div>`
-        )}
+        <div class="open-tabs-options">
+          ${when(
+            isSearchEnabled(),
+            () => html`<div>
+              <fxview-search-textbox
+                data-l10n-id="firefoxview-search-text-box-opentabs"
+                data-l10n-attrs="placeholder"
+                @fxview-search-textbox-query=${this.onSearchQuery}
+                .size=${this.searchTextboxSize}
+                pageName=${this.recentBrowsing ? "recentbrowsing" : "opentabs"}
+              ></fxview-search-textbox>
+            </div>`
+          )}
+          <div class="open-tabs-sort-wrapper">
+            <div class="open-tabs-sort-option">
+              <input
+                type="radio"
+                id="sort-by-recency"
+                name="open-tabs-sort-option"
+                value="recency"
+                ?checked=${this.sortOption === "recency"}
+                @click=${this.onChangeSortOption}
+              />
+              <label
+                for="sort-by-recency"
+                data-l10n-id="firefoxview-sort-open-tabs-by-recency-label"
+              ></label>
+            </div>
+            <div class="open-tabs-sort-option">
+              <input
+                type="radio"
+                id="sort-by-order"
+                name="open-tabs-sort-option"
+                value="tabStripOrder"
+                ?checked=${this.sortOption === "tabStripOrder"}
+                @click=${this.onChangeSortOption}
+              />
+              <label
+                for="sort-by-order"
+                data-l10n-id="firefoxview-sort-open-tabs-by-order-label"
+              ></label>
+            </div>
+          </div>
+        </div>
       </div>
       <div
         card-count=${cardCount}
@@ -242,6 +294,17 @@ class OpenTabsInView extends ViewPage {
 
   onSearchQuery(e) {
     this.searchQuery = e.detail.query;
+  }
+
+  onChangeSortOption(e) {
+    this.sortOption = e.target.value;
+    this.#setupTabChangeListener();
+    if (!this.recentBrowsing) {
+      Services.prefs.setStringPref(
+        "browser.tabs.firefox-view.ui-state.opentabs.sort-option",
+        this.sortOption
+      );
+    }
   }
 
   /**

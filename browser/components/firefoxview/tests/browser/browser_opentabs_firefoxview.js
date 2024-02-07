@@ -125,6 +125,7 @@ async function moreMenuSetup() {
   await navigateToCategoryAndWait(document, "opentabs");
 
   let openTabs = document.querySelector("view-opentabs[name=opentabs]");
+  setSortOption(openTabs, "tabStripOrder");
   await openTabs.openTabsTarget.readyWindowsPromise;
 
   info("waiting for openTabs' first card rows");
