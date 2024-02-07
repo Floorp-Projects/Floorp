@@ -129,6 +129,9 @@ class Image {
   bool IsDRM() const { return mIsDRM; }
   virtual void SetIsDRM(bool aIsDRM) { mIsDRM = aIsDRM; }
 
+  virtual void OnPrepareForwardToHost() {}
+  virtual void OnAbandonForwardToHost() {}
+
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
 
   enum class BuildSdbFlags : uint8_t {

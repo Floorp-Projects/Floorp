@@ -347,7 +347,8 @@ LayersIPCActor* WebRenderBridgeChild::GetLayersIPCActor() {
   return static_cast<LayersIPCActor*>(GetCompositorBridgeChild());
 }
 
-void WebRenderBridgeChild::SyncWithCompositor() {
+void WebRenderBridgeChild::SyncWithCompositor(
+    const Maybe<uint64_t>& aWindowID) {
   if (!IPCOpen()) {
     return;
   }

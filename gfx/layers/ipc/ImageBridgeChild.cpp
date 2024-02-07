@@ -33,10 +33,12 @@
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "transport/runnable_utils.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsISupportsImpl.h"         // for ImageContainer::AddRef, etc
 #include "nsTArray.h"                // for AutoTArray, nsTArray, etc
 #include "nsTArrayForwardDeclare.h"  // for AutoTArray
 #include "nsThreadUtils.h"           // for NS_IsMainThread
+#include "WindowRenderer.h"
 
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
@@ -392,6 +394,43 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
       &task, aClient, aContainer);
   GetThread()->Dispatch(runnable.forget());
 
+  task.Wait();
+}
+
+void ImageBridgeChild::SyncWithCompositor(const Maybe<uint64_t>& aWindowID) {
+  if (NS_WARN_IF(InImageBridgeChildThread())) {
+    MOZ_ASSERT_UNREACHABLE("Cannot call on ImageBridge thread!");
+    return;
+  }
+
+  if (!aWindowID) {
+    return;
+  }
+
+  const auto fnSyncWithWindow = [&]() {
+    if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(*aWindowID)) {
+      if (auto* widget = window->GetNearestWidget()) {
+        if (auto* renderer = widget->GetWindowRenderer()) {
+          if (auto* kc = renderer->AsKnowsCompositor()) {
+            kc->SyncWithCompositor();
+          }
+        }
+      }
+    }
+  };
+
+  if (NS_IsMainThread()) {
+    fnSyncWithWindow();
+    return;
+  }
+
+  SynchronousTask task("SyncWithCompositor Lock");
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("ImageBridgeChild::SyncWithCompositor", [&]() {
+        AutoCompleteTask complete(&task);
+        fnSyncWithWindow();
+      });
+  NS_DispatchToMainThread(runnable.forget());
   task.Wait();
 }
 

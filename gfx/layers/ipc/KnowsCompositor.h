@@ -175,7 +175,10 @@ class KnowsCompositor {
    * content process accumulates resource allocations that the compositor is not
    * consuming and releasing.
    */
-  virtual void SyncWithCompositor() { MOZ_ASSERT_UNREACHABLE("Unimplemented"); }
+  virtual void SyncWithCompositor(
+      const Maybe<uint64_t>& aWindowID = Nothing()) {
+    MOZ_ASSERT_UNREACHABLE("Unimplemented");
+  }
 
   /**
    * Helpers for finding other related interface. These are infallible.
@@ -216,7 +219,8 @@ class KnowsCompositorMediaProxy : public KnowsCompositor {
 
   LayersIPCActor* GetLayersIPCActor() override;
 
-  void SyncWithCompositor() override;
+  void SyncWithCompositor(
+      const Maybe<uint64_t>& aWindowID = Nothing()) override;
 
  protected:
   virtual ~KnowsCompositorMediaProxy();

@@ -281,6 +281,19 @@ OffscreenCanvas::CreateContext(CanvasContextType aContextType) {
   return ret.forget();
 }
 
+Maybe<uint64_t> OffscreenCanvas::GetWindowID() {
+  if (NS_IsMainThread()) {
+    if (nsIGlobalObject* global = GetOwnerGlobal()) {
+      if (auto* window = global->GetAsInnerWindow()) {
+        return Some(window->WindowID());
+      }
+    }
+  } else if (auto* workerPrivate = GetCurrentThreadWorkerPrivate()) {
+    return Some(workerPrivate->WindowID());
+  }
+  return Nothing();
+}
+
 void OffscreenCanvas::UpdateDisplayData(
     const OffscreenCanvasDisplayData& aData) {
   if (!mDisplay) {

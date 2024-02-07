@@ -111,6 +111,8 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
                                    JS::Handle<JS::Value> aParams,
                                    ErrorResult& aRv);
 
+  Maybe<uint64_t> GetWindowID();
+
   nsICanvasRenderingContextInternal* GetContext() const {
     return mCurrentContext;
   }
