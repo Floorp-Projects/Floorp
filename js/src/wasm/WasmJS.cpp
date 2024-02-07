@@ -5361,23 +5361,23 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
         return false;
       }
     }
-
-    RootedObject tagProto(
-        cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTag));
-    if (!tagProto) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    SharedTagType wrappedJSValueTagType(sWrappedJSValueTagType);
-    WasmTagObject* wrappedJSValueTagObject =
-        WasmTagObject::create(cx, wrappedJSValueTagType, tagProto);
-    if (!wrappedJSValueTagObject) {
-      return false;
-    }
-
-    wasm->setWrappedJSValueTag(wrappedJSValueTagObject);
   }
+
+  RootedObject tagProto(
+      cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTag));
+  if (!tagProto) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  SharedTagType wrappedJSValueTagType(sWrappedJSValueTagType);
+  WasmTagObject* wrappedJSValueTagObject =
+      WasmTagObject::create(cx, wrappedJSValueTagType, tagProto);
+  if (!wrappedJSValueTagObject) {
+    return false;
+  }
+
+  wasm->setWrappedJSValueTag(wrappedJSValueTagObject);
 
 #ifdef ENABLE_WASM_MOZ_INTGEMM
   if (MozIntGemmAvailable(cx) &&
