@@ -24,7 +24,7 @@ use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{
-    PropertyRegistration, ScriptRegistry as CustomPropertyScriptRegistry,
+    PropertyRegistration, PropertyRegistrationData, ScriptRegistry as CustomPropertyScriptRegistry,
 };
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
@@ -677,16 +677,16 @@ impl Stylist {
 
     /// Returns the custom property registration for this property's name.
     /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
-    pub fn get_custom_property_registration(&self, name: &Atom) -> Option<&PropertyRegistration> {
+    pub fn get_custom_property_registration(&self, name: &Atom) -> &PropertyRegistrationData {
         if let Some(registration) = self.custom_property_script_registry().get(name) {
-            return Some(registration);
+            return &registration.data;
         }
         for (data, _) in self.iter_origins() {
             if let Some(registration) = data.custom_property_registrations.get(name) {
-                return Some(registration);
+                return &registration.data;
             }
         }
-        None
+        PropertyRegistrationData::unregistered()
     }
 
     /// Returns custom properties with their registered initial values.
