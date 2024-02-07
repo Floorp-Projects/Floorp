@@ -32,6 +32,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "gTabCacheSize",
   "browser.tabs.remote.tabCacheSize"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gTabUnloadDelay",
+  "browser.tabs.remote.unloadDelayMs",
+  300
+);
 
 /**
  * The tab switcher is responsible for asynchronously switching
@@ -82,7 +88,7 @@ export class AsyncTabSwitcher {
 
     // When the user hasn't switched tabs for this long, we unload
     // layers for all tabs that aren't in use.
-    this.UNLOAD_DELAY = 300; // ms
+    this.UNLOAD_DELAY = lazy.gTabUnloadDelay; // ms
 
     // The next three tabs form the principal state variables.
     // See the assertions in postActions for their invariants.
