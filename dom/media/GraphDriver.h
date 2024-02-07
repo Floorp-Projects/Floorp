@@ -689,6 +689,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
    * audio buffer cubeb passes us. This is only ever accessed on the audio
    * callback thread. */
   AudioCallbackBufferWrapper<AudioDataValue> mBuffer;
+  // mAudioStream (a cubeb_stream) has a bare pointer to the cubeb context, so
+  // we hold a strong reference on its behalf.
+  RefPtr<CubebUtils::CubebHandle> mCubeb;
   /* cubeb stream for this graph. This is non-null after a successful
    * cubeb_stream_init(). CubebOperation thread only. */
   nsAutoRef<cubeb_stream> mAudioStream;
