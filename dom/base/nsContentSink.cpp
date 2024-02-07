@@ -335,11 +335,10 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
   }
 
   bool isAlternate = linkTypes & LinkStyle::eALTERNATE;
-  return ProcessStyleLinkFromHeader(
-      aHeader.mHref, isAlternate, aHeader.mTitle, aHeader.mIntegrity,
-      aHeader.mType, aHeader.mMedia, aHeader.mReferrerPolicy,
-      StaticPrefs::network_fetchpriority_enabled() ? aHeader.mFetchPriority
-                                                   : EmptyString());
+  return ProcessStyleLinkFromHeader(aHeader.mHref, isAlternate, aHeader.mTitle,
+                                    aHeader.mIntegrity, aHeader.mType,
+                                    aHeader.mMedia, aHeader.mReferrerPolicy,
+                                    aHeader.mFetchPriority);
 }
 
 nsresult nsContentSink::ProcessStyleLinkFromHeader(
