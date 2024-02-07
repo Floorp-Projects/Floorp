@@ -2,6 +2,7 @@ import * as scriptTestsData from "./support/script-tests-data.js";
 import * as linkTestsData from "./support/link-tests-data.js";
 import * as fontfaceTestsData from "./support/font-face-tests-data.js";
 import * as imageTestsData from "./support/image-tests-data.js";
+import * as fetchTestsData from "./support/fetch-tests-data.js";
 
 const kTopicHttpOnOpeningRequest = "http-on-opening-request";
 
@@ -34,7 +35,7 @@ function containsOnlyUniqueFileNames(aRequests) {
 }
 
 const kTestGroups = [
-  scriptTestsData, linkTestsData, fontfaceTestsData, imageTestsData
+  scriptTestsData, linkTestsData, fontfaceTestsData, imageTestsData, fetchTestsData
 ];
 
 const kSupportFolderName = "support";
