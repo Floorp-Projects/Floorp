@@ -2101,7 +2101,7 @@
     <string name="radio_preference_info_content_description">Click for more details</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Navigate up</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Navigate up</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Close</string>
