@@ -219,7 +219,7 @@ class nsTextFrame : public nsIFrame {
 
   void Destroy(DestroyContext&) override;
 
-  mozilla::Maybe<Cursor> GetCursor(const nsPoint&) final;
+  Cursor GetCursor(const nsPoint&) final;
 
   nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 
