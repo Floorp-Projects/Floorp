@@ -39,7 +39,13 @@ inline JS::ColumnNumberOneOrigin js::ErrorObject::columnNumber() const {
 }
 
 inline JSObject* js::ErrorObject::stack() const {
-  return getReservedSlot(STACK_SLOT).toObjectOrNull();
+  // If the stack was a CCW, it might have been turned into a dead object proxy
+  // by NukeCrossCompartmentWrapper. Return nullptr in this case.
+  JSObject* obj = getReservedSlot(STACK_SLOT).toObjectOrNull();
+  if (obj && obj->canUnwrapAs<SavedFrame>()) {
+    return obj;
+  }
+  return nullptr;
 }
 
 #endif /* vm_ErrorObject_inl_h */
