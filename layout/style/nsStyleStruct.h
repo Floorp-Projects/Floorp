@@ -82,6 +82,11 @@ struct ContainSizeAxes {
   bool IsBoth() const { return mIContained && mBContained; }
   bool IsAny() const { return mIContained || mBContained; }
 
+  bool operator==(const ContainSizeAxes& aOther) const {
+    return mIContained == aOther.mIContained &&
+           mBContained == aOther.mBContained;
+  }
+
   /**
    * Return a contained size from an uncontained size.
    */
@@ -89,7 +94,6 @@ struct ContainSizeAxes {
                      const nsIFrame& aFrame) const;
   IntrinsicSize ContainIntrinsicSize(const IntrinsicSize& aUncontainedSize,
                                      const nsIFrame& aFrame) const;
-
   Maybe<nscoord> ContainIntrinsicBSize(const nsIFrame& aFrame,
                                        nscoord aNoneValue = 0) const;
   Maybe<nscoord> ContainIntrinsicISize(const nsIFrame& aFrame,

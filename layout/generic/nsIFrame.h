@@ -4086,6 +4086,15 @@ class nsIFrame : public nsQueryFrame {
     return StyleDisplay()->GetContainSizeAxes(*this);
   }
 
+  // Common steps to all replaced elements given an unconstrained intrinsic
+  // size.
+  mozilla::IntrinsicSize FinishIntrinsicSize(
+      const mozilla::ContainSizeAxes& aAxes,
+      const mozilla::IntrinsicSize& aUncontainedSize) const {
+    MOZ_ASSERT(aAxes == GetContainSizeAxes());
+    return aAxes.ContainIntrinsicSize(aUncontainedSize, *this);
+  }
+
   Maybe<nscoord> ContainIntrinsicBSize(nscoord aNoneValue = 0) const {
     return GetContainSizeAxes().ContainIntrinsicBSize(*this, aNoneValue);
   }
