@@ -1,5 +1,3 @@
-"use strict";
-
 import {
   TopSiteImpressionWrapper,
   INTERSECTION_RATIO,
