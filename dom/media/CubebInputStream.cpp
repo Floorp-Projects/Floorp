@@ -83,8 +83,8 @@ UniquePtr<CubebInputStream> CubebInputStream::Create(cubeb_devid aDeviceId,
     return nullptr;
   }
 
-  RefPtr<CubebUtils::CubebHandle> handle = CubebUtils::GetCubeb();
-  if (!handle) {
+  cubeb* context = CubebUtils::GetCubebContext();
+  if (!context) {
     LOGE("No valid cubeb context");
     CubebUtils::ReportCubebStreamInitFailure(CubebUtils::GetFirstStream());
     return nullptr;
@@ -98,9 +98,9 @@ UniquePtr<CubebInputStream> CubebInputStream::Create(cubeb_devid aDeviceId,
 
   RefPtr<Listener> listener(aListener);
   if (int r = CubebUtils::CubebStreamInit(
-          handle->Context(), &cubebStream, "input-only stream", aDeviceId,
-          &params, nullptr, nullptr, latencyFrames, DataCallback_s,
-          StateCallback_s, listener.get());
+          context, &cubebStream, "input-only stream", aDeviceId, &params,
+          nullptr, nullptr, latencyFrames, DataCallback_s, StateCallback_s,
+          listener.get());
       r != CUBEB_OK) {
     CubebUtils::ReportCubebStreamInitFailure(CubebUtils::GetFirstStream());
     LOGE("Fail to create a cubeb stream. Error %d", r);
@@ -120,9 +120,7 @@ UniquePtr<CubebInputStream> CubebInputStream::Create(cubeb_devid aDeviceId,
 CubebInputStream::CubebInputStream(
     already_AddRefed<Listener>&& aListener,
     UniquePtr<cubeb_stream, CubebDestroyPolicy>&& aStream)
-    : mListener(aListener),
-      mCubeb(CubebUtils::GetCubeb()),
-      mStream(std::move(aStream)) {
+    : mListener(aListener), mStream(std::move(aStream)) {
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mStream);
 }
