@@ -28,7 +28,7 @@ const SIGNUP = "/account/create";
 const DEVICES_FILTER_DAYS = 21;
 
 export var FxAccountsClient = function (
-  host = Services.prefs.getCharPref(HOST_PREF)
+  host = Services.prefs.getStringPref(HOST_PREF)
 ) {
   this.host = host;
 

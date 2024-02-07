@@ -6,9 +6,12 @@
 #include "WinIMEHandler.h"
 
 #include "IMMHandler.h"
+#include "KeyboardLayout.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_intl.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
 #include "WinTextEventDispatcherListener.h"
@@ -134,6 +137,12 @@ void* IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType) {
 
 // static
 bool IMEHandler::ProcessRawKeyMessage(const MSG& aMsg) {
+  if (StaticPrefs::ui_key_layout_load_when_first_needed()) {
+    // Getting instance creates the singleton instance and that will
+    // automatically load active keyboard layout data.  We should do that
+    // before TSF or TranslateMessage handles a key message.
+    Unused << KeyboardLayout::GetInstance();
+  }
   if (IsTSFAvailable()) {
     return TSFTextStore::ProcessRawKeyMessage(aMsg);
   }

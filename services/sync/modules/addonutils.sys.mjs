@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 function AddonUtilsInternal() {
   this._log = Log.repository.getLogger("Sync.AddonUtils");
   this._log.Level =
-    Log.Level[Svc.PrefBranch.getCharPref("log.logger.addonutils", null)];
+    Log.Level[Svc.PrefBranch.getStringPref("log.logger.addonutils", null)];
 }
 AddonUtilsInternal.prototype = {
   /**

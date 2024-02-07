@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class YelpSuggestions extends BaseFeature {
   get shouldEnable() {
     return (
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored") &&
       lazy.UrlbarPrefs.get("yelpFeatureGate") &&
       lazy.UrlbarPrefs.get("suggest.yelp")
     );
@@ -36,6 +37,8 @@ export class YelpSuggestions extends BaseFeature {
   }
 
   makeResult(queryContext, suggestion, searchString) {
+    suggestion.is_top_pick = lazy.UrlbarPrefs.get("yelpSuggestPriority");
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
@@ -49,9 +52,6 @@ export class YelpSuggestions extends BaseFeature {
         })
       ),
       {
-        isBestMatch: true,
-        suggestedIndex: 1,
-        isRichSuggestion: true,
         richSuggestionIconSize: 24,
       }
     );

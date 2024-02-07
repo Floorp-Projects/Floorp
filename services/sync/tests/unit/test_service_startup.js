@@ -5,8 +5,8 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-// Svc.PrefBranch.setCharPref("services.sync.log.appender.dump", "All");
-Svc.PrefBranch.setCharPref("registerEngines", "Tab,Bookmarks,Form,History");
+// Svc.PrefBranch.setStringPref("services.sync.log.appender.dump", "All");
+Svc.PrefBranch.setStringPref("registerEngines", "Tab,Bookmarks,Form,History");
 
 add_task(async function run_test() {
   validate_all_future_pings();

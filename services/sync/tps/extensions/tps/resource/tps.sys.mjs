@@ -190,7 +190,7 @@ export var TPS = {
           this._setupComplete = true;
 
           if (this._syncWipeAction) {
-            lazy.Weave.Svc.PrefBranch.setCharPref(
+            lazy.Weave.Svc.PrefBranch.setStringPref(
               "firstSync",
               this._syncWipeAction
             );
@@ -1103,7 +1103,7 @@ export var TPS = {
    */
   async _executeTestPhase(file, phase, settings) {
     try {
-      this.config = JSON.parse(Services.prefs.getCharPref("tps.config"));
+      this.config = JSON.parse(Services.prefs.getStringPref("tps.config"));
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
@@ -1375,7 +1375,7 @@ export var TPS = {
     // also handle it via the "weave:service:setup-complete" notification.
     if (wipeAction) {
       this._syncWipeAction = wipeAction;
-      lazy.Weave.Svc.PrefBranch.setCharPref("firstSync", wipeAction);
+      lazy.Weave.Svc.PrefBranch.setStringPref("firstSync", wipeAction);
     } else {
       lazy.Weave.Svc.PrefBranch.clearUserPref("firstSync");
     }

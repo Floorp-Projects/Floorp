@@ -42,9 +42,12 @@ add_task(async function test_noPrefs() {
 
 // Test that changes to the prefs used by the log manager are updated dynamically.
 add_task(async function test_PrefChanges() {
-  Services.prefs.setCharPref("log-manager.test.log.appender.console", "Trace");
-  Services.prefs.setCharPref("log-manager.test.log.appender.dump", "Trace");
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
+    "log-manager.test.log.appender.console",
+    "Trace"
+  );
+  Services.prefs.setStringPref("log-manager.test.log.appender.dump", "Trace");
+  Services.prefs.setStringPref(
     "log-manager.test.log.appender.file.level",
     "Trace"
   );
@@ -56,9 +59,12 @@ add_task(async function test_PrefChanges() {
   equal(dapp.level, Log.Level.Trace);
   equal(fapp.level, Log.Level.Trace);
   // adjust the prefs and they should magically be reflected in the appenders.
-  Services.prefs.setCharPref("log-manager.test.log.appender.console", "Debug");
-  Services.prefs.setCharPref("log-manager.test.log.appender.dump", "Debug");
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
+    "log-manager.test.log.appender.console",
+    "Debug"
+  );
+  Services.prefs.setStringPref("log-manager.test.log.appender.dump", "Debug");
+  Services.prefs.setStringPref(
     "log-manager.test.log.appender.file.level",
     "Debug"
   );
@@ -66,9 +72,12 @@ add_task(async function test_PrefChanges() {
   equal(dapp.level, Log.Level.Debug);
   equal(fapp.level, Log.Level.Debug);
   // and invalid values should cause them to fallback to their defaults.
-  Services.prefs.setCharPref("log-manager.test.log.appender.console", "xxx");
-  Services.prefs.setCharPref("log-manager.test.log.appender.dump", "xxx");
-  Services.prefs.setCharPref("log-manager.test.log.appender.file.level", "xxx");
+  Services.prefs.setStringPref("log-manager.test.log.appender.console", "xxx");
+  Services.prefs.setStringPref("log-manager.test.log.appender.dump", "xxx");
+  Services.prefs.setStringPref(
+    "log-manager.test.log.appender.file.level",
+    "xxx"
+  );
   equal(capp.level, Log.Level.Fatal);
   equal(dapp.level, Log.Level.Error);
   equal(fapp.level, Log.Level.Debug);
@@ -78,24 +87,24 @@ add_task(async function test_PrefChanges() {
 // Test that the same log used by multiple log managers does the right thing.
 add_task(async function test_SharedLogs() {
   // create the prefs for the first instance.
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     "log-manager-1.test.log.appender.console",
     "Trace"
   );
-  Services.prefs.setCharPref("log-manager-1.test.log.appender.dump", "Trace");
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref("log-manager-1.test.log.appender.dump", "Trace");
+  Services.prefs.setStringPref(
     "log-manager-1.test.log.appender.file.level",
     "Trace"
   );
   let lm1 = new LogManager("log-manager-1.test.", ["TestLog3"], "test");
 
   // and the second.
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     "log-manager-2.test.log.appender.console",
     "Debug"
   );
-  Services.prefs.setCharPref("log-manager-2.test.log.appender.dump", "Debug");
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref("log-manager-2.test.log.appender.dump", "Debug");
+  Services.prefs.setStringPref(
     "log-manager-2.test.log.appender.file.level",
     "Debug"
   );
@@ -111,12 +120,12 @@ add_task(async function test_SharedLogs() {
 
   // Set the prefs on the -1 branch to "Error" - it should then end up with
   // "Debug" from the -2 branch.
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     "log-manager-1.test.log.appender.console",
     "Error"
   );
-  Services.prefs.setCharPref("log-manager-1.test.log.appender.dump", "Error");
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref("log-manager-1.test.log.appender.dump", "Error");
+  Services.prefs.setStringPref(
     "log-manager-1.test.log.appender.file.level",
     "Error"
   );

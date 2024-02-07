@@ -68,7 +68,7 @@ Preference.prototype = {
           "string",
           "Wrong type used for preference value"
         );
-        Services.prefs.setCharPref(this.name, this.value);
+        Services.prefs.setStringPref(this.name, this.value);
         break;
       case Ci.nsIPrefBranch.PREF_BOOL:
         Logger.AssertEqual(
@@ -100,7 +100,7 @@ Preference.prototype = {
           value = Services.prefs.getIntPref(this.name);
           break;
         case Ci.nsIPrefBranch.PREF_STRING:
-          value = Services.prefs.getCharPref(this.name);
+          value = Services.prefs.getStringPref(this.name);
           break;
         case Ci.nsIPrefBranch.PREF_BOOL:
           value = Services.prefs.getBoolPref(this.name);

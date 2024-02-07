@@ -30,7 +30,7 @@ try {
   LOG_LEVEL =
     Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
       Ci.nsIPrefBranch.PREF_STRING &&
-    Services.prefs.getCharPref(PREF_LOG_LEVEL);
+    Services.prefs.getStringPref(PREF_LOG_LEVEL);
 } catch (e) {}
 
 var log = Log.repository.getLogger("Identity.FxAccounts");

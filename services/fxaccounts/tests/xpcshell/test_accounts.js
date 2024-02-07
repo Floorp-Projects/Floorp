@@ -45,9 +45,9 @@ var log = Log.repository.getLogger("Services.FxAccounts.test");
 log.level = Log.Level.Debug;
 
 // See verbose logging from FxAccounts.jsm and jwcrypto.jsm.
-Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
+Services.prefs.setStringPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
-Services.prefs.setCharPref("services.crypto.jwcrypto.log.level", "Debug");
+Services.prefs.setStringPref("services.crypto.jwcrypto.log.level", "Debug");
 
 /*
  * The FxAccountsClient communicates with the remote Firefox
@@ -1143,7 +1143,7 @@ add_test(function test_resend_email() {
   });
 });
 
-Services.prefs.setCharPref(
+Services.prefs.setStringPref(
   "identity.fxaccounts.remote.oauth.uri",
   "https://example.com/v1"
 );
@@ -1346,7 +1346,7 @@ add_test(function test_getOAuthToken_invalid_scope_array() {
 add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
   let fxa = new MockFxAccounts();
 
-  const prevServerURL = Services.prefs.getCharPref(
+  const prevServerURL = Services.prefs.getStringPref(
     "identity.fxaccounts.remote.oauth.uri"
   );
   Services.prefs.deleteBranch("identity.fxaccounts.remote.oauth.uri");
@@ -1354,7 +1354,7 @@ add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
   fxa.getOAuthToken().catch(err => {
     Assert.equal(err.message, "INVALID_PARAMETER");
     // revert the pref
-    Services.prefs.setCharPref(
+    Services.prefs.setStringPref(
       "identity.fxaccounts.remote.oauth.uri",
       prevServerURL
     );

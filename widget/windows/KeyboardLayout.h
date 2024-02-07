@@ -14,6 +14,7 @@
 #include "nsWindowDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/widget/WinMessages.h"
 #include "mozilla/widget/WinModifierKeyState.h"
@@ -824,8 +825,34 @@ class KeyboardLayout {
  public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
-  static HKL GetActiveLayout();
-  static nsCString GetActiveLayoutName();
+
+  /**
+   * GetLayout() returns a keyboard layout which has already been loaded in the
+   * singleton instance or active keyboard layout.
+   */
+  static HKL GetLayout() {
+    if (!sInstance || sInstance->mIsPendingToRestoreKeyboardLayout) {
+      return ::GetKeyboardLayout(0);
+    }
+    return sInstance->mKeyboardLayout;
+  }
+
+  /**
+   * GetLoadedLayout() returns a keyboard layout which was loaded in the
+   * singleton instance.  This may be different from the active keyboard layout
+   * on the system if we override the keyboard layout for synthesizing native
+   * key events for tests.
+   */
+  HKL GetLoadedLayout() { return mKeyboardLayout; }
+
+  /**
+   * GetLoadedLayoutName() returns the name of the loaded keyboard layout in the
+   * singleton instance.
+   */
+  nsCString GetLoadedLayoutName() {
+    return KeyboardLayout::GetLayoutName(mKeyboardLayout);
+  }
+
   static void NotifyIdleServiceOfUserActivity();
 
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
@@ -925,11 +952,6 @@ class KeyboardLayout {
    */
   static CodeNameIndex ConvertScanCodeToCodeNameIndex(UINT aScanCode);
 
-  HKL GetLayout() const {
-    return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0)
-                                             : mKeyboardLayout;
-  }
-
   /**
    * This wraps MapVirtualKeyEx() API with MAPVK_VK_TO_VSC.
    */
@@ -950,17 +972,17 @@ class KeyboardLayout {
   ~KeyboardLayout();
 
   static KeyboardLayout* sInstance;
-  static nsIUserIdleServiceInternal* sIdleService;
+  static StaticRefPtr<nsIUserIdleServiceInternal> sIdleService;
 
   struct DeadKeyTableListEntry {
     DeadKeyTableListEntry* next;
     uint8_t data[1];
   };
 
-  HKL mKeyboardLayout;
+  HKL mKeyboardLayout = nullptr;
 
-  VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
-  DeadKeyTableListEntry* mDeadKeyTableListHead;
+  VirtualKey mVirtualKeys[NS_NUM_OF_KEYS] = {};
+  DeadKeyTableListEntry* mDeadKeyTableListHead = nullptr;
   // When mActiveDeadKeys is empty, it's not in dead key sequence.
   // Otherwise, it contains virtual keycodes which are pressed in current
   // dead key sequence.
@@ -970,9 +992,9 @@ class KeyboardLayout {
   // mActiveDeadKeys.
   nsTArray<VirtualKey::ShiftState> mDeadKeyShiftStates;
 
-  bool mIsOverridden;
-  bool mIsPendingToRestoreKeyboardLayout;
-  bool mHasAltGr;
+  bool mIsOverridden = false;
+  bool mIsPendingToRestoreKeyboardLayout = false;
+  bool mHasAltGr = false;
 
   static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
   static bool AddDeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar,
@@ -1003,7 +1025,7 @@ class KeyboardLayout {
    * Gets the keyboard layout name of aLayout.  Be careful, this may be too
    * slow to call at handling user input.
    */
-  nsCString GetLayoutName(HKL aLayout) const;
+  static nsCString GetLayoutName(HKL aLayout);
 
   /**
    * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or

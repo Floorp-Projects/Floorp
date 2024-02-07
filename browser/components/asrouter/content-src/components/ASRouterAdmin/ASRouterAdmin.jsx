@@ -507,7 +507,6 @@ export class ASRouterAdminInner extends React.PureComponent {
             isBlocked ? null : isModified ? (
               <button
                 className="button restore"
-                // eslint-disable-next-line react/jsx-no-bind
                 onClick={e => this.resetJSON(msg)}
               >
                 Reset
@@ -524,7 +523,6 @@ export class ASRouterAdminInner extends React.PureComponent {
           {isBlocked ? null : (
             <button
               className="button modify"
-              // eslint-disable-next-line react/jsx-no-bind
               onClick={e => this.modifyJson(msg)}
             >
               Modify
@@ -559,7 +557,6 @@ export class ASRouterAdminInner extends React.PureComponent {
                 name={msg.id}
                 className="general-textarea"
                 disabled={isBlocked}
-                // eslint-disable-next-line react/jsx-no-bind
                 onChange={e => this.handleChange(msg.id)}
               >
                 {JSON.stringify(msg, null, 2)}
@@ -701,7 +698,6 @@ export class ASRouterAdminInner extends React.PureComponent {
       <div>
         <button
           className="ASRouterButton slim"
-          // eslint-disable-next-line react/jsx-no-bind
           onClick={e => this.toggleAllMessages(messagesToShow)}
         >
           Collapse/Expand All
@@ -1311,7 +1307,6 @@ export class ASRouterAdminInner extends React.PureComponent {
           <h2>Messages</h2>
           <button
             className="ASRouterButton slim button"
-            // eslint-disable-next-line react/jsx-no-bind
             onClick={e => this.toggleAllMessages(messagesToShow)}
           >
             Collapse/Expand All
