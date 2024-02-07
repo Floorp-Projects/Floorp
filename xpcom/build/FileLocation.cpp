@@ -8,6 +8,8 @@
 #include "nsZipArchive.h"
 #include "nsURLHelper.h"
 
+#include "mozilla/UniquePtrExtensions.h"
+
 namespace mozilla {
 
 FileLocation::FileLocation() = default;
@@ -147,7 +149,8 @@ bool FileLocation::Equals(const FileLocation& aFile) const {
 
 nsresult FileLocation::GetData(Data& aData) {
   if (!IsZip()) {
-    return mBaseFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &aData.mFd.rwget());
+    return mBaseFile->OpenNSPRFileDesc(PR_RDONLY, 0444,
+                                       getter_Transfers(aData.mFd));
   }
   aData.mZip = mBaseZip;
   if (!aData.mZip) {
@@ -166,7 +169,7 @@ nsresult FileLocation::GetData(Data& aData) {
 nsresult FileLocation::Data::GetSize(uint32_t* aResult) {
   if (mFd) {
     PRFileInfo64 fileInfo;
-    if (PR_SUCCESS != PR_GetOpenFileInfo64(mFd, &fileInfo)) {
+    if (PR_SUCCESS != PR_GetOpenFileInfo64(mFd.get(), &fileInfo)) {
       return NS_ErrorAccordingToNSPR();
     }
 
@@ -187,7 +190,7 @@ nsresult FileLocation::Data::GetSize(uint32_t* aResult) {
 nsresult FileLocation::Data::Copy(char* aBuf, uint32_t aLen) {
   if (mFd) {
     for (uint32_t totalRead = 0; totalRead < aLen;) {
-      int32_t read = PR_Read(mFd, aBuf + totalRead,
+      int32_t read = PR_Read(mFd.get(), aBuf + totalRead,
                              XPCOM_MIN(aLen - totalRead, uint32_t(INT32_MAX)));
       if (read < 0) {
         return NS_ErrorAccordingToNSPR();
