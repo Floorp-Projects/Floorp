@@ -223,9 +223,7 @@ partial interface Element {
   readonly attribute long scrollWidth;
   readonly attribute long scrollHeight;
 
-  [BinaryName="scrollTo"]
   undefined scroll(unrestricted double x, unrestricted double y);
-  [BinaryName="scrollTo"]
   undefined scroll(optional ScrollToOptions options = {});
   undefined scrollTo(unrestricted double x, unrestricted double y);
   undefined scrollTo(optional ScrollToOptions options = {});

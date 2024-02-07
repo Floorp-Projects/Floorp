@@ -1153,50 +1153,6 @@ inline nscoord StyleZoom::UnzoomCoord(nscoord aValue) const {
   return NSToCoordRoundWithClamp(Unzoom(float(aValue)));
 }
 
-inline nsSize StyleZoom::Zoom(const nsSize& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsSize(ZoomCoord(aValue.Width()), ZoomCoord(aValue.Height()));
-}
-
-inline nsSize StyleZoom::Unzoom(const nsSize& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsSize(UnzoomCoord(aValue.Width()), UnzoomCoord(aValue.Height()));
-}
-
-inline nsPoint StyleZoom::Zoom(const nsPoint& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsPoint(ZoomCoord(aValue.X()), ZoomCoord(aValue.Y()));
-}
-
-inline nsPoint StyleZoom::Unzoom(const nsPoint& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsPoint(UnzoomCoord(aValue.X()), UnzoomCoord(aValue.Y()));
-}
-
-inline nsRect StyleZoom::Zoom(const nsRect& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsRect(ZoomCoord(aValue.X()), ZoomCoord(aValue.Y()),
-                ZoomCoord(aValue.Width()), ZoomCoord(aValue.Height()));
-}
-
-inline nsRect StyleZoom::Unzoom(const nsRect& aValue) const {
-  if (*this == ONE) {
-    return aValue;
-  }
-  return nsRect(UnzoomCoord(aValue.X()), UnzoomCoord(aValue.Y()),
-                UnzoomCoord(aValue.Width()), UnzoomCoord(aValue.Height()));
-}
-
 }  // namespace mozilla
 
 #endif
