@@ -145,6 +145,8 @@ const SPONSORED_TILE_PARTNERS = new Set([
 
 const DISPLAY_FAIL_REASON_OVERSOLD = "oversold";
 const DISPLAY_FAIL_REASON_DISMISSED = "dismissed";
+// Unable to determine reason if tile is/is not displayed.
+const DISPLAY_FAIL_REASON_UNRESOLVED = "unresolved";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -154,6 +156,7 @@ function getShortURLForCurrentSearch() {
 class TopSitesTelemetry {
   constructor() {
     this.allSponsoredTiles = {};
+    this.sponsoredTilesConfigured = 0;
   }
 
   _tileProviderForTiles(tiles) {
@@ -205,6 +208,7 @@ class TopSitesTelemetry {
         NIMBUS_VARIABLE_MAX_SPONSORED
       ) ?? MAX_NUM_SPONSORED;
 
+    this.sponsoredTilesConfigured = maxSponsored;
     Glean.topsites.sponsoredTilesConfigured.set(maxSponsored);
   }
 
@@ -260,19 +264,69 @@ class TopSitesTelemetry {
   }
 
   _setTilePositions(currentTiles) {
+    // This function performs many loops over a small dataset.  The size of
+    // dataset is limited by the number of sponsored tiles displayed on
+    // the newtab instance.
     if (this.allSponsoredTiles) {
+      let tilePositionsAssigned = [];
+      // processing the currentTiles parameter, assigns a position to the
+      // corresponding property in this.allSponsoredTiles
       currentTiles.forEach(item => {
-        if (this._buildPropertyKey(item) in this.allSponsoredTiles) {
-          let tile = this.allSponsoredTiles[this._buildPropertyKey(item)];
-          if (
-            tile.display_fail_reason === undefined ||
-            tile.display_fail_reason === null
-          ) {
-            tile.display_position = item.sponsored_position;
-          }
+        let tile = this.allSponsoredTiles[this._buildPropertyKey(item)];
+        if (
+          tile &&
+          (tile.display_fail_reason === undefined ||
+            tile.display_fail_reason === null)
+        ) {
+          tile.display_position = item.sponsored_position;
+          // Track assigned tile slots.
+          tilePositionsAssigned.push(item.sponsored_position);
         }
       });
+
+      // Need to check if any objects in this.allSponsoredTiles do not
+      // have either a display_fail_reason or a display_position set.
+      // This can happen if the tiles list was updated before the
+      // metric is written to Glean.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1877197
+      let tilesMissingPosition = [];
+      Object.keys(this.allSponsoredTiles).forEach(property => {
+        let tile = this.allSponsoredTiles[property];
+        if (!tile.display_fail_reason && !tile.display_position) {
+          tilesMissingPosition.push(property);
+        }
+      });
+
+      if (tilesMissingPosition.length) {
+        // Determine if any available slots exist based on max number of tiles
+        // and the list of tiles already used and assign to a tile with missing
+        // value.
+        for (let i = 1; i <= this.sponsoredTilesConfigured; i++) {
+          if (!tilePositionsAssigned.includes(i)) {
+            let tileProperty = tilesMissingPosition.shift();
+            this.allSponsoredTiles[tileProperty].display_position = i;
+          }
+        }
+      }
+
+      // At this point we might still have a few unresolved states.  These
+      // rows will be tagged with a display_fail_reason `unresolved`.
+      this._detectErrorConditionAndSetUnresolved();
     }
+  }
+
+  // Checks the data for inconsistent state and updates the display_fail_reason
+  _detectErrorConditionAndSetUnresolved() {
+    Object.keys(this.allSponsoredTiles).forEach(property => {
+      let tile = this.allSponsoredTiles[property];
+      if (
+        (!tile.display_fail_reason && !tile.display_position) ||
+        (tile.display_fail_reason && tile.display_position)
+      ) {
+        tile.display_position = null;
+        tile.display_fail_reason = DISPLAY_FAIL_REASON_UNRESOLVED;
+      }
+    });
   }
 
   finalizeNewtabPingFields(currentTiles) {
