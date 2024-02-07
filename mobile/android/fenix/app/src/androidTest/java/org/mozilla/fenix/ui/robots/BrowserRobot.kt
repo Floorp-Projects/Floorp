@@ -71,6 +71,7 @@ class BrowserRobot {
 
     fun verifyCurrentPrivateSession(context: Context) {
         val selectedTab = context.components.core.store.state.selectedTab
+        Log.i(TAG, "verifyCurrentPrivateSession: Trying to verify that current browsing session is private")
         assertTrue("Current session is private", selectedTab?.content?.private ?: false)
         Log.i(TAG, "verifyCurrentPrivateSession: Verified that current browsing session is private")
     }
@@ -228,6 +229,7 @@ class BrowserRobot {
     fun verifyNavURLBarHidden() = assertUIObjectIsGone(navURLBar())
 
     fun verifyMenuButton() {
+        Log.i(TAG, "verifyMenuButton: Trying to verify main menu button is displayed")
         threeDotButton().check(matches(isDisplayed()))
         Log.i(TAG, "verifyMenuButton: Verified main menu button is displayed")
     }
@@ -249,6 +251,7 @@ class BrowserRobot {
         assertUIObjectExists(itemWithResId("$packageName:id/notification_dot"))
 
     fun dismissContentContextMenu() {
+        Log.i(TAG, "dismissContentContextMenu: Trying to click device back button")
         mDevice.pressBack()
         Log.i(TAG, "dismissContentContextMenu: Clicked device back button")
         assertUIObjectExists(itemWithResId("$packageName:id/engineView"))
@@ -280,7 +283,9 @@ class BrowserRobot {
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
         assertUIObjectIsGone(itemWithResId("submit"))
+        Log.i(TAG, "clickSubmitLoginButton: Waiting for device to be idle for $waitingTimeLong ms")
         mDevice.waitForIdle(waitingTimeLong)
+        Log.i(TAG, "clickSubmitLoginButton: Waited for device to be idle for $waitingTimeLong ms")
     }
 
     fun enterPassword(password: String) {
@@ -323,11 +328,13 @@ class BrowserRobot {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
             Log.i(TAG, "swipeNavBarRight: Try block")
+            Log.i(TAG, "swipeNavBarRight: Trying to perform swipe right action on navigation toolbar")
             navURLBar().swipeRight(2)
             Log.i(TAG, "swipeNavBarRight: Performed swipe right action on navigation toolbar")
             assertUIObjectIsGone(itemWithText(tabUrl))
         } catch (e: AssertionError) {
             Log.i(TAG, "swipeNavBarRight: AssertionError caught, executing fallback methods")
+            Log.i(TAG, "swipeNavBarRight: Trying to perform swipe right action on navigation toolbar")
             navURLBar().swipeRight(2)
             Log.i(TAG, "swipeNavBarRight: Performed swipe right action on navigation toolbar")
             assertUIObjectIsGone(itemWithText(tabUrl))
@@ -338,11 +345,13 @@ class BrowserRobot {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
             Log.i(TAG, "swipeNavBarLeft: Try block")
+            Log.i(TAG, "swipeNavBarLeft: Trying to perform swipe left action on navigation toolbar")
             navURLBar().swipeLeft(2)
             Log.i(TAG, "swipeNavBarLeft: Performed swipe left action on navigation toolbar")
             assertUIObjectIsGone(itemWithText(tabUrl))
         } catch (e: AssertionError) {
             Log.i(TAG, "swipeNavBarLeft: AssertionError caught, executing fallback methods")
+            Log.i(TAG, "swipeNavBarLeft: Trying to perform swipe left action on navigation toolbar")
             navURLBar().swipeLeft(2)
             Log.i(TAG, "swipeNavBarLeft: Performed swipe left action on navigation toolbar")
             assertUIObjectIsGone(itemWithText(tabUrl))
@@ -354,6 +363,7 @@ class BrowserRobot {
             try {
                 Log.i(TAG, "clickSuggestedLoginsButton: Started try #$i")
                 mDevice.waitForObjects(suggestedLogins())
+                Log.i(TAG, "clickSuggestedLoginsButton: Trying to click suggested logins button")
                 suggestedLogins().click()
                 Log.i(TAG, "clickSuggestedLoginsButton: Clicked suggested logins button")
                 mDevice.waitForObjects(suggestedLogins())
@@ -370,6 +380,7 @@ class BrowserRobot {
     }
 
     fun setTextForApartmentTextBox(apartment: String) {
+        Log.i(TAG, "setTextForApartmentTextBox: Trying to set the text for the apartment text box to: $apartment")
         itemWithResId("apartment").setText(apartment)
         Log.i(TAG, "setTextForApartmentTextBox: The text for the apartment text box was set to: $apartment")
     }
@@ -388,8 +399,9 @@ class BrowserRobot {
             try {
                 Log.i(TAG, "clickSelectAddressButton: Started try #$i")
                 assertUIObjectExists(selectAddressButton())
+                Log.i(TAG, "clickSelectAddressButton: Trying to click the select address button and wait for $waitingTime ms for a new window")
                 selectAddressButton().clickAndWaitForNewWindow(waitingTime)
-                Log.i(TAG, "clickSelectAddressButton: Clicked select address button")
+                Log.i(TAG, "clickSelectAddressButton: Clicked the select address button and waited for $waitingTime ms for a new window")
 
                 break
             } catch (e: AssertionError) {
@@ -409,37 +421,51 @@ class BrowserRobot {
     fun verifySelectAddressButtonExists(exists: Boolean) = assertUIObjectExists(selectAddressButton(), exists = exists)
 
     fun changeCreditCardExpiryDate(expiryDate: String) {
+        Log.i(TAG, "changeCreditCardExpiryDate: Trying to set credit card expiry date to: $expiryDate")
         itemWithResId("expiryMonthAndYear").setText(expiryDate)
         Log.i(TAG, "changeCreditCardExpiryDate: Credit card expiry date was set to: $expiryDate")
     }
 
     fun clickCreditCardNumberTextBox() {
-        Log.i(TAG, "clickCreditCardNumberTextBox: Waiting for credit card number text box")
+        Log.i(TAG, "clickCreditCardNumberTextBox: Waiting for $waitingTime ms until finding the credit card number text box")
         mDevice.wait(Until.findObject(By.res("cardNumber")), waitingTime)
+        Log.i(TAG, "clickCreditCardNumberTextBox: Waited for $waitingTime ms until the credit card number text box was found")
+        Log.i(TAG, "clickCreditCardNumberTextBox: Trying to click the credit card number text box")
         mDevice.findObject(By.res("cardNumber")).click()
-        Log.i(TAG, "clickCreditCardNumberTextBox: Clicked credit card number text box")
+        Log.i(TAG, "clickCreditCardNumberTextBox: Clicked the credit card number text box")
+        Log.i(TAG, "clickCreditCardNumberTextBox: Waiting for $waitingTimeShort ms for $appName window to be updated")
         mDevice.waitForWindowUpdate(appName, waitingTimeShort)
+        Log.i(TAG, "clickCreditCardNumberTextBox: Waited for $waitingTimeShort ms for $appName window to be updated")
     }
 
     fun clickCreditCardFormSubmitButton() {
+        Log.i(TAG, "clickCreditCardFormSubmitButton: Trying to click the credit card form submit button and wait for $waitingTime ms for a new window")
         itemWithResId("submit").clickAndWaitForNewWindow(waitingTime)
-        Log.i(TAG, "clickCreditCardFormSubmitButton: Clicked credit card form submit button")
+        Log.i(TAG, "clickCreditCardFormSubmitButton: Clicked the credit card form submit button and waited for $waitingTime ms for a new window")
     }
 
     fun fillAndSaveCreditCard(cardNumber: String, cardName: String, expiryMonthAndYear: String) {
+        Log.i(TAG, "fillAndSaveCreditCard: Tying to set credit card number to: $cardNumber")
         itemWithResId("cardNumber").setText(cardNumber)
-        Log.i(TAG, "fillAndSaveCreditCard: Set card number to: $cardNumber")
+        Log.i(TAG, "fillAndSaveCreditCard: Credit card number was set to: $cardNumber")
         mDevice.waitForIdle(waitingTime)
+        Log.i(TAG, "fillAndSaveCreditCard: Trying to set credit card name to: $cardName")
         itemWithResId("nameOnCard").setText(cardName)
-        Log.i(TAG, "fillAndSaveCreditCard: Set card name to: $cardName")
+        Log.i(TAG, "fillAndSaveCreditCard: Credit card name was set to: $cardName")
         mDevice.waitForIdle(waitingTime)
+        Log.i(TAG, "fillAndSaveCreditCard: Trying to set credit card expiry month and year to: $expiryMonthAndYear")
         itemWithResId("expiryMonthAndYear").setText(expiryMonthAndYear)
-        Log.i(TAG, "fillAndSaveCreditCard: Set expiry month and year to: $expiryMonthAndYear")
+        Log.i(TAG, "fillAndSaveCreditCard: Credit card expiry month and year were set to: $expiryMonthAndYear")
+        Log.i(TAG, "fillAndSaveCreditCard: Waiting for device to be idle for $waitingTime ms")
         mDevice.waitForIdle(waitingTime)
+        Log.i(TAG, "fillAndSaveCreditCard: Waited for device to be idle for $waitingTime ms")
+        Log.i(TAG, "fillAndSaveCreditCard: Trying to click the credit card form submit button and wait for $waitingTime ms for a new window")
         itemWithResId("submit").clickAndWaitForNewWindow(waitingTime)
-        Log.i(TAG, "fillAndSaveCreditCard: Clicked credit card form submit button")
+        Log.i(TAG, "fillAndSaveCreditCard: Clicked the credit card form submit button and waited for $waitingTime ms for a new window")
         waitForPageToLoad()
+        Log.i(TAG, "fillAndSaveCreditCard: Waiting for $waitingTime ms for $packageName window to be updated")
         mDevice.waitForWindowUpdate(packageName, waitingTime)
+        Log.i(TAG, "fillAndSaveCreditCard: Waited for $waitingTime ms for $packageName window to be updated")
     }
 
     fun verifyUpdateOrSaveCreditCardPromptExists(exists: Boolean) =
@@ -463,7 +489,9 @@ class BrowserRobot {
     }
 
     fun verifySuggestedUserName(userName: String) {
+        Log.i(TAG, "verifySuggestedUserName: Waiting for $waitingTime ms for suggested logins fragment to exist")
         itemWithResId("$packageName:id/mozac_feature_login_multiselect_expand").waitForExists(waitingTime)
+        Log.i(TAG, "verifySuggestedUserName: Waited for $waitingTime ms for suggested logins fragment to exist")
         assertUIObjectExists(itemContainingText(userName))
     }
 
@@ -548,43 +576,54 @@ class BrowserRobot {
 
     fun verifyCookiesProtectionHintIsDisplayed(composeTestRule: HomeActivityComposeTestRule, isDisplayed: Boolean) {
         if (isDisplayed) {
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection message is displayed")
             composeTestRule.onNodeWithTag("tcp_cfr.message").assertIsDisplayed()
             Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection message is displayed")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection learn more link is displayed")
             composeTestRule.onNodeWithTag("tcp_cfr.action").assertIsDisplayed()
-            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection learn more link is displayed")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified that the total cookie protection learn more link is displayed")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection dismiss button is displayed")
             composeTestRule.onNodeWithTag("cfr.dismiss").assertIsDisplayed()
             Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection dismiss button is displayed")
         } else {
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection message does not exist")
             composeTestRule.onNodeWithTag("tcp_cfr.message").assertDoesNotExist()
-            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection message does not exist")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified that the total cookie protection message does not exist")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection learn more link does not exist")
             composeTestRule.onNodeWithTag("tcp_cfr.action").assertDoesNotExist()
             Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection learn more link does not exist")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Trying to verify that the total cookie protection dismiss button does not exist")
             composeTestRule.onNodeWithTag("cfr.dismiss").assertDoesNotExist()
-            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified total cookie protection dismiss button does not exist")
+            Log.i(TAG, "verifyCookiesProtectionHintIsDisplayed: Verified that the total cookie protection dismiss button does not exist")
         }
     }
 
     fun clickTCPCFRLearnMore(composeTestRule: HomeActivityComposeTestRule) {
+        Log.i(TAG, "clickTCPCFRLearnMore: Trying to click the total cookie protection learn more link")
         composeTestRule.onNodeWithTag("tcp_cfr.action").performClick()
         Log.i(TAG, "clickTCPCFRLearnMore: Clicked total cookie protection learn more link")
     }
 
     fun dismissTCPCFRPopup(composeTestRule: HomeActivityComposeTestRule) {
+        Log.i(TAG, "dismissTCPCFRPopup: Trying to click the total cookie protection dismiss button")
         composeTestRule.onNodeWithTag("cfr.dismiss").performClick()
         Log.i(TAG, "dismissTCPCFRPopup: Clicked total cookie protection dismiss button")
     }
 
     fun verifyShouldShowCFRTCP(shouldShow: Boolean, settings: Settings) {
         if (shouldShow) {
+            Log.i(TAG, "verifyShouldShowCFRTCP: Trying to verify that the TCP CFR should be shown")
             assertTrue(settings.shouldShowTotalCookieProtectionCFR)
-            Log.i(TAG, "verifyShouldShowCFRTCP: Verified that TCP CFR should be shown")
+            Log.i(TAG, "verifyShouldShowCFRTCP: Verified that the TCP CFR should be shown")
         } else {
+            Log.i(TAG, "verifyShouldShowCFRTCP: Trying to verify that the TCP CFR should not be shown")
             assertFalse(settings.shouldShowTotalCookieProtectionCFR)
-            Log.i(TAG, "verifyShouldShowCFRTCP: Verified that TCP CFR should not be shown")
+            Log.i(TAG, "verifyShouldShowCFRTCP: Verified that the TCP CFR should not be shown")
         }
     }
 
     fun selectTime(hour: Int, minute: Int) {
+        Log.i(TAG, "selectTime: Trying to select time picker hour: $hour and minute: $minute")
         onView(
             isAssignableFrom(TimePicker::class.java),
         ).inRoot(
@@ -674,17 +713,18 @@ class BrowserRobot {
         for (i in 1..RETRY_COUNT) {
             try {
                 Log.i(TAG, "verifySelectedDropDownOption: Started try #$i")
-                Log.i(TAG, "verifySelectedDropDownOption: Looking for \"Submit drop down option\" form button")
+                Log.i(TAG, "verifySelectedDropDownOption: Waiting for $waitingTime ms for \"Submit drop down option\" form button to exist")
                 mDevice.findObject(
                     UiSelector()
                         .textContains("Submit drop down option")
                         .resourceId("submitOption"),
                 ).waitForExists(waitingTime)
-
+                Log.i(TAG, "verifySelectedDropDownOption: Waited for $waitingTime ms for \"Submit drop down option\" form button to exist")
                 assertUIObjectExists(itemContainingText("Selected option is: $optionName"))
 
                 break
             } catch (e: AssertionError) {
+                Log.i(TAG, "verifySelectedDropDownOption: AssertionError caught, executing fallback methods")
                 Log.e(TAG, "Selected option isn't displayed ${e.localizedMessage}")
 
                 clickPageObject(itemWithResId("dropDown"))
@@ -704,16 +744,18 @@ class BrowserRobot {
 
     fun verifyCookieBannerExists(exists: Boolean) {
         for (i in 1..RETRY_COUNT) {
-            Log.i(TAG, "verifyCookieBannerExists: For loop: $i")
+            Log.i(TAG, "verifyCookieBannerExists: Started try #$i")
             try {
                 // Wait for the blocker to kick-in and make the cookie banner disappear
+                Log.i(TAG, "verifyCookieBannerExists: Waiting for $waitingTime ms for cookie banner to be gone")
                 itemWithResId("CybotCookiebotDialog").waitUntilGone(waitingTime)
-                Log.i(TAG, "verifyCookieBannerExists: Waiting for window update")
+                Log.i(TAG, "verifyCookieBannerExists: Waited for $waitingTime ms for cookie banner to be gone")
                 // Assert that the blocker properly dismissed the cookie banner
                 assertUIObjectExists(itemWithResId("CybotCookiebotDialog"), exists = exists)
 
                 break
             } catch (e: AssertionError) {
+                Log.i(TAG, "verifyCookieBannerExists: AssertionError caught, executing fallback methods")
                 if (i == RETRY_COUNT) {
                     throw e
                 }
@@ -840,11 +882,12 @@ class BrowserRobot {
         assertUIObjectExists(itemWithDescription("Close"))
 
     fun clickOpenLinksInAppsDismissCFRButton() {
+        Log.i(TAG, "clickOpenLinksInAppsDismissCFRButton: Trying to click the open links in apps banner \"Dismiss\" button")
         itemWithResIdContainingText(
             "$packageName:id/dismiss",
             getStringResource(R.string.open_in_app_cfr_negative_button_text),
         ).click()
-        Log.i(TAG, "clickOpenLinksInAppsDismissCFRButton: Clicked open links in apps banner \"Dismiss\" button")
+        Log.i(TAG, "clickOpenLinksInAppsDismissCFRButton: Clicked the open links in apps banner \"Dismiss\" button")
     }
 
     fun clickTakeSurveyButton() {
@@ -871,6 +914,7 @@ class BrowserRobot {
     }
 
     fun longClickToolbar() {
+        Log.i(TAG, "longClickToolbar: Trying to long click the toolbar")
         onView(withId(R.id.mozac_browser_toolbar_url_view)).perform(longClick())
         Log.i(TAG, "longClickToolbar: Long clicked the toolbar")
     }
@@ -903,27 +947,31 @@ class BrowserRobot {
     }
 
     fun clickStayInPrivateBrowsingPromptButton() {
+        Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Trying to click the \"STAY IN PRIVATE BROWSING\" prompt button")
         itemWithResIdContainingText(
             "$packageName:id/deny_button",
             getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
         ).click()
-        Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Clicked \"STAY IN PRIVATE BROWSING\" prompt button")
+        Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Clicked the \"STAY IN PRIVATE BROWSING\" prompt button")
     }
 
     fun clickCancelPrivateDownloadsPromptButton() {
+        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Trying to click the \"CANCEL DOWNLOADS\" prompt button")
         itemWithResIdContainingText(
             "$packageName:id/accept_button",
             getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
         ).click()
-        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Clicked \"CANCEL DOWNLOADS\" prompt button")
-
+        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Clicked the \"CANCEL DOWNLOADS\" prompt button")
+        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Waiting for $waitingTime ms for $packageName window to be updated")
         mDevice.waitForWindowUpdate(packageName, waitingTime)
+        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Waited for $waitingTime ms for $packageName window to be updated")
     }
 
     fun fillPdfForm(name: String) {
         // Set PDF form text for the text box
+        Log.i(TAG, "fillPdfForm: Trying to set the text of the PDF form text box to: $name")
         itemWithResId("pdfjs_internal_id_10R").setText(name)
-        Log.i(TAG, "fillPdfForm: Set PDF form text box text to: $name")
+        Log.i(TAG, "fillPdfForm: PDF form text box text was set to: $name")
         mDevice.waitForWindowUpdate(packageName, waitingTime)
         if (
             !itemWithResId("pdfjs_internal_id_11R").exists() &&
@@ -932,18 +980,22 @@ class BrowserRobot {
                 .contains("mInputShown=true")
         ) {
             // Close the keyboard
+            Log.i(TAG, "fillPdfForm: Trying to close the keyboard using device back button")
             mDevice.pressBack()
-            Log.i(TAG, "fillPdfForm: Closing the keyboard using device back button")
+            Log.i(TAG, "fillPdfForm: Closed the keyboard using device back button")
         }
         // Click PDF form check box
+        Log.i(TAG, "fillPdfForm: Trying to click the PDF form check box")
         itemWithResId("pdfjs_internal_id_11R").click()
         Log.i(TAG, "fillPdfForm: Clicked PDF form check box")
     }
 
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
+            Log.i(TAG, "openThreeDotMenu: Waiting for device to be idle for $waitingTime ms")
             mDevice.waitForIdle(waitingTime)
             Log.i(TAG, "openThreeDotMenu: Device was idle for $waitingTime ms")
+            Log.i(TAG, "openThreeDotMenu: Trying to click the main menu button")
             threeDotButton().perform(click())
             Log.i(TAG, "openThreeDotMenu: Clicked the main menu button")
 
@@ -953,8 +1005,9 @@ class BrowserRobot {
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
             clickPageObject(navURLBar())
-            Log.i(TAG, "openNavigationToolbar: Looking for search bar")
+            Log.i(TAG, "openNavigationToolbar: Waiting for $waitingTime ms for for search bar to exist")
             searchBar().waitForExists(waitingTime)
+            Log.i(TAG, "openNavigationToolbar: Waited for $waitingTime ms for for search bar to exist")
 
             NavigationToolbarRobot().interact()
             return NavigationToolbarRobot.Transition()
@@ -971,7 +1024,7 @@ class BrowserRobot {
                         ),
                         waitingTime,
                     )
-
+                    Log.i(TAG, "openTabDrawer: Trying to click the tab counter button")
                     tabsCounter().click()
                     Log.i(TAG, "openTabDrawer: Clicked the tab counter button")
                     assertUIObjectExists(itemWithResId("$packageName:id/new_tab_button"))
@@ -982,8 +1035,9 @@ class BrowserRobot {
                     if (i == RETRY_COUNT) {
                         throw e
                     } else {
+                        Log.i(TAG, "openTabDrawer: Waiting for device to be idle")
                         mDevice.waitForIdle()
-                        Log.i(TAG, "openTabDrawer: Device waited to be idle")
+                        Log.i(TAG, "openTabDrawer: Waited for device to be idle")
                     }
                 }
             }
@@ -1005,10 +1059,10 @@ class BrowserRobot {
                         ),
                         waitingTime,
                     )
-
+                    Log.i(TAG, "openComposeTabDrawer: Trying to click the tab counter button")
                     tabsCounter().click()
                     Log.i(TAG, "openComposeTabDrawer: Clicked the tab counter button")
-
+                    Log.i(TAG, "openComposeTabDrawer: Trying to verify the tabs tray exists")
                     composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
                     Log.i(TAG, "openComposeTabDrawer: Verified the tabs tray exists")
 
@@ -1018,22 +1072,24 @@ class BrowserRobot {
                     if (i == RETRY_COUNT) {
                         throw e
                     } else {
+                        Log.i(TAG, "openComposeTabDrawer: Waiting for device to be idle")
                         mDevice.waitForIdle()
-                        Log.i(TAG, "openComposeTabDrawer: Device waited to be idle")
+                        Log.i(TAG, "openComposeTabDrawer: Waited for device to be idle")
                     }
                 }
             }
-
+            Log.i(TAG, "openComposeTabDrawer: Trying to verify the tabs tray new tab FAB button exists")
             composeTestRule.onNodeWithTag(TabsTrayTestTag.fab).assertExists()
-            Log.i(TAG, "openComposeTabDrawer: Verified the tabs tray new tab button exists")
+            Log.i(TAG, "openComposeTabDrawer: Verified the tabs tray new tab FAB button exists")
 
             ComposeTabDrawerRobot(composeTestRule).interact()
             return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
         fun openNotificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {
+            Log.i(TAG, "openNotificationShade: Trying to open the notification tray")
             mDevice.openNotification()
-            Log.i(TAG, "openNotificationShade: Opened notification tray")
+            Log.i(TAG, "openNotificationShade: Opened the notification tray")
 
             NotificationRobot().interact()
             return NotificationRobot.Transition()
@@ -1041,8 +1097,7 @@ class BrowserRobot {
 
         fun goToHomescreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             clickPageObject(itemWithDescription("Home screen"))
-
-            Log.i(TAG, "goToHomescreen: Looking for home screen layout or jump back in contextual hint")
+            Log.i(TAG, "goToHomescreen: Waiting for $waitingTime ms for for home screen layout or jump back in contextual hint to exist")
             mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
                 .waitForExists(waitingTime) ||
                 mDevice.findObject(
@@ -1050,6 +1105,7 @@ class BrowserRobot {
                         getStringResource(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
                     ),
                 ).waitForExists(waitingTime)
+            Log.i(TAG, "goToHomescreen: Waited for $waitingTime ms for for home screen layout or jump back in contextual hint to exist")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
@@ -1058,7 +1114,7 @@ class BrowserRobot {
         fun goToHomescreenWithComposeTopSites(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTopSitesRobot.() -> Unit): ComposeTopSitesRobot.Transition {
             clickPageObject(itemWithDescription("Home screen"))
 
-            Log.i(TAG, "goToHomescreenWithComposeTopSites: Looking for home screen layout or jump back in contextual hint")
+            Log.i(TAG, "goToHomescreenWithComposeTopSites: Waiting for $waitingTime ms for for home screen layout or jump back in contextual hint to exist")
             mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
                 .waitForExists(waitingTime) ||
                 mDevice.findObject(
@@ -1066,12 +1122,14 @@ class BrowserRobot {
                         getStringResource(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
                     ),
                 ).waitForExists(waitingTime)
+            Log.i(TAG, "goToHomescreenWithComposeTopSites: Waited for $waitingTime ms for for home screen layout or jump back in contextual hint to exist")
 
             ComposeTopSitesRobot(composeTestRule).interact()
             return ComposeTopSitesRobot.Transition(composeTestRule)
         }
 
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            Log.i(TAG, "goBack: Trying to click device back button")
             mDevice.pressBack()
             Log.i(TAG, "goBack: Clicked device back button")
 
@@ -1081,7 +1139,9 @@ class BrowserRobot {
 
         fun clickTabCrashedCloseButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             clickPageObject(itemWithText("Close tab"))
+            Log.i(TAG, "clickTabCrashedCloseButton: Waiting for device to be idle")
             mDevice.waitForIdle()
+            Log.i(TAG, "clickTabCrashedCloseButton: Waited for device to be idle")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
@@ -1167,50 +1227,56 @@ class BrowserRobot {
         }
 
         fun openSiteSecuritySheet(interact: SiteSecurityRobot.() -> Unit): SiteSecurityRobot.Transition {
-            Log.i(TAG, "openSiteSecuritySheet: Looking for site security toolbar button")
+            Log.i(TAG, "openSiteSecuritySheet: Waiting for $waitingTime ms for site security toolbar button to exist")
             siteSecurityToolbarButton().waitForExists(waitingTime)
+            Log.i(TAG, "openSiteSecuritySheet: Waited for $waitingTime ms for site security toolbar button to exist")
+            Log.i(TAG, "openSiteSecuritySheet: Trying to click the site security toolbar button and wait for $waitingTime ms for a new window")
             siteSecurityToolbarButton().clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "openSiteSecuritySheet: Clicked site security toolbar button")
+            Log.i(TAG, "openSiteSecuritySheet: Clicked the site security toolbar button and waited for $waitingTime ms for a new window")
 
             SiteSecurityRobot().interact()
             return SiteSecurityRobot.Transition()
         }
 
         fun clickManageAddressButton(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+            Log.i(TAG, "clickManageAddressButton: Trying to click the manage address button and wait for $waitingTime ms for a new window")
             itemWithResId("$packageName:id/manage_addresses")
                 .clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "clickManageAddressButton: Clicked manage address button")
+            Log.i(TAG, "clickManageAddressButton: Clicked the manage address button and waited for $waitingTime ms for a new window")
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
         }
 
         fun clickManageCreditCardsButton(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+            Log.i(TAG, "clickManageCreditCardsButton: Trying to click the manage credit cards button and wait for $waitingTime ms for a new window")
             itemWithResId("$packageName:id/manage_credit_cards")
                 .clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "clickManageCreditCardsButton: Clicked manage credit cards button")
+            Log.i(TAG, "clickManageCreditCardsButton: Clicked the manage credit cards button and waited for $waitingTime ms for a new window")
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
         }
 
         fun clickOpenLinksInAppsGoToSettingsCFRButton(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            Log.i(TAG, "clickOpenLinksInAppsGoToSettingsCFRButton: Trying to click the \"Go to settings\" open links in apps CFR button and wait for $waitingTime ms for a new window")
             itemWithResIdContainingText(
                 "$packageName:id/action",
                 getStringResource(R.string.open_in_app_cfr_positive_button_text),
             ).clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "clickOpenLinksInAppsGoToSettingsCFRButton: Clicked \"Go to settings\" open links in apps CFR button")
+            Log.i(TAG, "clickOpenLinksInAppsGoToSettingsCFRButton: Clicked the \"Go to settings\" open links in apps CFR button and waited for $waitingTime ms for a new window")
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
         }
 
         fun clickDownloadPDFButton(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            Log.i(TAG, "clickDownloadPDFButton: Trying to click the download PDF button")
             itemWithResIdContainingText(
                 "download",
                 "Download",
             ).click()
-            Log.i(TAG, "clickDownloadPDFButton: Clicked download PDF button")
+            Log.i(TAG, "clickDownloadPDFButton: Clicked the download PDF button")
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
@@ -1270,8 +1336,10 @@ fun clickPageObject(item: UiObject) {
     for (i in 1..RETRY_COUNT) {
         try {
             Log.i(TAG, "clickPageObject: Started try #$i")
-            Log.i(TAG, "clickPageObject: Looking for ${item.selector}")
+            Log.i(TAG, "clickPageObject: Waiting for $waitingTime ms for ${item.selector} to exist")
             item.waitForExists(waitingTime)
+            Log.i(TAG, "clickPageObject: Waited for $waitingTime ms for ${item.selector} to exist")
+            Log.i(TAG, "clickPageObject: Trying to click ${item.selector}")
             item.click()
             Log.i(TAG, "clickPageObject: Clicked ${item.selector}")
 
@@ -1295,8 +1363,10 @@ fun longClickPageObject(item: UiObject) {
     for (i in 1..RETRY_COUNT) {
         try {
             Log.i(TAG, "longClickPageObject: Started try #$i")
-            Log.i(TAG, "longClickPageObject: Looking for ${item.selector}")
+            Log.i(TAG, "longClickPageObject: Waiting for $waitingTime ms for ${item.selector} to exist")
             item.waitForExists(waitingTime)
+            Log.i(TAG, "longClickPageObject: Waited for $waitingTime ms for ${item.selector} to exist")
+            Log.i(TAG, "longClickPageObject: Trying to long click ${item.selector}")
             item.longClick()
             Log.i(TAG, "longClickPageObject: Long clicked ${item.selector}")
 
@@ -1321,21 +1391,25 @@ fun clickContextMenuItem(item: String) {
         Until.findObject(text(item)),
         waitingTime,
     )
+    Log.i(TAG, "clickContextMenuItem: Trying to click context menu item: $item")
     mDevice.findObject(text(item)).click()
-    Log.i(TAG, "longClickPageObject: Clicked context menu item: $item")
+    Log.i(TAG, "clickContextMenuItem: Clicked context menu item: $item")
 }
 
 fun setPageObjectText(webPageItem: UiObject, text: String) {
     for (i in 1..RETRY_COUNT) {
-        Log.i(TAG, "setPageObjectText: For loop i = $i")
+        Log.i(TAG, "setPageObjectText: Started try #$i")
         try {
             webPageItem.also {
-                Log.i(TAG, "setPageObjectText: Looking for ${webPageItem.selector}")
+                Log.i(TAG, "setPageObjectText: Waiting for $waitingTime ms for ${webPageItem.selector} to exist")
                 it.waitForExists(waitingTime)
+                Log.i(TAG, "setPageObjectText: Waited for $waitingTime ms for ${webPageItem.selector} to exist")
+                Log.i(TAG, "setPageObjectText: Trying to clear ${webPageItem.selector} text field")
                 it.clearTextField()
                 Log.i(TAG, "setPageObjectText: Cleared ${webPageItem.selector} text field")
+                Log.i(TAG, "setPageObjectText: Trying to set ${webPageItem.selector} text to $text")
                 it.text = text
-                Log.i(TAG, "setPageObjectText: ${webPageItem.selector} text set to $text")
+                Log.i(TAG, "setPageObjectText: ${webPageItem.selector} text was set to $text")
             }
 
             break
@@ -1355,8 +1429,10 @@ fun setPageObjectText(webPageItem: UiObject, text: String) {
 }
 
 fun clearTextFieldItem(item: UiObject) {
-    Log.i(TAG, "clearTextFieldItem: Looking for ${item.selector}")
+    Log.i(TAG, "clearTextFieldItem: Waiting for $waitingTime ms for ${item.selector} to exist")
     item.waitForExists(waitingTime)
+    Log.i(TAG, "clearTextFieldItem: Waited for $waitingTime ms for ${item.selector} to exist")
+    Log.i(TAG, "clearTextFieldItem: Trying to clear ${item.selector} text field")
     item.clearTextField()
     Log.i(TAG, "clearTextFieldItem: Cleared ${item.selector} text field")
 }
