@@ -240,14 +240,14 @@ void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass) {
   mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(byteBuf));
 }
 
-void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass) {
+void CommandEncoder::EndRenderPass(ffi::WGPURecordedRenderPass& aPass) {
   if (!mBridge->IsOpen()) {
     return;
   }
 
   ipc::ByteBuf byteBuf;
   ffi::wgpu_render_pass_finish(&aPass, ToFFI(&byteBuf));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(byteBuf));
+  mBridge->SendRenderPass(mId, mParent->mId, std::move(byteBuf));
 }
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(
