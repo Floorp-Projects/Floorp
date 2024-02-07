@@ -17,9 +17,9 @@ use crate::parser::{Parse, ParserContext};
 use crate::properties;
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::values::{
+    animated::{self, Animate, Procedure},
     computed::{self, ToComputedValue},
     specified, CustomIdent,
-    animated::{self, Animate, Procedure},
 };
 use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, TokenSerializationType};
 use selectors::matching::QuirksMode;
