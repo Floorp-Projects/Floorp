@@ -664,7 +664,7 @@ bool GLContext::InitImpl() {
       "Gallium 0.4 on llvmpipe",
       "Intel HD Graphics 3000 OpenGL Engine",
       "Microsoft Basic Render Driver",
-      "Samsung Xclipse 920",
+      "Samsung Xclipse",
       "Unknown"};
 
   mRenderer = GLRenderer::Other;
@@ -763,7 +763,7 @@ bool GLContext::InitImpl() {
       MarkUnsupported(GLFeature::robust_buffer_access_behavior);
     }
 
-    if (Renderer() == GLRenderer::SamsungXclipse920) {
+    if (Renderer() == GLRenderer::SamsungXclipse) {
       MarkUnsupported(GLFeature::invalidate_framebuffer);
     }
   }
