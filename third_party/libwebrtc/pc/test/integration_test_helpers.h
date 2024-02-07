@@ -31,10 +31,10 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/audio_options.h"
-#include "api/call/call_factory_interface.h"
 #include "api/candidate.h"
 #include "api/crypto/crypto_options.h"
 #include "api/data_channel_interface.h"
+#include "api/enable_media_with_defaults.h"
 #include "api/field_trials_view.h"
 #include "api/ice_transport_interface.h"
 #include "api/jsep.h"
@@ -68,8 +68,6 @@
 #include "media/base/media_engine.h"
 #include "media/base/stream_params.h"
 #include "media/engine/fake_webrtc_video_engine.h"
-#include "media/engine/webrtc_media_engine.h"
-#include "media/engine/webrtc_media_engine_defaults.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/test/audio_processing_builder_for_testing.h"
@@ -782,35 +780,26 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     pc_factory_dependencies.trials = std::make_unique<FieldTrialBasedConfig>();
     pc_factory_dependencies.metronome =
         std::make_unique<TaskQueueMetronome>(TimeDelta::Millis(8));
-    cricket::MediaEngineDependencies media_deps;
-    media_deps.task_queue_factory =
-        pc_factory_dependencies.task_queue_factory.get();
-    media_deps.adm = fake_audio_capture_module_;
-    // TODO(bugs.webrtc.org/15574): Migrate this test helper to use EnableMedia
-    // instead of creating media_engine directly. In particular ensure no tests
-    // rely on behaviour where call_factory is set, while media_engine is not.
-    webrtc::DeprecatedSetMediaEngineDefaults(&media_deps);
+
+    pc_factory_dependencies.adm = fake_audio_capture_module_;
+    if (create_media_engine) {
+      EnableMediaWithDefaults(pc_factory_dependencies);
+    }
 
     if (reset_encoder_factory) {
-      media_deps.video_encoder_factory.reset();
+      pc_factory_dependencies.video_encoder_factory.reset();
     }
     if (reset_decoder_factory) {
-      media_deps.video_decoder_factory.reset();
+      pc_factory_dependencies.video_decoder_factory.reset();
     }
 
-    if (!media_deps.audio_processing) {
+    if (!pc_factory_dependencies.audio_processing) {
       // If the standard Creation method for APM returns a null pointer, instead
       // use the builder for testing to create an APM object.
-      media_deps.audio_processing = AudioProcessingBuilderForTesting().Create();
+      pc_factory_dependencies.audio_processing =
+          AudioProcessingBuilderForTesting().Create();
     }
 
-    media_deps.trials = pc_factory_dependencies.trials.get();
-
-    if (create_media_engine) {
-      pc_factory_dependencies.media_engine =
-          cricket::CreateMediaEngine(std::move(media_deps));
-    }
-    pc_factory_dependencies.call_factory = webrtc::CreateCallFactory();
     if (event_log_factory) {
       event_log_factory_ = event_log_factory.get();
       pc_factory_dependencies.event_log_factory = std::move(event_log_factory);
