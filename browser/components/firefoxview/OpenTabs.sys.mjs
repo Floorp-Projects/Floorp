@@ -315,12 +315,16 @@ class OpenTabsTarget extends EventTarget {
 
   /*
    * @param {Window} win
+   * @param {boolean} sortByRecency
    * @returns {Array<Tab>}
    *    The list of visible tabs for the browser window
    */
-  getTabsForWindow(win) {
+  getTabsForWindow(win, sortByRecency = false) {
     if (this.currentWindows.includes(win)) {
-      return [...win.gBrowser.visibleTabs];
+      const { visibleTabs } = win.gBrowser;
+      return sortByRecency
+        ? visibleTabs.toSorted(lastSeenActiveSort)
+        : [...visibleTabs];
     }
     return [];
   }

@@ -23,3 +23,22 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.open-tabs-options, .open-tabs-sort-wrapper {
+  display: flex;
+  gap: 24px;
+}
+
+.open-tabs-options {
+  flex-wrap: wrap;
+}
+
+.open-tabs-sort-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  & label {
+    white-space: nowrap;
+  }
+}
