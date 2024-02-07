@@ -593,7 +593,7 @@ class TelemetryHandler {
    * @param {number} loadType
    *   The loadtype of a the request.
    */
-  updateTrackingSinglePageApp(browser, url, loadType) {
+  async updateTrackingSinglePageApp(browser, url, loadType) {
     let providerInfo = this._getProviderInfoForURL(url);
     if (!providerInfo?.isSPA) {
       return;
@@ -602,25 +602,39 @@ class TelemetryHandler {
     let item = this.findItemForBrowser(browser);
     let telemetryState = item?.browserTelemetryStateMap.get(browser);
 
-    let searchTermChanged =
-      this.urlSearchTerms(url, providerInfo) != telemetryState?.searchQuery;
+    let previousSearchTerm = telemetryState?.searchQuery ?? "";
+    let searchTerm = this.urlSearchTerms(url, providerInfo);
+    let searchTermChanged = previousSearchTerm !== searchTerm;
+
     let isSerp = !!this._checkURLForSerpMatch(url, providerInfo);
     let browserIsTracked = !!telemetryState;
     let isTabHistory = loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY;
 
     // Step 2: Maybe record engagement.
     if (browserIsTracked && !isTabHistory && (searchTermChanged || !isSerp)) {
-      impressionIdsWithoutEngagementsSet.delete(telemetryState.impressionId);
-      Glean.serp.engagement.record({
-        impression_id: telemetryState.impressionId,
-        action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-        target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-      });
-      lazy.logConsole.debug("Counting click:", {
-        impressionId: telemetryState.impressionId,
-        type: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        URL: url,
-      });
+      // If we've established we've changed to another SERP, the cause could be
+      // from a submission event inside the content process. The event is
+      // sent to the parent and stored as `telemetryState.searchBoxSubmitted`
+      // but if we check now, it may be too early. Instead, we check with the
+      // content process directly to see if it recorded a submit event.
+      let actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "SearchSERPTelemetry"
+      );
+      let didSubmit = await actor.sendQuery("SearchSERPTelemetry:DidSubmit");
+
+      if (telemetryState && !telemetryState.searchBoxSubmitted && !didSubmit) {
+        impressionIdsWithoutEngagementsSet.delete(telemetryState.impressionId);
+        Glean.serp.engagement.record({
+          impression_id: telemetryState.impressionId,
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        });
+        lazy.logConsole.debug("Counting click:", {
+          impressionId: telemetryState.impressionId,
+          type: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+          URL: url,
+        });
+      }
     }
 
     // Step 3: Maybe untrack the browser.
@@ -634,7 +648,7 @@ class TelemetryHandler {
       let actor = browser.browsingContext.currentWindowGlobal.getActor(
         "SearchSERPTelemetry"
       );
-      actor.sendAsyncMessage("SearchSERPTelemetry:RemoveEventListeners");
+      actor.sendAsyncMessage("SearchSERPTelemetry:StopTrackingDocument");
       this.stopTrackingBrowser(browser, reason);
       browserIsTracked = false;
     }
