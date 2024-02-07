@@ -3659,9 +3659,15 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
     return;
   }
 
-  for (uint32_t rangeIdx = 0; rangeIdx < RangeCount(); ++rangeIdx) {
-    RefPtr<nsRange> range = GetRangeAt(rangeIdx);
-    range->DeleteContents(aRv);
+  // nsRange::DeleteContents() may run script, let's store all ranges first.
+  AutoTArray<RefPtr<nsRange>, 1> ranges;
+  MOZ_ASSERT(RangeCount() == mStyledRanges.mRanges.Length());
+  ranges.SetCapacity(RangeCount());
+  for (uint32_t index : IntegerRange(RangeCount())) {
+    ranges.AppendElement(mStyledRanges.mRanges[index].mRange->AsDynamicRange());
+  }
+  for (const auto& range : ranges) {
+    MOZ_KnownLive(range)->DeleteContents(aRv);
     if (aRv.Failed()) {
       return;
     }
