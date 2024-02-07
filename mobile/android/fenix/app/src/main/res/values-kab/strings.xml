@@ -1558,6 +1558,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Akk inagan n tuqqna (ad rẓen isaml web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ɛzel inagan n tuqqna gar yismal</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Ssuter i yismal web ur snuzuyen, ur beṭṭun isefka-w</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Agbur n uḍfaṛ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1759,6 +1761,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="logins_biometric_prompt_message">Serreḥ akken ad tsekneḍ inekcam-ik yettwaskelsen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Mmesten inekcam d wawalen uffiren</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Seɣles awalen-ik·im uffiren i yettwaskelsen</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Sbadu azenziɣ n usekkeṛ, tangal PIN, neɣ awal uffir akken ad temmesteneḍ inekcam-ik akked wawlen-ik uffiren yettwaskelsen ticki yella win ikecmen ɣer yibenk-ik.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->

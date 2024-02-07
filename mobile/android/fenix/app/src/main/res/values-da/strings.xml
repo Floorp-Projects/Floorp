@@ -252,6 +252,9 @@
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Slet browser-historik</string>
 
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Oversæt side</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Valgt sprog</string>
@@ -325,9 +328,14 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Ikke nu</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Privatlivserklæring for Firefox</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Vi elsker at holde dig sikker</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Vores browser er støttet af en nonprofit-organisation og forhindrer virksomheder i at følge dig rundt på nettet i det skjulte.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Vores non-profit-støttede browser hjælper med at forhindre virksomheder i at følge dig rundt på nettet i hemmelighed.\n\nLæs mere i vores privatlivserklæring.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -682,6 +690,8 @@
     <string name="preferences_sync_bookmarks">Bogmærker</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Logins</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Adgangskoder</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Åbne faneblade</string>
     <!-- Preference for signing out -->
@@ -708,6 +718,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Betalingskort</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Betalingsmetoder</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresser</string>
 
@@ -1643,8 +1655,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Logins og adgangskoder</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Adgangskoder</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Gem logins og adgangskoder</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Gem adgangskoder</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Bed om at gemme</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1661,26 +1677,46 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Tilføj login</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Tilføj adgangskode</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkroniser logins</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Synkroniser adgangskoder</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Synkroniser logins på tværs af enheder</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Synkroniser adgangskoder på tværs af enheder</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Gemte logins</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Gemte adgangskoder</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">De logins, du gemmer eller synkroniserer til %s, vises her.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Adgangskoderne, du gemmer i eller synkroniserer med %s vil blive vist her. Alle dine gemte adgangskoder bliver krypteret.
+</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Læs mere om Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Læs mere om synkronisering</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Undtagelser</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Logins og adgangskoder, der ikke er gemt, vises her.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s gemmer ikke adgangskoder til websteder vist her.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Logins og adgangskoder vil ikke blive gemt for disse websteder.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s gemmer ikke adgangskoder til disse websteder.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Slet alle undtagelser</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Søg efter logins</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Søg efter adgangskoder</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Websted</string>
     <!-- The header for the username for a login -->
@@ -1709,10 +1745,16 @@
     <string name="saved_login_hide_password">Skjul adgangskode</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Lås op for at se dine gemte logins</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Lås op for at se dine gemte adgangskoder</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Gør dine logins og adgangskoder sikre</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Gør dine gemte adgangskoder sikre</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte logins og adgangskoder, hvis de har adgang til din enhed.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte  adgangskoder, hvis de har adgang til din enhed.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Senere</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1732,6 +1774,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortér menuen logins</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menuen sorter adgangskoder</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Autofyld</string>
@@ -1739,26 +1784,41 @@
     <string name="preferences_addresses">Adresser</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Betalingskort</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Betalingsmetoder</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Gem og autofyld betalingskort</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Gem og udfyld betalingsmetoder</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data er krypteret</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s krypterer alle betalingsmetoder, du gemmer</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tværs af enheder</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synkroniser kort</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Tilføj betalingskort</string>
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Tilføj kort</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Håndter gemte kort</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Håndter kort</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Tilføj adresse</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Håndter adresser</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Gem og autofyld adresser</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Gem og udfyld adresser</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Inkluderer oplysninger såsom telefonnumre, mail- og forsendelsesadresser</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Inkluderer telefonnumre og mailadresser</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tilføj kort</string>
@@ -1780,6 +1840,8 @@
     <string name="credit_cards_delete_card_button">Slet kort</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Er du sikker på, at du vil slette dette betalingskort?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Slet kort?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Slet</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1795,14 +1857,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Indtast et gyldigt betalingskortnummer</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Indtast et gyldigt kortnummer</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Udfyld dette felt</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Tilføj navn</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Lås op for at se dine gemte betalingskort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Beskyt dine betalingskort</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Gør dine gemte betalingsmetoder sikre</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte betalingskort, hvis de har adgang til din enhed.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte betalingsmetoder, hvis de har adgang til din enhed.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Indstil nu</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1812,6 +1882,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Lås op for at anvende gemte informationer om betalingskort</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Lås op for at bruge gemte betalingsmetoder</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Tilføj adresse</string>
     <!-- Title of the "Edit address" screen -->
@@ -1848,6 +1920,8 @@
     <string name="addressess_delete_address_button">Slet adresse</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Er du sikker på, at du vil slette denne adresse?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Slet denne adresse?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Slet</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1947,30 +2021,52 @@
     <string name="login_menu_edit_button">Rediger</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Er du sikker på, at du vil slette dette login?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Er du sikker på, at du vil slette denne adgangskode?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Slet</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annuller</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Login-indstillinger</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Adgangskode-indstillinger</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Det redigerbare tekstfelt for login’ets webadresse.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Det redigerbare tekstfelt for webadressen.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Det redigerbare tekstfelt for login’ets brugernavn.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Det redigerbare tekstfelt for brugernavnet.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Det redigerbare tekstfelt for login’ets adgangskode.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Det redigerbare tekstfelt for adgangskoden.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Gem ændringer til login.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Gem ændringer.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Rediger</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Rediger adgangskode</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Tilføj nyt login</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Tilføj adgangskode</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Adgangskode påkrævet</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Indtast en adgangskode</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Brugernavn påkrævet</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Indtast et brugernavn</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Værtsnavn påkrævet</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Indtast en webadresse</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Stemme-søgning</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2325,6 +2421,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Oversættelse i gang</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Vælg et sprog</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Der opstod et problem med at oversætte. Prøv igen.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2345,6 +2443,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Oversæt aldrig %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Oversæt aldrig dette websted</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Tilsidesætter alle andre indstillinger</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Tilsidesætter tilbud om oversættelse</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Oversættelses-indstillinger</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

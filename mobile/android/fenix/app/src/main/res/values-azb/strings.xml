@@ -192,6 +192,140 @@
     <string name="recently_visited_menu_item_remove">قالدیر</string>
 
 
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">بوتون گئچمیش آراشدیرمالاری گؤستر</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">دالیا</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">قاباغا</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">رفرش</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">دوردور</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">تاخیلان‌لار</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">حساب بیلگی‌لری</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">بوردا هئچ تاخیلان یوخ</string>
+
+
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">ال‌توتما</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">یئنی نه وار</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">تنظیم‌‎لر</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">کیتابخانا</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">دسکتاپ سایت</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">معمولی تاغدا آچ</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">آناصفحه‌یه آرتیر</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">قوْش</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">گئنه دؤنگل</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">صفحه‌ده تاپ</string>
+
+
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">صفحه‌نی ترجومه ائله</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">مجموعه‌ده ساخلا</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">پایلاش</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">%1$s ایله آچ</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s طرفیندن گوج آلیر</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s گوجو ایله</string>
+
+
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">اوخوجو گؤرونوشو</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">اوخوجو گؤرونوشو باغلا</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">اپده آچ</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">اوخوجو گؤرونوشو اؤزللشدیر</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">اکله</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">دوزه‌لیش</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">آنایارپاغی اؤزللشدیر</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">باش صفحه</string>
+
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">مورور گئچمیشینی پوز</string>
+
+
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">صفحه‌نی ترجومه ائله</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">سئچیلمیش دیل</string>
+
+
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">جهاز دیلینی ایشه آل</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">دیل آختار</string>
+
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">اسکن</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">آختاریش موتورونون تنظیم‌لری</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">ایجازه وئر</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">ایجازه وئرمه</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">اؤزل اوتورم‌لاردا آختاریش تکلیف‌لرینه ایجازه وئریلسین؟</string>
+
+
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
+    <string name="search_engine_suggestions_title">%s ایله آختار</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ایندی یوخ</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">یئنی بیر %1$s تاغی آچین</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">آختاریش</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">وب‌ده آختارین</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">سس‌لی آختاریش</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">تنظیم‌‎لر</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">عمومی</string>
+
+
     <!-- Translations feature-->
 
     </resources>

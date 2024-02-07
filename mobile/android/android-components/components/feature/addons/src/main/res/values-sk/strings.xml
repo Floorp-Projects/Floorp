@@ -245,7 +245,7 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">Doplnok %1$s bol pridaný do aplikácie %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">Otvorte ho v ponuke</string>
+    <string name="mozac_feature_addons_installed_dialog_description">Nájdete ho v ponuke</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Ok, rozumiem</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
