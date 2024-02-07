@@ -140,6 +140,7 @@ function isSelectedTab(win, tab) {
 function ensureReportBrokenSitePreffedOn() {
   Services.prefs.setBoolPref(PREFS.DATAREPORTING_ENABLED, true);
   Services.prefs.setBoolPref(PREFS.REPORTER_ENABLED, true);
+  ensureReasonDisabled();
 }
 
 function ensureReportBrokenSitePreffedOff() {
