@@ -35,7 +35,7 @@ const BOGUS_PUBLICKEY =
   "BBXOKjUb84pzws1wionFpfCBjDuCh4-s_1b52WA46K5wYL2gCWEOmFKWn_NkS5nmJwTBuO8qxxdjAIDtNeklvQc";
 const BOGUS_AUTHKEY = "GSsIiaD2Mr83iPqwFNK4rw";
 
-Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
+Services.prefs.setStringPref("identity.fxaccounts.loglevel", "Trace");
 
 const DEVICE_REGISTRATION_VERSION = 42;
 

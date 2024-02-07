@@ -73,7 +73,7 @@ let rightEmail = "Greta.Garbo@gmail.COM";
 let password = "123456";
 
 function runTest() {
-  is(Services.prefs.getCharPref("identity.fxaccounts.auth.uri"), TEST_SERVER,
+  is(Services.prefs.getStringPref("identity.fxaccounts.auth.uri"), TEST_SERVER,
      "Pref for auth.uri should be set to test server");
 
   let fxa = new MockFxAccounts();

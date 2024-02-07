@@ -54,7 +54,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", function () {
     let level =
       Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
         Ci.nsIPrefBranch.PREF_STRING &&
-      Services.prefs.getCharPref(PREF_LOG_LEVEL);
+      Services.prefs.getStringPref(PREF_LOG_LEVEL);
     appender.level = Log.Level[level] || Log.Level.Error;
   } catch (e) {
     log.error(e);

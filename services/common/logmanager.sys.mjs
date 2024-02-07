@@ -236,7 +236,8 @@ LogManager.prototype = {
           // dump=Error, we need to keep dump=Debug so consumerA is respected.
           for (let branch of allBranches) {
             let lookPrefBranch = Services.prefs.getBranch(branch);
-            let lookVal = Log.Level[lookPrefBranch.getCharPref(prefName, null)];
+            let lookVal =
+              Log.Level[lookPrefBranch.getStringPref(prefName, null)];
             if (lookVal && lookVal < level) {
               level = lookVal;
             }
@@ -247,7 +248,7 @@ LogManager.prototype = {
       this._prefs.addObserver(prefName, observer);
       this._prefObservers.push([prefName, observer]);
       // and call the observer now with the current pref value.
-      observer(this._prefs.getCharPref(prefName, null));
+      observer(this._prefs.getStringPref(prefName, null));
       return observer;
     };
 

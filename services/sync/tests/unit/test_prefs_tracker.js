@@ -80,7 +80,7 @@ add_task(async function run_test() {
     await tracker.clearChangedIDs();
 
     _("Changing some other random pref won't do anything.");
-    Services.prefs.setCharPref("testing.other", "blergh");
+    Services.prefs.setStringPref("testing.other", "blergh");
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);

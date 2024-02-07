@@ -429,7 +429,7 @@ Sync11Service.prototype = {
       Svc.PrefBranch.getPrefType("registerEngines") !=
       Ci.nsIPrefBranch.PREF_INVALID
     ) {
-      engines = Svc.PrefBranch.getCharPref("registerEngines").split(",");
+      engines = Svc.PrefBranch.getStringPref("registerEngines").split(",");
       this._log.info("Registering custom set of engines", engines);
     } else {
       // default is all engines.
@@ -437,7 +437,7 @@ Sync11Service.prototype = {
     }
 
     let declined = [];
-    let pref = Svc.PrefBranch.getCharPref("declinedEngines", null);
+    let pref = Svc.PrefBranch.getStringPref("declinedEngines", null);
     if (pref) {
       declined = pref.split(",");
     }
@@ -1009,7 +1009,7 @@ Sync11Service.prototype = {
     this._ignorePrefObserver = false;
     this.clusterURL = null;
 
-    Svc.PrefBranch.setCharPref("lastversion", WEAVE_VERSION);
+    Svc.PrefBranch.setStringPref("lastversion", WEAVE_VERSION);
 
     try {
       this.identity.finalize();
@@ -1303,7 +1303,7 @@ Sync11Service.prototype = {
       Utils.mpLocked()
     ) {
       reason = kSyncMasterPasswordLocked;
-    } else if (Svc.PrefBranch.getCharPref("firstSync", null) == "notReady") {
+    } else if (Svc.PrefBranch.getStringPref("firstSync", null) == "notReady") {
       reason = kFirstSyncChoiceNotMade;
     } else if (!Async.isAppReady()) {
       reason = kFirefoxShuttingDown;

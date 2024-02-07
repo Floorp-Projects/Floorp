@@ -61,7 +61,7 @@ function run_test() {
 }
 
 async function clear_state() {
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     "services.settings.server",
     `http://localhost:${server.identity.primaryPort}/v1`
   );
@@ -101,7 +101,7 @@ add_task(clear_state);
 add_task(async function test_base_attachment_url_depends_on_server() {
   const before = await downloader._baseAttachmentsURL();
 
-  Services.prefs.setCharPref(
+  Services.prefs.setStringPref(
     "services.settings.server",
     `http://localhost:${server.identity.primaryPort}/v2`
   );

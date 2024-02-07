@@ -199,7 +199,7 @@ export var FxAccountsConfig = {
   },
 
   getAutoConfigURL() {
-    let pref = Services.prefs.getCharPref(
+    let pref = Services.prefs.getStringPref(
       "identity.fxaccounts.autoconfig.uri",
       ""
     );
@@ -263,31 +263,31 @@ export var FxAccountsConfig = {
       if (!authServerBase.endsWith("/v1")) {
         authServerBase += "/v1";
       }
-      Services.prefs.setCharPref(
+      Services.prefs.setStringPref(
         "identity.fxaccounts.auth.uri",
         authServerBase
       );
-      Services.prefs.setCharPref(
+      Services.prefs.setStringPref(
         "identity.fxaccounts.remote.oauth.uri",
         config.oauth_server_base_url + "/v1"
       );
       // At the time of landing this, our servers didn't yet answer with pairing_server_base_uri.
       // Remove this condition check once Firefox 68 is stable.
       if (config.pairing_server_base_uri) {
-        Services.prefs.setCharPref(
+        Services.prefs.setStringPref(
           "identity.fxaccounts.remote.pairing.uri",
           config.pairing_server_base_uri
         );
       }
-      Services.prefs.setCharPref(
+      Services.prefs.setStringPref(
         "identity.fxaccounts.remote.profile.uri",
         config.profile_server_base_url + "/v1"
       );
-      Services.prefs.setCharPref(
+      Services.prefs.setStringPref(
         "identity.sync.tokenserver.uri",
         config.sync_tokenserver_base_url + "/1.0/sync/1.5"
       );
-      Services.prefs.setCharPref("identity.fxaccounts.remote.root", rootURL);
+      Services.prefs.setStringPref("identity.fxaccounts.remote.root", rootURL);
 
       // Ensure the webchannel is pointed at the correct uri
       lazy.EnsureFxAccountsWebChannel();
