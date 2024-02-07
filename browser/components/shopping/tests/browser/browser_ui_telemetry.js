@@ -449,7 +449,8 @@ add_task(async function test_auto_open_settings_toggle() {
       let mockData = MOCK_ANALYZED_PRODUCT_RESPONSE;
       await clickAutoOpenToggle(browser, mockData);
       await Services.fog.testFlushAllChildren();
-      let toggledEvents = Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
+      let toggledEvents =
+        Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
       assertEventMatches(toggledEvents[0], {
         category: "shopping",
         name: "surface_auto_open_setting_toggled",
@@ -461,7 +462,8 @@ add_task(async function test_auto_open_settings_toggle() {
       // Toggle back in the other direction.
       await clickAutoOpenToggle(browser, mockData);
       await Services.fog.testFlushAllChildren();
-      toggledEvents = Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
+      toggledEvents =
+        Glean.shopping.surfaceAutoOpenSettingToggled.testGetValue();
       assertEventMatches(toggledEvents[0], {
         category: "shopping",
         name: "surface_auto_open_setting_toggled",
