@@ -1392,7 +1392,12 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:strong text
+          {
+            role: ROLE_STRONG, // HTML:strong text
+            children: [
+              { role: ROLE_TEXT_LEAF, },
+            ],
+          },
         ],
       };
       testElm("strong_container", obj);
