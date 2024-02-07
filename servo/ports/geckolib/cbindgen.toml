@@ -980,12 +980,6 @@ renaming_overrides_prefixing = true
  inline float Unzoom(float) const;
  inline nscoord ZoomCoord(nscoord) const;
  inline nscoord UnzoomCoord(nscoord) const;
- inline nsSize Zoom(const nsSize&) const;
- inline nsSize Unzoom(const nsSize&) const;
- inline nsPoint Zoom(const nsPoint&) const;
- inline nsPoint Unzoom(const nsPoint&) const;
- inline nsRect Zoom(const nsRect&) const;
- inline nsRect Unzoom(const nsRect&) const;
 """
 
 "AnimationName" = """
