@@ -43,7 +43,7 @@ module.exports = {
       },
     },
     {
-      files: ["./*.js", "content-src/**", "tests/unit/**"],
+      files: ["content-src/**", "tests/unit/**"],
       env: {
         node: true,
       },
