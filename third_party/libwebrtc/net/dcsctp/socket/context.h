@@ -39,8 +39,8 @@ class Context {
   // Returns the socket callbacks.
   virtual DcSctpSocketCallbacks& callbacks() const = 0;
 
-  // Observes a measured RTT value, in milliseconds.
-  virtual void ObserveRTT(DurationMs rtt_ms) = 0;
+  // Observes a measured RTT value.
+  virtual void ObserveRTT(webrtc::TimeDelta rtt_ms) = 0;
 
   // Returns the current Retransmission Timeout (rto) value, in milliseconds.
   virtual DurationMs current_rto() const = 0;

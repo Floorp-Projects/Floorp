@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/units/time_delta.h"
 #include "net/dcsctp/common/math.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/public/types.h"
@@ -441,8 +442,8 @@ void OutstandingData::NackAll() {
   RTC_DCHECK(IsConsistent());
 }
 
-absl::optional<DurationMs> OutstandingData::MeasureRTT(TimeMs now,
-                                                       UnwrappedTSN tsn) const {
+webrtc::TimeDelta OutstandingData::MeasureRTT(TimeMs now,
+                                              UnwrappedTSN tsn) const {
   auto it = outstanding_data_.find(tsn);
   if (it != outstanding_data_.end() && !it->second.has_been_retransmitted()) {
     // https://tools.ietf.org/html/rfc4960#section-6.3.1
@@ -450,9 +451,9 @@ absl::optional<DurationMs> OutstandingData::MeasureRTT(TimeMs now,
     // packets that were retransmitted (and thus for which it is ambiguous
     // whether the reply was for the first instance of the chunk or for a
     // later instance)"
-    return now - it->second.time_sent();
+    return (now - it->second.time_sent()).ToTimeDelta();
   }
-  return absl::nullopt;
+  return webrtc::TimeDelta::PlusInfinity();
 }
 
 std::vector<std::pair<TSN, OutstandingData::State>>

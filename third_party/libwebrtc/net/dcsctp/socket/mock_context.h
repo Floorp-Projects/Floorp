@@ -51,7 +51,7 @@ class MockContext : public Context {
   MOCK_METHOD(TSN, peer_initial_tsn, (), (const, override));
   MOCK_METHOD(DcSctpSocketCallbacks&, callbacks, (), (const, override));
 
-  MOCK_METHOD(void, ObserveRTT, (DurationMs rtt_ms), (override));
+  MOCK_METHOD(void, ObserveRTT, (webrtc::TimeDelta rtt), (override));
   MOCK_METHOD(DurationMs, current_rto, (), (const, override));
   MOCK_METHOD(bool,
               IncrementTxErrorCounter,

@@ -155,7 +155,7 @@ void HeartbeatHandler::HandleHeartbeatAck(HeartbeatAckChunk chunk) {
 
   TimeMs now = ctx_->callbacks().TimeMillis();
   if (info->created_at() > TimeMs(0) && info->created_at() <= now) {
-    ctx_->ObserveRTT(now - info->created_at());
+    ctx_->ObserveRTT((now - info->created_at()).ToTimeDelta());
   }
 
   // https://tools.ietf.org/html/rfc4960#section-8.1

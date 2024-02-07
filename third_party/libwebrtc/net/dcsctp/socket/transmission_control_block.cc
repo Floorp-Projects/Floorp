@@ -37,6 +37,7 @@
 #include "rtc_base/strings/string_builder.h"
 
 namespace dcsctp {
+using ::webrtc::TimeDelta;
 
 TransmissionControlBlock::TransmissionControlBlock(
     TimerManager& timer_manager,
@@ -112,10 +113,10 @@ TransmissionControlBlock::TransmissionControlBlock(
   send_queue.EnableMessageInterleaving(capabilities.message_interleaving);
 }
 
-void TransmissionControlBlock::ObserveRTT(DurationMs rtt) {
+void TransmissionControlBlock::ObserveRTT(TimeDelta rtt) {
   DurationMs prev_rto = rto_.rto();
-  rto_.ObserveRTT(rtt);
-  RTC_DLOG(LS_VERBOSE) << log_prefix_ << "new rtt=" << *rtt
+  rto_.ObserveRTT(DurationMs(rtt));
+  RTC_DLOG(LS_VERBOSE) << log_prefix_ << "new rtt=" << webrtc::ToString(rtt)
                        << ", srtt=" << *rto_.srtt() << ", rto=" << *rto_.rto()
                        << " (" << *prev_rto << ")";
   t3_rtx_->set_duration(rto_.rto());

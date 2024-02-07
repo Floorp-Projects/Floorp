@@ -67,7 +67,7 @@ class TransmissionControlBlock : public Context {
   TSN my_initial_tsn() const override { return my_initial_tsn_; }
   TSN peer_initial_tsn() const override { return peer_initial_tsn_; }
   DcSctpSocketCallbacks& callbacks() const override { return callbacks_; }
-  void ObserveRTT(DurationMs rtt) override;
+  void ObserveRTT(webrtc::TimeDelta rtt) override;
   DurationMs current_rto() const override { return rto_.rto(); }
   bool IncrementTxErrorCounter(absl::string_view reason) override {
     return tx_error_counter_.Increment(reason);
