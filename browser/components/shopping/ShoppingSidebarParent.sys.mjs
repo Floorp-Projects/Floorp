@@ -341,10 +341,11 @@ class ShoppingSidebarManagerClass {
     if (!sidebar) {
       return;
     }
+    let { browsingContext } = sidebar.querySelector("browser");
     try {
       // Tell Gecko when the sidebar visibility changes to avoid background
       // sidebars taking more CPU / energy than needed.
-      sidebar.querySelector("browser").docShellIsActive =
+      browsingContext.isActive =
         !document.hidden &&
         aBrowser == gBrowser.selectedBrowser &&
         !sidebar.hidden;
