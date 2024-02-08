@@ -419,7 +419,6 @@ STATIC_ATOMS = [
     Atom("elements", "elements"),
     Atom("em", "em"),
     Atom("embed", "embed"),
-    Atom("emphasis", "emphasis"),
     Atom("empty", "empty"),
     Atom("encoding", "encoding"),
     Atom("enctype", "enctype"),

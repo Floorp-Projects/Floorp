@@ -1509,38 +1509,4 @@ ROLE(SUPERSCRIPT,
      IA2_ROLE_TEXT_FRAME,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromSubtreeIfReqRule)
-
-ROLE(EMPHASIS,
-     "emphasis",
-     nsGkAtoms::emphasis,
-     ATK_ROLE_STATIC,
-     NSAccessibilityGroupRole,
-     @"AXEmphasisStyleGroup",
-     ROLE_SYSTEM_GROUPING,
-     IA2_ROLE_TEXT_FRAME,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNameFromSubtreeIfReqRule)
-
-ROLE(STRONG,
-     "strong",
-     nsGkAtoms::strong,
-     ATK_ROLE_STATIC,
-     NSAccessibilityGroupRole,
-     @"AXStrongStyleGroup",
-     ROLE_SYSTEM_GROUPING,
-     IA2_ROLE_TEXT_FRAME,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNameFromSubtreeIfReqRule)
-
-ROLE(TIME,
-     "time",
-     nsGkAtoms::time,
-     ATK_ROLE_STATIC,
-     NSAccessibilityGroupRole,
-     @"AXTimeGroup",
-     ROLE_SYSTEM_GROUPING,
-     ROLE_SYSTEM_GROUPING,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNameFromSubtreeIfReqRule)
-
 // clang-format on
