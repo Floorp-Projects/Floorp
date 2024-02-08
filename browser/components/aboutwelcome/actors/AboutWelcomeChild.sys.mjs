@@ -93,6 +93,10 @@ export class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWFinish",
     });
 
+    Cu.exportFunction(this.AWEnsureAddonInstalled.bind(this), window, {
+      defineAs: "AWEnsureAddonInstalled",
+    });
+
     Cu.exportFunction(this.AWEnsureLangPackInstalled.bind(this), window, {
       defineAs: "AWEnsureLangPackInstalled",
     });
@@ -262,6 +266,12 @@ export class AboutWelcomeChild extends JSWindowActorChild {
         type: "FOCUS_URLBAR",
       });
     }
+  }
+
+  AWEnsureAddonInstalled(addonId) {
+    return this.wrapPromise(
+      this.sendQuery("AWPage:ENSURE_ADDON_INSTALLED", addonId)
+    );
   }
 
   AWEnsureLangPackInstalled(negotiated, screenContent) {

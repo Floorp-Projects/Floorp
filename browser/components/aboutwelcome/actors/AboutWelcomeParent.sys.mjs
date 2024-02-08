@@ -160,6 +160,26 @@ export class AboutWelcomeParent extends JSWindowActorParent {
         let attributionData =
           await lazy.AboutWelcomeDefaults.getAttributionContent();
         return attributionData;
+      case "AWPage:ENSURE_ADDON_INSTALLED":
+        return new Promise(resolve => {
+          let listener = {
+            onInstallEnded(install, addon) {
+              if (addon.id === data) {
+                lazy.AddonManager.removeInstallListener(listener);
+                resolve("complete");
+              }
+            },
+            onInstallCancelled() {
+              lazy.AddonManager.removeInstallListener(listener);
+              resolve("install cancelled");
+            },
+            onInstallFailed() {
+              lazy.AddonManager.removeInstallListener(listener);
+              resolve("install failed");
+            },
+          };
+          lazy.AddonManager.addInstallListener(listener);
+        });
       case "AWPage:GET_ADDON_DETAILS":
         let addonDetails =
           await lazy.AboutWelcomeDefaults.getAddonFromRepository(data);
