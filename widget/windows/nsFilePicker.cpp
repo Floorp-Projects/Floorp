@@ -59,26 +59,30 @@ using mozilla::LogLevel;
 
 // Manages matching PickerOpen/PickerClosed calls on the parent widget.
 class AutoWidgetPickerState {
+  static RefPtr<nsWindow> GetWindowForWidget(nsIWidget* aWidget) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!aWidget) {
+      return nullptr;
+    }
+    HWND hwnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+    return RefPtr(WinUtils::GetNSWindowPtr(hwnd));
+  }
+
  public:
   explicit AutoWidgetPickerState(nsIWidget* aWidget)
-      : mWindow(static_cast<nsWindow*>(aWidget)) {
-    PickerState(true);
+      : mWindow(GetWindowForWidget(aWidget)) {
+    MOZ_ASSERT(mWindow);
+    if (mWindow) mWindow->PickerOpen();
+  }
+  ~AutoWidgetPickerState() {
+    // may be null if moved-from
+    if (mWindow) mWindow->PickerClosed();
   }
 
   AutoWidgetPickerState(AutoWidgetPickerState const&) = delete;
   AutoWidgetPickerState(AutoWidgetPickerState&& that) noexcept = default;
 
-  ~AutoWidgetPickerState() { PickerState(false); }
-
  private:
-  void PickerState(bool aFlag) {
-    if (mWindow) {
-      if (aFlag)
-        mWindow->PickerOpen();
-      else
-        mWindow->PickerClosed();
-    }
-  }
   RefPtr<nsWindow> mWindow;
 };
 
