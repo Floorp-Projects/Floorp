@@ -292,6 +292,8 @@ support-files = [
 ["browser_storageAccess_TopLevel_UserActivation.js"]
 skip-if = ["debug"] # Bug 1700551
 
+["browser_storageAccess_cookies_on_grant.js"]
+
 ["browser_storageAccess_userActivation.js"]
 
 ["browser_subResources.js"]
