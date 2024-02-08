@@ -368,7 +368,7 @@ MARKUPMAP(
     },
     roles::TABLE)
 
-MARKUPMAP(time, New_HyperText, 0, Attr(xmlroles, time),
+MARKUPMAP(time, New_HyperText, roles::TIME, Attr(xmlroles, time),
           AttrFromDOM(datetime, datetime))
 
 MARKUPMAP(tbody, nullptr, roles::GROUPING)
