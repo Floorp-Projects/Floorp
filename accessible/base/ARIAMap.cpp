@@ -650,16 +650,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     kNoReqStates,
     eReadonlyUntilEditable
   },
-  { // emphasis
-    nsGkAtoms::emphasis,
-    roles::EMPHASIS,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
-    kNoReqStates
-  },
   { // feed
     nsGkAtoms::feed,
     roles::GROUPING,
@@ -688,16 +678,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoAction,
     eNoLiveAttr,
     eLandmark,
-    kNoReqStates
-  },
-  { // generic
-    nsGkAtoms::generic,
-    roles::SECTION,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
     kNoReqStates
   },
   { // graphics-document
@@ -1193,16 +1173,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     kGenericAccType,
     kNoReqStates
   },
-  { // strong
-    nsGkAtoms::strong,
-    roles::STRONG,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kGenericAccType,
-    kNoReqStates
-  },
   { // subscript
     nsGkAtoms::subscript,
     roles::SUBSCRIPT,
@@ -1308,15 +1278,6 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eARIAAutoComplete,
     eARIAMultiline,
     eARIAReadonlyOrEditable
-  },
-  { // time
-    nsGkAtoms::time,
-    roles::TIME,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kNoReqStates
   },
   { // timer
     nsGkAtoms::timer,

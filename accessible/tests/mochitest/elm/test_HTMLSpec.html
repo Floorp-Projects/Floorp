@@ -452,18 +452,11 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { },
+          6: { "font-style": "italic" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_EMPHASIS, // HTML:em text
-            children: [
-              { role: ROLE_TEXT_LEAF, },
-            ],
-            textAttrs: {
-              0: { },
-            },
-          },
+          { role: ROLE_TEXT_LEAF }, // HTML:em text
         ],
       };
       testElm("em_container", obj);
@@ -1392,12 +1385,7 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          {
-            role: ROLE_STRONG, // HTML:strong text
-            children: [
-              { role: ROLE_TEXT_LEAF, },
-            ],
-          },
+          { role: ROLE_TEXT_LEAF }, // HTML:strong text
         ],
       };
       testElm("strong_container", obj);
@@ -1473,7 +1461,7 @@
       // HTML:time
 
       obj = {
-        role: ROLE_TIME,
+        role: ROLE_TEXT,
         attributes: { "xml-roles": "time", "datetime": "2001-05-15 19:00" },
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
