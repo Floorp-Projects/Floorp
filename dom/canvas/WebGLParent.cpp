@@ -56,21 +56,39 @@ IPCResult WebGLParent::RecvDispatchCommands(BigBuffer&& shmem,
     MOZ_ALWAYS_TRUE(!initialOffset);
   }
 
+  std::optional<std::string> fatalError;
+
   while (true) {
     view.AlignTo(kUniversalAlignment);
     size_t id = 0;
     if (!view.ReadParam(&id)) break;
 
-    const auto ok = WebGLMethodDispatcher<0>::DispatchCommand(*mHost, id, view);
+    // We split this up so that we don't end up in a long callstack chain of
+    // WebGLMethodDispatcher<i>|i=0->N. First get the lambda for dispatch, then
+    // invoke the lambda with our args.
+    const auto pfn =
+        WebGLMethodDispatcher<0>::DispatchCommandFuncById<HostWebGLContext>(id);
+    if (!pfn) {
+      const nsPrintfCString cstr(
+          "MethodDispatcher<%zu> not found. Please file a bug!", id);
+      fatalError = ToString(cstr);
+      gfxCriticalError() << *fatalError;
+      break;
+    };
+
+    const auto ok = (*pfn)(*mHost, view);
     if (!ok) {
       const nsPrintfCString cstr(
-          "DispatchCommand(id: %i) failed. Please file a bug!", int(id));
-      const auto str = ToString(cstr);
-      gfxCriticalError() << str;
-      mHost->JsWarning(str);
-      mHost->OnContextLoss(webgl::ContextLossReason::None);
+          "DispatchCommand(id: %zu) failed. Please file a bug!", id);
+      fatalError = ToString(cstr);
+      gfxCriticalError() << *fatalError;
       break;
     }
+  }
+
+  if (fatalError) {
+    mHost->JsWarning(*fatalError);
+    mHost->OnContextLoss(webgl::ContextLossReason::None);
   }
 
   return IPC_OK();
