@@ -18,6 +18,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
@@ -198,6 +199,7 @@ class AddonsManagerAdapter(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun bindSection(holder: SectionViewHolder, section: Section, position: Int) {
         holder.titleView.setText(section.title)
+        ViewCompat.setAccessibilityHeading(holder.titleView, true)
 
         style?.let {
             holder.divider.isVisible = it.visibleDividers && position != 0
