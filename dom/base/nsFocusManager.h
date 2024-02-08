@@ -26,6 +26,7 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class Element;
+class HTMLAreaElement;
 struct FocusOptions;
 class BrowserParent;
 class ContentChild;
@@ -866,6 +867,10 @@ class nsFocusManager final : public nsIFocusManager,
   // https://html.spec.whatwg.org/#get-the-focusable-area
   static mozilla::dom::Element* GetTheFocusableArea(
       mozilla::dom::Element* aTarget, uint32_t aFlags);
+
+  // Returns true if it's an area element with one or more shapes that are
+  // focusable areas.
+  static bool IsAreaElementFocusable(mozilla::dom::HTMLAreaElement& aArea);
 
  private:
   // In the chrome process, the currently active and front-most top-most
