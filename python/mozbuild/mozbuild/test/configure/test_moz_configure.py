@@ -5,7 +5,7 @@
 from mozunit import main
 
 from common import BaseConfigureTest, ConfigureTestSandbox
-from mozbuild.util import ReadOnlyNamespace, exec_, memoized_property
+from mozbuild.util import ReadOnlyNamespace, memoized_property
 
 
 def sandbox_class(platform):
@@ -13,7 +13,7 @@ def sandbox_class(platform):
         @memoized_property
         def _wrapped_sys(self):
             sys = {}
-            exec_("from sys import *", sys)
+            exec("from sys import *", sys)
             sys["platform"] = platform
             return ReadOnlyNamespace(**sys)
 

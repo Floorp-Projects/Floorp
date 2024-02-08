@@ -23,7 +23,6 @@ from mozbuild.configure.util import (
     Version,
     getpreferredencoding,
 )
-from mozbuild.util import exec_
 
 
 class TestConfigureOutputHandler(unittest.TestCase):
@@ -457,7 +456,7 @@ class TestCheckCmdOutput(unittest.TestCase):
         )
         status = 0
         try:
-            exec_(command, sandbox)
+            exec(command, sandbox)
             sandbox.run()
         except SystemExit as e:
             status = e.code

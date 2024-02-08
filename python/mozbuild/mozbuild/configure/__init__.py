@@ -30,7 +30,6 @@ from mozbuild.configure.util import ConfigureOutputHandler, LineIO, getpreferred
 from mozbuild.util import (
     ReadOnlyDict,
     ReadOnlyNamespace,
-    exec_,
     memoize,
     memoized_property,
     system_encoding,
@@ -491,7 +490,7 @@ class ConfigureSandbox(dict):
             source = fh.read()
 
         code = self.get_compiled_source(source, path)
-        exec_(code, self)
+        exec(code, self)
 
         self._paths.pop(-1)
 
@@ -1017,13 +1016,13 @@ class ConfigureSandbox(dict):
     @memoized_property
     def _wrapped_os(self):
         wrapped_os = {}
-        exec_("from os import *", {}, wrapped_os)
+        exec("from os import *", {}, wrapped_os)
         # Special case os and os.environ so that os.environ is our copy of
         # the environment.
         wrapped_os["environ"] = self._environ
         # Also override some os.path functions with ours.
         wrapped_path = {}
-        exec_("from os.path import *", {}, wrapped_path)
+        exec("from os.path import *", {}, wrapped_path)
         wrapped_path.update(self.OS.path.__dict__)
         wrapped_os["path"] = ReadOnlyNamespace(**wrapped_path)
         return ReadOnlyNamespace(**wrapped_os)
@@ -1031,7 +1030,7 @@ class ConfigureSandbox(dict):
     @memoized_property
     def _wrapped_subprocess(self):
         wrapped_subprocess = {}
-        exec_("from subprocess import *", {}, wrapped_subprocess)
+        exec("from subprocess import *", {}, wrapped_subprocess)
 
         def wrap(function):
             def wrapper(*args, **kwargs):
@@ -1055,11 +1054,11 @@ class ConfigureSandbox(dict):
         if six.PY3:
             return six
         wrapped_six = {}
-        exec_("from six import *", {}, wrapped_six)
+        exec("from six import *", {}, wrapped_six)
         wrapped_six_moves = {}
-        exec_("from six.moves import *", {}, wrapped_six_moves)
+        exec("from six.moves import *", {}, wrapped_six_moves)
         wrapped_six_moves_builtins = {}
-        exec_("from six.moves.builtins import *", {}, wrapped_six_moves_builtins)
+        exec("from six.moves.builtins import *", {}, wrapped_six_moves_builtins)
 
         # Special case for the open() builtin, because otherwise, using it
         # fails with "IOError: file() constructor not accessible in
@@ -1104,7 +1103,7 @@ class ConfigureSandbox(dict):
             _import,
             (" as %s" % _as) if _as else "",
         )
-        exec_(import_line, {}, glob)
+        exec(import_line, {}, glob)
 
     def _resolve_and_set(self, data, name, value, when=None):
         # Don't set anything when --help was on the command line
