@@ -19,6 +19,7 @@
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
 #include "nsILoadInfo.h"
+#include "mozilla/MozPromise.h"
 
 // Only fired for inner windows.
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
@@ -635,8 +636,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
-  void SaveStorageAccessPermissionGranted();
-  void SaveStorageAccessPermissionRevoked();
+  RefPtr<mozilla::GenericPromise> SaveStorageAccessPermissionGranted();
+  RefPtr<mozilla::GenericPromise> SaveStorageAccessPermissionRevoked();
 
   bool UsingStorageAccess();
 

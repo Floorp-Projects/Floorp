@@ -41,7 +41,7 @@ class CookieServiceChild final : public PCookieServiceChild,
 
   static already_AddRefed<CookieServiceChild> GetSingleton();
 
-  void TrackCookieLoad(nsIChannel* aChannel);
+  RefPtr<GenericPromise> TrackCookieLoad(nsIChannel* aChannel);
 
  private:
   ~CookieServiceChild();

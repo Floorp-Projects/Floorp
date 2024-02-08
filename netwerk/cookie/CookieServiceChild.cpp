@@ -8,6 +8,7 @@
 #include "CookieLogging.h"
 #include "CookieService.h"
 #include "mozilla/net/CookieServiceChild.h"
+#include "ErrorList.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
@@ -81,9 +82,10 @@ void CookieServiceChild::Init() {
   NS_ASSERTION(mTLDService, "couldn't get TLDService");
 }
 
-void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
+RefPtr<GenericPromise> CookieServiceChild::TrackCookieLoad(
+    nsIChannel* aChannel) {
   if (!CanSend()) {
-    return;
+    return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
   uint32_t rejectedReason = 0;
@@ -102,13 +104,31 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   bool hadCrossSiteRedirects = false;
   bool isSameSiteForeign =
       CookieCommons::IsSameSiteForeign(aChannel, uri, &hadCrossSiteRedirects);
-  SendPrepareCookieList(
-      uri, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
-      hadCrossSiteRedirects, attrs);
+
+  RefPtr<CookieServiceChild> self(this);
+
+  return SendGetCookieList(
+             uri, result.contains(ThirdPartyAnalysis::IsForeign),
+             result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+             result.contains(
+                 ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
+             result.contains(
+                 ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
+             rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
+             hadCrossSiteRedirects, attrs)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self, uri, attrs](const nsTArray<CookieStruct>& aCookiesList) {
+            for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
+              RefPtr<Cookie> cookie = Cookie::Create(aCookiesList[i], attrs);
+              cookie->SetIsHttpOnly(false);
+              self->RecordDocumentCookie(cookie, attrs);
+            }
+            return GenericPromise::CreateAndResolve(true, __func__);
+          },
+          [](const mozilla::ipc::ResponseRejectReason) {
+            return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          });
 }
 
 IPCResult CookieServiceChild::RecvRemoveAll() {
