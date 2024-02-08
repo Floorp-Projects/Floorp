@@ -18,9 +18,9 @@ same directory structure than the source tree.
 import os
 import os.path
 import shlex
+import shutil
 import subprocess
 import sys
-from distutils.spawn import find_executable
 
 
 def run_jsshell(command, label=None):
@@ -31,7 +31,7 @@ def run_jsshell(command, label=None):
     """
     shell = os.environ.get("JSSHELL")
     if shell is None:
-        shell = find_executable("js")
+        shell = shutil.which("js")
         if shell is None:
             raise FileNotFoundError(shell)
     else:

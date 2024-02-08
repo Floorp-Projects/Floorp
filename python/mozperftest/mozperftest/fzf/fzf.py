@@ -5,8 +5,8 @@ import json
 import os
 import subprocess
 import sys
-from distutils.spawn import find_executable
 from pathlib import Path
+from shutil import which
 
 from mach.util import get_state_dir
 from mozterm import Terminal
@@ -92,9 +92,9 @@ def select(test_objects):
 
     candidate_tasks = [_display(t) for t in test_objects]
 
-    fzf_bin = find_executable(
-        "fzf", str(Path(get_state_dir(), "fzf", "bin"))
-    ) or find_executable("fzf")
+    fzf_bin = which("fzf", path=str(Path(get_state_dir(), "fzf", "bin"))) or which(
+        "fzf"
+    )
     if not fzf_bin:
         raise AssertionError("Unable to find fzf")
 

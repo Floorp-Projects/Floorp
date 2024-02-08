@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 import time
-from distutils.spawn import find_executable
+import shutil
 from textwrap import wrap
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,7 @@ def setup():
     """
     status = run_mozharness('--no-run-tests')
 
-    if find_executable('mach'):
+    if shutil.which('mach'):
         print(MACH_SETUP_FINISHED)
     else:
         print(MACH_SETUP_FAILED)

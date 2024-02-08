@@ -17,9 +17,9 @@ is "password".
 
 import base64
 import os
+import shutil
 import subprocess
 import sys
-from distutils.spawn import find_executable
 
 import mozinfo
 import pycert
@@ -78,7 +78,7 @@ class PKCS12(object):
             certTmp.flush()
             keyTmp.write(self.key.toPEM())
             keyTmp.flush()
-            openssl = find_executable("openssl")
+            openssl = shutil.which("openssl")
             status = runUtil(
                 openssl,
                 [
