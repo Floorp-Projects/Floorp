@@ -2170,6 +2170,9 @@
     <string name="other_default_search_engine_suggestion_header">Chwilio gan %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Newidiwch eich porwr rhagosodedig</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Gosod dolenni o wefannau, e-byst, a negeseuon i agor yn awtomatig yn Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

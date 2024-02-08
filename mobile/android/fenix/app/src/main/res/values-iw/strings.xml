@@ -2178,6 +2178,9 @@
     <string name="other_default_search_engine_suggestion_header">חיפוש ב־%s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">החלפת דפדפן ברירת המחדל שלך</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">הגדרת קישורים מאתרים, מהודעות דוא״ל ומהודעות לפתיחה אוטומטית ב־Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

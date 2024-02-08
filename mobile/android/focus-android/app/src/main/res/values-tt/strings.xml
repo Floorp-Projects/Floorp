@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Ярлыклардан алып ату</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Яңалыклар</string>
     <string name="menu_settings">Көйләүләр</string>
     <string name="menu_about">Хакында</string>
     <string name="menu_help">Ярдәм</string>
@@ -85,10 +84,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Аша уртаклашу</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Гизү тарихы бетерелсенме?</string>
+    <string name="notification_erase_text_android_14">Гизү тарихыгызны хәвефсез рәвештә бетерү өчен бу искәртүгә басыгыз яки аны чистартыгыз.</string>
+
     <string name="notification_erase_text">Гизү тарихын бетерү</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
@@ -157,7 +155,7 @@
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
-    <string name="preference_search_summary">Стандарт итү, автотөгәлләү</string>
+    <string name="preference_search_summary">Төп итү, автотөгәлләү</string>
 
     <!-- Preference category description for settings screen for settings related to Mozilla -->
     <!-- About the app and help are links that are inside this menu -->
@@ -177,7 +175,7 @@
     <string name="preference_category_general">Гомуми</string>
 
     <!-- Preference summary for General Settings category; the two things users can find in this category -->
-    <string name="preference_general_summary2">Стандарт браузер, тел</string>
+    <string name="preference_general_summary2">Төп браузер, тел</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Мәгълүмат туплау һәм аны куллану</string>
@@ -191,7 +189,7 @@
     <string name="preference_show_search_suggestions_summary">%1$s Сез адрес юлында язганны Сезнең эзләү системасына җибәрәчәк</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
-    <string name="preference_search_engine_default">Стандарт</string>
+    <string name="preference_search_engine_default">Төп</string>
 
     <!-- This label is shown above the currently selected search engine in settings -->
     <string name="preference_search_engine_label">Эзләү системасы</string>
@@ -373,7 +371,7 @@
     <string name="preference_choose_search_engine">Эзләү системасын сайлау</string>
 
     <!-- Action for restoring the default list of search engines -->
-    <string name="preference_search_restore">Стандарт эзләү системаларын яңадан торгызу</string>
+    <string name="preference_search_restore">Төп эзләү системаларын яңадан торгызу</string>
 
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
@@ -552,7 +550,7 @@
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Сезнең эзләү, Сезнең кагыйдәләр</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, стандарт итеп башка бер эзләү системасын сайлый аласыз.</string>
+    <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, төп итеп башка бер эзләү системасын сайлый аласыз.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Өй экранына ярлыклар өстәгез</string>

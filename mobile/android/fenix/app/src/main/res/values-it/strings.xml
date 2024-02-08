@@ -2214,6 +2214,9 @@
     <string name="other_default_search_engine_suggestion_header">Ricerca %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Cambia il browser predefinito</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Apri link da siti web, email e messaggi in Firefox per impostazione predefinita.</string>
 
     <!-- Content description for close button in collection placeholder. -->

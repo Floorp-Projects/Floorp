@@ -2027,6 +2027,8 @@
     <string name="login_menu_edit_button">Uredi</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Ali ste prepričani, da želite izbrisati to prijavo?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ali ste prepričani, da želite izbrisati to geslo?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Izbriši</string>
     <!-- Negative action of a dialog asking to delete login -->
@@ -2168,7 +2170,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Iskalnik %s</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Nastavite, naj se povezave s spletnih strani, e-pošte in sporočil samodejno odpirajo v Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->
