@@ -1047,7 +1047,7 @@ extern "C" fn C_WaitForSlotEvent(
     CKR_FUNCTION_NOT_SUPPORTED
 }
 
-pub static mut FUNCTION_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
+pub static FUNCTION_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     version: CRYPTOKI_VERSION,
     C_Initialize: Some(C_Initialize),
     C_Finalize: Some(C_Finalize),
@@ -1124,7 +1124,9 @@ pub unsafe fn BUILTINSC_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR
     if ppFunctionList.is_null() {
         return CKR_ARGUMENTS_BAD;
     }
-    *ppFunctionList = &mut FUNCTION_LIST;
+    // CK_FUNCTION_LIST_PTR is a *mut CK_FUNCTION_LIST, but as per the
+    // specification, the caller must treat it as *const CK_FUNCTION_LIST.
+    *ppFunctionList = std::ptr::addr_of!(FUNCTION_LIST) as CK_FUNCTION_LIST_PTR;
     CKR_OK
 }
 
