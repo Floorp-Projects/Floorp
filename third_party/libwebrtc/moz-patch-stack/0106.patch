@@ -76,10 +76,10 @@ index 0bec3eb765..55415845ad 100644
     * Fills the membervariable _captureCapabilities with capabilites for the
     * given device name.
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 6614032299..378a53b4d2 100644
+index 43a6a7f832..f59c34f8b2 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -74,7 +74,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -74,7 +74,8 @@ class VideoCaptureModule : public RefCountInterface {
                                    uint32_t deviceUniqueIdUTF8Length,
                                    char* productUniqueIdUTF8 = 0,
                                    uint32_t productUniqueIdUTF8Length = 0,

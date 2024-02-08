@@ -29,6 +29,7 @@ rtc_library("api") {
     ":audio_frame_view",
     ":audio_processing_statistics",
     "../../api:array_view",
+    "../../api:ref_count",
     "../../api:scoped_refptr",
     "../../api/audio:aec3_config",
     "../../api/audio:audio_frame_api",

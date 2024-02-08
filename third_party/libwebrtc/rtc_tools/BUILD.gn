@@ -54,6 +54,7 @@ rtc_library("video_file_reader") {
   ]
   deps = [
     "../api:make_ref_counted",
+    "../api:ref_count",
     "../api:scoped_refptr",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",

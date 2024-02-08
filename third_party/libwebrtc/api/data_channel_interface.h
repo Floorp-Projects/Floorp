@@ -116,7 +116,7 @@ class DataChannelObserver {
   virtual ~DataChannelObserver() = default;
 };
 
-class RTC_EXPORT DataChannelInterface : public rtc::RefCountInterface {
+class RTC_EXPORT DataChannelInterface : public RefCountInterface {
  public:
   // C++ version of: https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelstate
   // Unlikely to change, but keep in sync with DataChannel.java:State and
