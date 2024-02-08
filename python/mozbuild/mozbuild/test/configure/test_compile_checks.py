@@ -13,7 +13,6 @@ from six import StringIO
 from test_toolchain_helpers import FakeCompiler
 
 from common import ConfigureTestSandbox
-from mozbuild.util import exec_
 
 
 class BaseCompileChecks(unittest.TestCase):
@@ -132,12 +131,12 @@ class BaseCompileChecks(unittest.TestCase):
         sandbox = ConfigureTestSandbox(paths, config, {}, ["/bin/configure"], out, out)
         sandbox.include_file(os.path.join(base_dir, "util.configure"))
         sandbox.include_file(os.path.join(base_dir, "checks.configure"))
-        exec_(mock_compiler_defs, sandbox)
+        exec(mock_compiler_defs, sandbox)
         sandbox.include_file(os.path.join(base_dir, "compile-checks.configure"))
 
         status = 0
         try:
-            exec_(command, sandbox)
+            exec(command, sandbox)
             sandbox.run()
         except SystemExit as e:
             status = e.code

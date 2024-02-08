@@ -40,22 +40,6 @@ else:
     system_encoding = "utf-8"
 
 
-def exec_(object, globals=None, locals=None):
-    """Wrapper around the exec statement to avoid bogus errors like:
-
-    SyntaxError: unqualified exec is not allowed in function ...
-    it is a nested function.
-
-    or
-
-    SyntaxError: unqualified exec is not allowed in function ...
-    it contains a nested function with free variable
-
-    which happen with older versions of python 2.7.
-    """
-    exec(object, globals, locals)
-
-
 def _open(path, mode):
     if "b" in mode:
         return io.open(path, mode)

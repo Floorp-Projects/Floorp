@@ -18,7 +18,7 @@ from mozbuild.configure.options import (
     NegativeOptionValue,
     PositiveOptionValue,
 )
-from mozbuild.util import ReadOnlyNamespace, exec_, memoized_property
+from mozbuild.util import ReadOnlyNamespace, memoized_property
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")
@@ -296,7 +296,7 @@ class TestConfigure(unittest.TestCase):
         sandbox = ConfigureSandbox(config, {}, ["configure"], out, out)
 
         with self.assertRaises(ImportError):
-            exec_(
+            exec(
                 textwrap.dedent(
                     """
                 @template
@@ -307,7 +307,7 @@ class TestConfigure(unittest.TestCase):
                 sandbox,
             )
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -322,11 +322,11 @@ class TestConfigure(unittest.TestCase):
 
         # os.path after an import is a mix of vanilla os.path and sandbox os.path.
         os_path = {}
-        exec_("from os.path import *", {}, os_path)
+        exec("from os.path import *", {}, os_path)
         os_path.update(sandbox.OS.path.__dict__)
         os_path = ReadOnlyNamespace(**os_path)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -339,7 +339,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEqual(sandbox["foo"](), os_path)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -352,7 +352,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEqual(sandbox["foo"](), os_path)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -367,7 +367,7 @@ class TestConfigure(unittest.TestCase):
             sandbox["foo"]()
         self.assertEqual(str(e.exception), "Importing __builtin__ is forbidden")
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -384,7 +384,7 @@ class TestConfigure(unittest.TestCase):
         f.close()
 
         # This used to unlock the sandbox
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -400,7 +400,7 @@ class TestConfigure(unittest.TestCase):
             sandbox["foo"]()
         self.assertEqual(str(e.exception), "Importing __builtin__ is forbidden")
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -413,7 +413,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox["foo"](), sandbox)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -430,7 +430,7 @@ class TestConfigure(unittest.TestCase):
         self.assertEqual(list(sandbox), ["__builtins__", "foo"])
         self.assertEqual(sandbox["__builtins__"], ConfigureSandbox.BUILTINS)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -462,7 +462,7 @@ class TestConfigure(unittest.TestCase):
         out = StringIO()
         sandbox = CountApplyImportsSandbox(config, {}, ["configure"], out, out)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
@@ -490,7 +490,7 @@ class TestConfigure(unittest.TestCase):
         out = StringIO()
         sandbox = BasicWrappingSandbox(config, {}, ["configure"], out, out)
 
-        exec_(
+        exec(
             textwrap.dedent(
                 """
             @template
