@@ -29,7 +29,8 @@ class WebAuthnService final : public nsIWebAuthnService {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBAUTHNSERVICE
 
-  WebAuthnService() {
+  WebAuthnService()
+      : mTransactionState(Nothing(), "WebAuthnService::mTransactionState") {
     Unused << authrs_service_constructor(getter_AddRefs(mAuthrsService));
 #if defined(XP_WIN)
     if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
@@ -62,6 +63,20 @@ class WebAuthnService final : public nsIWebAuthnService {
   }
 
   nsIWebAuthnService* AuthrsService() { return mAuthrsService; }
+
+  nsIWebAuthnService* SelectedService() {
+    auto guard = mTransactionState.Lock();
+    if (guard->isSome()) {
+      return guard->ref().service;
+    }
+    return DefaultService();
+  }
+
+  struct TransactionState {
+    nsCOMPtr<nsIWebAuthnService> service;
+  };
+  using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
+  TransactionStateMutex mTransactionState;
 
   nsCOMPtr<nsIWebAuthnService> mAuthrsService;
   nsCOMPtr<nsIWebAuthnService> mPlatformService;
