@@ -690,6 +690,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eLandmark,
     kNoReqStates
   },
+  { // generic
+    nsGkAtoms::generic,
+    roles::SECTION,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
   { // graphics-document
     nsGkAtoms::graphicsDocument,
     roles::NON_NATIVE_DOCUMENT,
