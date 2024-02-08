@@ -1389,7 +1389,8 @@ richlistitem .text-link:hover {
 }
 
 #web-appearance-chooser,
-#web-appearance-override-warning {
+#web-appearance-override-warning,
+#text-zoom-override-warning {
   margin: 12px 0;
 }
 
