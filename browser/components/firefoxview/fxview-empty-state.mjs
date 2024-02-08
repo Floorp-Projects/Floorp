@@ -86,7 +86,7 @@ class FxviewEmptyState extends MozLitElement {
            <div class="main">
              <h2
                id="header"
-               class="header"
+               class="header heading-large"
                ?hidden=${!this.headerLabel}
              >
                  <img class="icon info"

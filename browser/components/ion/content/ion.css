@@ -70,9 +70,6 @@ details > summary {
 }
 
 #report-title, #title {
-  font-size: 1.46em;
-  font-weight: 300;
-  line-height: 1.3em;
   margin-block-end: 0;
 }
 

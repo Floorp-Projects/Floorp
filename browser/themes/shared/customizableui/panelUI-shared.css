@@ -1788,13 +1788,6 @@ panelview {
     grid-column-start: 2;
   }
 
-  .whatsNew-message-title-large {
-    font-size: 2.1em;
-    margin: 2px 0;
-    font-weight: 300;
-    grid-column-start: 1;
-  }
-
   .whatsNew-message-subtitle {
     margin: 2px 0;
     font-size: .8em;

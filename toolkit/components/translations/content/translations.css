@@ -23,11 +23,6 @@
   --AT-select-arrow-inset: 5px;
 }
 
-h1 {
-  /* Provide this style for "toolkit". It is defined in "browser" */
-  font-weight: lighter;
-}
-
 body {
   display: flex;
   justify-content: center;

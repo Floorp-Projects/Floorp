@@ -95,11 +95,10 @@
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
   --display-10-font-size: 28px;
-  --display-10-font-weight: 200;
+  --display-10-font-weight: 600;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
   --title-30-font-size: 22px;
-  --title-30-font-weight: 300;
 
   /* Global layout vars */
   --page-width: 664px;
@@ -265,7 +264,7 @@ p, h1 {
 
 .main-heading-subtitle {
   font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
+  font-weight: var(--title-20-font-weight);
 }
 
 /* Main style for a subheading (i.e. h2). It features an icon */
@@ -301,7 +300,7 @@ p, h1 {
 
 .alt-heading--larger {
   font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
+  font-weight: var(--title-20-font-weight);
 }
 
 /* Alternative style for a subheading (i.e. h2). It features an icon */
