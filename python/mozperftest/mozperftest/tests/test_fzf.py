@@ -19,12 +19,12 @@ class Fzf:
         return "query\n" + args[0], "stderr"
 
 
-def fzf_executable(*args):
+def fzf_executable(*args, path: str = None):
     return None if len(args) == 2 else "fzf"
 
 
 @mock.patch("subprocess.Popen", new=Fzf)
-@mock.patch("mozperftest.fzf.fzf.find_executable", new=fzf_executable)
+@mock.patch("mozperftest.fzf.fzf.which", new=fzf_executable)
 def test_select(*mocked):
     test_objects = [{"path": EXAMPLE_TEST}]
     selection = select(test_objects)
@@ -32,7 +32,7 @@ def test_select(*mocked):
 
 
 @mock.patch("subprocess.Popen", new=Fzf)
-@mock.patch("mozperftest.fzf.fzf.find_executable", new=fzf_executable)
+@mock.patch("mozperftest.fzf.fzf.which", new=fzf_executable)
 def test_find_fzf_executable(*mocked):
     test_objects = [{"path": EXAMPLE_TEST}]
     selection = select(test_objects)

@@ -13,7 +13,6 @@ import re
 import shutil
 import subprocess
 import sys
-from distutils.spawn import find_executable
 
 import mozinfo
 from mozbuild.base import BinaryNotFoundException, MozbuildObject
@@ -103,7 +102,7 @@ def constructCertDatabase(build, srcDir):
     except BinaryNotFoundException as e:
         print("{}\n\n{}\n".format(e, e.help()))
         return 1
-    openssl = find_executable("openssl")
+    openssl = shutil.which("openssl")
     pycert = os.path.join(build.topsrcdir, "security", "manager", "tools", "pycert.py")
     pykey = os.path.join(build.topsrcdir, "security", "manager", "tools", "pykey.py")
 

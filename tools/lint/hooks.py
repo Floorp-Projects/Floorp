@@ -4,10 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import shutil
 import signal
 import subprocess
 import sys
-from distutils.spawn import find_executable
 
 here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
@@ -27,7 +27,7 @@ def run_mozlint(hooktype, args):
     if isinstance(hooktype, bytes):
         hooktype = hooktype.decode("UTF-8", "replace")
 
-    python = find_executable("python3")
+    python = shutil.which("python3")
     if not python:
         print("error: Python 3 not detected on your system! Please install it.")
         sys.exit(1)
