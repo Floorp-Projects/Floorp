@@ -17,13 +17,16 @@ ENV XZ_OPT=-T0
 RUN apt-get update && \
     apt-get dist-upgrade && \
     apt-get install \
+      bash \
       binutils \
       bzip2 \
-      curl \
       cpio \
+      curl \
       file \
+      findutils \
       gawk \
       gnupg \
+      gzip \
       jq \
       lib32atomic1 \
       'lib32gcc(1|-s1)$' \
@@ -33,7 +36,11 @@ RUN apt-get update && \
       libc6-i386 \
       libgtk-3-0 \
       libucl1 \
+      libxml2 \
+      m4 \
+      make \
       p7zip-full \
+      perl \
       procps \
       python3-dev \
       rsync \
