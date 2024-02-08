@@ -8200,9 +8200,13 @@ WPARAM nsWindow::wParamFromGlobalMouseState() {
   return result;
 }
 
-void nsWindow::PickerOpen() { mPickerDisplayCount++; }
+void nsWindow::PickerOpen() {
+  AssertIsOnMainThread();
+  mPickerDisplayCount++;
+}
 
 void nsWindow::PickerClosed() {
+  AssertIsOnMainThread();
   NS_ASSERTION(mPickerDisplayCount > 0, "mPickerDisplayCount out of sync!");
   if (!mPickerDisplayCount) return;
   mPickerDisplayCount--;
