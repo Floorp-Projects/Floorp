@@ -1372,7 +1372,7 @@ void Loader::AdjustPriority(const SheetLoadData& aLoadData,
   // according to
   // <https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority>.
   const int32_t supportsPriority = [&]() {
-    if (!aLoadData.mMediaMatched || aLoadData.mWasAlternate) {
+    if (aLoadData.ShouldDefer()) {
       return nsISupportsPriority::PRIORITY_LOW;
     }
     switch (aLoadData.mFetchPriority) {
