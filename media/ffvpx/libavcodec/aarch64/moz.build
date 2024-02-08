@@ -17,7 +17,6 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'hpeldsp_neon.S',
         'idctdsp_init_aarch64.c',
         'idctdsp_neon.S',
-        'mdct_neon.S',
         'mpegaudiodsp_init.c',
         'mpegaudiodsp_neon.S',
         'neon.S',
