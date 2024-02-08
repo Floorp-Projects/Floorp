@@ -8210,6 +8210,19 @@ void nsWindow::PickerClosed() {
   NS_ASSERTION(mPickerDisplayCount > 0, "mPickerDisplayCount out of sync!");
   if (!mPickerDisplayCount) return;
   mPickerDisplayCount--;
+
+  // WORKAROUND FOR UNDOCUMENTED BEHAVIOR: `IFileDialog::Show` disables the
+  // top-level ancestor of its provided owner-window. If the modal window's
+  // container process crashes, it will never get a chance to undo that, so we
+  // do it manually here.
+  //
+  // Note that this may cause problems in the embedded case if you reparent a
+  // subtree of the native window hierarchy containing a Gecko window while that
+  // Gecko window has a file-dialog open.
+  if (!mPickerDisplayCount) {
+    ::EnableWindow(::GetAncestor(GetWindowHandle(), GA_ROOT), TRUE);
+  }
+
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }

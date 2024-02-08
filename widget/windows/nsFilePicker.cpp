@@ -114,7 +114,7 @@ namespace mozilla::detail {
 template <typename ActionType,
           typename ReturnType = typename decltype(std::declval<ActionType>()(
               nullptr))::element_type::ResolveValueType>
-static auto ShowRemote(HWND parent, ActionType&& action)
+static auto ShowRemote(ActionType&& action)
     -> RefPtr<MozPromise<ReturnType, HRESULT, true>> {
   using RetPromise = MozPromise<ReturnType, HRESULT, true>;
 
@@ -135,62 +135,28 @@ static auto ShowRemote(HWND parent, ActionType&& action)
 
   using mozilla::widget::filedialog::sLogFileDialog;
 
-  // WORKAROUND FOR UNDOCUMENTED BEHAVIOR: `IFileDialog::Show` disables the
-  // top-level ancestor of its provided owner-window. If the modal window's
-  // container process crashes, it will never get a chance to undo that, so
-  // we have to do it manually.
-  struct WindowEnabler {
-    HWND hwnd;
-    BOOL enabled;
-    explicit WindowEnabler(HWND hwnd)
-        : hwnd(hwnd), enabled(::IsWindowEnabled(hwnd)) {
-      MOZ_LOG(sLogFileDialog, LogLevel::Info,
-              ("ShowRemote: HWND %08zX enabled=%u", uintptr_t(hwnd), enabled));
-    }
-    WindowEnabler(WindowEnabler const&) = default;
-
-    void restore() const {
-      MOZ_LOG(sLogFileDialog, LogLevel::Info,
-              ("ShowRemote: HWND %08zX enabled=%u (restoring to %u)",
-               uintptr_t(hwnd), ::IsWindowEnabled(hwnd), enabled));
-      ::EnableWindow(hwnd, enabled);
-    }
-  };
-  HWND const rootWindow = ::GetAncestor(parent, GA_ROOT);
-
   return wfda->Then(
       mozilla::GetMainThreadSerialEventTarget(),
       "nsFilePicker ShowRemote acquire",
-      [action = std::forward<ActionType>(action),
-       rootWindow](filedialog::ProcessProxy const& p) -> RefPtr<RetPromise> {
+      [action = std::forward<ActionType>(action)](
+          filedialog::ProcessProxy const& p) -> RefPtr<RetPromise> {
         MOZ_LOG(sLogFileDialog, LogLevel::Info,
                 ("nsFilePicker ShowRemote first callback: p = [%p]", p.get()));
-        WindowEnabler enabledState(rootWindow);
 
         // false positive: not actually redundant
         // NOLINTNEXTLINE(readability-redundant-smartptr-get)
-        return action(p.get())
-            ->Then(
-                mozilla::GetMainThreadSerialEventTarget(),
-                "nsFilePicker ShowRemote call",
-                [p](ReturnType ret) {
-                  return RetPromise::CreateAndResolve(std::move(ret),
-                                                      __PRETTY_FUNCTION__);
-                },
-                [](mozilla::ipc::ResponseRejectReason error) {
-                  MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                          ("IPC call rejected: %zu", size_t(error)));
-                  return fail();
-                })
-            // Unconditionally restore the disabled state.
-            ->Then(mozilla::GetMainThreadSerialEventTarget(),
-                   "nsFilePicker ShowRemote cleanup",
-                   [enabledState](
-                       typename RetPromise::ResolveOrRejectValue const& val) {
-                     enabledState.restore();
-                     return RetPromise::CreateAndResolveOrReject(
-                         val, "nsFilePicker ShowRemote cleanup fmap");
-                   });
+        return action(p.get())->Then(
+            mozilla::GetMainThreadSerialEventTarget(),
+            "nsFilePicker ShowRemote call",
+            [p](ReturnType ret) {
+              return RetPromise::CreateAndResolve(std::move(ret),
+                                                  __PRETTY_FUNCTION__);
+            },
+            [](mozilla::ipc::ResponseRejectReason error) {
+              MOZ_LOG(sLogFileDialog, LogLevel::Error,
+                      ("IPC call rejected: %zu", size_t(error)));
+              return fail();
+            });
       },
       [](nsresult error) -> RefPtr<RetPromise> {
         MOZ_LOG(sLogFileDialog, LogLevel::Error,
@@ -437,8 +403,8 @@ nsFilePicker::FPPromise<filedialog::Results> nsFilePicker::ShowFilePickerRemote(
     nsTArray<filedialog::Command> const& commands) {
   using mozilla::widget::filedialog::sLogFileDialog;
   return mozilla::detail::ShowRemote(
-      parent, [parent, type, commands = commands.Clone()](
-                  filedialog::WinFileDialogParent* p) {
+      [parent, type,
+       commands = commands.Clone()](filedialog::WinFileDialogParent* p) {
         MOZ_LOG(sLogFileDialog, LogLevel::Info,
                 ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
         return p->SendShowFileDialog((uintptr_t)parent, type, commands);
@@ -449,13 +415,12 @@ nsFilePicker::FPPromise<filedialog::Results> nsFilePicker::ShowFilePickerRemote(
 nsFilePicker::FPPromise<nsString> nsFilePicker::ShowFolderPickerRemote(
     HWND parent, nsTArray<filedialog::Command> const& commands) {
   using mozilla::widget::filedialog::sLogFileDialog;
-  return mozilla::detail::ShowRemote(
-      parent, [parent, commands = commands.Clone()](
-                  filedialog::WinFileDialogParent* p) {
-        MOZ_LOG(sLogFileDialog, LogLevel::Info,
-                ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
-        return p->SendShowFolderDialog((uintptr_t)parent, commands);
-      });
+  return mozilla::detail::ShowRemote([parent, commands = commands.Clone()](
+                                         filedialog::WinFileDialogParent* p) {
+    MOZ_LOG(sLogFileDialog, LogLevel::Info,
+            ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
+    return p->SendShowFolderDialog((uintptr_t)parent, commands);
+  });
 }
 
 /* static */
