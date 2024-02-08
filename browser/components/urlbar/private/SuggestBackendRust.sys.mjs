@@ -108,7 +108,7 @@ export class SuggestBackendRust extends BaseFeature {
       .featuresByRustSuggestionType) {
       if (feature.isEnabled && feature.isRustSuggestionTypeEnabled(type)) {
         let key = type.toUpperCase();
-        this.logger.debug("Adding provider to query:" + key);
+        this.logger.debug("Adding provider to query: " + key);
         if (!lazy.SuggestionProvider.hasOwnProperty(key)) {
           this.logger.error(`SuggestionProvider["${key}"] is not defined!`);
           continue;

@@ -1562,6 +1562,11 @@ export var UrlbarUtils = {
   },
 
   _getQuickSuggestTelemetryType(result) {
+    if (result.payload.telemetryType == "weather") {
+      // Return "weather" without the usual source prefix for consistency with
+      // the weather result returned by UrlbarProviderWeather.
+      return "weather";
+    }
     let source = result.payload.source;
     if (source == "remote-settings") {
       source = "rs";

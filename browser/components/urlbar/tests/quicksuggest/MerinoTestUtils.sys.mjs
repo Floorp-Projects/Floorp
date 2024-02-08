@@ -58,6 +58,8 @@ const WEATHER_KEYWORD = "weather";
 
 const WEATHER_RS_DATA = {
   keywords: [WEATHER_KEYWORD],
+  min_keyword_length: 3,
+  score: "0.29",
 };
 
 const WEATHER_SUGGESTION = {
