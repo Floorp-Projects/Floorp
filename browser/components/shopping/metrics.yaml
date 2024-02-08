@@ -91,6 +91,26 @@ shopping.settings:
       - metrics
     telemetry_mirror: SHOPPING_DISABLED_ADS
 
+  auto_open_user_disabled:
+    type: boolean
+    lifetime: application
+    description: |
+      Indicates if the user has manually disabled the auto open sidebar feature.
+      Set during shopping component init and updated when changed in browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879119
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879119
+    data_sensitivity:
+      - interaction
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - metrics
+    telemetry_mirror: SHOPPING_AUTO_OPEN_USER_DISABLED
+
 shopping:
   surface_displayed:
     type: event

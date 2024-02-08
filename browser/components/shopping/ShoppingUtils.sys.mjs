@@ -86,6 +86,7 @@ export const ShoppingUtils = {
 
     this.setOnUpdate(undefined, undefined, this.optedIn);
     this.recordUserAdsPreference();
+    this.recordUserAutoOpenPreference();
 
     if (this._isAutoOpenEligible()) {
       Services.prefs.setBoolPref(ACTIVE_PREF, true);
@@ -170,6 +171,12 @@ export const ShoppingUtils = {
 
   recordUserAdsPreference() {
     Glean.shoppingSettings.disabledAds.set(!ShoppingUtils.adsUserEnabled);
+  },
+
+  recordUserAutoOpenPreference() {
+    Glean.shoppingSettings.autoOpenUserDisabled.set(
+      !ShoppingUtils.autoOpenUserEnabled
+    );
   },
 
   /**
@@ -299,5 +306,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   ShoppingUtils,
   "autoOpenUserEnabled",
   AUTO_OPEN_USER_ENABLED_PREF,
-  false
+  false,
+  ShoppingUtils.recordUserAutoOpenPreference
 );

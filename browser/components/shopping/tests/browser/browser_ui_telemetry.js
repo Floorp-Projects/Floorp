@@ -549,6 +549,31 @@ add_task(async function test_auto_open_yes_keep_closed_button() {
   );
 });
 
+add_task(async function test_auto_open_user_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
+      ["browser.shopping.experience2023.autoOpen.userEnabled", true],
+    ],
+  });
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  Services.prefs.setBoolPref(
+    "browser.shopping.experience2023.autoOpen.userEnabled",
+    false
+  );
+
+  await Services.fog.testFlushAllChildren();
+
+  Assert.equal(
+    Glean.shoppingSettings.autoOpenUserDisabled.testGetValue(),
+    true,
+    "Auto open should be marked as disabled"
+  );
+});
+
 function clickAdsToggle(browser, data) {
   return SpecialPowers.spawn(browser, [data], async args => {
     const { mockData, mockRecommendationData } = args;
