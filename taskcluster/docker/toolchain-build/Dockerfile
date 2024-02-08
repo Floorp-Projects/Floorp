@@ -44,7 +44,6 @@ RUN apt-get update && \
       p7zip-full \
       pkg-config \
       procps \
-      python3-distutils-extra \
       python3-requests \
       python3-toml \
       scons \
