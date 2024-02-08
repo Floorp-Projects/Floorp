@@ -18,9 +18,22 @@ enum MediaKeySessionType {
   // persistent-usage-record,
 };
 
-// https://github.com/WICG/media-capabilities/blob/master/eme-extension-policy-check.md
+// https://w3c.github.io/encrypted-media/#idl-def-hdcpversion
+enum HDCPVersion {
+    "1.0",
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4",
+    "2.0",
+    "2.1",
+    "2.2",
+    "2.3",
+};
+
+// https://w3c.github.io/encrypted-media/#idl-def-mediakeyspolicy
 dictionary MediaKeysPolicy {
-  DOMString minHdcpVersion = "";
+  HDCPVersion minHdcpVersion;
 };
 
 [Exposed=Window]
