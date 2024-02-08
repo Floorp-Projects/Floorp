@@ -24,8 +24,6 @@ function handlerCount(path) {
 
 ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
 
-do_get_profile();
-
 // Bug 1805371: Tests that require FaultyServer can't currently be built
 // with system NSS.
 add_setup(
@@ -33,6 +31,9 @@ add_setup(
     skip_if: () => AppConstants.MOZ_SYSTEM_NSS,
   },
   async () => {
+    do_get_profile();
+    Services.fog.initializeFOG();
+
     httpServer = new HttpServer();
     httpServer.registerPrefixHandler("/callback/", listenHandler);
     httpServer.start(-1);
@@ -102,6 +103,19 @@ add_task(
         handlerCount("/callback/29"),
         countOfX25519 + 1,
         "negotiated x25519"
+      );
+    }
+    if (!mozinfo.socketprocess_networking) {
+      // Bug 1824574
+      equal(
+        1,
+        await Glean.tls.xyberIntoleranceReason.PR_END_OF_FILE_ERROR.testGetValue(),
+        "PR_END_OF_FILE_ERROR telemetry accumulated"
+      );
+      equal(
+        1,
+        await Glean.tls.xyberIntoleranceReason.SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE.testGetValue(),
+        "SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE telemetry accumulated"
       );
     }
   }
