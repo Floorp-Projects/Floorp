@@ -53,6 +53,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/XULPopupElement.h"
@@ -5455,14 +5456,8 @@ Element* nsFocusManager::GetTheFocusableArea(Element* aTarget,
 
   // If focus target is an area element with one or more shapes that are
   // focusable areas.
-  if (aTarget->IsHTMLElement(nsGkAtoms::area)) {
-    // HTML areas do not have their own frame, and the img frame we get from
-    // GetPrimaryFrame() is not relevant as to whether it is focusable or
-    // not, so we have to do all the relevant checks manually for them.
-    return frame->IsVisibleConsideringAncestors() &&
-                   aTarget->IsFocusableWithoutStyle()
-               ? aTarget
-               : nullptr;
+  if (auto* area = HTMLAreaElement::FromNode(aTarget)) {
+    return IsAreaElementFocusable(*area) ? area : nullptr;
   }
 
   // For these 3 steps mentioned in the spec
@@ -5499,6 +5494,19 @@ Element* nsFocusManager::GetTheFocusableArea(Element* aTarget,
     }
   }
   return nullptr;
+}
+
+/* static */
+bool nsFocusManager::IsAreaElementFocusable(HTMLAreaElement& aArea) {
+  nsIFrame* frame = aArea.GetPrimaryFrame();
+  if (!frame) {
+    return false;
+  }
+  // HTML areas do not have their own frame, and the img frame we get from
+  // GetPrimaryFrame() is not relevant as to whether it is focusable or
+  // not, so we have to do all the relevant checks manually for them.
+  return frame->IsVisibleConsideringAncestors() &&
+         aArea.IsFocusableWithoutStyle(false /* aWithMouse */);
 }
 
 nsresult NS_NewFocusManager(nsIFocusManager** aResult) {
