@@ -1994,6 +1994,7 @@ if (rtc_include_tests) {
         ":zero_memory",
         "../api:array_view",
         "../api:make_ref_counted",
+        "../api:ref_count",
         "../api:scoped_refptr",
         "../api/numerics",
         "../api/units:data_rate",

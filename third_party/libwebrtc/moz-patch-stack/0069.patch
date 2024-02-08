@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d
  1 file changed, 3 insertions(+)
 
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 04203033b0..6614032299 100644
+index db07580921..43a6a7f832 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -154,6 +154,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -154,6 +154,9 @@ class VideoCaptureModule : public RefCountInterface {
    // Return whether the rotation is applied or left pending.
    virtual bool GetApplyRotation() = 0;
  

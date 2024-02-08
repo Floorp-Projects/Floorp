@@ -133,7 +133,7 @@ index b2857163f1..89e9e9e3b0 100644
  
  struct TaskQueueDeleter {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 6e885a9b1b..6fa8f0d392 100644
+index 67d2b86de5..ac237ed4c8 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1453,21 +1453,6 @@ rtc_library("crc32") {

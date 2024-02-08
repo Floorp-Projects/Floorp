@@ -28,7 +28,7 @@ class MessageDeliverer {
   }
 
  private:
-  struct State : public rtc::RefCountInterface {
+  struct State : public webrtc::RefCountInterface {
     explicit State(DcSctpMessage&& m)
         : has_delivered(false), message(std::move(m)) {}
     bool has_delivered;

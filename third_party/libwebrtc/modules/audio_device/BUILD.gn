@@ -50,6 +50,7 @@ rtc_source_set("audio_device_api") {
     "include/audio_device_defines.h",
   ]
   deps = [
+    "../../api:ref_count",
     "../../api:scoped_refptr",
     "../../api/task_queue",
     "../../rtc_base:checks",

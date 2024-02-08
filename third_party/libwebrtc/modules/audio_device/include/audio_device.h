@@ -12,16 +12,16 @@
 #define MODULES_AUDIO_DEVICE_INCLUDE_AUDIO_DEVICE_H_
 
 #include "absl/types/optional.h"
+#include "api/ref_count.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/include/audio_device_defines.h"
-#include "rtc_base/ref_count.h"
 
 namespace webrtc {
 
 class AudioDeviceModuleForTest;
 
-class AudioDeviceModule : public rtc::RefCountInterface {
+class AudioDeviceModule : public webrtc::RefCountInterface {
  public:
   enum AudioLayer {
     kPlatformDefaultAudio = 0,
