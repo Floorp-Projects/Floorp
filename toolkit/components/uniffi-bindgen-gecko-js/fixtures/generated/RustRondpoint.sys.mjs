@@ -2077,7 +2077,7 @@ export class FfiConverterTypeStringifier extends FfiConverter {
 }
 
 export class Dictionnaire {
-    constructor(un,deux,petitNombre,grosNombre) {
+    constructor({ un, deux, petitNombre, grosNombre } = {}) {
         try {
             FfiConverterTypeEnumeration.checkType(un)
         } catch (e) {
@@ -2128,12 +2128,12 @@ export class Dictionnaire {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeDictionnaire extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new Dictionnaire(
-            FfiConverterTypeEnumeration.read(dataStream), 
-            FfiConverterBool.read(dataStream), 
-            FfiConverterU8.read(dataStream), 
-            FfiConverterU64.read(dataStream)
-        );
+        return new Dictionnaire({
+            un: FfiConverterTypeEnumeration.read(dataStream),
+            deux: FfiConverterBool.read(dataStream),
+            petitNombre: FfiConverterU8.read(dataStream),
+            grosNombre: FfiConverterU64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterTypeEnumeration.write(dataStream, value.un);
@@ -2153,6 +2153,9 @@ export class FfiConverterTypeDictionnaire extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof Dictionnaire)) {
+            throw new TypeError(`Expected 'Dictionnaire', found '${typeof value}'`);
+        }
         try {
             FfiConverterTypeEnumeration.checkType(value.un);
         } catch (e) {
@@ -2189,7 +2192,7 @@ export class FfiConverterTypeDictionnaire extends FfiConverterArrayBuffer {
 }
 
 export class DictionnaireNombres {
-    constructor(petitNombre,courtNombre,nombreSimple,grosNombre) {
+    constructor({ petitNombre, courtNombre, nombreSimple, grosNombre } = {}) {
         try {
             FfiConverterU8.checkType(petitNombre)
         } catch (e) {
@@ -2240,12 +2243,12 @@ export class DictionnaireNombres {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeDictionnaireNombres extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new DictionnaireNombres(
-            FfiConverterU8.read(dataStream), 
-            FfiConverterU16.read(dataStream), 
-            FfiConverterU32.read(dataStream), 
-            FfiConverterU64.read(dataStream)
-        );
+        return new DictionnaireNombres({
+            petitNombre: FfiConverterU8.read(dataStream),
+            courtNombre: FfiConverterU16.read(dataStream),
+            nombreSimple: FfiConverterU32.read(dataStream),
+            grosNombre: FfiConverterU64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterU8.write(dataStream, value.petitNombre);
@@ -2265,6 +2268,9 @@ export class FfiConverterTypeDictionnaireNombres extends FfiConverterArrayBuffer
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof DictionnaireNombres)) {
+            throw new TypeError(`Expected 'DictionnaireNombres', found '${typeof value}'`);
+        }
         try {
             FfiConverterU8.checkType(value.petitNombre);
         } catch (e) {
@@ -2301,7 +2307,7 @@ export class FfiConverterTypeDictionnaireNombres extends FfiConverterArrayBuffer
 }
 
 export class DictionnaireNombresSignes {
-    constructor(petitNombre,courtNombre,nombreSimple,grosNombre) {
+    constructor({ petitNombre, courtNombre, nombreSimple, grosNombre } = {}) {
         try {
             FfiConverterI8.checkType(petitNombre)
         } catch (e) {
@@ -2352,12 +2358,12 @@ export class DictionnaireNombresSignes {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeDictionnaireNombresSignes extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new DictionnaireNombresSignes(
-            FfiConverterI8.read(dataStream), 
-            FfiConverterI16.read(dataStream), 
-            FfiConverterI32.read(dataStream), 
-            FfiConverterI64.read(dataStream)
-        );
+        return new DictionnaireNombresSignes({
+            petitNombre: FfiConverterI8.read(dataStream),
+            courtNombre: FfiConverterI16.read(dataStream),
+            nombreSimple: FfiConverterI32.read(dataStream),
+            grosNombre: FfiConverterI64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterI8.write(dataStream, value.petitNombre);
@@ -2377,6 +2383,9 @@ export class FfiConverterTypeDictionnaireNombresSignes extends FfiConverterArray
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof DictionnaireNombresSignes)) {
+            throw new TypeError(`Expected 'DictionnaireNombresSignes', found '${typeof value}'`);
+        }
         try {
             FfiConverterI8.checkType(value.petitNombre);
         } catch (e) {
@@ -2413,7 +2422,7 @@ export class FfiConverterTypeDictionnaireNombresSignes extends FfiConverterArray
 }
 
 export class OptionneurDictionnaire {
-    constructor(i8Var = -8,u8Var = 8,i16Var = -16,u16Var = 0x10,i32Var = -32,u32Var = 32,i64Var = -64,u64Var = 64,floatVar = 4.0,doubleVar = 8.0,booleanVar = true,stringVar = "default",listVar = [],enumerationVar = Enumeration.DEUX,dictionnaireVar = null) {
+    constructor({ i8Var = -8, u8Var = 8, i16Var = -16, u16Var = 0x10, i32Var = -32, u32Var = 32, i64Var = -64, u64Var = 64, floatVar = 4.0, doubleVar = 8.0, booleanVar = true, stringVar = "default", listVar = [], enumerationVar = Enumeration.DEUX, dictionnaireVar = null } = {}) {
         try {
             FfiConverterI8.checkType(i8Var)
         } catch (e) {
@@ -2574,23 +2583,23 @@ export class OptionneurDictionnaire {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeOptionneurDictionnaire extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new OptionneurDictionnaire(
-            FfiConverterI8.read(dataStream), 
-            FfiConverterU8.read(dataStream), 
-            FfiConverterI16.read(dataStream), 
-            FfiConverterU16.read(dataStream), 
-            FfiConverterI32.read(dataStream), 
-            FfiConverterU32.read(dataStream), 
-            FfiConverterI64.read(dataStream), 
-            FfiConverterU64.read(dataStream), 
-            FfiConverterF32.read(dataStream), 
-            FfiConverterF64.read(dataStream), 
-            FfiConverterBool.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterSequencestring.read(dataStream), 
-            FfiConverterTypeEnumeration.read(dataStream), 
-            FfiConverterOptionalTypeminusculeMajusculeEnum.read(dataStream)
-        );
+        return new OptionneurDictionnaire({
+            i8Var: FfiConverterI8.read(dataStream),
+            u8Var: FfiConverterU8.read(dataStream),
+            i16Var: FfiConverterI16.read(dataStream),
+            u16Var: FfiConverterU16.read(dataStream),
+            i32Var: FfiConverterI32.read(dataStream),
+            u32Var: FfiConverterU32.read(dataStream),
+            i64Var: FfiConverterI64.read(dataStream),
+            u64Var: FfiConverterU64.read(dataStream),
+            floatVar: FfiConverterF32.read(dataStream),
+            doubleVar: FfiConverterF64.read(dataStream),
+            booleanVar: FfiConverterBool.read(dataStream),
+            stringVar: FfiConverterString.read(dataStream),
+            listVar: FfiConverterSequencestring.read(dataStream),
+            enumerationVar: FfiConverterTypeEnumeration.read(dataStream),
+            dictionnaireVar: FfiConverterOptionalTypeminusculeMajusculeEnum.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterI8.write(dataStream, value.i8Var);
@@ -2632,6 +2641,9 @@ export class FfiConverterTypeOptionneurDictionnaire extends FfiConverterArrayBuf
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof OptionneurDictionnaire)) {
+            throw new TypeError(`Expected 'OptionneurDictionnaire', found '${typeof value}'`);
+        }
         try {
             FfiConverterI8.checkType(value.i8Var);
         } catch (e) {
@@ -2756,7 +2768,7 @@ export class FfiConverterTypeOptionneurDictionnaire extends FfiConverterArrayBuf
 }
 
 export class MinusculeMajusculeDict {
-    constructor(minusculeMajusculeField) {
+    constructor({ minusculeMajusculeField } = {}) {
         try {
             FfiConverterBool.checkType(minusculeMajusculeField)
         } catch (e) {
@@ -2777,9 +2789,9 @@ export class MinusculeMajusculeDict {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeminusculeMajusculeDict extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new MinusculeMajusculeDict(
-            FfiConverterBool.read(dataStream)
-        );
+        return new MinusculeMajusculeDict({
+            minusculeMajusculeField: FfiConverterBool.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterBool.write(dataStream, value.minusculeMajusculeField);
@@ -2793,6 +2805,9 @@ export class FfiConverterTypeminusculeMajusculeDict extends FfiConverterArrayBuf
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof MinusculeMajusculeDict)) {
+            throw new TypeError(`Expected 'MinusculeMajusculeDict', found '${typeof value}'`);
+        }
         try {
             FfiConverterBool.checkType(value.minusculeMajusculeField);
         } catch (e) {

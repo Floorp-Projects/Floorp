@@ -118,7 +118,7 @@ export class SuggestBackendRust extends BaseFeature {
     }
 
     let suggestions = await this.#store.query(
-      new lazy.SuggestionQuery(searchString, providers)
+      new lazy.SuggestionQuery({ keyword: searchString, providers })
     );
 
     for (let suggestion of suggestions) {
@@ -170,11 +170,11 @@ export class SuggestBackendRust extends BaseFeature {
       this.#store = lazy.SuggestStore.init(
         path,
         SuggestBackendRust._test_remoteSettingsConfig ??
-          new lazy.RemoteSettingsConfig(
-            "quicksuggest",
-            lazy.Utils.actualBucketName("main"),
-            lazy.Utils.SERVER_URL
-          )
+          new lazy.RemoteSettingsConfig({
+            collectionName: "quicksuggest",
+            bucketName: lazy.Utils.actualBucketName("main"),
+            serverUrl: lazy.Utils.SERVER_URL,
+          })
       );
     } catch (error) {
       this.logger.error("Error initializing SuggestStore:");

@@ -465,7 +465,7 @@ export class FfiConverterTypeRemoteSettings extends FfiConverter {
 }
 
 export class Attachment {
-    constructor(filename,mimetype,location,hash,size) {
+    constructor({ filename, mimetype, location, hash, size } = {}) {
         try {
             FfiConverterString.checkType(filename)
         } catch (e) {
@@ -526,13 +526,13 @@ export class Attachment {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new Attachment(
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterU64.read(dataStream)
-        );
+        return new Attachment({
+            filename: FfiConverterString.read(dataStream),
+            mimetype: FfiConverterString.read(dataStream),
+            location: FfiConverterString.read(dataStream),
+            hash: FfiConverterString.read(dataStream),
+            size: FfiConverterU64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.filename);
@@ -554,6 +554,9 @@ export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof Attachment)) {
+            throw new TypeError(`Expected 'Attachment', found '${typeof value}'`);
+        }
         try {
             FfiConverterString.checkType(value.filename);
         } catch (e) {
@@ -598,7 +601,7 @@ export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
 }
 
 export class RemoteSettingsConfig {
-    constructor(collectionName,bucketName = null,serverUrl = null) {
+    constructor({ collectionName, bucketName = null, serverUrl = null } = {}) {
         try {
             FfiConverterString.checkType(collectionName)
         } catch (e) {
@@ -639,11 +642,11 @@ export class RemoteSettingsConfig {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new RemoteSettingsConfig(
-            FfiConverterString.read(dataStream), 
-            FfiConverterOptionalstring.read(dataStream), 
-            FfiConverterOptionalstring.read(dataStream)
-        );
+        return new RemoteSettingsConfig({
+            collectionName: FfiConverterString.read(dataStream),
+            bucketName: FfiConverterOptionalstring.read(dataStream),
+            serverUrl: FfiConverterOptionalstring.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.collectionName);
@@ -661,6 +664,9 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof RemoteSettingsConfig)) {
+            throw new TypeError(`Expected 'RemoteSettingsConfig', found '${typeof value}'`);
+        }
         try {
             FfiConverterString.checkType(value.collectionName);
         } catch (e) {
@@ -689,7 +695,7 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
 }
 
 export class RemoteSettingsRecord {
-    constructor(id,lastModified,deleted,attachment,fields) {
+    constructor({ id, lastModified, deleted, attachment, fields } = {}) {
         try {
             FfiConverterString.checkType(id)
         } catch (e) {
@@ -750,13 +756,13 @@ export class RemoteSettingsRecord {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeRemoteSettingsRecord extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new RemoteSettingsRecord(
-            FfiConverterString.read(dataStream), 
-            FfiConverterU64.read(dataStream), 
-            FfiConverterBool.read(dataStream), 
-            FfiConverterOptionalTypeAttachment.read(dataStream), 
-            FfiConverterTypeRsJsonObject.read(dataStream)
-        );
+        return new RemoteSettingsRecord({
+            id: FfiConverterString.read(dataStream),
+            lastModified: FfiConverterU64.read(dataStream),
+            deleted: FfiConverterBool.read(dataStream),
+            attachment: FfiConverterOptionalTypeAttachment.read(dataStream),
+            fields: FfiConverterTypeRsJsonObject.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.id);
@@ -778,6 +784,9 @@ export class FfiConverterTypeRemoteSettingsRecord extends FfiConverterArrayBuffe
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof RemoteSettingsRecord)) {
+            throw new TypeError(`Expected 'RemoteSettingsRecord', found '${typeof value}'`);
+        }
         try {
             FfiConverterString.checkType(value.id);
         } catch (e) {
@@ -822,7 +831,7 @@ export class FfiConverterTypeRemoteSettingsRecord extends FfiConverterArrayBuffe
 }
 
 export class RemoteSettingsResponse {
-    constructor(records,lastModified) {
+    constructor({ records, lastModified } = {}) {
         try {
             FfiConverterSequenceTypeRemoteSettingsRecord.checkType(records)
         } catch (e) {
@@ -853,10 +862,10 @@ export class RemoteSettingsResponse {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeRemoteSettingsResponse extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new RemoteSettingsResponse(
-            FfiConverterSequenceTypeRemoteSettingsRecord.read(dataStream), 
-            FfiConverterU64.read(dataStream)
-        );
+        return new RemoteSettingsResponse({
+            records: FfiConverterSequenceTypeRemoteSettingsRecord.read(dataStream),
+            lastModified: FfiConverterU64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterSequenceTypeRemoteSettingsRecord.write(dataStream, value.records);
@@ -872,6 +881,9 @@ export class FfiConverterTypeRemoteSettingsResponse extends FfiConverterArrayBuf
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof RemoteSettingsResponse)) {
+            throw new TypeError(`Expected 'RemoteSettingsResponse', found '${typeof value}'`);
+        }
         try {
             FfiConverterSequenceTypeRemoteSettingsRecord.checkType(value.records);
         } catch (e) {
