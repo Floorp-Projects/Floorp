@@ -71,7 +71,7 @@ add_task(async function test_timestamp_fixup() {
     Math.floor(Services.cookies.cookies[0].creationTime / 1000),
     now
   );
-  Assert.equal(conn.schemaVersion, 12);
+  Assert.equal(conn.schemaVersion, 13);
 
   Assert.equal(
     await Glean.networking.cookieTimestampFixedCount.creationTime.testGetValue(),

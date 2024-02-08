@@ -59,7 +59,7 @@ conn.executeSimpleSQL(
 // Get sessionCookies to wait for the initialization in cookie thread
 Services.cookies.sessionCookies;
 
-Assert.equal(conn.schemaVersion, 12);
+Assert.equal(conn.schemaVersion, 13);
 let stmt = conn.createStatement(
   "SELECT sql FROM sqlite_master " +
     "WHERE type = 'table' AND " +
