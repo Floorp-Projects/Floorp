@@ -85,6 +85,223 @@ function add24HourImpressionJEXLTargeting(
 const MESSAGES = () => {
   let messages = [
     {
+      id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
+      template: "feature_callout",
+      content: {
+        id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        tour_pref_name:
+          "messaging-system-action.fakespot-opted-out-survey.progress",
+        tour_pref_default_value:
+          '{"screen":"FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_1","complete":false}',
+        screens: [
+          {
+            id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_1",
+            force_hide_steps_indicator: true,
+            anchors: [
+              {
+                selector: "#shopping-sidebar-button",
+                panel_position: {
+                  anchor_attachment: "bottomcenter",
+                  callout_attachment: "topright",
+                },
+                no_open_on_anchor: true,
+                arrow_width: "22.62742",
+              },
+            ],
+            content: {
+              position: "callout",
+              layout: "survey",
+              width: "332px",
+              padding: "20",
+              title: "Help improve Firefox",
+              title_logo: {
+                imageURL: "chrome://branding/content/about-logo.png",
+              },
+              subtitle:
+                "Please let us know why you turned off Review Checker. Select multiple if needed.",
+              secondary_button: {
+                label: "Submit",
+                style: "primary",
+                action: {
+                  type: "MULTI_ACTION",
+                  collectSelect: true,
+                  data: {
+                    actions: [
+                      {
+                        type: "SET_PREF",
+                        data: {
+                          pref: {
+                            name: "messaging-system-action.fakespot-opted-out-survey.progress",
+                            value:
+                              '{"screen":"FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_2","complete":false}',
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+                disabled: "hasActiveMultiSelect",
+              },
+              additional_button: {
+                label: { raw: "Terms of use", marginInline: "2px 0" },
+                style: "link",
+                alignment: "space-between",
+                action: {
+                  data: {
+                    args: "https://www.mozilla.org/about/legal/terms/mozilla/",
+                    where: "tabshifted",
+                  },
+                  type: "OPEN_URL",
+                },
+              },
+              dismiss_button: {
+                action: {
+                  type: "MULTI_ACTION",
+                  collectSelect: true,
+                  data: {
+                    actions: [
+                      {
+                        type: "BLOCK_MESSAGE",
+                        data: { id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY" },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: {
+                          pref: {
+                            name: "messaging-system-action.fakespot-opted-out-survey.progress",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                  dismiss: true,
+                },
+                label: { aria_label: "Close" },
+                size: "small",
+              },
+              tiles: {
+                type: "multiselect",
+                style: {
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                },
+                data: [
+                  {
+                    id: "fakespot-opted-out-survey-hard-to-understand",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "It’s hard to understand" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                  {
+                    id: "fakespot-opted-out-survey-too-slow",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "It’s too slow" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                  {
+                    id: "fakespot-opted-out-survey-not-accurate",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "It’s not accurate" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                  {
+                    id: "fakespot-opted-out-survey-not-helpful",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "It’s not helpful to me" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                  {
+                    id: "fakespot-opted-out-survey-check-reviews-myself",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "I’d rather check reviews myself" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                  {
+                    id: "fakespot-opted-out-survey-other",
+                    type: "checkbox",
+                    defaultValue: false,
+                    label: { raw: "Other" },
+                    icon: { style: { marginInline: "2px 8px" } },
+                  },
+                ],
+              },
+            },
+          },
+          {
+            id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY_2",
+            force_hide_steps_indicator: true,
+            anchors: [
+              {
+                selector: "#shopping-sidebar-button",
+                panel_position: {
+                  anchor_attachment: "bottomcenter",
+                  callout_attachment: "topright",
+                },
+                no_open_on_anchor: true,
+                arrow_width: "22.62742",
+              },
+            ],
+            content: {
+              layout: "inline",
+              position: "callout",
+              title: "Thanks for your feedback!",
+              title_logo: {
+                imageURL:
+                  "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/706c7a85-cf23-442e-8a92-7ebc7f537375.svg",
+              },
+              dismiss_button: {
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "messaging-system-action.fakespot-opted-out-survey.progress",
+                    },
+                  },
+                  dismiss: true,
+                },
+                label: { aria_label: "Close" },
+                size: "small",
+              },
+              page_event_listeners: [
+                {
+                  params: {
+                    type: "timeout",
+                    options: { once: true, interval: 20000 },
+                  },
+                  action: { dismiss: true },
+                },
+                {
+                  params: {
+                    type: "tourend",
+                    options: { once: true },
+                  },
+                  action: {
+                    type: "BLOCK_MESSAGE",
+                    data: { id: "FAKESPOT_CALLOUT_OPTED_OUT_SURVEY" },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      priority: 2,
+      targeting: `'browser.shopping.experience2023.optedIn' | preferenceValue == 2 && !'browser.shopping.experience2023.active' | preferenceValue && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false`,
+      trigger: {
+        id: "preferenceObserver",
+        params: ["browser.shopping.experience2023.optedIn"],
+      },
+    },
+    {
       id: "FIREFOX_VIEW_SPOTLIGHT",
       template: "spotlight",
       content: {
