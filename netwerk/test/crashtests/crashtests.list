@@ -5,3 +5,4 @@ load 1274044-1.html
 skip-if(ThreadSanitizer) skip-if(Android) pref(privacy.firstparty.isolate,true) load 1334468-1.html # Bug 1639080
 load 1399467-1.html
 load 1793521.html
+load 1787122.html
