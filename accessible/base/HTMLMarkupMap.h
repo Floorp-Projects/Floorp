@@ -155,6 +155,8 @@ MARKUPMAP(
 
 MARKUPMAP(dt, New_HTMLDtOrDd<HTMLLIAccessible>, roles::TERM)
 
+MARKUPMAP(em, New_HyperText, roles::EMPHASIS)
+
 MARKUPMAP(
     figcaption,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {

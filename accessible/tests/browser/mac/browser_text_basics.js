@@ -355,7 +355,7 @@ addAccessibleTask(
 
 addAccessibleTask(
   `<div id="t">
-    A link <b>should</b> explain <em>clearly</em> what information the <i>reader</i> will get by clicking on that link.
+    A link <b>should</b> explain <u>clearly</u> what information the <i>reader</i> will get by clicking on that link.
   </div>`,
   async (browser, accDoc) => {
     let t = getNativeInterface(accDoc, "t");
