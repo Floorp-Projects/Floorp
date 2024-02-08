@@ -1225,4 +1225,28 @@ bool IsWaveMimetype(const nsACString& aMimeType) {
          aMimeType.EqualsLiteral("audio/wave; codecs=65534");
 }
 
+void DetermineResolutionForTelemetry(const MediaInfo& aInfo,
+                                     nsCString& aResolutionOut) {
+  if (aInfo.HasAudio()) {
+    aResolutionOut.AppendASCII("AV,");
+  } else {
+    aResolutionOut.AppendASCII("V,");
+  }
+  static const struct {
+    int32_t mH;
+    const char* mRes;
+  } sResolutions[] = {{240, "0<h<=240"},     {480, "240<h<=480"},
+                      {576, "480<h<=576"},   {720, "576<h<=720"},
+                      {1080, "720<h<=1080"}, {2160, "1080<h<=2160"}};
+  const char* resolution = "h>2160";
+  int32_t height = aInfo.mVideo.mDisplay.height;
+  for (const auto& res : sResolutions) {
+    if (height <= res.mH) {
+      resolution = res.mRes;
+      break;
+    }
+  }
+  aResolutionOut.AppendASCII(resolution);
+}
+
 }  // end namespace mozilla

@@ -436,22 +436,8 @@ void TelemetryProbesReporter::ReportResultForVideo() {
 
   // Keyed by audio+video or video alone, and by a resolution range.
   const MediaInfo& info = mOwner->GetMediaInfo();
-  nsCString key(info.HasAudio() ? "AV," : "V,");
-  static const struct {
-    int32_t mH;
-    const char* mRes;
-  } sResolutions[] = {{240, "0<h<=240"},     {480, "240<h<=480"},
-                      {576, "480<h<=576"},   {720, "576<h<=720"},
-                      {1080, "720<h<=1080"}, {2160, "1080<h<=2160"}};
-  const char* resolution = "h>2160";
-  int32_t height = info.mVideo.mDisplay.height;
-  for (const auto& res : sResolutions) {
-    if (height <= res.mH) {
-      resolution = res.mRes;
-      break;
-    }
-  }
-  key.AppendASCII(resolution);
+  nsCString key;
+  DetermineResolutionForTelemetry(info, key);
 
   auto visiblePlayTimeS = totalVideoPlayTimeS - invisiblePlayTimeS;
   LOG("VIDEO_VISIBLE_PLAY_TIME = %f, keys: '%s' and 'All'", visiblePlayTimeS,
