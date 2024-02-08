@@ -945,6 +945,9 @@ address-autofill-feature:
   variables:
     status:
       type: boolean
+      setPref:
+        branch: default
+        pref: extensions.formautofill.addresses.experiments.enabled
       description: If true, we will allow user to use address autofill
 
 shellService:
