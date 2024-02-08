@@ -5,6 +5,9 @@
 
   ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
   ### DO NOT edit it by hand.                                       ###
+if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
+    LOCAL_INCLUDES += [ "/media/libvpx/libvpx/" ]
+    CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]
 
 COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
@@ -25,7 +28,6 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
-    "/media/libvpx/libvpx/",
     "/media/libyuv/",
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
