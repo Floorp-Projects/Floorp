@@ -4,6 +4,7 @@
 
 import abc
 import re
+import sys
 from pathlib import Path
 from threading import Thread
 
@@ -187,7 +188,8 @@ def _delete_server_name(sentry_event, _):
 def _get_repository_object(topsrcdir: Path):
     try:
         return get_repository_object(str(topsrcdir))
-    except (InvalidRepoPath, MissingVCSTool):
+    except (InvalidRepoPath, MissingVCSTool) as e:
+        print(f"Warning: {e}", file=sys.stderr)
         return None
 
 
