@@ -420,9 +420,6 @@ div#feature-callout.hidden {
 #feature-callout .screen[pos=callout] .action-buttons[alignment=start] {
   justify-content: start;
 }
-#feature-callout .screen[pos=callout] .action-buttons[alignment=space-between] {
-  justify-content: space-between;
-}
 #feature-callout .screen[pos=callout] .action-buttons .secondary-cta {
   font-size: inherit;
 }

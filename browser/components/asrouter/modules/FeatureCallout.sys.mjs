@@ -285,7 +285,6 @@ export class FeatureCallout {
         }
       };
       if (this._container?.localName === "panel") {
-        this._container.removeEventListener("popuphiding", this);
         this._container.addEventListener("popuphidden", onFadeOut, {
           once: true,
         });
