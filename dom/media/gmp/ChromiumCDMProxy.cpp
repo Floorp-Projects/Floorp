@@ -8,6 +8,7 @@
 #include "ChromiumCDMCallbackProxy.h"
 #include "MediaResult.h"
 #include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/dom/MediaKeysBinding.h"
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
@@ -599,12 +600,13 @@ RefPtr<DecryptPromise> ChromiumCDMProxy::Decrypt(MediaRawData* aSample) {
                      [cdm, sample]() { return cdm->Decrypt(sample); });
 }
 
-void ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
-                                          const nsAString& aMinHdcpVersion) {
+void ChromiumCDMProxy::GetStatusForPolicy(
+    PromiseId aPromiseId, const dom::HDCPVersion& aMinHdcpVersion) {
   MOZ_ASSERT(NS_IsMainThread());
   EME_LOG("ChromiumCDMProxy::GetStatusForPolicy(this=%p, pid=%" PRIu32
           ") minHdcpVersion=%s",
-          this, aPromiseId, NS_ConvertUTF16toUTF8(aMinHdcpVersion).get());
+          this, aPromiseId,
+          dom::HDCPVersionValues::GetString(aMinHdcpVersion).data());
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
@@ -613,10 +615,10 @@ void ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
     return;
   }
 
-  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsCString>(
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, dom::HDCPVersion>(
       "gmp::ChromiumCDMParent::GetStatusForPolicy", cdm,
       &gmp::ChromiumCDMParent::GetStatusForPolicy, aPromiseId,
-      NS_ConvertUTF16toUTF8(aMinHdcpVersion)));
+      aMinHdcpVersion));
 }
 
 void ChromiumCDMProxy::Terminated() {

@@ -276,67 +276,44 @@ void ChromiumCDMParent::CompleteQueryOutputProtectionStatus(
                                                     aProtectionMask);
 }
 
-// See
-// https://cs.chromium.org/chromium/src/media/blink/webcontentdecryptionmodule_impl.cc?l=33-66&rcl=d49aa59ac8c2925d5bec229f3f1906537b6b4547
-static Result<cdm::HdcpVersion, nsresult> ToCDMHdcpVersion(
-    const nsCString& aMinHdcpVersion) {
-  if (aMinHdcpVersion.IsEmpty()) {
-    return cdm::HdcpVersion::kHdcpVersionNone;
+static cdm::HdcpVersion ToCDMHdcpVersion(
+    const dom::HDCPVersion& aMinHdcpVersion) {
+  switch (aMinHdcpVersion) {
+    case dom::HDCPVersion::_1_0:
+      return cdm::HdcpVersion::kHdcpVersion1_0;
+    case dom::HDCPVersion::_1_1:
+      return cdm::HdcpVersion::kHdcpVersion1_1;
+    case dom::HDCPVersion::_1_2:
+      return cdm::HdcpVersion::kHdcpVersion1_2;
+    case dom::HDCPVersion::_1_3:
+      return cdm::HdcpVersion::kHdcpVersion1_3;
+    case dom::HDCPVersion::_1_4:
+      return cdm::HdcpVersion::kHdcpVersion1_4;
+    case dom::HDCPVersion::_2_0:
+      return cdm::HdcpVersion::kHdcpVersion2_0;
+    case dom::HDCPVersion::_2_1:
+      return cdm::HdcpVersion::kHdcpVersion2_1;
+    case dom::HDCPVersion::_2_2:
+      return cdm::HdcpVersion::kHdcpVersion2_2;
+    case dom::HDCPVersion::_2_3:
+      return cdm::HdcpVersion::kHdcpVersion2_3;
+    // When adding another version remember to update GMPMessageUtils so that we
+    // can serialize it correctly and have correct bounds on the enum!
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected HDCP version!");
+      return cdm::HdcpVersion::kHdcpVersionNone;
   }
-  if (aMinHdcpVersion.EqualsIgnoreCase("1.0")) {
-    return cdm::HdcpVersion::kHdcpVersion1_0;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("1.1")) {
-    return cdm::HdcpVersion::kHdcpVersion1_1;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("1.2")) {
-    return cdm::HdcpVersion::kHdcpVersion1_2;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("1.3")) {
-    return cdm::HdcpVersion::kHdcpVersion1_3;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("1.4")) {
-    return cdm::HdcpVersion::kHdcpVersion1_4;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("2.0")) {
-    return cdm::HdcpVersion::kHdcpVersion2_0;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("2.1")) {
-    return cdm::HdcpVersion::kHdcpVersion2_1;
-  }
-  if (aMinHdcpVersion.EqualsIgnoreCase("2.2")) {
-    return cdm::HdcpVersion::kHdcpVersion2_2;
-  }
-  // When adding another version remember to update GMPMessageUtils so that we
-  // can serialize it correctly and have correct bounds on the enum!
-
-  // Invalid hdcp version string.
-  return Err(NS_ERROR_INVALID_ARG);
 }
 
-void ChromiumCDMParent::GetStatusForPolicy(uint32_t aPromiseId,
-                                           const nsCString& aMinHdcpVersion) {
+void ChromiumCDMParent::GetStatusForPolicy(
+    uint32_t aPromiseId, const dom::HDCPVersion& aMinHdcpVersion) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   GMP_LOG_DEBUG("ChromiumCDMParent::GetStatusForPolicy(this=%p)", this);
   if (mIsShutdown) {
     RejectPromiseShutdown(aPromiseId);
     return;
   }
-  auto hdcpVersionResult = ToCDMHdcpVersion(aMinHdcpVersion);
-  if (hdcpVersionResult.isErr()) {
-    ErrorResult rv;
-    // XXXbz there's no spec for this yet, and
-    // <https://github.com/WICG/hdcp-detection/blob/master/explainer.md>
-    // does not define what exceptions get thrown.  Let's assume
-    // TypeError for invalid args, as usual.
-    constexpr auto err =
-        "getStatusForPolicy failed due to bad hdcp version argument"_ns;
-    rv.ThrowTypeError(err);
-    RejectPromise(aPromiseId, std::move(rv), err);
-    return;
-  }
-
-  if (!SendGetStatusForPolicy(aPromiseId, hdcpVersionResult.unwrap())) {
+  if (!SendGetStatusForPolicy(aPromiseId, ToCDMHdcpVersion(aMinHdcpVersion))) {
     RejectPromiseWithStateError(
         aPromiseId, "Failed to send getStatusForPolicy to CDM process"_ns);
   }
