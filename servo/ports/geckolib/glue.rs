@@ -8837,9 +8837,6 @@ pub struct PropDef {
     pub initial_value: nsCString,
     // True if the property was set with CSS.registerProperty
     pub from_js: bool,
-    pub url_data: *mut URLExtraData,
-    pub line: u32,
-    pub column: u32,
 }
 
 impl PropDef {
@@ -8865,9 +8862,6 @@ impl PropDef {
             has_initial_value: property_registration.data.initial_value.is_some(),
             initial_value,
             from_js,
-            url_data: property_registration.url_data.ptr(),
-            line: property_registration.source_location.line,
-            column: property_registration.source_location.column,
         }
     }
 }

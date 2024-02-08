@@ -156,9 +156,6 @@ dictionary InspectorCSSPropertyDefinition {
   required boolean inherits;
   required UTF8String? initialValue;
   required boolean fromJS;
-  required unsigned long line;
-  required unsigned long column;
-  required DOMString uri;
 };
 
 [Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",

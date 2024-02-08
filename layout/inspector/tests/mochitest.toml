@@ -6,11 +6,9 @@ prefs = [
   "dom.customHighlightAPI.enabled=true",
 ]
 support-files = [
-  "at_property.css",
   "bug1202095.css",
   "bug1202095-2.css",
   "bug856317.css",
-  "css_register_property.js",
   "file_bug522601.html",
 ]
 
