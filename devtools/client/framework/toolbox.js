@@ -4478,8 +4478,8 @@ Toolbox.prototype = {
    * Opens source in plain "view-source:".
    * @see devtools/client/shared/source-utils.js
    */
-  viewSource(sourceURL, sourceLine) {
-    return viewSource.viewSource(this, sourceURL, sourceLine);
+  viewSource(sourceURL, sourceLine, sourceColumn) {
+    return viewSource.viewSource(this, sourceURL, sourceLine, sourceColumn);
   },
 
   // Support for WebExtensions API (`devtools.network.*`)

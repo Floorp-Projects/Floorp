@@ -31,6 +31,16 @@ exports[`SourceFooter Component default case should render 1`] = `
           className="prettyPrint"
         />
       </button>
+      <MenuButton
+        className="devtools-button debugger-source-map-button disabled not-mapped"
+        icon={true}
+        menuId="debugger-source-map-button"
+        menuOffset={-5}
+        menuPosition="bottom"
+        title="Source Map status"
+      >
+        <Component />
+      </MenuButton>
     </div>
   </div>
   <div
@@ -77,6 +87,16 @@ exports[`SourceFooter Component move cursor should render new cursor position 1`
           className="prettyPrint"
         />
       </button>
+      <MenuButton
+        className="devtools-button debugger-source-map-button disabled not-mapped"
+        icon={true}
+        menuId="debugger-source-map-button"
+        menuOffset={-5}
+        menuPosition="bottom"
+        title="Source Map status"
+      >
+        <Component />
+      </MenuButton>
     </div>
   </div>
   <div

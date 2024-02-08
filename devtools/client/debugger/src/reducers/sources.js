@@ -174,6 +174,19 @@ function update(state = initialSourcesState(), action) {
       };
     }
 
+    case "SET_DEFAULT_SELECTED_LOCATION": {
+      if (
+        state.shouldSelectOriginalLocation ==
+        action.shouldSelectOriginalLocation
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        shouldSelectOriginalLocation: action.shouldSelectOriginalLocation,
+      };
+    }
+
     case "SET_PENDING_SELECTED_LOCATION": {
       const pendingSelectedLocation = {
         url: action.url,

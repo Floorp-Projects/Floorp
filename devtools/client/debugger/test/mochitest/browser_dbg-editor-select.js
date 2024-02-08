@@ -30,6 +30,7 @@ add_task(async function () {
   );
   // Note that CodeMirror is 0-based while the footer displays 1-based
   getCM(dbg).setCursor({ line: 1, ch: 0 });
+  await waitForCursorPosition(dbg, 2);
   assertCursorPosition(
     dbg,
     2,
@@ -37,6 +38,7 @@ add_task(async function () {
     "when moving the cursor, the position footer updates"
   );
   getCM(dbg).setCursor({ line: 2, ch: 0 });
+  await waitForCursorPosition(dbg, 3);
   assertCursorPosition(
     dbg,
     3,

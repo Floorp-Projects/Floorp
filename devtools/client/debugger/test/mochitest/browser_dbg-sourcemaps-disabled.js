@@ -17,7 +17,34 @@ add_task(async function () {
 
   info("Pretty print the bundle");
   await selectSource(dbg, bundleSrc);
+
+  const footerButton = findElement(dbg, "sourceMapFooterButton");
+  is(
+    footerButton.textContent,
+    "Source Maps disabled",
+    "The source map button reports the disabling"
+  );
+  ok(
+    footerButton.classList.contains("disabled"),
+    "The source map button is disabled"
+  );
+
   clickElement(dbg, "prettyPrintButton");
   await waitForSelectedSource(dbg, "bundle.js:formatted");
-  ok(true, "everything finished");
+  ok(true, "Pretty printed source shown");
+
+  const toggled = waitForDispatch(dbg.store, "TOGGLE_SOURCE_MAPS_ENABLED");
+  await clickOnSourceMapMenuItem(dbg, ".debugger-source-map-enabled");
+  await toggled;
+  ok(true, "Toggled the Source map setting");
+
+  is(
+    footerButton.textContent,
+    "original file",
+    "The source map button now reports the pretty printed file as original file"
+  );
+  ok(
+    !footerButton.classList.contains("disabled"),
+    "The source map button is no longer disabled"
+  );
 });
