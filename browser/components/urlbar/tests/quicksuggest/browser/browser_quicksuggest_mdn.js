@@ -15,6 +15,7 @@ const REMOTE_SETTINGS_DATA = [
         description:
           "The filter() method creates a shallow copy of a portion of a given array, filtered down to just the elements from the given array that pass the test implemented by the provided function.",
         keywords: ["array"],
+        score: 0.24,
       },
     ],
   },
@@ -26,7 +27,7 @@ add_setup(async function () {
   });
 });
 
-add_task(async function basic() {
+add_tasks_with_rust(async function basic() {
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -43,7 +44,10 @@ add_task(async function basic() {
     UrlbarProviderQuickSuggest.name,
     "The result should be from the expected provider"
   );
-  Assert.equal(result.payload.provider, "MDNSuggestions");
+  Assert.equal(
+    result.payload.provider,
+    UrlbarPrefs.get("quickSuggestRustEnabled") ? "Mdn" : "MDNSuggestions"
+  );
 
   const onLoad = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
@@ -58,7 +62,7 @@ add_task(async function basic() {
 });
 
 // Tests the row/group label.
-add_task(async function rowLabel() {
+add_tasks_with_rust(async function rowLabel() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0],
@@ -72,7 +76,7 @@ add_task(async function rowLabel() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-add_task(async function disable() {
+add_tasks_with_rust(async function disable() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.mdn.featureGate", false]],
   });
@@ -91,7 +95,7 @@ add_task(async function disable() {
 });
 
 // Tests the "Not interested" result menu dismissal command.
-add_task(async function resultMenu_notInterested() {
+add_tasks_with_rust(async function resultMenu_notInterested() {
   await doDismissTest("not_interested");
 
   Assert.equal(UrlbarPrefs.get("suggest.mdn"), false);
@@ -107,7 +111,7 @@ add_task(async function resultMenu_notInterested() {
 });
 
 // Tests the "Not relevant" result menu dismissal command.
-add_task(async function notRelevant() {
+add_tasks_with_rust(async function notRelevant() {
   await doDismissTest("not_relevant");
 
   Assert.equal(UrlbarPrefs.get("suggest.mdn"), true);
