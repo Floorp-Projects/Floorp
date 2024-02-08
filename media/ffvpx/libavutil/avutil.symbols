@@ -337,3 +337,6 @@ av_hwframe_transfer_get_formats
 av_hwdevice_ctx_create_derived
 av_malloc_array
 av_get_sample_fmt_name
+av_tx_uninit
+av_tx_init
+av_channel_layout_describe_bprint
