@@ -6,6 +6,7 @@ package mozilla.components.support.utils
 
 import android.graphics.Color
 import androidx.annotation.ColorInt
+import androidx.core.graphics.ColorUtils
 
 object ColorUtils {
 
@@ -18,12 +19,12 @@ object ColorUtils {
     }
 
     /**
-     * Returns true if the color is dark enough that white text should be used on top of it.
+     * @return true if the given [color] is dark enough that white text should be used on top of it.
      */
     @JvmStatic
     @SuppressWarnings("MagicNumber")
     fun isDark(@ColorInt color: Int): Boolean {
-        if (color == Color.WHITE || Color.alpha(color) < 128) {
+        if (color == Color.TRANSPARENT || ColorUtils.calculateLuminance(color) >= 0.5) {
             return false
         }
 

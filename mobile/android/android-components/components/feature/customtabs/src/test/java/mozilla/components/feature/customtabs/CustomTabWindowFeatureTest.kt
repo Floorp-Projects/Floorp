@@ -10,6 +10,8 @@ import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ColorSchemeParams
+import mozilla.components.browser.state.state.ColorSchemes
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
@@ -107,8 +109,12 @@ class CustomTabWindowFeatureTest {
     fun `creates intent based on custom tab config`() {
         val feature = CustomTabWindowFeature(activity, store, sessionId)
         val config = CustomTabConfig(
-            toolbarColor = Color.RED,
-            navigationBarColor = Color.BLUE,
+            colorSchemes = ColorSchemes(
+                defaultColorSchemeParams = ColorSchemeParams(
+                    toolbarColor = Color.RED,
+                    navigationBarColor = Color.BLUE,
+                ),
+            ),
             enableUrlbarHiding = true,
             showShareMenuItem = true,
             titleVisible = true,

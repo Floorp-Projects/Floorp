@@ -119,7 +119,9 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
     private fun generateOptions(customTabConfig: CustomTabConfig): List<String> {
         val options = mutableListOf<String>()
 
-        if (customTabConfig.toolbarColor != null) options.add(TOOLBAR_COLOR_OPTION)
+        if (customTabConfig.colorSchemes?.defaultColorSchemeParams?.toolbarColor != null) {
+            options.add(TOOLBAR_COLOR_OPTION)
+        }
         if (customTabConfig.closeButtonIcon != null) options.add(CLOSE_BUTTON_OPTION)
         if (customTabConfig.enableUrlbarHiding) options.add(DISABLE_URLBAR_HIDING_OPTION)
         if (customTabConfig.actionButtonConfig != null) options.add(ACTION_BUTTON_OPTION)

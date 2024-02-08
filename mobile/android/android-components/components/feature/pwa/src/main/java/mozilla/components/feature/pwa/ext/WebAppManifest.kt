@@ -11,6 +11,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.core.net.toUri
+import mozilla.components.browser.state.state.ColorSchemeParams
+import mozilla.components.browser.state.state.ColorSchemes
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -47,13 +49,19 @@ fun WebAppManifest.toTaskDescription(icon: Bitmap?) =
  */
 fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
     val backgroundColor = this.backgroundColor
+    val colorSchemes = if (themeColor != null && backgroundColor != null) {
+        ColorSchemes(
+            ColorSchemeParams(
+                toolbarColor = themeColor,
+                navigationBarColor = getVersionSafeNavBarColor(backgroundColor),
+            ),
+        )
+    } else {
+        null
+    }
+
     return CustomTabConfig(
-        toolbarColor = themeColor,
-        navigationBarColor = if (SDK_INT >= Build.VERSION_CODES.O && backgroundColor != null) {
-            if (isDark(backgroundColor)) Color.BLACK else Color.WHITE
-        } else {
-            null
-        },
+        colorSchemes = colorSchemes,
         closeButtonIcon = null,
         enableUrlbarHiding = true,
         actionButtonConfig = null,
@@ -62,6 +70,12 @@ fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
         menuItems = emptyList(),
         externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
     )
+}
+
+private fun getVersionSafeNavBarColor(backgroundColor: Int) = if (SDK_INT >= Build.VERSION_CODES.O) {
+    if (isDark(backgroundColor)) Color.BLACK else Color.WHITE
+} else {
+    null
 }
 
 /**

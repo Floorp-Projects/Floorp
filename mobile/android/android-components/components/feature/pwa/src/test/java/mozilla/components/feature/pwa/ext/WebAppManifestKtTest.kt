@@ -52,8 +52,8 @@ class WebAppManifestKtTest {
             themeColor = rgb(255, 0, 255),
             backgroundColor = rgb(230, 230, 230),
         ).toCustomTabConfig()
-        assertEquals(rgb(255, 0, 255), config.toolbarColor)
-        assertEquals(Color.WHITE, config.navigationBarColor)
+        assertEquals(rgb(255, 0, 255), config.colorSchemes?.defaultColorSchemeParams?.toolbarColor)
+        assertEquals(Color.WHITE, config.colorSchemes?.defaultColorSchemeParams?.navigationBarColor)
         assertNull(config.closeButtonIcon)
         assertTrue(config.enableUrlbarHiding)
         assertNull(config.actionButtonConfig)

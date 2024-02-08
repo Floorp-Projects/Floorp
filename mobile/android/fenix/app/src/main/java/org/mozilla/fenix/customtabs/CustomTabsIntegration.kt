@@ -66,7 +66,7 @@ class CustomTabsIntegration(
         window = activity.window,
         shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
         closeListener = { activity.finishAndRemoveTask() },
-        updateToolbarBackground = !isPrivate,
+        updateTheme = !isPrivate,
         forceActionButtonTinting = isPrivate,
     )
 

@@ -39,11 +39,17 @@ class ColorUtilsTest {
     @Test
     fun isDark() {
         assertTrue(ColorUtils.isDark(Color.BLACK))
+        assertTrue(ColorUtils.isDark(Color.GRAY))
+        assertTrue(ColorUtils.isDark(Color.DKGRAY))
+        assertTrue(ColorUtils.isDark(Color.RED))
+        assertTrue(ColorUtils.isDark(Color.BLUE))
+        assertTrue(ColorUtils.isDark(Color.MAGENTA))
+
+        assertFalse(ColorUtils.isDark(Color.GREEN))
+        assertFalse(ColorUtils.isDark(Color.YELLOW))
+        assertFalse(ColorUtils.isDark(Color.LTGRAY))
+        assertFalse(ColorUtils.isDark(Color.CYAN))
         assertFalse(ColorUtils.isDark(Color.WHITE))
         assertFalse(ColorUtils.isDark(Color.TRANSPARENT))
-        assertFalse(ColorUtils.isDark(50 shl 24)) // Alpha 50
-        assertFalse(ColorUtils.isDark(127 shl 24)) // Alpha 127
-        assertTrue(ColorUtils.isDark(128 shl 24)) // Alpha 128
-        assertTrue(ColorUtils.isDark(255 shl 24)) // Alpha 255
     }
 }

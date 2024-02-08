@@ -10,14 +10,17 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
+import android.util.SparseArray
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR
 import androidx.browser.customtabs.TrustedWebUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.state.state.ColorSchemeParams
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -30,6 +33,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabConfigHelperTest {
@@ -65,24 +69,139 @@ class CustomTabConfigHelperTest {
     }
 
     @Test
-    fun createFromIntentWithToolbarColor() {
-        val builder = CustomTabsIntent.Builder()
-        val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
-        customTabColorSchemeBuilder.setToolbarColor(Color.BLACK)
-        builder.setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())
+    fun createFromIntentNoColorScheme() {
+        val customTabsIntent = CustomTabsIntent.Builder().build()
 
-        val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
-        assertEquals(Color.BLACK, customTabConfig.toolbarColor)
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(null, result.colorScheme)
     }
 
     @Test
-    fun createFromIntentWithNavigationBarColor() {
-        val intent = CustomTabsIntent.Builder().build().intent.apply {
-            putExtra(EXTRA_NAVIGATION_BAR_COLOR, Color.WHITE)
-        }
+    fun createFromIntentWithColorScheme() {
+        val colorScheme = CustomTabsIntent.COLOR_SCHEME_SYSTEM
+        val customTabsIntent = CustomTabsIntent.Builder().setColorScheme(colorScheme).build()
 
-        val customTabConfig = createCustomTabConfigFromIntent(intent, testContext.resources)
-        assertEquals(Color.WHITE, customTabConfig.navigationBarColor)
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(colorScheme, result.colorScheme)
+    }
+
+    @Test
+    fun createFromIntentNoColorSchemeParams() {
+        val customTabsIntent = CustomTabsIntent.Builder().build()
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(null, result.colorSchemes)
+    }
+
+    @Test
+    fun createFromIntentWithDefaultColorSchemeParams() {
+        val colorSchemeParams = createColorSchemeParams()
+        val customTabsIntent = CustomTabsIntent.Builder().setDefaultColorSchemeParams(
+            createCustomTabColorSchemeParamsFrom(colorSchemeParams),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(colorSchemeParams, result.colorSchemes!!.defaultColorSchemeParams)
+    }
+
+    @Test
+    fun createFromIntentWithDefaultColorSchemeParamsWithNoProperties() {
+        val customTabsIntent = CustomTabsIntent.Builder().setDefaultColorSchemeParams(
+            CustomTabColorSchemeParams.Builder().build(),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(null, result.colorSchemes?.defaultColorSchemeParams)
+    }
+
+    @Test
+    fun createFromIntentWithLightColorSchemeParams() {
+        val colorSchemeParams = createColorSchemeParams()
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            CustomTabsIntent.COLOR_SCHEME_LIGHT,
+            createCustomTabColorSchemeParamsFrom(colorSchemeParams),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(colorSchemeParams, result.colorSchemes!!.lightColorSchemeParams)
+    }
+
+    @Test
+    fun createFromIntentWithLightColorSchemeParamsWithNoProperties() {
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            CustomTabsIntent.COLOR_SCHEME_LIGHT,
+            CustomTabColorSchemeParams.Builder().build(),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(null, result.colorSchemes?.lightColorSchemeParams)
+    }
+
+    @Test
+    fun createFromIntentWithDarkColorSchemeParams() {
+        val colorSchemeParams = createColorSchemeParams()
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            CustomTabsIntent.COLOR_SCHEME_DARK,
+            createCustomTabColorSchemeParamsFrom(colorSchemeParams),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(colorSchemeParams, result.colorSchemes!!.darkColorSchemeParams)
+    }
+
+    @Test
+    fun createFromIntentWithDarkColorSchemeParamsWithNoProperties() {
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            CustomTabsIntent.COLOR_SCHEME_DARK,
+            CustomTabColorSchemeParams.Builder().build(),
+        ).build()
+
+        val result = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
+
+        assertEquals(null, result.colorSchemes?.lightColorSchemeParams)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun getColorSchemeParamsBundleOnAndroidVersionTiramisu() {
+        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
+        val colorSchemeParams = createColorSchemeParams()
+        val customTabColorScheme = createCustomTabColorSchemeParamsFrom(colorSchemeParams)
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            colorScheme,
+            customTabColorScheme,
+        ).build()
+
+        val result = customTabsIntent.intent.toSafeIntent().getColorSchemeParamsBundle()!!
+        val expected = SparseArray<Bundle>()
+        expected.put(colorScheme, createBundleFrom(customTabColorScheme))
+
+        result[colorScheme].assertEquals(expected[colorScheme])
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2])
+    fun getColorSchemeParamsBundlePreAndroidVersionTiramisu() {
+        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
+        val colorSchemeParams = createColorSchemeParams()
+        val customTabColorScheme = createCustomTabColorSchemeParamsFrom(colorSchemeParams)
+        val customTabsIntent = CustomTabsIntent.Builder().setColorSchemeParams(
+            colorScheme,
+            customTabColorScheme,
+        ).build()
+
+        val result = customTabsIntent.intent.toSafeIntent().getColorSchemeParamsBundle()!!
+        val expected = SparseArray<Bundle>()
+        expected.put(colorScheme, createBundleFrom(customTabColorScheme))
+
+        result[colorScheme].assertEquals(expected[colorScheme])
     }
 
     @Test
@@ -258,5 +377,40 @@ class CustomTabConfigHelperTest {
 
         val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent, testContext.resources)
         assertNotNull(customTabConfig.sessionToken)
+    }
+
+    private fun createColorSchemeParams() = ColorSchemeParams(
+        toolbarColor = Color.BLACK,
+        secondaryToolbarColor = Color.RED,
+        navigationBarColor = Color.BLUE,
+        navigationBarDividerColor = Color.YELLOW,
+    )
+
+    private fun createCustomTabColorSchemeParamsFrom(colorSchemeParams: ColorSchemeParams): CustomTabColorSchemeParams {
+        val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
+        customTabColorSchemeBuilder.setToolbarColor(colorSchemeParams.toolbarColor!!)
+        customTabColorSchemeBuilder.setSecondaryToolbarColor(colorSchemeParams.secondaryToolbarColor!!)
+        customTabColorSchemeBuilder.setNavigationBarColor(colorSchemeParams.navigationBarColor!!)
+        customTabColorSchemeBuilder.setNavigationBarDividerColor(colorSchemeParams.navigationBarDividerColor!!)
+        return customTabColorSchemeBuilder.build()
+    }
+
+    private fun createBundleFrom(customTabColorScheme: CustomTabColorSchemeParams): Bundle {
+        val expectedBundle = Bundle()
+        expectedBundle.putInt(CustomTabsIntent.EXTRA_TOOLBAR_COLOR, customTabColorScheme.toolbarColor!!)
+        expectedBundle.putInt(CustomTabsIntent.EXTRA_SECONDARY_TOOLBAR_COLOR, customTabColorScheme.secondaryToolbarColor!!)
+        expectedBundle.putInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR, customTabColorScheme.navigationBarColor!!)
+        expectedBundle.putInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_DIVIDER_COLOR, customTabColorScheme.navigationBarDividerColor!!)
+        return expectedBundle
+    }
+
+    /**
+     * As Bundle does not implement Equals, assert the values individually.
+     */
+    private fun Bundle.assertEquals(bundle: Bundle) {
+        assertEquals(bundle.getInt(CustomTabsIntent.EXTRA_TOOLBAR_COLOR), getInt(CustomTabsIntent.EXTRA_TOOLBAR_COLOR))
+        assertEquals(bundle.getInt(CustomTabsIntent.EXTRA_SECONDARY_TOOLBAR_COLOR), getInt(CustomTabsIntent.EXTRA_SECONDARY_TOOLBAR_COLOR))
+        assertEquals(bundle.getInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR), getInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR))
+        assertEquals(bundle.getInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_DIVIDER_COLOR), getInt(CustomTabsIntent.EXTRA_NAVIGATION_BAR_DIVIDER_COLOR))
     }
 }

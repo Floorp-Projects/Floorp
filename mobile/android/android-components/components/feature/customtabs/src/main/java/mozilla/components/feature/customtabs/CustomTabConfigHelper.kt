@@ -8,15 +8,24 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent.ColorScheme
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_COLOR_SCHEME
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_COLOR_SCHEME_PARAMS
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_ENABLE_URLBAR_HIDING
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_MENU_ITEMS
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_DIVIDER_COLOR
+import androidx.browser.customtabs.CustomTabsIntent.EXTRA_SECONDARY_TOOLBAR_COLOR
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_SESSION
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_SHARE_STATE
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_TINT_ACTION_BUTTON
@@ -34,6 +43,8 @@ import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
 import androidx.browser.customtabs.CustomTabsSessionToken
 import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
+import mozilla.components.browser.state.state.ColorSchemeParams
+import mozilla.components.browser.state.state.ColorSchemes
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
@@ -41,7 +52,6 @@ import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
 import mozilla.components.support.utils.toSafeIntent
-import java.lang.ClassCastException
 import kotlin.math.max
 
 /**
@@ -78,21 +88,19 @@ fun isTrustedWebActivityIntent(safeIntent: SafeIntent) = isCustomTabIntent(safeI
     safeIntent.getBooleanExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, false)
 
 /**
- * Creates a [CustomTabConfig] instance based on the provided intent.
+ * Creates a [CustomTabConfig] instance based on the provided [Intent].
  *
- * @param intent the intent, wrapped as a SafeIntent, which is processed to extract configuration data.
- * @param resources needed in-order to verify that icons of a max size are only provided.
- * @return the CustomTabConfig instance.
+ * @param intent The [Intent] wrapped as a [SafeIntent], which is processed to extract configuration data.
+ * @param resources Optional [Resources] to verify that only icons of a max size are provided.
+ *
+ * @return the configured [CustomTabConfig].
  */
-fun createCustomTabConfigFromIntent(
-    intent: Intent,
-    resources: Resources?,
-): CustomTabConfig {
+fun createCustomTabConfigFromIntent(intent: Intent, resources: Resources?): CustomTabConfig {
     val safeIntent = intent.toSafeIntent()
 
     return CustomTabConfig(
-        toolbarColor = safeIntent.getColorExtra(EXTRA_TOOLBAR_COLOR),
-        navigationBarColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_COLOR),
+        colorScheme = safeIntent.getColorExtra(EXTRA_COLOR_SCHEME),
+        colorSchemes = getColorSchemes(safeIntent),
         closeButtonIcon = getCloseButtonIcon(safeIntent, resources),
         enableUrlbarHiding = safeIntent.getBooleanExtra(EXTRA_ENABLE_URLBAR_HIDING, false),
         actionButtonConfig = getActionButtonConfig(safeIntent),
@@ -128,6 +136,110 @@ private fun getCloseButtonIcon(intent: SafeIntent, resources: Resources?): Bitma
         null
     }
 }
+
+private fun getColorSchemes(safeIntent: SafeIntent): ColorSchemes? {
+    val defaultColorSchemeParams = getDefaultSchemeColorParams(safeIntent)
+    val lightColorSchemeParams = getLightColorSchemeParams(safeIntent)
+    val darkColorSchemeParams = getDarkColorSchemeParams(safeIntent)
+
+    return if (allNull(defaultColorSchemeParams, lightColorSchemeParams, darkColorSchemeParams)) {
+        null
+    } else {
+        ColorSchemes(
+            defaultColorSchemeParams = defaultColorSchemeParams,
+            lightColorSchemeParams = lightColorSchemeParams,
+            darkColorSchemeParams = darkColorSchemeParams,
+        )
+    }
+}
+
+/**
+ * Processes the given [SafeIntent] to extract possible default [CustomTabColorSchemeParams]
+ * properties.
+ *
+ * @param safeIntent the [SafeIntent] to process.
+ *
+ * @return the derived [ColorSchemeParams] or null if the [SafeIntent] had no default
+ * [CustomTabColorSchemeParams] properties.
+ *
+ * @see [CustomTabsIntent.Builder.setDefaultColorSchemeParams].
+ */
+private fun getDefaultSchemeColorParams(safeIntent: SafeIntent): ColorSchemeParams? {
+    val toolbarColor = safeIntent.getColorExtra(EXTRA_TOOLBAR_COLOR)
+    val secondaryToolbarColor = safeIntent.getColorExtra(EXTRA_SECONDARY_TOOLBAR_COLOR)
+    val navigationBarColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_COLOR)
+    val navigationBarDividerColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_DIVIDER_COLOR)
+
+    return if (allNull(
+            toolbarColor,
+            secondaryToolbarColor,
+            navigationBarColor,
+            navigationBarDividerColor,
+        )
+    ) {
+        null
+    } else {
+        ColorSchemeParams(
+            toolbarColor = toolbarColor,
+            secondaryToolbarColor = secondaryToolbarColor,
+            navigationBarColor = navigationBarColor,
+            navigationBarDividerColor = navigationBarDividerColor,
+        )
+    }
+}
+
+private fun getLightColorSchemeParams(safeIntent: SafeIntent) =
+    getColorSchemeParams(safeIntent, CustomTabsIntent.COLOR_SCHEME_LIGHT)
+
+private fun getDarkColorSchemeParams(safeIntent: SafeIntent) =
+    getColorSchemeParams(safeIntent, CustomTabsIntent.COLOR_SCHEME_DARK)
+
+/**
+ * Processes the given [SafeIntent] to extract possible [CustomTabColorSchemeParams] properties for
+ * the given [colorScheme].
+ *
+ * @param safeIntent The [SafeIntent] to process.
+ * @param colorScheme The [ColorScheme] to get the [ColorSchemeParams] for.
+ *
+ * @return the derived [ColorSchemeParams] for the given [ColorScheme], or null if the [SafeIntent]
+ * had no [CustomTabColorSchemeParams] properties for the [ColorScheme].
+ *
+ * @see [CustomTabsIntent.Builder.setColorSchemeParams].
+ */
+private fun getColorSchemeParams(safeIntent: SafeIntent, @ColorScheme colorScheme: Int): ColorSchemeParams? {
+    val bundle = safeIntent.getColorSchemeParamsBundle()?.get(colorScheme)
+
+    val toolbarColor = bundle?.getNullableSafeValue(EXTRA_TOOLBAR_COLOR)
+    val secondaryToolbarColor = bundle?.getNullableSafeValue(EXTRA_SECONDARY_TOOLBAR_COLOR)
+    val navigationBarColor = bundle?.getNullableSafeValue(EXTRA_NAVIGATION_BAR_COLOR)
+    val navigationBarDividerColor = bundle?.getNullableSafeValue(EXTRA_NAVIGATION_BAR_DIVIDER_COLOR)
+
+    return if (allNull(toolbarColor, secondaryToolbarColor, navigationBarColor, navigationBarDividerColor)) {
+        null
+    } else {
+        ColorSchemeParams(
+            toolbarColor = toolbarColor,
+            secondaryToolbarColor = secondaryToolbarColor,
+            navigationBarColor = navigationBarColor,
+            navigationBarDividerColor = navigationBarDividerColor,
+        )
+    }
+}
+
+private fun <T> allNull(vararg value: T?) = value.toList().all { it == null }
+
+@VisibleForTesting
+internal fun SafeIntent.getColorSchemeParamsBundle() = extras?.let {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        @Suppress("DEPRECATION")
+        it.getSparseParcelableArray(EXTRA_COLOR_SCHEME_PARAMS)
+    } else {
+        it.getSparseParcelableArray(EXTRA_COLOR_SCHEME_PARAMS, Bundle::class.java)
+    }
+}
+
+private fun Bundle.getNullableSafeValue(key: String) =
+    if (containsKey(key)) toSafeBundle().getInt(key) else null
 
 private fun getActionButtonConfig(intent: SafeIntent): CustomTabActionButtonConfig? {
     val actionButtonBundle = intent.getBundleExtra(EXTRA_ACTION_BUTTON_BUNDLE) ?: return null

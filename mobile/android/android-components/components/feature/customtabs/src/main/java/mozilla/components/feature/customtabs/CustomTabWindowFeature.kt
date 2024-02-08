@@ -47,10 +47,10 @@ class CustomTabWindowFeature(
             setInstantAppsEnabled(false)
 
             val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
-            config?.toolbarColor?.let {
+            config?.colorSchemes?.defaultColorSchemeParams?.toolbarColor?.let {
                 customTabColorSchemeBuilder.setToolbarColor(it)
             }
-            config?.navigationBarColor?.let {
+            config?.colorSchemes?.defaultColorSchemeParams?.navigationBarColor?.let {
                 customTabColorSchemeBuilder.setNavigationBarColor(it)
             }
             setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())

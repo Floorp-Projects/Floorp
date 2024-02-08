@@ -9,6 +9,8 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import mozilla.components.browser.state.state.ColorSchemeParams
+import mozilla.components.browser.state.state.ColorSchemes
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -139,7 +141,11 @@ class FennecWebAppIntentProcessor(
 
     private fun createFallbackCustomTabConfig(): CustomTabConfig {
         return CustomTabConfig(
-            toolbarColor = ContextCompat.getColor(context, R.color.fx_mobile_layer_color_1),
+            colorSchemes = ColorSchemes(
+                defaultColorSchemeParams = ColorSchemeParams(
+                    toolbarColor = ContextCompat.getColor(context, R.color.fx_mobile_layer_color_1),
+                ),
+            ),
         )
     }
 

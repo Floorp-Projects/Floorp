@@ -5,12 +5,23 @@
 package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
+import android.app.UiModeManager.MODE_NIGHT_YES
+import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.util.Size
 import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+import androidx.appcompat.app.AppCompatDelegate.NightMode
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
+import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
+import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_SYSTEM
+import androidx.browser.customtabs.CustomTabsIntent.ColorScheme
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +31,8 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.state.ColorSchemeParams
+import mozilla.components.browser.state.state.ColorSchemes
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
@@ -53,8 +66,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @property menuBuilder [BrowserMenuBuilder] reference to pull menu options from.
  * @property menuItemIndex Location to insert any custom menu options into the predefined menu list.
  * @property window Reference to the [Window] so the navigation bar color can be set.
- * @property updateToolbarBackground Whether or not the [toolbar] background should be changed based
- * on [CustomTabConfig.toolbarColor].
+ * @property updateTheme Whether or not the toolbar and system bar colors should be changed.
  * @property forceActionButtonTinting When set to true the [toolbar] action button will always be tinted
  * based on the [toolbar] background, ignoring the value of [CustomTabActionButtonConfig.tint].
  * @property shareListener Invoked when the share button is pressed.
@@ -69,7 +81,7 @@ class CustomTabsToolbarFeature(
     private val menuBuilder: BrowserMenuBuilder? = null,
     private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
     private val window: Window? = null,
-    private val updateToolbarBackground: Boolean = true,
+    private val updateTheme: Boolean = true,
     private val forceActionButtonTinting: Boolean = false,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit,
@@ -117,8 +129,18 @@ class CustomTabsToolbarFeature(
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
 
-        val readableColor = if (updateToolbarBackground) {
-            config.toolbarColor?.let { getReadableTextColor(it) } ?: toolbar.display.colors.menu
+        if (updateTheme) {
+            config.colorScheme?.toNightMode()?.let { AppCompatDelegate.setDefaultNightMode(it) }
+        }
+
+        val colorSchemeParams = config.colorSchemes?.getConfiguredColorSchemeParams(
+            colorScheme = config.colorScheme,
+            isDarkMode = context.isDarkMode(),
+        )
+
+        val readableColor = if (updateTheme) {
+            colorSchemeParams?.toolbarColor?.let { getReadableTextColor(it) }
+                ?: toolbar.display.colors.menu
         } else {
             // It's private mode, the readable color needs match the app.
             // Note: The main app is configuring the private theme, Custom Tabs is adding the
@@ -127,12 +149,15 @@ class CustomTabsToolbarFeature(
             getColor(context, colorResId)
         }
 
-        if (updateToolbarBackground) {
-            updateToolbarColor(
-                config.toolbarColor,
-                config.navigationBarColor ?: config.toolbarColor,
-                readableColor,
-            )
+        if (updateTheme) {
+            colorSchemeParams.let {
+                updateTheme(
+                    toolbarColor = it?.toolbarColor,
+                    navigationBarColor = it?.navigationBarColor ?: it?.toolbarColor,
+                    navigationBarDividerColor = it?.navigationBarDividerColor,
+                    readableColor = readableColor,
+                )
+            }
         }
 
         // Add navigation close action
@@ -155,9 +180,10 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun updateToolbarColor(
-        @ColorInt toolbarColor: Int?,
-        @ColorInt navigationBarColor: Int?,
+    internal fun updateTheme(
+        @ColorInt toolbarColor: Int? = null,
+        @ColorInt navigationBarColor: Int? = null,
+        @ColorInt navigationBarDividerColor: Int? = null,
         @ColorInt readableColor: Int,
     ) {
         toolbarColor?.let {
@@ -174,8 +200,9 @@ class CustomTabsToolbarFeature(
 
             window?.setStatusBarTheme(it)
         }
-        navigationBarColor?.let { color ->
-            window?.setNavigationBarTheme(color)
+
+        if (navigationBarColor != null || navigationBarDividerColor != null) {
+            window?.setNavigationBarTheme(navigationBarColor, navigationBarDividerColor)
         }
     }
 
@@ -320,3 +347,72 @@ class CustomTabsToolbarFeature(
         private val ACTION_BUTTON_MAX_DRAWABLE_DP_SIZE = Size(48, 24)
     }
 }
+
+@VisibleForTesting
+internal fun ColorSchemes.getConfiguredColorSchemeParams(
+    @ColorScheme colorScheme: Int? = null,
+    isDarkMode: Boolean = false,
+) = when {
+    noColorSchemeParamsSet() -> null
+
+    defaultColorSchemeParamsOnly() -> defaultColorSchemeParams
+
+    // Try to follow specified color scheme.
+    colorScheme == COLOR_SCHEME_SYSTEM -> {
+        if (isDarkMode) {
+            darkColorSchemeParams?.withDefault(defaultColorSchemeParams)
+                ?: defaultColorSchemeParams
+        } else {
+            lightColorSchemeParams?.withDefault(defaultColorSchemeParams)
+                ?: defaultColorSchemeParams
+        }
+    }
+
+    colorScheme == COLOR_SCHEME_LIGHT -> lightColorSchemeParams?.withDefault(
+        defaultColorSchemeParams,
+    ) ?: defaultColorSchemeParams
+
+    colorScheme == COLOR_SCHEME_DARK -> darkColorSchemeParams?.withDefault(
+        defaultColorSchemeParams,
+    ) ?: defaultColorSchemeParams
+
+    // No color scheme set, try to use default.
+    else -> defaultColorSchemeParams
+}
+
+/**
+ * Try to convert the given [ColorScheme] to [NightMode].
+ */
+@VisibleForTesting
+@NightMode
+internal fun Int.toNightMode() = when (this) {
+    COLOR_SCHEME_SYSTEM -> MODE_NIGHT_FOLLOW_SYSTEM
+    COLOR_SCHEME_LIGHT -> MODE_NIGHT_NO
+    COLOR_SCHEME_DARK -> MODE_NIGHT_YES
+    else -> null
+}
+
+private fun ColorSchemes.noColorSchemeParamsSet() =
+    defaultColorSchemeParams == null && lightColorSchemeParams == null && darkColorSchemeParams == null
+
+private fun ColorSchemes.defaultColorSchemeParamsOnly() =
+    defaultColorSchemeParams != null && lightColorSchemeParams == null && darkColorSchemeParams == null
+
+private fun Context.isDarkMode() =
+    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+
+/**
+ * Try to create a [ColorSchemeParams] using the given [defaultColorSchemeParam] as a fallback if
+ * there are missing properties.
+ */
+@VisibleForTesting
+internal fun ColorSchemeParams.withDefault(defaultColorSchemeParam: ColorSchemeParams?) = ColorSchemeParams(
+    toolbarColor = toolbarColor
+        ?: defaultColorSchemeParam?.toolbarColor,
+    secondaryToolbarColor = secondaryToolbarColor
+        ?: defaultColorSchemeParam?.secondaryToolbarColor,
+    navigationBarColor = navigationBarColor
+        ?: defaultColorSchemeParam?.navigationBarColor,
+    navigationBarDividerColor = navigationBarDividerColor
+        ?: defaultColorSchemeParam?.navigationBarDividerColor,
+)
