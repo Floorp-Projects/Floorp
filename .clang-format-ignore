@@ -73,6 +73,7 @@ toolkit/components/uniffi-js/UniFFIFixtureScaffolding.cpp
 # awk '{print ""$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
 browser/extensions/mortar/ppapi/.*
 devtools/client/shared/sourceeditor/codemirror/.*
+devtools/client/shared/sourceeditor/codemirror6/.*
 dom/canvas/test/webgl-conf/checkout/closure-library/.*
 dom/media/gmp/rlz/.*
 dom/media/gmp/widevine-adapter/content_decryption_module.h

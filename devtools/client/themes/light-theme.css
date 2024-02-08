@@ -33,6 +33,7 @@ body {
 
 .theme-link,
 .cm-s-mozilla .cm-link,
+.cm-editor .tok-link,
 .CodeMirror-Tern-type {
   color: var(--theme-comment);
 }
@@ -41,15 +42,22 @@ body {
  * FIXME: http://bugzil.la/575675 CSS links without :visited set cause assertion
  * failures in debug builds.
  */
-.theme-link:visited,
-.cm-s-mozilla .cm-link:visited {
+:is(
+  .theme-link,
+  .cm-s-mozilla .cm-link,
+  .cm-editor .tok-link
+):visited {
   color: var(--theme-link-color);
 }
 
 .theme-comment,
 .cm-s-mozilla .cm-meta,
 .cm-s-mozilla .cm-hr,
-.cm-s-mozilla .cm-comment,
+.cm-s-mozilla .cm-comment
+.cm-editor :is(
+  .tok-meta,
+  .tok-comment
+),
 .variable-or-property .token-undefined,
 .variable-or-property .token-null,
 .CodeMirror-Tern-completion-unknown:before {
@@ -66,6 +74,7 @@ body {
 }
 
 .cm-s-mozilla .cm-number,
+.cm-editor .tok-number,
 .variable-or-property .token-number,
 .variable-or-property[return] > .title > .name,
 .variable-or-property[scope] > .title > .name {
@@ -80,20 +89,27 @@ body {
 .cm-s-mozilla .cm-attribute,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-keyword,
+.cm-editor .tok-keyword,
 .variables-view-variable > .title > .name {
   color: var(--theme-highlight-red);
 }
 
 .cm-s-mozilla .cm-def,
-.cm-s-mozilla .cm-variable-2 {
+.cm-s-mozilla .cm-variable-2,
+.cm-editor :is(
+  .tok-variableName.tok-definition,
+  .tok-variableName
+) {
   color: var(--blue-55);
 }
 
-.cm-s-mozilla .cm-variable {
+.cm-s-mozilla .cm-variable,
+.cm-editor .tok-variableName2 {
   color: var(--purple-60);
 }
 
-.cm-s-mozilla .cm-property {
+.cm-s-mozilla .cm-property,
+.cm-editor .tok-propertyName {
   color: var(--theme-highlight-green);
 }
 
@@ -106,6 +122,7 @@ body {
 .cm-s-mozilla .cm-header,
 .cm-s-mozilla .cm-bracket,
 .cm-s-mozilla .cm-qualifier,
+.cm-editor .tok-heading,
 .variables-view-property > .title > .name {
   color: var(--theme-highlight-blue);
 }
@@ -117,6 +134,7 @@ body {
 .theme-fg-color2,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
+.cm-editor .tok-string,
 .variable-or-property .token-string,
 .CodeMirror-Tern-farg {
   color: var(--theme-highlight-purple);
@@ -130,6 +148,11 @@ body {
 .cm-s-mozilla .cm-atom,
 .cm-s-mozilla .cm-quote,
 .cm-s-mozilla .cm-error,
+.cm-editor :is(
+  .tok-atom,
+  .tok-bool,
+  .tok-invalid
+),
 .variable-or-property .token-boolean,
 .variable-or-property .token-domnode,
 .variable-or-property[exception] > .title > .name {
@@ -182,7 +205,11 @@ body {
 .CodeMirror.cm-s-mozilla  pre.CodeMirror-line-like,
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
-.cm-s-mozilla .cm-special {
+.cm-s-mozilla .cm-special,
+.cm-editor :is(
+  .tok-punctuation,
+  .tok-operator
+) {
   color: var(--theme-body-color);
 }
 
@@ -238,7 +265,8 @@ div.CodeMirror span.eval-text {
   color: var(--grey-50);
 }
 
-.cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
+.cm-s-mozilla .CodeMirror-gutters,
+.cm-editor .cm-gutters { /* vertical line next to line numbers */
   border-right-color: var(--theme-splitter-color);
   background-color: var(--theme-sidebar-background);
 }

@@ -62,6 +62,8 @@ const { OS } = Services.appinfo;
 
 const CM_BUNDLE =
   "chrome://devtools/content/shared/sourceeditor/codemirror/codemirror.bundle.js";
+const CM6_BUNDLE =
+  "resource://devtools/client/shared/sourceeditor/codemirror6/codemirror6.bundle.js";
 
 const CM_IFRAME =
   "chrome://devtools/content/shared/sourceeditor/codemirror/cmiframe.html";
@@ -159,6 +161,7 @@ class Editor extends EventEmitter {
   config = null;
   Doc = null;
 
+  #compartments;
   #lastDirty;
   #loadedKeyMaps;
   #ownerDoc;
@@ -173,6 +176,7 @@ class Editor extends EventEmitter {
 
     this.version = null;
     this.config = {
+      cm6: false,
       value: "",
       mode: Editor.modes.text,
       indentUnit: tabSize,
@@ -380,7 +384,14 @@ class Editor extends EventEmitter {
         env.style.visibility = "";
         const win = env.contentWindow.wrappedJSObject;
         this.container = env;
-        this.#setup(win.document.body, el.ownerDocument);
+
+        const editorEl = win.document.body;
+        const editorDoc = el.ownerDocument;
+        if (this.config.cm6) {
+          this.#setupCm6(editorEl, editorDoc);
+        } else {
+          this.#setup(editorEl, editorDoc);
+        }
         resolve();
       };
 
@@ -394,7 +405,11 @@ class Editor extends EventEmitter {
   }
 
   appendToLocalElement(el) {
-    this.#setup(el);
+    if (this.config.cm6) {
+      this.#setupCm6(el);
+    } else {
+      this.#setup(el);
+    }
   }
 
   /**
@@ -568,6 +583,82 @@ class Editor extends EventEmitter {
   }
 
   /**
+   * Do the actual appending and configuring of the CodeMirror 6 instance.
+   * This is used by appendTo and appendToLocalElement, and does all the hard work to
+   * configure CodeMirror 6 with all the right options/modes/etc.
+   * This should be kept in sync with #setup.
+   *
+   * @param {Element} el: Element into which the codeMirror editor should be appended.
+   * @param {Document} document: Optional document, if not set, will default to el.ownerDocument
+   */
+  #setupCm6(el, doc) {
+    this.#ownerDoc = doc || el.ownerDocument;
+    const win = el.ownerDocument.defaultView;
+
+    Services.scriptloader.loadSubScript(CM6_BUNDLE, win);
+
+    const {
+      codemirror,
+      codemirrorView: { EditorView, lineNumbers },
+      codemirrorState: { EditorState, Compartment },
+      codemirrorLanguage,
+      codemirrorLangJavascript,
+      lezerHighlight,
+    } = win.CodeMirror;
+
+    const tabSizeCompartment = new Compartment();
+    const indentCompartment = new Compartment();
+    this.#compartments = {
+      tabSizeCompartment,
+      indentCompartment,
+    };
+
+    const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
+      this.config.indentUnit || 2
+    );
+
+    const extensions = [
+      indentCompartment.of(codemirrorLanguage.indentUnit.of(indentStr)),
+      tabSizeCompartment.of(EditorState.tabSize.of(this.config.tabSize)),
+      EditorState.readOnly.of(this.config.readOnly),
+      codemirrorLanguage.codeFolding({
+        placeholderText: "↔",
+      }),
+      codemirrorLanguage.foldGutter({
+        class: "cm6-dt-foldgutter",
+        markerDOM: open => {
+          const button = doc.createElement("button");
+          button.classList.add("cm6-dt-foldgutter__toggle-button");
+          button.setAttribute("aria-expanded", open);
+          return button;
+        },
+      }),
+      codemirrorLanguage.syntaxHighlighting(lezerHighlight.classHighlighter),
+      // keep last so other extension take precedence
+      codemirror.minimalSetup,
+    ];
+
+    if (this.config.mode === Editor.modes.js) {
+      extensions.push(codemirrorLangJavascript.javascript());
+    }
+
+    if (this.config.lineNumbers) {
+      extensions.push(lineNumbers());
+    }
+
+    if (this.config.lineWrapping) {
+      extensions.push(EditorView.lineWrapping);
+    }
+
+    const cm = new EditorView({
+      parent: el,
+      extensions,
+    });
+
+    editors.set(this, cm);
+  }
+
+  /**
    * Returns a boolean indicating whether the editor is ready to
    * use. Use appendTo(el).then(() => {}) for most cases
    */
@@ -592,6 +683,14 @@ class Editor extends EventEmitter {
     }
     const win = this.container.contentWindow.wrappedJSObject;
     Services.scriptloader.loadSubScript(url, win);
+  }
+
+  /**
+   * Returns the container content window
+   * @returns {Window}
+   */
+  getContainerWindow() {
+    return this.container.contentWindow.wrappedJSObject;
   }
 
   /**
@@ -647,7 +746,7 @@ class Editor extends EventEmitter {
     const cm = editors.get(this);
 
     if (line == null) {
-      return cm.getValue();
+      return this.config.cm6 ? cm.state.doc.toString() : cm.getValue();
     }
 
     const info = this.lineInfo(line);
@@ -684,6 +783,22 @@ class Editor extends EventEmitter {
       return null;
     }
     const cm = editors.get(this);
+
+    if (this.config.cm6) {
+      return {
+        // cm6 lines are 1-based, while cm5 are 0-based
+        text: cm.state.doc.lineAt(line + 1)?.text,
+        // TODO: Expose those, or see usage for those and do things differently
+        line: null,
+        handle: null,
+        gutterMarkers: null,
+        textClass: null,
+        bgClass: null,
+        wrapClass: null,
+        widgets: null,
+      };
+    }
+
     return cm.lineInfo(line);
   }
 
@@ -719,7 +834,13 @@ class Editor extends EventEmitter {
       value = { split: () => lines };
     }
 
-    cm.setValue(value);
+    if (this.config.cm6) {
+      cm.dispatch({
+        changes: { from: 0, to: cm.state.doc.length, insert: value },
+      });
+    } else {
+      cm.setValue(value);
+    }
 
     this.resetIndentUnit();
   }
@@ -774,17 +895,49 @@ class Editor extends EventEmitter {
   resetIndentUnit() {
     const cm = editors.get(this);
 
-    const iterFn = function (start, end, callback) {
-      cm.eachLine(start, end, line => {
-        return callback(line.text);
-      });
+    const iterFn = (start, maxEnd, callback) => {
+      if (!this.config.cm6) {
+        cm.eachLine(start, maxEnd, line => {
+          return callback(line.text);
+        });
+      } else {
+        const iterator = cm.state.doc.iterLines(
+          start + 1,
+          Math.min(cm.state.doc.lines, maxEnd) + 1
+        );
+        let callbackRes;
+        do {
+          iterator.next();
+          callbackRes = callback(iterator.value);
+        } while (iterator.done !== true && !callbackRes);
+      }
     };
 
     const { indentUnit, indentWithTabs } = getIndentationFromIteration(iterFn);
 
-    cm.setOption("tabSize", indentUnit);
-    cm.setOption("indentUnit", indentUnit);
-    cm.setOption("indentWithTabs", indentWithTabs);
+    if (!this.config.cm6) {
+      cm.setOption("tabSize", indentUnit);
+      cm.setOption("indentUnit", indentUnit);
+      cm.setOption("indentWithTabs", indentWithTabs);
+    } else {
+      const {
+        codemirrorState: { EditorState },
+        codemirrorLanguage,
+      } = this.getContainerWindow().CodeMirror;
+
+      cm.dispatch({
+        effects: this.#compartments.tabSizeCompartment.reconfigure(
+          EditorState.tabSize.of(indentUnit)
+        ),
+      });
+      cm.dispatch({
+        effects: this.#compartments.indentCompartment.reconfigure(
+          codemirrorLanguage.indentUnit.of(
+            (indentWithTabs ? "\t" : " ").repeat(indentUnit)
+          )
+        ),
+      });
+    }
   }
 
   /**
