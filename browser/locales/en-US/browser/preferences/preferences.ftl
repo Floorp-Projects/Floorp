@@ -327,6 +327,9 @@ preferences-zoom-text-only =
     .label = Zoom text only
     .accesskey = t
 
+preferences-text-zoom-override-warning =
+    .message = Warning: If you select “Zoom text only” and your default zoom is not set to 100%, it may cause some sites or content to break.
+
 language-header = Language
 
 choose-language-description = Choose your preferred language for displaying pages
