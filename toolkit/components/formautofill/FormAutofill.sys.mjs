@@ -99,18 +99,6 @@ export const FormAutofill = {
     );
   },
   /**
-   * Determines if the address autofill feature is available to use in the browser.
-   * If the feature is not available, then there are no user facing ways to enable it.
-   *
-   * @returns {boolean} `true` if address autofill is available
-   */
-  get isAutofillAddressesAvailable() {
-    return this._isSupportedRegion(
-      FormAutofill._isAutofillAddressesAvailable,
-      FormAutofill._addressAutofillSupportedCountries
-    );
-  },
-  /**
    * Determines if the user has enabled or disabled credit card autofill.
    *
    * @returns {boolean} `true` if credit card autofill is enabled
@@ -270,6 +258,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   null,
   val => val?.split(",").filter(v => !!v)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "isAutofillAddressesAvailable",
+  "extensions.formautofill.addresses.experiments.enabled"
 );
 
 ChromeUtils.defineLazyGetter(FormAutofill, "countries", () =>
