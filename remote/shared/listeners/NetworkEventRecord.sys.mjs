@@ -96,6 +96,12 @@ export class NetworkEventRecord {
     // step 8.17
     // Bug 1802181: switch the NetworkObserver to an event-based API.
     this.#emitBeforeRequestSent();
+
+    // If the request is already blocked, we will not receive further updates,
+    // emit a network.fetchError event immediately.
+    if (networkEvent.blockedReason) {
+      this.#emitFetchError();
+    }
   }
 
   /**

@@ -1007,7 +1007,7 @@
     "testIdPattern": "[page.spec] Page Page.waitForNetworkIdle should work with aborted requests",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["webDriverBiDi"],
-    "expectations": ["FAIL", "PASS", "TIMEOUT"]
+    "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[prerender.spec] Prerender can screencast",
