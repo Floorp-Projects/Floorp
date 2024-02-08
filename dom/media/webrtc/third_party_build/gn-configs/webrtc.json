@@ -13,6 +13,12 @@
       "third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
       "third_party/libwebrtc/modules/portal/portal_gn",
       "third_party/libwebrtc/modules/video_capture/video_capture_internal_impl_gn"
+    ],
+    "INCLUDE_SYSTEM_LIBVPX_HANDLING": [
+      "third_party/libwebrtc/modules/video_coding/webrtc_libvpx_interface_gn",
+      "third_party/libwebrtc/modules/video_coding/webrtc_vp8_gn",
+      "third_party/libwebrtc/modules/video_coding/webrtc_vp9_gn",
+      "third_party/libwebrtc/third_party/libvpx/libvpx_gn"
     ]
   },
   "non_unified_sources": [
