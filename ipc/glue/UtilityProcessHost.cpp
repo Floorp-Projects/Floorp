@@ -115,6 +115,10 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   EnsureWidevineL1PathForSandbox(aExtraOpts);
 #endif
 
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+  EnanbleMFCDMTelemetryEventIfNeeded();
+#endif
+
   mLaunchPhase = LaunchPhase::Waiting;
 
   if (!GeckoChildProcessHost::AsyncLaunch(aExtraOpts)) {
@@ -409,6 +413,19 @@ void UtilityProcessHost::EnsureWidevineL1PathForSandbox(
 
 #  undef WMF_LOG
 
+#endif
+
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+void UtilityProcessHost::EnanbleMFCDMTelemetryEventIfNeeded() const {
+  if (mSandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    return;
+  }
+  static bool sTelemetryEventEnabled = false;
+  if (!sTelemetryEventEnabled) {
+    sTelemetryEventEnabled = true;
+    Telemetry::SetEventRecordingEnabled("mfcdm"_ns, true);
+  }
+}
 #endif
 
 }  // namespace mozilla::ipc
