@@ -28,6 +28,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/net/SSLTokensCache.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/psm/IPCClientCertsChild.h"
@@ -446,7 +447,13 @@ bool retryDueToTLSIntolerance(PRErrorCode err, NSSSocketControl* socketInfo) {
 
   if (!socketInfo->IsPreliminaryHandshakeDone() &&
       socketInfo->SentXyberShare()) {
-    // Bug 1874963 - add a probe for Xyber error reason
+    nsAutoCString errorName;
+    const char* prErrorName = PR_ErrorToName(err);
+    if (prErrorName) {
+      errorName.AppendASCII(prErrorName);
+    }
+    mozilla::glean::tls::xyber_intolerance_reason.Get(errorName).Add(1);
+    // Don't record version intolerance if we sent Xyber, just force a retry.
     return true;
   }
 
