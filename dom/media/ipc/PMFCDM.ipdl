@@ -11,6 +11,7 @@ using mozilla::KeySystemConfig::SessionType from "mozilla/KeySystemConfig.h";
 using mozilla::CryptoScheme from "MediaData.h";
 using mozilla::dom::MediaKeyMessageType from "mozilla/dom/MediaKeyMessageEventBinding.h";
 using mozilla::dom::MediaKeyStatus from "mozilla/dom/MediaKeyStatusMapBinding.h";
+using mozilla::dom::HDCPVersion from "mozilla/dom/MediaKeysBinding.h";
 
 namespace mozilla {
 
@@ -107,6 +108,7 @@ parent:
   async CloseSession(nsString sessionId) returns (nsresult result);
   async RemoveSession(nsString sessionId) returns (nsresult result);
   async SetServerCertificate(uint8_t[] certificate) returns (nsresult result);
+  async GetStatusForPolicy(HDCPVersion minHdcpVersion) returns (nsresult result);
   async __delete__();
 
 child:

@@ -6,6 +6,7 @@
 
 #include "WMFCDMProxy.h"
 
+#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/EMEUtils.h"
@@ -149,6 +150,28 @@ void WMFCDMProxy::ResolvePromise(PromiseId aId) {
   }
   mMainThread->Dispatch(
       NS_NewRunnableFunction("WMFCDMProxy::ResolvePromise", resolve));
+}
+
+void WMFCDMProxy::ResolvePromiseWithKeyStatus(
+    const PromiseId& aId, const dom::MediaKeyStatus& aStatus) {
+  auto resolve = [self = RefPtr{this}, this, aId, aStatus]() {
+    RETURN_IF_SHUTDOWN();
+    EME_LOG("WMFCDMProxy::ResolvePromiseWithKeyStatus(this=%p, pid=%" PRIu32
+            ", status=%s)",
+            this, aId, ToMediaKeyStatusStr(aStatus));
+    if (!mKeys.IsNull()) {
+      mKeys->ResolvePromiseWithKeyStatus(aId, aStatus);
+    } else {
+      NS_WARNING("WMFCDMProxy unable to resolve promise!");
+    }
+  };
+
+  if (NS_IsMainThread()) {
+    resolve();
+    return;
+  }
+  mMainThread->Dispatch(NS_NewRunnableFunction(
+      "WMFCDMProxy::ResolvePromiseWithKeyStatus", resolve));
 }
 
 void WMFCDMProxy::RejectPromise(PromiseId aId, ErrorResult&& aException,
@@ -349,6 +372,29 @@ void WMFCDMProxy::SetServerCertificate(PromiseId aPromiseId,
             RejectPromiseWithStateError(
                 aPromiseId,
                 nsLiteralCString("WMFCDMProxy::SetServerCertificate failed!"));
+          });
+}
+
+void WMFCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
+                                     const dom::HDCPVersion& aMinHdcpVersion) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
+  EME_LOG("WMFCDMProxy::GetStatusForPolicy(this=%p, pid=%" PRIu32
+          ", minHDCP=%s)",
+          this, aPromiseId,
+          dom::HDCPVersionValues::GetString(aMinHdcpVersion).data());
+  mCDM->GetStatusForPolicy(aPromiseId, aMinHdcpVersion)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            RETURN_IF_SHUTDOWN();
+            ResolvePromiseWithKeyStatus(aPromiseId,
+                                        dom::MediaKeyStatus::Usable);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            RETURN_IF_SHUTDOWN();
+            ResolvePromiseWithKeyStatus(aPromiseId,
+                                        dom::MediaKeyStatus::Output_restricted);
           });
 }
 
