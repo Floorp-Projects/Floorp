@@ -45,6 +45,10 @@ SOURCES += [
     'samplefmt.c',
     'slicethread.c',
     'time.c',
+    'tx.c',
+    'tx_double.c',
+    'tx_float.c',
+    'tx_int32.c',
     'utils.c'
 ]
 

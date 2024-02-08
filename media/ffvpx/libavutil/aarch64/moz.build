@@ -8,6 +8,8 @@ SOURCES += [
     'cpu.c',
     'float_dsp_init.c',
     'float_dsp_neon.S',
+    'tx_float_init.c',
+    'tx_float_neon.S'
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
