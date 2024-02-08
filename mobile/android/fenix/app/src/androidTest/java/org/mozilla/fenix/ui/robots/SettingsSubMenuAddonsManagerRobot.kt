@@ -98,7 +98,7 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonInstallCompleted(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertUIObjectExists(itemWithText("Okay, Got it"), waitingTime = waitingTimeLong)
+                assertUIObjectExists(itemWithText("OK"), waitingTime = waitingTimeLong)
 
                 break
             } catch (e: AssertionError) {
@@ -123,10 +123,10 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonInstallCompletedPrompt(addonName: String) {
         onView(
             allOf(
-                withText("Okay, Got it"),
+                withText("OK"),
                 withParent(instanceOf(RelativeLayout::class.java)),
                 hasSibling(withText("$addonName has been added to $appName")),
-                hasSibling(withText("Open it in the menu")),
+                hasSibling(withText("Access $addonName from the $appName menu.")),
                 hasSibling(withText("Allow in private browsing")),
             ),
         )
@@ -134,7 +134,7 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun closeAddonInstallCompletePrompt() {
-        onView(withText("Okay, Got it")).click()
+        onView(withText("OK")).click()
     }
 
     fun verifyAddonIsInstalled(addonName: String) {

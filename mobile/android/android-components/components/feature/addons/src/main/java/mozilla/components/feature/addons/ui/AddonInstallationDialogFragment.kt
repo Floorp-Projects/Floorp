@@ -136,10 +136,17 @@ class AddonInstallationDialogFragment : AddonDialogFragment() {
 
         val binding = MozacFeatureAddonsFragmentDialogAddonInstalledBinding.bind(rootView)
 
+        val addonName = addon.translateName(requireContext())
         rootView.findViewById<TextView>(R.id.title).text =
             requireContext().getString(
                 R.string.mozac_feature_addons_installed_dialog_title,
-                addon.translateName(requireContext()),
+                addonName,
+                requireContext().appName,
+            )
+        rootView.findViewById<TextView>(R.id.description).text =
+            requireContext().getString(
+                R.string.mozac_feature_addons_installed_dialog_description_2,
+                addonName,
                 requireContext().appName,
             )
 

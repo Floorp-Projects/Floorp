@@ -50,17 +50,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?android:attr/textColorPrimary"
-        android:text="@string/mozac_feature_addons_installed_dialog_description" />
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/description"
-        android:layout_below="@id/title"
-        android:layout_marginTop="16dp"
-        app:tint="?android:attr/textColorPrimary"
-        app:srcCompat="@drawable/mozac_ic_ellipsis_vertical_24"
-        />
+        tools:text="@string/mozac_feature_addons_installed_dialog_description_2" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/allow_in_private_browsing"
@@ -87,7 +77,7 @@
         android:layout_marginBottom="16dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:text="@string/mozac_feature_addons_installed_dialog_okay_button"
+        android:text="@string/mozac_feature_addons_installed_dialog_okay_button_2"
         android:textAlignment="center"
         android:textAllCaps="false" />
 

@@ -56,7 +56,7 @@ class AddonInstallationDialogFragmentTest {
         val allowedInPrivateBrowsing = dialog.findViewById<AppCompatCheckBox>(R.id.allow_in_private_browsing)
 
         assertTrue(titleTextView.text.contains(name))
-        assertTrue(description.text.contains(testContext.getString(R.string.mozac_feature_addons_installed_dialog_description)))
+        assertTrue(description.text.contains(name))
         assertTrue(allowedInPrivateBrowsing.text.contains(testContext.getString(R.string.mozac_feature_addons_settings_allow_in_private_browsing)))
     }
 
