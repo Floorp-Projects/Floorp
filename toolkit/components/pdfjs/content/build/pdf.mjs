@@ -8262,15 +8262,17 @@ class OptionalContentConfig {
 
 
 class PDFDataTransportStream {
-  constructor({
-    length,
-    initialData,
-    progressiveDone = false,
-    contentDispositionFilename = null,
+  constructor(pdfDataRangeTransport, {
     disableRange = false,
     disableStream = false
-  }, pdfDataRangeTransport) {
+  }) {
     assert(pdfDataRangeTransport, 'PDFDataTransportStream - missing required "pdfDataRangeTransport" argument.');
+    const {
+      length,
+      initialData,
+      progressiveDone,
+      contentDispositionFilename
+    } = pdfDataRangeTransport;
     this._queuedChunks = [];
     this._progressiveDone = progressiveDone;
     this._contentDispositionFilename = contentDispositionFilename;
@@ -8284,27 +8286,27 @@ class PDFDataTransportStream {
     this._contentLength = length;
     this._fullRequestReader = null;
     this._rangeReaders = [];
-    this._pdfDataRangeTransport.addRangeListener((begin, chunk) => {
+    pdfDataRangeTransport.addRangeListener((begin, chunk) => {
       this._onReceiveData({
         begin,
         chunk
       });
     });
-    this._pdfDataRangeTransport.addProgressListener((loaded, total) => {
+    pdfDataRangeTransport.addProgressListener((loaded, total) => {
       this._onProgress({
         loaded,
         total
       });
     });
-    this._pdfDataRangeTransport.addProgressiveReadListener(chunk => {
+    pdfDataRangeTransport.addProgressiveReadListener(chunk => {
       this._onReceiveData({
         chunk
       });
     });
-    this._pdfDataRangeTransport.addProgressiveDoneListener(() => {
+    pdfDataRangeTransport.addProgressiveDoneListener(() => {
       this._onProgressiveDone();
     });
-    this._pdfDataRangeTransport.transportReady();
+    pdfDataRangeTransport.transportReady();
   }
   _onReceiveData({
     begin,
@@ -8665,7 +8667,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.121",
+    apiVersion: "4.1.133",
     data,
     password,
     disableAutoFetch,
@@ -8705,14 +8707,10 @@ function getDocument(src) {
     const networkStreamPromise = new Promise(function (resolve) {
       let networkStream;
       if (rangeTransport) {
-        networkStream = new PDFDataTransportStream({
-          length,
-          initialData: rangeTransport.initialData,
-          progressiveDone: rangeTransport.progressiveDone,
-          contentDispositionFilename: rangeTransport.contentDispositionFilename,
+        networkStream = new PDFDataTransportStream(rangeTransport, {
           disableRange,
           disableStream
-        }, rangeTransport);
+        });
       } else if (!data) {
         throw new Error("Not implemented: createPDFNetworkStream");
       }
@@ -10302,8 +10300,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.121";
-const build = "eb5c1d441";
+const version = "4.1.133";
+const build = "60fd9d583";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -16798,8 +16796,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.121";
-const pdfjsBuild = "eb5c1d441";
+const pdfjsVersion = "4.1.133";
+const pdfjsBuild = "60fd9d583";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
