@@ -31,7 +31,7 @@
 // This is a hack to hide HttpOnly cookies from older browsers
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
-constexpr auto COOKIES_SCHEMA_VERSION = 12;
+constexpr auto COOKIES_SCHEMA_VERSION = 13;
 
 // parameter indexes; see |Read|
 constexpr auto IDX_NAME = 0;
@@ -47,6 +47,7 @@ constexpr auto IDX_ORIGIN_ATTRIBUTES = 9;
 constexpr auto IDX_SAME_SITE = 10;
 constexpr auto IDX_RAW_SAME_SITE = 11;
 constexpr auto IDX_SCHEME_MAP = 12;
+constexpr auto IDX_PARTITIONED_ATTRIBUTE_SET = 13;
 
 #define COOKIES_FILE "cookies.sqlite"
 
@@ -107,6 +108,10 @@ void BindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = params->BindInt32ByName("schemeMap"_ns, aCookie->SchemeMap());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = params->BindInt32ByName("isPartitionedAttributeSet"_ns,
+                               aCookie->RawIsPartitioned());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Bind the params to the array.
@@ -1397,6 +1402,23 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
       }
         [[fallthrough]];
 
+      case 12: {
+        // Add the isPartitionedAttributeSet column to the table.
+        rv = mSyncConn->ExecuteSimpleSQL(
+            nsLiteralCString("ALTER TABLE moz_cookies ADD "
+                             "isPartitionedAttributeSet INTEGER DEFAULT 0;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        COOKIE_LOGSTRING(LogLevel::Debug,
+                         ("Upgraded database to schema version 13"));
+
+        // No more upgrades. Update the schema version.
+        rv = mSyncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        [[fallthrough]];
+      }
+
       case COOKIES_SCHEMA_VERSION:
         break;
 
@@ -1423,23 +1445,25 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
       default: {
         // check if all the expected columns exist
         nsCOMPtr<mozIStorageStatement> stmt;
-        rv = mSyncConn->CreateStatement(nsLiteralCString("SELECT "
-                                                         "id, "
-                                                         "originAttributes, "
-                                                         "name, "
-                                                         "value, "
-                                                         "host, "
-                                                         "path, "
-                                                         "expiry, "
-                                                         "lastAccessed, "
-                                                         "creationTime, "
-                                                         "isSecure, "
-                                                         "isHttpOnly, "
-                                                         "sameSite, "
-                                                         "rawSameSite, "
-                                                         "schemeMap "
-                                                         "FROM moz_cookies"),
-                                        getter_AddRefs(stmt));
+        rv = mSyncConn->CreateStatement(
+            nsLiteralCString("SELECT "
+                             "id, "
+                             "originAttributes, "
+                             "name, "
+                             "value, "
+                             "host, "
+                             "path, "
+                             "expiry, "
+                             "lastAccessed, "
+                             "creationTime, "
+                             "isSecure, "
+                             "isHttpOnly, "
+                             "sameSite, "
+                             "rawSameSite, "
+                             "schemeMap, "
+                             "isPartitionedAttributeSet "
+                             "FROM moz_cookies"),
+            getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv)) {
           break;
         }
@@ -1597,22 +1621,24 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
   // Read in the data synchronously.
   // see IDX_NAME, etc. for parameter indexes
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mSyncConn->CreateStatement(nsLiteralCString("SELECT "
-                                                            "name, "
-                                                            "value, "
-                                                            "host, "
-                                                            "path, "
-                                                            "expiry, "
-                                                            "lastAccessed, "
-                                                            "creationTime, "
-                                                            "isSecure, "
-                                                            "isHttpOnly, "
-                                                            "originAttributes, "
-                                                            "sameSite, "
-                                                            "rawSameSite, "
-                                                            "schemeMap "
-                                                            "FROM moz_cookies"),
-                                           getter_AddRefs(stmt));
+  nsresult rv =
+      mSyncConn->CreateStatement(nsLiteralCString("SELECT "
+                                                  "name, "
+                                                  "value, "
+                                                  "host, "
+                                                  "path, "
+                                                  "expiry, "
+                                                  "lastAccessed, "
+                                                  "creationTime, "
+                                                  "isSecure, "
+                                                  "isHttpOnly, "
+                                                  "originAttributes, "
+                                                  "sameSite, "
+                                                  "rawSameSite, "
+                                                  "schemeMap, "
+                                                  "isPartitionedAttributeSet "
+                                                  "FROM moz_cookies"),
+                                 getter_AddRefs(stmt));
 
   NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
@@ -1691,11 +1717,13 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   int32_t sameSite = aRow->AsInt32(IDX_SAME_SITE);
   int32_t rawSameSite = aRow->AsInt32(IDX_RAW_SAME_SITE);
   int32_t schemeMap = aRow->AsInt32(IDX_SCHEME_MAP);
+  bool isPartitionedAttributeSet =
+      0 != aRow->AsInt32(IDX_PARTITIONED_ATTRIBUTE_SET);
 
   // Create a new constCookie and assign the data.
   return MakeUnique<CookieStruct>(
       name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
-      false, isSecure, false, sameSite, rawSameSite,
+      false, isSecure, isPartitionedAttributeSet, sameSite, rawSameSite,
       static_cast<nsICookie::schemeType>(schemeMap));
 }
 
@@ -1854,37 +1882,39 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
   mDBConn->ExecuteSimpleSQL("PRAGMA wal_autocheckpoint = 16"_ns);
 
   // cache frequently used statements (for insertion, deletion, and updating)
-  rv =
-      mDBConn->CreateAsyncStatement(nsLiteralCString("INSERT INTO moz_cookies ("
-                                                     "originAttributes, "
-                                                     "name, "
-                                                     "value, "
-                                                     "host, "
-                                                     "path, "
-                                                     "expiry, "
-                                                     "lastAccessed, "
-                                                     "creationTime, "
-                                                     "isSecure, "
-                                                     "isHttpOnly, "
-                                                     "sameSite, "
-                                                     "rawSameSite, "
-                                                     "schemeMap "
-                                                     ") VALUES ("
-                                                     ":originAttributes, "
-                                                     ":name, "
-                                                     ":value, "
-                                                     ":host, "
-                                                     ":path, "
-                                                     ":expiry, "
-                                                     ":lastAccessed, "
-                                                     ":creationTime, "
-                                                     ":isSecure, "
-                                                     ":isHttpOnly, "
-                                                     ":sameSite, "
-                                                     ":rawSameSite, "
-                                                     ":schemeMap "
-                                                     ")"),
-                                    getter_AddRefs(mStmtInsert));
+  rv = mDBConn->CreateAsyncStatement(
+      nsLiteralCString("INSERT INTO moz_cookies ("
+                       "originAttributes, "
+                       "name, "
+                       "value, "
+                       "host, "
+                       "path, "
+                       "expiry, "
+                       "lastAccessed, "
+                       "creationTime, "
+                       "isSecure, "
+                       "isHttpOnly, "
+                       "sameSite, "
+                       "rawSameSite, "
+                       "schemeMap, "
+                       "isPartitionedAttributeSet "
+                       ") VALUES ("
+                       ":originAttributes, "
+                       ":name, "
+                       ":value, "
+                       ":host, "
+                       ":path, "
+                       ":expiry, "
+                       ":lastAccessed, "
+                       ":creationTime, "
+                       ":isSecure, "
+                       ":isHttpOnly, "
+                       ":sameSite, "
+                       ":rawSameSite, "
+                       ":schemeMap, "
+                       ":isPartitionedAttributeSet "
+                       ")"),
+      getter_AddRefs(mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateAsyncStatement(
@@ -1927,6 +1957,7 @@ nsresult CookiePersistentStorage::CreateTableWorker(const char* aName) {
       "sameSite INTEGER DEFAULT 0, "
       "rawSameSite INTEGER DEFAULT 0, "
       "schemeMap INTEGER DEFAULT 0, "
+      "isPartitionedAttributeSet INTEGER DEFAULT 0, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
       ")");
   return mSyncConn->ExecuteSimpleSQL(command);

@@ -90,6 +90,7 @@ class Cookie final : public nsICookie {
   inline bool IsDomain() const { return *mData.host().get() == '.'; }
   inline bool IsSecure() const { return mData.isSecure(); }
   inline bool IsHttpOnly() const { return mData.isHttpOnly(); }
+  inline bool RawIsPartitioned() const { return mData.isPartitioned(); }
   inline const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }

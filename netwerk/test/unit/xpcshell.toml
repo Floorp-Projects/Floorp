@@ -1034,6 +1034,10 @@ run-sequentially = "tlsserver uses fixed port"
 
 ["test_safeoutputstream_append.js"]
 
+["test_schema_13_db.js"]
+
+["test_schema_12_migration.js"]
+
 ["test_schema_10_migration.js"]
 
 ["test_schema_2_migration.js"]
