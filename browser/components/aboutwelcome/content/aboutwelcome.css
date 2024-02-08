@@ -1257,9 +1257,35 @@ html {
   font-size: 13px;
   font-weight: 400;
 }
+.onboardingContainer .screen[pos=center].addons-picker .addon-container .install-button-wrapper {
+  display: flex;
+}
 .onboardingContainer .screen[pos=center].addons-picker .addon-container button {
   align-self: center;
-  margin-inline: auto 12px;
+  width: 124px;
+}
+.onboardingContainer .screen[pos=center].addons-picker .loader {
+  width: 1em;
+  height: 1em;
+  border: 3px solid var(--in-content-primary-button-text-color);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+  justify-self: center;
+}
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.onboardingContainer .screen[pos=center].addons-picker .loaderContainer {
+  display: flex;
+  padding: 1.5px 37.5px;
+  margin: auto;
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary {
   background: none;

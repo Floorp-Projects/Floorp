@@ -2079,6 +2079,8 @@ const EmbeddedMigrationWizard = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Loader": () => (/* binding */ Loader),
+/* harmony export */   "InstallButton": () => (/* binding */ InstallButton),
 /* harmony export */   "AddonsPicker": () => (/* binding */ AddonsPicker)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
@@ -2092,6 +2094,44 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const Loader = () => {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    className: "primary"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "loaderContainer"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    className: "loader"
+  })));
+};
+const InstallButton = props => {
+  const [installing, setInstalling] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [installComplete, setInstallComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  let buttonLabel = installComplete ? "Installed" : "Add to Firefox";
+  function onClick(event) {
+    props.handleAction(event);
+    // Replace the label with the spinner
+    setInstalling(true);
+    window.AWEnsureAddonInstalled(props.addonId).then(value => {
+      if (value === "complete") {
+        // Set the label to "Installed"
+        setInstallComplete(true);
+      }
+      // Whether the addon installs or not, we want to remove the spinner
+      setInstalling(false);
+    });
+  }
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "install-button-wrapper"
+  }, installing ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(Loader, null) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
+    text: buttonLabel
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    id: props.name,
+    value: props.index,
+    onClick: onClick,
+    disabled: installComplete,
+    className: "primary"
+  })));
+};
 const AddonsPicker = props => {
   const {
     content
@@ -2126,7 +2166,6 @@ const AddonsPicker = props => {
     className: "addons-picker-container"
   }, content.tiles.data.map(({
     id,
-    install_label,
     name,
     type,
     description,
@@ -2151,14 +2190,13 @@ const AddonsPicker = props => {
     text: description
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "addon-description"
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__.Localized, {
-    text: install_label
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    id: name,
-    value: index,
-    onClick: handleAction,
-    className: "primary"
-  }))) : null));
+  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(InstallButton, {
+    key: id,
+    addonId: id,
+    name: name,
+    handleAction: handleAction,
+    index: index
+  })) : null));
 };
 
 /***/ }),
