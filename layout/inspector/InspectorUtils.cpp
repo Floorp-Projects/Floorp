@@ -898,11 +898,6 @@ void InspectorUtils::GetCSSRegisteredProperties(
       property.mInitialValue.SetIsVoid(true);
     }
     property.mFromJS = propDef.from_js;
-
-    NS_MakeAbsoluteURI(property.mUri, property.mUri,
-                       propDef.url_data->BaseURI());
-    property.mLine = propDef.line;
-    property.mColumn = propDef.column;
   }
 }
 

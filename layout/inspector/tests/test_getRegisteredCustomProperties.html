@@ -4,29 +4,17 @@
   <title>Test InspectorUtils.getCSSRegisteredProperties</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <link rel="stylesheet" type="text/css" href="at_property.css"/>
   <style>
     @property --color-1 {
       syntax: "<color>";
       inherits: true;
       initial-value: blue;
     }
+    @property --color-2 {
+      syntax: "*";
+      inherits: false;
+    }
   </style>
-  <script>
-    CSS.registerProperty({
-      name: "--length-1",
-      syntax: "<length>",
-      initialValue: "10px",
-      inherits: true,
-    });
-    CSS.registerProperty({
-      name: "--length-2",
-      syntax: "foo | <integer>+ | <percentage> | <length># | auto",
-      initialValue: "100vw",
-      inherits: true
-    });
-  </script>
-  <script src="css_register_property.js"></script>
 </head>
 <body>
 <code>InspectorUtils.getCSSRegisteredProperties</code>
@@ -41,14 +29,34 @@ const { Assert } = SpecialPowers.ChromeUtils.importESModule(
 );
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
+CSS.registerProperty({
+  name: "--length-1",
+  syntax: "<length>",
+  initialValue: "10px",
+  inherits: true,
+});
+CSS.registerProperty({
+  name: "--length-2",
+  syntax: "foo | <integer>+ | <percentage> | <length># | auto",
+  initialValue: "100vw",
+  inherits: true
+});
+CSS.registerProperty({
+  name: "--length-3",
+  syntax: "*",
+  inherits: false
+});
+CSS.registerProperty({
+  name: "--length-4",
+  syntax: "*",
+  initialValue: "",
+  inherits: false
+});
+
 // The order isn't guaranteed, so sort variable by their name.
 // We get a Proxy, so build another array to properly sort it.
 const results = Array.from(InspectorUtils.getCSSRegisteredProperties(document));
 results.sort((a,b) => a.name < b.name ? -1 : 1)
-
-const TEST_FOLDER = "http://mochi.test:8888/tests/layout/inspector/tests/";
-const TEST_URL = TEST_FOLDER + "test_getRegisteredCustomProperties.html";
-const CSS_TEST_FILE_URL = TEST_FOLDER + "at_property.css";
 
 Assert.deepEqual(
   results,
@@ -58,54 +66,36 @@ Assert.deepEqual(
     inherits: true,
     initialValue: "blue",
     fromJS: false,
-    uri :TEST_URL,
-    line: 1,
-    column: 5,
   },{
     name: "--color-2",
     syntax: "*",
     inherits: false,
     initialValue: null,
     fromJS: false,
-    uri :CSS_TEST_FILE_URL,
-    line: 0,
-    column: 1,
   },{
     name: "--length-1",
     syntax: "<length>",
     inherits: true,
     initialValue: "10px",
     fromJS: true,
-    uri :TEST_URL,
-    line: 0,
-    column: 0,
   }, {
     name: "--length-2",
     syntax: "foo | <integer>+ | <percentage> | <length># | auto",
     inherits: true,
     initialValue: "100vw",
     fromJS: true,
-    uri :TEST_URL,
-    line: 0,
-    column: 0,
   }, {
     name: "--length-3",
     syntax: "*",
     inherits: false,
     initialValue: null,
     fromJS: true,
-    uri :TEST_URL,
-    line: 0,
-    column: 0,
   }, {
     name: "--length-4",
     syntax: "*",
     inherits: false,
     initialValue: "",
     fromJS: true,
-    uri :TEST_URL,
-    line: 0,
-    column: 0,
   }],
   `Got registered CSS properties`
 );
