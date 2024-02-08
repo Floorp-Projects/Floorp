@@ -229,11 +229,8 @@ void Link::SetSearch(const nsAString& aSearch) {
     return;
   }
 
-  auto encoding = mElement->OwnerDoc()->GetDocumentCharacterSet();
   nsresult rv =
-      NS_MutateURI(uri)
-          .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding)
-          .Finalize(uri);
+      NS_MutateURI(uri).SetQuery(NS_ConvertUTF16toUTF8(aSearch)).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
