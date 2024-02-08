@@ -53,3 +53,233 @@ add_task(async function basic() {
   );
   Assert.equal(result.payload.title, "RaMeN iN tOkYo");
 });
+
+// Tests the "Show less frequently" result menu command.
+add_task(async function resultMenu_show_less_frequently() {
+  await doShowLessFrequently({
+    minKeywordLength: 0,
+    frequentlyCap: 0,
+    initialFrequentlyCount: 2,
+    testData: [
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: false,
+        },
+      },
+    ],
+  });
+
+  await doShowLessFrequently({
+    minKeywordLength: 0,
+    frequentlyCap: 4,
+    initialFrequentlyCount: 2,
+    testData: [
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: false,
+        },
+      },
+    ],
+  });
+
+  await doShowLessFrequently({
+    minKeywordLength: 1,
+    frequentlyCap: 4,
+    initialFrequentlyCount: 2,
+    testData: [
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: false,
+        },
+      },
+    ],
+  });
+});
+
+async function doShowLessFrequently({
+  minKeywordLength,
+  frequentlyCap,
+  initialFrequentlyCount,
+  testData,
+}) {
+  let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    yelpMinKeywordLength: minKeywordLength,
+    yelpShowLessFrequentlyCap: frequentlyCap,
+  });
+  UrlbarPrefs.set("yelp.showLessFrequentlyCount", initialFrequentlyCount);
+
+  for (let { input, expected } of testData) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+    });
+
+    if (expected.hasSuggestion) {
+      let resultIndex = 1;
+      let details = await UrlbarTestUtils.getDetailsOfResultAt(
+        window,
+        resultIndex
+      );
+      Assert.equal(details.result.payload.provider, "Yelp");
+
+      if (expected.hasShowLessItem) {
+        // Click the command.
+        let previousShowLessFrequentlyCount = UrlbarPrefs.get(
+          "yelp.showLessFrequentlyCount"
+        );
+        await UrlbarTestUtils.openResultMenuAndClickItem(
+          window,
+          "show_less_frequentry",
+          { resultIndex, openByMouse: true }
+        );
+
+        Assert.equal(
+          UrlbarPrefs.get("yelp.showLessFrequentlyCount"),
+          previousShowLessFrequentlyCount + 1
+        );
+      } else {
+        let menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
+          window,
+          command: "show_less_frequently",
+          resultIndex: 1,
+          openByMouse: true,
+        });
+        Assert.ok(!menuitem);
+      }
+    } else {
+      // Yelp suggestion should not be shown.
+      for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+        let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+        Assert.notEqual(details.result.payload.provider, "Yelp");
+      }
+    }
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  }
+
+  await cleanUpNimbus();
+  UrlbarPrefs.set("yelp.showLessFrequentlyCount", 0);
+}
+
+// Tests the "Don't show this again" result menu dismissal command.
+add_task(async function resultMenu_not_interested() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "ramen",
+  });
+
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+  let resultIndex = 1;
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  Assert.equal(details.result.payload.provider, "Yelp");
+
+  // Click the command.
+  await UrlbarTestUtils.openResultMenuAndClickItem(window, "not_interested", {
+    resultIndex,
+    openByMouse: true,
+  });
+
+  // The row should be a tip now.
+  Assert.ok(gURLBar.view.isOpen, "The view should remain open after dismissal");
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    resultCount,
+    "The result count should not haved changed after dismissal"
+  );
+  details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  Assert.equal(
+    details.type,
+    UrlbarUtils.RESULT_TYPE.TIP,
+    "Row should be a tip after dismissal"
+  );
+  Assert.equal(
+    details.result.payload.type,
+    "dismissalAcknowledgment",
+    "Tip type should be dismissalAcknowledgment"
+  );
+  Assert.ok(
+    !details.element.row.hasAttribute("feedback-acknowledgment"),
+    "Row should not have feedback acknowledgment after dismissal"
+  );
+
+  // Get the dismissal acknowledgment's "Got it" button and click it.
+  let gotItButton = UrlbarTestUtils.getButtonForResultIndex(
+    window,
+    "0",
+    resultIndex
+  );
+  Assert.ok(gotItButton, "Row should have a 'Got it' button");
+  EventUtils.synthesizeMouseAtCenter(gotItButton, {}, window);
+
+  // The view should remain open and the tip row should be gone.
+  Assert.ok(
+    gURLBar.view.isOpen,
+    "The view should remain open clicking the 'Got it' button"
+  );
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    resultCount - 1,
+    "The result count should be one less after clicking 'Got it' button"
+  );
+
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+    details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.ok(
+      details.type != UrlbarUtils.RESULT_TYPE.TIP &&
+        details.result.payload.provider !== "Yelp",
+      "Tip result and Yelp result should not be present"
+    );
+  }
+
+  Assert.ok(!UrlbarPrefs.get("suggest.yelp"));
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  UrlbarPrefs.clear("suggest.yelp");
+});

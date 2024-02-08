@@ -306,6 +306,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for Yelp suggestions in the urlbar.
   ["yelp.featureGate", false],
 
+  // The number of times the user has clicked the "Show less frequently" command
+  // for Yelp suggestions.
+  ["yelp.showLessFrequentlyCount", 0],
+
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 
@@ -505,6 +509,8 @@ const NIMBUS_DEFAULTS = {
   weatherKeywords: null,
   weatherKeywordsMinimumLength: 0,
   weatherKeywordsMinimumLengthCap: 0,
+  yelpMinKeywordLength: 0,
+  yelpShowLessFrequentlyCap: 0,
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined

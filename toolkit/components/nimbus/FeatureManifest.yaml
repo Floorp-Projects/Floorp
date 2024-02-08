@@ -421,12 +421,24 @@ urlbar:
         If neither Nimbus nor remote settings defines a cap, no cap will be
         used, and the user will be able to increment the minimum length without
         any limit.
+    yelpMinKeywordLength:
+      type: int
+      description: >-
+        If the length of user's query is less than this value plus
+        "yelp.showLessFrequentlyCount", Yelp suggestion never be shown.
     yelpFeatureGate:
       type: boolean
       fallbackPref: browser.urlbar.yelp.featureGate
       description: >-
         Feature gate that controls whether all aspects of the Yelp suggestion
         feature are exposed to the user.
+    yelpShowLessFrequentlyCap:
+      type: int
+      description: >-
+        If defined and non-zero, this is the maximum number of times the user
+        will be able to click the "Show less frequently" command for Yelp
+        suggestions. If undefined or zero, the user will be able to click the
+        command without any limit.
     yelpSuggestPriority:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.yelpPriority
