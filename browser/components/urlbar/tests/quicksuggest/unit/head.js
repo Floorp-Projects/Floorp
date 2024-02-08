@@ -269,6 +269,59 @@ function makeMdnResult({ url, title, description }) {
   return result;
 }
 
+function makeWeatherResult({
+  source,
+  provider,
+  telemetryType = undefined,
+  temperatureUnit = undefined,
+} = {}) {
+  if (!temperatureUnit) {
+    temperatureUnit =
+      Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
+  }
+
+  let result = {
+    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    suggestedIndex: 1,
+    payload: {
+      temperatureUnit,
+      url: MerinoTestUtils.WEATHER_SUGGESTION.url,
+      iconId: "6",
+      helpUrl: QuickSuggest.HELP_URL,
+      requestId: MerinoTestUtils.server.response.body.request_id,
+      source: "merino",
+      provider: "accuweather",
+      dynamicType: "weather",
+      city: MerinoTestUtils.WEATHER_SUGGESTION.city_name,
+      temperature:
+        MerinoTestUtils.WEATHER_SUGGESTION.current_conditions.temperature[
+          temperatureUnit
+        ],
+      currentConditions:
+        MerinoTestUtils.WEATHER_SUGGESTION.current_conditions.summary,
+      forecast: MerinoTestUtils.WEATHER_SUGGESTION.forecast.summary,
+      high: MerinoTestUtils.WEATHER_SUGGESTION.forecast.high[temperatureUnit],
+      low: MerinoTestUtils.WEATHER_SUGGESTION.forecast.low[temperatureUnit],
+      shouldNavigate: true,
+    },
+  };
+
+  if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
+    result.payload.source = source || "rust";
+    result.payload.provider = provider || "Weather";
+    if (telemetryType !== null) {
+      result.payload.telemetryType = telemetryType || "weather";
+    }
+  } else {
+    result.payload.source = source || "merino";
+    result.payload.provider = provider || "accuweather";
+  }
+
+  return result;
+}
+
 /**
  * Tests quick suggest prefs migrations.
  *

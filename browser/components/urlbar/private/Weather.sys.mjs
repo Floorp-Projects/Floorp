@@ -12,6 +12,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 const FETCH_DELAY_AFTER_COMING_ONLINE_MS = 3000; // 3s
@@ -29,10 +32,125 @@ const NOTIFICATIONS = {
   WAKE: "wake_notification",
 };
 
+const RESULT_MENU_COMMAND = {
+  HELP: "help",
+  INACCURATE_LOCATION: "inaccurate_location",
+  NOT_INTERESTED: "not_interested",
+  NOT_RELEVANT: "not_relevant",
+  SHOW_LESS_FREQUENTLY: "show_less_frequently",
+};
+
+const WEATHER_PROVIDER_DISPLAY_NAME = "AccuWeather";
+
+const WEATHER_DYNAMIC_TYPE = "weather";
+const WEATHER_VIEW_TEMPLATE = {
+  attributes: {
+    selectable: true,
+  },
+  children: [
+    {
+      name: "currentConditions",
+      tag: "span",
+      children: [
+        {
+          name: "currently",
+          tag: "div",
+        },
+        {
+          name: "currentTemperature",
+          tag: "div",
+          children: [
+            {
+              name: "temperature",
+              tag: "span",
+            },
+            {
+              name: "weatherIcon",
+              tag: "img",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "summary",
+      tag: "span",
+      overflowable: true,
+      children: [
+        {
+          name: "top",
+          tag: "div",
+          children: [
+            {
+              name: "topNoWrap",
+              tag: "span",
+              children: [
+                { name: "title", tag: "span", classList: ["urlbarView-title"] },
+                {
+                  name: "titleSeparator",
+                  tag: "span",
+                  classList: ["urlbarView-title-separator"],
+                },
+              ],
+            },
+            {
+              name: "url",
+              tag: "span",
+              classList: ["urlbarView-url"],
+            },
+          ],
+        },
+        {
+          name: "middle",
+          tag: "div",
+          children: [
+            {
+              name: "middleNoWrap",
+              tag: "span",
+              overflowable: true,
+              children: [
+                {
+                  name: "summaryText",
+                  tag: "span",
+                },
+                {
+                  name: "summaryTextSeparator",
+                  tag: "span",
+                },
+                {
+                  name: "highLow",
+                  tag: "span",
+                },
+              ],
+            },
+            {
+              name: "highLowWrap",
+              tag: "span",
+            },
+          ],
+        },
+        {
+          name: "bottom",
+          tag: "div",
+        },
+      ],
+    },
+  ],
+};
+
 /**
  * A feature that periodically fetches weather suggestions from Merino.
  */
 export class Weather extends BaseFeature {
+  constructor(...args) {
+    super(...args);
+    lazy.UrlbarResult.addDynamicResultType(WEATHER_DYNAMIC_TYPE);
+    lazy.UrlbarView.addDynamicViewTemplate(
+      WEATHER_DYNAMIC_TYPE,
+      WEATHER_VIEW_TEMPLATE
+    );
+  }
+
   get shouldEnable() {
     // The feature itself is enabled by setting these prefs regardless of
     // whether any config is defined. This is necessary to allow the feature to
@@ -47,6 +165,21 @@ export class Weather extends BaseFeature {
 
   get enablingPreferences() {
     return ["suggest.weather"];
+  }
+
+  get rustSuggestionTypes() {
+    return ["Weather"];
+  }
+
+  isRustSuggestionTypeEnabled(type) {
+    // When weather keywords are defined in Nimbus, weather suggestions are
+    // served by UrlbarProviderWeather. Return false here so the quick suggest
+    // provider doesn't try to serve them too.
+    return !lazy.UrlbarPrefs.get("weatherKeywords");
+  }
+
+  getSuggestionTelemetryType(suggestion) {
+    return "weather";
   }
 
   /**
@@ -164,6 +297,222 @@ export class Weather extends BaseFeature {
     this.logger.debug("Got weather records: " + JSON.stringify(records));
     this.#rsData = records?.[0]?.weather;
     this.#updateConfig();
+  }
+
+  makeResult(queryContext, suggestion, searchString) {
+    // The Rust component doesn't enforce a minimum keyword length, so discard
+    // the suggestion if the search string isn't long enough.
+    if (searchString.length < this.minKeywordLength) {
+      return null;
+    }
+
+    // The Rust component will return a dummy suggestion if the query matches a
+    // weather keyword. Here in this method we replace it with the actual cached
+    // weather suggestion from Merino. If there is no cached suggestion, discard
+    // the Rust suggestion.
+    if (!this.suggestion) {
+      return null;
+    }
+
+    if (suggestion.source == "rust") {
+      if (lazy.UrlbarPrefs.get("weatherKeywords")) {
+        // This shouldn't happen since this feature won't enable Rust weather
+        // suggestions in this case, but just to be safe, discard the suggestion
+        // if keywords are defined in Nimbus.
+        return null;
+      }
+      // Replace the dummy Rust suggestion with the actual weather suggestion
+      // from Merino.
+      suggestion = this.suggestion;
+    }
+
+    let unit = Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          url: suggestion.url,
+          iconId: suggestion.current_conditions.icon_id,
+          helpUrl: lazy.QuickSuggest.HELP_URL,
+          requestId: suggestion.request_id,
+          dynamicType: WEATHER_DYNAMIC_TYPE,
+          city: suggestion.city_name,
+          temperatureUnit: unit,
+          temperature: suggestion.current_conditions.temperature[unit],
+          currentConditions: suggestion.current_conditions.summary,
+          forecast: suggestion.forecast.summary,
+          high: suggestion.forecast.high[unit],
+          low: suggestion.forecast.low[unit],
+          shouldNavigate: true,
+        }
+      ),
+      {
+        showFeedbackMenu: true,
+        suggestedIndex: searchString ? 1 : 0,
+      }
+    );
+  }
+
+  getViewUpdate(result) {
+    let uppercaseUnit = result.payload.temperatureUnit.toUpperCase();
+    return {
+      currently: {
+        l10n: {
+          id: "firefox-suggest-weather-currently",
+          cacheable: true,
+        },
+      },
+      temperature: {
+        l10n: {
+          id: "firefox-suggest-weather-temperature",
+          args: {
+            value: result.payload.temperature,
+            unit: uppercaseUnit,
+          },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      weatherIcon: {
+        attributes: { iconId: result.payload.iconId },
+      },
+      title: {
+        l10n: {
+          id: "firefox-suggest-weather-title",
+          args: { city: result.payload.city },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      url: {
+        textContent: result.payload.url,
+      },
+      summaryText: {
+        l10n: {
+          id: "firefox-suggest-weather-summary-text",
+          args: {
+            currentConditions: result.payload.currentConditions,
+            forecast: result.payload.forecast,
+          },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      highLow: {
+        l10n: {
+          id: "firefox-suggest-weather-high-low",
+          args: {
+            high: result.payload.high,
+            low: result.payload.low,
+            unit: uppercaseUnit,
+          },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      highLowWrap: {
+        l10n: {
+          id: "firefox-suggest-weather-high-low",
+          args: {
+            high: result.payload.high,
+            low: result.payload.low,
+            unit: uppercaseUnit,
+          },
+        },
+      },
+      bottom: {
+        l10n: {
+          id: "firefox-suggest-weather-sponsored",
+          args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
+          cacheable: true,
+        },
+      },
+    };
+  }
+
+  getResultCommands(result) {
+    let commands = [
+      {
+        name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,
+        l10n: {
+          id: "firefox-suggest-weather-command-inaccurate-location",
+        },
+      },
+    ];
+
+    if (this.canIncrementMinKeywordLength) {
+      commands.push({
+        name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
+        l10n: {
+          id: "firefox-suggest-command-show-less-frequently",
+        },
+      });
+    }
+
+    commands.push(
+      {
+        l10n: {
+          id: "firefox-suggest-command-dont-show-this",
+        },
+        children: [
+          {
+            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
+            l10n: {
+              id: "firefox-suggest-command-not-relevant",
+            },
+          },
+          {
+            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
+            l10n: {
+              id: "firefox-suggest-command-not-interested",
+            },
+          },
+        ],
+      },
+      { name: "separator" },
+      {
+        name: RESULT_MENU_COMMAND.HELP,
+        l10n: {
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        },
+      }
+    );
+
+    return commands;
+  }
+
+  handleCommand(view, result, selType) {
+    switch (selType) {
+      case RESULT_MENU_COMMAND.HELP:
+        // "help" is handled by UrlbarInput, no need to do anything here.
+        break;
+      // selType == "dismiss" when the user presses the dismiss key shortcut.
+      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
+      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        this.logger.info("Dismissing weather result");
+        lazy.UrlbarPrefs.set("suggest.weather", false);
+        result.acknowledgeDismissalL10n = {
+          id: "firefox-suggest-dismissal-acknowledgment-all",
+        };
+        view.controller.removeResult(result);
+        break;
+      case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
+        // Currently the only way we record this feedback is in the Glean
+        // engagement event. As with all commands, it will be recorded with an
+        // `engagement_type` value that is the command's name, in this case
+        // `inaccurate_location`.
+        view.acknowledgeFeedback(result);
+        break;
+      case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
+        view.acknowledgeFeedback(result);
+        this.incrementMinKeywordLength();
+        if (!this.canIncrementMinKeywordLength) {
+          view.invalidateResultMenuCommands();
+        }
+        break;
+    }
   }
 
   get #vpnDetected() {
@@ -371,16 +720,37 @@ export class Weather extends BaseFeature {
   #updateConfig() {
     this.logger.debug("Starting config update");
 
-    // Get the full keywords, preferring Nimbus over remote settings.
-    let fullKeywords =
-      lazy.UrlbarPrefs.get("weatherKeywords") ?? this.#rsData?.keywords;
-    if (!fullKeywords) {
-      this.logger.debug("No keywords defined, stopping suggestion fetching");
+    let nimbusKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
+
+    // If the Rust backend is enabled and weather keywords aren't defined in
+    // Nimbus, Rust will manage the keywords.
+    if (lazy.UrlbarPrefs.get("quickSuggestRustEnabled") && !nimbusKeywords) {
+      this.logger.debug(
+        "Rust enabled, no keywords in Nimbus. " +
+          "Starting fetch and deferring to Rust."
+      );
+      this.#keywords = null;
+      this.#startFetching();
+      return;
+    }
+
+    // If the JS backend is enabled but no keywords are defined, we can't
+    // possibly serve a weather suggestion.
+    if (
+      !lazy.UrlbarPrefs.get("quickSuggestRustEnabled") &&
+      !this.#rsData?.keywords &&
+      !nimbusKeywords
+    ) {
+      this.logger.debug(
+        "Rust disabled, no keywords in RS or Nimbus. Stopping fetch."
+      );
       this.#keywords = null;
       this.#stopFetching();
       return;
     }
 
+    // At this point, this feature will manage the keywords.
+    let fullKeywords = nimbusKeywords || this.#rsData?.keywords;
     let minLength = this.minKeywordLength;
     this.logger.debug(
       "Updating keywords: " + JSON.stringify({ fullKeywords, minLength })

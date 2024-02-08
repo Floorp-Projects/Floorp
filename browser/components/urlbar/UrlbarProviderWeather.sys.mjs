@@ -13,11 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
-  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
-
-const WEATHER_PROVIDER_DISPLAY_NAME = "AccuWeather";
 
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
@@ -28,124 +24,19 @@ const TELEMETRY_SCALARS = {
   IMPRESSION: `${TELEMETRY_PREFIX}.impression_weather`,
 };
 
-const RESULT_MENU_COMMAND = {
-  HELP: "help",
-  INACCURATE_LOCATION: "inaccurate_location",
-  NOT_INTERESTED: "not_interested",
-  NOT_RELEVANT: "not_relevant",
-  SHOW_LESS_FREQUENTLY: "show_less_frequently",
-};
-
-const WEATHER_DYNAMIC_TYPE = "weather";
-const WEATHER_VIEW_TEMPLATE = {
-  attributes: {
-    selectable: true,
-  },
-  children: [
-    {
-      name: "currentConditions",
-      tag: "span",
-      children: [
-        {
-          name: "currently",
-          tag: "div",
-        },
-        {
-          name: "currentTemperature",
-          tag: "div",
-          children: [
-            {
-              name: "temperature",
-              tag: "span",
-            },
-            {
-              name: "weatherIcon",
-              tag: "img",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: "summary",
-      tag: "span",
-      overflowable: true,
-      children: [
-        {
-          name: "top",
-          tag: "div",
-          children: [
-            {
-              name: "topNoWrap",
-              tag: "span",
-              children: [
-                { name: "title", tag: "span", classList: ["urlbarView-title"] },
-                {
-                  name: "titleSeparator",
-                  tag: "span",
-                  classList: ["urlbarView-title-separator"],
-                },
-              ],
-            },
-            {
-              name: "url",
-              tag: "span",
-              classList: ["urlbarView-url"],
-            },
-          ],
-        },
-        {
-          name: "middle",
-          tag: "div",
-          children: [
-            {
-              name: "middleNoWrap",
-              tag: "span",
-              overflowable: true,
-              children: [
-                {
-                  name: "summaryText",
-                  tag: "span",
-                },
-                {
-                  name: "summaryTextSeparator",
-                  tag: "span",
-                },
-                {
-                  name: "highLow",
-                  tag: "span",
-                },
-              ],
-            },
-            {
-              name: "highLowWrap",
-              tag: "span",
-            },
-          ],
-        },
-        {
-          name: "bottom",
-          tag: "div",
-        },
-      ],
-    },
-  ],
-};
-
 /**
  * A provider that returns a suggested url to the user based on what
  * they have currently typed so they can navigate directly.
+ *
+ * This provider is active only when either the Rust backend is disabled or
+ * weather keywords are defined in Nimbus. When Rust is enabled and keywords are
+ * not defined in Nimbus, the Rust component serves the initial weather
+ * suggestion and UrlbarProviderQuickSuggest handles it along with other
+ * suggestion types. Once the Rust backend is enabled by default and we no
+ * longer want to experiment with weather keywords, this provider can be removed
+ * along with the legacy telemetry it records.
  */
 class ProviderWeather extends UrlbarProvider {
-  constructor(...args) {
-    super(...args);
-    lazy.UrlbarResult.addDynamicResultType(WEATHER_DYNAMIC_TYPE);
-    lazy.UrlbarView.addDynamicViewTemplate(
-      WEATHER_DYNAMIC_TYPE,
-      WEATHER_VIEW_TEMPLATE
-    );
-  }
-
   /**
    * Returns the name of this provider.
    *
@@ -190,6 +81,15 @@ class ProviderWeather extends UrlbarProvider {
   isActive(queryContext) {
     this.#resultFromLastQuery = null;
 
+    // When Rust is enabled and keywords are not defined in Nimbus, weather
+    // results are created by the quick suggest provider, not this one.
+    if (
+      lazy.UrlbarPrefs.get("quickSuggestRustEnabled") &&
+      !lazy.QuickSuggest.weather?.keywords
+    ) {
+      return false;
+    }
+
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
     if (
@@ -228,90 +128,26 @@ class ProviderWeather extends UrlbarProvider {
    * @returns {Promise}
    */
   async startQuery(queryContext, addCallback) {
-    let { suggestion } = lazy.QuickSuggest.weather;
-    if (!suggestion) {
+    let { weather } = lazy.QuickSuggest;
+    if (!weather.suggestion) {
       return;
     }
 
-    let unit = Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      {
-        url: suggestion.url,
-        iconId: suggestion.current_conditions.icon_id,
-        helpUrl: lazy.QuickSuggest.HELP_URL,
-        requestId: suggestion.request_id,
-        source: suggestion.source,
-        provider: suggestion.provider,
-        dynamicType: WEATHER_DYNAMIC_TYPE,
-        city: suggestion.city_name,
-        temperatureUnit: unit,
-        temperature: suggestion.current_conditions.temperature[unit],
-        currentConditions: suggestion.current_conditions.summary,
-        forecast: suggestion.forecast.summary,
-        high: suggestion.forecast.high[unit],
-        low: suggestion.forecast.low[unit],
-        shouldNavigate: true,
-      }
+    let result = weather.makeResult(
+      queryContext,
+      weather.suggestion,
+      queryContext.searchString
     );
-
-    result.showFeedbackMenu = true;
-    result.suggestedIndex = queryContext.searchString ? 1 : 0;
-
-    addCallback(this, result);
-    this.#resultFromLastQuery = result;
+    if (result) {
+      result.payload.source = weather.suggestion.source;
+      result.payload.provider = weather.suggestion.provider;
+      addCallback(this, result);
+      this.#resultFromLastQuery = result;
+    }
   }
 
   getResultCommands(result) {
-    let commands = [
-      {
-        name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,
-        l10n: {
-          id: "firefox-suggest-weather-command-inaccurate-location",
-        },
-      },
-    ];
-
-    if (lazy.QuickSuggest.weather.canIncrementMinKeywordLength) {
-      commands.push({
-        name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
-        l10n: {
-          id: "firefox-suggest-command-show-less-frequently",
-        },
-      });
-    }
-
-    commands.push(
-      {
-        l10n: {
-          id: "firefox-suggest-command-dont-show-this",
-        },
-        children: [
-          {
-            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
-            l10n: {
-              id: "firefox-suggest-command-not-relevant",
-            },
-          },
-          {
-            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
-            l10n: {
-              id: "firefox-suggest-command-not-interested",
-            },
-          },
-        ],
-      },
-      { name: "separator" },
-      {
-        name: RESULT_MENU_COMMAND.HELP,
-        l10n: {
-          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-        },
-      }
-    );
-
-    return commands;
+    return lazy.QuickSuggest.weather.getResultCommands(result);
   }
 
   /**
@@ -328,81 +164,7 @@ class ProviderWeather extends UrlbarProvider {
    * @returns {object} An object describing the view update.
    */
   getViewUpdate(result, idsByName) {
-    let uppercaseUnit = result.payload.temperatureUnit.toUpperCase();
-
-    return {
-      currently: {
-        l10n: {
-          id: "firefox-suggest-weather-currently",
-          cacheable: true,
-        },
-      },
-      temperature: {
-        l10n: {
-          id: "firefox-suggest-weather-temperature",
-          args: {
-            value: result.payload.temperature,
-            unit: uppercaseUnit,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      weatherIcon: {
-        attributes: { iconId: result.payload.iconId },
-      },
-      title: {
-        l10n: {
-          id: "firefox-suggest-weather-title",
-          args: { city: result.payload.city },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      url: {
-        textContent: result.payload.url,
-      },
-      summaryText: {
-        l10n: {
-          id: "firefox-suggest-weather-summary-text",
-          args: {
-            currentConditions: result.payload.currentConditions,
-            forecast: result.payload.forecast,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      highLow: {
-        l10n: {
-          id: "firefox-suggest-weather-high-low",
-          args: {
-            high: result.payload.high,
-            low: result.payload.low,
-            unit: uppercaseUnit,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      highLowWrap: {
-        l10n: {
-          id: "firefox-suggest-weather-high-low",
-          args: {
-            high: result.payload.high,
-            low: result.payload.low,
-            unit: uppercaseUnit,
-          },
-        },
-      },
-      bottom: {
-        l10n: {
-          id: "firefox-suggest-weather-sponsored",
-          args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
-          cacheable: true,
-        },
-      },
-    };
+    return lazy.QuickSuggest.weather.getViewUpdate(result);
   }
 
   onEngagement(state, queryContext, details, controller) {
@@ -541,36 +303,7 @@ class ProviderWeather extends UrlbarProvider {
   }
 
   #handlePossibleCommand(view, result, selType) {
-    switch (selType) {
-      case RESULT_MENU_COMMAND.HELP:
-        // "help" is handled by UrlbarInput, no need to do anything here.
-        break;
-      // selType == "dismiss" when the user presses the dismiss key shortcut.
-      case "dismiss":
-      case RESULT_MENU_COMMAND.NOT_INTERESTED:
-      case RESULT_MENU_COMMAND.NOT_RELEVANT:
-        this.logger.info("Dismissing weather result");
-        lazy.UrlbarPrefs.set("suggest.weather", false);
-        result.acknowledgeDismissalL10n = {
-          id: "firefox-suggest-dismissal-acknowledgment-all",
-        };
-        view.controller.removeResult(result);
-        break;
-      case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
-        // Currently the only way we record this feedback is in the Glean
-        // engagement event. As with all commands, it will be recorded with an
-        // `engagement_type` value that is the command's name, in this case
-        // `inaccurate_location`.
-        view.acknowledgeFeedback(result);
-        break;
-      case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
-        view.acknowledgeFeedback(result);
-        lazy.QuickSuggest.weather.incrementMinKeywordLength();
-        if (!lazy.QuickSuggest.weather.canIncrementMinKeywordLength) {
-          view.invalidateResultMenuCommands();
-        }
-        break;
-    }
+    lazy.QuickSuggest.weather.handleCommand(view, result, selType);
   }
 
   // The result we added during the most recent query.
