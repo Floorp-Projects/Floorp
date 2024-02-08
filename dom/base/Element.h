@@ -706,7 +706,7 @@ class Element : public FragmentOrElement {
 
  public:
   MOZ_CAN_RUN_SCRIPT
-  nsIScrollableFrame* GetScrollFrame(nsIFrame** aStyledFrame = nullptr,
+  nsIScrollableFrame* GetScrollFrame(nsIFrame** aFrame = nullptr,
                                      FlushType aFlushType = FlushType::Layout);
 
  private:
