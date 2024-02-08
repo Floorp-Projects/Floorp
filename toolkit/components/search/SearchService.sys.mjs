@@ -2292,7 +2292,6 @@ export class SearchService {
       { webExtension: { id: "startpage@search.mozilla.org", locale: "default"}},
       { webExtension: { id: "ddg@search.mozilla.org",       locale: "default"}},
       { webExtension: { id: "you.com@search.mozilla.org",   locale: "default"}},
-      { webExtension: { id: "searxng@search.mozilla.org",   locale: "default"}},
     ];
 
     const privateDefault = (
