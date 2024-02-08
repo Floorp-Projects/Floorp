@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test getStatusForPolicy on MFCDM</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<video id="v" controls></video>
+<script class="testbody" type="text/javascript">
+
+add_task(async function setupTestingPrefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.eme.hdcp-policy-check.enabled", true],
+      ["media.wmf.media-engine.enabled", 2],
+      ["media.eme.playready.enabled", true],
+      ["media.eme.widevine.experiment.enabled", true],
+      // This is used to trigger Widevine CDM installation check
+      ["media.gmp-widevinecdm-l1.enabled", true],
+      ["media.eme.wmf.clearkey.enabled", true],
+      // Use the mock clearkey CDM to create cdm for all other key systems.
+      ["media.eme.wmf.use-mock-cdm-for-external-cdms", true],
+      // Our mock CDM doesn't implement 'IsTypeSupportedEx()', only 'IsTypeSupported()'
+      ["media.eme.playready.istypesupportedex", false],
+    ],
+  });
+});
+
+// We expect that all key system have HDCP 2.1 compliant, which is pre-defined
+// in `WMFClearKeyCDMFactory::IsTypeSupported`.
+const expectedResults = [
+  {
+    minHdcpVersion : "1.0",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.1",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.2",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.3",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.4",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.0",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.1",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.2",
+    expectedResult : "output-restricted"
+  },
+  {
+    minHdcpVersion : "2.3",
+    expectedResult : "output-restricted"
+  },
+];
+
+const kKeySystems = [
+  "com.microsoft.playready.recommendation",
+  "com.microsoft.playready.recommendation.3000",
+  "com.microsoft.playready.recommendation.3000.clearlead",
+  "com.widevine.alpha.experiment",
+  "com.widevine.alpha.experiment2",
+  "org.w3.clearkey",
+];
+
+add_task(async function testGetStatusForPolicy() {
+  for (let keySystem of kKeySystems) {
+    for (let result of expectedResults) {
+      let mediaKey = await createMediaKeysAndSet(keySystem);
+      let video = document.getElementById("v");
+      is(video.mediaKeys, mediaKey,
+        "Should have set MediaKeys on media element");
+      let keyStatus = await
+          video.mediaKeys.getStatusForPolicy({minHdcpVersion : result.minHdcpVersion})
+          .catch(e => ok(false, "getStatusForPolicy failed!"));
+      info(`getStatusForPolicy for HDCP ${result.minHdcpVersion} : ${keyStatus}`);
+      is(keyStatus, result.expectedResult,
+          `Expected ${result.expectedResult}, got ${keyStatus}`);
+    }
+  }
+});
+
+// Helper function
+function createMediaKeysAndSet(keySystem) {
+  return navigator.requestMediaKeySystemAccess(keySystem, gCencMediaKeySystemConfig)
+  .then(function (access) {
+    return access.createMediaKeys();
+  })
+  .then(function (mediaKeys) {
+    document.getElementById("v").setMediaKeys(mediaKeys);
+    return mediaKeys;
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
