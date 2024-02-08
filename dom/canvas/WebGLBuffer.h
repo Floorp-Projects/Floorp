@@ -41,7 +41,8 @@ class WebGLBuffer final : public WebGLContextBoundObject {
   bool ValidateRange(size_t byteOffset, size_t byteLen) const;
 
   bool ValidateCanBindToTarget(GLenum target);
-  void BufferData(GLenum target, uint64_t size, const void* data, GLenum usage);
+  void BufferData(GLenum target, uint64_t size, const void* data, GLenum usage,
+                  bool allowUninitialized = false);
   void BufferSubData(GLenum target, uint64_t dstByteOffset, uint64_t dataLen,
                      const void* data, bool unsynchronized = false) const;
 

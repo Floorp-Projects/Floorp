@@ -1256,9 +1256,9 @@ static const float kRectVertexData[12] = {0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
 // buffers.
 void SharedContextWebgl::ResetPathVertexBuffer(bool aChanged) {
   mWebgl->BindBuffer(LOCAL_GL_ARRAY_BUFFER, mPathVertexBuffer.get());
-  mWebgl->BufferData(
+  mWebgl->UninitializedBufferData_SizeOnly(
       LOCAL_GL_ARRAY_BUFFER,
-      std::max(size_t(mPathVertexCapacity), sizeof(kRectVertexData)), nullptr,
+      std::max(size_t(mPathVertexCapacity), sizeof(kRectVertexData)),
       LOCAL_GL_DYNAMIC_DRAW);
   mWebgl->BufferSubData(LOCAL_GL_ARRAY_BUFFER, 0, sizeof(kRectVertexData),
                         (const uint8_t*)kRectVertexData);
