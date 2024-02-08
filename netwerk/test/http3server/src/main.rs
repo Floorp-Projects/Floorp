@@ -423,7 +423,9 @@ impl HttpServer for Http3TestServer {
                 } => {
                     // echo bidirectional input back to client
                     if self.webtransport_bidi_stream.contains(&stream) {
-                        self.new_response(stream, data);
+                        if stream.handler.borrow().state().active() {
+                            self.new_response(stream, data);
+                        }
                         break;
                     }
 
