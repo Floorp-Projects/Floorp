@@ -1,6 +1,6 @@
 {%- let record = ci.get_record_definition(name).unwrap() -%}
 export class {{ record.nm() }} {
-    constructor({{ record.constructor_field_list() }}) {
+    constructor({{ record.constructor_field_list() }} = {}) {
         {%- for field in record.fields() %}
         try {
             {{ field.ffi_converter() }}.checkType({{ field.nm() }})
@@ -28,12 +28,11 @@ export class {{ record.nm() }} {
 // Export the FFIConverter object to make external types work.
 export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new {{record.nm()}}(
+        return new {{record.nm()}}({
             {%- for field in record.fields() %}
-            {{ field.read_datastream_fn() }}(dataStream)
-            {%- if !loop.last %}, {% endif %}
+            {{ field.nm() }}: {{ field.read_datastream_fn() }}(dataStream),
             {%- endfor %}
-        );
+        });
     }
     static write(dataStream, value) {
         {%- for field in record.fields() %}
@@ -51,6 +50,9 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof {{ record.nm() }})) {
+            throw new TypeError(`Expected '{{ record.nm() }}', found '${typeof value}'`);
+        }
         {%- for field in record.fields() %}
         try {
             {{ field.ffi_converter() }}.checkType(value.{{ field.nm() }});

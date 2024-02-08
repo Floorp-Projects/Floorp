@@ -789,7 +789,7 @@ export class FfiConverterTypeSuggestStoreBuilder extends FfiConverter {
 }
 
 export class SuggestGlobalConfig {
-    constructor(showLessFrequentlyCap) {
+    constructor({ showLessFrequentlyCap } = {}) {
         try {
             FfiConverterI32.checkType(showLessFrequentlyCap)
         } catch (e) {
@@ -810,9 +810,9 @@ export class SuggestGlobalConfig {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSuggestGlobalConfig extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new SuggestGlobalConfig(
-            FfiConverterI32.read(dataStream)
-        );
+        return new SuggestGlobalConfig({
+            showLessFrequentlyCap: FfiConverterI32.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterI32.write(dataStream, value.showLessFrequentlyCap);
@@ -826,6 +826,9 @@ export class FfiConverterTypeSuggestGlobalConfig extends FfiConverterArrayBuffer
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof SuggestGlobalConfig)) {
+            throw new TypeError(`Expected 'SuggestGlobalConfig', found '${typeof value}'`);
+        }
         try {
             FfiConverterI32.checkType(value.showLessFrequentlyCap);
         } catch (e) {
@@ -838,7 +841,7 @@ export class FfiConverterTypeSuggestGlobalConfig extends FfiConverterArrayBuffer
 }
 
 export class SuggestIngestionConstraints {
-    constructor(maxSuggestions = null) {
+    constructor({ maxSuggestions = null } = {}) {
         try {
             FfiConverterOptionalu64.checkType(maxSuggestions)
         } catch (e) {
@@ -859,9 +862,9 @@ export class SuggestIngestionConstraints {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new SuggestIngestionConstraints(
-            FfiConverterOptionalu64.read(dataStream)
-        );
+        return new SuggestIngestionConstraints({
+            maxSuggestions: FfiConverterOptionalu64.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterOptionalu64.write(dataStream, value.maxSuggestions);
@@ -875,6 +878,9 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof SuggestIngestionConstraints)) {
+            throw new TypeError(`Expected 'SuggestIngestionConstraints', found '${typeof value}'`);
+        }
         try {
             FfiConverterOptionalu64.checkType(value.maxSuggestions);
         } catch (e) {
@@ -887,7 +893,7 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
 }
 
 export class SuggestionQuery {
-    constructor(keyword,providers,limit = null) {
+    constructor({ keyword, providers, limit = null } = {}) {
         try {
             FfiConverterString.checkType(keyword)
         } catch (e) {
@@ -928,11 +934,11 @@ export class SuggestionQuery {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new SuggestionQuery(
-            FfiConverterString.read(dataStream), 
-            FfiConverterSequenceTypeSuggestionProvider.read(dataStream), 
-            FfiConverterOptionali32.read(dataStream)
-        );
+        return new SuggestionQuery({
+            keyword: FfiConverterString.read(dataStream),
+            providers: FfiConverterSequenceTypeSuggestionProvider.read(dataStream),
+            limit: FfiConverterOptionali32.read(dataStream),
+        });
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.keyword);
@@ -950,6 +956,9 @@ export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
+        if (!(value instanceof SuggestionQuery)) {
+            throw new TypeError(`Expected 'SuggestionQuery', found '${typeof value}'`);
+        }
         try {
             FfiConverterString.checkType(value.keyword);
         } catch (e) {

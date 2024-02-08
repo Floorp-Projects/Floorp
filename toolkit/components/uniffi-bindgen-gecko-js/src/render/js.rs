@@ -118,7 +118,8 @@ pub impl Record {
     }
 
     fn constructor_field_list(&self) -> String {
-        self.fields()
+        let o = self
+            .fields()
             .iter()
             .map(|field| {
                 if let Some(default_value) = field.default_value() {
@@ -128,7 +129,8 @@ pub impl Record {
                 }
             })
             .collect::<Vec<String>>()
-            .join(",")
+            .join(", ");
+        format!("{{ {o} }}")
     }
 }
 
