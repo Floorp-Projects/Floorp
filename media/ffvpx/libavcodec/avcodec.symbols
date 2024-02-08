@@ -79,7 +79,5 @@ avcodec_send_packet
 avcodec_string
 avcodec_version
 avsubtitle_free
-ff_init_vlc_from_lengths
-ff_init_vlc_sparse
 ff_mpa_freq_tab
 ff_mpa_bitrate_tab
