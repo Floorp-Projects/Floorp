@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e2
  11 files changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index f61f8965b9..e514b4d6a7 100644
+index 7c7655e974..634a43ac94 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -427,12 +427,12 @@ config("common_config") {
