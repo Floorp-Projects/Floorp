@@ -1700,7 +1700,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
 
   if (sandboxEnabled && !StaticPrefs::media_cubeb_sandbox()) {
     // Pre-start audio before sandboxing; see bug 1443612.
-    Unused << CubebUtils::GetCubebContext();
+    Unused << CubebUtils::GetCubeb();
   }
 
   if (sandboxEnabled) {

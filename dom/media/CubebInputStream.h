@@ -76,6 +76,8 @@ class CubebInputStream final {
 
   // mListener must outlive the life time of the mStream.
   const RefPtr<Listener> mListener;
+  // So must mCubeb (mStream has a bare pointer to cubeb).
+  const RefPtr<CubebUtils::CubebHandle> mCubeb;
   const UniquePtr<cubeb_stream, CubebDestroyPolicy> mStream;
 };
 
