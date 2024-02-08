@@ -179,6 +179,7 @@ internal object TranslationsStateReducer {
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(
                     pageSettings = action.pageSettings,
+                    settingsError = null,
                 )
             }
 

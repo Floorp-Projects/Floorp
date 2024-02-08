@@ -343,6 +343,7 @@ class TranslationsActionTest {
         ).joinBlocking()
 
         assertEquals(pageSettings, tabState().translationsState.pageSettings)
+        assertNull(tabState().translationsState.settingsError)
 
         // Action started
         store.dispatch(

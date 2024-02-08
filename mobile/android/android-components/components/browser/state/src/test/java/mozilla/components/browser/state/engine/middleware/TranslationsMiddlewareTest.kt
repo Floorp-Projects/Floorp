@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettings
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.any
@@ -68,6 +69,24 @@ class TranslationsMiddlewareTest {
         scope.testScheduler.advanceUntilIdle()
         coroutinesTestRule.testDispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
+    }
+
+    /**
+     * Use with tests that need a mock translations engine state.
+     */
+    private fun setupMockState() {
+        val mockFrom = "es"
+        val mockTo = "en"
+        val mockDetectedLanguages = DetectedLanguages(
+            documentLangTag = mockFrom,
+            supportedDocumentLang = true,
+            userPreferredLangTag = mockTo,
+        )
+        val mockState = TranslationsState(
+            translationEngineState = TranslationEngineState(mockDetectedLanguages),
+        )
+
+        whenever(store.state.findTab(tab.id)?.translationsState).thenReturn(mockState)
     }
 
     @Test
@@ -123,78 +142,91 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN OperationRequestedAction is dispatched WITH FETCH_PAGE_SETTINGS AND fetching languages is successful THEN TranslationPageSettings is dispatched`() = runTest {
-        // Mock detected languages are required to pull the language settings
-        val mockFrom = "es"
-        val mockTo = "en"
-        val mockDetectedLanguages = DetectedLanguages(
-            documentLangTag = mockFrom,
-            supportedDocumentLang = true,
-            userPreferredLangTag = mockTo,
-        )
-        val mockState = TranslationsState(
-            translationEngineState = TranslationEngineState(mockDetectedLanguages),
-        )
-        // Had mock issues when mocking anything more granular
-        whenever(store.state.findTab(tab.id)?.translationsState).thenReturn(mockState)
+    fun `WHEN OperationRequestedAction is dispatched WITH FETCH_PAGE_SETTINGS AND fetching settings is successful THEN TranslationPageSettings is dispatched`() = runTest {
+        // Setup
+        setupMockState()
 
-        // Always offer behavior
-        val offerResponse = true
-        whenever(engine.getTranslationsOfferPopup()).thenAnswer { offerResponse }
-
-        // Page language
-        val languageSettingCallback = argumentCaptor<((LanguageSetting) -> Unit)>()
-        val languageResponse = LanguageSetting.ALWAYS
-        whenever(
-            engine.getLanguageSetting(
-                languageCode = any(),
-                onSuccess = languageSettingCallback.capture(),
-                onError = any(),
-            ),
+        val mockPageSettings = TranslationPageSettings(
+            alwaysOfferPopup = true,
+            alwaysTranslateLanguage = true,
+            neverTranslateLanguage = false,
+            neverTranslateSite = true,
         )
-            .thenAnswer {
-                languageSettingCallback.value.invoke(languageResponse)
-            }
 
-        // Never translate site behavior
-        val neverTranslateSiteCallback = argumentCaptor<((Boolean) -> Unit)>()
-        val neverSiteResponse = true
-        whenever(
-            engineSession.getNeverTranslateSiteSetting(
-                onResult = neverTranslateSiteCallback.capture(),
-                onException = any(),
-            ),
-        )
-            .thenAnswer {
-                neverTranslateSiteCallback.value.invoke(neverSiteResponse)
-            }
+        whenever(engine.getTranslationsOfferPopup()).thenAnswer { mockPageSettings.alwaysOfferPopup }
 
-        store.dispatch(
+        // Send Action
+        val action =
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-            ),
-        ).joinBlocking()
-
+            )
+        translationsMiddleware.invoke(context, {}, action)
         waitForIdle()
+
+        // Check Behavior
+        // Popup always offer behavior
+        verify(engine).getTranslationsOfferPopup()
+
+        // Page language behavior
+        val languageSettingCallback = argumentCaptor<((LanguageSetting) -> Unit)>()
+        verify(engine).getLanguageSetting(
+            languageCode = any(),
+            onSuccess = languageSettingCallback.capture(),
+            onError = any(),
+        )
+        val languageResponse = LanguageSetting.ALWAYS
+        languageSettingCallback.value.invoke(languageResponse)
+
+        // Never translate site behavior behavior
+        val neverTranslateSiteCallback = argumentCaptor<((Boolean) -> Unit)>()
+        verify(engineSession).getNeverTranslateSiteSetting(
+            onResult = neverTranslateSiteCallback.capture(),
+            onException = any(),
+        )
+        neverTranslateSiteCallback.value.invoke(mockPageSettings.neverTranslateSite!!)
 
         verify(store).dispatch(
             TranslationsAction.SetPageSettingsAction(
                 tabId = tab.id,
-                pageSettings = any(),
+                pageSettings = mockPageSettings,
             ),
         )
+        waitForIdle()
     }
 
     @Test
-    fun `WHEN OperationRequestedAction AND fetching data fails THEN TranslateExceptionAction is dispatched`() {
-        store.dispatch(
+    fun `WHEN OperationRequestedAction WITH FETCH_PAGE_SETTINGS AND fetching settings fails THEN TranslateExceptionAction is dispatched`() {
+        // Setup
+        setupMockState()
+        whenever(engine.getTranslationsOfferPopup()).thenAnswer { false }
+
+        // Send Action
+        val action =
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-            ),
-        ).joinBlocking()
+            )
+        translationsMiddleware.invoke(context, {}, action)
         waitForIdle()
+
+        // Check Behavior
+        // Page language behavior
+        val languageErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine).getLanguageSetting(
+            languageCode = any(),
+            onSuccess = any(),
+            onError = languageErrorCallback.capture(),
+        )
+        languageErrorCallback.value.invoke(Throwable())
+
+        // Never translate site behavior behavior
+        val neverTranslateSiteErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engineSession).getNeverTranslateSiteSetting(
+            onResult = any(),
+            onException = neverTranslateSiteErrorCallback.capture(),
+        )
+        neverTranslateSiteErrorCallback.value.invoke(Throwable())
 
         verify(store).dispatch(
             TranslationsAction.TranslateExceptionAction(

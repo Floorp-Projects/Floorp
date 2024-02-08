@@ -48,7 +48,7 @@ class TranslationsMiddleware(
                     }
                     TranslationOperation.FETCH_PAGE_SETTINGS -> {
                         scope.launch {
-                            requestTranslationPageSettings(context, action.tabId)
+                            requestPageSettings(context, action.tabId)
                         }
                     }
                     TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
@@ -151,7 +151,7 @@ class TranslationsMiddleware(
      * @param context Context to use to dispatch to the store.
      * @param tabId Tab ID associated with the request.
      */
-    private suspend fun requestTranslationPageSettings(
+    private suspend fun requestPageSettings(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         tabId: String,
     ) {
@@ -175,22 +175,25 @@ class TranslationsMiddleware(
             neverTranslateLanguage != null &&
             neverTranslateSite != null
         ) {
-            TranslationsAction.SetPageSettingsAction(
-                tabId = tabId,
-                pageSettings =
-                TranslationPageSettings(
-                    alwaysOfferPopup = alwaysOfferPopup,
-                    alwaysTranslateLanguage = alwaysTranslateLanguage,
-                    neverTranslateLanguage = neverTranslateLanguage,
-                    neverTranslateSite = neverTranslateSite,
+            context.store.dispatch(
+                TranslationsAction.SetPageSettingsAction(
+                    tabId = tabId,
+                    pageSettings = TranslationPageSettings(
+                        alwaysOfferPopup = alwaysOfferPopup,
+                        alwaysTranslateLanguage = alwaysTranslateLanguage,
+                        neverTranslateLanguage = neverTranslateLanguage,
+                        neverTranslateSite = neverTranslateSite,
+                    ),
                 ),
             )
         } else {
             // Any null values indicate something went wrong, alert an error occurred
-            TranslationsAction.TranslateExceptionAction(
-                tabId = tabId,
-                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-                translationError = TranslationError.CouldNotLoadPageSettingsError(null),
+            context.store.dispatch(
+                TranslationsAction.TranslateExceptionAction(
+                    tabId = tabId,
+                    operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+                    translationError = TranslationError.CouldNotLoadPageSettingsError(null),
+                ),
             )
         }
     }
