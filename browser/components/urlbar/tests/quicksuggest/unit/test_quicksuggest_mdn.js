@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Tests Pocket quick suggest results.
+// Tests MDN quick suggest results.
 
 "use strict";
 
@@ -16,6 +16,7 @@ const REMOTE_SETTINGS_DATA = [
         description:
           "The filter() method creates a shallow copy of a portion of a given array, filtered down to just the elements from the given array that pass the test implemented by the provided function.",
         keywords: ["array filter"],
+        score: 0.24,
       },
       {
         url: "https://example.com/input",
@@ -23,6 +24,7 @@ const REMOTE_SETTINGS_DATA = [
         description:
           "The <input> HTML element is used to create interactive controls for web-based forms in order to accept data from the user; a wide variety of types of input data and control widgets are available, depending on the device and user agent. The <input> element is one of the most powerful and complex in all of HTML due to the sheer number of combinations of input types and attributes.",
         keywords: ["input"],
+        score: 0.24,
       },
       {
         url: "https://example.com/grid",
@@ -30,6 +32,7 @@ const REMOTE_SETTINGS_DATA = [
         description:
           "CSS Grid Layout excels at dividing a page into major regions or defining the relationship in terms of size, position, and layer, between parts of a control built from HTML primitives.",
         keywords: ["grid"],
+        score: 0.24,
       },
     ],
   },
@@ -48,16 +51,14 @@ add_setup(async function init() {
   });
 });
 
-add_task(async function basic() {
+add_tasks_with_rust(async function basic() {
   for (const suggestion of REMOTE_SETTINGS_DATA[0].attachment) {
     const fullKeyword = suggestion.keywords[0];
     const firstWord = fullKeyword.split(" ")[0];
     for (let i = 1; i < fullKeyword.length; i++) {
       const keyword = fullKeyword.substring(0, i);
       const shouldMatch = i >= firstWord.length;
-      const matches = shouldMatch
-        ? [makeExpectedResult({ searchString: keyword, suggestion })]
-        : [];
+      const matches = shouldMatch ? [makeMdnResult(suggestion)] : [];
       await check_results({
         context: createContext(keyword, {
           providers: [UrlbarProviderQuickSuggest.name],
@@ -72,13 +73,16 @@ add_task(async function basic() {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
-      matches: [],
+      matches:
+        UrlbarPrefs.get("quickSuggestRustEnabled") && !fullKeyword.includes(" ")
+          ? [makeMdnResult(suggestion)]
+          : [],
     });
   }
 });
 
 // Check wheather the MDN suggestions will be hidden by the pref.
-add_task(async function disableByLocalPref() {
+add_tasks_with_rust(async function disableByLocalPref() {
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
   const keyword = suggestion.keywords[0];
 
@@ -95,12 +99,7 @@ add_task(async function disableByLocalPref() {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
-      matches: [
-        makeExpectedResult({
-          searchString: keyword,
-          suggestion,
-        }),
-      ],
+      matches: [makeMdnResult(suggestion)],
     });
 
     // Now disable them.
@@ -121,7 +120,7 @@ add_task(async function disableByLocalPref() {
 
 // Check wheather the MDN suggestions will be shown by the setup of Nimbus
 // variable.
-add_task(async function nimbus() {
+add_tasks_with_rust(async function nimbus() {
   const defaultPrefs = Services.prefs.getDefaultBranch("browser.urlbar.");
 
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
@@ -149,7 +148,7 @@ add_task(async function nimbus() {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
-    matches: [makeExpectedResult({ searchString: keyword, suggestion })],
+    matches: [makeMdnResult(suggestion)],
   });
   await cleanUpNimbusEnable();
 
@@ -177,7 +176,7 @@ add_task(async function nimbus() {
   await QuickSuggestTestUtils.forceSync();
 });
 
-add_task(async function mixedCaseQuery() {
+add_tasks_with_rust(async function mixedCaseQuery() {
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[1];
   const keyword = "InPuT";
 
@@ -186,42 +185,6 @@ add_task(async function mixedCaseQuery() {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
-    matches: [makeExpectedResult({ searchString: keyword, suggestion })],
+    matches: [makeMdnResult(suggestion)],
   });
 });
-
-function makeExpectedResult({
-  searchString,
-  suggestion,
-  source = "remote-settings",
-} = {}) {
-  const url = new URL(suggestion.url);
-  url.searchParams.set("utm_medium", "firefox-desktop");
-  url.searchParams.set("utm_source", "firefox-suggest");
-  url.searchParams.set(
-    "utm_campaign",
-    "firefox-mdn-web-docs-suggestion-experiment"
-  );
-  url.searchParams.set("utm_content", "treatment");
-
-  return {
-    isBestMatch: true,
-    suggestedIndex: 1,
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-    heuristic: false,
-    payload: {
-      source,
-      provider: source == "remote-settings" ? "MDNSuggestions" : "mdn",
-      telemetryType: "mdn",
-      title: suggestion.title,
-      url: url.href,
-      originalUrl: suggestion.url,
-      displayUrl: url.href.replace(/^https:\/\//, ""),
-      description: suggestion.description,
-      icon: "chrome://global/skin/icons/mdn.svg",
-      shouldShowUrl: true,
-      bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
-    },
-  };
-}

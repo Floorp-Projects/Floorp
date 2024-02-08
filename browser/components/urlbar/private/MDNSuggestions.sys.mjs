@@ -44,6 +44,10 @@ export class MDNSuggestions extends BaseFeature {
     return "mdn";
   }
 
+  get rustSuggestionTypes() {
+    return ["Mdn"];
+  }
+
   enable(enabled) {
     if (enabled) {
       lazy.QuickSuggest.jsBackend.register(this);
