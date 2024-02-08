@@ -109,14 +109,14 @@ export async function runBackgroundTask(commandLine) {
   // Similarly, debug commands are always allowed.
   switch (command) {
     case "uninstall": {
-      lazy.log.info(`Uninstalling for token "${token}"`);
       let token = commandLine.getArgument(1);
+      lazy.log.info(`Uninstalling for token "${token}"`);
       defaultAgent.uninstall(token);
       return EXIT_CODE.SUCCESS;
     }
     case "unregister-task": {
-      lazy.log.info(`Unregistering task for token "${token}"`);
       let token = commandLine.getArgument(1);
+      lazy.log.info(`Unregistering task for token "${token}"`);
       defaultAgent.unregisterTask(token);
       return EXIT_CODE.SUCCESS;
     }
@@ -133,14 +133,14 @@ export async function runBackgroundTask(commandLine) {
 
   switch (command) {
     case "register-task": {
-      lazy.log.info(`Registering task for token "${token}"`);
       let token = commandLine.getArgument(1);
+      lazy.log.info(`Registering task for token "${token}"`);
       defaultAgent.registerTask(token);
       return EXIT_CODE.SUCCESS;
     }
     case "update-task": {
-      lazy.log.info(`Updating task for token "${token}"`);
       let token = commandLine.getArgument(1);
+      lazy.log.info(`Updating task for token "${token}"`);
       defaultAgent.updateTask(token);
       return EXIT_CODE.SUCCESS;
     }
