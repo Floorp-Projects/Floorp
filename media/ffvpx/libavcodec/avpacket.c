@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "libavutil/avassert.h"
+#include "libavutil/avutil.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/mem.h"
@@ -300,6 +301,9 @@ const char *av_packet_side_data_name(enum AVPacketSideDataType type)
     case AV_PKT_DATA_DOVI_CONF:                  return "DOVI configuration record";
     case AV_PKT_DATA_S12M_TIMECODE:              return "SMPTE ST 12-1:2014 timecode";
     case AV_PKT_DATA_DYNAMIC_HDR10_PLUS:         return "HDR10+ Dynamic Metadata (SMPTE 2094-40)";
+    case AV_PKT_DATA_IAMF_MIX_GAIN_PARAM:        return "IAMF Mix Gain Parameter Data";
+    case AV_PKT_DATA_IAMF_DEMIXING_INFO_PARAM:   return "IAMF Demixing Info Parameter Data";
+    case AV_PKT_DATA_IAMF_RECON_GAIN_INFO_PARAM: return "IAMF Recon Gain Info Parameter Data";
     }
     return NULL;
 }
@@ -644,4 +648,104 @@ int ff_side_data_set_prft(AVPacket *pkt, int64_t timestamp)
     prft->flags = 0;
 
     return 0;
+}
+
+const AVPacketSideData *av_packet_side_data_get(const AVPacketSideData *sd, int nb_sd,
+                                                enum AVPacketSideDataType type)
+{
+    for (int i = 0; i < nb_sd; i++)
+        if (sd[i].type == type)
+            return &sd[i];
+
+    return NULL;
+}
+
+static AVPacketSideData *packet_side_data_add(AVPacketSideData **psd, int *pnb_sd,
+                                              enum AVPacketSideDataType type,
+                                              void *data, size_t size)
+{
+    AVPacketSideData *sd = *psd, *tmp;
+    int nb_sd = *pnb_sd;
+
+    for (int i = 0; i < nb_sd; i++) {
+        if (sd[i].type != type)
+            continue;
+
+        av_free(sd[i].data);
+        sd[i].data = data;
+        sd[i].size = size;
+        return &sd[i];
+    }
+
+    if (nb_sd == INT_MAX)
+        return NULL;
+
+    tmp = av_realloc_array(sd, nb_sd + 1, sizeof(*tmp));
+    if (!tmp)
+        return NULL;
+
+    *psd = sd = tmp;
+    sd[nb_sd].type = type;
+    sd[nb_sd].data = data;
+    sd[nb_sd].size = size;
+    *pnb_sd = nb_sd + 1;
+
+    return &sd[nb_sd];
+}
+
+AVPacketSideData *av_packet_side_data_add(AVPacketSideData **psd, int *pnb_sd,
+                                          enum AVPacketSideDataType type,
+                                          void *data, size_t size, int flags)
+{
+    return packet_side_data_add(psd, pnb_sd, type, data, size);
+}
+
+AVPacketSideData *av_packet_side_data_new(AVPacketSideData **psd, int *pnb_sd,
+                                          enum AVPacketSideDataType type,
+                                          size_t size, int flags)
+{
+    AVPacketSideData *sd = NULL;
+    uint8_t *data;
+
+    if (size > SIZE_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
+        return NULL;
+
+    data = av_malloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
+    if (!data)
+        return NULL;
+    memset(data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+
+    sd = packet_side_data_add(psd, pnb_sd, type, data, size);
+    if (!sd)
+        av_freep(&data);
+
+    return sd;
+}
+
+void av_packet_side_data_remove(AVPacketSideData *sd, int *pnb_sd,
+                                enum AVPacketSideDataType type)
+{
+    int nb_sd = *pnb_sd;
+
+    for (int i = nb_sd - 1; i >= 0; i--) {
+        if (sd[i].type != type)
+            continue;
+        av_free(sd[i].data);
+        sd[i] = sd[--nb_sd];
+        break;
+    }
+
+    *pnb_sd = nb_sd;
+}
+
+void av_packet_side_data_free(AVPacketSideData **psd, int *pnb_sd)
+{
+    AVPacketSideData *sd = *psd;
+    int nb_sd = *pnb_sd;
+
+    for (int i = 0; i < nb_sd; i++)
+        av_free(sd[i].data);
+
+    av_freep(psd);
+    *pnb_sd = 0;
 }

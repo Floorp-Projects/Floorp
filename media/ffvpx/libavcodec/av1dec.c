@@ -27,7 +27,6 @@
 #include "libavutil/opt.h"
 #include "avcodec.h"
 #include "av1_parse.h"
-#include "decode.h"
 #include "av1dec.h"
 #include "atsc_a53.h"
 #include "bytestream.h"
@@ -37,6 +36,7 @@
 #include "internal.h"
 #include "hwconfig.h"
 #include "profiles.h"
+#include "refstruct.h"
 #include "thread.h"
 
 /**< same with Div_Lut defined in spec 7.11.3.7 */
@@ -177,7 +177,7 @@ static uint8_t get_shear_params_valid(AV1DecContext *s, int idx)
     int16_t alpha, beta, gamma, delta, divf, divs;
     int64_t v, w;
     int32_t *param = &s->cur_frame.gm_params[idx][0];
-    if (param[2] < 0)
+    if (param[2] <= 0)
         return 0;
 
     alpha = av_clip_int16(param[2] - (1 << AV1_WARPEDMODEL_PREC_BITS));
@@ -440,29 +440,20 @@ static int get_tiles_info(AVCodecContext *avctx, const AV1RawTileGroup *tile_gro
 
 }
 
-static int get_pixel_format(AVCodecContext *avctx)
+static enum AVPixelFormat get_sw_pixel_format(void *logctx,
+                                              const AV1RawSequenceHeader *seq)
 {
-    AV1DecContext *s = avctx->priv_data;
-    const AV1RawSequenceHeader *seq = s->raw_seq;
     uint8_t bit_depth;
-    int ret;
     enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE;
-#define HWACCEL_MAX (CONFIG_AV1_DXVA2_HWACCEL + \
-                     CONFIG_AV1_D3D11VA_HWACCEL * 2 + \
-                     CONFIG_AV1_NVDEC_HWACCEL + \
-                     CONFIG_AV1_VAAPI_HWACCEL + \
-                     CONFIG_AV1_VDPAU_HWACCEL + \
-                     CONFIG_AV1_VULKAN_HWACCEL)
-    enum AVPixelFormat pix_fmts[HWACCEL_MAX + 2], *fmtp = pix_fmts;
 
     if (seq->seq_profile == 2 && seq->color_config.high_bitdepth)
         bit_depth = seq->color_config.twelve_bit ? 12 : 10;
     else if (seq->seq_profile <= 2)
         bit_depth = seq->color_config.high_bitdepth ? 10 : 8;
     else {
-        av_log(avctx, AV_LOG_ERROR,
+        av_log(logctx, AV_LOG_ERROR,
                "Unknown AV1 profile %d.\n", seq->seq_profile);
-        return -1;
+        return AV_PIX_FMT_NONE;
     }
 
     if (!seq->color_config.mono_chrome) {
@@ -476,7 +467,7 @@ static int get_pixel_format(AVCodecContext *avctx)
             else if (bit_depth == 12)
                 pix_fmt = AV_PIX_FMT_YUV444P12;
             else
-                av_log(avctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
+                av_log(logctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
         } else if (seq->color_config.subsampling_x == 1 &&
                    seq->color_config.subsampling_y == 0) {
             if (bit_depth == 8)
@@ -486,7 +477,7 @@ static int get_pixel_format(AVCodecContext *avctx)
             else if (bit_depth == 12)
                 pix_fmt = AV_PIX_FMT_YUV422P12;
             else
-                av_log(avctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
+                av_log(logctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
         } else if (seq->color_config.subsampling_x == 1 &&
                    seq->color_config.subsampling_y == 1) {
             if (bit_depth == 8)
@@ -496,7 +487,7 @@ static int get_pixel_format(AVCodecContext *avctx)
             else if (bit_depth == 12)
                 pix_fmt = AV_PIX_FMT_YUV420P12;
             else
-                av_log(avctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
+                av_log(logctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
         }
     } else {
         if (bit_depth == 8)
@@ -506,11 +497,26 @@ static int get_pixel_format(AVCodecContext *avctx)
         else if (bit_depth == 12)
             pix_fmt = AV_PIX_FMT_GRAY12;
         else
-            av_log(avctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
+            av_log(logctx, AV_LOG_WARNING, "Unknown AV1 pixel format.\n");
     }
 
-    av_log(avctx, AV_LOG_DEBUG, "AV1 decode get format: %s.\n",
-           av_get_pix_fmt_name(pix_fmt));
+    return pix_fmt;
+}
+
+static int get_pixel_format(AVCodecContext *avctx)
+{
+    AV1DecContext *s = avctx->priv_data;
+    const AV1RawSequenceHeader *seq = s->raw_seq;
+    int ret;
+    enum AVPixelFormat pix_fmt = get_sw_pixel_format(avctx, seq);
+#define HWACCEL_MAX (CONFIG_AV1_DXVA2_HWACCEL + \
+                     CONFIG_AV1_D3D11VA_HWACCEL * 2 + \
+                     CONFIG_AV1_D3D12VA_HWACCEL + \
+                     CONFIG_AV1_NVDEC_HWACCEL + \
+                     CONFIG_AV1_VAAPI_HWACCEL + \
+                     CONFIG_AV1_VDPAU_HWACCEL + \
+                     CONFIG_AV1_VULKAN_HWACCEL)
+    enum AVPixelFormat pix_fmts[HWACCEL_MAX + 2], *fmtp = pix_fmts;
 
     if (pix_fmt == AV_PIX_FMT_NONE)
         return -1;
@@ -523,6 +529,9 @@ static int get_pixel_format(AVCodecContext *avctx)
 #if CONFIG_AV1_D3D11VA_HWACCEL
         *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
         *fmtp++ = AV_PIX_FMT_D3D11;
+#endif
+#if CONFIG_AV1_D3D12VA_HWACCEL
+        *fmtp++ = AV_PIX_FMT_D3D12;
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
         *fmtp++ = AV_PIX_FMT_CUDA;
@@ -544,6 +553,9 @@ static int get_pixel_format(AVCodecContext *avctx)
 #if CONFIG_AV1_D3D11VA_HWACCEL
         *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
         *fmtp++ = AV_PIX_FMT_D3D11;
+#endif
+#if CONFIG_AV1_D3D12VA_HWACCEL
+        *fmtp++ = AV_PIX_FMT_D3D12;
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
         *fmtp++ = AV_PIX_FMT_CUDA;
@@ -608,9 +620,7 @@ static int get_pixel_format(AVCodecContext *avctx)
     *fmtp++ = pix_fmt;
     *fmtp = AV_PIX_FMT_NONE;
 
-    ret = ff_thread_get_format(avctx, pix_fmts);
-    if (ret < 0)
-        return ret;
+    ret = ff_get_format(avctx, pix_fmts);
 
     /**
      * check if the HW accel is inited correctly. If not, return un-implemented.
@@ -620,21 +630,24 @@ static int get_pixel_format(AVCodecContext *avctx)
     if (!avctx->hwaccel) {
         av_log(avctx, AV_LOG_ERROR, "Your platform doesn't support"
                " hardware accelerated AV1 decoding.\n");
+        avctx->pix_fmt = AV_PIX_FMT_NONE;
         return AVERROR(ENOSYS);
     }
 
     s->pix_fmt = pix_fmt;
     avctx->pix_fmt = ret;
 
+    av_log(avctx, AV_LOG_DEBUG, "AV1 decode get format: %s.\n",
+           av_get_pix_fmt_name(avctx->pix_fmt));
+
     return 0;
 }
 
-static void av1_frame_unref(AVCodecContext *avctx, AV1Frame *f)
+static void av1_frame_unref(AV1Frame *f)
 {
-    ff_thread_release_buffer(avctx, f->f);
-    av_buffer_unref(&f->hwaccel_priv_buf);
-    f->hwaccel_picture_private = NULL;
-    av_buffer_unref(&f->header_ref);
+    av_frame_unref(f->f);
+    ff_refstruct_unref(&f->hwaccel_picture_private);
+    ff_refstruct_unref(&f->header_ref);
     f->raw_frame_header = NULL;
     f->spatial_id = f->temporal_id = 0;
     memset(f->skip_mode_frame_idx, 0,
@@ -647,9 +660,7 @@ static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *s
 {
     int ret;
 
-    ret = av_buffer_replace(&dst->header_ref, src->header_ref);
-    if (ret < 0)
-        return ret;
+    ff_refstruct_replace(&dst->header_ref, src->header_ref);
 
     dst->raw_frame_header = src->raw_frame_header;
 
@@ -660,12 +671,8 @@ static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *s
     if (ret < 0)
         goto fail;
 
-    if (src->hwaccel_picture_private) {
-        dst->hwaccel_priv_buf = av_buffer_ref(src->hwaccel_priv_buf);
-        if (!dst->hwaccel_priv_buf)
-            goto fail;
-        dst->hwaccel_picture_private = dst->hwaccel_priv_buf->data;
-    }
+    ff_refstruct_replace(&dst->hwaccel_picture_private,
+                          src->hwaccel_picture_private);
 
     dst->spatial_id = src->spatial_id;
     dst->temporal_id = src->temporal_id;
@@ -689,7 +696,7 @@ static int av1_frame_ref(AVCodecContext *avctx, AV1Frame *dst, const AV1Frame *s
     return 0;
 
 fail:
-    av1_frame_unref(avctx, dst);
+    av1_frame_unref(dst);
     return AVERROR(ENOMEM);
 }
 
@@ -699,16 +706,19 @@ static av_cold int av1_decode_free(AVCodecContext *avctx)
     AV1RawMetadataITUTT35 itut_t35;
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->ref); i++) {
-        av1_frame_unref(avctx, &s->ref[i]);
-        av_frame_free(&s->ref[i].f);
+        if (s->ref[i].f) {
+            av1_frame_unref(&s->ref[i]);
+            av_frame_free(&s->ref[i].f);
+        }
     }
-    av1_frame_unref(avctx, &s->cur_frame);
-    av_frame_free(&s->cur_frame.f);
-
-    av_buffer_unref(&s->seq_ref);
-    av_buffer_unref(&s->header_ref);
-    av_buffer_unref(&s->cll_ref);
-    av_buffer_unref(&s->mdcv_ref);
+    if (s->cur_frame.f) {
+        av1_frame_unref(&s->cur_frame);
+        av_frame_free(&s->cur_frame.f);
+    }
+    ff_refstruct_unref(&s->seq_ref);
+    ff_refstruct_unref(&s->header_ref);
+    ff_refstruct_unref(&s->cll_ref);
+    ff_refstruct_unref(&s->mdcv_ref);
     av_freep(&s->tile_group_info);
 
     while (s->itut_t35_fifo && av_fifo_read(s->itut_t35_fifo, &itut_t35, 1) >= 0)
@@ -755,7 +765,6 @@ static int set_context_with_sequence(AVCodecContext *avctx,
         if (ret < 0)
             return ret;
     }
-    avctx->sample_aspect_ratio = (AVRational) { 1, 1 };
 
     if (seq->timing_info_present_flag)
         avctx->framerate = ff_av1_framerate(1LL + seq->timing_info.num_ticks_per_picture_minus_1,
@@ -817,19 +826,13 @@ static av_cold int av1_decode_init(AVCodecContext *avctx)
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->ref); i++) {
         s->ref[i].f = av_frame_alloc();
-        if (!s->ref[i].f) {
-            av_log(avctx, AV_LOG_ERROR,
-                   "Failed to allocate reference frame buffer %d.\n", i);
+        if (!s->ref[i].f)
             return AVERROR(ENOMEM);
-        }
     }
 
     s->cur_frame.f = av_frame_alloc();
-    if (!s->cur_frame.f) {
-        av_log(avctx, AV_LOG_ERROR,
-               "Failed to allocate current frame buffer.\n");
+    if (!s->cur_frame.f)
         return AVERROR(ENOMEM);
-    }
 
     ret = ff_cbs_init(&s->cbc, AV_CODEC_ID_AV1, avctx);
     if (ret < 0)
@@ -865,6 +868,8 @@ static av_cold int av1_decode_init(AVCodecContext *avctx)
             av_log(avctx, AV_LOG_WARNING, "Failed to set decoder context.\n");
             goto end;
         }
+
+        avctx->pix_fmt = get_sw_pixel_format(avctx, seq);
 
         end:
         ff_cbs_fragment_reset(&s->current_obu);
@@ -908,15 +913,14 @@ static int av1_frame_alloc(AVCodecContext *avctx, AV1Frame *f)
         break;
     }
 
-    ret = ff_hwaccel_frame_priv_alloc(avctx, &f->hwaccel_picture_private,
-                                      &f->hwaccel_priv_buf);
+    ret = ff_hwaccel_frame_priv_alloc(avctx, &f->hwaccel_picture_private);
     if (ret < 0)
         goto fail;
 
     return 0;
 
 fail:
-    av1_frame_unref(avctx, f);
+    av1_frame_unref(f);
     return ret;
 }
 
@@ -1134,7 +1138,7 @@ static int update_reference_list(AVCodecContext *avctx)
 
     for (int i = 0; i < AV1_NUM_REF_FRAMES; i++) {
         if (header->refresh_frame_flags & (1 << i)) {
-            av1_frame_unref(avctx, &s->ref[i]);
+            av1_frame_unref(&s->ref[i]);
             if ((ret = av1_frame_ref(avctx, &s->ref[i], &s->cur_frame)) < 0) {
                 av_log(avctx, AV_LOG_ERROR,
                        "Failed to update frame %d in reference list\n", i);
@@ -1150,11 +1154,9 @@ static int get_current_frame(AVCodecContext *avctx)
     AV1DecContext *s = avctx->priv_data;
     int ret;
 
-    av1_frame_unref(avctx, &s->cur_frame);
+    av1_frame_unref(&s->cur_frame);
 
-    s->cur_frame.header_ref = av_buffer_ref(s->header_ref);
-    if (!s->cur_frame.header_ref)
-        return AVERROR(ENOMEM);
+    s->cur_frame.header_ref = ff_refstruct_ref(s->header_ref);
 
     s->cur_frame.raw_frame_header = s->raw_frame_header;
 
@@ -1206,12 +1208,7 @@ static int av1_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
 
         switch (unit->type) {
         case AV1_OBU_SEQUENCE_HEADER:
-            av_buffer_unref(&s->seq_ref);
-            s->seq_ref = av_buffer_ref(unit->content_ref);
-            if (!s->seq_ref) {
-                ret = AVERROR(ENOMEM);
-                goto end;
-            }
+            ff_refstruct_replace(&s->seq_ref, unit->content_ref);
 
             s->raw_seq = &obu->obu.sequence_header;
 
@@ -1256,12 +1253,7 @@ static int av1_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
                 goto end;
             }
 
-            av_buffer_unref(&s->header_ref);
-            s->header_ref = av_buffer_ref(unit->content_ref);
-            if (!s->header_ref) {
-                ret = AVERROR(ENOMEM);
-                goto end;
-            }
+            ff_refstruct_replace(&s->header_ref, unit->content_ref);
 
             if (unit->type == AV1_OBU_FRAME)
                 s->raw_frame_header = &obu->obu.frame.header;
@@ -1269,7 +1261,7 @@ static int av1_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
                 s->raw_frame_header = &obu->obu.frame_header;
 
             if (s->raw_frame_header->show_existing_frame) {
-                av1_frame_unref(avctx, &s->cur_frame);
+                av1_frame_unref(&s->cur_frame);
 
                 ret = av1_frame_ref(avctx, &s->cur_frame,
                                     &s->ref[s->raw_frame_header->frame_to_show_map_idx]);
@@ -1348,23 +1340,11 @@ static int av1_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
         case AV1_OBU_METADATA:
             switch (obu->obu.metadata.metadata_type) {
             case AV1_METADATA_TYPE_HDR_CLL:
-                av_buffer_unref(&s->cll_ref);
-                s->cll_ref = av_buffer_ref(unit->content_ref);
-                if (!s->cll_ref) {
-                    s->cll = NULL;
-                    ret = AVERROR(ENOMEM);
-                    goto end;
-                }
+                ff_refstruct_replace(&s->cll_ref, unit->content_ref);
                 s->cll = &obu->obu.metadata.metadata.hdr_cll;
                 break;
             case AV1_METADATA_TYPE_HDR_MDCV:
-                av_buffer_unref(&s->mdcv_ref);
-                s->mdcv_ref = av_buffer_ref(unit->content_ref);
-                if (!s->mdcv_ref) {
-                    s->mdcv = NULL;
-                    ret = AVERROR(ENOMEM);
-                    goto end;
-                }
+                ff_refstruct_replace(&s->mdcv_ref, unit->content_ref);
                 s->mdcv = &obu->obu.metadata.metadata.hdr_mdcv;
                 break;
             case AV1_METADATA_TYPE_ITUT_T35: {
@@ -1476,9 +1456,9 @@ static void av1_decode_flush(AVCodecContext *avctx)
     AV1RawMetadataITUTT35 itut_t35;
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->ref); i++)
-        av1_frame_unref(avctx, &s->ref[i]);
+        av1_frame_unref(&s->ref[i]);
 
-    av1_frame_unref(avctx, &s->cur_frame);
+    av1_frame_unref(&s->cur_frame);
     s->operating_point_idc = 0;
     s->nb_unit = 0;
     s->raw_frame_header = NULL;
@@ -1519,7 +1499,7 @@ const FFCodec ff_av1_decoder = {
     .init                  = av1_decode_init,
     .close                 = av1_decode_free,
     FF_CODEC_RECEIVE_FRAME_CB(av1_receive_frame),
-    .p.capabilities        = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_AVOID_PROBING,
+    .p.capabilities        = AV_CODEC_CAP_DR1,
     .caps_internal         = FF_CODEC_CAP_INIT_CLEANUP,
     .flush                 = av1_decode_flush,
     .p.profiles            = NULL_IF_CONFIG_SMALL(ff_av1_profiles),
@@ -1533,6 +1513,9 @@ const FFCodec ff_av1_decoder = {
 #endif
 #if CONFIG_AV1_D3D11VA2_HWACCEL
         HWACCEL_D3D11VA2(av1),
+#endif
+#if CONFIG_AV1_D3D12VA_HWACCEL
+        HWACCEL_D3D12VA(av1),
 #endif
 #if CONFIG_AV1_NVDEC_HWACCEL
         HWACCEL_NVDEC(av1),

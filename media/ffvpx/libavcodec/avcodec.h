@@ -31,6 +31,7 @@
 #include "libavutil/attributes.h"
 #include "libavutil/avutil.h"
 #include "libavutil/buffer.h"
+#include "libavutil/channel_layout.h"
 #include "libavutil/dict.h"
 #include "libavutil/frame.h"
 #include "libavutil/log.h"
@@ -38,8 +39,6 @@
 #include "libavutil/rational.h"
 
 #include "codec.h"
-#include "codec_desc.h"
-#include "codec_par.h"
 #include "codec_id.h"
 #include "defs.h"
 #include "packet.h"
@@ -49,7 +48,12 @@
  * to avoid unnecessary rebuilds. When included externally, keep including
  * the full version information. */
 #include "version.h"
+
+#include "codec_desc.h"
+#include "codec_par.h"
 #endif
+
+struct AVCodecParameters;
 
 /**
  * @defgroup libavc libavcodec
@@ -1260,7 +1264,7 @@ typedef struct AVCodecContext {
     /**
      * decoder bitstream buffer size
      * - encoding: Set by user.
-     * - decoding: unused
+     * - decoding: May be set by libavcodec.
      */
     int rc_buffer_size;
 
@@ -1587,8 +1591,12 @@ typedef struct AVCodecContext {
      * profile
      * - encoding: Set by user.
      * - decoding: Set by libavcodec.
+     * See the AV_PROFILE_* defines in defs.h.
      */
      int profile;
+#if FF_API_FF_PROFILE_LEVEL
+    /** @deprecated The following defines are deprecated; use AV_PROFILE_*
+     * in defs.h instead. */
 #define FF_PROFILE_UNKNOWN -99
 #define FF_PROFILE_RESERVED -100
 
@@ -1719,14 +1727,22 @@ typedef struct AVCodecContext {
 
 #define FF_PROFILE_EVC_BASELINE             0
 #define FF_PROFILE_EVC_MAIN                 1
+#endif
 
     /**
-     * level
-     * - encoding: Set by user.
+     * Encoding level descriptor.
+     * - encoding: Set by user, corresponds to a specific level defined by the
+     *   codec, usually corresponding to the profile level, if not specified it
+     *   is set to FF_LEVEL_UNKNOWN.
      * - decoding: Set by libavcodec.
+     * See AV_LEVEL_* in defs.h.
      */
      int level;
+#if FF_API_FF_PROFILE_LEVEL
+    /** @deprecated The following define is deprecated; use AV_LEVEL_UNKOWN
+     * in defs.h instead. */
 #define FF_LEVEL_UNKNOWN -99
+#endif
 
     /**
      * Skip loop filtering for selected frames.
@@ -1794,9 +1810,9 @@ typedef struct AVCodecContext {
     enum AVPixelFormat sw_pix_fmt;
 
     /**
-     * Timebase in which pkt_dts/pts and AVPacket.dts/pts are.
-     * - encoding unused.
-     * - decoding set by user.
+     * Timebase in which pkt_dts/pts and AVPacket.dts/pts are expressed.
+     * - encoding: unused.
+     * - decoding: set by user.
      */
     AVRational pkt_timebase;
 
@@ -1805,7 +1821,7 @@ typedef struct AVCodecContext {
      * - encoding: unused.
      * - decoding: set by libavcodec.
      */
-    const AVCodecDescriptor *codec_descriptor;
+    const struct AVCodecDescriptor *codec_descriptor;
 
     /**
      * Current statistics for PTS correction.
@@ -1893,7 +1909,7 @@ typedef struct AVCodecContext {
     /**
      * Additional data associated with the entire coded stream.
      *
-     * - decoding: unused
+     * - decoding: may be set by user before calling avcodec_open2().
      * - encoding: may be set by libavcodec after avcodec_open2().
      */
     AVPacketSideData *coded_side_data;
@@ -2318,7 +2334,7 @@ const AVClass *avcodec_get_subtitle_rect_class(void);
  *
  * @return >= 0 on success, a negative AVERROR code on failure
  */
-int avcodec_parameters_from_context(AVCodecParameters *par,
+int avcodec_parameters_from_context(struct AVCodecParameters *par,
                                     const AVCodecContext *codec);
 
 /**
@@ -2330,7 +2346,7 @@ int avcodec_parameters_from_context(AVCodecParameters *par,
  * @return >= 0 on success, a negative AVERROR code on failure.
  */
 int avcodec_parameters_to_context(AVCodecContext *codec,
-                                  const AVCodecParameters *par);
+                                  const struct AVCodecParameters *par);
 
 /**
  * Initialize the AVCodecContext to use the given AVCodec. Prior to using this

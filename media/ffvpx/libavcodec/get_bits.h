@@ -93,6 +93,8 @@ typedef BitstreamContext GetBitContext;
 #define init_get_bits8      bits_init8
 #define align_get_bits      bits_align
 #define get_vlc2            bits_read_vlc
+#define get_vlc_multi       bits_read_vlc_multi
+#define get_leb             bits_read_leb
 
 #define init_get_bits8_le(s, buffer, byte_size) bits_init8_le((BitstreamContextLE*)s, buffer, byte_size)
 #define get_bits_le(s, n)                       bits_read_le((BitstreamContextLE*)s, n)
@@ -186,21 +188,28 @@ static inline unsigned int show_bits(GetBitContext *s, int n);
 
 #define CLOSE_READER(name, gb) (gb)->index = name ## _index
 
+#define UPDATE_CACHE_BE_EXT(name, gb, bits, dst_bits) name ## _cache = \
+    AV_RB ## bits((gb)->buffer + (name ## _index >> 3)) << (name ## _index & 7) >> (bits - dst_bits)
+
+#define UPDATE_CACHE_LE_EXT(name, gb, bits, dst_bits) name ## _cache = \
+    (uint ## dst_bits ## _t)(AV_RL ## bits((gb)->buffer + (name ## _index >> 3)) >> (name ## _index & 7))
+
+/* Using these two macros ensures that 32 bits are available. */
+# define UPDATE_CACHE_LE_32(name, gb) UPDATE_CACHE_LE_EXT(name, (gb), 64, 32)
+
+# define UPDATE_CACHE_BE_32(name, gb) UPDATE_CACHE_BE_EXT(name, (gb), 64, 32)
+
 # ifdef LONG_BITSTREAM_READER
 
-# define UPDATE_CACHE_LE(name, gb) name ## _cache = \
-      AV_RL64((gb)->buffer + (name ## _index >> 3)) >> (name ## _index & 7)
+# define UPDATE_CACHE_LE(name, gb) UPDATE_CACHE_LE_32(name, (gb))
 
-# define UPDATE_CACHE_BE(name, gb) name ## _cache = \
-      AV_RB64((gb)->buffer + (name ## _index >> 3)) >> (32 - (name ## _index & 7))
+# define UPDATE_CACHE_BE(name, gb) UPDATE_CACHE_BE_32(name, (gb))
 
 #else
 
-# define UPDATE_CACHE_LE(name, gb) name ## _cache = \
-      AV_RL32((gb)->buffer + (name ## _index >> 3)) >> (name ## _index & 7)
+# define UPDATE_CACHE_LE(name, gb) UPDATE_CACHE_LE_EXT(name, (gb), 32, 32)
 
-# define UPDATE_CACHE_BE(name, gb) name ## _cache = \
-      AV_RB32((gb)->buffer + (name ## _index >> 3)) << (name ## _index & 7)
+# define UPDATE_CACHE_BE(name, gb) UPDATE_CACHE_BE_EXT(name, (gb), 32, 32)
 
 #endif
 
@@ -208,12 +217,14 @@ static inline unsigned int show_bits(GetBitContext *s, int n);
 #ifdef BITSTREAM_READER_LE
 
 # define UPDATE_CACHE(name, gb) UPDATE_CACHE_LE(name, gb)
+# define UPDATE_CACHE_32(name, gb) UPDATE_CACHE_LE_32(name, (gb))
 
 # define SKIP_CACHE(name, gb, num) name ## _cache >>= (num)
 
 #else
 
 # define UPDATE_CACHE(name, gb) UPDATE_CACHE_BE(name, gb)
+# define UPDATE_CACHE_32(name, gb) UPDATE_CACHE_BE_32(name, (gb))
 
 # define SKIP_CACHE(name, gb, num) name ## _cache <<= (num)
 
@@ -413,15 +424,26 @@ static inline unsigned int get_bits_long(GetBitContext *s, int n)
     av_assert2(n>=0 && n<=32);
     if (!n) {
         return 0;
-    } else if (n <= MIN_CACHE_BITS) {
+    } else if ((!HAVE_FAST_64BIT || av_builtin_constant_p(n <= MIN_CACHE_BITS))
+               && n <= MIN_CACHE_BITS) {
         return get_bits(s, n);
     } else {
+#if HAVE_FAST_64BIT
+        unsigned tmp;
+        OPEN_READER(re, s);
+        UPDATE_CACHE_32(re, s);
+        tmp = SHOW_UBITS(re, s, n);
+        LAST_SKIP_BITS(re, s, n);
+        CLOSE_READER(re, s);
+        return tmp;
+#else
 #ifdef BITSTREAM_READER_LE
         unsigned ret = get_bits(s, 16);
         return ret | (get_bits(s, n - 16) << 16);
 #else
         unsigned ret = get_bits(s, 16) << (n - 16);
         return ret | get_bits(s, n - 16);
+#endif
 #endif
     }
 }
@@ -622,7 +644,7 @@ static inline const uint8_t *align_get_bits(GetBitContext *s)
 /**
  * Parse a vlc code.
  * @param bits is the number of bits which will be read at once, must be
- *             identical to nb_bits in init_vlc()
+ *             identical to nb_bits in vlc_init()
  * @param max_depth is the number of times bits bits must be read to completely
  *                  read the longest vlc code
  *                  = (max_vlc_length + bits - 1) / bits
@@ -641,6 +663,15 @@ static av_always_inline int get_vlc2(GetBitContext *s, const VLCElem *table,
     CLOSE_READER(re, s);
 
     return code;
+}
+
+static inline int get_vlc_multi(GetBitContext *s, uint8_t *dst,
+                                const VLC_MULTI_ELEM *const Jtable,
+                                const VLCElem *const table,
+                                const int bits, const int max_depth)
+{
+    dst[0] = get_vlc2(s, table, bits, max_depth);
+    return 1;
 }
 
 static inline int decode012(GetBitContext *gb)
@@ -678,6 +709,29 @@ static inline int skip_1stop_8data_bits(GetBitContext *gb)
     }
 
     return 0;
+}
+
+/**
+ * Read a unsigned integer coded as a variable number of up to eight
+ * little-endian bytes, where the MSB in a byte signals another byte
+ * must be read.
+ * All coded bits are read, but values > UINT_MAX are truncated.
+ */
+static inline unsigned get_leb(GetBitContext *s) {
+    int more, i = 0;
+    unsigned leb = 0;
+
+    do {
+        int byte = get_bits(s, 8);
+        unsigned bits = byte & 0x7f;
+        more = byte & 0x80;
+        if (i <= 4)
+            leb |= bits << (i * 7);
+        if (++i == 8)
+            break;
+    } while (more);
+
+    return leb;
 }
 
 #endif // CACHED_BITSTREAM_READER

@@ -252,12 +252,12 @@ int av_fifo_read_to_cb(AVFifo *f, AVFifoCB write_cb,
     return ret;
 }
 
-int av_fifo_peek(AVFifo *f, void *buf, size_t nb_elems, size_t offset)
+int av_fifo_peek(const AVFifo *f, void *buf, size_t nb_elems, size_t offset)
 {
     return fifo_peek_common(f, buf, &nb_elems, offset, NULL, NULL);
 }
 
-int av_fifo_peek_to_cb(AVFifo *f, AVFifoCB write_cb, void *opaque,
+int av_fifo_peek_to_cb(const AVFifo *f, AVFifoCB write_cb, void *opaque,
                        size_t *nb_elems, size_t offset)
 {
     return fifo_peek_common(f, NULL, nb_elems, offset, write_cb, opaque);
@@ -293,6 +293,7 @@ void av_fifo_freep2(AVFifo **f)
 
 
 #if FF_API_FIFO_OLD_API
+#include "internal.h"
 FF_DISABLE_DEPRECATION_WARNINGS
 #define OLD_FIFO_SIZE_MAX (size_t)FFMIN3(INT_MAX, UINT32_MAX, SIZE_MAX)
 

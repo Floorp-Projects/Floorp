@@ -366,19 +366,19 @@ static int decode_subframe_fixed(FLACContext *s, int32_t *decoded,
         break;                                                        \
     case 1:                                                           \
         for (int i = pred_order; i < blocksize; i++)                  \
-            decoded[i] = (int64_t)residual[i] + (int64_t)decoded[i-1];\
+            decoded[i] = (uint64_t)residual[i] + (uint64_t)decoded[i-1];\
         break;                                                        \
     case 2:                                                           \
         for (int i = pred_order; i < blocksize; i++)                  \
-            decoded[i] = (int64_t)residual[i] + 2*(int64_t)decoded[i-1] - (int64_t)decoded[i-2];  \
+            decoded[i] = (uint64_t)residual[i] + 2*(uint64_t)decoded[i-1] - (uint64_t)decoded[i-2];  \
         break;                                                        \
     case 3:                                                           \
         for (int i = pred_order; i < blocksize; i++)                  \
-            decoded[i] = (int64_t)residual[i] + 3*(int64_t)decoded[i-1] - 3*(int64_t)decoded[i-2] + (int64_t)decoded[i-3];   \
+            decoded[i] = (uint64_t)residual[i] + 3*(uint64_t)decoded[i-1] - 3*(uint64_t)decoded[i-2] + (uint64_t)decoded[i-3];   \
         break;                                                        \
     case 4:                                                           \
         for (int i = pred_order; i < blocksize; i++)                  \
-            decoded[i] = (int64_t)residual[i] + 4*(int64_t)decoded[i-1] - 6*(int64_t)decoded[i-2] + 4*(int64_t)decoded[i-3] - (int64_t)decoded[i-4];   \
+            decoded[i] = (uint64_t)residual[i] + 4*(uint64_t)decoded[i-1] - 6*(uint64_t)decoded[i-2] + 4*(uint64_t)decoded[i-3] - (uint64_t)decoded[i-4];   \
         break;                                                        \
     default:                                                          \
         av_log(s->avctx, AV_LOG_ERROR, "illegal pred order %d\n", pred_order);   \
@@ -706,10 +706,10 @@ static void decorrelate_33bps(int ch_mode, int32_t **decoded, int64_t *decoded_3
     int i;
     if (ch_mode == FLAC_CHMODE_LEFT_SIDE ) {
         for (i = 0; i < len; i++)
-           decoded[1][i] = decoded[0][i] - decoded_33bps[i];
+           decoded[1][i] = decoded[0][i] - (uint64_t)decoded_33bps[i];
     } else if (ch_mode == FLAC_CHMODE_RIGHT_SIDE ) {
         for (i = 0; i < len; i++)
-           decoded[0][i] = decoded[1][i] + decoded_33bps[i];
+           decoded[0][i] = decoded[1][i] + (uint64_t)decoded_33bps[i];
     } else if (ch_mode == FLAC_CHMODE_MID_SIDE ) {
         for (i = 0; i < len; i++) {
             uint64_t a = decoded[0][i];

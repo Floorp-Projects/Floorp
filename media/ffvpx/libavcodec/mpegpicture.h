@@ -66,8 +66,8 @@ typedef struct Picture {
     int alloc_mb_height;        ///< mb_height used to allocate tables
     int alloc_mb_stride;        ///< mb_stride used to allocate tables
 
-    AVBufferRef *hwaccel_priv_buf;
-    void *hwaccel_picture_private; ///< Hardware accelerator private data
+    /// RefStruct reference for hardware accelerator private data
+    void *hwaccel_picture_private;
 
     int field_picture;          ///< whether or not the picture was encoded in separate fields
 
@@ -82,22 +82,20 @@ typedef struct Picture {
 } Picture;
 
 /**
- * Allocate a Picture.
- * The pixels are allocated/set by calling get_buffer() if shared = 0.
+ * Allocate a Picture's accessories, but not the AVFrame's buffer itself.
  */
 int ff_alloc_picture(AVCodecContext *avctx, Picture *pic, MotionEstContext *me,
-                     ScratchpadContext *sc, int shared, int encoding,
-                     int chroma_x_shift, int chroma_y_shift, int out_format,
+                     ScratchpadContext *sc, int encoding, int out_format,
                      int mb_stride, int mb_width, int mb_height, int b8_stride,
                      ptrdiff_t *linesize, ptrdiff_t *uvlinesize);
 
 int ff_mpeg_framesize_alloc(AVCodecContext *avctx, MotionEstContext *me,
                             ScratchpadContext *sc, int linesize);
 
-int ff_mpeg_ref_picture(AVCodecContext *avctx, Picture *dst, Picture *src);
-void ff_mpeg_unref_picture(AVCodecContext *avctx, Picture *picture);
+int ff_mpeg_ref_picture(Picture *dst, Picture *src);
+void ff_mpeg_unref_picture(Picture *picture);
 
-void ff_mpv_picture_free(AVCodecContext *avctx, Picture *pic);
+void ff_mpv_picture_free(Picture *pic);
 int ff_update_picture_tables(Picture *dst, const Picture *src);
 
 int ff_find_unused_picture(AVCodecContext *avctx, Picture *picture, int shared);

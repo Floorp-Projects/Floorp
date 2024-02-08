@@ -257,7 +257,12 @@ const char *av_get_media_type_string(enum AVMediaType media_type);
  * Internal time base represented as fractional value
  */
 
+#ifdef __cplusplus
+/* ISO C++ forbids compound-literals. */
+#define AV_TIME_BASE_Q          av_make_q(1, AV_TIME_BASE)
+#else
 #define AV_TIME_BASE_Q          (AVRational){1, AV_TIME_BASE}
+#endif
 
 /**
  * @}
@@ -294,7 +299,6 @@ char av_get_picture_type_char(enum AVPictureType pict_type);
  */
 
 #include "common.h"
-#include "error.h"
 #include "rational.h"
 #include "version.h"
 #include "macros.h"

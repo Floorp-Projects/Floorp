@@ -62,7 +62,7 @@ typedef struct AVCodecInternal {
      */
     int pad_samples;
 
-    AVBufferRef *pool;
+    struct FramePool *pool;
 
     void *thread_ctx;
 
@@ -179,11 +179,6 @@ static av_always_inline float ff_exp2fi(int x) {
 int avpriv_h264_has_num_reorder_frames(AVCodecContext *avctx);
 
 int avpriv_codec_get_cap_skip_frame_fill_param(const AVCodec *codec);
-
-/**
- * Add a CPB properties side data to an encoding context.
- */
-AVCPBProperties *ff_add_cpb_side_data(AVCodecContext *avctx);
 
 /**
  * Check AVFrame for S12M timecode side data and allocate and fill TC SEI message with timecode info

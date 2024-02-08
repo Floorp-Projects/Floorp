@@ -437,7 +437,8 @@ typedef struct CodedBitstreamAV1Context {
     const AVClass *class;
 
     AV1RawSequenceHeader *sequence_header;
-    AVBufferRef          *sequence_header_ref;
+    /** A RefStruct reference backing sequence_header. */
+    AV1RawOBU            *sequence_header_ref;
 
     int     seen_frame_header;
     AVBufferRef *frame_header_ref;
@@ -467,6 +468,10 @@ typedef struct CodedBitstreamAV1Context {
 
     // AVOptions
     int operating_point;
+    // When writing, fix the length in bytes of the obu_size field.
+    // Writing will fail with an error if an OBU larger than can be
+    // represented by the fixed size is encountered.
+    int fixed_obu_size_length;
 } CodedBitstreamAV1Context;
 
 

@@ -30,6 +30,7 @@
 #include "hwaccel_internal.h"
 #include "hwconfig.h"
 #include "profiles.h"
+#include "refstruct.h"
 #include "thread.h"
 #include "threadframe.h"
 #include "pthread_internal.h"
@@ -96,13 +97,12 @@ static void vp9_tile_data_free(VP9TileData *td)
     av_freep(&td->block_structure);
 }
 
-static void vp9_frame_unref(AVCodecContext *avctx, VP9Frame *f)
+static void vp9_frame_unref(VP9Frame *f)
 {
-    ff_thread_release_ext_buffer(avctx, &f->tf);
-    av_buffer_unref(&f->extradata);
-    av_buffer_unref(&f->hwaccel_priv_buf);
+    ff_thread_release_ext_buffer(&f->tf);
+    ff_refstruct_unref(&f->extradata);
+    ff_refstruct_unref(&f->hwaccel_picture_private);
     f->segmentation_map = NULL;
-    f->hwaccel_picture_private = NULL;
 }
 
 static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
@@ -116,8 +116,9 @@ static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
 
     sz = 64 * s->sb_cols * s->sb_rows;
     if (sz != s->frame_extradata_pool_size) {
-        av_buffer_pool_uninit(&s->frame_extradata_pool);
-        s->frame_extradata_pool = av_buffer_pool_init(sz * (1 + sizeof(VP9mvrefPair)), NULL);
+        ff_refstruct_pool_uninit(&s->frame_extradata_pool);
+        s->frame_extradata_pool = ff_refstruct_pool_alloc(sz * (1 + sizeof(VP9mvrefPair)),
+                                                          FF_REFSTRUCT_POOL_FLAG_ZERO_EVERY_TIME);
         if (!s->frame_extradata_pool) {
             s->frame_extradata_pool_size = 0;
             ret = AVERROR(ENOMEM);
@@ -125,29 +126,27 @@ static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
         }
         s->frame_extradata_pool_size = sz;
     }
-    f->extradata = av_buffer_pool_get(s->frame_extradata_pool);
+    f->extradata = ff_refstruct_pool_get(s->frame_extradata_pool);
     if (!f->extradata) {
         ret = AVERROR(ENOMEM);
         goto fail;
     }
-    memset(f->extradata->data, 0, f->extradata->size);
 
-    f->segmentation_map = f->extradata->data;
-    f->mv = (VP9mvrefPair *) (f->extradata->data + sz);
+    f->segmentation_map = f->extradata;
+    f->mv = (VP9mvrefPair *) ((char*)f->extradata + sz);
 
-    ret = ff_hwaccel_frame_priv_alloc(avctx, &f->hwaccel_picture_private,
-                                      &f->hwaccel_priv_buf);
+    ret = ff_hwaccel_frame_priv_alloc(avctx, &f->hwaccel_picture_private);
     if (ret < 0)
         goto fail;
 
     return 0;
 
 fail:
-    vp9_frame_unref(avctx, f);
+    vp9_frame_unref(f);
     return ret;
 }
 
-static int vp9_frame_ref(AVCodecContext *avctx, VP9Frame *dst, VP9Frame *src)
+static int vp9_frame_ref(VP9Frame *dst, VP9Frame *src)
 {
     int ret;
 
@@ -155,32 +154,23 @@ static int vp9_frame_ref(AVCodecContext *avctx, VP9Frame *dst, VP9Frame *src)
     if (ret < 0)
         return ret;
 
-    dst->extradata = av_buffer_ref(src->extradata);
-    if (!dst->extradata)
-        goto fail;
+    dst->extradata = ff_refstruct_ref(src->extradata);
 
     dst->segmentation_map = src->segmentation_map;
     dst->mv = src->mv;
     dst->uses_2pass = src->uses_2pass;
 
-    if (src->hwaccel_picture_private) {
-        dst->hwaccel_priv_buf = av_buffer_ref(src->hwaccel_priv_buf);
-        if (!dst->hwaccel_priv_buf)
-            goto fail;
-        dst->hwaccel_picture_private = dst->hwaccel_priv_buf->data;
-    }
+    ff_refstruct_replace(&dst->hwaccel_picture_private,
+                          src->hwaccel_picture_private);
 
     return 0;
-
-fail:
-    vp9_frame_unref(avctx, dst);
-    return AVERROR(ENOMEM);
 }
 
 static int update_size(AVCodecContext *avctx, int w, int h)
 {
 #define HWACCEL_MAX (CONFIG_VP9_DXVA2_HWACCEL + \
                      CONFIG_VP9_D3D11VA_HWACCEL * 2 + \
+                     CONFIG_VP9_D3D12VA_HWACCEL + \
                      CONFIG_VP9_NVDEC_HWACCEL + \
                      CONFIG_VP9_VAAPI_HWACCEL + \
                      CONFIG_VP9_VDPAU_HWACCEL + \
@@ -206,6 +196,9 @@ static int update_size(AVCodecContext *avctx, int w, int h)
 #if CONFIG_VP9_D3D11VA_HWACCEL
             *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
             *fmtp++ = AV_PIX_FMT_D3D11;
+#endif
+#if CONFIG_VP9_D3D12VA_HWACCEL
+            *fmtp++ = AV_PIX_FMT_D3D12;
 #endif
 #if CONFIG_VP9_NVDEC_HWACCEL
             *fmtp++ = AV_PIX_FMT_CUDA;
@@ -250,7 +243,7 @@ static int update_size(AVCodecContext *avctx, int w, int h)
         *fmtp++ = s->pix_fmt;
         *fmtp = AV_PIX_FMT_NONE;
 
-        ret = ff_thread_get_format(avctx, pix_fmts);
+        ret = ff_get_format(avctx, pix_fmts);
         if (ret < 0)
             return ret;
 
@@ -1247,14 +1240,14 @@ static av_cold int vp9_decode_free(AVCodecContext *avctx)
     int i;
 
     for (i = 0; i < 3; i++) {
-        vp9_frame_unref(avctx, &s->s.frames[i]);
+        vp9_frame_unref(&s->s.frames[i]);
         av_frame_free(&s->s.frames[i].tf.f);
     }
-    av_buffer_pool_uninit(&s->frame_extradata_pool);
+    ff_refstruct_pool_uninit(&s->frame_extradata_pool);
     for (i = 0; i < 8; i++) {
-        ff_thread_release_ext_buffer(avctx, &s->s.refs[i]);
+        ff_thread_release_ext_buffer(&s->s.refs[i]);
         av_frame_free(&s->s.refs[i].f);
-        ff_thread_release_ext_buffer(avctx, &s->next_refs[i]);
+        ff_thread_release_ext_buffer(&s->next_refs[i]);
         av_frame_free(&s->next_refs[i].f);
     }
 
@@ -1582,7 +1575,7 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         frame->pkt_dts = pkt->dts;
         for (i = 0; i < 8; i++) {
             if (s->next_refs[i].f->buf[0])
-                ff_thread_release_ext_buffer(avctx, &s->next_refs[i]);
+                ff_thread_release_ext_buffer(&s->next_refs[i]);
             if (s->s.refs[i].f->buf[0] &&
                 (ret = ff_thread_ref_frame(&s->next_refs[i], &s->s.refs[i])) < 0)
                 return ret;
@@ -1595,18 +1588,18 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     if (!retain_segmap_ref || s->s.h.keyframe || s->s.h.intraonly) {
         if (s->s.frames[REF_FRAME_SEGMAP].tf.f->buf[0])
-            vp9_frame_unref(avctx, &s->s.frames[REF_FRAME_SEGMAP]);
+            vp9_frame_unref(&s->s.frames[REF_FRAME_SEGMAP]);
         if (!s->s.h.keyframe && !s->s.h.intraonly && !s->s.h.errorres && s->s.frames[CUR_FRAME].tf.f->buf[0] &&
-            (ret = vp9_frame_ref(avctx, &s->s.frames[REF_FRAME_SEGMAP], &s->s.frames[CUR_FRAME])) < 0)
+            (ret = vp9_frame_ref(&s->s.frames[REF_FRAME_SEGMAP], &s->s.frames[CUR_FRAME])) < 0)
             return ret;
     }
     if (s->s.frames[REF_FRAME_MVPAIR].tf.f->buf[0])
-        vp9_frame_unref(avctx, &s->s.frames[REF_FRAME_MVPAIR]);
+        vp9_frame_unref(&s->s.frames[REF_FRAME_MVPAIR]);
     if (!s->s.h.intraonly && !s->s.h.keyframe && !s->s.h.errorres && s->s.frames[CUR_FRAME].tf.f->buf[0] &&
-        (ret = vp9_frame_ref(avctx, &s->s.frames[REF_FRAME_MVPAIR], &s->s.frames[CUR_FRAME])) < 0)
+        (ret = vp9_frame_ref(&s->s.frames[REF_FRAME_MVPAIR], &s->s.frames[CUR_FRAME])) < 0)
         return ret;
     if (s->s.frames[CUR_FRAME].tf.f->buf[0])
-        vp9_frame_unref(avctx, &s->s.frames[CUR_FRAME]);
+        vp9_frame_unref(&s->s.frames[CUR_FRAME]);
     if ((ret = vp9_frame_alloc(avctx, &s->s.frames[CUR_FRAME])) < 0)
         return ret;
     f = s->s.frames[CUR_FRAME].tf.f;
@@ -1619,13 +1612,13 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     if (s->s.frames[REF_FRAME_SEGMAP].tf.f->buf[0] &&
         (s->s.frames[REF_FRAME_MVPAIR].tf.f->width  != s->s.frames[CUR_FRAME].tf.f->width ||
          s->s.frames[REF_FRAME_MVPAIR].tf.f->height != s->s.frames[CUR_FRAME].tf.f->height)) {
-        vp9_frame_unref(avctx, &s->s.frames[REF_FRAME_SEGMAP]);
+        vp9_frame_unref(&s->s.frames[REF_FRAME_SEGMAP]);
     }
 
     // ref frame setup
     for (i = 0; i < 8; i++) {
         if (s->next_refs[i].f->buf[0])
-            ff_thread_release_ext_buffer(avctx, &s->next_refs[i]);
+            ff_thread_release_ext_buffer(&s->next_refs[i]);
         if (s->s.h.refreshrefmask & (1 << i)) {
             ret = ff_thread_ref_frame(&s->next_refs[i], &s->s.frames[CUR_FRAME].tf);
         } else if (s->s.refs[i].f->buf[0]) {
@@ -1775,7 +1768,7 @@ finish:
     // ref frame setup
     for (i = 0; i < 8; i++) {
         if (s->s.refs[i].f->buf[0])
-            ff_thread_release_ext_buffer(avctx, &s->s.refs[i]);
+            ff_thread_release_ext_buffer(&s->s.refs[i]);
         if (s->next_refs[i].f->buf[0] &&
             (ret = ff_thread_ref_frame(&s->s.refs[i], &s->next_refs[i])) < 0)
             return ret;
@@ -1796,9 +1789,9 @@ static void vp9_decode_flush(AVCodecContext *avctx)
     int i;
 
     for (i = 0; i < 3; i++)
-        vp9_frame_unref(avctx, &s->s.frames[i]);
+        vp9_frame_unref(&s->s.frames[i]);
     for (i = 0; i < 8; i++)
-        ff_thread_release_ext_buffer(avctx, &s->s.refs[i]);
+        ff_thread_release_ext_buffer(&s->s.refs[i]);
 
     if (FF_HW_HAS_CB(avctx, flush))
         FF_HW_SIMPLE_CALL(avctx, flush);
@@ -1842,20 +1835,22 @@ static int vp9_decode_update_thread_context(AVCodecContext *dst, const AVCodecCo
 
     for (i = 0; i < 3; i++) {
         if (s->s.frames[i].tf.f->buf[0])
-            vp9_frame_unref(dst, &s->s.frames[i]);
+            vp9_frame_unref(&s->s.frames[i]);
         if (ssrc->s.frames[i].tf.f->buf[0]) {
-            if ((ret = vp9_frame_ref(dst, &s->s.frames[i], &ssrc->s.frames[i])) < 0)
+            if ((ret = vp9_frame_ref(&s->s.frames[i], &ssrc->s.frames[i])) < 0)
                 return ret;
         }
     }
     for (i = 0; i < 8; i++) {
         if (s->s.refs[i].f->buf[0])
-            ff_thread_release_ext_buffer(dst, &s->s.refs[i]);
+            ff_thread_release_ext_buffer(&s->s.refs[i]);
         if (ssrc->next_refs[i].f->buf[0]) {
             if ((ret = ff_thread_ref_frame(&s->s.refs[i], &ssrc->next_refs[i])) < 0)
                 return ret;
         }
     }
+    ff_refstruct_replace(&s->frame_extradata_pool, ssrc->frame_extradata_pool);
+    s->frame_extradata_pool_size = ssrc->frame_extradata_pool_size;
 
     s->s.h.invisible = ssrc->s.h.invisible;
     s->s.h.keyframe = ssrc->s.h.keyframe;
@@ -1907,6 +1902,9 @@ const FFCodec ff_vp9_decoder = {
 #endif
 #if CONFIG_VP9_D3D11VA2_HWACCEL
                                HWACCEL_D3D11VA2(vp9),
+#endif
+#if CONFIG_VP9_D3D12VA_HWACCEL
+                               HWACCEL_D3D12VA(vp9),
 #endif
 #if CONFIG_VP9_NVDEC_HWACCEL
                                HWACCEL_NVDEC(vp9),

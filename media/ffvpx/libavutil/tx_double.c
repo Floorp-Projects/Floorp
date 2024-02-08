@@ -16,5 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#define FFT_FLOAT 1
-#include "fft_template.c"
+#define TX_DOUBLE
+#include "tx_priv.h"
+#include "tx_template.c"
