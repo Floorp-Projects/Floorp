@@ -87,6 +87,21 @@ const kExpectedRequestsOfLinkPreloadImage = [
     },
 ];
 
+const kExpectedRequestsOfLinkPreloadImageDisabled = [
+    {   fileNameAndSuffix: "dummy.image?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
+    },
+    {   fileNameAndSuffix: "dummy.image?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
+    },
+    {   fileNameAndSuffix: "dummy.image?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
+    },
+    {   fileNameAndSuffix: "dummy.image?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
+    },
+];
+
 const kExpectedRequestsOfLinkPreloadFetch = [
     {   fileNameAndSuffix: "dummy.txt?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
@@ -337,6 +352,9 @@ export const kTestDataDisabled = [
     {   testFileName: "link-initial-modulepreload.h2.html",
         expectedRequests: kExpectedRequestsOfModulepreloadDisabled
     },
+    {   testFileName: "link-initial-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
     {   testFileName: "link-dynamic-preload-font.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
     },
@@ -349,11 +367,17 @@ export const kTestDataDisabled = [
     {   testFileName: "link-dynamic-modulepreload.h2.html",
         expectedRequests: kExpectedRequestsOfModulepreloadDisabled
     },
+    {   testFileName: "link-dynamic-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFontLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFetchLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadImageLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadScriptLinks,
         expectedRequests: kExpectedRequestsOfPreloadScriptDisabled
