@@ -328,7 +328,7 @@ impl Global {
 
     /// Assign `id_in` an error with the given `label`.
     ///
-    /// See `create_buffer_error` for more context and explaination.
+    /// See `create_buffer_error` for more context and explanation.
     pub fn create_texture_error<A: HalApi>(&self, id_in: Option<id::TextureId>, label: Label) {
         let hub = A::hub(self);
         let fid = hub.textures.prepare(id_in);
@@ -2084,7 +2084,7 @@ impl Global {
     }
 
     #[cfg(feature = "replay")]
-    /// Only triange suspected resource IDs. This helps us to avoid ID collisions
+    /// Only triangle suspected resource IDs. This helps us to avoid ID collisions
     /// upon creating new resources when re-playing a trace.
     pub fn device_maintain_ids<A: HalApi>(&self, device_id: DeviceId) -> Result<(), InvalidDevice> {
         let hub = A::hub(self);
@@ -2107,6 +2107,12 @@ impl Global {
     ) -> Result<bool, WaitIdleError> {
         api_log!("Device::poll");
 
+        let hub = A::hub(self);
+        let device = hub
+            .devices
+            .get(device_id)
+            .map_err(|_| DeviceError::Invalid)?;
+
         let (closures, queue_empty) = {
             if let wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
                 if submission_index.queue_id != device_id.transmute() {
@@ -2117,15 +2123,14 @@ impl Global {
                 }
             }
 
-            let hub = A::hub(self);
-            let device = hub
-                .devices
-                .get(device_id)
-                .map_err(|_| DeviceError::Invalid)?;
             let fence = device.fence.read();
             let fence = fence.as_ref().unwrap();
             device.maintain(fence, maintain)?
         };
+
+        // Some deferred destroys are scheduled in maintain so run this right after
+        // to avoid holding on to them until the next device poll.
+        device.deferred_resource_destruction();
 
         closures.fire();
 
@@ -2519,7 +2524,7 @@ impl Global {
                     });
                 }
                 // ptr points to the beginning of the range we mapped in map_async
-                // rather thant the beginning of the buffer.
+                // rather than the beginning of the buffer.
                 let relative_offset = (offset - range.start) as isize;
                 unsafe { Ok((ptr.as_ptr().offset(relative_offset), range_size)) }
             }

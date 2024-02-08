@@ -1305,7 +1305,7 @@ who = [
     "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+delta = "0.7.0 -> 0.19.0@git:07e59eb6fc7de3f682f1c401b9cf9f0da9ee4b4a"
 importable = false
 
 [[audits.darling]]
@@ -2637,7 +2637,7 @@ who = [
     "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+delta = "0.14.0 -> 0.19.0@git:07e59eb6fc7de3f682f1c401b9cf9f0da9ee4b4a"
 importable = false
 
 [[audits.net2]]
@@ -4446,7 +4446,7 @@ who = [
     "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+delta = "0.18.0 -> 0.19.0@git:07e59eb6fc7de3f682f1c401b9cf9f0da9ee4b4a"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4500,7 +4500,7 @@ who = [
     "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+delta = "0.18.0 -> 0.19.0@git:07e59eb6fc7de3f682f1c401b9cf9f0da9ee4b4a"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4554,7 +4554,7 @@ who = [
     "Nicolas Silva <nical@fastmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:32e70bc1635905c508d408eb1cf22b2aa062ffe1"
+delta = "0.18.0 -> 0.19.0@git:07e59eb6fc7de3f682f1c401b9cf9f0da9ee4b4a"
 importable = false
 
 [[audits.whatsys]]
