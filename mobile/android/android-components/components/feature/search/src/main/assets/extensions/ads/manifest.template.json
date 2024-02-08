@@ -204,7 +204,8 @@
         "https://www.bing.com/search*",
         "https://www.baidu.com/*",
         "https://m.baidu.com/*",
-        "https://duckduckgo.com/*"
+        "https://duckduckgo.com/*",
+        "https://www.ecosia.org/*"
       ],
       "js": ["adsTelemetry.js"],
       "run_at": "document_end"
