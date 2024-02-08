@@ -62,6 +62,7 @@ export const initialUIState = () => ({
   },
   projectSearchQuery: "",
   hideIgnoredSources: prefs.hideIgnoredSources,
+  sourceMapsEnabled: prefs.clientSourceMapsEnabled,
   sourceMapIgnoreListEnabled: prefs.sourceMapIgnoreListEnabled,
 });
 
@@ -92,7 +93,7 @@ function update(state = initialUIState(), action) {
 
     case "TOGGLE_SOURCE_MAPS_ENABLED": {
       prefs.clientSourceMapsEnabled = action.value;
-      return { ...state };
+      return { ...state, sourceMapsEnabled: action.value };
     }
 
     case "SET_ORIENTATION": {
