@@ -784,4 +784,10 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_SUPERSCRIPT = 134;
 
+  /**
+   * Represents one or more emphasized characters. Use this role to stress or
+   * emphasize content.
+   */
+  const unsigned long ROLE_EMPHASIS = 135;
+
 };
