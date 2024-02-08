@@ -105,7 +105,6 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/CustomElementRegistry.h"
@@ -7455,8 +7454,7 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
   mSharedWorkers.RemoveElement(aSharedWorker);
 }
 
-RefPtr<GenericPromise> nsGlobalWindowInner::StorageAccessPermissionChanged(
-    bool aGranted) {
+void nsGlobalWindowInner::StorageAccessPermissionChanged() {
   // Invalidate cached StorageAllowed field so that calls to GetLocalStorage
   // give us the updated localStorage object.
   ClearStorageAllowedCache();
@@ -7476,18 +7474,7 @@ RefPtr<GenericPromise> nsGlobalWindowInner::StorageAccessPermissionChanged(
       if (mDoc) {
         mDoc->ClearActiveCookieAndStoragePrincipals();
       }
-      // When storage access is granted the content process needs to request the
-      // updated cookie list from the parent process. Otherwise the site won't
-      // have access to unpartitioned cookies via document.cookie without a
-      // reload.
-      if (aGranted) {
-        nsIChannel* channel = mDoc->GetChannel();
-        if (channel) {
-          // The promise resolves when the updated cookie list has been received
-          // from the parent.
-          return ContentChild::UpdateCookieStatus(channel);
-        }
-      }
+      return;
     }
   }
 
@@ -7500,8 +7487,7 @@ RefPtr<GenericPromise> nsGlobalWindowInner::StorageAccessPermissionChanged(
     IgnoredErrorResult error;
     GetLocalStorage(error);
     if (NS_WARN_IF(error.Failed())) {
-      return MozPromise<bool, nsresult, true>::CreateAndReject(
-          error.StealNSResult(), __func__);
+      return;
     }
 
     MOZ_ASSERT(mLocalStorage &&
@@ -7533,19 +7519,6 @@ RefPtr<GenericPromise> nsGlobalWindowInner::StorageAccessPermissionChanged(
           mDoc->NodePrincipal(), mDoc->EffectiveStoragePrincipal());
     }
   }
-
-  // When storage access is granted the content process needs to request the
-  // updated cookie list from the parent process. Otherwise the site won't have
-  // access to unpartitioned cookies via document.cookie without a reload.
-  if (aGranted) {
-    nsIChannel* channel = mDoc->GetChannel();
-    if (channel) {
-      // The promise resolves when the updated cookie list has been received
-      // from the parent.
-      return ContentChild::UpdateCookieStatus(channel);
-    }
-  }
-  return MozPromise<bool, nsresult, true>::CreateAndResolve(true, __func__);
 }
 
 ContentMediaController* nsGlobalWindowInner::GetContentMediaController() {
@@ -7663,24 +7636,22 @@ const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
   return nsGlobalWindowInner::Cast(this);
 }
 
-RefPtr<GenericPromise>
-nsPIDOMWindowInner::SaveStorageAccessPermissionGranted() {
+void nsPIDOMWindowInner::SaveStorageAccessPermissionGranted() {
   WindowContext* wc = GetWindowContext();
   if (wc) {
     Unused << wc->SetUsingStorageAccess(true);
   }
 
-  return nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged(true);
+  nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged();
 }
 
-RefPtr<GenericPromise>
-nsPIDOMWindowInner::SaveStorageAccessPermissionRevoked() {
+void nsPIDOMWindowInner::SaveStorageAccessPermissionRevoked() {
   WindowContext* wc = GetWindowContext();
   if (wc) {
     Unused << wc->SetUsingStorageAccess(false);
   }
 
-  return nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged(false);
+  nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged();
 }
 
 bool nsPIDOMWindowInner::UsingStorageAccess() {

@@ -193,14 +193,14 @@ void CookieServiceParent::SerializeCookieList(
   }
 }
 
-IPCResult CookieServiceParent::RecvGetCookieList(
+IPCResult CookieServiceParent::RecvPrepareCookieList(
     nsIURI* aHost, const bool& aIsForeign,
     const bool& aIsThirdPartyTrackingResource,
     const bool& aIsThirdPartySocialTrackingResource,
     const bool& aStorageAccessPermissionGranted,
     const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
     const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
-    const OriginAttributes& aAttrs, GetCookieListResolver&& aResolve) {
+    const OriginAttributes& aAttrs) {
   // Send matching cookies to Child.
   if (!aHost) {
     return IPC_FAIL(this, "aHost must not be null");
@@ -219,12 +219,9 @@ IPCResult CookieServiceParent::RecvGetCookieList(
       aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
       aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign,
       aHadCrossSiteRedirects, false, true, aAttrs, foundCookieList);
-
   nsTArray<CookieStruct> matchingCookiesList;
   SerializeCookieList(foundCookieList, matchingCookiesList, aHost);
-
-  aResolve(matchingCookiesList);
-
+  Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
   return IPC_OK();
 }
 
