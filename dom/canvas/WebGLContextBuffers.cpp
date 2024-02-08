@@ -251,6 +251,18 @@ void WebGLContext::BufferData(GLenum target, uint64_t dataLen,
   buffer->BufferData(target, dataLen, data, usage);
 }
 
+void WebGLContext::UninitializedBufferData_SizeOnly(GLenum target,
+                                                    uint64_t dataLen,
+                                                    GLenum usage) const {
+  const FuncScope funcScope(*this, "bufferData");
+  if (IsContextLost()) return;
+
+  const auto& buffer = ValidateBufferSelection(target);
+  if (!buffer) return;
+
+  buffer->BufferData(target, dataLen, nullptr, usage, true);
+}
+
 ////////////////////////////////////////
 
 void WebGLContext::BufferSubData(GLenum target, uint64_t dstByteOffset,

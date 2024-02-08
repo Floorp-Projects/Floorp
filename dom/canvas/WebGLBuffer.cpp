@@ -75,7 +75,8 @@ static bool ValidateBufferUsageEnum(WebGLContext* webgl, GLenum usage) {
 }
 
 void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
-                             const void* const maybeData, const GLenum usage) {
+                             const void* const maybeData, const GLenum usage,
+                             bool allowUninitialized) {
   // The driver knows only GLsizeiptr, which is int32_t on 32bit!
   bool sizeValid = CheckedInt<GLsizeiptr>(size).isValid();
 
@@ -104,7 +105,7 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
 
   const void* uploadData = maybeData;
   UniqueBuffer maybeCalloc;
-  if (!uploadData) {
+  if (!uploadData && !allowUninitialized) {
     maybeCalloc = UniqueBuffer::Take(calloc(1, AssertedCast<size_t>(size)));
     if (!maybeCalloc) {
       mContext->ErrorOutOfMemory("Failed to alloc zeros.");
@@ -112,7 +113,7 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
     }
     uploadData = maybeCalloc.get();
   }
-  MOZ_ASSERT(uploadData);
+  MOZ_ASSERT(uploadData || allowUninitialized);
 
   UniqueBuffer newIndexCache;
   const bool needsIndexCache = mContext->mNeedsIndexValidation ||
