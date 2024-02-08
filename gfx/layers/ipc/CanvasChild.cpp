@@ -299,7 +299,7 @@ bool CanvasChild::ShouldBeCleanedUp() const {
   return !mRecorder || mRecorder->hasOneRef();
 }
 
-already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
+already_AddRefed<gfx::DrawTargetRecording> CanvasChild::CreateDrawTarget(
     int64_t aTextureId, const RemoteTextureOwnerId& aTextureOwnerId,
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   NS_ASSERT_OWNINGTHREAD(CanvasChild);
@@ -310,7 +310,7 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 
   RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
       gfx::BackendType::SKIA, gfx::IntSize(1, 1), aFormat);
-  RefPtr<gfx::DrawTarget> dt = MakeAndAddRef<gfx::DrawTargetRecording>(
+  RefPtr<gfx::DrawTargetRecording> dt = MakeAndAddRef<gfx::DrawTargetRecording>(
       mRecorder, aTextureId, aTextureOwnerId, dummyDt, aSize);
 
   mTextureInfo.insert({aTextureId, {}});

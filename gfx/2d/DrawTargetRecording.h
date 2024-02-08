@@ -365,6 +365,10 @@ class DrawTargetRecording : public DrawTarget {
     return mFinalDT->IsCurrentGroupOpaque();
   }
 
+  bool IsDirty() const { return mIsDirty; }
+
+  void MarkClean() { mIsDirty = false; }
+
  private:
   /**
    * Used for creating a DrawTargetRecording for a CreateSimilarDrawTarget call.
@@ -385,6 +389,8 @@ class DrawTargetRecording : public DrawTarget {
                   const DrawOptions& aOptions = DrawOptions(),
                   const StrokeOptions* aStrokeOptions = nullptr);
 
+  void MarkChanged();
+
   RefPtr<DrawEventRecorderPrivate> mRecorder;
   RefPtr<DrawTarget> mFinalDT;
   IntRect mRect;
@@ -395,6 +401,8 @@ class DrawTargetRecording : public DrawTarget {
     bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
+
+  bool mIsDirty = false;
 };
 
 }  // namespace gfx
