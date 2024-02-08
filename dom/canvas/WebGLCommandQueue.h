@@ -171,6 +171,11 @@ inline Maybe<uint16_t> Deserialize(RangeConsumerView& view,
 
 }  // namespace webgl
 
+// -
+
+template <class R, class... Args>
+using fn_t = R(Args...);
+
 // The MethodDispatcher setup uses a CommandSink to read parameters, call the
 // given method using the given synchronization protocol, and provide
 // compile-time lookup of the ID by class method.
@@ -200,13 +205,9 @@ template <template <size_t> typename Derived>
 class EmptyMethodDispatcher {
  public:
   template <typename ObjectT>
-  static MOZ_ALWAYS_INLINE bool DispatchCommand(ObjectT&, const size_t id,
-                                                webgl::RangeConsumerView&) {
-    const nsPrintfCString cstr(
-        "MethodDispatcher<%i> not found. Please file a bug!", int(id));
-    const auto str = ToString(cstr);
-    gfxCriticalError() << str;
-    return false;
+  static constexpr fn_t<bool, ObjectT&, webgl::RangeConsumerView&>*
+  DispatchCommandFuncById(const size_t id) {
+    return nullptr;
   }
 };
 
@@ -225,22 +226,26 @@ std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> ArgsTuple(
 }
 
 // Derived type must be parameterized by the ID.
-template <template <size_t> typename Derived, size_t ID, typename MethodType,
-          MethodType method>
+template <template <size_t> typename Derived, size_t _Id, typename MethodType,
+          MethodType _Method>
 class MethodDispatcher {
-  static constexpr size_t kId = ID;
-  using DerivedType = Derived<ID>;
-  using NextDispatcher = Derived<ID + 1>;
+  static constexpr auto Id = _Id;
+  static constexpr auto Method = _Method;
+  using DerivedType = Derived<Id>;
 
  public:
-  template <typename ObjectT>
-  static MOZ_ALWAYS_INLINE bool DispatchCommand(
-      ObjectT& obj, const size_t id, webgl::RangeConsumerView& view) {
-    if (id == kId) {
-      auto argsTuple = ArgsTuple(method);
+  template <class ObjectT>
+  static constexpr fn_t<bool, ObjectT&, webgl::RangeConsumerView&>*
+  DispatchCommandFuncById(const size_t targetId) {
+    if (targetId != Id)
+      return Derived<Id + 1>::template DispatchCommandFuncById<ObjectT>(
+          targetId);
 
+    return [](ObjectT& obj, webgl::RangeConsumerView& view) -> bool {
       const auto viewWas = view;
       (void)viewWas;  // For debugging.
+
+      auto argsTuple = ArgsTuple(Method);
       return std::apply(
           [&](auto&... args) {
             const auto badArgId = webgl::Deserialize(view, 1, args...);
@@ -250,16 +255,12 @@ class MethodDispatcher {
                                  << " arg " << *badArgId;
               return false;
             }
-            (obj.*method)(args...);
+            (obj.*Method)(args...);
             return true;
           },
           argsTuple);
-    }
-    return Derived<kId + 1>::DispatchCommand(obj, id, view);
+    };
   }
-
-  static constexpr size_t Id() { return kId; }
-  static constexpr MethodType Method() { return method; }
 };
 
 }  // namespace mozilla
