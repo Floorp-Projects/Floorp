@@ -58,10 +58,6 @@ bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem) {
       StaticPrefs::media_wmf_media_engine_enabled() != 2) {
     return false;
   }
-  return IsPlayReadyKeySystem(aKeySystem);
-}
-
-bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
          aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware) ||
          aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName);
@@ -76,10 +72,6 @@ bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem) {
       StaticPrefs::media_wmf_media_engine_enabled() != 2) {
     return false;
   }
-  return IsWidevineExperimentKeySystem(aKeySystem);
-}
-
-bool IsWidevineExperimentKeySystem(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
          aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName);
 }
