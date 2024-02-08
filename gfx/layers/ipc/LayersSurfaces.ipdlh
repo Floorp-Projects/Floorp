@@ -29,6 +29,7 @@ using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUt
 using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::GpuProcessTextureId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::GpuProcessQueryId from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ExternalImageSource from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
@@ -45,6 +46,7 @@ namespace layers {
   ColorRange colorRange;
   bool hasKeyedMutex;
   FenceInfo? fenceInfo;
+  GpuProcessQueryId? gpuProcessQueryId;
 };
 
 [Comparable] struct SurfaceDescriptorDXGIYCbCr {

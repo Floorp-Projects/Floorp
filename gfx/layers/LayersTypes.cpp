@@ -80,5 +80,16 @@ GpuProcessTextureId GpuProcessTextureId::GetNext() {
   return GpuProcessTextureId{++sCounter};
 }
 
+/* static */
+GpuProcessQueryId GpuProcessQueryId::GetNext() {
+  if (!XRE_IsGPUProcess()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return GpuProcessQueryId{};
+  }
+
+  static std::atomic<uint64_t> sCounter = 0;
+  return GpuProcessQueryId{++sCounter};
+}
+
 }  // namespace layers
 }  // namespace mozilla

@@ -122,6 +122,8 @@ class D3D11TextureData final : public TextureData {
     return mGpuProcessTextureId;
   }
 
+  void RegisterQuery(RefPtr<ID3D11Query> aQuery);
+
  private:
   D3D11TextureData(ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
                    RefPtr<gfx::FileHandleWrapper> aSharedHandle,
@@ -158,6 +160,7 @@ class D3D11TextureData final : public TextureData {
   Maybe<GpuProcessTextureId> mGpuProcessTextureId;
   uint32_t mArrayIndex = 0;
   const TextureAllocationFlags mAllocationFlags;
+  Maybe<GpuProcessQueryId> mGpuProcessQueryId;
 };
 
 class DXGIYCbCrTextureData : public TextureData {
@@ -389,6 +392,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11Texture2D> mTexture;
   Maybe<GpuProcessTextureId> mGpuProcessTextureId;
+  Maybe<GpuProcessQueryId> mGpuProcessQueryId;
   uint32_t mArrayIndex = 0;
   RefPtr<DataTextureSourceD3D11> mTextureSource;
   gfx::IntSize mSize;

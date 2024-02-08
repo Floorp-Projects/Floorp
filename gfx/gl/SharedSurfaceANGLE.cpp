@@ -176,7 +176,7 @@ SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor() {
       mSharedHandle, /* gpuProcessTextureId */ Nothing(),
       /* arrayIndex */ 0, format, mDesc.size, mDesc.colorSpace,
       gfx::ColorRange::FULL, /* hasKeyedMutex */ true,
-      /* fenceInfo */ Nothing()));
+      /* fenceInfo */ Nothing(), /* gpuProcessQueryId */ Nothing()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

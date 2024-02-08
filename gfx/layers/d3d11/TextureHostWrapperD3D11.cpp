@@ -247,7 +247,8 @@ RefPtr<TextureHost> TextureHostWrapperD3D11::CreateFromBufferTexture(
   auto descD3D10 = SurfaceDescriptorD3D10(
       nullptr, Some(id),
       /* arrayIndex */ 0, gfx::SurfaceFormat::NV12, size, colorSpace,
-      colorRange, /* hasKeyedMutex */ false, /* fenceInfo */ Nothing());
+      colorRange, /* hasKeyedMutex */ false, /* fenceInfo */ Nothing(),
+      /* gpuProcessQueryId */ Nothing());
 
   RefPtr<DXGITextureHostD3D11> textureHostD3D11 =
       new DXGITextureHostD3D11(flags, descD3D10);

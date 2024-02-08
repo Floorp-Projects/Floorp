@@ -28,6 +28,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/D3D11TextureIMFSampleImage.h"
+#include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureForwarder.h"
@@ -386,6 +387,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   std::list<ThreadSafeWeakPtr<layers::IMFSampleWrapper>> mIMFSampleWrappers;
   RefPtr<layers::IMFSampleUsageInfo> mIMFSampleUsageInfo;
+  uint32_t mVendorID = 0;
 };
 
 bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
@@ -708,6 +710,8 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
+  mVendorID = adapterDesc.VendorId;
+
   if ((adapterDesc.VendorId == 0x1022 || adapterDesc.VendorId == 0x1002) &&
       !StaticPrefs::media_wmf_skip_blacklist()) {
     for (const auto& model : sAMDPreUVD4) {
@@ -842,6 +846,39 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
     client->SyncWithObject(mSyncObject);
     if (!mSyncObject->Synchronize(true)) {
       return DXGI_ERROR_DEVICE_RESET;
+    }
+  } else if (mDevice == DeviceManagerDx::Get()->GetCompositorDevice() &&
+             mVendorID != 0x8086) {
+    MOZ_ASSERT(XRE_IsGPUProcess());
+    MOZ_ASSERT(mVendorID);
+
+    // Normally when D3D11Texture2D is copied by
+    // ID3D11DeviceContext::CopySubresourceRegion() with compositor device,
+    // WebRender does not need to wait copy complete, since WebRender also uses
+    // compositor device. But with some non-Intel GPUs, the copy complete need
+    // to be wait explicitly even with compositor device such as when using
+    // video overlays.
+
+    RefPtr<ID3D11DeviceContext> context;
+    mDevice->GetImmediateContext(getter_AddRefs(context));
+
+    RefPtr<ID3D11Query> query;
+    CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
+    HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(query));
+    if (SUCCEEDED(hr) && query) {
+      context->End(query);
+
+      auto* data = client->GetInternalData()->AsD3D11TextureData();
+      MOZ_ASSERT(data);
+      if (data) {
+        // Wait query happens only just before blitting for video overlay.
+        data->RegisterQuery(query);
+      } else {
+        gfxCriticalNoteOnce << "D3D11TextureData does not exist";
+      }
+    } else {
+      gfxCriticalNoteOnce << "Could not create D3D11_QUERY_EVENT: "
+                          << gfx::hexa(hr);
     }
   }
 

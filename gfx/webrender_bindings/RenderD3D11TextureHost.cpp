@@ -17,6 +17,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/FenceD3D11.h"
+#include "mozilla/layers/GpuProcessD3D11QueryMap.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -28,9 +29,11 @@ RenderDXGITextureHost::RenderDXGITextureHost(
     Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
-    gfx::IntSize aSize, bool aHasKeyedMutex, gfx::FenceInfo& aAcquireFenceInfo)
+    gfx::IntSize aSize, bool aHasKeyedMutex, gfx::FenceInfo& aAcquireFenceInfo,
+    Maybe<layers::GpuProcessQueryId>& aGpuProcessQueryId)
     : mHandle(aHandle),
       mGpuProcessTextureId(aGpuProcessTextureId),
+      mGpuProcessQueryId(aGpuProcessQueryId),
       mArrayIndex(aArrayIndex),
       mSurface(0),
       mStream(0),
@@ -54,6 +57,24 @@ RenderDXGITextureHost::RenderDXGITextureHost(
 RenderDXGITextureHost::~RenderDXGITextureHost() {
   MOZ_COUNT_DTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   DeleteTextureHandle();
+}
+
+RefPtr<ID3D11Query> RenderDXGITextureHost::GetQuery() {
+  if (mGpuProcessQueryId.isNothing()) {
+    return nullptr;
+  }
+
+  auto* queryMap = layers::GpuProcessD3D11QueryMap::Get();
+  if (!queryMap) {
+    return nullptr;
+  }
+
+  auto query = queryMap->GetQuery(mGpuProcessQueryId.ref());
+  if (!query) {
+    gfxCriticalNoteOnce << "Failed to get ID3D11Query";
+  }
+
+  return query;
 }
 
 ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2DWithGL() {
