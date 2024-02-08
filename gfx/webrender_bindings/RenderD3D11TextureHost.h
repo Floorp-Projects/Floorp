@@ -31,7 +31,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
       Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
       uint32_t aArrayIndex, gfx::SurfaceFormat aFormat, gfx::ColorSpace2,
       gfx::ColorRange aColorRange, gfx::IntSize aSize, bool aHasKeyedMutex,
-      gfx::FenceInfo& aAcquireFenceInfo);
+      gfx::FenceInfo& aAcquireFenceInfo,
+      Maybe<layers::GpuProcessQueryId>& aGpuProcessQueryId);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
@@ -90,6 +91,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   void SetIsSoftwareDecodedVideo() override { mIsSoftwareDecodedVideo = true; }
   bool IsSoftwareDecodedVideo() override { return mIsSoftwareDecodedVideo; }
 
+  RefPtr<ID3D11Query> GetQuery();
+
  private:
   virtual ~RenderDXGITextureHost();
 
@@ -102,6 +105,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   RefPtr<gfx::FileHandleWrapper> mHandle;
   Maybe<layers::GpuProcessTextureId> mGpuProcessTextureId;
+  Maybe<layers::GpuProcessQueryId> mGpuProcessQueryId;
   RefPtr<ID3D11Texture2D> mTexture;
   uint32_t mArrayIndex = 0;
   RefPtr<IDXGIKeyedMutex> mKeyedMutex;

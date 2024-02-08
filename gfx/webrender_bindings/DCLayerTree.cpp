@@ -23,6 +23,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderDcompSurfaceTextureHost.h"
@@ -1555,6 +1556,19 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
 
   if (!mVideoSwapChain) {
     return false;
+  }
+
+  auto query = texture->GetQuery();
+  if (query) {
+    // Wait ID3D11Query of D3D11Texture2D copy complete just before blitting for
+    // video overlay with non Intel GPUs. See Bug 1817617.
+    BOOL result;
+    bool ret = layers::WaitForFrameGPUQuery(mDCLayerTree->GetDevice(),
+                                            mDCLayerTree->GetDeviceContext(),
+                                            query, &result);
+    if (!ret) {
+      gfxCriticalNoteOnce << "WaitForFrameGPUQuery() failed";
+    }
   }
 
   if (!mDCLayerTree->EnsureVideoProcessor(mVideoSize, mSwapChainSize)) {

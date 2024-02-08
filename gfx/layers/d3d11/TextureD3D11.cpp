@@ -22,6 +22,7 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/D3D11TextureIMFSampleImage.h"
+#include "mozilla/layers/GpuProcessD3D11QueryMap.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
@@ -334,6 +335,15 @@ D3D11TextureData::~D3D11TextureData() {
       gfxCriticalNoteOnce << "GpuProcessD3D11TextureMap does not exist";
     }
   }
+
+  if (mGpuProcessQueryId.isSome()) {
+    auto* queryMap = GpuProcessD3D11QueryMap::Get();
+    if (queryMap) {
+      queryMap->Unregister(mGpuProcessQueryId.ref());
+    } else {
+      gfxCriticalNoteOnce << "GpuProcessD3D11QueryMap does not exist";
+    }
+  }
 }
 
 bool D3D11TextureData::Lock(OpenMode aMode) {
@@ -405,7 +415,7 @@ bool D3D11TextureData::SerializeSpecific(
   *aOutDesc = SurfaceDescriptorD3D10(
       mSharedHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mSize,
       mColorSpace, mColorRange, /* hasKeyedMutex */ mHasKeyedMutex,
-      /* fenceInfo */ Nothing());
+      /* fenceInfo */ Nothing(), mGpuProcessQueryId);
   return true;
 }
 
@@ -623,6 +633,20 @@ TextureFlags D3D11TextureData::GetTextureFlags() const {
   return TextureFlags::WAIT_HOST_USAGE_END;
 }
 
+void D3D11TextureData::RegisterQuery(RefPtr<ID3D11Query> aQuery) {
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  MOZ_ASSERT(GpuProcessD3D11QueryMap::Get());
+
+  if (!GpuProcessD3D11QueryMap::Get()) {
+    return;
+  }
+
+  if (mGpuProcessQueryId.isNothing()) {
+    mGpuProcessQueryId = Some(GpuProcessQueryId::GetNext());
+  }
+  GpuProcessD3D11QueryMap::Get()->Register(mGpuProcessQueryId.ref(), aQuery);
+}
+
 DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
     ID3D11Texture2D* aTextureY, ID3D11Texture2D* aTextureCb,
     ID3D11Texture2D* aTextureCr, const gfx::IntSize& aSize,
@@ -792,6 +816,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorD3D10& aDescriptor)
     : TextureHost(TextureHostType::DXGI, aFlags),
       mGpuProcessTextureId(aDescriptor.gpuProcessTextureId()),
+      mGpuProcessQueryId(aDescriptor.gpuProcessQueryId()),
       mArrayIndex(aDescriptor.arrayIndex()),
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
@@ -958,7 +983,8 @@ void DXGITextureHostD3D11::CreateRenderTexture(
 
   RefPtr<wr::RenderDXGITextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
-      mColorRange, mSize, mHasKeyedMutex, mAcquireFenceInfo);
+      mColorRange, mSize, mHasKeyedMutex, mAcquireFenceInfo,
+      mGpuProcessQueryId);
   if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
     texture->SetIsSoftwareDecodedVideo();
   }
