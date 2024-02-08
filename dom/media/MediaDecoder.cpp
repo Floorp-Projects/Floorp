@@ -27,6 +27,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -455,6 +456,36 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
       !needExternalEngine /* disable external engine */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG("Failed to create a new state machine!");
+    glean::mfcdm::ErrorExtra extraData;
+    extraData.errorName = Some("FAILED_TO_FALLBACK_TO_STATE_MACHINE"_ns);
+    nsAutoCString resolution;
+    if (mInfo) {
+      if (mInfo->HasAudio()) {
+        extraData.audioCodec = Some(mInfo->mAudio.mMimeType);
+      }
+      if (mInfo->HasVideo()) {
+        extraData.videoCodec = Some(mInfo->mVideo.mMimeType);
+        DetermineResolutionForTelemetry(*mInfo, resolution);
+        extraData.resolution = Some(resolution);
+      }
+    }
+    glean::mfcdm::error.Record(Some(extraData));
+    if (MOZ_LOG_TEST(gMediaDecoderLog, LogLevel::Debug)) {
+      nsPrintfCString logMessage{"MFCDM Error event, error=%s",
+                                 extraData.errorName->get()};
+      if (mInfo) {
+        if (mInfo->HasAudio()) {
+          logMessage.Append(
+              nsPrintfCString{", audio=%s", mInfo->mAudio.mMimeType.get()});
+        }
+        if (mInfo->HasVideo()) {
+          logMessage.Append(nsPrintfCString{", video=%s, resolution=%s",
+                                            mInfo->mVideo.mMimeType.get(),
+                                            resolution.get()});
+        }
+      }
+      LOG("%s", logMessage.get());
+    }
   }
 
   // Some attributes might have been set on the destroyed state machine, and
