@@ -1923,11 +1923,11 @@ mozilla::ipc::IPCResult ContentChild::RecvPTestShellConstructor(
   return IPC_OK();
 }
 
-RefPtr<GenericPromise> ContentChild::UpdateCookieStatus(nsIChannel* aChannel) {
+void ContentChild::UpdateCookieStatus(nsIChannel* aChannel) {
   RefPtr<CookieServiceChild> csChild = CookieServiceChild::GetSingleton();
   NS_ASSERTION(csChild, "Couldn't get CookieServiceChild");
 
-  return csChild->TrackCookieLoad(aChannel);
+  csChild->TrackCookieLoad(aChannel);
 }
 
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(

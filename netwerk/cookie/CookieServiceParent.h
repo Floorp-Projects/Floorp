@@ -63,14 +63,14 @@ class CookieServiceParent : public PCookieServiceParent {
       const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
       nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies);
 
-  mozilla::ipc::IPCResult RecvGetCookieList(
+  mozilla::ipc::IPCResult RecvPrepareCookieList(
       nsIURI* aHost, const bool& aIsForeign,
       const bool& aIsThirdPartyTrackingResource,
       const bool& aIsThirdPartySocialTrackingResource,
       const bool& aStorageAccessPermissionGranted,
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
-      const OriginAttributes& aAttrs, GetCookieListResolver&& aResolve);
+      const OriginAttributes& aAttrs);
 
   static void SerializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
                                   nsTArray<CookieStruct>& aCookiesList,
