@@ -207,8 +207,8 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
 
   RefPtr<Buffer> self(this);
 
-  auto mappingPromise =
-      GetDevice().GetBridge()->SendBufferMap(mId, aMode, aOffset, size);
+  auto mappingPromise = GetDevice().GetBridge()->SendBufferMap(
+      GetDevice().mId, mId, aMode, aOffset, size);
   MOZ_ASSERT(mappingPromise);
 
   mMapRequest = promise;

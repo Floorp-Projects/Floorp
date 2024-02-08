@@ -526,8 +526,11 @@ void WebGPUParent::MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
     auto offset = req->mOffset;
 
     if (req->mHostMap == ffi::WGPUHostMap_Read && size > 0) {
+      ErrorBuffer error;
       const auto src = ffi::wgpu_server_buffer_get_mapped_range(
-          req->mContext, req->mBufferId, offset, size);
+          req->mContext, req->mBufferId, offset, size, error.ToFFI());
+
+      MOZ_RELEASE_ASSERT(!error.GetError());
 
       MOZ_RELEASE_ASSERT(mapData->mShmem.Size() >= offset + size);
       if (src.ptr != nullptr && src.length >= size) {
@@ -547,8 +550,9 @@ void WebGPUParent::MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
   delete req;
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId, uint32_t aMode,
-                                           uint64_t aOffset, uint64_t aSize,
+ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aDeviceId, RawId aBufferId,
+                                           uint32_t aMode, uint64_t aOffset,
+                                           uint64_t aSize,
                                            BufferMapResolver&& aResolver) {
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferMap %" PRIu64 " offset=%" PRIu64 " size=%" PRIu64 "\n",
@@ -585,8 +589,10 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId, uint32_t aMode,
 
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
+  ErrorBuffer mapError;
   ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize, mode,
-                              callback);
+                              callback, mapError.ToFFI());
+  ForwardError(aDeviceId, mapError);
 
   return IPC_OK();
 }
@@ -602,8 +608,10 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aDeviceId, RawId aBufferId,
     uint64_t offset = mapData->mMappedOffset;
     uint64_t size = mapData->mMappedSize;
 
+    ErrorBuffer getRangeError;
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
-        mContext.get(), aBufferId, offset, size);
+        mContext.get(), aBufferId, offset, size, getRangeError.ToFFI());
+    ForwardError(aDeviceId, getRangeError);
 
     if (mapped.ptr != nullptr && mapped.length >= size) {
       auto shmSize = mapData->mShmem.Size();
@@ -618,9 +626,9 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aDeviceId, RawId aBufferId,
     mapData->mMappedSize = 0;
   }
 
-  ErrorBuffer error;
-  ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId, error.ToFFI());
-  ForwardError(aDeviceId, error);
+  ErrorBuffer unmapError;
+  ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId, unmapError.ToFFI());
+  ForwardError(aDeviceId, unmapError);
 
   if (mapData && !mapData->mHasMapFlags) {
     // We get here if the buffer was mapped at creation without map flags.
@@ -951,9 +959,13 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   // copy the data
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
     const auto bufferSize = data->mDesc.size().height * data->mSourcePitch;
+    ErrorBuffer getRangeError;
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
-        req->mContext, bufferId, 0, bufferSize);
-    MOZ_ASSERT(mapped.length >= bufferSize);
+        req->mContext, bufferId, 0, bufferSize, getRangeError.ToFFI());
+    // If an error occured in get_mapped_range, treat it as an internal error
+    // and crash. The error handling story for something unexpected happening
+    // during the present glue needs to befigured out in a more global way.
+    MOZ_RELEASE_ASSERT(mapped.length >= bufferSize);
     auto textureData =
         req->mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
             data->mDesc.size(), data->mDesc.format(), req->mOwnerId);
@@ -975,9 +987,9 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }
-    ErrorBuffer error;
-    wgpu_server_buffer_unmap(req->mContext, bufferId, error.ToFFI());
-    if (auto innerError = error.GetError()) {
+    ErrorBuffer unmapError;
+    wgpu_server_buffer_unmap(req->mContext, bufferId, unmapError.ToFFI());
+    if (auto innerError = unmapError.GetError()) {
       MOZ_LOG(sLogger, LogLevel::Info,
               ("WebGPU present: buffer unmap failed: %s\n",
                innerError->message.get()));
@@ -1185,8 +1197,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   ffi::WGPUBufferMapCallbackC callback = {
       &ReadbackPresentCallback,
       reinterpret_cast<uint8_t*>(presentRequest.release())};
+
+  ErrorBuffer error;
   ffi::wgpu_server_buffer_map(mContext.get(), bufferId, 0, bufferSize,
-                              ffi::WGPUHostMap_Read, callback);
+                              ffi::WGPUHostMap_Read, callback, error.ToFFI());
+  if (ForwardError(data->mDeviceId, error)) {
+    return IPC_OK();
+  }
 
   return IPC_OK();
 }

@@ -471,6 +471,7 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
     size: wgt::BufferAddress,
     map_mode: wgc::device::HostMap,
     callback: wgc::resource::BufferMapCallbackC,
+    mut error_buf: ErrorBuffer,
 ) {
     let callback = wgc::resource::BufferMapCallback::from_c(callback);
     let operation = wgc::resource::BufferMapOperation {
@@ -479,11 +480,15 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
     };
     // All errors are also exposed to the mapping callback, so we handle them there and ignore
     // the returned value of buffer_map_async.
-    let _ = gfx_select!(buffer_id => global.buffer_map_async(
+    let result = gfx_select!(buffer_id => global.buffer_map_async(
         buffer_id,
         start .. start + size,
         operation
     ));
+
+    if let Err(error) = result {
+        error_buf.init(error);
+    }
 }
 
 #[repr(C)]
@@ -502,6 +507,7 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
     buffer_id: id::BufferId,
     start: wgt::BufferAddress,
     size: wgt::BufferAddress,
+    mut error_buf: ErrorBuffer,
 ) -> MappedBufferSlice {
     let result = gfx_select!(buffer_id => global.buffer_get_mapped_range(
         buffer_id,
@@ -509,14 +515,11 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
         Some(size)
     ));
 
-    // TODO: error reporting.
-
-    result
-        .map(|(ptr, length)| MappedBufferSlice { ptr, length })
-        .unwrap_or(MappedBufferSlice {
-            ptr: std::ptr::null_mut(),
-            length: 0,
-        })
+    let (ptr, length) = result.unwrap_or_else(|error| {
+        error_buf.init(error);
+        (std::ptr::null_mut(), 0)
+    });
+    MappedBufferSlice { ptr, length }
 }
 
 #[no_mangle]
