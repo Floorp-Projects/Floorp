@@ -48,8 +48,8 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.clickAtLocationInView
 import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
@@ -64,31 +64,37 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifyNormalBrowsingButtonIsSelected(isSelected: Boolean = true) {
         if (isSelected) {
+            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Trying to verify that the normal browsing button is selected")
             composeTestRule.normalBrowsingButton().assertIsSelected()
-            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Verified normal browsing button is selected")
+            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Verified that the normal browsing button is selected")
         } else {
+            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Trying to verify that the normal browsing button is not selected")
             composeTestRule.normalBrowsingButton().assertIsNotSelected()
-            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Verified normal browsing button is not selected")
+            Log.i(TAG, "verifyNormalBrowsingButtonIsSelected: Verified that the normal browsing button is not selected")
         }
     }
 
     fun verifyPrivateBrowsingButtonIsSelected(isSelected: Boolean = true) {
         if (isSelected) {
+            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Trying to verify that the private browsing button is selected")
             composeTestRule.privateBrowsingButton().assertIsSelected()
-            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Verified private browsing button is selected")
+            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Verified that the private browsing button is selected")
         } else {
+            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Trying to verify that the private browsing button is not selected")
             composeTestRule.privateBrowsingButton().assertIsNotSelected()
-            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Verified private browsing button is not selected")
+            Log.i(TAG, "verifyPrivateBrowsingButtonIsSelected: Verified that the private browsing button is not selected")
         }
     }
 
     fun verifySyncedTabsButtonIsSelected(isSelected: Boolean = true) {
         if (isSelected) {
+            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Trying to verify that the synced tabs button is selected")
             composeTestRule.syncedTabsButton().assertIsSelected()
-            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Verified synced tabs button is selected")
+            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Verified that the synced tabs button is selected")
         } else {
+            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Trying to verify that the synced tabs button is not selected")
             composeTestRule.syncedTabsButton().assertIsNotSelected()
-            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Verified synced tabs button is not selected")
+            Log.i(TAG, "verifySyncedTabsButtonIsSelected: Verified that the synced tabs button is not selected")
         }
     }
 
@@ -103,18 +109,22 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifyExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
+            Log.i(TAG, "verifyExistingOpenTabs: Waiting for $waitingTime ms for tab with title: $title to exist")
             itemContainingText(title).waitForExists(waitingTime)
+            Log.i(TAG, "verifyExistingOpenTabs: Waited for $waitingTime ms for tab with title: $title to exist")
+            Log.i(TAG, "verifyExistingOpenTabs: Trying to verify that the open tab with title: $title exists")
             composeTestRule.tabItem(title).assertExists()
-            Log.i(TAG, "verifyExistingOpenTabs: Verified open tab with title: $title exists")
+            Log.i(TAG, "verifyExistingOpenTabs: Verified that the open tab with title: $title exists")
         }
     }
 
     fun verifyOpenTabsOrder(title: String, position: Int) {
+        Log.i(TAG, "verifyOpenTabsOrder: Trying to verify that the open tab at position: $position has title: $title")
         composeTestRule.normalTabsList()
             .onChildAt(position - 1)
             .assert(hasTestTag(TabsTrayTestTag.tabItemRoot))
             .assert(hasAnyChild(hasText(title)))
-        Log.i(TAG, "verifyOpenTabsOrder: Verified open tab at position: $position has title: $title")
+        Log.i(TAG, "verifyOpenTabsOrder: Verified that the open tab at position: $position has title: $title")
     }
 
     fun verifyNoExistingOpenTabs(vararg titles: String) {
@@ -127,109 +137,129 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
     }
 
     fun verifyNormalTabsList() {
+        Log.i(TAG, "verifyNormalTabsList: Trying to verify that the normal tabs list exists")
         composeTestRule.normalTabsList().assertExists()
-        Log.i(TAG, "verifyNormalTabsList: Verified normal tabs list exists")
+        Log.i(TAG, "verifyNormalTabsList: Verified that the normal tabs list exists")
     }
 
     fun verifyPrivateTabsList() {
+        Log.i(TAG, "verifyPrivateTabsList: Trying to verify that the private tabs list exists")
         composeTestRule.privateTabsList().assertExists()
-        Log.i(TAG, "verifyPrivateTabsList: Verified private tabs list exists")
+        Log.i(TAG, "verifyPrivateTabsList: Verified that the private tabs list exists")
     }
 
     fun verifySyncedTabsList() {
+        Log.i(TAG, "verifySyncedTabsList: Trying to verify that the synced tabs list exists")
         composeTestRule.syncedTabsList().assertExists()
-        Log.i(TAG, "verifySyncedTabsList: Verified synced tabs list exists")
+        Log.i(TAG, "verifySyncedTabsList: Verified that the synced tabs list exists")
     }
 
     fun verifyNoOpenTabsInNormalBrowsing() {
+        Log.i(TAG, "verifyNoOpenTabsInNormalBrowsing: Trying to verify that the empty normal tabs list exists")
         composeTestRule.emptyNormalTabsList().assertExists()
-        Log.i(TAG, "verifyNoOpenTabsInNormalBrowsing: Verified empty normal tabs list exists")
+        Log.i(TAG, "verifyNoOpenTabsInNormalBrowsing: Verified that the empty normal tabs list exists")
     }
 
     fun verifyNoOpenTabsInPrivateBrowsing() {
+        Log.i(TAG, "verifyNoOpenTabsInPrivateBrowsing: Trying to verify that the empty private tabs list exists")
         composeTestRule.emptyPrivateTabsList().assertExists()
-        Log.i(TAG, "verifyNoOpenTabsInPrivateBrowsing: Verified empty private tabs list exists")
+        Log.i(TAG, "verifyNoOpenTabsInPrivateBrowsing: Verified that the empty private tabs list exists")
     }
 
     fun verifyAccountSettingsButton() {
+        Log.i(TAG, "verifyAccountSettingsButton: Trying to verify that the \"Account settings\" menu button exists")
         composeTestRule.dropdownMenuItemAccountSettings().assertExists()
-        Log.i(TAG, "verifyAccountSettingsButton: Verified \"Account settings\" menu button exists")
+        Log.i(TAG, "verifyAccountSettingsButton: Verified that the \"Account settings\" menu button exists")
     }
 
     fun verifyCloseAllTabsButton() {
+        Log.i(TAG, "verifyCloseAllTabsButton: Trying to verify that the \"Close all tabs\" menu button exists")
         composeTestRule.dropdownMenuItemCloseAllTabs().assertExists()
-        Log.i(TAG, "verifyCloseAllTabsButton: Verified \"Close all tabs\" menu button exists")
+        Log.i(TAG, "verifyCloseAllTabsButton: Verified that the \"Close all tabs\" menu button exists")
     }
 
     fun verifySelectTabsButton() {
+        Log.i(TAG, "verifySelectTabsButton: Trying to verify that the \"Select tabs\" menu button exists")
         composeTestRule.dropdownMenuItemSelectTabs().assertExists()
-        Log.i(TAG, "verifySelectTabsButton: Verified \"Select tabs\" menu button exists")
+        Log.i(TAG, "verifySelectTabsButton: Verified that the \"Select tabs\" menu button exists")
     }
 
     fun verifyShareAllTabsButton() {
+        Log.i(TAG, "verifyShareAllTabsButton: Trying to verify that the \"Share all tabs\" menu button exists")
         composeTestRule.dropdownMenuItemShareAllTabs().assertExists()
-        Log.i(TAG, "verifyShareAllTabsButton: Verified \"Share all tabs\" menu button exists")
+        Log.i(TAG, "verifyShareAllTabsButton: Verified that the \"Share all tabs\" menu button exists")
     }
 
     fun verifyRecentlyClosedTabsButton() {
+        Log.i(TAG, "verifyRecentlyClosedTabsButton: Trying to verify that the \"Recently closed tabs\" menu button exists")
         composeTestRule.dropdownMenuItemRecentlyClosedTabs().assertExists()
-        Log.i(TAG, "verifyRecentlyClosedTabsButton: Verified \"Recently closed tabs\" menu button exists")
+        Log.i(TAG, "verifyRecentlyClosedTabsButton: Verified that the \"Recently closed tabs\" menu button exists")
     }
 
     fun verifyTabSettingsButton() {
+        Log.i(TAG, "verifyTabSettingsButton: Trying to verify that the \"Tab settings\" menu button exists")
         composeTestRule.dropdownMenuItemTabSettings().assertExists()
-        Log.i(TAG, "verifyTabSettingsButton: Verified \"Tab settings\" menu button exists")
+        Log.i(TAG, "verifyTabSettingsButton: Verified that the \"Tab settings\" menu button exists")
     }
 
     fun verifyThreeDotButton() {
+        Log.i(TAG, "verifyThreeDotButton: Trying to verify that the three dot button exists")
         composeTestRule.threeDotButton().assertExists()
-        Log.i(TAG, "verifyThreeDotButton: Verified three dot button exists")
+        Log.i(TAG, "verifyThreeDotButton: Verified that the three dot button exists")
     }
 
     fun verifyFab() {
+        Log.i(TAG, "verifyFab: Trying to verify that the new tab FAB button exists")
         composeTestRule.tabsTrayFab().assertExists()
-        Log.i(TAG, "verifyFab: Verified new tab FAB button exists")
+        Log.i(TAG, "verifyFab: Verified that the new tab FAB button exists")
     }
 
     fun verifyNormalTabCounter() {
+        Log.i(TAG, "verifyNormalTabCounter: Trying to verify that the normal tabs list counter exists")
         composeTestRule.normalTabsCounter().assertExists()
-        Log.i(TAG, "verifyNormalTabCounter: Verified normal tabs list counter exists")
+        Log.i(TAG, "verifyNormalTabCounter: Verified that the normal tabs list counter exists")
     }
 
     /**
      * Verifies a tab's thumbnail when there is only one tab open.
      */
     fun verifyTabThumbnail() {
+        Log.i(TAG, "verifyTabThumbnail: Trying to verify that the tab thumbnail exists")
         composeTestRule.tabThumbnail().assertExists()
-        Log.i(TAG, "verifyTabThumbnail: Verified tab thumbnail exists")
+        Log.i(TAG, "verifyTabThumbnail: Verified that the tab thumbnail exists")
     }
 
     /**
      * Verifies a tab's close button when there is only one tab open.
      */
     fun verifyTabCloseButton() {
+        Log.i(TAG, "verifyTabCloseButton: Trying to verify that the close tab button exists")
         composeTestRule.closeTabButton().assertExists()
-        Log.i(TAG, "verifyTabCloseButton: Verified close tab button exists")
+        Log.i(TAG, "verifyTabCloseButton: Verified that the close tab button exists")
     }
 
     fun verifyTabsTrayBehaviorState(expectedState: Int) {
+        Log.i(TAG, "verifyTabsTrayBehaviorState: Trying to verify that the tabs tray state matches: $expectedState")
         tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorStateMatcher(expectedState)))
         Log.i(TAG, "verifyTabsTrayBehaviorState: Verified that the tabs tray state matches: $expectedState")
     }
 
     fun verifyMinusculeHalfExpandedRatio() {
+        Log.i(TAG, "verifyMinusculeHalfExpandedRatio: Trying to verify the tabs tray half expanded ratio")
         tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
-        Log.i(TAG, "verifyMinusculeHalfExpandedRatio: Verified that the tabs tray half expanded ratio")
+        Log.i(TAG, "verifyMinusculeHalfExpandedRatio: Verified the tabs tray half expanded ratio")
     }
 
     fun verifyTabTrayIsOpen() {
+        Log.i(TAG, "verifyTabTrayIsOpen: Trying to verify that the tabs tray exists")
         composeTestRule.tabsTray().assertExists()
-        Log.i(TAG, "verifyTabTrayIsOpen: Verified that the open tabs tray exists")
+        Log.i(TAG, "verifyTabTrayIsOpen: Verified that the tabs tray exists")
     }
 
     fun verifyTabTrayIsClosed() {
+        Log.i(TAG, "verifyTabTrayIsClosed: Trying to verify that the tabs tray does not exist")
         composeTestRule.tabsTray().assertDoesNotExist()
-        Log.i(TAG, "verifyTabTrayIsClosed: Verified that the tabs tray is closed")
+        Log.i(TAG, "verifyTabTrayIsClosed: Verified that the tabs tray does not exist")
     }
 
     /**
@@ -237,16 +267,22 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     @OptIn(ExperimentalTestApi::class)
     fun closeTab() {
+        Log.i(TAG, "closeTab: Waiting until the close tab button exists")
         composeTestRule.waitUntilAtLeastOneExists(hasTestTag(TabsTrayTestTag.tabItemClose))
+        Log.i(TAG, "closeTab: Waited until the close tab button exists")
+        Log.i(TAG, "closeTab: Trying to verify that the close tab button exists")
         composeTestRule.closeTabButton().assertExists()
+        Log.i(TAG, "closeTab: Verified that the close tab button exists")
+        Log.i(TAG, "closeTab: Trying to click the close tab button")
         composeTestRule.closeTabButton().performClick()
-        Log.i(TAG, "closeTab: Clicked close tab button")
+        Log.i(TAG, "closeTab: Clicked the close tab button")
     }
 
     /**
      * Swipes a tab with [title] left.
      */
     fun swipeTabLeft(title: String) {
+        Log.i(TAG, "swipeTabLeft: Trying to perform swipe left action on tab: $title")
         composeTestRule.tabItem(title).performTouchInput { swipeLeft() }
         Log.i(TAG, "swipeTabLeft: Performed swipe left action on tab: $title")
     }
@@ -255,6 +291,7 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      * Swipes a tab with [title] right.
      */
     fun swipeTabRight(title: String) {
+        Log.i(TAG, "swipeTabRight: Trying to perform swipe right action on tab: $title")
         composeTestRule.tabItem(title).performTouchInput { swipeRight() }
         Log.i(TAG, "swipeTabRight: Performed swipe right action on tab: $title")
     }
@@ -267,10 +304,12 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         collectionName: String,
         firstCollection: Boolean = true,
     ) {
+        Log.i(TAG, "createCollection: Trying to click the three dot button")
         composeTestRule.threeDotButton().performClick()
-        Log.i(TAG, "createCollection: Clicked 3 dot button")
+        Log.i(TAG, "createCollection: Clicked the three dot button")
+        Log.i(TAG, "createCollection: Trying to click the \"Select tabs\" menu button")
         composeTestRule.dropdownMenuItemSelectTabs().performClick()
-        Log.i(TAG, "createCollection: Clicked \"Select tabs\" menu button")
+        Log.i(TAG, "createCollection: Clicked the \"Select tabs\" menu button")
 
         for (tab in tabTitles) {
             selectTab(tab)
@@ -289,8 +328,10 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     @OptIn(ExperimentalTestApi::class)
     fun selectTab(title: String) {
-        Log.i(TAG, "selectTab: Waiting for tab with title: $title to exist")
+        Log.i(TAG, "selectTab: Waiting for $waitingTime ms until the tab with title: $title exists")
         composeTestRule.waitUntilExactlyOneExists(hasText(title), waitingTime)
+        Log.i(TAG, "selectTab: Waited for $waitingTime ms until the tab with title: $title exists")
+        Log.i(TAG, "selectTab: Trying to click tab with title: $title")
         composeTestRule.tabItem(title).performClick()
         Log.i(TAG, "selectTab: Clicked tab with title: $title")
     }
@@ -299,6 +340,7 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      * Performs a long click on a tab with [title].
      */
     fun longClickTab(title: String) {
+        Log.i(TAG, "longClickTab: Trying to long click tab with title: $title")
         composeTestRule.tabItem(title)
             .performTouchInput { longClick(durationMillis = Constants.LONG_CLICK_DURATION) }
         Log.i(TAG, "longClickTab: Long clicked tab with title: $title")
@@ -308,9 +350,10 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      * Verifies the multi selection counter displays [numOfTabs].
      */
     fun verifyTabsMultiSelectionCounter(numOfTabs: Int) {
+        Log.i(TAG, "verifyTabsMultiSelectionCounter: Trying to verify that $numOfTabs tabs are selected")
         composeTestRule.multiSelectionCounter()
             .assert(hasText("$numOfTabs selected"))
-        Log.i(TAG, "verifyTabsMultiSelectionCounter: Verified $numOfTabs are selected")
+        Log.i(TAG, "verifyTabsMultiSelectionCounter: Verified that $numOfTabs tabs are selected")
     }
 
     /**
@@ -318,11 +361,13 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     @OptIn(ExperimentalTestApi::class)
     fun verifyTabMediaControlButtonState(action: String) {
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Waiting for media tab control button: $action to exist")
+        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Waiting for $waitingTime ms until the media tab control button: $action exists")
         composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
+        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Waited for $waitingTime ms until the media tab control button: $action exists")
+        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Trying to verify that the tab media control button: $action exists")
         composeTestRule.tabMediaControlButton(action)
             .assertExists()
-        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Verified media tab control button: $action exists")
+        Log.i(TAG, "verifyTabMediaControlButtonStateTab: Verified tab media control button: $action exists")
     }
 
     /**
@@ -330,65 +375,75 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     @OptIn(ExperimentalTestApi::class)
     fun clickTabMediaControlButton(action: String) {
-        Log.i(TAG, "clickTabMediaControlButton: Waiting for media tab control button: $action to exist")
+        Log.i(TAG, "clickTabMediaControlButton: Waiting for $waitingTime ms until the media tab control button: $action exists")
         composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
+        Log.i(TAG, "clickTabMediaControlButton: Waited for $waitingTime ms until the media tab control button: $action exists")
+        Log.i(TAG, "clickTabMediaControlButton: Trying to click the tab media control button: $action")
         composeTestRule.tabMediaControlButton(action)
             .performClick()
-        Log.i(TAG, "clickTabMediaControlButton: Clicked media tab control button: $action")
+        Log.i(TAG, "clickTabMediaControlButton: Clicked the tab media control button: $action")
     }
 
     /**
      * Closes a tab with a given [title].
      */
     fun closeTabWithTitle(title: String) {
+        Log.i(TAG, "closeTabWithTitle: Trying to click the close button for tab with title: $title")
         composeTestRule.onAllNodesWithTag(TabsTrayTestTag.tabItemClose)
             .filter(hasParent(hasText(title)))
             .onFirst()
             .performClick()
-        Log.i(TAG, "closeTabWithTitle: Closed tab with title: $title")
+        Log.i(TAG, "closeTabWithTitle: Clicked the close button for tab with title: $title")
     }
 
     class Transition(private val composeTestRule: HomeActivityComposeTestRule) {
 
         fun openNewTab(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            Log.i(TAG, "openNewTab: Waiting for device to be idle")
             mDevice.waitForIdle()
-
+            Log.i(TAG, "openNewTab: Waited for device to be idle")
+            Log.i(TAG, "openNewTab: Trying to click the new tab FAB button")
             composeTestRule.tabsTrayFab().performClick()
-            Log.i(TAG, "openNewTab: Clicked new tab FAB button")
+            Log.i(TAG, "openNewTab: Clicked the new tab FAB button")
             SearchRobot().interact()
             return SearchRobot.Transition()
         }
 
         fun toggleToNormalTabs(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            Log.i(TAG, "toggleToNormalTabs: Trying to click the normal browsing button")
             composeTestRule.normalBrowsingButton().performClick()
-            Log.i(TAG, "toggleToNormalTabs: Clicked normal browsing button")
+            Log.i(TAG, "toggleToNormalTabs: Clicked the normal browsing button")
             ComposeTabDrawerRobot(composeTestRule).interact()
             return Transition(composeTestRule)
         }
 
         fun toggleToPrivateTabs(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            Log.i(TAG, "toggleToPrivateTabs: Trying to click the private browsing button")
             composeTestRule.privateBrowsingButton().performClick()
-            Log.i(TAG, "toggleToPrivateTabs: Clicked private browsing button")
+            Log.i(TAG, "toggleToPrivateTabs: Clicked the private browsing button")
             ComposeTabDrawerRobot(composeTestRule).interact()
             return Transition(composeTestRule)
         }
 
         fun toggleToSyncedTabs(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            Log.i(TAG, "toggleToSyncedTabs: Trying to click the synced tabs button")
             composeTestRule.syncedTabsButton().performClick()
-            Log.i(TAG, "toggleToSyncedTabs: Clicked synced tabs button")
+            Log.i(TAG, "toggleToSyncedTabs: Clicked the synced tabs button")
             ComposeTabDrawerRobot(composeTestRule).interact()
             return Transition(composeTestRule)
         }
 
         fun clickSignInToSyncButton(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
+            Log.i(TAG, "clickSignInToSyncButton: Trying to click the sign in to sync button and wait for $waitingTimeShort ms for a new window")
             itemContainingText(getStringResource(R.string.sync_sign_in))
-                .clickAndWaitForNewWindow(TestAssetHelper.waitingTimeShort)
-            Log.i(TAG, "clickSignInToSyncButton: Clicked sign in to sync button")
+                .clickAndWaitForNewWindow(waitingTimeShort)
+            Log.i(TAG, "clickSignInToSyncButton: Clicked the sign in to sync button and waited for $waitingTimeShort ms for a new window")
             SyncSignInRobot().interact()
             return SyncSignInRobot.Transition()
         }
 
         fun openThreeDotMenu(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            Log.i(TAG, "openThreeDotMenu: Trying to click the three dot button")
             composeTestRule.threeDotButton().performClick()
             Log.i(TAG, "openThreeDotMenu: Clicked three dot button")
             ComposeTabDrawerRobot(composeTestRule).interact()
@@ -396,37 +451,42 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         }
 
         fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            Log.i(TAG, "closeAllTabs: Trying to click the \"Close all tabs\" menu button")
             composeTestRule.dropdownMenuItemCloseAllTabs().performClick()
-            Log.i(TAG, "closeAllTabs: Clicked \"Close all tabs\" menu button")
+            Log.i(TAG, "closeAllTabs: Clicked the \"Close all tabs\" menu button")
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
 
         fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            composeTestRule.tabItem(title)
-                .performScrollTo()
-                .performClick()
-            Log.i(TAG, "openTab: Scrolled and clicked tab with title: $title")
+            Log.i(TAG, "openTab: Trying to scroll to tab with title: $title")
+            composeTestRule.tabItem(title).performScrollTo()
+            Log.i(TAG, "openTab: Scrolled to tab with title: $title")
+            Log.i(TAG, "openTab: Trying to click tab with title: $title")
+            composeTestRule.tabItem(title).performClick()
+            Log.i(TAG, "openTab: Clicked tab with title: $title")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun openPrivateTab(position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "openPrivateTab: Trying to click private tab at position: ${position + 1}")
             composeTestRule.privateTabsList()
                 .onChildren()[position]
                 .performClick()
-            Log.i(TAG, "openPrivateTab: Opened private tab at position: ${position + 1}")
+            Log.i(TAG, "openPrivateTab: Clicked private tab at position: ${position + 1}")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun openNormalTab(position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "openNormalTab: Trying to click tab at position: ${position + 1}")
             composeTestRule.normalTabsList()
                 .onChildren()[position]
                 .performClick()
-            Log.i(TAG, "openNormalTab: Opened tab at position: ${position + 1}")
+            Log.i(TAG, "openNormalTab: Clicked tab at position: ${position + 1}")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -435,8 +495,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         fun clickTopBar(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
             // The topBar contains other views.
             // Don't do the default click in the middle, rather click in some free space - top right.
+            Log.i(TAG, "clickTopBar: Trying to click the tabs tray top bar")
             Espresso.onView(ViewMatchers.withId(R.id.topBar)).clickAtLocationInView(GeneralLocation.TOP_RIGHT)
-            Log.i(TAG, "clickTopBar: Clicked tabs tray top bar")
+            Log.i(TAG, "clickTopBar: Clicked the tabs tray top bar")
             ComposeTabDrawerRobot(composeTestRule).interact()
             return Transition(composeTestRule)
         }
@@ -493,14 +554,16 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         }
 
         fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "closeTabDrawer: Trying to close the tabs tray by clicking the handle")
             composeTestRule.bannerHandle().performSemanticsAction(SemanticsActions.OnClick)
-            Log.i(TAG, "closeTabDrawer: Closed tabs tray clicking the handle")
+            Log.i(TAG, "closeTabDrawer: Closed the tabs tray by clicking the handle")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickSaveCollection(interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+            Log.i(TAG, "clickSaveCollection: Trying to click the collections button")
             composeTestRule.collectionsButton().performClick()
             Log.i(TAG, "clickSaveCollection: Clicked collections button")
 
@@ -509,8 +572,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         }
 
         fun clickShareAllTabsButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            Log.i(TAG, "clickShareAllTabsButton: Trying to click the \"Share all tabs\" menu button button")
             composeTestRule.dropdownMenuItemShareAllTabs().performClick()
-            Log.i(TAG, "clickShareAllTabsButton: Clicked \"Share all tabs\" menu button button")
+            Log.i(TAG, "clickShareAllTabsButton: Clicked the \"Share all tabs\" menu button button")
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
@@ -530,8 +594,9 @@ fun composeTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: Com
  * Clicks on the Collections button in the Tabs Tray banner and opens a transition in the [CollectionRobot].
  */
 private fun clickCollectionsButton(composeTestRule: HomeActivityComposeTestRule, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+    Log.i(TAG, "clickCollectionsButton: Trying to click the collections button")
     composeTestRule.collectionsButton().performClick()
-    Log.i(TAG, "clickCollectionsButton: Clicked collections button")
+    Log.i(TAG, "clickCollectionsButton: Clicked the collections button")
 
     CollectionRobot().interact()
     return CollectionRobot.Transition()
