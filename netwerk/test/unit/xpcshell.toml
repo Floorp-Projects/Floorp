@@ -471,6 +471,8 @@ run-sequentially = "http3server"
 
 ["test_cookie_ipv6.js"]
 
+["test_cookie_partitioned_attribute.js"]
+
 ["test_cookiejars.js"]
 
 ["test_cookiejars_safebrowsing.js"]

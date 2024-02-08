@@ -185,6 +185,10 @@ NS_IMETHODIMP Cookie::GetIsHttpOnly(bool* aHttpOnly) {
   *aHttpOnly = IsHttpOnly();
   return NS_OK;
 }
+NS_IMETHODIMP Cookie::GetIsPartitioned(bool* aPartitioned) {
+  *aPartitioned = IsPartitioned();
+  return NS_OK;
+}
 NS_IMETHODIMP Cookie::GetCreationTime(int64_t* aCreation) {
   *aCreation = CreationTime();
   return NS_OK;

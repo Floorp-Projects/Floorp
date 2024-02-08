@@ -158,4 +158,9 @@ interface nsICookie : nsISupports {
      * Bitmap of schemes.
      */
     readonly attribute nsICookie_schemeType schemeMap;
+
+    /**
+     * true if the cookie's OriginAttributes PartitionKey is NOT empty
+     */
+    readonly attribute boolean isPartitioned;
 };
