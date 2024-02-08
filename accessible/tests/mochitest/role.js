@@ -121,6 +121,7 @@ const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;
 const ROLE_SPINBUTTON = nsIAccessibleRole.ROLE_SPINBUTTON;
 const ROLE_STATICTEXT = nsIAccessibleRole.ROLE_STATICTEXT;
 const ROLE_STATUSBAR = nsIAccessibleRole.ROLE_STATUSBAR;
+const ROLE_STRONG = nsIAccessibleRole.ROLE_STRONG;
 const ROLE_SUBSCRIPT = nsIAccessibleRole.ROLE_SUBSCRIPT;
 const ROLE_SUGGESTION = nsIAccessibleRole.ROLE_SUGGESTION;
 const ROLE_SUPERSCRIPT = nsIAccessibleRole.ROLE_SUPERSCRIPT;

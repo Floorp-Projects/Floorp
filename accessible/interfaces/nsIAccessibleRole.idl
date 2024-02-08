@@ -790,4 +790,8 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_EMPHASIS = 135;
 
+  /**
+   * Represents content that is important, serious, or urgent.
+   */
+  const unsigned long ROLE_STRONG = 136;
 };
