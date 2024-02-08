@@ -327,7 +327,7 @@ void SetInCommunication(bool aInCommunication) {
 }
 
 bool InitPreferredSampleRate() {
-  StaticMutexAutoLock lock(sMutex);
+  sMutex.AssertCurrentThreadOwns();
   if (sPreferredSampleRate != 0) {
     return true;
   }
@@ -345,8 +345,11 @@ bool InitPreferredSampleRate() {
     return false;
   }
   uint32_t rate;
-  if (cubeb_get_preferred_sample_rate(handle->Context(), &rate) != CUBEB_OK) {
-    return false;
+  {
+    StaticMutexAutoUnlock unlock(sMutex);
+    if (cubeb_get_preferred_sample_rate(handle->Context(), &rate) != CUBEB_OK) {
+      return false;
+    }
   }
   sPreferredSampleRate = rate;
 #endif
@@ -355,6 +358,7 @@ bool InitPreferredSampleRate() {
 }
 
 uint32_t PreferredSampleRate(bool aShouldResistFingerprinting) {
+  StaticMutexAutoLock lock(sMutex);
   if (sCubebForcedSampleRate) {
     return sCubebForcedSampleRate;
   }
@@ -558,15 +562,18 @@ RefPtr<CubebHandle> GetCubebUnlocked() {
 }
 
 void ReportCubebBackendUsed() {
-  StaticMutexAutoLock lock(sMutex);
+  RefPtr<CubebHandle> handle;
+  {
+    StaticMutexAutoLock lock(sMutex);
+    sAudioStreamInitEverSucceeded = true;
+    handle = sCubebHandle;
+  }
 
-  sAudioStreamInitEverSucceeded = true;
-
-  MOZ_RELEASE_ASSERT(sCubebHandle.get());
+  MOZ_RELEASE_ASSERT(handle.get());
 
   LABELS_MEDIA_AUDIO_BACKEND label = LABELS_MEDIA_AUDIO_BACKEND::unknown;
   auto backend = kTelemetryBackendLabel.find(
-      cubeb_get_backend_id(sCubebHandle->Context()));
+      cubeb_get_backend_id(handle->Context()));
   if (backend != kTelemetryBackendLabel.end()) {
     label = backend->second;
   }
@@ -620,8 +627,15 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
     return sCubebMTGLatencyInFrames;  // default 512
   }
   uint32_t latency_frames = 0;
-  if (cubeb_get_min_latency(handle->Context(), params, &latency_frames) !=
-      CUBEB_OK) {
+  int cubeb_result = CUBEB_OK;
+
+  {
+    StaticMutexAutoUnlock unlock(sMutex);
+    cubeb_result =
+        cubeb_get_min_latency(handle->Context(), params, &latency_frames);
+  }
+
+  if (cubeb_result != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return sCubebMTGLatencyInFrames;  // default 512
   }
@@ -682,18 +696,22 @@ void ShutdownLibrary() {
   Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
 
-  StaticMutexAutoLock lock(sMutex);
   cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
-  if (sCubebHandle) {
-    nsrefcnt count = sCubebHandle.forget().take()->Release();
-    MOZ_RELEASE_ASSERT(!count,
-                       "ShutdownLibrary should be releasing the last reference "
-                       "to the cubeb ctx!");
-  }
+  RefPtr<CubebHandle> trash;
+  StaticMutexAutoLock lock(sMutex);
+  trash = sCubebHandle.forget();
   sBrandName = nullptr;
   sCubebBackendName = nullptr;
   // This will ensure we don't try to re-create a context.
   sCubebState = CubebState::Shutdown;
+
+  if (trash) {
+    StaticMutexAutoUnlock unlock(sMutex);
+    nsrefcnt count = trash.forget().take()->Release();
+    MOZ_RELEASE_ASSERT(!count,
+                       "ShutdownLibrary should be releasing the last reference "
+                       "to the cubeb ctx!");
+  }
 
 #ifdef MOZ_CUBEB_REMOTING
   sIPCConnection = nullptr;
