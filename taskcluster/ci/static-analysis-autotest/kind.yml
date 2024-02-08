@@ -97,4 +97,5 @@ jobs:
                 - win64-dump_syms
                 - win64-winchecksec
                 - vs
+                - windows-rs
                 - sysroot-wasm32-wasi
