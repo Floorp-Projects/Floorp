@@ -509,6 +509,7 @@ if (!build_with_chromium) {
 
     deps = [
       "api:create_peerconnection_factory",
+      "api:enable_media",
       "api:libjingle_peerconnection_api",
       "api:rtc_error",
       "api:transport_api",
