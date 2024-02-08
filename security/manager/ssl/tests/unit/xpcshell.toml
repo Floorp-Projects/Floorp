@@ -195,6 +195,9 @@ skip-if = ["os != 'win'"]
 tags = "blocklist psm"
 run-sequentially = "hardcoded ports"
 
+["test_faulty_server.js"]
+run-sequentially = "hardcoded ports"
+
 ["test_forget_about_site_security_headers.js"]
 
 ["test_hash_algorithms.js"]
