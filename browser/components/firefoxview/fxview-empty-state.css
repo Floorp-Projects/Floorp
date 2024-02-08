@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/design-system/text-and-typography.css");
+
 [slot="main"] {
   display: flex;
   gap: 40px;
@@ -43,8 +45,6 @@
 
 .header {
   margin-block: 0;
-  font-size: 1.46rem;
-  font-weight: 300;
   align-items: center;
   gap: 8px;
 

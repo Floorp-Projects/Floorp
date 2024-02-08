@@ -9,7 +9,7 @@
 
 h1,
 .heading-large {
-  font-weight: var(--font-weight-light, var(--font-weight-bold));
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xlarge);
 }
 

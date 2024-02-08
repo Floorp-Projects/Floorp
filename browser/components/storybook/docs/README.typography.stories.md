@@ -30,7 +30,7 @@ We also don't specify line height units and rely on the default.
         <code>2.2rem</code> (<code>33px</code>)
       </td>
       <td>
-        <code>300</code>
+        <code>600</code>
       </td>
     </tr>
     <tr>
@@ -45,7 +45,7 @@ We also don't specify line height units and rely on the default.
         <code>1.467rem</code> (<code>22px</code>)
       </td>
       <td>
-        <code>300</code>
+        <code>600</code>
       </td>
     </tr>
     <tr>
@@ -249,21 +249,10 @@ Type setting relies on design tokens for font size and font weight.
   <tbody>
     <tr>
       <th>
-        <code>--font-weight-light</code>
-      </th>
-      <td>
-        <code>300</code>
-      </td>
-      <td>
-        <code>unset</code>
-      </td>
-    </tr>
-    <tr>
-      <th>
         <code>--font-weight-default</code>
       </th>
       <td>
-        <code>400</code>
+        <code>normal</code>
       </td>
       <td>
         <code>normal</code>
@@ -315,7 +304,7 @@ This file is imported into `common-shared.css` and `global-shared.css` so that b
 ```css story
 h1,
 .heading-large {
-  font-weight: var(--font-weight-light, var(--font-weight-bold));
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xlarge);
 }
 ```

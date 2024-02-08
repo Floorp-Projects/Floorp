@@ -12,9 +12,6 @@
   --font-size-large: 1.133rem;  /* 17px */
   --font-size-xlarge: 1.467rem; /* 22px */
   --font-size-xxlarge: 2.2rem;  /* 33px */
-
-  /** Font weight **/
-  --font-weight-light: 300;
 }
 
 @media not (prefers-contrast) {

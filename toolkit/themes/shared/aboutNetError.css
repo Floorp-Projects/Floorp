@@ -48,11 +48,6 @@ body.clockSkewError .title {
   background-repeat: no-repeat;
 }
 
-.title-text {
-  font-weight: 300;
-  line-height: 1.2;
-}
-
 /* Pressing the retry button will cause the cursor to flicker from a pointer to
  * not-allowed. Override the disabled cursor behaviour since we will never show
  * the button disabled as the initial state. */

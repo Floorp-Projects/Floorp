@@ -31,9 +31,6 @@
     --font-size-xlarge: unset;
     --font-size-xxlarge: unset;
 
-    /** Font weight **/
-    --font-weight-light: unset;
-
     /** Link **/
     --link-color: LinkText;
     --link-color-hover: LinkText;

@@ -721,7 +721,6 @@ menupopup::part(drop-indicator) {
 
   &[data-notification-category="addon_recommendation"] {
     .popup-notification-description > b {
-      font-weight: 300;
       padding-inline-start: 5px;
     }
 

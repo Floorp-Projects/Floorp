@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/design-system/text-and-typography.css");
+
 :host {
   background-image: url("chrome://global/skin/illustrations/error-malformed-url.svg");
   min-height: 300px;
@@ -18,10 +20,4 @@
 
 :host(:dir(rtl)) {
   background-position-x: right;
-}
-
-h1 {
-  text-align: center;
-  font-size: 2.5em;
-  font-weight: lighter;
 }

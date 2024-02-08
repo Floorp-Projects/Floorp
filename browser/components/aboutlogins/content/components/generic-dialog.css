@@ -40,7 +40,6 @@
 
 ::slotted([slot="dialog-title"]) {
   font-size: 2.2em;
-  font-weight: 300;
   user-select: none;
   margin: 0;
 }
