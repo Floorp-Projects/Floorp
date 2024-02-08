@@ -840,6 +840,23 @@ networking:
       - regular
       - private
 
+  http_response_version:
+    type: labeled_counter
+    description: >
+      HTTP protocol version used on response from nsHttp.h
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876776
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1876776#c2
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+    labels:
+      - unknown
+      - http_1
+      - http_2
+      - http_3
+
   https_rr_presented:
     type: labeled_counter
     description: >
