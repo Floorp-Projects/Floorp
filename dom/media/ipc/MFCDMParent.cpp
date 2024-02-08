@@ -647,6 +647,19 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
   return support;
 }
 
+static nsresult IsHDCPVersionSupported(
+    ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
+    const nsString& aKeySystem, const dom::HDCPVersion& aMinHdcpVersion) {
+  nsresult rv = NS_OK;
+  // Codec doesn't matter when querying the HDCP policy, so use H264.
+  if (!FactorySupports(aFactory, aKeySystem, nsCString("avc1"),
+                       KeySystemConfig::EMECodecString(""),
+                       GetHdcpPolicy(aMinHdcpVersion))) {
+    rv = NS_ERROR_DOM_MEDIA_CDM_HDCP_NOT_SUPPORT;
+  }
+  return rv;
+}
+
 static bool IsKeySystemHWSecure(
     const nsAString& aKeySystem,
     const nsTArray<MFCDMMediaCapability>& aCapabilities) {
@@ -913,6 +926,11 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     }
   }
 
+  if (IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
+      NS_OK) {
+    aCapabilitiesOut.isHDCP22Compatible() = true;
+  }
+
   // TODO: don't hardcode
   aCapabilitiesOut.initDataTypes().AppendElement(u"keyids");
   aCapabilitiesOut.initDataTypes().AppendElement(u"cenc");
@@ -1107,18 +1125,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
     const dom::HDCPVersion& aMinHdcpVersion,
     GetStatusForPolicyResolver&& aResolver) {
   MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
-  nsresult rv = NS_OK;
-
-  // Codec doesn't matter when querying the HDCP policy, so use H264.
-  if (!FactorySupports(mFactory, mKeySystem, nsCString("avc1"),
-                       KeySystemConfig::EMECodecString(""),
-                       GetHdcpPolicy(aMinHdcpVersion))) {
-    rv = NS_ERROR_DOM_MEDIA_CDM_HDCP_NOT_SUPPORT;
-  }
-  MFCDM_PARENT_LOG("Get status for HDCP policy %s : %s",
-                   dom::HDCPVersionValues::GetString(aMinHdcpVersion).data(),
-                   rv == NS_OK ? "usable" : "output-restricted");
-  aResolver(rv);
+  aResolver(IsHDCPVersionSupported(mFactory, mKeySystem, aMinHdcpVersion));
   return IPC_OK();
 }
 

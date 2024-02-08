@@ -57,6 +57,7 @@ struct MFCDMCapabilitiesIPDL {
   CryptoScheme[] encryptionSchemes;
   Requirement distinctiveID;
   Requirement persistentState;
+  bool isHDCP22Compatible;
 };
 
 union MFCDMCapabilitiesResult {
