@@ -9,6 +9,7 @@ devtools/client/jsonview/lib/require.js
 devtools/client/shared/build/babel.js
 devtools/client/shared/source-map/
 devtools/client/shared/sourceeditor/codemirror/
+devtools/client/shared/sourceeditor/codemirror6/
 devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
 devtools/client/shared/sourceeditor/test/codemirror/
 devtools/client/shared/vendor/

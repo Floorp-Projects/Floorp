@@ -3,7 +3,28 @@ is a JavaScript component that provides a code editor in the browser. When
 a mode is available for the language you are coding in, it will color your
 code, and optionally help with indentation.
 
-# Upgrade
+# CodeMirror 6
+
+We're currently migrating to CodeMirror 6, which means we have bundle for version 6 _and_ 5,
+until we successfully migrated all consumers to CodeMirror 6.
+
+For version 6, we're generating a bundle (codemirror6/codemirror6.bundle.js) using rollup.
+The entry point for the bundle is codemirror6/index.mjs, where we export all the classes
+and functions that the editor needs. When adding new exported item, the bundle needs to
+be updated, which can be done by running:
+ > cd devtools/client/shared/sourceeditor
+ > npm install
+ > npm run build-cm6
+
+This will produced a minified bundle, which might not be ideal if you're debugging an issue or profiling.
+You can get an unminified bundle by running:
+> npm run build-cm6-unminified
+
+The generated bundle can be configurated in rollup.config.mjs.
+
+# CodeMirror 5
+
+## CodeMirror 5 Upgrade
 
 Currently used version is 5.58.1. To upgrade: download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
@@ -41,18 +62,18 @@ The sourceeditor component contains imported CodeMirror tests [3].
 Other than that, we don't have any Mozilla-specific patches applied to
 CodeMirror itself.
 
-# Addons
+## Addons
 
-To install a new CodeMirror addon add it to the codemirror directory,
+To install a new CodeMirror 5 addon add it to the codemirror directory,
 jar.mn [4] file and editor.js [5]. Also, add it to the License section
 below.
 
-# License
+## License
 
 The following files in this directory and devtools/client/shared/sourceeditor/test/codemirror/
 are licensed according to the contents in the LICENSE file.
 
-# Localization patches
+## Localization patches
 
 diff --git a/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js b/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js
 --- a/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js
