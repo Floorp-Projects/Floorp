@@ -22,6 +22,7 @@ import mozilla.components.feature.addons.ui.updatedAtDate
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentAddOnDetailsBinding
+import org.mozilla.fenix.ext.addUnderline
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -70,6 +71,7 @@ class AddonDetailsBindingDelegate(
 
             if (addon.ratingUrl.isNotBlank()) {
                 binding.reviewCount.setTextColor(binding.root.context.getColorFromAttr(R.attr.textAccent))
+                binding.reviewCount.addUnderline()
                 binding.reviewCount.setOnClickListener {
                     interactor.openWebsite(addon.ratingUrl.toUri())
                 }
@@ -85,6 +87,7 @@ class AddonDetailsBindingDelegate(
             return
         }
 
+        binding.homePageLabel.addUnderline()
         binding.homePageLabel.setOnClickListener {
             interactor.openWebsite(addon.homepageUrl.toUri())
         }
@@ -134,6 +137,7 @@ class AddonDetailsBindingDelegate(
 
         if (author.url.isNotBlank()) {
             binding.authorText.setTextColor(binding.root.context.getColorFromAttr(R.attr.textAccent))
+            binding.authorText.addUnderline()
             binding.authorText.setOnClickListener {
                 interactor.openWebsite(author.url.toUri())
             }
@@ -181,6 +185,7 @@ class AddonDetailsBindingDelegate(
             return
         }
 
+        binding.detailUrl.addUnderline()
         binding.detailUrl.setOnClickListener {
             interactor.openWebsite(addon.detailUrl.toUri())
         }

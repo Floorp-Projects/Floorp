@@ -85,7 +85,7 @@ class AddonDetailsBindingDelegateTest {
                 ratingUrl = "https://example.org/",
             ),
         )
-        assertEquals("100", binding.reviewCount.text)
+        assertEquals("100", binding.reviewCount.text.toString())
 
         binding.reviewCount.performClick()
 
@@ -163,7 +163,7 @@ class AddonDetailsBindingDelegateTest {
             baseAddon.copy(author = Addon.Author(name = "Sarah Jane", url = "https://example.org/")),
         )
 
-        assertEquals("Sarah Jane", binding.authorText.text)
+        assertEquals("Sarah Jane", binding.authorText.text.toString())
         assertEquals(testContext.getColorFromAttr(R.attr.textAccent), binding.authorText.currentTextColor)
 
         binding.authorText.performClick()
