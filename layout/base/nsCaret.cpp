@@ -413,7 +413,7 @@ void nsCaret::SchedulePaint(Selection* aSelection) {
   nsIFrame* frame = GetFrameAndOffset(selection, mOverrideContent,
                                       mOverrideOffset, &frameOffset);
   if (!frame) {
-    SetLastCaretFrame(nullptr);
+    mLastCaretFrame = nullptr;
     return;
   }
 
@@ -421,7 +421,7 @@ void nsCaret::SchedulePaint(Selection* aSelection) {
     frame = cb;
   }
 
-  SetLastCaretFrame(frame);
+  mLastCaretFrame = frame;
   frame->SchedulePaint();
 }
 

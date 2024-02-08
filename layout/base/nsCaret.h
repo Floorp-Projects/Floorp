@@ -197,10 +197,6 @@ class nsCaret final : public nsISelectionListener {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  void SetLastCaretFrame(nsIFrame* aLastCaretFrame) {
-    mLastCaretFrame = aLastCaretFrame;
-  }
-
  protected:
   static void CaretBlinkCallback(nsITimer* aTimer, void* aClosure);
 
