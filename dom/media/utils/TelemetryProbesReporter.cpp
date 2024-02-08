@@ -12,7 +12,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -436,8 +435,22 @@ void TelemetryProbesReporter::ReportResultForVideo() {
 
   // Keyed by audio+video or video alone, and by a resolution range.
   const MediaInfo& info = mOwner->GetMediaInfo();
-  nsCString key;
-  DetermineResolutionForTelemetry(info, key);
+  nsCString key(info.HasAudio() ? "AV," : "V,");
+  static const struct {
+    int32_t mH;
+    const char* mRes;
+  } sResolutions[] = {{240, "0<h<=240"},     {480, "240<h<=480"},
+                      {576, "480<h<=576"},   {720, "576<h<=720"},
+                      {1080, "720<h<=1080"}, {2160, "1080<h<=2160"}};
+  const char* resolution = "h>2160";
+  int32_t height = info.mVideo.mDisplay.height;
+  for (const auto& res : sResolutions) {
+    if (height <= res.mH) {
+      resolution = res.mRes;
+      break;
+    }
+  }
+  key.AppendASCII(resolution);
 
   auto visiblePlayTimeS = totalVideoPlayTimeS - invisiblePlayTimeS;
   LOG("VIDEO_VISIBLE_PLAY_TIME = %f, keys: '%s' and 'All'", visiblePlayTimeS,
@@ -468,55 +481,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
       videoDecodeSuspendPercentage, key.get());
 
   ReportResultForVideoFrameStatistics(totalVideoPlayTimeS, key);
-#ifdef MOZ_WMF_CDM
-  if (mOwner->IsUsingWMFCDM()) {
-    ReportResultForMFCDMPlaybackIfNeeded(totalVideoPlayTimeS, key);
-  }
-#endif
 }
-
-#ifdef MOZ_WMF_CDM
-void TelemetryProbesReporter::ReportResultForMFCDMPlaybackIfNeeded(
-    double aTotalPlayTimeS, const nsCString& aResolution) {
-  const auto keySystem = mOwner->GetKeySystem();
-  if (!keySystem) {
-    NS_WARNING("Can not find key system to report telemetry for MFCDM!!");
-    return;
-  }
-  glean::mfcdm::EmePlaybackExtra extraData;
-  extraData.keySystem = Some(NS_ConvertUTF16toUTF8(*keySystem));
-  extraData.videoCodec = Some(mOwner->GetMediaInfo().mVideo.mMimeType);
-  extraData.resolution = Some(aResolution);
-  extraData.playedTime = Some(aTotalPlayTimeS);
-
-  Maybe<uint64_t> renderedFrames;
-  Maybe<uint64_t> droppedFrames;
-  if (auto* stats = mOwner->GetFrameStatistics()) {
-    renderedFrames = Some(stats->GetPresentedFrames());
-    droppedFrames = Some(stats->GetDroppedFrames());
-    extraData.renderedFrames = Some(*renderedFrames);
-    extraData.droppedFrames = Some(*droppedFrames);
-  }
-  if (MOZ_LOG_TEST(gTelemetryProbesReporterLog, LogLevel::Debug)) {
-    nsPrintfCString logMessage{
-        "MFCDM EME_Playback event, keySystem=%s, videoCodec=%s, resolution=%s, "
-        "playedTime=%s",
-        NS_ConvertUTF16toUTF8(*keySystem).get(),
-        mOwner->GetMediaInfo().mVideo.mMimeType.get(), aResolution.get(),
-        std::to_string(aTotalPlayTimeS).c_str()};
-    if (renderedFrames) {
-      logMessage.Append(
-          nsPrintfCString{", renderedFrames=%" PRIu64, *renderedFrames});
-    }
-    if (droppedFrames) {
-      logMessage.Append(
-          nsPrintfCString{", droppedFrames=%" PRIu64, *droppedFrames});
-    }
-    LOG("%s", logMessage.get());
-  }
-  glean::mfcdm::eme_playback.Record(Some(extraData));
-}
-#endif
 
 void TelemetryProbesReporter::ReportResultForAudio() {
   // Don't record telemetry for a media that didn't have a valid audio or video

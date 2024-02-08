@@ -291,8 +291,6 @@ class ExternalEngineStateMachine final
 
   void RecoverFromCDMProcessCrashIfNeeded();
 
-  void ReportTelemetry(const MediaResult& aError);
-
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
   bool mHasEnoughAudio = false;
@@ -306,9 +304,6 @@ class ExternalEngineStateMachine final
 
   // It would be zero for audio-only playback.
   gfx::IntSize mVideoDisplay;
-
-  // It would be set if playback is encrypted.
-  nsCString mKeySystem;
 };
 
 class ExternalPlaybackEngine {
