@@ -42,6 +42,45 @@ const kExpectedRequestsOfLoadStylesheet = [
     },
 ];
 
+const kExpectedRequestsOfLoadStylesheetDisabled = [
+    {   fileNameAndSuffix: "dummy.css?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?5",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?6",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?7",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?8",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?9",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?10",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?11",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.css?12",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+];
+
 const kExpectedRequestsOfLinkPreloadFont = [
     {   fileNameAndSuffix: "dummy.font?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
@@ -357,6 +396,9 @@ export const kTestData = [
 ];
 
 export const kTestDataDisabled = [
+    {   testFileName: "link-initial-load-stylesheet.h2.html",
+        expectedRequests: kExpectedRequestsOfLoadStylesheetDisabled
+    },
     {   testFileName: "link-initial-preload-font.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
     },
@@ -378,6 +420,9 @@ export const kTestDataDisabled = [
     {   testFileName: "link-initial-preload-image.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
     },
+    {   testFileName: "link-dynamic-load-stylesheet.h2.html",
+        expectedRequests: kExpectedRequestsOfLoadStylesheetDisabled
+    },
     {   testFileName: "link-dynamic-prefetch.h2.html",
         expectedRequests: kExpectedRequestsOfPrefetchDisabled
     },
@@ -398,6 +443,9 @@ export const kTestDataDisabled = [
     },
     {   testFileName: "link-dynamic-preload-image.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderLinksToStylesheets,
+        expectedRequests: kExpectedRequestsOfLoadStylesheetDisabled
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPrefetchLinks,
         expectedRequests: kExpectedRequestsOfPrefetchDisabled
