@@ -249,10 +249,11 @@ class PannerNodeEngine final : public AudioNodeEngine {
   // later, via a MediaTrackGraph ControlMessage.
   UniquePtr<HRTFPanner> mHRTFPanner;
   RefPtr<AudioListenerEngine> mListenerEngine;
-  typedef void (PannerNodeEngine::*PanningModelFunction)(
-      const AudioBlock& aInput, AudioBlock* aOutput, TrackTime tick);
+  using PanningModelFunction = void (PannerNodeEngine::*)(const AudioBlock&,
+                                                          AudioBlock*,
+                                                          TrackTime);
   PanningModelFunction mPanningModelFunction;
-  typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
+  using DistanceModelFunction = float (PannerNodeEngine::*)(double);
   DistanceModelFunction mDistanceModelFunction;
   AudioParamTimeline mPositionX;
   AudioParamTimeline mPositionY;
@@ -399,10 +400,12 @@ JSObject* PannerNode::WrapObject(JSContext* aCx,
 
 // Those three functions are described in the spec.
 float PannerNodeEngine::LinearGainFunction(double aDistance) {
-  return 1 - mRolloffFactor *
-                 (std::max(std::min(aDistance, mMaxDistance), mRefDistance) -
-                  mRefDistance) /
-                 (mMaxDistance - mRefDistance);
+  double clampedRollof = std::clamp(mRolloffFactor, 0.0, 1.0);
+  return AssertedCast<float>(
+      1.0 - clampedRollof *
+                (std::max(std::min(aDistance, mMaxDistance), mRefDistance) -
+                 mRefDistance) /
+                (mMaxDistance - mRefDistance));
 }
 
 float PannerNodeEngine::InverseGainFunction(double aDistance) {
