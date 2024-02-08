@@ -204,7 +204,7 @@ class SettingsSubMenuAddonsManagerRobot {
     private fun installButtonForAddon(addonName: String) =
         onView(
             allOf(
-                withContentDescription(R.string.mozac_feature_addons_install_addon_content_description),
+                withContentDescription("Install $addonName"),
                 isDescendantOfA(withId(R.id.add_on_item)),
                 hasSibling(hasDescendant(withText(addonName))),
             ),
