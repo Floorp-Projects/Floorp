@@ -280,7 +280,7 @@ export class FfiConverterString extends FfiConverter {
 }
 
 export class CustomTypesDemo {
-    constructor({ url, handle } = {}) {
+    constructor(url,handle) {
         try {
             FfiConverterTypeUrl.checkType(url)
         } catch (e) {
@@ -311,10 +311,10 @@ export class CustomTypesDemo {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeCustomTypesDemo extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new CustomTypesDemo({
-            url: FfiConverterTypeUrl.read(dataStream),
-            handle: FfiConverterTypeHandle.read(dataStream),
-        });
+        return new CustomTypesDemo(
+            FfiConverterTypeUrl.read(dataStream), 
+            FfiConverterTypeHandle.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterTypeUrl.write(dataStream, value.url);
@@ -330,9 +330,6 @@ export class FfiConverterTypeCustomTypesDemo extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof CustomTypesDemo)) {
-            throw new TypeError(`Expected 'CustomTypesDemo', found '${typeof value}'`);
-        }
         try {
             FfiConverterTypeUrl.checkType(value.url);
         } catch (e) {

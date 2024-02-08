@@ -788,7 +788,7 @@ export class FfiConverterTypeTabsStore extends FfiConverter {
 }
 
 export class ClientRemoteTabs {
-    constructor({ clientId, clientName, deviceType, lastModified, remoteTabs } = {}) {
+    constructor(clientId,clientName,deviceType,lastModified,remoteTabs) {
         try {
             FfiConverterString.checkType(clientId)
         } catch (e) {
@@ -849,13 +849,13 @@ export class ClientRemoteTabs {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeClientRemoteTabs extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new ClientRemoteTabs({
-            clientId: FfiConverterString.read(dataStream),
-            clientName: FfiConverterString.read(dataStream),
-            deviceType: FfiConverterTypeDeviceType.read(dataStream),
-            lastModified: FfiConverterI64.read(dataStream),
-            remoteTabs: FfiConverterSequenceTypeRemoteTabRecord.read(dataStream),
-        });
+        return new ClientRemoteTabs(
+            FfiConverterString.read(dataStream), 
+            FfiConverterString.read(dataStream), 
+            FfiConverterTypeDeviceType.read(dataStream), 
+            FfiConverterI64.read(dataStream), 
+            FfiConverterSequenceTypeRemoteTabRecord.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.clientId);
@@ -877,9 +877,6 @@ export class FfiConverterTypeClientRemoteTabs extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof ClientRemoteTabs)) {
-            throw new TypeError(`Expected 'ClientRemoteTabs', found '${typeof value}'`);
-        }
         try {
             FfiConverterString.checkType(value.clientId);
         } catch (e) {
@@ -924,7 +921,7 @@ export class FfiConverterTypeClientRemoteTabs extends FfiConverterArrayBuffer {
 }
 
 export class RemoteTabRecord {
-    constructor({ title, urlHistory, icon, lastUsed, inactive = false } = {}) {
+    constructor(title,urlHistory,icon,lastUsed,inactive = false) {
         try {
             FfiConverterString.checkType(title)
         } catch (e) {
@@ -985,13 +982,13 @@ export class RemoteTabRecord {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new RemoteTabRecord({
-            title: FfiConverterString.read(dataStream),
-            urlHistory: FfiConverterSequencestring.read(dataStream),
-            icon: FfiConverterOptionalstring.read(dataStream),
-            lastUsed: FfiConverterI64.read(dataStream),
-            inactive: FfiConverterBool.read(dataStream),
-        });
+        return new RemoteTabRecord(
+            FfiConverterString.read(dataStream), 
+            FfiConverterSequencestring.read(dataStream), 
+            FfiConverterOptionalstring.read(dataStream), 
+            FfiConverterI64.read(dataStream), 
+            FfiConverterBool.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.title);
@@ -1013,9 +1010,6 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof RemoteTabRecord)) {
-            throw new TypeError(`Expected 'RemoteTabRecord', found '${typeof value}'`);
-        }
         try {
             FfiConverterString.checkType(value.title);
         } catch (e) {

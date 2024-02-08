@@ -556,7 +556,7 @@ export class FfiConverterTypeTodoList extends FfiConverter {
 }
 
 export class TodoEntry {
-    constructor({ text } = {}) {
+    constructor(text) {
         try {
             FfiConverterString.checkType(text)
         } catch (e) {
@@ -577,9 +577,9 @@ export class TodoEntry {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeTodoEntry extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new TodoEntry({
-            text: FfiConverterString.read(dataStream),
-        });
+        return new TodoEntry(
+            FfiConverterString.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.text);
@@ -593,9 +593,6 @@ export class FfiConverterTypeTodoEntry extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof TodoEntry)) {
-            throw new TypeError(`Expected 'TodoEntry', found '${typeof value}'`);
-        }
         try {
             FfiConverterString.checkType(value.text);
         } catch (e) {

@@ -30,7 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
   TabsStore: "resource://gre/modules/RustTabs.sys.mjs",
-  RemoteTabRecord: "resource://gre/modules/RustTabs.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -76,7 +75,8 @@ TabEngine.prototype = {
       tabs.map(tab => {
         // rust wants lastUsed in MS but the provider gives it in seconds
         tab.lastUsed = tab.lastUsed * 1000;
-        return new lazy.RemoteTabRecord(tab);
+        tab.inactive = false;
+        return tab;
       })
     );
 
@@ -411,12 +411,13 @@ export const TabProvider = {
         continue;
       }
 
-      let thisTab = new lazy.RemoteTabRecord({
+      let thisTab = {
         title: tab.linkedBrowser.contentTitle || "",
         urlHistory: [url],
         icon: "",
+        inactive: false,
         lastUsed: Math.floor((tab.lastAccessed || 0) / 1000),
-      });
+      };
       tabRecords.push(thisTab);
 
       // we don't want to wait for each favicon to resolve to get the bytes
