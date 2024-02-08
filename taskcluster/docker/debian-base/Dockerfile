@@ -38,7 +38,6 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       mercurial \
       patch \
       python3 \
-      python3-distutils-extra \
       python3-minimal \
       python3-zstandard \
       python3-psutil \

@@ -40,7 +40,6 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       python3.8 \
       python3.8-dev \
       python3.8-venv \
-      python3-distutils-extra \
       python3-minimal \
       python3-zstandard \
       python3-psutil \
