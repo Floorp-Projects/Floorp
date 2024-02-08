@@ -63,6 +63,9 @@ class MFCDMChild final : public PMFCDMChild {
   RefPtr<GenericPromise> SetServerCertificate(uint32_t aPromiseId,
                                               nsTArray<uint8_t>& aCert);
 
+  RefPtr<GenericPromise> GetStatusForPolicy(
+      uint32_t aPromiseId, const dom::HDCPVersion& aMinHdcpVersion);
+
   mozilla::ipc::IPCResult RecvOnSessionKeyMessage(
       const MFCDMKeyMessage& aMessage);
   mozilla::ipc::IPCResult RecvOnSessionKeyStatusesChanged(
