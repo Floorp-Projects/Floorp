@@ -147,7 +147,11 @@ export const ProtonScreenActionButtons = props => {
         </div>
       ) : null}
       {content.secondary_button ? (
-        <SecondaryCTA content={content} handleAction={props.handleAction} />
+        <SecondaryCTA
+          content={content}
+          handleAction={props.handleAction}
+          activeMultiSelect={activeMultiSelect}
+        />
       ) : null}
     </div>
   );
