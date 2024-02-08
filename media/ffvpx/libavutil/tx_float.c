@@ -16,17 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_X86_FFT_H
-#define AVCODEC_X86_FFT_H
-
-#include "libavcodec/fft.h"
-
-void ff_fft_permute_sse(FFTContext *s, FFTComplex *z);
-void ff_fft_calc_avx(FFTContext *s, FFTComplex *z);
-void ff_fft_calc_sse(FFTContext *s, FFTComplex *z);
-
-void ff_imdct_calc_sse(FFTContext *s, FFTSample *output, const FFTSample *input);
-void ff_imdct_half_sse(FFTContext *s, FFTSample *output, const FFTSample *input);
-void ff_imdct_half_avx(FFTContext *s, FFTSample *output, const FFTSample *input);
-
-#endif /* AVCODEC_X86_FFT_H */
+#define TX_FLOAT
+#include "tx_priv.h"
+#include "tx_template.c"

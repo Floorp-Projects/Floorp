@@ -29,20 +29,13 @@
 #include "libavutil/pixfmt.h"
 
 #include "codec_id.h"
+#include "defs.h"
+#include "packet.h"
 
 /**
  * @addtogroup lavc_core
  * @{
  */
-
-enum AVFieldOrder {
-    AV_FIELD_UNKNOWN,
-    AV_FIELD_PROGRESSIVE,
-    AV_FIELD_TT,          ///< Top coded_first, top displayed first
-    AV_FIELD_BB,          ///< Bottom coded first, bottom displayed first
-    AV_FIELD_TB,          ///< Top coded first, bottom displayed first
-    AV_FIELD_BT,          ///< Bottom coded first, top displayed first
-};
 
 /**
  * This struct describes the properties of an encoded stream.
@@ -223,6 +216,19 @@ typedef struct AVCodecParameters {
      * when no higher-level timing information is available.
      */
     AVRational framerate;
+
+    /**
+     * Additional data associated with the entire stream.
+     *
+     * Should be allocated with av_packet_side_data_new() or
+     * av_packet_side_data_add(), and will be freed by avcodec_parameters_free().
+     */
+    AVPacketSideData *coded_side_data;
+
+    /**
+     * Amount of entries in @ref coded_side_data.
+     */
+    int nb_coded_side_data;
 } AVCodecParameters;
 
 /**

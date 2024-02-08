@@ -16,21 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "libavutil/attributes.h"
-#include "libavutil/cpu.h"
-#include "libavutil/x86/cpu.h"
-#include "libavcodec/dct.h"
-
-void ff_dct32_float_sse2(FFTSample *out, const FFTSample *in);
-void ff_dct32_float_avx(FFTSample *out, const FFTSample *in);
-
-av_cold void ff_dct_init_x86(DCTContext *s)
-{
-    int cpu_flags = av_get_cpu_flags();
-
-    if (EXTERNAL_SSE2(cpu_flags))
-        s->dct32 = ff_dct32_float_sse2;
-    if (EXTERNAL_AVX_FAST(cpu_flags))
-        s->dct32 = ff_dct32_float_avx;
-}
+#define TX_INT32
+#include "tx_priv.h"
+#include "tx_template.c"

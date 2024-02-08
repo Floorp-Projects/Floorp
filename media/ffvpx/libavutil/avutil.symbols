@@ -198,8 +198,8 @@ av_log_get_level
 av_log_set_callback
 av_log_set_flags
 av_log_set_level
-av_malloc
 av_mallocz
+av_malloc
 #ifndef MOZ_FFVPX_AUDIOONLY
 av_mastering_display_metadata_create_side_data
 #endif

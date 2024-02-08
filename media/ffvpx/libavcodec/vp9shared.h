@@ -64,13 +64,12 @@ typedef struct VP9mvrefPair {
 
 typedef struct VP9Frame {
     ThreadFrame tf;
-    AVBufferRef *extradata;
+    void *extradata;               ///< RefStruct reference
     uint8_t *segmentation_map;
     VP9mvrefPair *mv;
     int uses_2pass;
 
-    AVBufferRef *hwaccel_priv_buf;
-    void *hwaccel_picture_private;
+    void *hwaccel_picture_private; ///< RefStruct reference
 } VP9Frame;
 
 enum BlockLevel {

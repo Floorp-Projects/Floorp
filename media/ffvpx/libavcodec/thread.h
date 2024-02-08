@@ -52,6 +52,8 @@ void ff_thread_flush(AVCodecContext *avctx);
 int ff_thread_decode_frame(AVCodecContext *avctx, AVFrame *picture,
                            int *got_picture_ptr, AVPacket *avpkt);
 
+int ff_thread_can_start_frame(AVCodecContext *avctx);
+
 /**
  * If the codec defines update_thread_context(), call this
  * when they are ready for the next thread to start decoding
@@ -62,8 +64,6 @@ int ff_thread_decode_frame(AVCodecContext *avctx, AVFrame *picture,
  */
 void ff_thread_finish_setup(AVCodecContext *avctx);
 
-#define ff_thread_get_format ff_get_format
-
 /**
  * Wrapper around get_buffer() for frame-multithreaded codecs.
  * Call this function instead of ff_get_buffer(f).
@@ -73,19 +73,6 @@ void ff_thread_finish_setup(AVCodecContext *avctx);
  * @param f The frame to write into.
  */
 int ff_thread_get_buffer(AVCodecContext *avctx, AVFrame *f, int flags);
-
-/**
- * Wrapper around release_buffer() frame-for multithreaded codecs.
- * Call this function instead of avctx->release_buffer(f).
- * The AVFrame will be copied and the actual release_buffer() call
- * will be performed later. The contents of data pointed to by the
- * AVFrame should not be changed until ff_thread_get_buffer() is called
- * on it.
- *
- * @param avctx The current context.
- * @param f The picture being released.
- */
-void ff_thread_release_buffer(AVCodecContext *avctx, AVFrame *f);
 
 int ff_thread_init(AVCodecContext *s);
 int ff_slice_thread_execute_with_mainfunc(AVCodecContext *avctx,
