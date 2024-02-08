@@ -1024,7 +1024,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (rv != SECSuccess) {
     return;
   }
-  // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4, ecdh_hybrid=5
+  // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4, ecdh_hybrid=8
   Telemetry::Accumulate(infoObject->IsFullHandshake()
                             ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
                             : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,

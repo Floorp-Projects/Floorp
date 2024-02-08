@@ -115,6 +115,16 @@ class NSSSocketControl final : public CommonSocketControl {
     return mEchExtensionStatus;
   }
 
+  void WillSendXyberShare() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mSentXyberShare = true;
+  }
+
+  bool SentXyberShare() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mSentXyberShare;
+  }
+
   bool GetJoined() {
     COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     return mJoined;
@@ -285,6 +295,7 @@ class NSSSocketControl final : public CommonSocketControl {
   bool mIsFullHandshake;
   bool mNotedTimeUntilReady;
   EchExtensionStatus mEchExtensionStatus;  // Currently only used for telemetry.
+  bool mSentXyberShare;
 
   // True when SSL layer has indicated an "SSL short write", i.e. need
   // to call on send one or more times to push all pending data to write.

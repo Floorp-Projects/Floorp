@@ -444,6 +444,12 @@ bool retryDueToTLSIntolerance(PRErrorCode err, NSSSocketControl* socketInfo) {
     return true;
   }
 
+  if (!socketInfo->IsPreliminaryHandshakeDone() &&
+      socketInfo->SentXyberShare()) {
+    // Bug 1874963 - add a probe for Xyber error reason
+    return true;
+  }
+
   SSLVersionRange range = socketInfo->GetTLSVersionRange();
   nsSSLIOLayerHelpers& helpers = socketInfo->SharedState().IOLayerHelpers();
 
@@ -1448,6 +1454,7 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 2)) {
       return NS_ERROR_FAILURE;
     }
+    infoObject->WillSendXyberShare();
   } else {
     const SSLNamedGroup namedGroups[] = {
         ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
