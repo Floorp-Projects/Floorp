@@ -826,17 +826,20 @@ void Element::ScrollTo(const ScrollToOptions& aOptions) {
       aOptions.mLeft.WasPassed() ||
       (aOptions.mTop.WasPassed() && aOptions.mTop.Value() != 0.0);
 
+  nsIFrame* frame;
   nsIScrollableFrame* sf = GetScrollFrame(
-      nullptr, needsLayoutFlush ? FlushType::Layout : FlushType::Frames);
+      &frame, needsLayoutFlush ? FlushType::Layout : FlushType::Frames);
   if (!sf) {
     return;
   }
   CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
   if (aOptions.mLeft.WasPassed()) {
-    scrollPos.x = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
+    scrollPos.x = int32_t(mozilla::ToZeroIfNonfinite(
+        frame->Style()->EffectiveZoom().Zoom(aOptions.mLeft.Value())));
   }
   if (aOptions.mTop.WasPassed()) {
-    scrollPos.y = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
+    scrollPos.y = int32_t(mozilla::ToZeroIfNonfinite(
+        frame->Style()->EffectiveZoom().Zoom(aOptions.mTop.Value())));
   }
   ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
                               ? ScrollMode::SmoothMsd
@@ -852,18 +855,21 @@ void Element::ScrollBy(double aXScrollDif, double aYScrollDif) {
 }
 
 void Element::ScrollBy(const ScrollToOptions& aOptions) {
-  nsIScrollableFrame* sf = GetScrollFrame();
+  nsIFrame* frame;
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return;
   }
 
   CSSIntPoint scrollDelta;
   if (aOptions.mLeft.WasPassed()) {
-    scrollDelta.x = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value()));
+    scrollDelta.x = int32_t(mozilla::ToZeroIfNonfinite(
+        frame->Style()->EffectiveZoom().Zoom(aOptions.mLeft.Value())));
   }
 
   if (aOptions.mTop.WasPassed()) {
-    scrollDelta.y = int32_t(mozilla::ToZeroIfNonfinite(aOptions.mTop.Value()));
+    scrollDelta.y = int32_t(mozilla::ToZeroIfNonfinite(
+        frame->Style()->EffectiveZoom().Zoom(aOptions.mTop.Value())));
   }
 
   auto scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
@@ -899,11 +905,12 @@ void Element::MozScrollSnap() {
 }
 
 nsRect Element::GetScrollRange() {
-  nsIScrollableFrame* sf = GetScrollFrame();
+  nsIFrame* frame;
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return nsRect();
   }
-  return sf->GetScrollRange();
+  return frame->Style()->EffectiveZoom().Unzoom(sf->GetScrollRange());
 }
 
 int32_t Element::ScrollTopMin() {
@@ -952,15 +959,19 @@ nsSize Element::GetScrollSize() {
   } else {
     size = GetScrollRectSizeForOverflowVisibleFrame(frame);
   }
-  return size;
+  if (!frame) {
+    return size;
+  }
+  return frame->Style()->EffectiveZoom().Unzoom(size);
 }
 
 nsPoint Element::GetScrollOrigin() {
-  nsIScrollableFrame* sf = GetScrollFrame();
+  nsIFrame* frame;
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return nsPoint();
   }
-  return sf->GetScrollPosition();
+  return frame->Style()->EffectiveZoom().Unzoom(sf->GetScrollPosition());
 }
 
 int32_t Element::ScrollHeight() {
@@ -1008,7 +1019,7 @@ nsRect Element::GetClientAreaRect() {
     // The scroll port value might be expanded to the minimum scale size, we
     // should limit the size to the ICB in such cases.
     scrollPort.SizeTo(sf->GetLayoutSize());
-    return scrollPort;
+    return frame->Style()->EffectiveZoom().Unzoom(scrollPort);
   }
 
   if (frame &&
@@ -1018,7 +1029,8 @@ nsRect Element::GetClientAreaRect() {
       (!frame->StyleDisplay()->IsInlineFlow() || frame->IsReplaced())) {
     // Special case code to make client area work even when there isn't
     // a scroll view, see bug 180552, bug 227567.
-    return frame->GetPaddingRect() - frame->GetPositionIgnoringScrolling();
+    return frame->Style()->EffectiveZoom().Unzoom(
+        frame->GetPaddingRect() - frame->GetPositionIgnoringScrolling());
   }
 
   // SVG nodes reach here and just return 0
