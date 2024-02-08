@@ -466,7 +466,7 @@ export class FfiConverterTypeSprite extends FfiConverter {
 }
 
 export class Point {
-    constructor({ x, y } = {}) {
+    constructor(x,y) {
         try {
             FfiConverterF64.checkType(x)
         } catch (e) {
@@ -497,10 +497,10 @@ export class Point {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new Point({
-            x: FfiConverterF64.read(dataStream),
-            y: FfiConverterF64.read(dataStream),
-        });
+        return new Point(
+            FfiConverterF64.read(dataStream), 
+            FfiConverterF64.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterF64.write(dataStream, value.x);
@@ -516,9 +516,6 @@ export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof Point)) {
-            throw new TypeError(`Expected 'Point', found '${typeof value}'`);
-        }
         try {
             FfiConverterF64.checkType(value.x);
         } catch (e) {
@@ -539,7 +536,7 @@ export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
 }
 
 export class Vector {
-    constructor({ dx, dy } = {}) {
+    constructor(dx,dy) {
         try {
             FfiConverterF64.checkType(dx)
         } catch (e) {
@@ -570,10 +567,10 @@ export class Vector {
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeVector extends FfiConverterArrayBuffer {
     static read(dataStream) {
-        return new Vector({
-            dx: FfiConverterF64.read(dataStream),
-            dy: FfiConverterF64.read(dataStream),
-        });
+        return new Vector(
+            FfiConverterF64.read(dataStream), 
+            FfiConverterF64.read(dataStream)
+        );
     }
     static write(dataStream, value) {
         FfiConverterF64.write(dataStream, value.dx);
@@ -589,9 +586,6 @@ export class FfiConverterTypeVector extends FfiConverterArrayBuffer {
 
     static checkType(value) {
         super.checkType(value);
-        if (!(value instanceof Vector)) {
-            throw new TypeError(`Expected 'Vector', found '${typeof value}'`);
-        }
         try {
             FfiConverterF64.checkType(value.dx);
         } catch (e) {
