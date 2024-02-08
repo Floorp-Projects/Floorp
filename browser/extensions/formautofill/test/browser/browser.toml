@@ -5,8 +5,11 @@ support-files = [
   "../fixtures/autocomplete_basic.html",
   "../fixtures/autocomplete_iframe.html",
   "../fixtures/autocomplete_simple_basic.html",
+  "../fixtures/page_navigation.html",
   "./empty.html",
 ]
+
+["browser_active_window_navigation.js"]
 
 ["browser_autocomplete_footer.js"]
 skip-if = ["verify"]
