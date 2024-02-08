@@ -113,10 +113,22 @@ add_task(async function () {
     eventTooltipBadge.classList.contains("has-disabled-events"),
     "event badge still has the has-disabled-events class"
   );
+  ({ onResource: onConsoleInfoMessage } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.message.level == "info";
+        },
+      }
+    ));
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   data = await getTargetElementHandledEventData();
   is(data.click, 2, `click event listener was disabled`);
   is(data.mousedown, 1, `and mousedown still is disabled as well`);
+  await onConsoleInfoMessage;
+  ok(true, `the "click" event listener (console.info) was called`);
 
   info("Uncheck the mouseup event checkbox");
   await toggleEventListenerCheckbox(tooltip, mouseupHeader);
