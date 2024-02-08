@@ -280,6 +280,13 @@ export const SecondaryCTA = props => {
   if (isSplitButton) {
     className += " split-button-container";
   }
+  const isDisabled = React.useCallback(
+    disabledValue =>
+      disabledValue === "hasActiveMultiSelect"
+        ? !(props.activeMultiSelect?.length > 0)
+        : disabledValue,
+    [props.activeMultiSelect?.length]
+  );
 
   if (isTextLink) {
     buttonStyling += " text-link";
@@ -300,6 +307,7 @@ export const SecondaryCTA = props => {
         <button
           className={buttonStyling}
           value={targetElement}
+          disabled={isDisabled(props.content.secondary_button?.disabled)}
           onClick={props.handleAction}
         />
       </Localized>

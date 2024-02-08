@@ -447,6 +447,40 @@ describe("MultiStageAboutWelcome module", () => {
           type: "SHOW_FIREFOX_ACCOUNTS",
         });
       });
+      it("should handle OPEN_URL", () => {
+        TEST_ACTION.type = "OPEN_URL";
+        TEST_ACTION.data = {
+          args: "https://example.com?utm_campaign=test-campaign",
+        };
+        TEST_ACTION.addFlowParams = true;
+        let flowBeginTime = Date.now();
+        const wrapper = mount(
+          <WelcomeScreen
+            {...SCREEN_PROPS}
+            flowParams={{
+              deviceId: "test-device-id",
+              flowId: "test-flow-id",
+              flowBeginTime,
+            }}
+          />
+        );
+
+        wrapper.find(".primary").simulate("click");
+
+        let [handledAction] = AboutWelcomeUtils.handleUserAction.firstCall.args;
+        assert.equal(handledAction.type, "OPEN_URL");
+        let { searchParams } = new URL(handledAction.data.args);
+        assert.equal(searchParams.get("utm_campaign"), "test-campaign");
+        assert.equal(searchParams.get("utm_medium"), "referral");
+        assert.equal(searchParams.get("utm_source"), "activity-stream");
+        assert.equal(searchParams.get("utm_term"), "you_tee_emm-screen");
+        assert.equal(searchParams.get("device_id"), "test-device-id");
+        assert.equal(searchParams.get("flow_id"), "test-flow-id");
+        assert.equal(
+          searchParams.get("flow_begin_time"),
+          flowBeginTime.toString()
+        );
+      });
       it("should handle SHOW_MIGRATION_WIZARD", () => {
         TEST_ACTION.type = "SHOW_MIGRATION_WIZARD";
         const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);

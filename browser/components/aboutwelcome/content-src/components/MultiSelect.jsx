@@ -58,7 +58,7 @@ export const MultiSelect = ({
   activeMultiSelect,
   setActiveMultiSelect,
 }) => {
-  const { data } = content.tiles;
+  const { data, randomize } = content.tiles;
 
   const refs = useRef({});
 
@@ -72,6 +72,11 @@ export const MultiSelect = ({
     setActiveMultiSelect(newActiveMultiSelect);
   }, [setActiveMultiSelect]);
 
+  const items = useMemo(
+    () => (randomize ? data.sort(() => 0.5 - Math.random()) : data),
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const containerStyle = useMemo(
     () => getValidStyle(content.tiles.style, MULTI_SELECT_STYLES, true),
     [content.tiles.style]
@@ -82,7 +87,7 @@ export const MultiSelect = ({
   useEffect(() => {
     if (!activeMultiSelect) {
       let newActiveMultiSelect = [];
-      data.forEach(({ id, defaultValue }) => {
+      items.forEach(({ id, defaultValue }) => {
         if (defaultValue && id) {
           newActiveMultiSelect.push(id);
         }
@@ -93,7 +98,7 @@ export const MultiSelect = ({
 
   return (
     <div className="multi-select-container" style={containerStyle}>
-      {data.map(({ id, label, icon, type = "checkbox", group, style }) => (
+      {items.map(({ id, label, icon, type = "checkbox", group, style }) => (
         <div
           key={id + label}
           className="checkbox-container multi-select-item"

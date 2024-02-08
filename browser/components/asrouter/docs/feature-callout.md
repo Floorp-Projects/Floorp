@@ -63,6 +63,21 @@ interface FeatureCallout {
     // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
     patterns?: string[];
   };
+  // An optional object specifying frequency caps for the message.
+  frequency?: {
+    // A basic limit on the number of times the message can be shown to a user
+    // across the entire lifetime of the user profile.
+    lifetime?: number;
+    // An array specifying any number of limits on the number of times the
+    // message can be shown to a user within a specific time period. This can be
+    // specified in addition to or instead of a lifetime limit.
+    custom?: Array<{
+      // The number of times the message can be shown within the period.
+      cap: number;
+      // The period of time in milliseconds. For example, 24 hours is 86400000.
+      period: number;
+    }>;
+  };
   // An array of message groups, which are used for frequency capping. Typically
   // this should be ["cfr"], unless you have a specific reason to do otherwise.
   groups?: string[];
@@ -73,6 +88,15 @@ interface FeatureCallout {
   // multiple messages with the same trigger and similar targeting.
   weight?: number; // e.g. weight: 200 is more likely than weight: 100
   priority?: number; // e.g. priority: 2 beats priority: 1
+  // Whether the message should be skipped in automated tests. If omitted, the
+  // message can be shown in tests. A truthy value will skip the message in
+  // tests. The value should be a string explaining why the message needs to be
+  // skipped. You can still test messages with this property in automation by
+  // stubbing `ASRouter.messagesEnabledInAutomation` (adding the message id to
+  // the array). This way, you can avoid showing the message in all tests except
+  // the specific test where you want to test it. This has no effect for
+  // messages in Nimbus experiments. It's for local messages only.
+  skip_in_tests?: string;
   content: {
     // The same as the id above
     id: string;
@@ -141,7 +165,7 @@ interface FeatureCallout {
             no_open_on_anchor?: boolean;
             // The desired width of the arrow in a number of pixels. 33.94113 by
             // default (this corresponds to a triangle with 24px edges). This
-+           // also affects the height of the arrow.
+            // also affects the height of the arrow.
             arrow_width?: number;
           }
         ];
@@ -194,6 +218,7 @@ interface FeatureCallout {
             // Extra text to show before the button.
             text: Label;
             has_arrow_icon?: boolean;
+            disabled?: boolean | "hasActiveMultiSelect";
             style?: "primary" | "secondary";
             action: Action;
           };
@@ -207,6 +232,11 @@ interface FeatureCallout {
             // The additional button can also be styled as a link.
             style?: "primary" | "secondary" | "link";
             action: Action;
+            // Justification/alignment of the buttons row/column. Defaults to
+            // "end" (right-justified buttons). You can use space-between if,
+            // for example, you have 2 buttons and you want one on the left and
+            // one on the right.
+            alignment?: "start" | "end" | "space-between";
           };
           dismiss_button?: {
             // This can be used to control the ARIA attributes and tooltip.
@@ -219,13 +249,36 @@ interface FeatureCallout {
             marginBlock?: string;
             marginInline?: string;
           };
+          // A split button is an additional_button or secondary_button split
+          // into 2 buttons: one that performs the main action, and one with an
+          // arrow that opens a dropdown submenu (which this property controls).
+          submenu_button?: {
+            // This defines the dropdown menu that appears when the user clicks
+            // the split button.
+            submenu: SubmenuItem[];
+            // The submenu button can only be a split button, so a secondary or
+            // additional button needs to exist for it to attach to.
+            attached_to: "secondary_button" | "additional_button";
+            // Used mainly to control the ARIA label and tooltip (tooltips are
+            // currently broken), but can also be used to override CSS styles.
+            label?: Label;
+            // Whether the split button should follow the primary or secondary
+            // button style. Set this to the same style you specified for the
+            // button it's attached to. Defaults to "secondary".
+            style?: "primary" | "secondary";
+          };
           // Predefined content modules. The only one currently supported in
           // feature callout is "multiselect", which allows you to show a series
           // of checkboxes and/or radio buttons.
           tiles?: {
-            type: "multiselect"
+            type: "multiselect";
             // Depends on the type, but we only support "multiselect" currently.
-            data: MultiSelectItem;
+            data: MultiSelectItem[];
+            // By default, multiselect items appear in the order they're listed
+            // in the data array. Set this to true to randomize the order. This
+            // is most commonly used to randomize the order of answer choices
+            // for a survey question, to avoid the first-choice bias.
+            randomize?: boolean;
             // Allows CSS overrides of the multiselect container.
             style?: {
               color?: string;
@@ -476,6 +529,22 @@ interface MultiSelectItem {
   action: Action;
 }
 
+interface SubmenuItem {
+  // Submenus can have 3 types of items, just like normal menupopups
+  // in Firefox.
+  type: "action" | "menu" | "separator";
+  // The id is used to identify the submenu item in telemetry.
+  id?: string;
+  label: Label;
+  // Used only for type "action". The action to perform when the
+  // submenu item is clicked.
+  action?: Action;
+  // Used only for type "menu". The submenu items to show when the
+  // user hovers over this item. This is a recursive structure.
+  submenu: SubmenuItem[];
+  // An optional URL specifying an icon to show next to the label.
+  icon?: string;
+}
 ```
 
 ### Example JSON
