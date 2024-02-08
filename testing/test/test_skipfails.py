@@ -8,7 +8,13 @@ from pathlib import Path
 
 import pytest
 from mozunit import main
-from skipfails import MockTask, Skipfails
+from skipfails import (
+    MOCK_BUG_DEFAULTS,
+    MOCK_TASK_DEFAULTS,
+    MOCK_TASK_INITS,
+    Mock,
+    Skipfails,
+)
 
 DATA_PATH = Path(__file__).with_name("data")
 
@@ -51,12 +57,15 @@ def test_get_tasks():
     assert push is not None
 
 
-def get_failures(tasks_name, exp_f_name):
+def get_failures(tasks_name, exp_f_name, task_details=None):
     """Runs Skipfails.get_failures on tasks to compare with failures"""
     sf = Skipfails()
+    if task_details is not None:  # preload task details cache, if needed
+        for task_id in task_details:
+            sf.tasks[task_id] = task_details[task_id]
     tasks_fp = DATA_PATH.joinpath(tasks_name).open("r", encoding="utf-8")
     tasks = json.load(tasks_fp)
-    tasks = [MockTask(task) for task in tasks]
+    tasks = [Mock(task, MOCK_TASK_DEFAULTS, MOCK_TASK_INITS) for task in tasks]
     exp_f_fp = DATA_PATH.joinpath(exp_f_name).open("r", encoding="utf-8")
     expected_failures = exp_f_fp.read().strip()
     failures = sf.get_failures(tasks)
@@ -66,27 +75,61 @@ def get_failures(tasks_name, exp_f_name):
 
 def test_get_failures_1():
     """Test get_failures 1"""
-    get_failures("wayland-tasks-1.json", "wayland-failures-1.json")
+    task_details = {"dwOJ8M9ERSmk6oI2KXg6hg": {}}
+    get_failures("wayland-tasks-1.json", "wayland-failures-1.json", task_details)
 
 
 def test_get_failures_2():
     """Test get_failures 2"""
-    get_failures("wayland-tasks-2.json", "wayland-failures-2.json")
+    task_details = {
+        "Y7r1q2xWSu-2bRAofEfeBw": {},
+        "Z7r1q2xWSu-2bRAofEfeBw": {},
+        "X7r1q2xWSu-2bRAofEfeBw": {},
+    }
+    get_failures("wayland-tasks-2.json", "wayland-failures-2.json", task_details)
 
 
 def test_get_failures_3():
     """Test get_failures 3"""
-    get_failures("wayland-tasks-3.json", "wayland-failures-3.json")
+    task_details = {
+        "b7_ahjGtQ_-ZMNBG_hUZUw": {},
+        "WVczuxkuSRKZg_jMiGyQsA": {},
+        "UOZUIVAaTZKmRwArq5WkDw": {},
+    }
+    get_failures("wayland-tasks-3.json", "wayland-failures-3.json", task_details)
 
 
 def test_get_failures_4():
     """Test get_failures 4"""
-    get_failures("wayland-tasks-4.json", "wayland-failures-4.json")
+    task_details = {
+        "bxMVPbPMTru_bfAivc1sPA": {},
+        "EDql3NKPR3W6OEU3mLeKbg": {},
+        "FDql3NKPR3W6OEU3mLeKbg": {},
+    }
+    get_failures("wayland-tasks-4.json", "wayland-failures-4.json", task_details)
 
 
 def test_get_failures_5():
     """Test get_failures 5"""
-    get_failures("wayland-tasks-5.json", "wayland-failures-5.json")
+
+    task_details = {
+        "Bgc6We1sSjakIo3V9crldw": {
+            "expires": "2024-01-09T16:05:56.825Z",
+            "extra": {
+                "suite": "mochitest-browser",
+                "test-setting": {
+                    "build": {"type": "opt"},
+                    "platform": {
+                        "arch": "64",
+                        "os": {"name": "linux", "version": "22.04"},
+                        "display": "wayland",
+                    },
+                    "runtime": {},
+                },
+            },
+        }
+    }
+    get_failures("wayland-tasks-5.json", "wayland-failures-5.json", task_details)
 
 
 def test_get_bug_by_id():
@@ -94,6 +137,13 @@ def test_get_bug_by_id():
 
     sf = Skipfails()
     id = 1682371
+    # preload bug cache
+    bugs_filename = f"bug-{id}.json"
+    bugs_fp = DATA_PATH.joinpath(bugs_filename).open("r", encoding="utf-8")
+    bugs_data = json.load(bugs_fp)
+    preload_bugs = [Mock(b, MOCK_BUG_DEFAULTS) for b in bugs_data]
+    sf.bugs = preload_bugs
+    # function under test
     bug = sf.get_bug_by_id(id)
     assert bug.id == id
     assert bug.product == "Testing"
@@ -102,6 +152,27 @@ def test_get_bug_by_id():
         bug.summary
         == "create tool to quickly parse and identify all failures from a try push and ideally annotate manifests"
     )
+
+
+def test_get_bugs_by_summary():
+    """Test get_bugs_by_summary"""
+
+    sf = Skipfails()
+    id = 1682371
+    # preload bug cache
+    bugs_filename = f"bug-{id}.json"
+    bugs_fp = DATA_PATH.joinpath(bugs_filename).open("r", encoding="utf-8")
+    bugs_data = json.load(bugs_fp)
+    preload_bugs = [Mock(b, MOCK_BUG_DEFAULTS) for b in bugs_data]
+    sf.bugs = preload_bugs
+    # function under test
+    summary = "create tool to quickly parse and identify all failures from a try push and ideally annotate manifests"
+    bugs = sf.get_bugs_by_summary(summary)
+    assert len(bugs) == 1
+    assert bugs[0].id == id
+    assert bugs[0].product == "Testing"
+    assert bugs[0].component == "General"
+    assert bugs[0].summary == summary
 
 
 def test_get_variants():
@@ -122,7 +193,7 @@ def test_task_to_skip_if():
 
     # preload task cache
     task_id = "UP-t3xrGSDWvUNjFGIt_aQ"
-    task = {
+    task_details = {
         "expires": "2024-01-09T16:05:56.825Z",
         "extra": {
             "suite": "mochitest-plain",
@@ -137,7 +208,7 @@ def test_task_to_skip_if():
         },
     }
     sf = Skipfails()
-    sf.tasks[task_id] = task
+    sf.tasks[task_id] = task_details
     # function under test
     skip_if = sf.task_to_skip_if(task_id)
     assert skip_if == "os == 'win' && os_version == '11' && bits == '32' && debug"

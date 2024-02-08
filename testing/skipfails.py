@@ -59,6 +59,9 @@ FAILURE_RATIO = 0.4  # more than this fraction of failures will disable
 LL = "label"
 MEDIAN_DURATION = "median_duration"
 MINIMUM_RUNS = 3  # mininum number of runs to consider success/failure
+MOCK_BUG_DEFAULTS = {"blocks": [], "comments": []}
+MOCK_TASK_DEFAULTS = {"failure_types": {}, "results": []}
+MOCK_TASK_INITS = ["results"]
 OPT = "opt"
 PP = "path"
 RUNS = "runs"
@@ -67,58 +70,21 @@ TOTAL_DURATION = "total_duration"
 TOTAL_RUNS = "total_runs"
 
 
-class MockResult(object):
-    def __init__(self, result):
-        self.result = result
+class Mock(object):
+    def __init__(self, data, defaults={}, inits=[]):
+        self._data = data
+        self._defaults = defaults
+        for name in inits:
+            values = self._data.get(name, [])  # assume type is an array
+            values = [Mock(value, defaults, inits) for value in values]
+            self._data[name] = values
 
-    @property
-    def duration(self):
-        return self.result["duration"]
-
-    @property
-    def group(self):
-        return self.result["group"]
-
-    @property
-    def ok(self):
-        return self.result["ok"]
-
-
-class MockTask(object):
-    def __init__(self, task):
-        self.task = task
-        if "results" in self.task:
-            self.task["results"] = [
-                MockResult(result) for result in self.task["results"]
-            ]
-        else:
-            self.task["results"] = []
-
-    @property
-    def failure_types(self):
-        if "failure_types" in self.task:
-            return self.task["failure_types"]
-        else:  # note no failure_types in Task object
-            return {}
-
-    @property
-    def duration(self):
-        return self.task["duration"]
-
-    @property
-    def id(self):
-        return self.task["id"]
-
-    @property
-    def label(self):
-        return self.task["label"]
-
-    @property
-    def results(self):
-        if "results" in self.task:
-            return self.task["results"]
-        else:
-            return []
+    def __getattr__(self, name):
+        if name in self._data:
+            return self._data[name]
+        if name in self._defaults:
+            return self._defaults[name]
+        return ""
 
 
 class Classification(object):
@@ -194,6 +160,7 @@ class Skipfails(object):
         self.push_ids = {}
         self.job_ids = {}
         self.extras = {}
+        self.bugs = []  # preloaded bugs, currently not an updated cache
 
     def _initialize_bzapi(self):
         """Lazily initializes the Bugzilla API"""
@@ -253,7 +220,9 @@ class Skipfails(object):
             if os.path.exists(use_tasks):
                 self.vinfo(f"use tasks: {use_tasks}")
                 tasks = self.read_json(use_tasks)
-                tasks = [MockTask(task) for task in tasks]
+                tasks = [
+                    Mock(task, MOCK_TASK_DEFAULTS, MOCK_TASK_INITS) for task in tasks
+                ]
             else:
                 self.error(f"uses tasks JSON file does not exist: {use_tasks}")
                 return False
@@ -491,13 +460,25 @@ class Skipfails(object):
         """Get bug by bug id"""
 
         self._initialize_bzapi()
-        bug = self._bzapi.getbug(id)
+        bug = None
+        for b in self.bugs:
+            if b.id == id:
+                bug = b
+                break
+        if bug is None:
+            bug = self._bzapi.getbug(id)
         return bug
 
     def get_bugs_by_summary(self, summary):
         """Get bug by bug summary"""
 
         self._initialize_bzapi()
+        bugs = []
+        for b in self.bugs:
+            if b.summary == summary:
+                bugs.append(b)
+        if len(bugs) > 0:
+            return bugs
         query = self._bzapi.build_query(short_desc=summary)
         query["include_fields"] = [
             "id",

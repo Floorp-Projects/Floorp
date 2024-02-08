@@ -1,0 +1,56 @@
+[
+  {
+    "blocks": [1682354, 1821700, 1821702],
+    "comments": [
+      {
+        "text": "This is a process which exists already for web-platform-tests, but in order to streamline our work, it would be beneficial to run ALL tests, scrape the failures and edit files, then sanity check that the skip-if/fail-if conditions are all working and we have a green try run.\n\nThere are multiple ways to scrape failures, I think we need to treat harnesses differently.  For example, a reftest failure would be annotating fuzzy-if pixels based on conditions, whereas an xpcshell failure would be the test name and a skip-if or fail-if statement.\n\nIn general we might have to do our reftest failures by hand, but it would be nice for mochitest and xpcshell tests to be done more programatically, especially given the fact that we have multi line conditions we can match against.\n\nAssuming we don't edit automatically, we can at least have a tool that queries treeherder for all failure_summary information and compiles a list of test names, recommended conditions to use (fuzzy-if(...), skip-if, fail-if) based on the test/harness/failure, and the frequency of failure (assuming we run >1, give x% as a where 0<x<100 for total_fail/total_run)."
+      },
+      {
+        "text": "Ideally this can be accumulated across various try pushes."
+      },
+      {
+        "text": "Some steps assuming using Treeherder as the datasource:\n1) get json from this api for each rev: https://treeherder.mozilla.org/api/project/try/push/health/?revision=e3b3b6d258f52b206c09e56414fff33147f95715\n2) build a dict of jobs based on jobNames by parsing json j: j['jobs'].keys()\n    a) keep track of the count by len(j['jobs'][key])\n3) in the json as j, parse j['metrics']['tests']['details']['needsInvestigation'] and j['metrics']['tests']['details']['knownIssues'] to get a list of failures, specifically in the `testName` field.\n  a) if `action == test`, then we have a better chance of finding exact test names, it would be best to limit to this for now.\n  b) keep track of fields: jobName, testName, jobGroup, platform, config, ideally a structure of \n    ```\n            jobs[jobName] = {'count': 0, 'failureCount': 0, 'failures': [\n                                            {test: testName, \n                                             details: {\n                                                    harness: jobGroup,\n                                                    configs: [[platform, config], ...]\n                                             }, ...\n                                           }\n                                       ]}\n    ```\n     where we have unique pairs of platform/config and the harness will indicate which type of config to modify.\n     the jobName is important to know how many times the job ran\n\n4) repeat for all revisions that have data\n5) iterate through the jobnames and if failures == [], then skip it- we only want jobs with failures\n6) for all jobs that have failures and failureCount/Count > .35, keep the failure, it repeats frequently enough\n7) write the remaining failures we want to keep as a .json file to output\n\nOne caution is that we could have intermittent test failures (dozens of them easily on a try push) which would be unfortunate to disable a test because it failed once and maybe never again.  In a perfect world we would run each job multiple times (10 ideally, 5 realistic, 3 minimum) and ensure that a majority of the times a test runs \n\nI will leave this bug scope at scraping failures and summarizing them.  A different bug can outline steps for editing manifests."
+      },
+      {
+        "text": "Created attachment 9362743\nBug 1682371 - mach skipfails part 1: add dependencies r=jmaher"
+      },
+      {
+        "text": "Pushed by jmaher@mozilla.com:\nhttps://hg.mozilla.org/integration/autoland/rev/4c5b3ec73a9a\nmach skipfails part 1: add dependencies r=jmaher,mach-reviewers,ahal"
+      },
+      {
+        "text": "Backed out for python related failures. \n\nPush with failures: https://treeherder.mozilla.org/jobs?repo=autoland&selectedTaskRun=LMhdsjDeRyGScsjta5TC_g.0&resultStatus=testfailed%2Cbusted%2Cexception%2Cretry%2Cusercancel&revision=4c5b3ec73a9ae0be2eea53352f00d705a8b04c36\n\nFailure logs:\n- [SM bustages](https://treeherder.mozilla.org/logviewer?job_id=437885116&repo=autoland)\n\nBackout link: https://hg.mozilla.org/integration/autoland/rev/a101da6213c2e8f729402046a3d4d1cce2d7bb47"
+      },
+      {
+        "text": "Pushed by jmaher@mozilla.com:\nhttps://hg.mozilla.org/integration/autoland/rev/812440d20ef2\nmach skipfails part 1: add dependencies r=jmaher,mach-reviewers,ahal"
+      },
+      {
+        "text": "Created attachment 9366143\nBug 1682371 - mach skipfails part 2: enable ci r=jmaher"
+      },
+      {
+        "text": "Added new paths to https://searchfox.org/mozilla-central/source/js/src/make-source-package.py#190"
+      },
+      {
+        "text": "https://hg.mozilla.org/mozilla-central/rev/812440d20ef2"
+      },
+      {
+        "text": "Pushed by jmaher@mozilla.com:\nhttps://hg.mozilla.org/integration/autoland/rev/c8ab4e2aa0a7\nmach skipfails part 2: enable ci r=jmaher,mach-reviewers,ahal"
+      },
+      {
+        "text": "https://hg.mozilla.org/mozilla-central/rev/c8ab4e2aa0a7"
+      },
+      {
+        "text": "Created attachment 9367667\nBug 1682371 - mach skipfails part 3: complete editing manifest r=jmaher"
+      },
+      {
+        "text": "Pushed by jmaher@mozilla.com:\nhttps://hg.mozilla.org/integration/autoland/rev/cf62e72915ca\nmach skipfails part 3: complete editing manifest r=jmaher,mach-reviewers,ahal"
+      },
+      {
+        "text": "https://hg.mozilla.org/mozilla-central/rev/cf62e72915ca"
+      }
+    ],
+    "component": "General",
+    "id": 1682371,
+    "product": "Testing",
+    "summary": "create tool to quickly parse and identify all failures from a try push and ideally annotate manifests"
+  }
+]
