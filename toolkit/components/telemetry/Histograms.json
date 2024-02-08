@@ -2581,7 +2581,7 @@
   },
   "HTTP_PAGE_DNS_ISSUE_TIME": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "vogosu@mozilla.com"],
@@ -2593,7 +2593,7 @@
   },
   "HTTP_PAGE_DNS_LOOKUP_TIME": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "vogosu@mozilla.com"],
@@ -2617,7 +2617,7 @@
   },
   "HTTP_PAGE_TCP_CONNECTION_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
@@ -13073,7 +13073,7 @@
   },
   "NETWORK_CACHE_V2_HIT_TIME_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "alert_emails": [
       "hbambas@mozilla.com",
       "mnovotny@mozilla.com",
@@ -15156,7 +15156,7 @@
   },
   "WEBFONT_DOWNLOAD_TIME_AFTER_START": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "fennec"],
     "alert_emails": [
       "perf-telemetry-alerts@mozilla.com",
       "necko@mozilla.com",

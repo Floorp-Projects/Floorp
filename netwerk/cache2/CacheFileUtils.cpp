@@ -7,6 +7,7 @@
 #include "CacheFileUtils.h"
 #include "CacheObserver.h"
 #include "LoadContextInfo.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
@@ -419,8 +420,8 @@ void DetailedCacheHitTelemetry::AddRecord(ERecType aType,
     mozilla::Telemetry::AccumulateTimeDelta(
         mozilla::Telemetry::NETWORK_CACHE_V2_MISS_TIME_MS, aLoadStart);
   } else {
-    mozilla::Telemetry::AccumulateTimeDelta(
-        mozilla::Telemetry::NETWORK_CACHE_V2_HIT_TIME_MS, aLoadStart);
+    mozilla::glean::network::cache_hit_time.AccumulateRawDuration(
+        TimeStamp::Now() - aLoadStart);
   }
 
   Telemetry::Accumulate(Telemetry::NETWORK_CACHE_HIT_MISS_STAT_PER_CACHE_SIZE,

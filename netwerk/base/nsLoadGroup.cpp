@@ -947,6 +947,33 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
         responseEnd);                                                          \
   }
 
+  // Glean instrumentation of metrics previously collected via Geckoview
+  // Streaming.
+  if (aDefaultRequest) {
+    if (!cacheReadStart.IsNull() && !cacheReadEnd.IsNull()) {
+      mozilla::glean::network::first_from_cache.AccumulateRawDuration(
+          cacheReadStart - asyncOpen);
+    }
+    if (!connectEnd.IsNull()) {
+      if (!connectStart.IsNull()) {
+        mozilla::glean::network::tcp_connection.AccumulateRawDuration(
+            connectEnd - connectStart);
+      }
+      if (!secureConnectionStart.IsNull()) {
+        mozilla::glean::network::tls_handshake.AccumulateRawDuration(
+            connectEnd - secureConnectionStart);
+      }
+    }
+    if (!domainLookupStart.IsNull()) {
+      mozilla::glean::network::dns_start.AccumulateRawDuration(
+          domainLookupStart - asyncOpen);
+      if (!domainLookupEnd.IsNull()) {
+        mozilla::glean::network::dns_end.AccumulateRawDuration(
+            domainLookupEnd - domainLookupStart);
+      }
+    }
+  }
+
   if (aDefaultRequest) {
     HTTP_REQUEST_HISTOGRAMS(PAGE)
   } else {

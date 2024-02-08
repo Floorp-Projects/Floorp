@@ -30,7 +30,7 @@ netwerk:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797695
     notification_emails:
       - necko@mozilla.com
-      - ddamjanovic@mozilla.com
+      - vgosu@mozilla.com
     expires: never
   eh_link_type:
     type: labeled_counter
@@ -147,3 +147,129 @@ network:
       - necko@mozilla.com
       - kershaw@mozilla.com
     expires: 130
+
+  cache_hit_time:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: NETWORK_CACHE_V2_HIT_TIME_MS
+    description: >
+      Time to open existing cache entry file.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+
+  font_download_end:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: WEBFONT_DOWNLOAD_TIME_AFTER_START
+    description: >
+      Time after navigationStart that all webfont downloads are completed.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - necko@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  first_from_cache:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      In the HTTP page channel, time from connection open to cache read start.
+      Corresponds to Legacy histogram HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE_V2 in
+      Desktop.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+
+  tcp_connection:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      In the HTTP page channel, time from the TCP SYN packet is received to
+      the connection is established and ready for HTTP.
+      Corresponds to Legacy histogram HTTP_PAGE_TCP_CONNECTION_2 in Desktop
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
+  dns_start:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      In the HTTP page channel, time from connection open to the DNS request
+      being issued.
+      Corresponds to Legacy histogram HTTP_PAGE_DNS_ISSUE_TIME in Desktop.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
+  dns_end:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      In the HTTP page channel, time from the DNS request being issued to
+      the response.
+      Corresponds to Legacy histogram HTTP_PAGE_DNS_LOOKUP_TIME in Desktop.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
+  tls_handshake:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      In the HTTP page channel, time from after the TCP SYN packet is
+      received to the secure connection is established and ready for HTTP.
+      Corresponds to Legacy histogram HTTP_PAGE_TLS_HANDSHAKE in Desktop.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877839
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never

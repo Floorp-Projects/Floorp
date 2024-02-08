@@ -26,6 +26,7 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -911,8 +912,8 @@ void FontFaceSetImpl::RecordFontLoadDone(uint32_t aFontSize,
   TimeStamp navStart = GetNavigationStartTimeStamp();
   TimeStamp zero;
   if (navStart != zero) {
-    Telemetry::AccumulateTimeDelta(Telemetry::WEBFONT_DOWNLOAD_TIME_AFTER_START,
-                                   navStart, aDoneTime);
+    mozilla::glean::network::font_download_end.AccumulateRawDuration(aDoneTime -
+                                                                     navStart);
   }
 }
 
