@@ -196,6 +196,8 @@ const kExpectedRequestsOfPrefetch = [
     }
 ];
 
+const kExpectedRequestsOfPrefetchDisabled = kExpectedRequestsOfPrefetch;
+
 const kPipeHeaderLinksToStylesheets =
   "=header(Link,<dummy.css?1>; rel=stylesheet; fetchpriority=low,True)" +
   "|header(Link,<dummy.css?2>; rel=stylesheet; fetchpriority=high,True)" +
@@ -352,8 +354,14 @@ export const kTestDataDisabled = [
     {   testFileName: "link-initial-modulepreload.h2.html",
         expectedRequests: kExpectedRequestsOfModulepreloadDisabled
     },
+    {   testFileName: "link-initial-prefetch.h2.html",
+        expectedRequests: kExpectedRequestsOfPrefetchDisabled
+    },
     {   testFileName: "link-initial-preload-image.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
+    {   testFileName: "link-dynamic-prefetch.h2.html",
+        expectedRequests: kExpectedRequestsOfPrefetchDisabled
     },
     {   testFileName: "link-dynamic-preload-font.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
@@ -369,6 +377,9 @@ export const kTestDataDisabled = [
     },
     {   testFileName: "link-dynamic-preload-image.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPrefetchLinks,
+        expectedRequests: kExpectedRequestsOfPrefetchDisabled
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFontLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
