@@ -816,18 +816,6 @@ already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
     return promise.forget();
   }
 
-  // Currently, only widevine CDM supports for this API.
-  if (!IsWidevineKeySystem(mKeySystem)) {
-    EME_LOG(
-        "MediaKeys[%p]::GetStatusForPolicy() HDCP policy check on unsupported "
-        "keysystem ",
-        this);
-    NS_WARNING("Tried to query without a CDM");
-    promise->MaybeRejectWithNotSupportedError(
-        "HDCP policy check on unsupported keysystem");
-    return promise.forget();
-  }
-
   if (!mProxy) {
     NS_WARNING("Tried to use a MediaKeys without a CDM");
     promise->MaybeRejectWithInvalidStateError(
