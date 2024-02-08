@@ -61,9 +61,9 @@ class RecordedTextureData final : public TextureData {
   RefPtr<CanvasChild> mCanvasChild;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  RefPtr<gfx::DrawTarget> mDT;
+  RefPtr<gfx::DrawTargetRecording> mDT;
   RefPtr<gfx::SourceSurface> mSnapshot;
-  ThreadSafeWeakPtr<gfx::SourceSurface> mSnapshotWrapper;
+  RefPtr<gfx::SourceSurface> mSnapshotWrapper;
   OpenMode mLockedMode;
   RemoteTextureId mLastRemoteTextureId;
   RemoteTextureOwnerId mRemoteTextureOwnerId;

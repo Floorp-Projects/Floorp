@@ -16,6 +16,7 @@
 namespace mozilla {
 
 namespace gfx {
+class DrawTargetRecording;
 class SourceSurface;
 }
 
@@ -96,7 +97,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    * @param aFormat SurfaceFormat for the DrawTarget
    * @returns newly created DrawTargetRecording
    */
-  already_AddRefed<gfx::DrawTarget> CreateDrawTarget(
+  already_AddRefed<gfx::DrawTargetRecording> CreateDrawTarget(
       int64_t aTextureId, const RemoteTextureOwnerId& aTextureOwnerId,
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
