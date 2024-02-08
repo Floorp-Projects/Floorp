@@ -10,7 +10,7 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 job-defaults:
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['mozilla-central-only']
     treeherder:
         kind: other
         platform: other/opt
