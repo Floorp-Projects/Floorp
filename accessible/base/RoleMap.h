@@ -1532,4 +1532,15 @@ ROLE(STRONG,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromSubtreeIfReqRule)
 
+ROLE(TIME,
+     "time",
+     nsGkAtoms::time,
+     ATK_ROLE_STATIC,
+     NSAccessibilityGroupRole,
+     @"AXTimeGroup",
+     ROLE_SYSTEM_GROUPING,
+     ROLE_SYSTEM_GROUPING,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     eNameFromSubtreeIfReqRule)
+
 // clang-format on
