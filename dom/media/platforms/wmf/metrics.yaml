@@ -48,3 +48,41 @@ mfcdm:
         type: quantity
     expires: 130
     telemetry_mirror: Mfcdm_EmePlayback_Gecko
+  error:
+    type: event
+    description:
+      Record the error or crash happened while using the media engine playback.
+      The value of this event is the name of error. This probe covers both EME
+      and non-EME playback.
+    metadata:
+      tags:
+        - 'Core :: Audio/Video: Playback'
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873394#c7
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - media-alerts@mozilla.com
+    extra_keys:
+      error_name:
+        description: The name of the error
+        type: string
+      current_state:
+        description: The state of the external state machine was being used when the error or crash happened
+        type: string
+      audio_codec:
+        description: The audio codec was being used when the error or crash happened
+        type: string
+      video_codec:
+        description: The video codec was being used when the error or crash happened
+        type: string
+      resolution:
+        description: The video resolution was being used when the error or crash happened
+        type: string
+      key_system:
+        description: The key system was being used when the error or crash happened
+        type: string
+    expires: 130
+    telemetry_mirror: Mfcdm_Error_Gecko
