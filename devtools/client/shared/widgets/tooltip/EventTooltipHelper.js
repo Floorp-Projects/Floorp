@@ -60,6 +60,7 @@ class EventTooltip extends EventEmitter {
       styleActiveLine: true,
       extraKeys: {},
       theme: "mozilla markup-view",
+      cm6: true,
     };
 
     const doc = this._tooltip.doc;
