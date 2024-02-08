@@ -12458,6 +12458,13 @@ curv.dev
 *.ocp.customer-oci.com
 *.ocs.customer-oci.com
 
+// Cyclic Software : https://www.cyclic.sh
+// Submitted by Kam Lasater <dns-admin@cyclic.sh>
+cyclic.app
+cyclic.cloud
+cyclic-app.com
+cyclic.co.in
+
 // cyon GmbH : https://www.cyon.ch/
 // Submitted by Dominic Luechinger <dol@cyon.ch>
 cyon.link
