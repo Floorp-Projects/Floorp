@@ -128,12 +128,12 @@ class MediaTrackGraphInitThreadRunnable : public Runnable {
       MOZ_ASSERT(!mDriver->AsAudioCallbackDriver());
       AudioCallbackDriver* audioCallbackDriver =
           previousDriver->AsAudioCallbackDriver();
-      audioCallbackDriver->mCubebOperationThread->Dispatch(
+      MOZ_ALWAYS_SUCCEEDS(audioCallbackDriver->mCubebOperationThread->Dispatch(
           NS_NewRunnableFunction(
               "ThreadedDriver previousDriver::Stop()",
               [audioCallbackDriver = RefPtr{audioCallbackDriver}] {
                 audioCallbackDriver->Stop();
-              }));
+              })));
       mDriver->SetPreviousDriver(nullptr);
     }
 
@@ -428,6 +428,17 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
 
 NS_IMPL_ISUPPORTS0(AudioCallbackDriver::FallbackWrapper)
 
+/* static */
+already_AddRefed<TaskQueue> AudioCallbackDriver::CreateTaskQueue() {
+  RefPtr<SharedThreadPool> pool = CUBEB_TASK_THREAD;
+  const uint32_t kIdleThreadTimeoutMs = 2000;
+  pool->SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
+
+  RefPtr<TaskQueue> queue =
+      TaskQueue::Create(pool.forget(), "AudioCallbackDriver cubeb task queue");
+  return queue.forget();
+}
+
 AudioCallbackDriver::AudioCallbackDriver(
     GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
     uint32_t aSampleRate, uint32_t aOutputChannelCount,
@@ -439,7 +450,7 @@ AudioCallbackDriver::AudioCallbackDriver(
       mOutputDeviceID(aOutputDeviceID),
       mInputDeviceID(aInputDeviceID),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
-      mCubebOperationThread(CUBEB_TASK_THREAD),
+      mCubebOperationThread(CreateTaskQueue()),
       mAudioThreadId(ProfilerThreadId{}),
       mAudioThreadIdInCb(std::thread::id()),
       mFallback("AudioCallbackDriver::mFallback"),
@@ -452,10 +463,6 @@ AudioCallbackDriver::AudioCallbackDriver(
   NS_WARNING_ASSERTION(mOutputChannelCount != 0,
                        "Invalid output channel count");
   MOZ_ASSERT(mOutputChannelCount <= 8);
-
-  const uint32_t kIdleThreadTimeoutMs = 2000;
-  mCubebOperationThread->SetIdleThreadTimeout(
-      PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
 
   bool allowVoice = true;
 #ifdef MOZ_WIDGET_COCOA
@@ -694,11 +701,13 @@ void AudioCallbackDriver::Start() {
     if (AudioCallbackDriver* previousAudioCallback =
             mPreviousDriver->AsAudioCallbackDriver()) {
       LOG(LogLevel::Debug, ("Releasing audio driver off main thread."));
-      mCubebOperationThread->Dispatch(NS_NewRunnableFunction(
-          "AudioCallbackDriver previousDriver::Stop()",
-          [previousDriver = RefPtr{previousAudioCallback}] {
-            previousDriver->Stop();
-          }));
+      MOZ_ALWAYS_SUCCEEDS(
+          previousAudioCallback->mCubebOperationThread->Dispatch(
+              NS_NewRunnableFunction(
+                  "AudioCallbackDriver previousDriver::Stop()",
+                  [previousDriver = RefPtr{previousAudioCallback}] {
+                    previousDriver->Stop();
+                  })));
     } else {
       LOG(LogLevel::Debug,
           ("Dropping driver reference for SystemClockDriver."));
@@ -709,11 +718,11 @@ void AudioCallbackDriver::Start() {
 
   LOG(LogLevel::Debug, ("Starting new audio driver off main thread, "
                         "to ensure it runs after previous shutdown."));
-  mCubebOperationThread->Dispatch(
+  MOZ_ALWAYS_SUCCEEDS(mCubebOperationThread->Dispatch(
       NS_NewRunnableFunction("AudioCallbackDriver Init()",
                              [self = RefPtr{this}, streamName = mStreamName] {
                                self->Init(streamName);
-                             }));
+                             })));
 }
 
 bool AudioCallbackDriver::StartStream() {
@@ -788,11 +797,11 @@ void AudioCallbackDriver::SetStreamName(const nsACString& aStreamName) {
   AudioStreamState streamState = mAudioStreamState;
   if (streamState != AudioStreamState::None &&
       streamState != AudioStreamState::Stopping) {
-    mCubebOperationThread->Dispatch(
+    MOZ_ALWAYS_SUCCEEDS(mCubebOperationThread->Dispatch(
         NS_NewRunnableFunction("AudioCallbackDriver SetStreamName()",
                                [self = RefPtr{this}, streamName = mStreamName] {
                                  self->SetCubebStreamName(streamName);
-                               }));
+                               })));
   }
 }
 
