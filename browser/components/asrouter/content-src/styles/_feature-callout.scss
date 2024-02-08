@@ -370,6 +370,10 @@
           justify-content: start;
         }
 
+        &[alignment='space-between'] {
+          justify-content: space-between;
+        }
+
         .secondary-cta {
           font-size: inherit;
         }

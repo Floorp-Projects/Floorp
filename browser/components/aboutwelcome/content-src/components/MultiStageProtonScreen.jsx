@@ -147,7 +147,11 @@ export const ProtonScreenActionButtons = props => {
         </div>
       ) : null}
       {content.secondary_button ? (
-        <SecondaryCTA content={content} handleAction={props.handleAction} />
+        <SecondaryCTA
+          content={content}
+          handleAction={props.handleAction}
+          activeMultiSelect={activeMultiSelect}
+        />
       ) : null}
     </div>
   );
@@ -300,7 +304,6 @@ export class ProtonScreen extends React.PureComponent {
             content={content}
             activeMultiSelect={this.props.activeMultiSelect}
             setActiveMultiSelect={this.props.setActiveMultiSelect}
-            handleAction={this.props.handleAction}
           />
         ) : null}
         {content.tiles && content.tiles.type === "migration-wizard" ? (

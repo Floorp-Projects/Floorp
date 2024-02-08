@@ -1,6 +1,8 @@
 import { addUtmParams, BASE_PARAMS } from "content-src/lib/addUtmParams.mjs";
 
 describe("addUtmParams", () => {
+  const originalBaseParams = JSON.parse(JSON.stringify(BASE_PARAMS));
+  afterEach(() => Object.assign(BASE_PARAMS, originalBaseParams));
   it("should convert a string URL", () => {
     const result = addUtmParams("https://foo.com", "foo");
     assert.equal(result.hostname, "foo.com");
