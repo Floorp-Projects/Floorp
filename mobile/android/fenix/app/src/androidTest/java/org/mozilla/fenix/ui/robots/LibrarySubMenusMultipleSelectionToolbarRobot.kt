@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
 import android.util.Log
-import android.widget.TextView
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -17,14 +16,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -93,15 +90,6 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
         Log.i(TAG, "verifyShareOverlay: Verified that the share overlay is displayed")
     }
 
-    fun verifyShareAppsLayout() {
-        val sendToDeviceTitle = mDevice.findObject(
-            UiSelector()
-                .instance(0)
-                .className(TextView::class.java),
-        )
-        sendToDeviceTitle.waitForExists(TestAssetHelper.waitingTime)
-    }
-
     fun verifyShareTabFavicon() {
         Log.i(TAG, "verifyShareTabFavicon: Trying to verify that the shared tab favicon is displayed")
         onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
@@ -159,11 +147,6 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
     }
 
     class Transition {
-        fun closeShareDialogReturnToPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun closeToolbarReturnToHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             Log.i(TAG, "closeToolbarReturnToHistory: Trying to click the navigate up toolbar button")
             closeToolbarButton().click()
