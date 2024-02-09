@@ -108,7 +108,7 @@ class TransmissionControlBlock : public Context {
   void MaybeSendSack();
 
   // Sends a FORWARD-TSN, if it is needed and allowed (rate-limited).
-  void MaybeSendForwardTsn(SctpPacket::Builder& builder, TimeMs now);
+  void MaybeSendForwardTsn(SctpPacket::Builder& builder, webrtc::Timestamp now);
 
   // Will be set while the socket is in kCookieEcho state. In this state, there
   // can only be a single packet outstanding, and it must contain the COOKIE
@@ -129,12 +129,12 @@ class TransmissionControlBlock : public Context {
   // Fills `builder` (which may already be filled with control chunks) with
   // other control and data chunks, and sends packets as much as can be
   // allowed by the congestion control algorithm.
-  void SendBufferedPackets(SctpPacket::Builder& builder, TimeMs now);
+  void SendBufferedPackets(SctpPacket::Builder& builder, webrtc::Timestamp now);
 
   // As above, but without passing in a builder. If `cookie_echo_chunk_` is
   // present, then only one packet will be sent, with this chunk as the first
   // chunk.
-  void SendBufferedPackets(TimeMs now) {
+  void SendBufferedPackets(webrtc::Timestamp now) {
     SctpPacket::Builder builder(peer_verification_tag_, options_);
     SendBufferedPackets(builder, now);
   }
@@ -172,7 +172,7 @@ class TransmissionControlBlock : public Context {
   const std::function<bool()> is_connection_established_;
   PacketSender& packet_sender_;
   // Rate limiting of FORWARD-TSN. Next can be sent at or after this timestamp.
-  TimeMs limit_forward_tsn_until_ = TimeMs(0);
+  webrtc::Timestamp limit_forward_tsn_until_ = webrtc::Timestamp::Zero();
 
   RetransmissionTimeout rto_;
   RetransmissionErrorCounter tx_error_counter_;

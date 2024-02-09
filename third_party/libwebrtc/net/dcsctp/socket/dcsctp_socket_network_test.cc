@@ -55,6 +55,8 @@ using ::testing::AllOf;
 using ::testing::Ge;
 using ::testing::Le;
 using ::testing::SizeIs;
+using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 constexpr StreamID kStreamId(1);
 constexpr PPID kPpid(53);
@@ -142,13 +144,13 @@ class SctpActor : public DcSctpSocketCallbacks {
         emulated_socket_(emulated_socket),
         timeout_factory_(
             *thread_,
-            [this]() { return TimeMillis(); },
+            [this]() { return TimeMs(Now().ms()); },
             [this](dcsctp::TimeoutID timeout_id) {
               sctp_socket_.HandleTimeout(timeout_id);
             }),
         random_(GetUniqueSeed()),
         sctp_socket_(name, *this, nullptr, sctp_options),
-        last_bandwidth_printout_(TimeMs(TimeMillis())) {
+        last_bandwidth_printout_(Now()) {
     emulated_socket.SetReceiver([this](rtc::CopyOnWriteBuffer buf) {
       // The receiver will be executed on the NetworkEmulation task queue, but
       // the dcSCTP socket is owned by `thread_` and is not thread-safe.
@@ -157,11 +159,11 @@ class SctpActor : public DcSctpSocketCallbacks {
   }
 
   void PrintBandwidth() {
-    TimeMs now = TimeMillis();
-    DurationMs duration = now - last_bandwidth_printout_;
+    Timestamp now = Now();
+    TimeDelta duration = now - last_bandwidth_printout_;
 
     double bitrate_mbps =
-        static_cast<double>(received_bytes_ * 8) / *duration / 1000;
+        static_cast<double>(received_bytes_ * 8) / duration.ms() / 1000;
     RTC_LOG(LS_INFO) << log_prefix()
                      << rtc::StringFormat("Received %0.2f Mbps", bitrate_mbps);
 
@@ -185,7 +187,7 @@ class SctpActor : public DcSctpSocketCallbacks {
     return timeout_factory_.CreateTimeout(precision);
   }
 
-  TimeMs TimeMillis() override { return TimeMs(rtc::TimeMillis()); }
+  Timestamp Now() override { return Timestamp::Millis(rtc::TimeMillis()); }
 
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override {
     return random_.Rand(low, high);
@@ -314,7 +316,7 @@ class SctpActor : public DcSctpSocketCallbacks {
   DcSctpSocket sctp_socket_;
   size_t received_bytes_ = 0;
   absl::optional<DcSctpMessage> last_received_message_;
-  TimeMs last_bandwidth_printout_;
+  Timestamp last_bandwidth_printout_;
   // Per-second received bitrates, in Mbps
   std::vector<double> received_bitrate_mbps_;
   webrtc::ScopedTaskSafety safety_;

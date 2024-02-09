@@ -53,7 +53,7 @@ class HeartbeatHandlerTestBase : public testing::Test {
         handler_("log: ", options_, &context_, &timer_manager_) {}
 
   void AdvanceTime(webrtc::TimeDelta duration) {
-    callbacks_.AdvanceTime(DurationMs(duration));
+    callbacks_.AdvanceTime(duration);
     for (;;) {
       absl::optional<TimeoutID> timeout_id = callbacks_.GetNextExpiredTimeout();
       if (!timeout_id.has_value()) {
@@ -135,9 +135,9 @@ TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
   HeartbeatAckChunk ack(std::move(req).extract_parameters());
 
   // Respond a while later. This RTT will be measured by the handler
-  constexpr DurationMs rtt(313);
+  constexpr TimeDelta rtt = TimeDelta::Millis(313);
 
-  EXPECT_CALL(context_, ObserveRTT(rtt.ToTimeDelta())).Times(1);
+  EXPECT_CALL(context_, ObserveRTT(rtt)).Times(1);
 
   callbacks_.AdvanceTime(rtt);
   handler_.HandleHeartbeatAck(std::move(ack));
@@ -162,7 +162,7 @@ TEST_F(HeartbeatHandlerTest, DoesntObserveInvalidHeartbeats) {
 
   // Go backwards in time - which make the HEARTBEAT-ACK have an invalid
   // timestamp in it, as it will be in the future.
-  callbacks_.AdvanceTime(DurationMs(-100));
+  callbacks_.AdvanceTime(TimeDelta::Millis(-100));
 
   handler_.HandleHeartbeatAck(std::move(ack));
 }

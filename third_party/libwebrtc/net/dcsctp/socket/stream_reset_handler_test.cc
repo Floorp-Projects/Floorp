@@ -130,8 +130,8 @@ class StreamResetHandlerTest : public testing::Test {
     EXPECT_CALL(ctx_, current_rto).WillRepeatedly(Return(kRto));
   }
 
-  void AdvanceTime(DurationMs duration) {
-    callbacks_.AdvanceTime(DurationMs(kRto));
+  void AdvanceTime(TimeDelta duration) {
+    callbacks_.AdvanceTime(duration);
     for (;;) {
       absl::optional<TimeoutID> timeout_id = callbacks_.GetNextExpiredTimeout();
       if (!timeout_id.has_value()) {
@@ -630,7 +630,7 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
   // Let some time pass, so that the reconfig timer expires, and retries the
   // same request.
   EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(1);
-  AdvanceTime(DurationMs(kRto));
+  AdvanceTime(kRto);
 
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
   ASSERT_FALSE(payload.empty());

@@ -11,6 +11,7 @@ import("../../../webrtc.gni")
 rtc_source_set("send_queue") {
   deps = [
     "../../../api:array_view",
+    "../../../api/units:timestamp",
     "../common:internal_types",
     "../packet:chunk",
     "../packet:data",
@@ -105,6 +106,7 @@ rtc_library("outstanding_data") {
     ":send_queue",
     "../../../api:array_view",
     "../../../api/units:time_delta",
+    "../../../api/units:timestamp",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base/containers:flat_set",
@@ -164,6 +166,7 @@ if (rtc_include_tests) {
     deps = [
       ":send_queue",
       "../../../api:array_view",
+      "../../../api/units:timestamp",
       "../../../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

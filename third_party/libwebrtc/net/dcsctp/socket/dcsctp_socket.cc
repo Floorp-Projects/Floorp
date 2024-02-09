@@ -83,6 +83,7 @@
 namespace dcsctp {
 namespace {
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 // https://tools.ietf.org/html/rfc4960#section-5.1
 constexpr uint32_t kMinVerificationTag = 1;
@@ -519,7 +520,7 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
     return SendStatus::kErrorResourceExhaustion;
   }
 
-  TimeMs now = callbacks_.TimeMillis();
+  Timestamp now = callbacks_.Now();
   ++metrics_.tx_messages_count;
   send_queue_.Add(now, std::move(message), send_options);
   if (tcb_ != nullptr) {
@@ -769,7 +770,7 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
   ++metrics_.rx_packets_count;
 
   if (packet_observer_ != nullptr) {
-    packet_observer_->OnReceivedPacket(callbacks_.TimeMillis(), data);
+    packet_observer_->OnReceivedPacket(TimeMs(callbacks_.Now().ms()), data);
   }
 
   absl::optional<SctpPacket> packet = SctpPacket::Parse(data, options_);
@@ -952,7 +953,7 @@ TimeDelta DcSctpSocket::OnCookieTimerExpiry() {
   RTC_DCHECK(state_ == State::kCookieEchoed);
 
   if (t1_cookie_->is_running()) {
-    tcb_->SendBufferedPackets(callbacks_.TimeMillis());
+    tcb_->SendBufferedPackets(callbacks_.Now());
   } else {
     InternalClose(ErrorKind::kTooManyRetries, "No COOKIE_ACK received");
   }
@@ -997,7 +998,7 @@ void DcSctpSocket::OnSentPacket(rtc::ArrayView<const uint8_t> packet,
   // The packet observer is invoked even if the packet was failed to be sent, to
   // indicate an attempt was made.
   if (packet_observer_ != nullptr) {
-    packet_observer_->OnSentPacket(callbacks_.TimeMillis(), packet);
+    packet_observer_->OnSentPacket(TimeMs(callbacks_.Now().ms()), packet);
   }
 
   if (status == SendPacketStatus::kSuccess) {
@@ -1283,7 +1284,7 @@ void DcSctpSocket::HandleInitAck(
 
   // The connection isn't fully established just yet.
   tcb_->SetCookieEchoChunk(CookieEchoChunk(cookie->data()));
-  tcb_->SendBufferedPackets(callbacks_.TimeMillis());
+  tcb_->SendBufferedPackets(callbacks_.Now());
   t1_cookie_->Start();
 }
 
@@ -1352,7 +1353,7 @@ void DcSctpSocket::HandleCookieEcho(
   // "A COOKIE ACK chunk may be bundled with any pending DATA chunks (and/or
   // SACK chunks), but the COOKIE ACK chunk MUST be the first chunk in the
   // packet."
-  tcb_->SendBufferedPackets(b, callbacks_.TimeMillis());
+  tcb_->SendBufferedPackets(b, callbacks_.Now());
 }
 
 bool DcSctpSocket::HandleCookieEchoWithTCB(const CommonHeader& header,
@@ -1450,7 +1451,7 @@ void DcSctpSocket::HandleCookieAck(
   t1_cookie_->Stop();
   tcb_->ClearCookieEchoChunk();
   SetState(State::kEstablished, "COOKIE_ACK received");
-  tcb_->SendBufferedPackets(callbacks_.TimeMillis());
+  tcb_->SendBufferedPackets(callbacks_.Now());
   callbacks_.OnConnected();
 }
 
@@ -1466,7 +1467,7 @@ void DcSctpSocket::HandleSack(const CommonHeader& header,
   absl::optional<SackChunk> chunk = SackChunk::Parse(descriptor.data);
 
   if (ValidateParseSuccess(chunk) && ValidateHasTCB()) {
-    TimeMs now = callbacks_.TimeMillis();
+    Timestamp now = callbacks_.Now();
     SackChunk sack = ChunkValidators::Clean(*std::move(chunk));
 
     if (tcb_->retransmission_queue().HandleSack(now, sack)) {
@@ -1555,7 +1556,7 @@ void DcSctpSocket::HandleError(const CommonHeader& header,
 void DcSctpSocket::HandleReconfig(
     const CommonHeader& header,
     const SctpPacket::ChunkDescriptor& descriptor) {
-  TimeMs now = callbacks_.TimeMillis();
+  Timestamp now = callbacks_.Now();
   absl::optional<ReConfigChunk> chunk = ReConfigChunk::Parse(descriptor.data);
   if (ValidateParseSuccess(chunk) && ValidateHasTCB()) {
     tcb_->stream_reset_handler().HandleReConfig(*std::move(chunk));
