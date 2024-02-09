@@ -4701,14 +4701,13 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestSetAudioCodecs) {
 
 // Compare the two vectors of codecs ignoring the payload type.
 bool CodecsMatch(const std::vector<Codec>& codecs1,
-                 const std::vector<Codec>& codecs2,
-                 const webrtc::FieldTrialsView* field_trials) {
+                 const std::vector<Codec>& codecs2) {
   if (codecs1.size() != codecs2.size()) {
     return false;
   }
 
   for (size_t i = 0; i < codecs1.size(); ++i) {
-    if (!codecs1[i].Matches(codecs2[i], field_trials)) {
+    if (!codecs1[i].Matches(codecs2[i])) {
       return false;
     }
   }
@@ -4752,11 +4751,11 @@ void TestAudioCodecsOffer(RtpTransceiverDirection direction) {
     // might eventually be used anything, but we don't know more at this
     // moment.
     if (acd->direction() == RtpTransceiverDirection::kSendOnly) {
-      EXPECT_TRUE(CodecsMatch(send_codecs, acd->codecs(), &field_trials));
+      EXPECT_TRUE(CodecsMatch(send_codecs, acd->codecs()));
     } else if (acd->direction() == RtpTransceiverDirection::kRecvOnly) {
-      EXPECT_TRUE(CodecsMatch(recv_codecs, acd->codecs(), &field_trials));
+      EXPECT_TRUE(CodecsMatch(recv_codecs, acd->codecs()));
     } else {
-      EXPECT_TRUE(CodecsMatch(sendrecv_codecs, acd->codecs(), &field_trials));
+      EXPECT_TRUE(CodecsMatch(sendrecv_codecs, acd->codecs()));
     }
   }
 }

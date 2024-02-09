@@ -20,7 +20,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/audio_codecs/audio_format.h"
-#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/media_constants.h"
@@ -112,8 +111,7 @@ struct RTC_EXPORT Codec {
   // Indicates if this codec is compatible with the specified codec by
   // checking the assigned id and profile values for the relevant video codecs.
   // H264 levels are not compared.
-  bool Matches(const Codec& codec,
-               const webrtc::FieldTrialsView* field_trials = nullptr) const;
+  bool Matches(const Codec& codec) const;
   bool MatchesRtpCodec(const webrtc::RtpCodec& capability) const;
 
   // Find the parameter for `name` and write the value to `out`.

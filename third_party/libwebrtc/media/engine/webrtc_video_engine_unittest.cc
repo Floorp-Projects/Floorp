@@ -4378,7 +4378,7 @@ TEST_F(WebRtcVideoChannelTest, SetDefaultSendCodecs) {
 
   absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
-  EXPECT_TRUE(codec->Matches(engine_.send_codecs()[0], &field_trials_));
+  EXPECT_TRUE(codec->Matches(engine_.send_codecs()[0]));
 
   // Using a RTX setup to verify that the default RTX payload type is good.
   const std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs1);
