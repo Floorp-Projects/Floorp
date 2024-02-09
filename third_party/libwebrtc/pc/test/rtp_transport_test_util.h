@@ -36,6 +36,13 @@ class TransportObserver : public RtpPacketSinkInterface {
         [this](webrtc::RtpPacketReceived& packet) {
           OnUndemuxableRtpPacket(packet);
         });
+    rtp_transport->SubscribeSentPacket(this,
+                                       [this](const rtc::SentPacket& packet) {
+                                         sent_packet_count_++;
+                                         if (action_on_sent_packet_) {
+                                           action_on_sent_packet_();
+                                         }
+                                       });
   }
 
   // RtpPacketInterface override.
@@ -57,6 +64,7 @@ class TransportObserver : public RtpPacketSinkInterface {
   int rtp_count() const { return rtp_count_; }
   int un_demuxable_rtp_count() const { return un_demuxable_rtp_count_; }
   int rtcp_count() const { return rtcp_count_; }
+  int sent_packet_count() const { return sent_packet_count_; }
 
   rtc::CopyOnWriteBuffer last_recv_rtp_packet() {
     return last_recv_rtp_packet_;
@@ -81,16 +89,21 @@ class TransportObserver : public RtpPacketSinkInterface {
   void SetActionOnReadyToSend(absl::AnyInvocable<void(bool)> action) {
     action_on_ready_to_send_ = std::move(action);
   }
+  void SetActionOnSentPacket(absl::AnyInvocable<void()> action) {
+    action_on_sent_packet_ = std::move(action);
+  }
 
  private:
   bool ready_to_send_ = false;
   int rtp_count_ = 0;
   int un_demuxable_rtp_count_ = 0;
   int rtcp_count_ = 0;
+  int sent_packet_count_ = 0;
   int ready_to_send_signal_count_ = 0;
   rtc::CopyOnWriteBuffer last_recv_rtp_packet_;
   rtc::CopyOnWriteBuffer last_recv_rtcp_packet_;
   absl::AnyInvocable<void(bool)> action_on_ready_to_send_;
+  absl::AnyInvocable<void()> action_on_sent_packet_;
 };
 
 }  // namespace webrtc
