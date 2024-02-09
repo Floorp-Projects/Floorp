@@ -61,7 +61,6 @@ class HpackDynamicTableReporter final : public nsIMemoryReporter {
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override {
-    MutexAutoLock lock(mMutex);
     if (mCompressor) {
       MOZ_COLLECT_REPORT("explicit/network/hpack/dynamic-tables", KIND_HEAP,
                          UNITS_BYTES,
@@ -76,8 +75,7 @@ class HpackDynamicTableReporter final : public nsIMemoryReporter {
 
   ~HpackDynamicTableReporter() = default;
 
-  Mutex mMutex{"HpackDynamicTableReporter"};
-  Http2BaseCompressor* mCompressor MOZ_GUARDED_BY(mMutex);
+  Http2BaseCompressor* mCompressor;
 
   friend class Http2BaseCompressor;
 };
@@ -189,18 +187,13 @@ nvFIFO::~nvFIFO() { Clear(); }
 void nvFIFO::AddElement(const nsCString& name, const nsCString& value) {
   nvPair* pair = new nvPair(name, value);
   mByteCount += pair->Size();
-  MutexAutoLock lock(mMutex);
   mTable.PushFront(pair);
 }
 
 void nvFIFO::AddElement(const nsCString& name) { AddElement(name, ""_ns); }
 
 void nvFIFO::RemoveElement() {
-  nvPair* pair = nullptr;
-  {
-    MutexAutoLock lock(mMutex);
-    pair = mTable.Pop();
-  }
+  nvPair* pair = mTable.Pop();
   if (pair) {
     mByteCount -= pair->Size();
     delete pair;
@@ -219,7 +212,6 @@ size_t nvFIFO::StaticLength() const { return gStaticHeaders->GetSize(); }
 
 void nvFIFO::Clear() {
   mByteCount = 0;
-  MutexAutoLock lock(mMutex);
   while (mTable.GetSize()) {
     delete mTable.Pop();
   }
@@ -252,27 +244,20 @@ Http2BaseCompressor::~Http2BaseCompressor() {
     Telemetry::Accumulate(mPeakCountID, mPeakCount);
   }
   UnregisterStrongMemoryReporter(mDynamicReporter);
-  {
-    MutexAutoLock lock(mDynamicReporter->mMutex);
-    mDynamicReporter->mCompressor = nullptr;
-  }
+  mDynamicReporter->mCompressor = nullptr;
   mDynamicReporter = nullptr;
-}
-
-size_t nvFIFO::SizeOfDynamicTable(mozilla::MallocSizeOf aMallocSizeOf) const {
-  size_t size = 0;
-  MutexAutoLock lock(mMutex);
-  for (const auto elem : mTable) {
-    size += elem->SizeOfIncludingThis(aMallocSizeOf);
-  }
-  return size;
 }
 
 void Http2BaseCompressor::ClearHeaderTable() { mHeaderTable.Clear(); }
 
 size_t Http2BaseCompressor::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
-  return mHeaderTable.SizeOfDynamicTable(aMallocSizeOf);
+  size_t size = 0;
+  for (uint32_t i = mHeaderTable.StaticLength(); i < mHeaderTable.Length();
+       ++i) {
+    size += mHeaderTable[i]->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return size;
 }
 
 void Http2BaseCompressor::MakeRoom(uint32_t amount, const char* direction) {
