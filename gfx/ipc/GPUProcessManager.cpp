@@ -213,10 +213,14 @@ bool GPUProcessManager::LaunchGPUProcess() {
   // Start the Vsync I/O thread so can use it as soon as the process launches.
   EnsureVsyncIOThread();
 
-  // If the process didn't live long enough, reset the stable flag so that we
-  // don't end up in a restart loop.
+  // If the previous process didn't live long enough, increment our unstable
+  // attempts counter so that we don't end up in a restart loop. If the process
+  // did live long enough, reset the counter so that we don't disable the
+  // process too eagerly.
   auto newTime = TimeStamp::Now();
-  if (!IsProcessStable(newTime)) {
+  if (IsProcessStable(newTime)) {
+    mUnstableProcessAttempts = 0;
+  } else {
     mUnstableProcessAttempts++;
     mozilla::glean::gpu_process::unstable_launch_attempts.Set(
         mUnstableProcessAttempts);
