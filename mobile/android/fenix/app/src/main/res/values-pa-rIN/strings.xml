@@ -2192,6 +2192,9 @@
     <string name="other_default_search_engine_suggestion_header">%s ਖੋਜ</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">ਆਪਣੇ ਮੂਲ ਬਰਾਊਜ਼ਰ ਨੂੰ ਬਦਲੋ</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">ਵੈੱਬਸਾਈਟਾਂ, ਈਮੇਲਾਂ ਅਤੇ ਸੁਨੇਹਿਆਂ ਨੂੰ Firefox ਵਿੱਚ ਆਪਣੇ ਖੋਲ੍ਹਣ ਲਈ ਲਿੰਕ ਸੈੱਟ ਕਰੋ।</string>
 
     <!-- Content description for close button in collection placeholder. -->

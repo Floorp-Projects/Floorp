@@ -2206,7 +2206,7 @@
 
     <!-- Default browser experiment -->
     <!-- Default browser card title -->
-    <string name="default_browser_experiment_card_title">Ihren Standardbrowser wechseln</string>
+    <string name="default_browser_experiment_card_title">Wechseln Sie Ihren Standardbrowser</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Stellen Sie Links von Websites, E-Mails und Nachrichten so ein, dass sie in Firefox automatisch geöffnet werden.</string>
 

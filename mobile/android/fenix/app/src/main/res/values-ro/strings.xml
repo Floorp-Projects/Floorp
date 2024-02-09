@@ -44,13 +44,38 @@
     <string name="private_browsing_placeholder_description_2">%1$s îți șterge istoricul de căutare și navigare din filele private când le închizi sau când ieși din aplicație. Deși nu te anonimizează pe site-urile web sau pentru furnizorul de servicii de internet, ușurează păstrarea confidențialității asupra a ce faci online față de oricine altcineva folosește acest dispozitiv.</string>
     <string name="private_browsing_common_myths">Mituri comune despre navigarea privată</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Nu lăsa urme pe acest dispozitiv</string>
+
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s îți șterge cookie-urile, istoricul și datele site-urilor când închizi toate ferestrele private. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Cine ar putea să-mi vadă activitatea?</string>
+
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Adaugă în ecranul de start</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nu, mulțumesc</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Poți seta %1$s să deschidă automat linkuri în aplicații.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Mergi la setări</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Înlătură</string>
+
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Atinge aici pentru a începe o nouă sesiune privată. Șterge-ți istoricul, cookie-urile — totul.</string>
+
 
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Înlătură</string>
@@ -70,11 +95,22 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Filă privată nouă</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Comandă rapidă pentru parole</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Revino la această filă</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Afișează toate</string>
+
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Elimină</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Vizitate recent</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -99,12 +135,16 @@
     <string name="browser_menu_library">Bibliotecă</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Versiune site de desktop</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Deschide într-o filă nouă</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Adaugă în ecranul de start</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalează</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Caută în pagină</string>
+    <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
+    <string name="browser_menu_translations">Tradu pagina</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Salvează în colecție</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -131,6 +171,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editează</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Șterge istoricul de navigare</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Limbă selectată</string>
@@ -142,8 +186,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scanează</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Motor de căutare</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setări pentru motorul de căutare</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -158,13 +200,36 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s va partaja tot ce tastezi în bara de adrese cu motorul de căutare implicit.</string>
 
-    <!-- Juno first user onboarding flow experiment -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Desemnează %s drept browserul implicit</string>
-    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Motor de căutare %s</string>
+
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Ne place să te protejăm</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Browserul nostru, susținut de o organizație non-profit, ajută la oprirea companiilor să te urmărească în secret pe web.\n\nAflă mai multe în notificarea noastră privind confidențialitatea.</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Păstrează-ți datele criptate când treci de pe un dispozitiv pe altul</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Când ești autentificat și sincronizat, ești mai în siguranță. Firefox criptează parolele, marcajele și multe altele.</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Desemnează Firefox drept browserul implicit</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Notificările te ajută să fii mai în siguranță cu Firefox</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Trimite-ți securizat file între dispozitive și descoperă alte funcții de confidențialitate în Firefox.</string>
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Încearcă widgetul de căutare Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Cu Firefox pe ecranul de start vei avea acces facil la primul browser orientat pe confidențailitate care blochează elementele de urmărire inter-site-uri.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Adaugă widgetul Firefox</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Nu acum</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Căutare</string>
@@ -181,12 +246,22 @@
     <string name="preferences_category_general">Generalități</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Despre</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Selectează una dintre opțiuni</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Gestionează motoarele de căutare alternative</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Editează motoarele vizibile în meniul de căutare</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Motoare vizibile în meniul de căutare</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motor de căutare implicit</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Căutare</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bară de adrese</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Motoare de căutare</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Sugestii de la motoarele de căutare</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Evaluează pe Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -211,22 +286,18 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accesibilitate</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Server personalizat pentru contul Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Server personalizat de sincronizare</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Server de cont Firefox/sincronizare modificat. Se închide aplicația pentru implementarea modificărilor…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Cont</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Bară de unelte</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Temă</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Pagină de start</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizare</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Cont Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Reconectează-te pentru a continua sincronizarea</string>
     <!-- Preference for language -->
@@ -237,8 +308,6 @@
     <string name="preferences_data_collection">Colectare de date</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depanare de la distanță prin USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Afișează motoare de căutare</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Afișează sugestii de căutare</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -257,6 +326,7 @@
     <string name="preferences_open_links_in_apps">Deschide linkuri în aplicații</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Manager extern pentru descărcări</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Suplimente</string>
 
@@ -268,7 +338,16 @@
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Numele colecției</string>
 
-    <!-- Account Preferences -->
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Marcaje recente</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Vizitate recent</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Povești sponsorizate</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Comenzi rapide sponsorizate</string>
+
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizează acum</string>
     <!-- Preference category for sync -->
@@ -403,6 +482,10 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">După o lună</string>
 
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Pagină de start</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Pagina de start după patru ore de inactivitate</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Închide manual</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -411,6 +494,11 @@
     <string name="close_tabs_after_one_week_summary">Închide după o săptămână</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Închide după o lună</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Deschide pe pagina de start</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Deschide ultima filă</string>
 
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">OK</string>
@@ -453,7 +541,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Deschide filele</string>
     <!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Șterge</string>
+    <string name="remove_top_site">Șterge</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Șterge din istoric</string>
@@ -752,13 +840,9 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d (de) file</string>
 
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Istoric de navigare și date site-uri</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d (de) adrese</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookie-uri</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Vei fi deconectat(ă) de pe majoritatea site-urilor</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -787,31 +871,11 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Se șterg datele de navigare…</string>
 
+    <!-- Onboarding -->
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync este activat</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standard (implicit)</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Strictă</string>
-
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Citește notificarea noastră privind confidențialitatea</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Începe navigarea</string>
 
     <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Alege o temă</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automat</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Se adaptează la setările dispozitivului</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Temă întunecată</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Temă deschisă</string>
-
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">File trimise!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -844,11 +908,7 @@
     <string name="etp_settings">Setări de protecție</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protecție îmbunătățită împotriva urmăririi</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navighează fără să fii urmărit(ă)</string>
 
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Păstrează-ți datele pentru tine. %s te protejează de multe dintre cele mai frecvente elemente de urmărire care monitorizează ce faci online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Află mai multe</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -969,6 +1029,9 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Denumire comandă rapidă</string>
 
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Poți adăuga cu ușurință acest site web în ecranul de start al dispozitivului pentru acces instant și o navigare mai rapidă, ca și cum ai fi într-o aplicație.</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Date de autentificare și parole</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1047,21 +1110,11 @@
     <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Editează motorul de căutare</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Adaugă</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Salvează</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Editează</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Șterge</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Altele</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Denumire</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Șir de căutare de utilizat</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Înlocuiește interogarea cu „%s”. Exemplu: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1157,11 +1210,11 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Comenzi rapide</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Nume</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Nume</string>
 
     <!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
+    <string name="top_sites_rename_dialog_ok">OK</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -1169,5 +1222,7 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Elimină</string>
+
+    <!-- Translations feature-->
 
     </resources>

@@ -2223,6 +2223,9 @@
     <string name="other_default_search_engine_suggestion_header">Cercar %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Cambia tu navigator predefinite</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Stabilir qual ligamines de sitos web, e-mails e messages se aperi automaticamente in Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

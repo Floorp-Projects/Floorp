@@ -2199,7 +2199,7 @@
 
     <!-- Default browser experiment -->
     <!-- Default browser card title -->
-    <string name="default_browser_experiment_card_title">Cambia tu navegador predeterminado</string>
+    <string name="default_browser_experiment_card_title">Cambiá tu navegador predeterminado</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Configurar enlaces de sitios web, correos electrónicos y mensajes para que se abran automáticamente en Firefox.</string>
 

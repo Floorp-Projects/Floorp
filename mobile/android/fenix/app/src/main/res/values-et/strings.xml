@@ -192,6 +192,7 @@
     <string name="browser_menu_edit">Muuda</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Kohanda avalehte</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Avaleht</string>
@@ -208,8 +209,6 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skanni</string>
 
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Otsingumootor</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Otsingumootori sätted</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -223,13 +222,16 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s jagab vaikeotsingumootoriga kõike, mida aadressiribale sisestad.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Otsi otsingumootoriga %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Otsi otse aadressiribalt</string>
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Otsingusätted</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Otsi seekord järgneva otsingumootoriga:</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -253,8 +255,6 @@
     <string name="preferences_default_search_engine">Vaikeotsingumootor</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Otsimine</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Aadressiriba</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Hinda Google Plays</string>
     <!-- Preference linking to about page for Fenix
@@ -283,10 +283,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Ainult HTTPS-režiim</string>
 
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Sellel saidil väljas</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Sellel saidil sees</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Kõrgendatud turvalisuse nimel üritatakse saitidega ühenduda ainult HTTPSi krüptitud protokolli vahendusel.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Sees</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Väljas</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
@@ -303,12 +306,8 @@
     <string name="errorpage_httpsonly_message_summary">Siiski on võimalik, et sellega on seotud ka ründaja. Saidi külastamise jätkamisel ära sisesta tundliku teavet. Jätkamisel lülitatakse saidi jaoks ajutiselt ainult HTTPSi režiim välja.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Hõlbustus</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Kohandatud Firefoxi konto server</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Kohandatud sünkroonimise server</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefoxi konto/sünkroniseerimise server muutus. Muudatuste rakendumiseks väljutakse äpist…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -321,8 +320,6 @@
     <string name="preferences_gestures">Žestid</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Kohandamine</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefoxi konto</string>
 
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Sünkroniseerimise jätkamiseks loo ühendus uuesti</string>
@@ -334,8 +331,6 @@
     <string name="preferences_data_collection">Andmete kogumine</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Kuvatakse otsingumootoreid</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Kuvatakse otsingu soovitusi</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -364,6 +359,7 @@
     <string name="preferences_open_links_in_apps_never">Mitte kunagi</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Kasutatakse välist allalaadimishaldurit</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Lisad</string>
 
@@ -413,13 +409,6 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Vaata</string>
 
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Lisa pole toetatud</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Lisa on juba paigaldatud</string>
-
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sünkroniseeri kohe</string>
     <!-- Preference category for sync -->
@@ -558,13 +547,6 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Loobu</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sait</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d saiti</string>
-
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Hiljuti suletud kaardid</string>
 
@@ -699,10 +681,10 @@
     <string name="collection_open_tabs">Ava kaardid</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Kollektsiooni nimi</string>
-	<!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Muuda nime</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Eemalda</string>
+    <!-- Text for the menu button to rename a top site -->
+    <string name="rename_top_site">Muuda nime</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Eemalda</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Kustuta ajaloost</string>
@@ -879,10 +861,10 @@
     <string name="phone_feature_blocked_by_android">Keelatud Androidi poolt</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Erandid</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Sees</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Väljas</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Tavaline</string>
     <!-- Summary of tracking protection preference if tracking protection is set to strict -->
     <string name="tracking_protection_strict">Range</string>
     <!-- Summary of tracking protection preference if tracking protection is set to custom -->
@@ -971,7 +953,7 @@
     <string name="share_button_content_description">Jaga</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Salvesta PDFina</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">PDFi loomine pole võimalik</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Edasta seadmele</string>
@@ -1080,13 +1062,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Avatud kaardid</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d kaarti</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Lehitsemise ajalugu ja saitide andmed</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d aadressi</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Küpsised</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Sind logitakse enamikest saitidest välja</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1124,39 +1102,11 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupp kustutatud</string>
 
+    <!-- Onboarding -->
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync on sisse lülitatud</string>
 
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Tavaline (vaikimisi)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Tasakaalustatud privaatsuse ja jõudluse jaoks. Lehed laaditakse tavapäraselt.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Range</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokib rohkem jälitajaid ning lehed laadivad kiiremini, aga mõned lehtedel olevad funktsionaalsused võivad katki minna.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Vali oma tööriistariba asukoht</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Loe meie privaatsuspoliitikat</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Alusta veebilehitsemist</string>
-
     <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Vali oma teema</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Säästa akut ja oma silmi, lubades tume teema.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automaatne</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Kohandub sinu seadme sätetega</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tume teema</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Hele teema</string>
-
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Kaardid on saadetud!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -1192,23 +1142,21 @@
     <string name="etp_settings">Kaitse sätted</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Täiustatud jälitamisvastane kaitse</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Lehitse veebi ilma jälitamiseta</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Hoia oma andmed endale. %s kaitseb sind paljude tuntud jälitajate eest, kes jälgivad, mida sa võrgus olles teed.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s kaitseb sind paljude tuntud jälitajate eest, kes jälgivad, mida sa võrgus olles teed.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Rohkem teavet</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Tavaline (vaikimisi)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Tasakaalustatud privaatsuse ja jõudluse jaoks. Lehed laaditakse tavapäraselt.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Lehed laadivad normaalselt, kuid blokitakse vähem jälitajaid.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mis on blokitud tavalise jälitamisvastase kaitse poolt</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Range</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokib rohkem jälitajaid ning lehed laadivad kiiremini, aga mõned lehtedel olevad funktsionaalsused võivad katki minna.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Tugevam jälitamisvastane kaitse ja suurem jõudlus, kuid mõned saidid ei pruugi korralikult töötada.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mis on blokitud tugevama jälitamisvastase kaitse poolt</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1228,6 +1176,10 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">kõik kolmanda osapoole küpsised (võib põhjustada mõnel veebisaidil probleeme)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">kõik küpsised (mõned veebisaidid lähevad katki)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Eraldatakse saidiülesed küpsised</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Veebisaite juhendatakse andmeid mitte müüma ega jagama</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Jälitav sisu</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1252,8 +1204,12 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Saitideülesed jälitamisküpsised</string>
 
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Saidiülesed küpsised</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokib küpsised, mida reklaami- ja analüüsiettevõtted üle paljude saitide sinu andmete kogumiseks kasutavad.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Täielik küpsistevastane eraldab külastatava saidi küpsiseid, nii et jälitajad, nt reklaamivõrgustikud, ei saa nende abil sind saitide üleselt jälitada.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Krüptorahakaevurid</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1557,21 +1513,11 @@
     <string name="search_engine_add_custom_search_engine_title">Otsingumootori lisamine</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Otsingumootori muutmine</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Lisa</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Salvesta</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Muuda</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Kustuta</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Muu</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Nimi</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Kasutatav otsingustring</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Päringu asendamiseks kasuta “%s”. Näiteks \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1702,14 +1648,14 @@
     <string name="top_sites_max_limit_confirmation_button">Olgu, sain aru</string>
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Otseteed</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Nimi</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Nimi</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Otsetee nimi</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">Olgu</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Loobu</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">Olgu</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Loobu</string>
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Sätted</string>
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
@@ -1738,7 +1684,7 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automaatne sulgemine on lubatud</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Määra Firefox automaatselt avama linke, e-posti ja sõnumeid.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -1772,5 +1718,7 @@
     <string name="experiments_snackbar">Andmete saatmiseks luba telemeetria.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Mine sätetesse</string>
+
+    <!-- Translations feature-->
 
     </resources>
