@@ -3352,7 +3352,10 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
 
   // Try to set the cursor image first, and fall back to the numeric cursor.
   bool fromImage = true;
-  GdkCursor* newCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
+  GdkCursor* newCursor = nullptr;
+  if (mCustomCursorAllowed) {
+    newCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
+  }
   if (!newCursor) {
     fromImage = false;
     newCursor = get_gtk_cursor(aCursor.mDefaultCursor);
