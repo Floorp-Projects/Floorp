@@ -56,7 +56,7 @@ add_task(async function test_network_offline() {
   sandbox.spy(TabsSetupFlowManager, "tryToClearError");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "syncedtabs");
+    await navigateToViewAndWait(document, "syncedtabs");
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     Services.obs.notifyObservers(
@@ -112,7 +112,7 @@ add_task(async function test_sync_error() {
   const sandbox = await setupWithDesktopDevices();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "syncedtabs");
+    await navigateToViewAndWait(document, "syncedtabs");
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     Services.obs.notifyObservers(null, "weave:service:sync:error");

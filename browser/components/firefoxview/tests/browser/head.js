@@ -548,31 +548,19 @@ registerCleanupFunction(() => {
   gSandbox?.restore();
 });
 
-function navigateToCategory(document, category) {
-  const navigation = document.querySelector("fxview-category-navigation");
-  let navButton = Array.from(navigation.categoryButtons).filter(
-    categoryButton => {
-      return categoryButton.name === category;
-    }
-  )[0];
-  navButton.buttonEl.click();
-}
-
-async function navigateToCategoryAndWait(document, category) {
-  info(`navigateToCategoryAndWait, for ${category}`);
-  const navigation = document.querySelector("fxview-category-navigation");
+async function navigateToViewAndWait(document, view) {
+  info(`navigateToViewAndWait, for ${view}`);
+  const navigation = document.querySelector("moz-page-nav");
   const win = document.ownerGlobal;
   SimpleTest.promiseFocus(win);
-  let navButton = Array.from(navigation.categoryButtons).find(
-    categoryButton => {
-      return categoryButton.name === category;
-    }
-  );
+  let navButton = Array.from(navigation.pageNavButtons).find(pageNavButton => {
+    return pageNavButton.view === view;
+  });
   const namedDeck = document.querySelector("named-deck");
 
   await BrowserTestUtils.waitForCondition(
     () => navButton.getBoundingClientRect().height,
-    `Waiting for ${category} button to be clickable`
+    `Waiting for ${view} button to be clickable`
   );
 
   EventUtils.synthesizeMouseAtCenter(navButton, {}, win);
@@ -582,10 +570,10 @@ async function navigateToCategoryAndWait(document, category) {
       child => child.slot == "selected"
     );
     return (
-      namedDeck.selectedViewName == category &&
+      namedDeck.selectedViewName == view &&
       selectedView?.getBoundingClientRect().height
     );
-  }, `Waiting for ${category} to be visible`);
+  }, `Waiting for ${view} to be visible`);
 }
 
 /**
