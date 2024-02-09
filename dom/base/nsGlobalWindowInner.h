@@ -50,6 +50,7 @@
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/MozPromise.h"
 
 class nsIArray;
 class nsIBaseWindow;
@@ -1106,7 +1107,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // This method is called if this window loads a 3rd party tracking resource
   // and the storage is just been changed. The window can reset the partitioned
   // storage objects and switch to the first party cookie jar.
-  void StorageAccessPermissionChanged();
+  RefPtr<mozilla::GenericPromise> StorageAccessPermissionChanged(bool aGranted);
 
  protected:
   static void NotifyDOMWindowDestroyed(nsGlobalWindowInner* aWindow);
