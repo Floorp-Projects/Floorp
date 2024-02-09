@@ -44,8 +44,12 @@ class ARM64Disassembler : public vixl::Disassembler {
 
  protected:
   void ProcessOutput(const vixl::Instruction* instr) override {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     JS::UniqueChars formatted = JS_smprintf(
         "0x%p  %08x  %s", instr, instr->InstructionBits(), GetOutput());
+    if (!formatted) {
+      oomUnsafe.crash("ARM64Disassembler::ProcessOutput");
+    }
     callback_(formatted.get());
   }
 
