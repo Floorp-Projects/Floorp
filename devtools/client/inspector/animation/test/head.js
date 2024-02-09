@@ -70,7 +70,10 @@ const closeAnimationInspector = async function () {
  */
 const enableAnimationFeatures = function () {
   return SpecialPowers.pushPrefEnv({
-    set: [["dom.animations-api.timelines.enabled", true]],
+    set: [
+      ["dom.animations-api.getAnimations.enabled", true],
+      ["dom.animations-api.timelines.enabled", true],
+    ],
   });
 };
 

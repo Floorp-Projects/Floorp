@@ -81,6 +81,7 @@ function test_getUnanimatedComputedStyle() {
   SpecialPowers.pushPrefEnv(
     {
       set: [
+        ["dom.animations-api.getAnimations.enabled", true],
         ["dom.animations-api.timelines.enabled", true],
         ["layout.css.properties-and-values.enabled", true],
       ],

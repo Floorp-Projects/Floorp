@@ -3423,6 +3423,8 @@ class Document : public nsINode,
   mozilla::dom::HTMLAllCollection* All();
 
   static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
+  static bool IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
+                                                  JSObject* aObject);
   static bool AreWebAnimationsTimelinesEnabled(JSContext* aCx,
                                                JSObject* aObject);
   // Checks that the caller is either chrome or some addon.
