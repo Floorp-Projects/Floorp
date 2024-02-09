@@ -4,13 +4,57 @@
 
 <script src="chrome://browser/content/preferences/translations.js"/>
 
-<hbox hidden="true"
-      data-category="paneTranslations">
-  <button id="translations-settings-back-button" class="back-button" data-l10n-id="translations-settings-back-button-text"/>
-</hbox>
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+     data-category="paneTranslations">
 
-<hbox hidden="true" class="header"
-      data-category="paneTranslations">
-    <html:h2 id="translations-settings-header"
-             data-l10n-id="translations-settings-header-text"/>
-</hbox>
+  <button id="translations-settings-back-button" class="back-button"
+          data-l10n-id="translations-settings-back-button"/>
+
+  <h1 id="translations-settings-header"
+      data-l10n-id="translations-settings-header"/>
+
+  <p id="translations-settings-description" data-l10n-id="translations-settings-description"/>
+
+  <div class="translations-settings-manage-list"
+       id="translations-settings-manage-always-translate-list">
+    <div class="translations-settings-manage-language">
+      <h2 id="translations-settings-always-translate" data-l10n-id="translations-settings-always-translate"/>
+      <xul:menulist id="translations-settings-always-translate-list"
+                    data-l10n-id="translations-settings-add-language-button">
+        <xul:menupopup/>
+      </xul:menulist>
+    </div>
+  </div>
+
+  <div id="translations-settings-manage-never-translate-list"
+       class="translations-settings-manage-list">
+    <div class="translations-settings-manage-language">
+      <h2 id="translations-settings-never-translate" data-l10n-id="translations-settings-never-translate"/>
+      <xul:menulist id="translations-settings-never-translate-list"
+                    data-l10n-id="translations-settings-add-language-button">
+        <xul:menupopup/>
+      </xul:menulist>
+    </div>
+  </div>
+
+  <div id="translations-settings-never-sites-list" class="translations-settings-manage-list" >
+    <div class="translations-settings-manage-list-info" >
+      <h2 id="translations-settings-never-sites-header"
+          data-l10n-id="translations-settings-never-sites-header"/>
+      <p id="translations-settings-never-sites"
+         data-l10n-id="translations-settings-never-sites-description"/>
+    </div>
+  </div>
+
+  <div id="translations-settings-manage-install-list" class="translations-settings-manage-list">
+    <div class="translations-settings-manage-list-info">
+      <h2 id="translations-settings-download-languages"
+          data-l10n-id="translations-settings-download-languages"/>
+      <a is="moz-support-link" class="learnMore"
+          id="download-languages-learn-more"
+          data-l10n-id="translations-settings-download-languages-link"
+          support-page="website-translation"/>
+    </div>
+  </div>
+</div>

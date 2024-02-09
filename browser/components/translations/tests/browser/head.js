@@ -1389,6 +1389,33 @@ class TranslationsSettingsTestUtils {
     const elements = {
       backButton: document.getElementById("translations-settings-back-button"),
       header: document.getElementById("translations-settings-header"),
+      translationsSettingsDescription: document.getElementById(
+        "translations-settings-description"
+      ),
+      translateAlwaysHeader: document.getElementById(
+        "translations-settings-always-translate"
+      ),
+      translateNeverHeader: document.getElementById(
+        "translations-settings-never-translate"
+      ),
+      translateAlwaysAddButton: document.getElementById(
+        "translations-settings-always-translate-list"
+      ),
+      translateNeverAddButton: document.getElementById(
+        "translations-settings-never-translate-list"
+      ),
+      translateNeverSiteHeader: document.getElementById(
+        "translations-settings-never-sites-header"
+      ),
+      translateNeverSiteDesc: document.getElementById(
+        "translations-settings-never-sites"
+      ),
+      translateDownloadLanguagesHeader: document.getElementById(
+        "translations-settings-download-languages"
+      ),
+      translateDownloadLanguagesLearnMore: document.getElementById(
+        "download-languages-learn-more"
+      ),
     };
 
     return elements;
