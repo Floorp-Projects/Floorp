@@ -2153,6 +2153,13 @@
   value: true
   mirror: always
 
+# Is support for Document.getAnimations() and Element.getAnimations()
+# supported?
+- name: dom.animations-api.getAnimations.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for timelines from the Web Animations API enabled?
 - name: dom.animations-api.timelines.enabled
   type: bool

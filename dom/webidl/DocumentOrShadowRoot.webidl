@@ -37,6 +37,7 @@ interface mixin DocumentOrShadowRoot {
 
 // https://drafts.csswg.org/web-animations-1/#extensions-to-the-documentorshadowroot-interface-mixin
 partial interface mixin DocumentOrShadowRoot {
+  [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
   sequence<Animation> getAnimations();
 };
 

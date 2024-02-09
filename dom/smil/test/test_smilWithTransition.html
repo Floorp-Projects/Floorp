@@ -9,6 +9,10 @@
 'use strict';
 
 SimpleTest.waitForExplicitFinish();
-window.open("file_smilWithTransition.html");
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.getAnimations.enabled", true]]},
+  function() {
+    window.open("file_smilWithTransition.html");
+  });
 </script>
 </html>

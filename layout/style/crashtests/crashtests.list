@@ -130,7 +130,7 @@ load 1146101-1.html
 load 1153693-1.html
 load 1156969.svg
 load 1161320-1.html
-load 1161320-2.html
+pref(dom.animations-api.getAnimations.enabled,true) load 1161320-2.html
 load 1161366-1.html
 load 1163446-1.html
 load 1164813-1.html
@@ -158,7 +158,7 @@ load 1265611-1.html
 load 1270795.html
 load 1275026.html
 load 1278463-1.html
-load 1277908-1.html
+pref(dom.animations-api.getAnimations.enabled,true) load 1277908-1.html
 load 1277908-2.html
 load 1282076-1.html
 load 1282076-2.html
@@ -276,7 +276,7 @@ load 1413361.html
 load 1413670.html
 load 1415353.html
 skip-if(wayland) load 1418059.html  # wayland: bug 1856389
-skip-if(wayland) test-load 1418867.html  # wayland: bug 1856389
+skip-if(wayland) test-pref(dom.animations-api.getAnimations.enabled,true) load 1418867.html  # wayland: bug 1856389
 load 1419554.html
 load 1426312.html
 load 1439793.html
