@@ -13,6 +13,7 @@
 #include <cstdint>
 
 #include "absl/strings/string_view.h"
+#include "api/units/time_delta.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/packet/sctp_packet.h"
 #include "net/dcsctp/public/dcsctp_socket.h"

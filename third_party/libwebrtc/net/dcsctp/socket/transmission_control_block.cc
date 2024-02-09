@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/units/time_delta.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/idata_chunk.h"
@@ -62,20 +63,20 @@ TransmissionControlBlock::TransmissionControlBlock(
       t3_rtx_(timer_manager_.CreateTimer(
           "t3-rtx",
           absl::bind_front(&TransmissionControlBlock::OnRtxTimerExpiry, this),
-          TimerOptions(options.rto_initial,
+          TimerOptions(options.rto_initial.ToTimeDelta(),
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/absl::nullopt,
                        options.max_timer_backoff_duration.has_value()
-                           ? *options.max_timer_backoff_duration
-                           : DurationMs::InfiniteDuration()))),
+                           ? options.max_timer_backoff_duration->ToTimeDelta()
+                           : TimeDelta::PlusInfinity()))),
       delayed_ack_timer_(timer_manager_.CreateTimer(
           "delayed-ack",
           absl::bind_front(&TransmissionControlBlock::OnDelayedAckTimerExpiry,
                            this),
-          TimerOptions(options.delayed_ack_max_timeout,
+          TimerOptions(options.delayed_ack_max_timeout.ToTimeDelta(),
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/0,
-                       /*max_backoff_duration=*/DurationMs::InfiniteDuration(),
+                       /*max_backoff_duration=*/TimeDelta::PlusInfinity(),
                        webrtc::TaskQueueBase::DelayPrecision::kHigh))),
       my_verification_tag_(my_verification_tag),
       my_initial_tsn_(my_initial_tsn),
@@ -120,14 +121,14 @@ void TransmissionControlBlock::ObserveRTT(TimeDelta rtt) {
                        << ", srtt=" << webrtc::ToString(rto_.srtt())
                        << ", rto=" << webrtc::ToString(rto_.rto()) << " ("
                        << webrtc::ToString(prev_rto) << ")";
-  t3_rtx_->set_duration(DurationMs(rto_.rto()));
+  t3_rtx_->set_duration(rto_.rto());
 
-  DurationMs delayed_ack_tmo =
-      std::min(DurationMs(rto_.rto()) * 0.5, options_.delayed_ack_max_timeout);
+  TimeDelta delayed_ack_tmo = std::min(
+      rto_.rto() * 0.5, options_.delayed_ack_max_timeout.ToTimeDelta());
   delayed_ack_timer_->set_duration(delayed_ack_tmo);
 }
 
-DurationMs TransmissionControlBlock::OnRtxTimerExpiry() {
+TimeDelta TransmissionControlBlock::OnRtxTimerExpiry() {
   TimeMs now = callbacks_.TimeMillis();
   RTC_DLOG(LS_INFO) << log_prefix_ << "Timer " << t3_rtx_->name()
                     << " has expired";
@@ -141,13 +142,13 @@ DurationMs TransmissionControlBlock::OnRtxTimerExpiry() {
       SendBufferedPackets(now);
     }
   }
-  return DurationMs(0);
+  return TimeDelta::Zero();
 }
 
-DurationMs TransmissionControlBlock::OnDelayedAckTimerExpiry() {
+TimeDelta TransmissionControlBlock::OnDelayedAckTimerExpiry() {
   data_tracker_.HandleDelayedAckTimerExpiry();
   MaybeSendSack();
-  return DurationMs(0);
+  return TimeDelta::Zero();
 }
 
 void TransmissionControlBlock::MaybeSendSack() {

@@ -11,6 +11,7 @@ import("../../../webrtc.gni")
 rtc_source_set("context") {
   sources = [ "context.h" ]
   deps = [
+    "../../../api/units:time_delta",
     "../common:internal_types",
     "../packet:sctp_packet",
     "../public:socket",
@@ -24,6 +25,7 @@ rtc_library("heartbeat_handler") {
     ":context",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../api/units:time_delta",
     "../../../rtc_base:logging",
     "../packet:bounded_io",
     "../packet:chunk",
@@ -48,6 +50,7 @@ rtc_library("stream_reset_handler") {
   deps = [
     ":context",
     "../../../api:array_view",
+    "../../../api/units:time_delta",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base/containers:flat_set",
@@ -96,6 +99,7 @@ rtc_library("transmission_control_block") {
     ":packet_sender",
     ":stream_reset_handler",
     "../../../api:array_view",
+    "../../../api/units:time_delta",
     "../../../api/task_queue:task_queue",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",

@@ -50,8 +50,8 @@ class HeartbeatHandler {
   void HandleHeartbeatAck(HeartbeatAckChunk chunk);
 
  private:
-  DurationMs OnIntervalTimerExpiry();
-  DurationMs OnTimeoutTimerExpiry();
+  webrtc::TimeDelta OnIntervalTimerExpiry();
+  webrtc::TimeDelta OnTimeoutTimerExpiry();
 
   const absl::string_view log_prefix_;
   Context* ctx_;

@@ -75,8 +75,8 @@ class RetransmissionQueueTest : public testing::Test {
         }),
         timer_(timer_manager_.CreateTimer(
             "test/t3_rtx",
-            []() { return DurationMs(0); },
-            TimerOptions(options_.rto_initial))) {}
+            []() { return TimeDelta::Zero(); },
+            TimerOptions(options_.rto_initial.ToTimeDelta()))) {}
 
   std::function<SendQueue::DataToSend(TimeMs, size_t)> CreateChunk(
       OutgoingMessageId message_id) {
