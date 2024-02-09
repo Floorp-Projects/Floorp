@@ -1,40 +1,28 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 14 Feb 2023 03:27:00 +0000
-Subject: Bug 1816173 - pt12 - add shim config for
- third_party/libwebrtc/testing/{gmock|gtest} r=ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 18 Oct 2023 17:25:00 +0000
+Subject: Bug 1857862 - (fix-32a8169a65) Don't call non-constexpr
+ RTC_CHECK_NOTREACHED from constexpr VideoFrameTypeToString under gcc-8.
+ r=webrtc-reviewers,mjf
 
-We don't vendor third_party/libwebrtc/third_party/gmock
-                third_party/libwebrtc/third_party/gtest, so:
-- add BUILD.gn to avoid scattered BUILD.gn changes
-
-Differential Revision: https://phabricator.services.mozilla.com/D169674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4ea9d2db79c42a144235e45c47c71adf1dd01fdc
+Differential Revision: https://phabricator.services.mozilla.com/D191308
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8a4449ba24fa3192b44863ed8ba96f6f94a6e88d
 ---
- testing/gmock/BUILD.gn | 5 +++++
- testing/gtest/BUILD.gn | 5 +++++
- 2 files changed, 10 insertions(+)
- create mode 100644 testing/gmock/BUILD.gn
- create mode 100644 testing/gtest/BUILD.gn
+ api/video/video_frame_type.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/testing/gmock/BUILD.gn b/testing/gmock/BUILD.gn
-new file mode 100644
-index 0000000000..a2a1efdea9
---- /dev/null
-+++ b/testing/gmock/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gmock") {
-+}
-diff --git a/testing/gtest/BUILD.gn b/testing/gtest/BUILD.gn
-new file mode 100644
-index 0000000000..c9c2703c37
---- /dev/null
-+++ b/testing/gtest/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gtest") {
-+}
+diff --git a/api/video/video_frame_type.h b/api/video/video_frame_type.h
+index 9079829ff8..3665a80cd8 100644
+--- a/api/video/video_frame_type.h
++++ b/api/video/video_frame_type.h
+@@ -34,7 +34,11 @@ inline constexpr absl::string_view VideoFrameTypeToString(
+     case VideoFrameType::kVideoFrameDelta:
+       return "delta";
+   }
++// Mozilla:
++//   gcc-8 complains about a constexpr function calling a non-constexpr ditto.
++#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 9)
+   RTC_CHECK_NOTREACHED();
++#endif
+   return "";
+ }
+ 
