@@ -1505,7 +1505,7 @@ interface TestSCConstructorForInterface {
   [SecureContext] constructor();
 };
 
-[Exposed=Window, Func="Document::IsWebAnimationsGetAnimationsEnabled"]
+[Exposed=Window, Func="IsNotUAWidget"]
 interface TestConstructorForFuncInterface {
   // Since the interface has a Func attribute, but the constructor does not,
   // the generated constructor should not check for the Func.
@@ -1516,7 +1516,7 @@ interface TestConstructorForFuncInterface {
 interface TestFuncConstructorForInterface {
   // Since the constructor has a Func attribute, but the interface does not,
   // the generated constructor should check for the Func.
-  [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
+  [Func="IsNotUAWidget"]
   constructor();
 };
 
@@ -1524,13 +1524,13 @@ interface TestFuncConstructorForInterface {
 interface TestFuncConstructorForDifferentFuncInterface {
   // Since the constructor has a different Func attribute from the interface,
   // the generated constructor should still check for its conditional func.
-  [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
+  [Func="IsNotUAWidget"]
   constructor();
 };
 
 [Exposed=Window]
 interface TestPrefChromeOnlySCFuncConstructorForInterface {
-  [Pref="dom.webidl.test1", ChromeOnly, SecureContext, Func="Document::IsWebAnimationsGetAnimationsEnabled"]
+  [Pref="dom.webidl.test1", ChromeOnly, SecureContext, Func="IsNotUAWidget"]
   // There should be checks for all Pref/ChromeOnly/SecureContext/Func
   // in the generated constructor.
   constructor();

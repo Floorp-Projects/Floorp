@@ -10,9 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="Document::IsWebAnimationsGetAnimationsEnabled",
- HeaderFile="nsAnimationManager.h",
- Exposed=Window]
+[HeaderFile="nsAnimationManager.h", Exposed=Window]
 interface CSSAnimation : Animation {
   [Constant] readonly attribute DOMString animationName;
 };
