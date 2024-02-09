@@ -228,7 +228,7 @@ void RtpTransport::OnSentPacket(rtc::PacketTransportInternal* packet_transport,
              packet_transport == rtcp_packet_transport_);
   if (processing_sent_packet_) {
     TaskQueueBase::Current()->PostTask(SafeTask(
-        safety_.flag(), [this, &sent_packet] { SendSentPacket(sent_packet); }));
+        safety_.flag(), [this, sent_packet] { SendSentPacket(sent_packet); }));
     return;
   }
   processing_sent_packet_ = true;
