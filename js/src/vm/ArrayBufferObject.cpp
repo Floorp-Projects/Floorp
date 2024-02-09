@@ -477,6 +477,11 @@ static ArrayBufferObject* ArrayBufferCopyAndDetach(
                               JSMSG_TYPED_ARRAY_DETACHED);
     return nullptr;
   }
+  if (arrayBuffer->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
+    return nullptr;
+  }
 
   // Steps 6-7.
   mozilla::Maybe<size_t> maxByteLength;
@@ -698,6 +703,11 @@ bool ArrayBufferObject::resizeImpl(JSContext* cx, const CallArgs& args) {
   if (obj->isDetached()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TYPED_ARRAY_DETACHED);
+    return false;
+  }
+  if (obj->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
     return false;
   }
 
@@ -935,6 +945,7 @@ void ResizableArrayBufferObject::resize(size_t newByteLength) {
   MOZ_ASSERT(!isPreparedForAsmJS());
   MOZ_ASSERT(!isWasm());
   MOZ_ASSERT(!isDetached());
+  MOZ_ASSERT(!isLengthPinned());
   MOZ_ASSERT(isResizable());
   MOZ_ASSERT(newByteLength <= maxByteLength());
 
@@ -1572,6 +1583,8 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
   cx->check(buffer);
 
   MOZ_ASSERT(!buffer->isDetached(), "can't steal from a detached buffer");
+  MOZ_ASSERT(!buffer->isLengthPinned(),
+             "can't steal from a buffer with a pinned length");
   MOZ_ASSERT(!buffer->isPreparedForAsmJS(),
              "asm.js-prepared buffers don't have detachable/stealable data");
 }
@@ -2038,6 +2051,7 @@ ResizableArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(!source->isLengthPinned());
   MOZ_ASSERT(newByteLength <= ArrayBufferObject::ByteLengthLimit,
              "caller must validate the byte count it passes");
 
@@ -2064,6 +2078,7 @@ ResizableArrayBufferObject::createBufferAndData(
 /* static */ ArrayBufferObject* ArrayBufferObject::copyAndDetachSteal(
     JSContext* cx, JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(!source->isLengthPinned());
   MOZ_ASSERT(source->isMalloced());
 
   size_t newByteLength = source->associatedBytes();
@@ -2101,6 +2116,7 @@ ResizableArrayBufferObject::createBufferAndData(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(!source->isLengthPinned());
   MOZ_ASSERT(source->bufferKind() == MALLOCED_ARRAYBUFFER_CONTENTS_ARENA);
   MOZ_ASSERT(newByteLength > FixedLengthArrayBufferObject::MaxInlineBytes,
              "prefer copying small buffers");
@@ -2158,6 +2174,7 @@ ResizableArrayBufferObject::copyAndDetach(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ResizableArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(!source->isLengthPinned());
   MOZ_ASSERT(newByteLength <= source->maxByteLength());
 
   if (source->maxByteLength() > ResizableArrayBufferObject::MaxInlineBytes &&
@@ -2179,6 +2196,7 @@ ResizableArrayBufferObject::copyAndDetachSteal(
     JSContext* cx, size_t newByteLength,
     JS::Handle<ResizableArrayBufferObject*> source) {
   MOZ_ASSERT(!source->isDetached());
+  MOZ_ASSERT(!source->isLengthPinned());
   MOZ_ASSERT(newByteLength <= source->maxByteLength());
   MOZ_ASSERT(source->isMalloced());
 
@@ -2297,9 +2315,6 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
 /* static */ uint8_t* ArrayBufferObject::stealMallocedContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  if (buffer->isLengthPinned()) {
-    return nullptr;
-  }
   CheckStealPreconditions(buffer, cx);
 
   switch (buffer->bufferKind()) {
@@ -3091,6 +3106,11 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
   if (unwrappedBuffer->isDetached()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TYPED_ARRAY_DETACHED);
+    return nullptr;
+  }
+  if (unwrappedBuffer->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
     return nullptr;
   }
 
