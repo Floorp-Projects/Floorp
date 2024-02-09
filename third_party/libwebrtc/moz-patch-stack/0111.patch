@@ -1,22 +1,24 @@
 From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Fri, 9 Feb 2024 15:02:00 -0500
-Subject: Bug 1876843 - (fix-b29ff000da) remove mozilla dependency on
- api:enable_media
+Date: Fri, 2 Feb 2024 17:13:00 -0500
+Subject: Bug 1876843 - (fix-082cb56ee7) remove mozilla dependency on
+ pc:media_factory.
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7f403ee038e9797a1aff6161fc70a2d92769851f
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/136b3fc0377be6dcaa302469d27968f445e0355e
 ---
- BUILD.gn | 1 +
- 1 file changed, 1 insertion(+)
+ api/BUILD.gn | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index dca9154020..7de8125f20 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -545,6 +545,7 @@ if (!build_with_chromium) {
-     if (build_with_mozilla) {
-       deps -= [
-         "api:create_peerconnection_factory",
-+        "api:enable_media",
-         "api:rtc_error",
-         "api:transport_api",
-         "api/crypto",
+diff --git a/api/BUILD.gn b/api/BUILD.gn
+index 609bb1e6e4..d3cb2842d7 100644
+--- a/api/BUILD.gn
++++ b/api/BUILD.gn
+@@ -48,6 +48,9 @@ rtc_source_set("enable_media") {
+     "../pc:media_factory",
+     "../rtc_base/system:rtc_export",
+   ]
++  if (build_with_mozilla) {
++    deps -= [ "../pc:media_factory" ]
++  }
+ }
+ 
+ rtc_source_set("enable_media_with_defaults") {

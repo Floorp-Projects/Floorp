@@ -1,93 +1,44 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 17 Sep 2019 06:47:00 +0000
-Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
+Date: Fri, 29 Mar 2019 18:43:00 +0000
+Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
+ r=pehrsons
 
-This restores the code for generating devicechange events that was
-accidentally removed as part of updating the Windows video capture code
-in Bug 1552755.
+We've hit a number of problems with handling of RGB24 video capture on
+Windows. This adds a check that will ignore any RGB24 capture capabilities
+when determining a best match if there are other capabilities available to
+workaround the problems.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46033
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
+Differential Revision: https://phabricator.services.mozilla.com/D25449
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
 ---
- .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
- .../video_capture/windows/device_info_ds.h    |  3 ++
- 2 files changed, 42 insertions(+)
+ modules/video_capture/device_info_impl.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index d0d274cb02..460ef3b7b9 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,6 +20,29 @@
- namespace webrtc {
- namespace videocapturemodule {
+diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
+index 7cccdb51a7..2a6afb3147 100644
+--- a/modules/video_capture/device_info_impl.cc
++++ b/modules/video_capture/device_info_impl.cc
+@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
+   const int32_t numberOfCapabilies =
+       static_cast<int32_t>(_captureCapabilities.size());
  
-+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-+{
-+    DeviceInfoDS* pParent;
-+    if (uiMsg == WM_CREATE)
-+    {
-+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
++  bool hasNonRGB24Capability = false;
+   for (int32_t tmp = 0; tmp < numberOfCapabilies;
+        ++tmp)  // Loop through all capabilities
+   {
+     VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (capability.videoType != VideoType::kRGB24) {
++      hasNonRGB24Capability = true;
 +    }
-+    else if (uiMsg == WM_DESTROY)
-+    {
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
-+    }
-+    else if (uiMsg == WM_DEVICECHANGE)
-+    {
-+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-+        if (pParent)
-+        {
-+            pParent->DeviceChange();
-+        }
-+    }
-+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
-+}
-+
- // static
- DeviceInfoDS* DeviceInfoDS::Create() {
-   DeviceInfoDS* dsInfo = new DeviceInfoDS();
-@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
-                         << rtc::ToHex(hr);
-     }
-   }
-+
-+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
-+  _wndClass = {0};
-+  _wndClass.lpfnWndProc = &WndProc;
-+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
-+  _wndClass.hInstance = _hInstance;
-+
-+  if (RegisterClass(&_wndClass)) {
-+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-+                         NULL, _hInstance, this);
 +  }
- }
++
++  for (int32_t tmp = 0; tmp < numberOfCapabilies;
++       ++tmp)  // Loop through all capabilities
++  {
++    VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
++      continue;
++    }
  
- DeviceInfoDS::~DeviceInfoDS() {
-@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
-   if (_CoUninitializeIsRequired) {
-     CoUninitialize();
-   }
-+  if (_hwnd != NULL) {
-+    DestroyWindow(_hwnd);
-+  }
-+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
- }
- 
- int32_t DeviceInfoDS::Init() {
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index 1b52645cde..dc7b9b1a24 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
-   IEnumMoniker* _dsMonikerDevEnum;
-   bool _CoUninitializeIsRequired;
-   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
-+  HWND _hwnd;
-+  WNDCLASS _wndClass;
-+  HINSTANCE _hInstance;
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
+     const int32_t diffWidth = capability.width - requested.width;
+     const int32_t diffHeight = capability.height - requested.height;
