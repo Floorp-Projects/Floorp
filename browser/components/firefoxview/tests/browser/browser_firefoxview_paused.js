@@ -322,7 +322,7 @@ add_task(async function test_opentabs() {
     const document = browser.contentDocument;
     const { openTabsView } = getTopLevelViewElements(document);
 
-    await navigateToCategoryAndWait(document, "opentabs");
+    await navigateToViewAndWait(document, "opentabs");
 
     const { openTabsList } = await getElements(document);
     ok(openTabsView, "Found the open tabs view");
@@ -387,7 +387,7 @@ add_task(async function test_recentlyclosed() {
   await withFirefoxView({}, async browser => {
     const document = browser.contentDocument;
     const { recentlyClosedView } = getTopLevelViewElements(document);
-    await navigateToCategoryAndWait(document, "recentlyclosed");
+    await navigateToViewAndWait(document, "recentlyclosed");
 
     const { recentlyClosedList } = await getElements(document);
     ok(recentlyClosedView, "Found the recently-closed view");

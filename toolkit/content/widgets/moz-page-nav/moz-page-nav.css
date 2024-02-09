@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --page-nav-button-border-radius: var(--button-border-radius);
+  --page-nav-button-text-color: var(--button-text-color);
+  --page-nav-button-background-color: transparent;
+  --page-nav-button-background-color-hover: var(--button-background-color-hover);
+  --page-nav-button-background-color-selected: var(--color-accent-primary);
+  --page-nav-button-padding: var(--space-small);
+  --page-nav-margin-top: 72px;
+  --page-nav-margin-bottom: 36px;
+  --page-nav-gap: 25px;
+  --page-nav-button-gap: var(--space-xsmall);
+  --page-nav-border-color: var(--border-color);
+  --page-nav-focus-outline-inset: var(--focus-outline-inset);
+  --page-nav-width: 240px;
+  margin-inline-start: 42px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: var(--page-nav-width);
+
+  @media (prefers-reduced-motion) {
+    /* (See Bug 1610081) Setting border-inline-end to add clear differentiation between side navigation and main content area */
+    border-inline-end: 1px solid var(--page-nav-border-color);
+  }
+
+  @media (max-width: 52rem) {
+    grid-template-rows: 1fr auto;
+    --page-nav-width: 118px;
+  }
+}
+
+nav {
+  display: grid;
+  grid-template-rows: min-content 1fr auto;
+  gap: var(--page-nav-gap);
+  margin-block: var(--page-nav-margin-top) var(--page-nav-margin-bottom);
+  height: calc(100vh - var(--page-nav-margin-top) - var(--page-nav-margin-bottom));
+  @media (max-width: 52rem) {
+    grid-template-rows: 1fr auto;
+  }
+}
+
+.page-nav-header {
+  /* Align the header text/icon with the page nav button icons */
+  margin-inline-start: var(--page-nav-button-padding);
+  font-size: var(--font-size-xlarge);
+  font-weight: var(--font-weight-bold);
+  margin-block: 0;
+
+  @media (max-width: 52rem) {
+    display: none;
+  }
+}
+
+.primary-nav-group,
+#secondary-nav-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  gap: var(--page-nav-button-gap);
+
+  @media (max-width: 52rem) {
+    justify-content: center;
+    grid-template-columns: min-content;
+  }
+}
+
+@media (prefers-contrast) {
+  .primary-nav-group {
+    gap: var(--space-small);
+  }
+}
