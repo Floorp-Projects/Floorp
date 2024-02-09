@@ -39,6 +39,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeVeryShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.clickPageObject
 
@@ -142,4 +143,10 @@ object TestHelper {
         assertFalse("Light theme not selected", expected)
 
     fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
+
+    fun waitForAppWindowToBeUpdated() {
+        Log.i(TAG, "waitForAppWindowToBeUpdated: Waiting for $waitingTimeVeryShort ms for $packageName window to be updated")
+        mDevice.waitForWindowUpdate(packageName, waitingTimeVeryShort)
+        Log.i(TAG, "waitForAppWindowToBeUpdated: Waited for $waitingTimeVeryShort ms for $packageName window to be updated")
+    }
 }
