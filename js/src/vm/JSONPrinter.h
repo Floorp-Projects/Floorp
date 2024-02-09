@@ -24,7 +24,6 @@ class JSONPrinter {
   int inlineLevel_ = 0;
   bool indent_;
   bool first_ = true;
-  bool afterPropName_ = false;
   GenericPrinter& out_;
 
   void indent();
@@ -96,7 +95,6 @@ class JSONPrinter {
   void outOfMemory() { out_.reportOutOfMemory(); }
 
  protected:
-  void propertyNameImpl(const char* name);
   void beginInline();
   void endInline();
 };
