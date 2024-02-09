@@ -43,6 +43,64 @@ export function setMaxDetectWidth(maxWidth) {
 }
 
 /**
+ * This function will try to get an element from a given point in the doc.
+ * This function is recursive because when sending a message to the
+ * ScreenshotsHelper, the ScreenshotsHelper will call into this function.
+ * This only occurs when the element at the given point is an iframe.
+ *
+ * If the element is an iframe, we will send a message to the ScreenshotsHelper
+ * actor in the correct context to get the element at the given point.
+ * The message will return the "getBestRectForElement" for the element at the
+ * given point.
+ *
+ * If the element is not an iframe, then we will just return the element.
+ *
+ * @param {Number} x The x coordinate
+ * @param {Number} y The y coordinate
+ * @param {Document} doc The document
+ * @returns {Object}
+ *    ele: The element for a given point (x, y)
+ *    rect: The rect for the given point if ele is an iframe
+ *          otherwise null
+ */
+export async function getElementFromPoint(x, y, doc) {
+  let ele = null;
+  let rect = null;
+  try {
+    ele = doc.elementFromPoint(x, y);
+    // if the element is an iframe, we need to send a message to that browsing context
+    // to get the coordinates of the element in the iframe
+    if (doc.defaultView.HTMLIFrameElement.isInstance(ele)) {
+      let actor =
+        ele.browsingContext.parentWindowContext.windowGlobalChild.getActor(
+          "ScreenshotsHelper"
+        );
+      rect = await actor.sendQuery(
+        "ScreenshotsHelper:GetElementRectFromPoint",
+        {
+          x: x + ele.ownerGlobal.mozInnerScreenX,
+          y: y + ele.ownerGlobal.mozInnerScreenY,
+          bcId: ele.browsingContext.id,
+        }
+      );
+
+      if (rect) {
+        rect = {
+          left: rect.left - ele.ownerGlobal.mozInnerScreenX,
+          right: rect.right - ele.ownerGlobal.mozInnerScreenX,
+          top: rect.top - ele.ownerGlobal.mozInnerScreenY,
+          bottom: rect.bottom - ele.ownerGlobal.mozInnerScreenY,
+        };
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  return { ele, rect };
+}
+
+/**
  * This function takes an element and finds a suitable rect to draw the hover box on
  * @param {Element} ele The element to find a suitale rect of
  * @param {Document} doc The current document

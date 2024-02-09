@@ -109,6 +109,19 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
   }
 }
 
+export class ScreenshotsHelperParent extends JSWindowActorParent {
+  receiveMessage(message) {
+    switch (message.name) {
+      case "ScreenshotsHelper:GetElementRectFromPoint":
+        let cxt = BrowsingContext.get(message.data.bcId);
+        return cxt.currentWindowGlobal
+          .getActor("ScreenshotsHelper")
+          .sendQuery("ScreenshotsHelper:GetElementRectFromPoint", message.data);
+    }
+    return null;
+  }
+}
+
 export const UIPhases = {
   CLOSED: 0, // nothing showing
   INITIAL: 1, // panel and overlay showing

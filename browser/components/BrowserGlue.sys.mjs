@@ -713,6 +713,17 @@ let JSWINDOWACTORS = {
     enablePreference: "screenshots.browser.component.enabled",
   },
 
+  ScreenshotsHelper: {
+    parent: {
+      esModuleURI: "resource:///modules/ScreenshotsUtils.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///modules/ScreenshotsHelperChild.sys.mjs",
+    },
+    allFrames: true,
+    enablePreference: "screenshots.browser.component.enabled",
+  },
+
   SearchSERPTelemetry: {
     parent: {
       esModuleURI: "resource:///actors/SearchSERPTelemetryParent.sys.mjs",

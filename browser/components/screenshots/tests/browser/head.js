@@ -18,6 +18,7 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
 const TEST_PAGE = TEST_ROOT + "test-page.html";
 const SHORT_TEST_PAGE = TEST_ROOT + "short-test-page.html";
 const LARGE_TEST_PAGE = TEST_ROOT + "large-test-page.html";
+const IFRAME_TEST_PAGE = TEST_ROOT + "iframe-test-page.html";
 
 const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
   "resource:///modules/ScreenshotsUtils.sys.mjs"
@@ -195,11 +196,22 @@ class ScreenshotsHelper {
     });
   }
 
-  async waitForHoverElementRect() {
-    return TestUtils.waitForCondition(async () => {
-      let rect = await this.getHoverElementRect();
-      return rect;
-    });
+  async waitForHoverElementRect(expectedWidth, expectedHeight) {
+    return SpecialPowers.spawn(
+      this.browser,
+      [expectedWidth, expectedHeight],
+      async (width, height) => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+        let dimensions;
+        await ContentTaskUtils.waitForCondition(() => {
+          dimensions = screenshotsChild.overlay.hoverElementRegion.dimensions;
+          return dimensions.width === width && dimensions.height === height;
+        }, "The hover element region is the expected width and height");
+        return dimensions;
+      }
+    );
   }
 
   async waitForSelectionRegionSizeChange(currentWidth) {
@@ -394,7 +406,7 @@ class ScreenshotsHelper {
     let y = Math.floor(rect.y + rect.height / 2);
 
     mouse.move(x, y);
-    await this.waitForHoverElementRect();
+    await this.waitForHoverElementRect(rect.width, rect.height);
     mouse.down(x, y);
     await this.assertStateChange("draggingReady");
     mouse.up(x, y);
