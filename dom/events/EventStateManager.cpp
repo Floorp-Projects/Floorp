@@ -4193,7 +4193,6 @@ struct CursorImage {
 //
 // We will not honor it all of the following are true:
 //
-//  * layout.cursor.block.enabled is true.
 //  * the size of the custom cursor is bigger than layout.cursor.block.max-size.
 //  * the bounds of the cursor would end up outside of the viewport of the
 //    top-level content document.
@@ -4203,10 +4202,6 @@ struct CursorImage {
 static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
                                     WidgetEvent* aEvent,
                                     const CursorImage& aCursor) {
-  if (!StaticPrefs::layout_cursor_block_enabled()) {
-    return false;
-  }
-
   int32_t width = 0;
   int32_t height = 0;
   aCursor.mContainer->GetWidth(&width);
