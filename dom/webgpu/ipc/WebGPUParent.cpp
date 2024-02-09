@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUParent.h"
+
+#include <unordered_set>
+
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
@@ -153,10 +156,16 @@ class ErrorBuffer {
   }
 };
 
+struct PendingSwapChainDrop {
+  layers::RemoteTextureTxnType mTxnType;
+  layers::RemoteTextureTxnId mTxnId;
+};
+
 class PresentationData {
   NS_INLINE_DECL_REFCOUNTING(PresentationData);
 
  public:
+  WeakPtr<WebGPUParent> mParent;
   const bool mUseExternalTextureInSwapChain;
   const RawId mDeviceId;
   const RawId mQueueId;
@@ -166,16 +175,22 @@ class PresentationData {
 
   std::deque<std::shared_ptr<ExternalTexture>> mRecycledExternalTextures;
 
+  std::unordered_set<layers::RemoteTextureId, layers::RemoteTextureId::HashFn>
+      mWaitingReadbackTexturesForPresent;
+  Maybe<PendingSwapChainDrop> mPendingSwapChainDrop;
+
   const uint32_t mSourcePitch;
   std::vector<RawId> mUnassignedBufferIds MOZ_GUARDED_BY(mBuffersLock);
   std::vector<RawId> mAvailableBufferIds MOZ_GUARDED_BY(mBuffersLock);
   std::vector<RawId> mQueuedBufferIds MOZ_GUARDED_BY(mBuffersLock);
   Mutex mBuffersLock;
 
-  PresentationData(bool aUseExternalTextureInSwapChain, RawId aDeviceId,
-                   RawId aQueueId, const layers::RGBDescriptor& aDesc,
-                   uint32_t aSourcePitch, const nsTArray<RawId>& aBufferIds)
-      : mUseExternalTextureInSwapChain(aUseExternalTextureInSwapChain),
+  PresentationData(WebGPUParent* aParent, bool aUseExternalTextureInSwapChain,
+                   RawId aDeviceId, RawId aQueueId,
+                   const layers::RGBDescriptor& aDesc, uint32_t aSourcePitch,
+                   const nsTArray<RawId>& aBufferIds)
+      : mParent(aParent),
+        mUseExternalTextureInSwapChain(aUseExternalTextureInSwapChain),
         mDeviceId(aDeviceId),
         mQueueId(aQueueId),
         mDesc(aDesc),
@@ -861,9 +876,9 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   }
   mRemoteTextureOwner->RegisterTextureOwner(aOwnerId);
 
-  auto data =
-      MakeRefPtr<PresentationData>(aUseExternalTextureInSwapChain, aDeviceId,
-                                   aQueueId, aDesc, bufferStride, aBufferIds);
+  auto data = MakeRefPtr<PresentationData>(this, aUseExternalTextureInSwapChain,
+                                           aDeviceId, aQueueId, aDesc,
+                                           bufferStride, aBufferIds);
   if (!mPresentationDataMap.emplace(aOwnerId, data).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
@@ -932,6 +947,23 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
                                     uint8_t* userdata) {
   UniquePtr<ReadbackPresentRequest> req(
       reinterpret_cast<ReadbackPresentRequest*>(userdata));
+
+  const auto onExit = mozilla::MakeScopeExit([&]() {
+    auto& waitingTextures = req->mData->mWaitingReadbackTexturesForPresent;
+    auto it = waitingTextures.find(req->mTextureId);
+    MOZ_ASSERT(it != waitingTextures.end());
+    if (it != waitingTextures.end()) {
+      waitingTextures.erase(it);
+    }
+    if (req->mData->mPendingSwapChainDrop.isSome() && waitingTextures.empty()) {
+      if (req->mData->mParent) {
+        auto& pendingDrop = req->mData->mPendingSwapChainDrop.ref();
+        req->mData->mParent->RecvSwapChainDrop(
+            req->mOwnerId, pendingDrop.mTxnType, pendingDrop.mTxnId);
+        req->mData->mPendingSwapChainDrop = Nothing();
+      }
+    }
+  });
 
   if (!req->mRemoteTextureOwner->IsRegistered(req->mOwnerId)) {
     // SwapChain is already Destroyed
@@ -1186,6 +1218,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     }
   }
 
+  auto& waitingTextures = data->mWaitingReadbackTexturesForPresent;
+  auto it = waitingTextures.find(aRemoteTextureId);
+  MOZ_ASSERT(it == waitingTextures.end());
+  if (it == waitingTextures.end()) {
+    waitingTextures.emplace(aRemoteTextureId);
+  }
+
   // step 4: request the pixels to be copied into the external texture
   // TODO: this isn't strictly necessary. When WR wants to Lock() the external
   // texture,
@@ -1219,6 +1258,13 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDrop(
   }
 
   RefPtr<PresentationData> data = lookup->second.get();
+
+  auto waitingCount = data->mWaitingReadbackTexturesForPresent.size();
+  if (waitingCount > 0) {
+    // Defer SwapChainDrop until readback complete
+    data->mPendingSwapChainDrop = Some(PendingSwapChainDrop{aTxnType, aTxnId});
+    return IPC_OK();
+  }
 
   if (mRemoteTextureOwner) {
     if (aTxnType && aTxnId) {
