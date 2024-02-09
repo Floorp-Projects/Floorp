@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.60.0"
 name = "bindgen"
-version = "0.69.2"
+version = "0.69.4"
 authors = [
     "Jyun-Yan You <jyyou.tw@gmail.com>",
     "Emilio Cobos Álvarez <emilio@crisal.io>",
@@ -79,6 +79,10 @@ version = "0.6"
 version = "1"
 features = ["clang_6_0"]
 
+[dependencies.itertools]
+version = ">=0.10,<0.13"
+default-features = false
+
 [dependencies.lazy_static]
 version = "1"
 
@@ -88,9 +92,6 @@ version = "1"
 [dependencies.log]
 version = "0.4"
 optional = true
-
-[dependencies.peeking_take_while]
-version = "0.1.2"
 
 [dependencies.prettyplease]
 version = "0.2.7"
@@ -106,10 +107,10 @@ version = "1"
 default-features = false
 
 [dependencies.regex]
-version = "1.5"
+version = "1.5.1"
 features = [
     "std",
-    "unicode",
+    "unicode-perl",
 ]
 default-features = false
 
@@ -135,7 +136,7 @@ default-features = false
 [features]
 __cli = []
 __testing_only_extra_assertions = []
-__testing_only_libclang_5 = []
+__testing_only_libclang_16 = []
 __testing_only_libclang_9 = []
 default = [
     "logging",

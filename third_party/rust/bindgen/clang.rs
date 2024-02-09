@@ -2297,6 +2297,15 @@ impl Drop for EvalResult {
         unsafe { clang_EvalResult_dispose(self.x) };
     }
 }
+/// ABI kinds as defined in
+/// <https://github.com/llvm/llvm-project/blob/ddf1de20a3f7db3bca1ef6ba7e6cbb90aac5fd2d/clang/include/clang/Basic/TargetCXXABI.def>
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub(crate) enum ABIKind {
+    /// All the regular targets like Linux, Mac, WASM, etc. implement the Itanium ABI
+    GenericItanium,
+    /// The ABI used when compiling for the MSVC target
+    Microsoft,
+}
 
 /// Target information obtained from libclang.
 #[derive(Debug)]
@@ -2305,6 +2314,8 @@ pub(crate) struct TargetInfo {
     pub(crate) triple: String,
     /// The width of the pointer _in bits_.
     pub(crate) pointer_width: usize,
+    /// The ABI of the target
+    pub(crate) abi: ABIKind,
 }
 
 impl TargetInfo {
@@ -2320,9 +2331,17 @@ impl TargetInfo {
         }
         assert!(pointer_width > 0);
         assert_eq!(pointer_width % 8, 0);
+
+        let abi = if triple.contains("msvc") {
+            ABIKind::Microsoft
+        } else {
+            ABIKind::GenericItanium
+        };
+
         TargetInfo {
             triple,
             pointer_width: pointer_width as usize,
+            abi,
         }
     }
 }

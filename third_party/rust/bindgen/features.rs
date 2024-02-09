@@ -95,9 +95,9 @@ macro_rules! define_rust_targets {
 // not stable.
 define_rust_targets! {
     Nightly => {
-        thiscall_abi: #42202,
         vectorcall_abi,
     },
+    Stable_1_73(73) => { thiscall_abi: #42202 },
     Stable_1_71(71) => { c_unwind_abi: #106075 },
     Stable_1_68(68) => { abi_efiapi: #105795 },
     Stable_1_64(64) => { core_ffi_c: #94503 },

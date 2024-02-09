@@ -668,8 +668,11 @@ impl Item {
                 ItemKind::Function(..) => {
                     ctx.options().blocklisted_functions.matches(&name)
                 }
-                // TODO: Add constant / namespace blocklisting?
-                ItemKind::Var(..) | ItemKind::Module(..) => false,
+                ItemKind::Var(..) => {
+                    ctx.options().blocklisted_vars.matches(&name)
+                }
+                // TODO: Add namespace blocklisting?
+                ItemKind::Module(..) => false,
             }
     }
 
