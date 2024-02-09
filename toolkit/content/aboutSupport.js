@@ -1181,7 +1181,6 @@ var snapshotFormatters = {
         $.new("td", getAudioRobustness(rvArray)),
         $.new("td", getCapabilities(rvArray)),
         $.new("td", cdmInfo.clearlead ? "Yes" : "No"),
-        $.new("td", cdmInfo.isHDCP22Compatible ? "Yes" : "No"),
       ]);
     }
 

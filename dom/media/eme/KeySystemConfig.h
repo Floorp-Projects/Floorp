@@ -176,7 +176,6 @@ struct KeySystemConfig {
   nsTArray<nsString> mEncryptionSchemes;
   ContainerSupport mMP4;
   ContainerSupport mWebM;
-  bool mIsHDCP22Compatible = false;
 };
 
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(

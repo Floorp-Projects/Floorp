@@ -10,7 +10,6 @@
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
 #include <propvarutil.h>  // For InitPropVariantFrom*()
 
-#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/ipc/UtilityAudioDecoderChild.h"
@@ -152,18 +151,6 @@ static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
   } else {
     return L"unknown";
   }
-}
-
-// The HDCP value follows the feature value in
-// https://docs.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
-// - 1 (on without HDCP 2.2 Type 1 restriction)
-// - 2 (on with HDCP 2.2 Type 1 restriction)
-static nsString GetHdcpPolicy(const dom::HDCPVersion& aMinHdcpVersion) {
-  if (aMinHdcpVersion == dom::HDCPVersion::_2_2 ||
-      aMinHdcpVersion == dom::HDCPVersion::_2_3) {
-    return nsString(u"hdcp=2");
-  }
-  return nsString(u"hdcp=1");
 }
 
 static void BuildCapabilitiesArray(
@@ -647,19 +634,6 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
   return support;
 }
 
-static nsresult IsHDCPVersionSupported(
-    ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
-    const nsString& aKeySystem, const dom::HDCPVersion& aMinHdcpVersion) {
-  nsresult rv = NS_OK;
-  // Codec doesn't matter when querying the HDCP policy, so use H264.
-  if (!FactorySupports(aFactory, aKeySystem, nsCString("avc1"),
-                       KeySystemConfig::EMECodecString(""),
-                       GetHdcpPolicy(aMinHdcpVersion))) {
-    rv = NS_ERROR_DOM_MEDIA_CDM_HDCP_NOT_SUPPORT;
-  }
-  return rv;
-}
-
 static bool IsKeySystemHWSecure(
     const nsAString& aKeySystem,
     const nsTArray<MFCDMMediaCapability>& aCapabilities) {
@@ -926,11 +900,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     }
   }
 
-  if (IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
-      NS_OK) {
-    aCapabilitiesOut.isHDCP22Compatible() = true;
-  }
-
   // TODO: don't hardcode
   aCapabilitiesOut.initDataTypes().AppendElement(u"keyids");
   aCapabilitiesOut.initDataTypes().AppendElement(u"cenc");
@@ -1118,14 +1087,6 @@ mozilla::ipc::IPCResult MFCDMParent::RecvSetServerCertificate(
                              aCertificate.Length()),
                          NS_ERROR_DOM_MEDIA_CDM_ERR);
   aResolver(rv);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
-    const dom::HDCPVersion& aMinHdcpVersion,
-    GetStatusForPolicyResolver&& aResolver) {
-  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
-  aResolver(IsHDCPVersionSupported(mFactory, mKeySystem, aMinHdcpVersion));
   return IPC_OK();
 }
 

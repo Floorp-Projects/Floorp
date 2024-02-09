@@ -1105,5 +1105,4 @@ dictionary CDMInformation {
   required DOMString keySystemName;
   required DOMString capabilities;
   required boolean clearlead;
-  required boolean isHDCP22Compatible;
 };
