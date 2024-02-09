@@ -142,7 +142,8 @@ var CaptivePortalWatcher = {
       let canonicalURI = Services.io.newURI(this.canonicalURL);
       if (
         tab &&
-        tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI) &&
+        (tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI) ||
+          tab.linkedBrowser.currentURI.host == "support.mozilla.org") &&
         (this._cps.state == this._cps.UNLOCKED_PORTAL ||
           this._cps.state == this._cps.UNKNOWN)
       ) {
@@ -261,7 +262,8 @@ var CaptivePortalWatcher = {
     if (
       tab &&
       tab.linkedBrowser &&
-      tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)
+      (tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI) ||
+        tab.linkedBrowser.currentURI.host == "support.mozilla.org")
     ) {
       this._previousCaptivePortalTab = null;
       gBrowser.removeTab(tab);
