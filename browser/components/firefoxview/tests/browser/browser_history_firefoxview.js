@@ -169,7 +169,7 @@ add_task(async function test_list_ordering() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -262,7 +262,7 @@ add_task(async function test_empty_states() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -350,7 +350,7 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
   );
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     let visitList = await TestUtils.waitForCondition(() =>
@@ -399,7 +399,7 @@ add_task(async function test_show_all_history_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -424,7 +424,7 @@ add_task(async function test_show_all_history_telemetry() {
 add_task(async function test_search_history() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     await historyComponentReady(historyComponent);
@@ -504,7 +504,7 @@ add_task(async function test_persist_collapse_card_after_view_change() {
   await addHistoryItems(today);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     await TestUtils.waitForCondition(
@@ -529,8 +529,8 @@ add_task(async function test_persist_collapse_card_after_view_change() {
     );
 
     // Switch to a new view and then back to History
-    await navigateToCategoryAndWait(document, "syncedtabs");
-    await navigateToCategoryAndWait(document, "history");
+    await navigateToViewAndWait(document, "syncedtabs");
+    await navigateToViewAndWait(document, "history");
 
     // Check that first history card is still collapsed after changing view
     ok(

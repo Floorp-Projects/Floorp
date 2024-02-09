@@ -122,7 +122,7 @@ async function moreMenuSetup() {
   await clickFirefoxViewButton(window);
   const document = window.FirefoxViewHandler.tab.linkedBrowser.contentDocument;
 
-  await navigateToCategoryAndWait(document, "opentabs");
+  await navigateToViewAndWait(document, "opentabs");
 
   let openTabs = document.querySelector("view-opentabs[name=opentabs]");
   setSortOption(openTabs, "tabStripOrder");

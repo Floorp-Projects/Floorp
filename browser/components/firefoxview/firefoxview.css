@@ -69,6 +69,10 @@ body {
   grid-template-columns: var(--fxview-sidebar-width) 1fr;
   background-color: var(--fxview-background-color);
   color: var(--fxview-text-primary-color);
+
+  @media (max-width: 52rem) {
+    display: flex;
+  }
 }
 
 .main-container {
@@ -86,26 +90,6 @@ body {
 
 .page-header {
   margin: 0;
-}
-
-fxview-category-button:focus-visible {
-  outline-offset: var(--in-content-focus-outline-inset);
-}
-
-fxview-category-button[name="recentbrowsing"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-recentbrowsing.svg");
-}
-fxview-category-button[name="opentabs"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-opentabs.svg");
-}
-fxview-category-button[name="recentlyclosed"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-recentlyclosed.svg");
-}
-fxview-category-button[name="syncedtabs"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-syncedtabs.svg");
-}
-fxview-category-button[name="history"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-history.svg");
 }
 
 fxview-tab-list.with-dismiss-button::part(secondary-button) {
@@ -172,14 +156,6 @@ panel-item::part(button):hover:active {
 
 panel-list {
   overflow-y: visible;
-}
-
-fxview-category-navigation {
-  overflow-y: auto;
-}
-
-fxview-category-navigation h1 {
-  margin-block: 0;
 }
 
 fxview-empty-state:not([isSelectedTab]) button[slot="primary-action"] {

@@ -159,8 +159,9 @@ function getOpenTabsComponent(browser) {
 async function checkTabList(browser, expected) {
   const tabsView = getOpenTabsComponent(browser);
   const openTabsCard = tabsView.shadowRoot.querySelector("view-opentabs-card");
-  await tabsView.getUpdateComplete();
+  await tabsView.updateComplete;
   const tabList = openTabsCard.shadowRoot.querySelector("fxview-tab-list");
+  await tabList.getUpdateComplete();
   Assert.ok(tabList, "Found the tab list element");
   await TestUtils.waitForCondition(() => tabList.rowEls.length);
   let actual = Array.from(tabList.rowEls).map(row => row.url);
