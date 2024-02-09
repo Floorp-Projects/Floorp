@@ -785,7 +785,7 @@ const SNAPSHOT_SCHEMA = {
         desktopEnvironment: {
           type: "string",
         },
-        fontDetermination: {
+        supportFontDetermination: {
           type: "string",
         },
       },
