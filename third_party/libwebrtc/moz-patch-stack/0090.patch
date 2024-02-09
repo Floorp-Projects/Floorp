@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2f1a0ba74bf71cfa0
  6 files changed, 24 insertions(+), 4 deletions(-)
 
 diff --git a/api/frame_transformer_interface.h b/api/frame_transformer_interface.h
-index 535659d49b..a5cd988119 100644
+index 94f8dab448..9a5b23b24b 100644
 --- a/api/frame_transformer_interface.h
 +++ b/api/frame_transformer_interface.h
-@@ -65,6 +65,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
+@@ -60,6 +60,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
   public:
    virtual ~TransformableVideoFrameInterface() = default;
    virtual bool IsKeyFrame() const = 0;

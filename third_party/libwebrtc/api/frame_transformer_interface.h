@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "api/ref_count.h"
 #include "api/scoped_refptr.h"
@@ -54,11 +53,7 @@ class TransformableFrameInterface {
   // sender frames to allow received frames to be directly re-transmitted on
   // other PeerConnectionss.
   virtual Direction GetDirection() const { return Direction::kUnknown; }
-  virtual std::string GetMimeType() const {
-    // TODO(bugs.webrtc.org/15579): Change this to pure virtual after it
-    // is implemented everywhere.
-    return "unknown/unknown";
-  }
+  virtual std::string GetMimeType() const = 0;
 };
 
 class TransformableVideoFrameInterface : public TransformableFrameInterface {
