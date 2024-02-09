@@ -322,6 +322,9 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBwe3) {
   EXPECT_EQ(RtpExtension::kTimestampOffsetUri, filtered[0].uri);
 }
 
+// Deprecated as part of the bugs.webrtc.org/15574 effort.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 TEST(WebRtcMediaEngineTest, Create) {
   MediaEngineDependencies deps;
   webrtc::DeprecatedSetMediaEngineDefaults(&deps);
@@ -333,5 +336,6 @@ TEST(WebRtcMediaEngineTest, Create) {
 
   EXPECT_TRUE(engine);
 }
+#pragma clang diagnostic pop
 
 }  // namespace cricket
