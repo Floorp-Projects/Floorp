@@ -715,7 +715,7 @@ var snapshotFormatters = {
     }
     addRow("features", "compositing", [new Text(compositor)]);
     addRow("features", "supportFontDetermination", [
-      new Text(data.fontDetermination),
+      new Text(data.supportFontDetermination),
     ]);
     delete data.windowLayerManagerRemote;
     delete data.windowLayerManagerType;
