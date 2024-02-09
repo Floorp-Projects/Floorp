@@ -33,7 +33,7 @@ const kDoNotSpoof = 1;
 const kSpoofEnglish = 2;
 
 async function runTest(locale) {
-  return BrowserTestUtils.withNewTab("http://example.com/", browser => {
+  return BrowserTestUtils.withNewTab("https://example.com/", browser => {
     return SpecialPowers.spawn(browser, [locale], _locale => {
       let locale = JSON.stringify(_locale);
       return content.eval(`({
