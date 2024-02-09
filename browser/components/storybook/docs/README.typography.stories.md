@@ -18,16 +18,16 @@ We also don't specify line height units and rely on the default.
     </tr>
   </thead>
   <tbody>
-  <tr>
-    <th>Heading XLarge <i>(used for error pages)</i></th>
-      <td><code>--font-size-xxlarge</code></td>
+    <tr>
+    <th>Heading XLarge</th>
+      <td><code>h1,<br/>.heading-xlarge</code></td>
       <td>
         ```html story
-          <h1 class="text-truncated-ellipsis sb-preview-font-size-xxlarge">The quick brown fox jumps over the lazy dog</h1>
+          <h1 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h1>
         ```
       </td>
       <td>
-        <code>2.2rem</code> (<code>33px</code>)
+        <code>1.6rem</code> (<code>24px</code>)
       </td>
       <td>
         <code>600</code>
@@ -35,10 +35,10 @@ We also don't specify line height units and rely on the default.
     </tr>
     <tr>
       <th>Heading Large</th>
-      <td><code>h1,<br/>.heading-large</code></td>
+      <td><code>h2,<br/>.heading-large</code></td>
       <td>
         ```html story
-          <h1 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h1>
+          <h2 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h2>
         ```
       </td>
       <td>
@@ -50,10 +50,10 @@ We also don't specify line height units and rely on the default.
     </tr>
     <tr>
       <th>Heading Medium</th>
-      <td><code>h2,<br/>.heading-medium</code></td>
+      <td><code>h3,<br/>.heading-medium</code></td>
       <td >
         ```html story
-          <h2 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h2>
+          <h3 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h3>
         ```
       </td>
       <td>
@@ -115,7 +115,7 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
   <tbody>
      <tr>
       <th>Menu Heading</th>
-      <td><code>h1,<br/>.heading-large</code></td>
+      <td><code>h1</code></td>
       <td class="sb-preview-chrome-typescale sb-preview-chrome-menu">
         ```html story
           <h1 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h1>
@@ -145,7 +145,7 @@ Note that there currently isn't a hierarchy of multiple headings on the chrome s
     </tr>
     <tr>
       <th>Heading</th>
-      <td><code>h1,<br/>.heading-large</code></td>
+      <td><code>h1</code></td>
       <td class="sb-preview-chrome-typescale">
         ```html story
           <h1 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h1>
@@ -189,6 +189,17 @@ Type setting relies on design tokens for font size and font weight.
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <th>
+        <code>--font-size-xxlarge</code>
+      </th>
+      <td>
+        <code>1.6rem</code>
+      </td>
+      <td>
+        <code>unset</code>
+      </td>
+    </tr>
     <tr>
       <th>
         <code>--font-size-xlarge</code>
@@ -285,10 +296,10 @@ You should rely on typography helper classes and the defaults set by the design 
 This file is imported into `common-shared.css` and `global-shared.css` so that both in-content pages and the chrome receive their respective typography scale treatments, and have access to helper classes.
 
 #### Heading
-##### Large (h1)
+##### XLarge (h1)
 ###### In-content
 ```html story
-  <h1>General</h1>
+  <h1>Firefox View</h1>
 ```
 
 ###### Chrome
@@ -303,21 +314,34 @@ This file is imported into `common-shared.css` and `global-shared.css` so that b
 
 ```css story
 h1,
+.heading-xlarge {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xxlarge);
+}
+```
+
+*Reminder: There's no hierarchy of headings on the chrome. So here's just in-content's preview:*
+
+##### Large (h2)
+```html story
+  <h2>Recent browsing</h2>
+```
+
+```css story
+h2,
 .heading-large {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xlarge);
 }
 ```
 
-##### Medium (h2)
-*Reminder: There's no hierarchy of headings on the chrome. So here's just in-content's preview:*
-
+##### Medium (h3)
 ```html story
-  <h2>Startup</h2>
+  <h3>Tabs from other devices</h3>
 ```
 
 ```css story
-h2,
+h3,
 .heading-medium {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-large);

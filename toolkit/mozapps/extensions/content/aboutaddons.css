@@ -29,6 +29,14 @@ body {
   min-width: 500px;
 }
 
+h1 {
+  font-size: var(--font-size-xlarge);
+}
+
+h2 {
+  font-size: var(--font-size-large);
+}
+
 #full {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
