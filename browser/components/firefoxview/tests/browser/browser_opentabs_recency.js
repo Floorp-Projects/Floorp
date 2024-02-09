@@ -6,6 +6,10 @@
    presents the correct tab data in the correct order.
 */
 
+const { ObjectUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ObjectUtils.sys.mjs"
+);
+
 const tabURL1 = "data:,Tab1";
 const tabURL2 = "data:,Tab2";
 const tabURL3 = "data:,Tab3";
@@ -94,6 +98,15 @@ async function restoreWindow(win) {
     "Docshell should be active again"
   );
   ok(!win.document.hidden, "Top level window should be visible");
+  // restoring a window doesnt necessarily focus it, and BrowserWindowTracker may not get updated
+  // As we're testing the lastSeenActive rather than window management behaviour, force it by
+  // ensuring our window gets focus
+  await SimpleTest.promiseFocus(win);
+  is(
+    BrowserWindowTracker.getTopWindow(),
+    win,
+    "The expected window is the top window"
+  );
 }
 
 async function prepareOpenTabs(urls, win = window) {
@@ -162,13 +175,10 @@ async function checkTabList(browser, expected) {
   await tabsView.getUpdateComplete();
   const tabList = openTabsCard.shadowRoot.querySelector("fxview-tab-list");
   Assert.ok(tabList, "Found the tab list element");
-  await TestUtils.waitForCondition(() => tabList.rowEls.length);
-  let actual = Array.from(tabList.rowEls).map(row => row.url);
-  Assert.deepEqual(
-    actual,
-    expected,
-    "Tab list has items with URLs in the expected order"
-  );
+  await TestUtils.waitForCondition(() => {
+    let actual = Array.from(tabList.rowEls).map(row => row.url);
+    return ObjectUtils.deepEqual(actual, expected);
+  }, "Tab list has items with URLs in the expected order");
 }
 
 add_task(async function test_single_window_tabs() {

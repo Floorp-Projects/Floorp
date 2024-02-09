@@ -828,7 +828,7 @@ function getTabListItems(tabs) {
       secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
       soundPlaying: tab.hasAttribute("soundplaying"),
       tabElement: tab,
-      time: tab.lastAccessed,
+      time: tab.lastSeenActive,
       title: tab.label,
       titleChanged: tab.hasAttribute("titlechanged"),
       url,
