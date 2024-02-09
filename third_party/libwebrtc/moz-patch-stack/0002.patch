@@ -1,402 +1,53 @@
 From: Jan-Ivar Bruaroey <jan-ivar@users.noreply.github.com>
-Date: Wed, 7 Feb 2024 11:54:19 -0500
-Subject: (tmp-cherry-pick) Revert "Measure wall clock time of capture and
- encode processing." (9c69c4625b)
+Date: Fri, 9 Feb 2024 15:35:24 -0500
+Subject: (tmp-cherry-pick) Revert "Add RTC_EXPORT for Voucher::ScopedSetter
+ and Voucher::Attachment." (dd45ab650e)
 
-This reverts commit 8039cdbe48f8c8bb91fa1761f807005a7b497196.
+This reverts commit 414ffac4b742dc3a1696deb3117ef1383fc8d9be.
 
 Reason for revert: remove functionality after measurement complete
 
 Original change's description:
-> Measure wall clock time of capture and encode processing.
->
-> (NOTE: This and dependent CLs will be reverted in a few days after
-> data collection from the field is complete.)
->
-> This change introduces a new task queue concept, Voucher. They
-> are associated with a currently running task tree. Whenever
-> tasks are posted, the current voucher is inherited and set as
-> current in the new task.
->
-> The voucher exists for as long as there are direct and indirect
-> tasks running that descend from the task where the voucher was
-> created.
->
-> Vouchers aggregate application-specific attachments, which perform
-> logic unrelated to Voucher progression. This particular change adds
-> an attachment that measures time from capture to all encode operations
-> complete, and places it into the WebRTC.Video.CaptureToSendTimeMs UMA.
->
-> An accompanying Chrome change crrev.com/c/4992282 ensures survival of
-> vouchers across certain Mojo IPC.
+> Add RTC_EXPORT for Voucher::ScopedSetter and Voucher::Attachment.
 >
 > Bug: chromium:1498378
-> Change-Id: I2a27800a4e5504f219d8b9d33c56a48904cf6dde
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/325400
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Markus Handell <handellm@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41061}
+> Change-Id: I606079411c71ac46cc5d261a86f6a11c473d1278
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/325960
+> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41071}
 
 Bug: chromium:1498378
-Change-Id: I9503575fbc52f1946ca26fc3c17b623ea75cd3c5
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/327023
-Commit-Queue: Markus Handell <handellm@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Change-Id: If35641719a8bf01b045e10c707af809250665330
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/327022
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#41135}
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41130}
 ---
- api/task_queue/BUILD.gn           |  1 -
- api/task_queue/task_queue_base.cc | 18 -------
- api/task_queue/task_queue_base.h  |  9 ++--
- rtc_base/BUILD.gn                 | 15 ------
- rtc_base/voucher.cc               | 80 -------------------------------
- rtc_base/voucher.h                | 78 ------------------------------
- video/BUILD.gn                    |  1 -
- video/video_stream_encoder.cc     | 34 -------------
- 8 files changed, 3 insertions(+), 233 deletions(-)
- delete mode 100644 rtc_base/voucher.cc
- delete mode 100644 rtc_base/voucher.h
+ rtc_base/voucher.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index a410c53a9b..e0e2e50514 100644
---- a/api/task_queue/BUILD.gn
-+++ b/api/task_queue/BUILD.gn
-@@ -20,7 +20,6 @@ rtc_library("task_queue") {
-     "..:location",
-     "../../rtc_base:checks",
-     "../../rtc_base:macromagic",
--    "../../rtc_base:voucher",
-     "../../rtc_base/system:rtc_export",
-     "../units:time_delta",
-   ]
-diff --git a/api/task_queue/task_queue_base.cc b/api/task_queue/task_queue_base.cc
-index 78c9a271c5..ecdc7f7691 100644
---- a/api/task_queue/task_queue_base.cc
-+++ b/api/task_queue/task_queue_base.cc
-@@ -14,7 +14,6 @@
- #include "absl/functional/any_invocable.h"
- #include "api/units/time_delta.h"
- #include "rtc_base/checks.h"
--#include "rtc_base/voucher.h"
- 
- #if defined(ABSL_HAVE_THREAD_LOCAL)
- 
-@@ -29,23 +28,6 @@ TaskQueueBase* TaskQueueBase::Current() {
-   return current;
- }
- 
--void TaskQueueBase::PostTask(absl::AnyInvocable<void() &&> task,
--                             const Location& location) {
--  PostTaskInternal(std::move(task), PostTaskTraits{}, location);
--}
--
--void TaskQueueBase::PostTaskInternal(absl::AnyInvocable<void() &&> task,
--                                     const PostTaskTraits& traits,
--                                     const Location& location) {
--  auto current = Voucher::Current();
--  PostTaskImpl(
--      [task = std::move(task), current = std::move(current)]() mutable {
--        Voucher::ScopedSetter setter(std::move(current));
--        std::move(task)();
--      },
--      traits, location);
--}
--
- TaskQueueBase::CurrentTaskQueueSetter::CurrentTaskQueueSetter(
-     TaskQueueBase* task_queue)
-     : previous_(current) {
-diff --git a/api/task_queue/task_queue_base.h b/api/task_queue/task_queue_base.h
-index b2857163f1..89e9e9e3b0 100644
---- a/api/task_queue/task_queue_base.h
-+++ b/api/task_queue/task_queue_base.h
-@@ -64,7 +64,9 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
-   //
-   // May be called on any thread or task queue, including this task queue.
-   void PostTask(absl::AnyInvocable<void() &&> task,
--                const Location& location = Location::Current());
-+                const Location& location = Location::Current()) {
-+    PostTaskImpl(std::move(task), PostTaskTraits{}, location);
-+  }
- 
-   // Prefer PostDelayedTask() over PostDelayedHighPrecisionTask() whenever
-   // possible.
-@@ -185,11 +187,6 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
-   // Users of the TaskQueue should call Delete instead of directly deleting
-   // this object.
-   virtual ~TaskQueueBase() = default;
--
-- private:
--  void PostTaskInternal(absl::AnyInvocable<void() &&> task,
--                        const PostTaskTraits& traits,
--                        const Location& location);
- };
- 
- struct TaskQueueDeleter {
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 67d2b86de5..ac237ed4c8 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1453,21 +1453,6 @@ rtc_library("crc32") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
- 
--rtc_library("voucher") {
--  sources = [
--    "voucher.cc",
--    "voucher.h",
--  ]
--  deps = [
--    ":macromagic",
--    ":refcount",
--    "../api:make_ref_counted",
--    "synchronization:mutex",
--    "system:rtc_export",
--  ]
--  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
--}
--
- rtc_library("stream") {
-   visibility = [ "*" ]
-   sources = [
-diff --git a/rtc_base/voucher.cc b/rtc_base/voucher.cc
-deleted file mode 100644
-index 46dd780334..0000000000
---- a/rtc_base/voucher.cc
-+++ /dev/null
-@@ -1,80 +0,0 @@
--/*
-- *  Copyright 2023 The WebRTC Project Authors. All rights reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--#include "rtc_base/voucher.h"
--
--#include <memory>
--#include <utility>
--
--#include "api/make_ref_counted.h"
--
--namespace webrtc {
--namespace {
--
--rtc::FinalRefCountedObject<Voucher>*& CurrentVoucherStorage() {
--  static thread_local rtc::FinalRefCountedObject<Voucher>* storage = nullptr;
--  return storage;
--}
--
--}  // namespace
--
--Voucher::ScopedSetter::ScopedSetter(Ptr voucher)
--    : old_current_(Voucher::Current()) {
--  Voucher::SetCurrent(std::move(voucher));
--}
--
--Voucher::ScopedSetter::~ScopedSetter() {
--  Voucher::SetCurrent(std::move(old_current_));
--}
--
--Voucher::Attachment::Id Voucher::Attachment::GetNextId() {
--  static std::atomic<Voucher::Attachment::Id> current_id = 0;
--  auto id = current_id.fetch_add(1);
--  RTC_CHECK(id < Voucher::kAttachmentCapacity);
--  return id;
--}
--
--Voucher::Ptr Voucher::CurrentOrCreateForCurrentTask() {
--  auto& storage = CurrentVoucherStorage();
--  Voucher::Ptr result(storage);
--  if (!result) {
--    result = rtc::make_ref_counted<Voucher>();
--    storage = result.get();
--    storage->AddRef();
--  }
--  return result;
--}
--
--Voucher::Ptr Voucher::Current() {
--  auto& storage = CurrentVoucherStorage();
--  Voucher::Ptr result(storage);
--  return result;
--}
--
--Voucher::Voucher() : attachments_(Voucher::kAttachmentCapacity) {}
--
--void Voucher::SetCurrent(Voucher::Ptr value) {
--  auto& storage = CurrentVoucherStorage();
--  if (value.get() != storage) {
--    if (storage) {
--      storage->Release();
--    }
--    storage = value.release();
--  }
--}
--
--void Voucher::SetAttachment(Attachment::Id id,
--                            std::unique_ptr<Attachment> attachment) {
--  RTC_CHECK(id < kAttachmentCapacity);
--  MutexLock lock(&mu_);
--  attachments_[id] = std::move(attachment);
--}
--
--}  // namespace webrtc
 diff --git a/rtc_base/voucher.h b/rtc_base/voucher.h
-deleted file mode 100644
-index 30a6460906..0000000000
+index 1a82551b74..30a6460906 100644
 --- a/rtc_base/voucher.h
-+++ /dev/null
-@@ -1,78 +0,0 @@
--/*
-- *  Copyright 2023 The WebRTC Project Authors. All rights reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--#ifndef RTC_BASE_VOUCHER_H_
--#define RTC_BASE_VOUCHER_H_
--
--#include <memory>
--
--#include "absl/container/inlined_vector.h"
--#include "rtc_base/ref_counted_object.h"
--#include "rtc_base/synchronization/mutex.h"
--#include "rtc_base/system/rtc_export.h"
--
--namespace webrtc {
--
--// A voucher is associated with a currently running task tree. Whenever tasks
--// are posted, the current voucher is inherited and set as current in the new
--// task. The voucher exists for as long as there are direct and indirect
--// tasks running that descend from the task where the voucher was created.
--class RTC_EXPORT Voucher {
-- public:
--  static constexpr size_t kAttachmentCapacity = 4;
--
--  using Ptr = rtc::scoped_refptr<rtc::FinalRefCountedObject<Voucher>>;
--
--  // Vouchers aggregate attachments, which are application-specific attachments
--  // that have logic unrelated to the mechanics of Voucher progression.
--  class Attachment {
--   public:
--    using Id = size_t;
--
--    // Attachments should call this function one to get an ID to use with
--    // SetAttachment.
--    static Attachment::Id GetNextId();
--
--    virtual ~Attachment() = default;
--  };
--
--  // Scoped setter that saves the current voucher on stack and instates a new
--  // one, until the scope exits.
--  class ScopedSetter {
--   public:
--    explicit ScopedSetter(Ptr voucher);
--    ~ScopedSetter();
--
--   private:
--    Ptr old_current_;
--  };
--
--  static Ptr Current();
--  static Ptr CurrentOrCreateForCurrentTask();
--
--  // For Attachments: stores an attachment into a voucher. If one is already
--  // present, it gets replaced.
--  void SetAttachment(Attachment::Id id, std::unique_ptr<Attachment> attachment);
--
-- private:
--  friend class rtc::FinalRefCountedObject<webrtc::Voucher>;
--  Voucher();
--
--  friend class ScopedSetter;
--  static void SetCurrent(Ptr ptr);
--
--  Mutex mu_;
--  absl::InlinedVector<std::unique_ptr<Attachment>, kAttachmentCapacity>
--      attachments_ RTC_GUARDED_BY(&mu_);
--};
--
--}  // namespace webrtc
--
--#endif  // RTC_BASE_VOUCHER_H_
-diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 850b4548d2..1722ad4f6e 100644
---- a/video/BUILD.gn
-+++ b/video/BUILD.gn
-@@ -448,7 +448,6 @@ rtc_library("video_stream_encoder_impl") {
-     "../rtc_base:safe_conversions",
-     "../rtc_base:stringutils",
-     "../rtc_base:timeutils",
--    "../rtc_base:voucher",
-     "../rtc_base/experiments:balanced_degradation_settings",
-     "../rtc_base/experiments:encoder_info_settings",
-     "../rtc_base/experiments:field_trial_parser",
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index c9bd604d05..2e5a120eed 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -49,9 +49,7 @@
- #include "rtc_base/strings/string_builder.h"
- #include "rtc_base/system/no_unique_address.h"
- #include "rtc_base/thread_annotations.h"
--#include "rtc_base/time_utils.h"
- #include "rtc_base/trace_event.h"
--#include "rtc_base/voucher.h"
- #include "system_wrappers/include/metrics.h"
- #include "video/adaptation/video_stream_encoder_resource_manager.h"
- #include "video/alignment_adjuster.h"
-@@ -85,35 +83,6 @@ constexpr int kMaxAnimationPixels = 1280 * 720;
++++ b/rtc_base/voucher.h
+@@ -32,7 +32,7 @@ class RTC_EXPORT Voucher {
  
- constexpr int kDefaultMinScreenSharebps = 1200000;
+   // Vouchers aggregate attachments, which are application-specific attachments
+   // that have logic unrelated to the mechanics of Voucher progression.
+-  class RTC_EXPORT Attachment {
++  class Attachment {
+    public:
+     using Id = size_t;
  
--// This voucher attachment measures the time from a passed capture reference
--// time to the time when the voucher is destroyed.
--class CaptureProcessingDurationMeasurement : public Voucher::Attachment {
-- public:
--  static void AttachToCurrentVoucher(Timestamp capture_reference_time) {
--    static const Voucher::Attachment::Id kCaptureToEncodeAttachmentId =
--        Voucher::Attachment::GetNextId();
--    auto voucher = Voucher::CurrentOrCreateForCurrentTask();
--    voucher->SetAttachment(
--        kCaptureToEncodeAttachmentId,
--        std::make_unique<CaptureProcessingDurationMeasurement>(
--            capture_reference_time));
--  }
--  explicit CaptureProcessingDurationMeasurement(
--      Timestamp capture_reference_time)
--      : capture_reference_time_(capture_reference_time) {}
--  ~CaptureProcessingDurationMeasurement() override {
--    auto duration =
--        Clock::GetRealTimeClock()->CurrentTime() - capture_reference_time_;
--    TRACE_EVENT1("webrtc", "CaptureProcessingDurationMeasurement", "duration",
--                 duration.us());
--    RTC_HISTOGRAM_COUNTS_1000("WebRTC.Video.CaptureToSendTimeMs",
--                              duration.ms());
--  }
--
-- private:
--  const Timestamp capture_reference_time_;
--};
--
- int GetNumSpatialLayers(const VideoCodec& codec) {
-   if (codec.codecType == kVideoCodecVP9) {
-     return codec.VP9().numberOfSpatialLayers;
-@@ -2065,9 +2034,6 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
+@@ -45,7 +45,7 @@ class RTC_EXPORT Voucher {
  
-   frame_encode_metadata_writer_.OnEncodeStarted(out_frame);
- 
--  CaptureProcessingDurationMeasurement::AttachToCurrentVoucher(
--      out_frame.reference_time().value_or(clock_->CurrentTime()));
--
-   const int32_t encode_status = encoder_->Encode(out_frame, &next_frame_types_);
-   was_encode_called_since_last_initialization_ = true;
- 
+   // Scoped setter that saves the current voucher on stack and instates a new
+   // one, until the scope exits.
+-  class RTC_EXPORT ScopedSetter {
++  class ScopedSetter {
+    public:
+     explicit ScopedSetter(Ptr voucher);
+     ~ScopedSetter();
