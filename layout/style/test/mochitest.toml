@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "dom.animations-api.compositing.enabled=true",
-  "dom.animations-api.getAnimations.enabled=true",
   "dom.animations-api.timelines.enabled=true",
   "gfx.omta.background-color=true",
   "gfx.font_loader.delay=0",

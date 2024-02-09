@@ -15,7 +15,7 @@ load 1282691-1.html
 load 1291413-1.html
 load 1291413-2.html
 pref(dom.animations-api.compositing.enabled,true) load 1304886-1.html
-pref(dom.animations-api.getAnimations.enabled,true) load 1309198-1.html
+load 1309198-1.html
 load 1322382-1.html
 load 1322291-1.html
 load 1322291-2.html
@@ -26,7 +26,7 @@ load 1324554-1.html
 pref(dom.animations-api.compositing.enabled,true) load 1325193-1.html
 load 1332588-1.html
 load 1330190-1.html
-pref(dom.animations-api.compositing.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) load 1330190-2.html
+pref(dom.animations-api.compositing.enabled,true) load 1330190-2.html
 pref(dom.animations-api.compositing.enabled,true) load 1330513-1.html
 pref(dom.animations-api.timelines.enabled,true) load 1333539-1.html
 pref(dom.animations-api.timelines.enabled,true) load 1333539-2.html
@@ -48,15 +48,15 @@ load 1524480-1.html
 load 1575926.html
 load 1585770.html
 load 1604500-1.html
-pref(dom.animations-api.getAnimations.enabled,true) load 1611847.html
+load 1611847.html
 load 1612891-1.html
 load 1612891-2.html
 load 1612891-3.html
-pref(dom.animations-api.getAnimations.enabled,true) load 1633442.html
+load 1633442.html
 load 1633486.html
 pref(layout.animation.prerender.partial,true) load 1656419.html
 load 1706157.html
 pref(gfx.omta.background-color,true) load 1699890.html
-pref(dom.animations-api.getAnimations.enabled,true) pref(dom.animations-api.timelines.enabled,true) load 1714421.html
+pref(dom.animations-api.timelines.enabled,true) load 1714421.html
 load 1807966.html
 load 1875441.html
