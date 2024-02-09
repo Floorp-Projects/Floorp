@@ -31,10 +31,10 @@ using namespace mozilla;
    journey into the depths, the hidden, that which the world fights its hardest to
    conceal from us.
 
-   Specially: you need to look at more decimal places. Run the test with:
+   Specifically: you need to look at more decimal places. Run the test with:
        MOZ_LOG="nsResistFingerprinting:5"
 
-   And look for two successive lines similar to the below (the format will certainly
+   And look for two successive lines similar to the below (the format will probably
    be different by the time you read this comment):
       V/nsResistFingerprinting Given: 2064.83384599999999, Reciprocal Rounding with 50000.00000000000000, Intermediate: 103241692.00000000000000, Got: 2064.83383999999978
       V/nsResistFingerprinting Given: 2064.83383999999978, Reciprocal Rounding with 50000.00000000000000, Intermediate: 103241691.00000000000000, Got: 2064.83381999999983
@@ -44,6 +44,7 @@ using namespace mozilla;
       Got: 2064.83381999999983
 
    They're supposed to be equal. They're not. But they both round to 2064.83.
+   Good luck and godspeed.
 */
 // clang-format on
 
