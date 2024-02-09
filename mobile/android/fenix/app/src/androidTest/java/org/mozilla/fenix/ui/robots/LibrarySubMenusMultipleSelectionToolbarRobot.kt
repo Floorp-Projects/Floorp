@@ -34,27 +34,46 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
  */
 class LibrarySubMenusMultipleSelectionToolbarRobot {
 
-    fun verifyMultiSelectionCheckmark() = assertMultiSelectionCheckmark()
+    fun verifyMultiSelectionCheckmark() = onView(withId(R.id.checkmark)).check(matches(isDisplayed()))
 
-    fun verifyMultiSelectionCheckmark(url: Uri) = assertMultiSelectionCheckmark(url)
+    fun verifyMultiSelectionCheckmark(url: Uri) =
+        onView(
+            allOf(
+                withId(R.id.checkmark),
+                withParent(withParent(withChild(allOf(withId(R.id.url), withText(url.toString()))))),
 
-    fun verifyMultiSelectionCounter() = assertMultiSelectionCounter()
+                // This is used as part of the `multiSelectionToolbarItemsTest` test. Somehow, in the view hierarchy,
+                // the match above is finding two checkmark views - one visible, one hidden, which is throwing off
+                // the matcher. This 'isDisplayed' check is a hacky workaround for this, we're explicitly ignoring
+                // the hidden one. Why are there two to begin with, though?
+                isDisplayed(),
+            ),
+        ).check(matches(isDisplayed()))
 
-    fun verifyShareHistoryButton() = assertShareHistoryButton()
+    fun verifyMultiSelectionCounter() = onView(withText("1 selected")).check(matches(isDisplayed()))
 
-    fun verifyShareBookmarksButton() = assertShareBookmarksButton()
+    fun verifyShareHistoryButton() = shareHistoryButton().check(matches(isDisplayed()))
 
-    fun verifyShareOverlay() = assertShareOverlay()
+    fun verifyShareBookmarksButton() = shareBookmarksButton().check(matches(isDisplayed()))
 
-    fun verifyShareAppsLayout() = assertShareAppsLayout()
+    fun verifyShareOverlay() = onView(withId(R.id.shareWrapper)).check(matches(isDisplayed()))
 
-    fun verifyShareTabFavicon() = assertShareTabFavicon()
+    fun verifyShareAppsLayout() {
+        val sendToDeviceTitle = mDevice.findObject(
+            UiSelector()
+                .instance(0)
+                .className(TextView::class.java),
+        )
+        sendToDeviceTitle.waitForExists(TestAssetHelper.waitingTime)
+    }
 
-    fun verifyShareTabTitle() = assertShareTabTitle()
+    fun verifyShareTabFavicon() = onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
 
-    fun verifyShareTabUrl() = assertShareTabUrl()
+    fun verifyShareTabTitle() = onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
 
-    fun verifyCloseToolbarButton() = assertCloseToolbarButton()
+    fun verifyShareTabUrl() = onView(withId(R.id.share_tab_url))
+
+    fun verifyCloseToolbarButton() = closeToolbarButton().check(matches(isDisplayed()))
 
     fun clickShareHistoryButton() {
         shareHistoryButton().click()
@@ -157,53 +176,3 @@ private fun openInNewTabButton() = onView(withText("Open in new tab"))
 private fun openInPrivateTabButton() = onView(withText("Open in private tab"))
 
 private fun deleteButton() = onView(withText("Delete"))
-
-private fun assertMultiSelectionCheckmark() =
-    onView(withId(R.id.checkmark))
-        .check(matches(isDisplayed()))
-
-private fun assertMultiSelectionCheckmark(url: Uri) =
-    onView(
-        allOf(
-            withId(R.id.checkmark),
-            withParent(withParent(withChild(allOf(withId(R.id.url), withText(url.toString()))))),
-
-            // This is used as part of the `multiSelectionToolbarItemsTest` test. Somehow, in the view hierarchy,
-            // the match above is finding two checkmark views - one visible, one hidden, which is throwing off
-            // the matcher. This 'isDisplayed' check is a hacky workaround for this, we're explicitly ignoring
-            // the hidden one. Why are there two to begin with, though?
-            isDisplayed(),
-        ),
-    )
-        .check(matches(isDisplayed()))
-
-private fun assertMultiSelectionCounter() =
-    onView(withText("1 selected")).check(matches(isDisplayed()))
-
-private fun assertShareHistoryButton() =
-    shareHistoryButton().check(matches(isDisplayed()))
-
-private fun assertShareBookmarksButton() =
-    shareBookmarksButton().check(matches(isDisplayed()))
-
-private fun assertShareOverlay() =
-    onView(withId(R.id.shareWrapper)).check(matches(isDisplayed()))
-
-private fun assertShareAppsLayout() = {
-    val sendToDeviceTitle = mDevice.findObject(
-        UiSelector()
-            .instance(0)
-            .className(TextView::class.java),
-    )
-    sendToDeviceTitle.waitForExists(TestAssetHelper.waitingTime)
-}
-
-private fun assertShareTabTitle() =
-    onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
-
-private fun assertShareTabFavicon() =
-    onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
-
-private fun assertShareTabUrl() = onView(withId(R.id.share_tab_url))
-
-private fun assertCloseToolbarButton() = closeToolbarButton().check(matches(isDisplayed()))
