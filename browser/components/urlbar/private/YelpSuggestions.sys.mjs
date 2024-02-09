@@ -81,7 +81,6 @@ export class YelpSuggestions extends BaseFeature {
         lazy.UrlbarUtils.RESULT_TYPE.URL,
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-          // TODO: Should define Yelp icon here. Bug 1874624.
           url: url.toString(),
           title,
           shouldShowUrl: true,
