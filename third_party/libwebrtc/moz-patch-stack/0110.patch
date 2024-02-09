@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/136b3fc0377be6dca
  1 file changed, 3 insertions(+)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 911801c0f1..6e372b22c1 100644
+index 609bb1e6e4..d3cb2842d7 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -48,6 +48,9 @@ rtc_source_set("enable_media") {
