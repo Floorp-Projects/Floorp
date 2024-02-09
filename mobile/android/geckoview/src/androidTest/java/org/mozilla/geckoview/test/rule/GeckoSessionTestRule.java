@@ -2483,6 +2483,10 @@ public class GeckoSessionTestRule implements TestRule {
     return dblPid.intValue();
   }
 
+  public void waitForContentTransformsReceived(final @NonNull GeckoSession session) {
+    webExtensionApiCall(session, "WaitForContentTransformsReceived", null);
+  }
+
   public String getProfilePath() {
     return (String) webExtensionApiCall("GetProfilePath", null);
   }

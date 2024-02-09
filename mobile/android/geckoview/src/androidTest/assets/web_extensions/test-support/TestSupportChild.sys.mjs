@@ -72,6 +72,9 @@ export class TestSupportChild extends GeckoViewActorChild {
           window.windowUtils.setResolutionAndScaleTo(resolution);
         });
       }
+      case "WaitForContentTransformsReceived": {
+        return this.contentWindow.docShell.browserChild.contentTransformsReceived();
+      }
     }
     return null;
   }
