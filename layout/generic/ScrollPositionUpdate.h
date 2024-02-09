@@ -34,6 +34,9 @@ enum class ScrollUpdateType {
   // The delta should be applied to whatever the current scroll position is
   // on the receiver side.
   PureRelative,
+  // Similar to |Absolute|, but even if there's an active async scroll animation
+  // the position update will NOT cancel the async scroll animation.
+  MergeableAbsolute,
 };
 
 enum class ScrollTriggeredByScript : bool { No, Yes };
@@ -82,6 +85,9 @@ class ScrollPositionUpdate {
   static ScrollPositionUpdate NewPureRelativeScroll(ScrollOrigin aOrigin,
                                                     ScrollMode aMode,
                                                     const nsPoint& aDelta);
+
+  static ScrollPositionUpdate NewMergeableScroll(ScrollOrigin aOrigin,
+                                                 nsPoint aDestination);
 
   bool operator==(const ScrollPositionUpdate& aOther) const;
 
