@@ -185,7 +185,7 @@ IceCandidatePairType GetIceCandidatePairCounter(
 absl::optional<int> RTCConfigurationToIceConfigOptionalInt(
     int rtc_configuration_parameter) {
   if (rtc_configuration_parameter ==
-      webrtc::PeerConnectionInterface::RTCConfiguration::kUndefined) {
+      PeerConnectionInterface::RTCConfiguration::kUndefined) {
     return absl::nullopt;
   }
   return rtc_configuration_parameter;
@@ -449,7 +449,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     absl::optional<int> ice_unwritable_min_checks;
     absl::optional<int> ice_inactive_timeout;
     absl::optional<int> stun_candidate_keepalive_interval;
-    webrtc::TurnCustomizer* turn_customizer;
+    TurnCustomizer* turn_customizer;
     SdpSemantics sdp_semantics;
     absl::optional<rtc::AdapterType> network_preference;
     bool active_reset_srtp_params;
@@ -459,7 +459,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     bool enable_implicit_rollback;
     absl::optional<int> report_usage_pattern_delay_ms;
     absl::optional<int> stable_writable_connection_ping_interval_ms;
-    webrtc::VpnPreference vpn_preference;
+    VpnPreference vpn_preference;
     std::vector<rtc::NetworkMask> vpn_list;
     PortAllocatorConfig port_allocator_config;
     absl::optional<TimeDelta> pacer_burst_interval;
@@ -1685,7 +1685,7 @@ void PeerConnection::AddIceCandidate(
     std::function<void(RTCError)> callback) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   sdp_handler_->AddIceCandidate(std::move(candidate),
-                                [this, callback](webrtc::RTCError result) {
+                                [this, callback](RTCError result) {
                                   ClearStatsCache();
                                   callback(result);
                                 });
@@ -1789,7 +1789,7 @@ bool PeerConnection::StartRtcEventLog(
     std::unique_ptr<RtcEventLogOutput> output) {
   int64_t output_period_ms = 5000;
   if (trials().IsDisabled("WebRTC-RtcEventLogNewFormat")) {
-    output_period_ms = webrtc::RtcEventLog::kImmediateOutput;
+    output_period_ms = RtcEventLog::kImmediateOutput;
   }
   return StartRtcEventLog(std::move(output), output_period_ms);
 }
@@ -2222,7 +2222,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
     IceTransportsType type,
     int candidate_pool_size,
     PortPrunePolicy turn_port_prune_policy,
-    webrtc::TurnCustomizer* turn_customizer,
+    TurnCustomizer* turn_customizer,
     absl::optional<int> stun_candidate_keepalive_interval,
     bool have_local_description) {
   RTC_DCHECK_RUN_ON(network_thread());

@@ -86,8 +86,7 @@ namespace webrtc {
 
 namespace {
 
-typedef webrtc::PeerConnectionInterface::RTCOfferAnswerOptions
-    RTCOfferAnswerOptions;
+typedef PeerConnectionInterface::RTCOfferAnswerOptions RTCOfferAnswerOptions;
 
 // Error messages
 const char kInvalidSdp[] = "Invalid session description.";
@@ -834,8 +833,8 @@ std::string GenerateRtcpCname() {
 }
 
 // Check if we can send `new_stream` on a PeerConnection.
-bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
-                            webrtc::MediaStreamInterface* new_stream) {
+bool CanAddLocalMediaStream(StreamCollectionInterface* current_streams,
+                            MediaStreamInterface* new_stream) {
   if (!new_stream || !current_streams) {
     return false;
   }
@@ -847,7 +846,7 @@ bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
   return true;
 }
 
-rtc::scoped_refptr<webrtc::DtlsTransport> LookupDtlsTransportByMid(
+rtc::scoped_refptr<DtlsTransport> LookupDtlsTransportByMid(
     rtc::Thread* network_thread,
     JsepTransportController* controller,
     const std::string& mid) {

@@ -355,9 +355,8 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
   report->AddInt64(StatsReport::kStatsValueNameInterframeDelayMaxMs,
                    info.interframe_delay_max_ms);
 
-  report->AddString(
-      StatsReport::kStatsValueNameContentType,
-      webrtc::videocontenttypehelpers::ToString(info.content_type));
+  report->AddString(StatsReport::kStatsValueNameContentType,
+                    videocontenttypehelpers::ToString(info.content_type));
 }
 
 void ExtractStats(const cricket::VideoSenderInfo& info,
@@ -398,9 +397,8 @@ void ExtractStats(const cricket::VideoSenderInfo& info,
   for (const auto& i : ints)
     report->AddInt(i.name, i.value);
   report->AddString(StatsReport::kStatsValueNameMediaType, "video");
-  report->AddString(
-      StatsReport::kStatsValueNameContentType,
-      webrtc::videocontenttypehelpers::ToString(info.content_type));
+  report->AddString(StatsReport::kStatsValueNameContentType,
+                    videocontenttypehelpers::ToString(info.content_type));
 }
 
 void ExtractStats(const cricket::BandwidthEstimationInfo& info,
@@ -1033,7 +1031,7 @@ void LegacyStatsCollector::ExtractBweInfo() {
   if (pc_->signaling_state() == PeerConnectionInterface::kClosed)
     return;
 
-  webrtc::Call::Stats call_stats = pc_->GetCallStats();
+  Call::Stats call_stats = pc_->GetCallStats();
   cricket::BandwidthEstimationInfo bwe_info;
   bwe_info.available_send_bandwidth = call_stats.send_bandwidth_bps;
   bwe_info.available_recv_bandwidth = call_stats.recv_bandwidth_bps;

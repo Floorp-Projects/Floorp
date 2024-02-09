@@ -160,10 +160,9 @@ std::string SvcTestNameGenerator(
 // encoder and decoder level.
 class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
  public:
-  using SpatialTemporalLayerCounts =
-      webrtc::flat_map<int, webrtc::flat_map<int, int>>;
+  using SpatialTemporalLayerCounts = flat_map<int, flat_map<int, int>>;
 
-  explicit SvcVideoQualityAnalyzer(webrtc::Clock* clock)
+  explicit SvcVideoQualityAnalyzer(Clock* clock)
       : DefaultVideoQualityAnalyzer(clock,
                                     test::GetGlobalMetricsLogger(),
                                     DefaultVideoQualityAnalyzerOptions{
@@ -315,9 +314,9 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
   if (UseDependencyDescriptor()) {
     trials += "WebRTC-DependencyDescriptorAdvertised/Enabled/";
   }
-  webrtc::test::ScopedFieldTrials override_trials(AppendFieldTrials(trials));
+  test::ScopedFieldTrials override_trials(AppendFieldTrials(trials));
   std::unique_ptr<NetworkEmulationManager> network_emulation_manager =
-      CreateNetworkEmulationManager(webrtc::TimeMode::kSimulated);
+      CreateNetworkEmulationManager(TimeMode::kSimulated);
   auto analyzer = std::make_unique<SvcVideoQualityAnalyzer>(
       network_emulation_manager->time_controller()->GetClock());
   SvcVideoQualityAnalyzer* analyzer_ptr = analyzer.get();

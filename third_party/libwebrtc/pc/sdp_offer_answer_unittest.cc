@@ -88,7 +88,7 @@ class SdpOfferAnswerTest : public ::testing::Test {
                                             Dav1dDecoderTemplateAdapter>>(),
             nullptr /* audio_mixer */,
             nullptr /* audio_processing */)) {
-    webrtc::metrics::Reset();
+    metrics::Reset();
   }
 
   std::unique_ptr<PeerConnectionWrapper> CreatePeerConnection() {
@@ -168,8 +168,8 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsCodecCollisionsAudioVideo) {
   // There is no error yet but the metrics counter will increase.
   EXPECT_TRUE(error.ok());
   EXPECT_METRIC_EQ(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.ValidBundledPayloadTypes", false));
+      1, metrics::NumEvents("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                            false));
 
   // Tolerate codec collisions in rejected m-lines.
   pc = CreatePeerConnection();
@@ -178,9 +178,9 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsCodecCollisionsAudioVideo) {
       absl::StrReplaceAll(sdp, {{"m=video 9 ", "m=video 0 "}}));
   pc->SetRemoteDescription(std::move(rejected_offer), &error);
   EXPECT_TRUE(error.ok());
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.ValidBundledPayloadTypes", true));
+  EXPECT_METRIC_EQ(
+      1, metrics::NumEvents("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                            true));
 }
 
 TEST_F(SdpOfferAnswerTest, BundleRejectsCodecCollisionsVideoFmtp) {
@@ -221,8 +221,8 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsCodecCollisionsVideoFmtp) {
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
   EXPECT_METRIC_EQ(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.ValidBundledPayloadTypes", false));
+      1, metrics::NumEvents("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                            false));
 }
 
 TEST_F(SdpOfferAnswerTest, BundleCodecCollisionInDifferentBundlesAllowed) {
@@ -264,8 +264,8 @@ TEST_F(SdpOfferAnswerTest, BundleCodecCollisionInDifferentBundlesAllowed) {
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
   EXPECT_METRIC_EQ(
-      0, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.ValidBundledPayloadTypes", false));
+      0, metrics::NumEvents("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                            false));
 }
 
 TEST_F(SdpOfferAnswerTest, BundleMeasuresHeaderExtensionIdCollision) {

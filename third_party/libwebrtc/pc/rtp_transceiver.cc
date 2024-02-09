@@ -542,7 +542,7 @@ bool RtpTransceiver::stopping() const {
 
 RtpTransceiverDirection RtpTransceiver::direction() const {
   if (unified_plan_ && stopping())
-    return webrtc::RtpTransceiverDirection::kStopped;
+    return RtpTransceiverDirection::kStopped;
 
   return direction_;
 }
@@ -570,7 +570,7 @@ RTCError RtpTransceiver::SetDirectionWithError(
 absl::optional<RtpTransceiverDirection> RtpTransceiver::current_direction()
     const {
   if (unified_plan_ && stopped())
-    return webrtc::RtpTransceiverDirection::kStopped;
+    return RtpTransceiverDirection::kStopped;
 
   return current_direction_;
 }
@@ -604,7 +604,7 @@ void RtpTransceiver::StopSendingAndReceiving() {
   });
 
   stopping_ = true;
-  direction_ = webrtc::RtpTransceiverDirection::kInactive;
+  direction_ = RtpTransceiverDirection::kInactive;
 }
 
 RTCError RtpTransceiver::StopStandard() {

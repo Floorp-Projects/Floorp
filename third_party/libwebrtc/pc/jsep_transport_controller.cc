@@ -148,7 +148,7 @@ JsepTransportController::GetRtcpDtlsTransport(const std::string& mid) const {
   return jsep_transport->rtcp_dtls_transport();
 }
 
-rtc::scoped_refptr<webrtc::DtlsTransport>
+rtc::scoped_refptr<DtlsTransport>
 JsepTransportController::LookupDtlsTransportByMid(const std::string& mid) {
   RTC_DCHECK_RUN_ON(network_thread_);
   auto jsep_transport = GetJsepTransportForMid(mid);
@@ -383,7 +383,7 @@ RTCError JsepTransportController::RollbackTransports() {
   return RTCError::OK();
 }
 
-rtc::scoped_refptr<webrtc::IceTransportInterface>
+rtc::scoped_refptr<IceTransportInterface>
 JsepTransportController::CreateIceTransport(const std::string& transport_name,
                                             bool rtcp) {
   int component = rtcp ? cricket::ICE_CANDIDATE_COMPONENT_RTCP
@@ -455,7 +455,7 @@ JsepTransportController::CreateDtlsTransport(
   return dtls;
 }
 
-std::unique_ptr<webrtc::RtpTransport>
+std::unique_ptr<RtpTransport>
 JsepTransportController::CreateUnencryptedRtpTransport(
     const std::string& transport_name,
     rtc::PacketTransportInternal* rtp_packet_transport,
@@ -470,13 +470,12 @@ JsepTransportController::CreateUnencryptedRtpTransport(
   return unencrypted_rtp_transport;
 }
 
-std::unique_ptr<webrtc::SrtpTransport>
-JsepTransportController::CreateSdesTransport(
+std::unique_ptr<SrtpTransport> JsepTransportController::CreateSdesTransport(
     const std::string& transport_name,
     cricket::DtlsTransportInternal* rtp_dtls_transport,
     cricket::DtlsTransportInternal* rtcp_dtls_transport) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  auto srtp_transport = std::make_unique<webrtc::SrtpTransport>(
+  auto srtp_transport = std::make_unique<SrtpTransport>(
       rtcp_dtls_transport == nullptr, *config_.field_trials);
   RTC_DCHECK(rtp_dtls_transport);
   srtp_transport->SetRtpPacketTransport(rtp_dtls_transport);
@@ -489,13 +488,13 @@ JsepTransportController::CreateSdesTransport(
   return srtp_transport;
 }
 
-std::unique_ptr<webrtc::DtlsSrtpTransport>
+std::unique_ptr<DtlsSrtpTransport>
 JsepTransportController::CreateDtlsSrtpTransport(
     const std::string& transport_name,
     cricket::DtlsTransportInternal* rtp_dtls_transport,
     cricket::DtlsTransportInternal* rtcp_dtls_transport) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
+  auto dtls_srtp_transport = std::make_unique<DtlsSrtpTransport>(
       rtcp_dtls_transport == nullptr, *config_.field_trials);
   if (config_.enable_external_auth) {
     dtls_srtp_transport->EnableExternalAuth();
@@ -985,13 +984,12 @@ int JsepTransportController::GetRtpAbsSendTimeHeaderExtensionId(
   const cricket::MediaContentDescription* content_desc =
       content_info.media_description();
 
-  const webrtc::RtpExtension* send_time_extension =
-      webrtc::RtpExtension::FindHeaderExtensionByUri(
-          content_desc->rtp_header_extensions(),
-          webrtc::RtpExtension::kAbsSendTimeUri,
+  const RtpExtension* send_time_extension =
+      RtpExtension::FindHeaderExtensionByUri(
+          content_desc->rtp_header_extensions(), RtpExtension::kAbsSendTimeUri,
           config_.crypto_options.srtp.enable_encrypted_rtp_header_extensions
-              ? webrtc::RtpExtension::kPreferEncryptedExtension
-              : webrtc::RtpExtension::kDiscardEncryptedExtension);
+              ? RtpExtension::kPreferEncryptedExtension
+              : RtpExtension::kDiscardEncryptedExtension);
   return send_time_extension ? send_time_extension->id : -1;
 }
 
@@ -1039,7 +1037,7 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
                     "SDES and DTLS-SRTP cannot be enabled at the same time.");
   }
 
-  rtc::scoped_refptr<webrtc::IceTransportInterface> ice =
+  rtc::scoped_refptr<IceTransportInterface> ice =
       CreateIceTransport(content_info.name, /*rtcp=*/false);
 
   std::unique_ptr<cricket::DtlsTransportInternal> rtp_dtls_transport =
@@ -1050,7 +1048,7 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   std::unique_ptr<SrtpTransport> sdes_transport;
   std::unique_ptr<DtlsSrtpTransport> dtls_srtp_transport;
 
-  rtc::scoped_refptr<webrtc::IceTransportInterface> rtcp_ice;
+  rtc::scoped_refptr<IceTransportInterface> rtcp_ice;
   if (config_.rtcp_mux_policy !=
           PeerConnectionInterface::kRtcpMuxPolicyRequire &&
       content_info.type == cricket::MediaProtocolType::kRtp) {
@@ -1096,7 +1094,7 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
         OnRtcpPacketReceived_n(buffer, packet_time_ms);
       });
   jsep_transport->rtp_transport()->SetUnDemuxableRtpPacketReceivedHandler(
-      [this](webrtc::RtpPacketReceived& packet) {
+      [this](RtpPacketReceived& packet) {
         RTC_DCHECK_RUN_ON(network_thread_);
         OnUnDemuxableRtpPacketReceived_n(packet);
       });
@@ -1421,7 +1419,7 @@ void JsepTransportController::OnRtcpPacketReceived_n(
 }
 
 void JsepTransportController::OnUnDemuxableRtpPacketReceived_n(
-    const webrtc::RtpPacketReceived& packet) {
+    const RtpPacketReceived& packet) {
   RTC_DCHECK(config_.un_demuxable_packet_handler);
   config_.un_demuxable_packet_handler(packet);
 }

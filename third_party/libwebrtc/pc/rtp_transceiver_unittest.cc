@@ -420,8 +420,8 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
   EXPECT_CALL(*mock_channel, mid()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(*mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
-  cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
-                                             webrtc::RtpExtension("uri2", 2)};
+  cricket::RtpHeaderExtensions extensions = {RtpExtension("uri1", 1),
+                                             RtpExtension("uri2", 2)};
   cricket::AudioContentDescription description;
   description.set_rtp_header_extensions(extensions);
   transceiver_->OnNegotiationUpdate(SdpType::kAnswer, &description);
@@ -449,8 +449,8 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
   EXPECT_CALL(*sender_.get(), Stop());
 
-  cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
-                                             webrtc::RtpExtension("uri2", 2)};
+  cricket::RtpHeaderExtensions extensions = {RtpExtension("uri1", 1),
+                                             RtpExtension("uri2", 2)};
   cricket::AudioContentDescription description;
   description.set_rtp_header_extensions(extensions);
   transceiver_->OnNegotiationUpdate(SdpType::kAnswer, &description);
@@ -464,8 +464,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
                                 RtpTransceiverDirection::kStopped),
                           Field(&RtpHeaderExtensionCapability::direction,
                                 RtpTransceiverDirection::kStopped)));
-  extensions = {webrtc::RtpExtension("uri3", 4),
-                webrtc::RtpExtension("uri5", 6)};
+  extensions = {RtpExtension("uri3", 4), RtpExtension("uri5", 6)};
   description.set_rtp_header_extensions(extensions);
   transceiver_->OnNegotiationUpdate(SdpType::kAnswer, &description);
 

@@ -90,7 +90,7 @@ class FakeClockForTest : public rtc::ScopedFakeClock {
     // Some things use a time of "0" as a special value, so we need to start out
     // the fake clock at a nonzero time.
     // TODO(deadbeef): Fix this.
-    AdvanceTime(webrtc::TimeDelta::Seconds(1));
+    AdvanceTime(TimeDelta::Seconds(1));
   }
 
   // Explicit handle.
@@ -422,7 +422,7 @@ TEST_P(DataChannelIntegrationTest, CalleeClosesSctpDataChannel) {
 TEST_P(DataChannelIntegrationTest, SctpDataChannelConfigSentToOtherSide) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
-  webrtc::DataChannelInit init;
+  DataChannelInit init;
   init.id = 53;
   init.maxRetransmits = 52;
   caller()->CreateDataChannel("data-channel", &init);
@@ -453,7 +453,7 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
   // Normal procedure, but with unordered data channel config.
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
-  webrtc::DataChannelInit init;
+  DataChannelInit init;
   init.ordered = false;
   caller()->CreateDataChannel(&init);
   caller()->CreateAndSetAndSignalOffer();
@@ -515,7 +515,7 @@ TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannelNoDelay) {
   const size_t kIterations = 10;
   bool has_negotiated = false;
 
-  webrtc::DataChannelInit init;
+  DataChannelInit init;
   for (size_t repeats = 0; repeats < kIterations; ++repeats) {
     RTC_LOG(LS_INFO) << "Iteration " << (repeats + 1) << "/" << kIterations;
 
@@ -592,7 +592,7 @@ TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannelWithDelay) {
   const size_t kIterations = 10;
   bool has_negotiated = false;
 
-  webrtc::DataChannelInit init;
+  DataChannelInit init;
   for (size_t repeats = 0; repeats < kIterations; ++repeats) {
     RTC_LOG(LS_INFO) << "Iteration " << (repeats + 1) << "/" << kIterations;
 

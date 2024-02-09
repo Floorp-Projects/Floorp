@@ -75,13 +75,13 @@ using ::testing::UnorderedElementsAre;
 using ::testing::Values;
 
 template <typename MethodFunctor>
-class OnSuccessObserver : public webrtc::SetRemoteDescriptionObserverInterface {
+class OnSuccessObserver : public SetRemoteDescriptionObserverInterface {
  public:
   explicit OnSuccessObserver(MethodFunctor on_success)
       : on_success_(std::move(on_success)) {}
 
-  // webrtc::SetRemoteDescriptionObserverInterface implementation.
-  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
+  // SetRemoteDescriptionObserverInterface implementation.
+  void OnSetRemoteDescriptionComplete(RTCError error) override {
     RTC_CHECK(error.ok());
     on_success_();
   }
@@ -113,7 +113,7 @@ class PeerConnectionRtpBaseTest : public ::testing::Test {
                                             Dav1dDecoderTemplateAdapter>>(),
             nullptr /* audio_mixer */,
             nullptr /* audio_processing */)) {
-    webrtc::metrics::Reset();
+    metrics::Reset();
   }
 
   std::unique_ptr<PeerConnectionWrapper> CreatePeerConnection() {
@@ -201,7 +201,7 @@ class PeerConnectionRtpTestUnifiedPlan : public PeerConnectionRtpBaseTest {
   }
 };
 
-// These tests cover `webrtc::PeerConnectionObserver` callbacks firing upon
+// These tests cover `PeerConnectionObserver` callbacks firing upon
 // setting the remote description.
 
 TEST_P(PeerConnectionRtpTest, AddTrackWithoutStreamFiresOnAddTrack) {
@@ -934,8 +934,8 @@ TEST_P(PeerConnectionRtpTest,
   auto caller = CreatePeerConnection();
   auto callee = CreatePeerConnection();
 
-  rtc::scoped_refptr<webrtc::MockSetSessionDescriptionObserver> observer =
-      rtc::make_ref_counted<webrtc::MockSetSessionDescriptionObserver>();
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> observer =
+      rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
 
   auto offer = caller->CreateOfferAndSetAsLocal();
   callee->pc()->SetRemoteDescription(observer.get(), offer.release());

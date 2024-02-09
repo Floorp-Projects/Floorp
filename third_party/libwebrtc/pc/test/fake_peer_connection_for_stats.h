@@ -150,7 +150,7 @@ class VoiceChannelForTesting : public cricket::VoiceChannel {
           receive_channel,
       const std::string& content_name,
       bool srtp_required,
-      webrtc::CryptoOptions crypto_options,
+      CryptoOptions crypto_options,
       rtc::UniqueRandomIdGenerator* ssrc_generator,
       std::string transport_name)
       : VoiceChannel(worker_thread,
@@ -183,7 +183,7 @@ class VideoChannelForTesting : public cricket::VideoChannel {
           receive_channel,
       const std::string& content_name,
       bool srtp_required,
-      webrtc::CryptoOptions crypto_options,
+      CryptoOptions crypto_options,
       rtc::UniqueRandomIdGenerator* ssrc_generator,
       std::string transport_name)
       : VideoChannel(worker_thread,
@@ -298,7 +298,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         worker_thread_, network_thread_, signaling_thread_,
         std::move(voice_media_send_channel),
         std::move(voice_media_receive_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), context_->ssrc_generator(), transport_name);
+        CryptoOptions(), context_->ssrc_generator(), transport_name);
     auto transceiver =
         GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_AUDIO)
             ->internal();
@@ -332,7 +332,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         worker_thread_, network_thread_, signaling_thread_,
         std::move(video_media_send_channel),
         std::move(video_media_receive_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), context_->ssrc_generator(), transport_name);
+        CryptoOptions(), context_->ssrc_generator(), transport_name);
     auto transceiver =
         GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_VIDEO)
             ->internal();
