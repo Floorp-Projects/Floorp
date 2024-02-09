@@ -87,9 +87,10 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
   // used for subresources, which is irrelevant to this probe.
   if (!aHttpChannel && StaticPrefs::dom_enable_performance() &&
       IsTopLevelContentDocument()) {
-    Telemetry::Accumulate(Telemetry::TIME_TO_RESPONSE_START_MS,
-                          mTimingData->ResponseStartHighRes(aPerformance) -
-                              mTimingData->ZeroTime());
+    glean::performance_time::response_start.AccumulateRawDuration(
+        TimeDuration::FromMilliseconds(
+            mTimingData->ResponseStartHighRes(aPerformance) -
+            mTimingData->ZeroTime()));
   }
 }
 

@@ -132,3 +132,228 @@ bloburl:
       - amadan@mozilla.com
     expires: 127
     telemetry_mirror: BLOBURL_RESOLVE_STOPPED
+
+performance.pageload:
+  load_time:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: PERF_PAGE_LOAD_TIME_MS
+    description: >
+      Time in milliseconds from navigationStart to loadEventStart
+      for the foreground http or https root content document.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  load_time_responsestart:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS
+    description: >
+      Time in milliseconds from responseStart to loadEventStart
+      for the foreground http or https root content document.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  fcp:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: PERF_FIRST_CONTENTFUL_PAINT_MS
+    description: >
+      The time between navigationStart and the first contentful paint
+      of a foreground http or https root content document, in
+      milliseconds. The contentful paint timestamp is taken during
+      display list building and does not include rasterization or
+      compositing of that paint.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  fcp_responsestart:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS
+    description: >
+      The time between responseStart and the first contentful paint
+      of a foreground http or https root content document, in
+      milliseconds. The contentful paint timestamp is taken during
+      display list building and does not include rasterization or
+      compositing of that paint.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+
+performance.time:
+  dom_interactive:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_DOM_INTERACTIVE_MS
+    description: >
+      Time from navigationStart to domInteractive as per the W3C
+      Performance Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - vgosu@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  dom_content_loaded_start:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_DOM_CONTENT_LOADED_START_MS
+    description: >
+      Time from navigationStart to domContentLoadedEventStart as per
+      the W3C Performance Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  dom_content_loaded_end:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_DOM_CONTENT_LOADED_END_MS
+    description: >
+      Time from navigationStart to domContentLoadedEventEnd as per
+      the W3C Performance Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - vchin@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  dom_complete:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_DOM_COMPLETE_MS
+    description: >
+      Time from navigationStart to domComplete as per the W3C Performance
+      Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - vgosu@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+  load_event_start:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_LOAD_EVENT_START_MS
+    description: >
+      Time from navigationStart to loadEventStart as per the W3C Performance
+      Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  load_event_end:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_LOAD_EVENT_END_MS
+    description: >
+      Time from navigationStart to loadEventEnd as per the W3C Performance
+      Timing API.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - vchin@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+
+
+performance.page:
+  non_blank_paint:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TIME_TO_NON_BLANK_PAINT_MS
+    description: >
+      The time between navigationStart and the first non-blank paint of a
+      foreground root content document, in milliseconds. This only records
+      documents that were in an active docshell throughout the whole time
+      between navigation start and non-blank paint. The non-blank paint
+      timestamp is taken during display list building and does not include
+      rasterization or compositing of that paint.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1307242
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - vchin@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never

@@ -1990,17 +1990,15 @@ void RecordCompositionPayloadsPresented(
       }
 
       if (payload.mType == CompositionPayloadType::eKeyPress) {
-        Telemetry::AccumulateTimeDelta(
-            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
-            presented);
+        glean::performance_interaction::keypress_present_latency
+            .AccumulateRawDuration(presented - payload.mTimeStamp);
       } else if (payload.mType == CompositionPayloadType::eAPZScroll) {
         mozilla::glean::gfx::scroll_present_latency.AccumulateRawDuration(
             presented - payload.mTimeStamp);
       } else if (payload.mType ==
                  CompositionPayloadType::eMouseUpFollowedByClick) {
-        Telemetry::AccumulateTimeDelta(
-            mozilla::Telemetry::MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY,
-            payload.mTimeStamp, presented);
+        glean::performance_interaction::mouseup_click_present_latency
+            .AccumulateRawDuration(presented - payload.mTimeStamp);
       }
     }
   }

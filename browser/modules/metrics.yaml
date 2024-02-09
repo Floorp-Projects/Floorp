@@ -93,3 +93,28 @@ browser.engagement:
     send_in_pings:
       - metrics
     expires: never
+
+
+performance.interaction:
+  tab_switch_composite:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: FX_TAB_SWITCH_COMPOSITE_E10S_MS
+    description: >
+      Time between tab selection and first composite of the tab content onto the
+      screen.
+      (Migrated from the geckoview metric of the same name.)
+    metadata:
+      tags:
+        - 'Firefox :: Tabbed Browser'
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1481704
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1529352
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - mconley@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: never

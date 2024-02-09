@@ -2393,7 +2393,7 @@
   },
   "KEYPRESS_PRESENT_LATENCY": {
     "record_in_processes": ["all"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com", "vchin@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2406,7 +2406,7 @@
   },
   "MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com", "sefeng@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2512,7 +2512,7 @@
   },
   "TOTAL_CONTENT_PAGE_LOAD_TIME": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com", "bdekoz@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8609,7 +8609,7 @@
   },
   "FX_TAB_SWITCH_COMPOSITE_E10S_MS": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["mwoodrow@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -15957,7 +15957,7 @@
   },
   "TIME_TO_NON_BLANK_PAINT_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16100,7 +16100,7 @@
   },
   "TIME_TO_DOM_INTERACTIVE_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "hbambas@mozilla.com",
       "vgosu@mozilla.com",
@@ -16116,7 +16116,7 @@
   },
   "TIME_TO_DOM_CONTENT_LOADED_START_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["bdekoz@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16150,7 +16150,7 @@
   },
   "TIME_TO_DOM_CONTENT_LOADED_END_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16162,7 +16162,7 @@
   },
   "TIME_TO_DOM_COMPLETE_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "hbambas@mozilla.com",
       "vgosu@mozilla.com",
@@ -16178,7 +16178,7 @@
   },
   "TIME_TO_LOAD_EVENT_START_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["bdekoz@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16212,7 +16212,7 @@
   },
   "TIME_TO_LOAD_EVENT_END_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16224,7 +16224,7 @@
   },
   "TIME_TO_RESPONSE_START_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -16236,7 +16236,7 @@
   },
   "PERF_PAGE_LOAD_TIME_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"
@@ -16251,7 +16251,7 @@
   },
   "PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"
@@ -16264,39 +16264,9 @@
     "bug_numbers": [1671729],
     "description": "Time in milliseconds from responseStart to loadEventStart for the foreground http or https root content document."
   },
-  "PERF_DOM_CONTENT_LOADED_TIME_MS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": [
-      "dpalmeiro@mozilla.com",
-      "perf-telemetry-alerts@mozilla.com"
-    ],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1671729],
-    "description": "Time in milliseconds from navigationStart to domContentLoaded for the foreground http or https root content document."
-  },
-  "PERF_DOM_CONTENT_LOADED_TIME_FROM_RESPONSESTART_MS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": [
-      "dpalmeiro@mozilla.com",
-      "perf-telemetry-alerts@mozilla.com"
-    ],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1671729],
-    "description": "Time in milliseconds from responseStart to domContentLoaded for the foreground http or https root content document."
-  },
   "PERF_FIRST_CONTENTFUL_PAINT_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"
@@ -16311,7 +16281,7 @@
   },
   "PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"
@@ -16350,7 +16320,7 @@
   },
   "PERF_REQUEST_ANIMATION_CALLBACK_NON_PAGELOAD_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"
@@ -16365,7 +16335,7 @@
   },
   "PERF_REQUEST_ANIMATION_CALLBACK_PAGELOAD_MS": {
     "record_in_processes": ["content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dpalmeiro@mozilla.com",
       "perf-telemetry-alerts@mozilla.com"

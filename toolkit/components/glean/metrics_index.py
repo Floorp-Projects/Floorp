@@ -16,12 +16,15 @@
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 gecko_metrics = [
     "browser/base/content/metrics.yaml",
+    "docshell/base/metrics.yaml",
     "dom/base/use_counter_metrics.yaml",
     "dom/media/metrics.yaml",
     "dom/media/webrtc/metrics.yaml",
     "dom/metrics.yaml",
+    "dom/performance/metrics.yaml",
     "gfx/metrics.yaml",
     "image/decoders/metrics.yaml",
+    "layout/base/metrics.yaml",
     "mobile/android/actors/metrics.yaml",
     "mobile/android/modules/geckoview/metrics.yaml",
     "netwerk/metrics.yaml",
