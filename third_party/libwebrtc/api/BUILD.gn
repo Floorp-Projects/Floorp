@@ -1493,12 +1493,18 @@ if (rtc_include_tests) {
 
     deps = [
       ":callfactory_api",
+      ":enable_media_with_defaults",
+      ":libjingle_peerconnection_api",
       ":time_controller",
       "../call",
       "../call:call_interfaces",
       "../call:rtp_interfaces",
+      "../pc:media_factory",
+      "../rtc_base:checks",
+      "../system_wrappers",
       "../test/time_controller",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
   }
 
   rtc_library("rtc_api_unittests") {

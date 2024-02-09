@@ -69,6 +69,11 @@ class MediaFactoryImpl : public MediaFactory {
 }  // namespace
 
 void EnableMedia(PeerConnectionFactoryDependencies& deps) {
+  if (deps.media_factory != nullptr) {
+    // Do nothing if media is already enabled. Overwriting media_factory can be
+    // harmful when a different (e.g. test-only) implementation is used.
+    return;
+  }
   deps.media_factory = std::make_unique<MediaFactoryImpl>();
 }
 
