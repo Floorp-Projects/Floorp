@@ -721,7 +721,6 @@ dom/webauthn/tests/test_webauthn_authenticator_selection.html
 dom/webauthn/tests/test_webauthn_authenticator_transports.html
 dom/webauthn/tests/test_webauthn_get_assertion.html
 dom/webauthn/tests/test_webauthn_get_assertion_dead_object.html
-dom/webauthn/tests/test_webauthn_isexternalctap2securitykeysupported.html
 dom/webauthn/tests/test_webauthn_isplatformauthenticatoravailable.html
 dom/webauthn/tests/test_webauthn_loopback.html
 dom/webauthn/tests/test_webauthn_make_credential.html
