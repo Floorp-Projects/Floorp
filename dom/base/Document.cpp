@@ -1928,10 +1928,6 @@ void Document::LoadEventFired() {
   }
 }
 
-static uint32_t ConvertToUnsignedFromDouble(double aNumber) {
-  return aNumber < 0 ? 0 : static_cast<uint32_t>(aNumber);
-}
-
 void Document::RecordPageLoadEventTelemetry(
     glean::perf::PageLoadExtra& aEventTelemetryData) {
   // If the page load time is empty, then the content wasn't something we want
@@ -2244,41 +2240,34 @@ void Document::AccumulateJSTelemetry(
   JS::JSTimers timers = JS::GetJSTimers(cx);
 
   if (!timers.executionTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_EXECUTION_MS,
-        ConvertToUnsignedFromDouble(timers.executionTime.ToMilliseconds()));
+    glean::javascript_pageload::execution_time.AccumulateRawDuration(
+        timers.executionTime);
     aEventTelemetryDataOut.jsExecTime = mozilla::Some(
         static_cast<uint32_t>(timers.executionTime.ToMilliseconds()));
   }
 
   if (!timers.delazificationTime.IsZero()) {
-    Telemetry::Accumulate(Telemetry::JS_PAGELOAD_DELAZIFICATION_MS,
-                          ConvertToUnsignedFromDouble(
-                              timers.delazificationTime.ToMilliseconds()));
+    glean::javascript_pageload::delazification_time.AccumulateRawDuration(
+        timers.delazificationTime);
   }
 
   if (!timers.xdrEncodingTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_XDR_ENCODING_MS,
-        ConvertToUnsignedFromDouble(timers.xdrEncodingTime.ToMilliseconds()));
+    glean::javascript_pageload::xdr_encode_time.AccumulateRawDuration(
+        timers.xdrEncodingTime);
   }
 
   if (!timers.baselineCompileTime.IsZero()) {
-    Telemetry::Accumulate(Telemetry::JS_PAGELOAD_BASELINE_COMPILE_MS,
-                          ConvertToUnsignedFromDouble(
-                              timers.baselineCompileTime.ToMilliseconds()));
+    glean::javascript_pageload::baseline_compile_time.AccumulateRawDuration(
+        timers.baselineCompileTime);
   }
 
   if (!timers.gcTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_GC_MS,
-        ConvertToUnsignedFromDouble(timers.gcTime.ToMilliseconds()));
+    glean::javascript_pageload::gc_time.AccumulateRawDuration(timers.gcTime);
   }
 
   if (!timers.protectTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_PROTECT_MS,
-        ConvertToUnsignedFromDouble(timers.protectTime.ToMilliseconds()));
+    glean::javascript_pageload::protect_time.AccumulateRawDuration(
+        timers.protectTime);
   }
 }
 

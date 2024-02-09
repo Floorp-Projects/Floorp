@@ -2856,9 +2856,8 @@ void ScriptLoader::LoadEventFired() {
   MaybeTriggerBytecodeEncoding();
 
   if (!mMainThreadParseTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_PARSE_MS,
-        static_cast<uint32_t>(mMainThreadParseTime.ToMilliseconds()));
+    glean::javascript_pageload::parse_time.AccumulateRawDuration(
+        mMainThreadParseTime);
   }
 }
 
