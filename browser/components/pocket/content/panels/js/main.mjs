@@ -3,11 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* global RPMGetStringPref:false */
 
-import HomeOverlay from "./home/overlay.js";
-import SignupOverlay from "./signup/overlay.js";
-import SavedOverlay from "./saved/overlay.js";
-import StyleGuideOverlay from "./style-guide/overlay.js";
-import pktPanelMessaging from "./messages.js";
+import HomeOverlay from "./home/overlay.jsx";
+import SignupOverlay from "./signup/overlay.jsx";
+import SavedOverlay from "./saved/overlay.jsx";
+import StyleGuideOverlay from "./style-guide/overlay.jsx";
+import pktPanelMessaging from "./messages.mjs";
 
 var PKT_PANEL = function () {};
 
