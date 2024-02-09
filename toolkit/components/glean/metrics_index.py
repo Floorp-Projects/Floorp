@@ -21,6 +21,7 @@ gecko_metrics = [
     "dom/media/webrtc/metrics.yaml",
     "dom/metrics.yaml",
     "gfx/metrics.yaml",
+    "image/decoders/metrics.yaml",
     "mobile/android/actors/metrics.yaml",
     "netwerk/metrics.yaml",
     "netwerk/protocol/http/metrics.yaml",

@@ -2058,7 +2058,7 @@
   },
   "AVIF_DECODE_RESULT": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2101,7 +2101,7 @@
   },
   "AVIF_AOM_DECODE_ERROR": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2121,7 +2121,7 @@
   },
   "AVIF_DECODER": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2132,7 +2132,7 @@
   },
   "AVIF_YUV_COLOR_SPACE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2143,7 +2143,7 @@
   },
   "AVIF_BIT_DEPTH": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2154,7 +2154,7 @@
   },
   "AVIF_ALPHA": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2165,7 +2165,7 @@
   },
   "AVIF_COLR": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2176,7 +2176,7 @@
   },
   "AVIF_CICP_CP": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2212,7 +2212,7 @@
   },
   "AVIF_CICP_TC": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2244,7 +2244,7 @@
   },
   "AVIF_CICP_MC": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2272,7 +2272,7 @@
   },
   "AVIF_ISPE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2283,7 +2283,7 @@
   },
   "AVIF_PIXI": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2294,7 +2294,7 @@
   },
   "AVIF_PASP": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2305,7 +2305,7 @@
   },
   "AVIF_MAJOR_BRAND": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2316,7 +2316,7 @@
   },
   "AVIF_SEQUENCE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2327,7 +2327,7 @@
   },
   "AVIF_A1LX": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2338,7 +2338,7 @@
   },
   "AVIF_A1OP": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2349,7 +2349,7 @@
   },
   "AVIF_CLAP": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2360,7 +2360,7 @@
   },
   "AVIF_GRID": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2371,7 +2371,7 @@
   },
   "AVIF_IPRO": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2382,7 +2382,7 @@
   },
   "AVIF_LSEL": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
