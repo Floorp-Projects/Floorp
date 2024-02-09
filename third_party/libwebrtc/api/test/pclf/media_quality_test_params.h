@@ -49,8 +49,6 @@ struct PeerConnectionFactoryComponents {
   std::unique_ptr<NetworkControllerFactoryInterface> network_controller_factory;
   std::unique_ptr<NetEqFactory> neteq_factory;
 
-  // Will be passed to MediaEngineInterface, that will be used in
-  // PeerConnectionFactory.
   std::unique_ptr<VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<VideoDecoderFactory> video_decoder_factory;
   rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory;
