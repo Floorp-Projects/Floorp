@@ -447,12 +447,19 @@ add_task(async function () {
   } else {
     const filename = "profile_startup_content_mainthreadio.json";
     let path = Services.env.get("MOZ_UPLOAD_DIR");
-    let profilePath = PathUtils.join(path, filename);
-    await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
+    let helpString;
+    if (path) {
+      let profilePath = PathUtils.join(path, filename);
+      await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
+      helpString = `open the ${filename} artifact in the Firefox Profiler to see what happened`;
+    } else {
+      helpString =
+        "set the MOZ_UPLOAD_DIR environment variable to record a profile";
+    }
     ok(
       false,
       "Unexpected main thread I/O behavior during child process startup; " +
-        `open the ${filename} artifact in the Firefox Profiler to see what happened`
+        helpString
     );
   }
 });
