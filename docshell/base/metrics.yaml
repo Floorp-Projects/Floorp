@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Navigation'
+
+performance.page:
+  total_content_page_load:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: TOTAL_CONTENT_PAGE_LOAD_TIME
+    description: >
+      Time to load all of a page's resources and render.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never

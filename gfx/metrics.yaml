@@ -909,3 +909,42 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
+
+
+performance.interaction:
+  keypress_present_latency:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: KEYPRESS_PRESENT_LATENCY
+    description: >
+      Time between receiving a keypress event in the event loop and compositing
+      its result onto the screen.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1506537
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1875170
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - vchin@mozilla.com
+    expires: never
+
+  mouseup_click_present_latency:
+    type: timing_distribution
+    time_unit: millisecond
+    telemetry_mirror: MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY
+    description: >
+      Time between receiving a mouseup which follow by a mouseclick
+      on the event loop and compositing its result onto the screen.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1698643
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1875170
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1698643#c3
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - sefeng@mozilla.com
+    expires: never

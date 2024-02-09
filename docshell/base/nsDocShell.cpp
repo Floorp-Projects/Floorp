@@ -6266,8 +6266,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     TimeStamp channelCreationTime;
     rv = timingChannel->GetChannelCreation(&channelCreationTime);
     if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
-      Telemetry::AccumulateTimeDelta(Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME,
-                                     channelCreationTime);
+      glean::performance_page::total_content_page_load.AccumulateRawDuration(
+          TimeStamp::Now() - channelCreationTime);
     }
   }
 

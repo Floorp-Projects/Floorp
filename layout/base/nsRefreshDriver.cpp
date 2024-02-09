@@ -2394,13 +2394,11 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
 
       if (docCallbacks.mDocument->GetReadyStateEnum() ==
           Document::READYSTATE_COMPLETE) {
-        Telemetry::AccumulateTimeDelta(
-            Telemetry::PERF_REQUEST_ANIMATION_CALLBACK_NON_PAGELOAD_MS,
-            startTime, TimeStamp::Now());
+        glean::performance_responsiveness::req_anim_frame_callback
+            .AccumulateRawDuration(TimeStamp::Now() - startTime);
       } else {
-        Telemetry::AccumulateTimeDelta(
-            Telemetry::PERF_REQUEST_ANIMATION_CALLBACK_PAGELOAD_MS, startTime,
-            TimeStamp::Now());
+        glean::performance_pageload::req_anim_frame_callback
+            .AccumulateRawDuration(TimeStamp::Now() - startTime);
       }
     }
   }

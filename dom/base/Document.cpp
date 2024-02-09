@@ -2146,8 +2146,8 @@ void Document::AccumulatePageLoadTelemetry(
   // First Contentful Composite
   if (TimeStamp firstContentfulComposite =
           GetNavigationTiming()->GetFirstContentfulCompositeTimeStamp()) {
-    Telemetry::AccumulateTimeDelta(Telemetry::PERF_FIRST_CONTENTFUL_PAINT_MS,
-                                   navigationStart, firstContentfulComposite);
+    glean::performance_pageload::fcp.AccumulateRawDuration(
+        firstContentfulComposite - navigationStart);
 
     if (!http3Key.IsEmpty()) {
       Telemetry::AccumulateTimeDelta(
@@ -2171,9 +2171,8 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::DNS_PERF_FIRST_CONTENTFUL_PAINT_MS, dnsKey, navigationStart,
         firstContentfulComposite);
 
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
-        responseStart, firstContentfulComposite);
+    glean::performance_pageload::fcp_responsestart.AccumulateRawDuration(
+        firstContentfulComposite - responseStart);
 
     TimeDuration fcpTime = firstContentfulComposite - navigationStart;
     if (fcpTime > zeroDuration) {
@@ -2190,21 +2189,11 @@ void Document::AccumulatePageLoadTelemetry(
         static_cast<uint32_t>((lcpTime - navigationStart).ToMilliseconds()));
   }
 
-  // DOM Content Loaded event
-  if (TimeStamp dclEventStart =
-          GetNavigationTiming()->GetDOMContentLoadedEventStartTimeStamp()) {
-    Telemetry::AccumulateTimeDelta(Telemetry::PERF_DOM_CONTENT_LOADED_TIME_MS,
-                                   navigationStart, dclEventStart);
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::PERF_DOM_CONTENT_LOADED_TIME_FROM_RESPONSESTART_MS,
-        responseStart, dclEventStart);
-  }
-
   // Load event
   if (TimeStamp loadEventStart =
           GetNavigationTiming()->GetLoadEventStartTimeStamp()) {
-    Telemetry::AccumulateTimeDelta(Telemetry::PERF_PAGE_LOAD_TIME_MS,
-                                   navigationStart, loadEventStart);
+    glean::performance_pageload::load_time.AccumulateRawDuration(
+        loadEventStart - navigationStart);
     if (!http3Key.IsEmpty()) {
       Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_PERF_PAGE_LOAD_TIME_MS,
                                      http3Key, navigationStart, loadEventStart);
@@ -2222,9 +2211,8 @@ void Document::AccumulatePageLoadTelemetry(
                                      loadEventStart);
     }
 
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS, responseStart,
-        loadEventStart);
+    glean::performance_pageload::load_time_responsestart.AccumulateRawDuration(
+        loadEventStart - responseStart);
 
     TimeDuration responseTime = responseStart - navigationStart;
     if (responseTime > zeroDuration) {
@@ -18420,15 +18408,15 @@ void Document::RecordNavigationTiming(ReadyState aReadyState) {
       break;
     case READYSTATE_INTERACTIVE:
       if (!mDOMInteractiveSet) {
-        Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_INTERACTIVE_MS,
-                                       startTime);
+        glean::performance_time::dom_interactive.AccumulateRawDuration(
+            TimeStamp::Now() - startTime);
         mDOMInteractiveSet = true;
       }
       break;
     case READYSTATE_COMPLETE:
       if (!mDOMCompleteSet) {
-        Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_COMPLETE_MS,
-                                       startTime);
+        glean::performance_time::dom_complete.AccumulateRawDuration(
+            TimeStamp::Now() - startTime);
         mDOMCompleteSet = true;
       }
       break;
