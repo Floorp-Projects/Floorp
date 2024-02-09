@@ -9,6 +9,7 @@
 #include "audio_thread_priority.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -572,12 +573,18 @@ void ReportCubebBackendUsed() {
   MOZ_RELEASE_ASSERT(handle.get());
 
   LABELS_MEDIA_AUDIO_BACKEND label = LABELS_MEDIA_AUDIO_BACKEND::unknown;
-  auto backend = kTelemetryBackendLabel.find(
-      cubeb_get_backend_id(handle->Context()));
+  auto backend =
+      kTelemetryBackendLabel.find(cubeb_get_backend_id(handle->Context()));
   if (backend != kTelemetryBackendLabel.end()) {
     label = backend->second;
   }
   AccumulateCategorical(label);
+
+  mozilla::glean::media_audio::backend
+      .Get(backend != kTelemetryBackendLabel.end()
+               ? nsDependentCString(cubeb_get_backend_id(handle->Context()))
+               : nsCString("unknown"_ns))
+      .Add();
 }
 
 void ReportCubebStreamInitFailure(bool aIsFirst) {
@@ -590,6 +597,10 @@ void ReportCubebStreamInitFailure(bool aIsFirst) {
   }
   AccumulateCategorical(aIsFirst ? LABELS_MEDIA_AUDIO_INIT_FAILURE::first
                                  : LABELS_MEDIA_AUDIO_INIT_FAILURE::other);
+  mozilla::glean::media_audio::init_failure
+      .EnumGet(aIsFirst ? mozilla::glean::media_audio::InitFailureLabel::eFirst
+                        : mozilla::glean::media_audio::InitFailureLabel::eOther)
+      .Add();
 }
 
 uint32_t GetCubebPlaybackLatencyInMilliseconds() {
