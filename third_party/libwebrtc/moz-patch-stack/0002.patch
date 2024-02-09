@@ -1,53 +1,54 @@
 From: Jan-Ivar Bruaroey <jan-ivar@users.noreply.github.com>
-Date: Fri, 9 Feb 2024 15:35:24 -0500
-Subject: (tmp-cherry-pick) Revert "Add RTC_EXPORT for Voucher::ScopedSetter
- and Voucher::Attachment." (dd45ab650e)
+Date: Fri, 9 Feb 2024 16:30:49 -0500
+Subject: (tmp-cherry-pick) Revert "VideoStreamEncoder: exclude screencast from
+ capture time measurement." (369111bf30)
 
-This reverts commit 414ffac4b742dc3a1696deb3117ef1383fc8d9be.
+This reverts commit 03bc3a0fa67e274efb4518da005f4c5b77c607e9.
 
-Reason for revert: remove functionality after measurement complete
+Reason for revert: measurement complete
 
 Original change's description:
-> Add RTC_EXPORT for Voucher::ScopedSetter and Voucher::Attachment.
+> VideoStreamEncoder: exclude screencast from capture time measurement.
+>
+> This CL avoids measurement for screencast encoding work. The reason is
+> screencast can cling on to and re-encode old video frames for which
+> webrtc::VideoFrame::reference_time() is unchanged.
 >
 > Bug: chromium:1498378
-> Change-Id: I606079411c71ac46cc5d261a86f6a11c473d1278
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/325960
-> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41071}
+> Change-Id: I5bf79d29ef7f57ddff2622cbb6c3436480bd16ba
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/326103
+> Commit-Queue: Markus Handell <handellm@webrtc.org>
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Auto-Submit: Markus Handell <handellm@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41097}
 
 Bug: chromium:1498378
-Change-Id: If35641719a8bf01b045e10c707af809250665330
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/327022
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Change-Id: I42c1a86123eb1d6c7ad7c8981769f5560884a2f5
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/327025
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#41130}
+Commit-Queue: Markus Handell <handellm@webrtc.org>
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41133}
 ---
- rtc_base/voucher.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ video/video_stream_encoder.cc | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/rtc_base/voucher.h b/rtc_base/voucher.h
-index 1a82551b74..30a6460906 100644
---- a/rtc_base/voucher.h
-+++ b/rtc_base/voucher.h
-@@ -32,7 +32,7 @@ class RTC_EXPORT Voucher {
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index a5711c104a..c9bd604d05 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -2065,11 +2065,8 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
  
-   // Vouchers aggregate attachments, which are application-specific attachments
-   // that have logic unrelated to the mechanics of Voucher progression.
--  class RTC_EXPORT Attachment {
-+  class Attachment {
-    public:
-     using Id = size_t;
+   frame_encode_metadata_writer_.OnEncodeStarted(out_frame);
  
-@@ -45,7 +45,7 @@ class RTC_EXPORT Voucher {
+-  if (encoder_config_.content_type !=
+-      VideoEncoderConfig::ContentType::kScreen) {
+-    CaptureProcessingDurationMeasurement::AttachToCurrentVoucher(
+-        out_frame.reference_time().value_or(clock_->CurrentTime()));
+-  }
++  CaptureProcessingDurationMeasurement::AttachToCurrentVoucher(
++      out_frame.reference_time().value_or(clock_->CurrentTime()));
  
-   // Scoped setter that saves the current voucher on stack and instates a new
-   // one, until the scope exits.
--  class RTC_EXPORT ScopedSetter {
-+  class ScopedSetter {
-    public:
-     explicit ScopedSetter(Ptr voucher);
-     ~ScopedSetter();
+   const int32_t encode_status = encoder_->Encode(out_frame, &next_frame_types_);
+   was_encode_called_since_last_initialization_ = true;
