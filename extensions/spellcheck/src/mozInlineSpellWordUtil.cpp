@@ -844,16 +844,16 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
     }
     checkBeforeOffset = INT32_MAX;
     if (IsBreakElement(node)) {
-      // Since GetPreviousContent follows tree *preorder*, we're about to
-      // traverse up out of 'node'. Since node induces breaks (e.g., it's a
-      // block), don't bother trying to look outside it, just stop now.
+      // Since GerPrevNode follows tree *preorder*, we're about to traverse up
+      // out of 'node'. Since node induces breaks (e.g., it's a block), don't
+      // bother trying to look outside it, just stop now.
       break;
     }
     // GetPreviousContent below expects aRootNode to be an ancestor of node.
     if (!node->IsInclusiveDescendantOf(aRootNode)) {
       break;
     }
-    node = node->GetPreviousContent(aRootNode);
+    node = node->GetPrevNode(aRootNode);
   }
 
   // Now build up the string moving forward through the DOM until we reach
