@@ -115,7 +115,7 @@ TEST(ChannelSendFrameTransformerDelegateTest,
             callback->OnTransformedFrame(std::move(frame));
           });
   delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, data, sizeof(data), 0,
-                      0);
+                      /*ssrc=*/0, /*mimeType=*/"audio/opus");
   channel_queue.WaitForPreviouslyPostedTasks();
 }
 
@@ -145,7 +145,7 @@ TEST(ChannelSendFrameTransformerDelegateTest,
             callback->OnTransformedFrame(CreateMockReceiverFrame());
           });
   delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, data, sizeof(data), 0,
-                      0);
+                      /*ssrc=*/0, /*mimeType=*/"audio/opus");
   channel_queue.WaitForPreviouslyPostedTasks();
 }
 

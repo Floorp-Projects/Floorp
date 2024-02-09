@@ -12,6 +12,7 @@
 #define AUDIO_CHANNEL_RECEIVE_FRAME_TRANSFORMER_DELEGATE_H_
 
 #include <memory>
+#include <string>
 
 #include "api/frame_transformer_interface.h"
 #include "api/sequence_checker.h"
@@ -48,7 +49,8 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
   // the frame asynchronously.
   void Transform(rtc::ArrayView<const uint8_t> packet,
                  const RTPHeader& header,
-                 uint32_t ssrc);
+                 uint32_t ssrc,
+                 const std::string& codec_mime_type);
 
   // Implements TransformedFrameCallback. Can be called on any thread.
   void OnTransformedFrame(

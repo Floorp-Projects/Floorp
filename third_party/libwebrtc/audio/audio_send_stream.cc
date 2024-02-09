@@ -637,12 +637,14 @@ bool AudioSendStream::SetupSendCodec(const Config& new_config) {
   }
 
   // Wrap the encoder in a RED encoder, if RED is enabled.
+  SdpAudioFormat format = spec.format;
   if (spec.red_payload_type) {
     AudioEncoderCopyRed::Config red_config;
     red_config.payload_type = *spec.red_payload_type;
     red_config.speech_encoder = std::move(encoder);
     encoder = std::make_unique<AudioEncoderCopyRed>(std::move(red_config),
                                                     field_trials_);
+    format.name = cricket::kRedCodecName;
   }
 
   // Set currently known overhead (used in ANA, opus only).
@@ -656,7 +658,7 @@ bool AudioSendStream::SetupSendCodec(const Config& new_config) {
   }
 
   StoreEncoderProperties(encoder->SampleRateHz(), encoder->NumChannels());
-  channel_send_->SetEncoder(new_config.send_codec_spec->payload_type,
+  channel_send_->SetEncoder(new_config.send_codec_spec->payload_type, format,
                             std::move(encoder));
 
   return true;
