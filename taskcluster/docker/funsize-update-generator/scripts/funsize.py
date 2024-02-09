@@ -13,10 +13,10 @@ import shutil
 import tempfile
 import time
 from contextlib import AsyncExitStack
+from distutils.util import strtobool
 from pathlib import Path
 
 import aiohttp
-from mach.util import strtobool
 from mardor.reader import MarReader
 from mardor.signing import get_keysize
 from scriptworker.utils import get_hash, retry_async
