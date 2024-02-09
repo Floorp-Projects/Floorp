@@ -419,9 +419,8 @@ static void DetachSenderFromMediaSection(const std::string& mid,
   sender_options_list.erase(sender_it);
 }
 
-// Helper function used to create a default MediaSessionOptions for Plan B SDP.
-// (https://tools.ietf.org/html/draft-uberti-rtcweb-plan-00).
-static MediaSessionOptions CreatePlanBMediaSessionOptions() {
+// Helper function used to create recv-only audio MediaSessionOptions.
+static MediaSessionOptions CreateAudioMediaSession() {
   MediaSessionOptions session_options;
   AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "audio",
                              RtpTransceiverDirection::kRecvOnly, kActive,
@@ -812,8 +811,7 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioOffer) {
   f1_.set_secure(SEC_ENABLED);
   std::unique_ptr<SessionDescription> offer =
-      f1_.CreateOfferOrError(CreatePlanBMediaSessionOptions(), nullptr)
-          .MoveValue();
+      f1_.CreateOfferOrError(CreateAudioMediaSession(), nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
   const ContentInfo* ac = offer->GetContentByName("audio");
   const ContentInfo* vc = offer->GetContentByName("video");
@@ -843,7 +841,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   EXPECT_EQ("opus", preferences[0].name);
   EXPECT_EQ("red", preferences[1].name);
 
-  auto opts = CreatePlanBMediaSessionOptions();
+  auto opts = CreateAudioMediaSession();
   opts.media_description_options.at(0).codec_preferences = preferences;
   std::unique_ptr<SessionDescription> offer =
       f1_.CreateOfferOrError(opts, nullptr).MoveValue();
@@ -872,7 +870,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioOfferWithRedForOpus) {
   EXPECT_EQ("red", preferences[0].name);
   EXPECT_EQ("opus", preferences[1].name);
 
-  auto opts = CreatePlanBMediaSessionOptions();
+  auto opts = CreateAudioMediaSession();
   opts.media_description_options.at(0).codec_preferences = preferences;
   std::unique_ptr<SessionDescription> offer =
       f1_.CreateOfferOrError(opts, nullptr).MoveValue();
@@ -1336,12 +1334,10 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioAnswer) {
   f1_.set_secure(SEC_ENABLED);
   f2_.set_secure(SEC_ENABLED);
   std::unique_ptr<SessionDescription> offer =
-      f1_.CreateOfferOrError(CreatePlanBMediaSessionOptions(), nullptr)
-          .MoveValue();
+      f1_.CreateOfferOrError(CreateAudioMediaSession(), nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
   std::unique_ptr<SessionDescription> answer =
-      f2_.CreateAnswerOrError(offer.get(), CreatePlanBMediaSessionOptions(),
-                              nullptr)
+      f2_.CreateAnswerOrError(offer.get(), CreateAudioMediaSession(), nullptr)
           .MoveValue();
   const ContentInfo* ac = answer->GetContentByName("audio");
   const ContentInfo* vc = answer->GetContentByName("video");
@@ -1363,7 +1359,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioAnswer) {
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAudioAnswerGcm) {
   f1_.set_secure(SEC_ENABLED);
   f2_.set_secure(SEC_ENABLED);
-  MediaSessionOptions opts = CreatePlanBMediaSessionOptions();
+  MediaSessionOptions opts = CreateAudioMediaSession();
   std::unique_ptr<SessionDescription> offer =
       f1_.CreateOfferOrError(opts, nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
@@ -1720,7 +1716,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, CreateAnswerToInactiveOffer) {
 
 // Test that the media protocol is RTP/AVPF if DTLS and SDES are disabled.
 TEST_F(MediaSessionDescriptionFactoryTest, AudioOfferAnswerWithCryptoDisabled) {
-  MediaSessionOptions opts = CreatePlanBMediaSessionOptions();
+  MediaSessionOptions opts = CreateAudioMediaSession();
   f1_.set_secure(SEC_DISABLED);
   f2_.set_secure(SEC_DISABLED);
   tdf1_.set_secure(SEC_DISABLED);
@@ -3870,8 +3866,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   tdf2_.set_secure(SEC_DISABLED);
 
   std::unique_ptr<SessionDescription> offer =
-      f1_.CreateOfferOrError(CreatePlanBMediaSessionOptions(), nullptr)
-          .MoveValue();
+      f1_.CreateOfferOrError(CreateAudioMediaSession(), nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
   ContentInfo* offer_content = offer->GetContentByName("audio");
   ASSERT_TRUE(offer_content);
@@ -3880,8 +3875,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   offer_audio_desc->set_protocol(cricket::kMediaProtocolDtlsSavpf);
 
   std::unique_ptr<SessionDescription> answer =
-      f2_.CreateAnswerOrError(offer.get(), CreatePlanBMediaSessionOptions(),
-                              nullptr)
+      f2_.CreateAnswerOrError(offer.get(), CreateAudioMediaSession(), nullptr)
           .MoveValue();
   ASSERT_TRUE(answer);
   ContentInfo* answer_content = answer->GetContentByName("audio");
@@ -3899,8 +3893,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestOfferDtlsSavpfCreateAnswer) {
   tdf2_.set_secure(SEC_ENABLED);
 
   std::unique_ptr<SessionDescription> offer =
-      f1_.CreateOfferOrError(CreatePlanBMediaSessionOptions(), nullptr)
-          .MoveValue();
+      f1_.CreateOfferOrError(CreateAudioMediaSession(), nullptr).MoveValue();
   ASSERT_TRUE(offer.get());
   ContentInfo* offer_content = offer->GetContentByName("audio");
   ASSERT_TRUE(offer_content);
@@ -3909,8 +3902,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestOfferDtlsSavpfCreateAnswer) {
   offer_audio_desc->set_protocol(cricket::kMediaProtocolDtlsSavpf);
 
   std::unique_ptr<SessionDescription> answer =
-      f2_.CreateAnswerOrError(offer.get(), CreatePlanBMediaSessionOptions(),
-                              nullptr)
+      f2_.CreateAnswerOrError(offer.get(), CreateAudioMediaSession(), nullptr)
           .MoveValue();
   ASSERT_TRUE(answer);
 
@@ -4017,7 +4009,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCryptoDtls) {
 // Test that an answer can't be created if cryptos are required but the offer is
 // unsecure.
 TEST_F(MediaSessionDescriptionFactoryTest, TestSecureAnswerToUnsecureOffer) {
-  MediaSessionOptions options = CreatePlanBMediaSessionOptions();
+  MediaSessionOptions options = CreateAudioMediaSession();
   f1_.set_secure(SEC_DISABLED);
   tdf1_.set_secure(SEC_DISABLED);
   f2_.set_secure(SEC_REQUIRED);
