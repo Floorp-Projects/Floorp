@@ -682,6 +682,29 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
+@_target_task("larch_tasks")
+def target_tasks_larch(full_task_graph, parameters, graph_config):
+    """Bug 1879213 - only run necessary tasks on larch"""
+    filtered_for_project = target_tasks_default(
+        full_task_graph, parameters, graph_config
+    )
+
+    def filter(task):
+        # no localized builds, no android
+        if (
+            "l10n" in task.kind
+            or "msix" in task.kind
+            or "android" in task.attributes.get("build_platform", "")
+        ):
+            return False
+        # otherwise reduce tests only
+        if task.kind != "test":
+            return True
+        return "browser-chrome" in task.label or "xpcshell" in task.label
+
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+
+
 @_target_task("kaios_tasks")
 def target_tasks_kaios(full_task_graph, parameters, graph_config):
     """The set of tasks to run for kaios integration"""
