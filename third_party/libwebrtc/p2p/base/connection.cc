@@ -466,27 +466,25 @@ void Connection::DeregisterReceivedPacketCallback() {
 void Connection::OnReadPacket(const char* data,
                               size_t size,
                               int64_t packet_time_us) {
+  OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy(data, size, packet_time_us));
+}
+void Connection::OnReadPacket(const rtc::ReceivedPacket& packet) {
   RTC_DCHECK_RUN_ON(network_thread_);
   std::unique_ptr<IceMessage> msg;
   std::string remote_ufrag;
   const rtc::SocketAddress& addr(remote_candidate_.address());
-  if (!port_->GetStunMessage(data, size, addr, &msg, &remote_ufrag)) {
+  if (!port_->GetStunMessage(
+          reinterpret_cast<const char*>(packet.payload().data()),
+          packet.payload().size(), addr, &msg, &remote_ufrag)) {
     // The packet did not parse as a valid STUN message
     // This is a data packet, pass it along.
     last_data_received_ = rtc::TimeMillis();
     UpdateReceiving(last_data_received_);
-    recv_rate_tracker_.AddSamples(size);
+    recv_rate_tracker_.AddSamples(packet.payload().size());
     stats_.packets_received++;
     if (received_packet_callback_) {
-      RTC_DCHECK(packet_time_us == -1 || packet_time_us >= 0);
-      received_packet_callback_(
-          this, rtc::ReceivedPacket(
-                    rtc::reinterpret_array_view<const uint8_t>(
-                        rtc::MakeArrayView(data, size)),
-                    (packet_time_us >= 0)
-                        ? absl::optional<webrtc::Timestamp>(
-                              webrtc::Timestamp::Micros(packet_time_us))
-                        : absl::nullopt));
+      received_packet_callback_(this, packet);
     }
     // If timed out sending writability checks, start up again
     if (!pruned_ && (write_state_ == STATE_WRITE_TIMEOUT)) {

@@ -38,6 +38,10 @@ class ReceivedPacket {
     return arrival_time_;
   }
 
+  static ReceivedPacket CreateFromLegacy(const char* data,
+                                         size_t size,
+                                         int64_t packet_time_us);
+
  private:
   rtc::ArrayView<const uint8_t> payload_;
   absl::optional<webrtc::Timestamp> arrival_time_;

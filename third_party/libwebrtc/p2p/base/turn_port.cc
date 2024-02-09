@@ -1074,7 +1074,8 @@ void TurnPort::DispatchPacket(const char* data,
                               ProtocolType proto,
                               int64_t packet_time_us) {
   if (Connection* conn = GetConnection(remote_addr)) {
-    conn->OnReadPacket(data, size, packet_time_us);
+    conn->OnReadPacket(
+        rtc::ReceivedPacket::CreateFromLegacy(data, size, packet_time_us));
   } else {
     Port::OnReadPacket(data, size, remote_addr, proto);
   }
