@@ -230,10 +230,8 @@ void WindowGlobalParent::OriginCounter::UpdateSiteOriginsFrom(
 }
 
 void WindowGlobalParent::OriginCounter::Accumulate() {
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::HistogramID::
-          FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT,
-      mMaxOrigins);
+  mozilla::glean::geckoview::per_document_site_origins.AccumulateSamples(
+      {mMaxOrigins});
 
   mMaxOrigins = 0;
   mOriginMap.Clear();

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.sys.mjs",
-  HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.sys.mjs",
+  GleanStopwatch: "resource://gre/modules/GeckoViewTelemetry.sys.mjs",
 });
 
 var IdentityHandler = {
@@ -180,15 +180,15 @@ class Tracker {
 class ProgressTracker extends Tracker {
   constructor(aModule) {
     super(aModule);
-    const window = aModule.browser.ownerGlobal;
-    this.pageLoadProbe = new lazy.HistogramStopwatch("GV_PAGE_LOAD_MS", window);
-    this.pageReloadProbe = new lazy.HistogramStopwatch(
-      "GV_PAGE_RELOAD_MS",
-      window
+
+    this.pageLoadStopwatch = new lazy.GleanStopwatch(
+      Glean.geckoview.pageLoadTime
     );
-    this.pageLoadProgressProbe = new lazy.HistogramStopwatch(
-      "GV_PAGE_LOAD_PROGRESS_MS",
-      window
+    this.pageReloadStopwatch = new lazy.GleanStopwatch(
+      Glean.geckoview.pageReloadTime
+    );
+    this.pageLoadProgressStopwatch = new lazy.GleanStopwatch(
+      Glean.geckoview.pageLoadProgressTime
     );
 
     this.clear();
@@ -212,7 +212,7 @@ class ProgressTracker extends Tracker {
       return;
     }
 
-    this.pageLoadProgressProbe.start();
+    this.pageLoadProgressStopwatch.start();
 
     data.uri = aUri;
     data.pageStart = true;
@@ -236,9 +236,9 @@ class ProgressTracker extends Tracker {
     }
 
     if (aIsSuccess) {
-      this.pageLoadProgressProbe.finish();
+      this.pageLoadProgressStopwatch.finish();
     } else {
-      this.pageLoadProgressProbe.cancel();
+      this.pageLoadProgressStopwatch.cancel();
     }
 
     const data = this._data;
@@ -265,7 +265,9 @@ class ProgressTracker extends Tracker {
 
     const isPageReload =
       (aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) != 0;
-    const probe = isPageReload ? this.pageReloadProbe : this.pageLoadProbe;
+    const stopwatch = isPageReload
+      ? this.pageReloadStopwatch
+      : this.pageLoadStopwatch;
 
     const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) != 0;
     const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) != 0;
@@ -273,13 +275,13 @@ class ProgressTracker extends Tracker {
       (aStateFlags & Ci.nsIWebProgressListener.STATE_REDIRECTING) != 0;
 
     if (isStart) {
-      probe.start();
+      stopwatch.start();
       this.start(displaySpec);
     } else if (isStop && !aWebProgress.isLoadingDocument) {
-      probe.finish();
+      stopwatch.finish();
       this.stop(aStatus == Cr.NS_OK);
     } else if (isRedirecting) {
-      probe.start();
+      stopwatch.start();
       this.start(displaySpec);
     }
 

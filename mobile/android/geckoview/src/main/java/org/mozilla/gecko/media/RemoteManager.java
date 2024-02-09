@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.TelemetryUtils;
 import org.mozilla.gecko.gfx.GeckoSurface;
 
 public final class RemoteManager implements IBinder.DeathRecipient {
@@ -172,7 +171,6 @@ public final class RemoteManager implements IBinder.DeathRecipient {
   @Override
   public void binderDied() {
     Log.e(LOGTAG, "remote codec is dead");
-    TelemetryUtils.addToHistogram("MEDIA_DECODING_PROCESS_CRASH", 1);
     handleRemoteDeath();
   }
 
