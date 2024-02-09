@@ -310,10 +310,10 @@ NetEq::Operation DecisionLogic::ExpectedPacketAvailable(
       !status.play_dtmf) {
     if (config_.enable_stable_delay_mode) {
       const int playout_delay_ms = GetPlayoutDelayMs(status);
-      const int low_limit = TargetLevelMs();
-      const int high_limit = low_limit +
-                             packet_arrival_history_->GetMaxDelayMs() +
-                             kDelayAdjustmentGranularityMs;
+      const int64_t low_limit = TargetLevelMs();
+      const int64_t high_limit = low_limit +
+                                 packet_arrival_history_->GetMaxDelayMs() +
+                                 kDelayAdjustmentGranularityMs;
       if (playout_delay_ms >= high_limit * 4) {
         return NetEq::Operation::kFastAccelerate;
       }
