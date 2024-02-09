@@ -25,11 +25,12 @@
 
 namespace dcsctp {
 namespace {
-using ::webrtc::TimeDelta;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
+using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 constexpr size_t kArwnd = 10000;
 constexpr TSN kInitialTSN(11);
@@ -72,7 +73,7 @@ class DataTrackerTest : public testing::Test {
     tracker_->RestoreFromState(state);
   }
 
-  TimeMs now_ = TimeMs(0);
+  Timestamp now_ = Timestamp::Zero();
   FakeTimeoutManager timeout_manager_;
   TimerManager timer_manager_;
   std::unique_ptr<Timer> timer_;

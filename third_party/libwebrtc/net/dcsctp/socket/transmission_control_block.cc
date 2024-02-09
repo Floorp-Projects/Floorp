@@ -39,6 +39,7 @@
 
 namespace dcsctp {
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 TransmissionControlBlock::TransmissionControlBlock(
     TimerManager& timer_manager,
@@ -129,7 +130,7 @@ void TransmissionControlBlock::ObserveRTT(TimeDelta rtt) {
 }
 
 TimeDelta TransmissionControlBlock::OnRtxTimerExpiry() {
-  TimeMs now = callbacks_.TimeMillis();
+  Timestamp now = callbacks_.Now();
   RTC_DLOG(LS_INFO) << log_prefix_ << "Timer " << t3_rtx_->name()
                     << " has expired";
   if (cookie_echo_chunk_.has_value()) {
@@ -161,7 +162,7 @@ void TransmissionControlBlock::MaybeSendSack() {
 }
 
 void TransmissionControlBlock::MaybeSendForwardTsn(SctpPacket::Builder& builder,
-                                                   TimeMs now) {
+                                                   Timestamp now) {
   if (now >= limit_forward_tsn_until_ &&
       retransmission_queue_.ShouldSendForwardTsn(now)) {
     if (capabilities_.message_interleaving) {
@@ -177,7 +178,7 @@ void TransmissionControlBlock::MaybeSendForwardTsn(SctpPacket::Builder& builder,
     // "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT exceed
     // 200ms and MUST NOT exceed 500ms".
     limit_forward_tsn_until_ =
-        now + std::min(DurationMs(200), DurationMs(rto_.srtt()));
+        now + std::min(TimeDelta::Millis(200), rto_.srtt());
   }
 }
 
@@ -209,7 +210,7 @@ void TransmissionControlBlock::MaybeSendFastRetransmit() {
 }
 
 void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
-                                                   TimeMs now) {
+                                                   Timestamp now) {
   for (int packet_idx = 0;
        packet_idx < options_.max_burst && retransmission_queue_.can_send_data();
        ++packet_idx) {

@@ -45,6 +45,7 @@
 namespace dcsctp {
 namespace {
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 // Allow sending only slightly less than an MTU, to account for headers.
 constexpr float kMinBytesRequiredToSendFactor = 0.9;
@@ -258,7 +259,7 @@ bool RetransmissionQueue::IsSackValid(const SackChunk& sack) const {
   return true;
 }
 
-bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
+bool RetransmissionQueue::HandleSack(Timestamp now, const SackChunk& sack) {
   if (!IsSackValid(sack)) {
     return false;
   }
@@ -336,7 +337,7 @@ bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
   return true;
 }
 
-void RetransmissionQueue::UpdateRTT(TimeMs now,
+void RetransmissionQueue::UpdateRTT(Timestamp now,
                                     UnwrappedTSN cumulative_tsn_ack) {
   // RTT updating is flawed in SCTP, as explained in e.g. Pedersen J, Griwodz C,
   // Halvorsen P (2006) Considerations of SCTP retransmission delays for thin
@@ -449,7 +450,7 @@ RetransmissionQueue::GetChunksForFastRetransmit(size_t bytes_in_packet) {
 }
 
 std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
-    TimeMs now,
+    Timestamp now,
     size_t bytes_remaining_in_packet) {
   // Chunks are always padded to even divisible by four.
   RTC_DCHECK(IsDivisibleBy4(bytes_remaining_in_packet));
@@ -494,7 +495,8 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
         chunk_opt->message_id, chunk_opt->data, now,
         partial_reliability_ ? chunk_opt->max_retransmissions
                              : MaxRetransmits::NoLimit(),
-        partial_reliability_ ? chunk_opt->expires_at : TimeMs::InfiniteFuture(),
+        partial_reliability_ ? chunk_opt->expires_at
+                             : Timestamp::PlusInfinity(),
         chunk_opt->lifecycle_id);
 
     if (tsn.has_value()) {
@@ -539,7 +541,7 @@ bool RetransmissionQueue::can_send_data() const {
          max_bytes_to_send() >= min_bytes_required_to_send_;
 }
 
-bool RetransmissionQueue::ShouldSendForwardTsn(TimeMs now) {
+bool RetransmissionQueue::ShouldSendForwardTsn(Timestamp now) {
   if (!partial_reliability_) {
     return false;
   }

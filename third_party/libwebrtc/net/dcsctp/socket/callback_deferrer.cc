@@ -70,6 +70,8 @@ std::unique_ptr<Timeout> CallbackDeferrer::CreateTimeout(
 }
 
 TimeMs CallbackDeferrer::TimeMillis() {
+  // This should not be called by the library - it's migrated to `Now()`.
+  RTC_DCHECK(false);
   // Will not be deferred - call directly.
   return underlying_.TimeMillis();
 }

@@ -15,12 +15,14 @@
 #include <vector>
 
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "net/dcsctp/common/math.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/public/types.h"
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
+using ::webrtc::Timestamp;
 
 // The number of times a packet must be NACKed before it's retransmitted.
 // See https://tools.ietf.org/html/rfc4960#section-7.2.4
@@ -64,12 +66,12 @@ void OutstandingData::Item::MarkAsRetransmitted() {
 }
 
 void OutstandingData::Item::Abandon() {
-  RTC_DCHECK(expires_at_ != TimeMs::InfiniteFuture() ||
+  RTC_DCHECK(!expires_at_.IsPlusInfinity() ||
              max_retransmissions_ != MaxRetransmits::NoLimit());
   lifecycle_ = Lifecycle::kAbandoned;
 }
 
-bool OutstandingData::Item::has_expired(TimeMs now) const {
+bool OutstandingData::Item::has_expired(Timestamp now) const {
   return expires_at_ <= now;
 }
 
@@ -283,9 +285,9 @@ void OutstandingData::AbandonAllFor(const Item& item) {
         outstanding_data_
             .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
                      std::forward_as_tuple(
-                         item.message_id(), std::move(message_end), TimeMs(0),
-                         MaxRetransmits(0), TimeMs::InfiniteFuture(),
-                         LifecycleId::NotSet()))
+                         item.message_id(), std::move(message_end),
+                         Timestamp::Zero(), MaxRetransmits(0),
+                         Timestamp::PlusInfinity(), LifecycleId::NotSet()))
             .first->second;
     // The added chunk shouldn't be included in `outstanding_bytes`, so set it
     // as acked.
@@ -371,7 +373,7 @@ std::vector<std::pair<TSN, Data>> OutstandingData::GetChunksToBeRetransmitted(
   return ExtractChunksThatCanFit(to_be_retransmitted_, max_size);
 }
 
-void OutstandingData::ExpireOutstandingChunks(TimeMs now) {
+void OutstandingData::ExpireOutstandingChunks(Timestamp now) {
   for (const auto& [tsn, item] : outstanding_data_) {
     // Chunks that are nacked can be expired. Care should be taken not to expire
     // unacked (in-flight) chunks as they might have been received, but the SACK
@@ -399,9 +401,9 @@ UnwrappedTSN OutstandingData::highest_outstanding_tsn() const {
 absl::optional<UnwrappedTSN> OutstandingData::Insert(
     OutgoingMessageId message_id,
     const Data& data,
-    TimeMs time_sent,
+    Timestamp time_sent,
     MaxRetransmits max_retransmissions,
-    TimeMs expires_at,
+    Timestamp expires_at,
     LifecycleId lifecycle_id) {
   UnwrappedTSN tsn = next_tsn_;
   next_tsn_.Increment();
@@ -442,7 +444,7 @@ void OutstandingData::NackAll() {
   RTC_DCHECK(IsConsistent());
 }
 
-webrtc::TimeDelta OutstandingData::MeasureRTT(TimeMs now,
+webrtc::TimeDelta OutstandingData::MeasureRTT(Timestamp now,
                                               UnwrappedTSN tsn) const {
   auto it = outstanding_data_.find(tsn);
   if (it != outstanding_data_.end() && !it->second.has_been_retransmitted()) {
@@ -451,7 +453,7 @@ webrtc::TimeDelta OutstandingData::MeasureRTT(TimeMs now,
     // packets that were retransmitted (and thus for which it is ambiguous
     // whether the reply was for the first instance of the chunk or for a
     // later instance)"
-    return (now - it->second.time_sent()).ToTimeDelta();
+    return now - it->second.time_sent();
   }
   return webrtc::TimeDelta::PlusInfinity();
 }

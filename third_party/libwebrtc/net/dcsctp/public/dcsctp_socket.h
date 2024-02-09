@@ -324,9 +324,11 @@ class DcSctpSocketCallbacks {
 
   // Returns the current time in milliseconds (from any epoch).
   //
+  // TODO(bugs.webrtc.org/15593): This method is deprecated, see `Now`.
+  //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual TimeMs TimeMillis() = 0;
+  virtual TimeMs TimeMillis() { return TimeMs(0); }
 
   // Returns the current time (from any epoch).
   //

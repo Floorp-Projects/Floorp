@@ -31,7 +31,7 @@ void StreamScheduler::Stream::SetPriority(StreamPriority priority) {
 }
 
 absl::optional<SendQueue::DataToSend> StreamScheduler::Produce(
-    TimeMs now,
+    webrtc::Timestamp now,
     size_t max_size) {
   // For non-interleaved streams, avoid rescheduling while still sending a
   // message as it needs to be sent in full. For interleaved messaging,
@@ -127,7 +127,7 @@ StreamScheduler::VirtualTime StreamScheduler::Stream::CalculateFinishTime(
 }
 
 absl::optional<SendQueue::DataToSend> StreamScheduler::Stream::Produce(
-    TimeMs now,
+    webrtc::Timestamp now,
     size_t max_size) {
   absl::optional<SendQueue::DataToSend> data = producer_.Produce(now, max_size);
 

@@ -37,6 +37,7 @@
 
 namespace dcsctp {
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 // This is stored (in serialized form) as HeartbeatInfoParameter sent in
 // HeartbeatRequestChunk and received back in HeartbeatAckChunk. It should be
@@ -51,11 +52,11 @@ class HeartbeatInfo {
   static constexpr size_t kBufferSize = sizeof(uint64_t);
   static_assert(kBufferSize == 8, "Unexpected buffer size");
 
-  explicit HeartbeatInfo(TimeMs created_at) : created_at_(created_at) {}
+  explicit HeartbeatInfo(Timestamp created_at) : created_at_(created_at) {}
 
   std::vector<uint8_t> Serialize() {
-    uint32_t high_bits = static_cast<uint32_t>(*created_at_ >> 32);
-    uint32_t low_bits = static_cast<uint32_t>(*created_at_);
+    uint32_t high_bits = static_cast<uint32_t>(created_at_.ms() >> 32);
+    uint32_t low_bits = static_cast<uint32_t>(created_at_.ms());
 
     std::vector<uint8_t> data(kBufferSize);
     BoundedByteWriter<kBufferSize> writer(data);
@@ -77,13 +78,13 @@ class HeartbeatInfo {
     uint32_t low_bits = reader.Load32<4>();
 
     uint64_t created_at = static_cast<uint64_t>(high_bits) << 32 | low_bits;
-    return HeartbeatInfo(TimeMs(created_at));
+    return HeartbeatInfo(Timestamp::Millis(created_at));
   }
 
-  TimeMs created_at() const { return created_at_; }
+  Timestamp created_at() const { return created_at_; }
 
  private:
-  const TimeMs created_at_;
+  const Timestamp created_at_;
 };
 
 HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
@@ -157,9 +158,9 @@ void HeartbeatHandler::HandleHeartbeatAck(HeartbeatAckChunk chunk) {
     return;
   }
 
-  TimeMs now = ctx_->callbacks().TimeMillis();
-  if (info->created_at() > TimeMs(0) && info->created_at() <= now) {
-    ctx_->ObserveRTT((now - info->created_at()).ToTimeDelta());
+  Timestamp now = ctx_->callbacks().Now();
+  if (info->created_at() > Timestamp::Zero() && info->created_at() <= now) {
+    ctx_->ObserveRTT(now - info->created_at());
   }
 
   // https://tools.ietf.org/html/rfc4960#section-8.1
@@ -170,7 +171,7 @@ void HeartbeatHandler::HandleHeartbeatAck(HeartbeatAckChunk chunk) {
 
 TimeDelta HeartbeatHandler::OnIntervalTimerExpiry() {
   if (ctx_->is_connection_established()) {
-    HeartbeatInfo info(ctx_->callbacks().TimeMillis());
+    HeartbeatInfo info(ctx_->callbacks().Now());
     timeout_timer_->set_duration(ctx_->current_rto());
     timeout_timer_->Start();
     RTC_DLOG(LS_INFO) << log_prefix_ << "Sending HEARTBEAT with timeout "

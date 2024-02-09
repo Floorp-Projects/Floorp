@@ -23,6 +23,7 @@ namespace dcsctp {
 namespace {
 using ::testing::Return;
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
 class TimerTest : public testing::Test {
  protected:
@@ -35,7 +36,7 @@ class TimerTest : public testing::Test {
   }
 
   void AdvanceTimeAndRunTimers(TimeDelta duration) {
-    now_ = now_ + DurationMs(duration);
+    now_ = now_ + duration;
 
     for (;;) {
       absl::optional<TimeoutID> timeout_id =
@@ -47,7 +48,7 @@ class TimerTest : public testing::Test {
     }
   }
 
-  TimeMs now_ = TimeMs(0);
+  Timestamp now_ = Timestamp::Zero();
   FakeTimeoutManager timeout_manager_;
   TimerManager manager_;
   testing::MockFunction<TimeDelta()> on_expired_;
@@ -429,7 +430,7 @@ TEST_F(TimerTest, DurationStaysWithinMaxTimerBackOffDuration) {
 }
 
 TEST(TimerManagerTest, TimerManagerPassesPrecisionToCreateTimeoutMethod) {
-  FakeTimeoutManager timeout_manager([&]() { return TimeMs(0); });
+  FakeTimeoutManager timeout_manager([&]() { return Timestamp::Zero(); });
   absl::optional<webrtc::TaskQueueBase::DelayPrecision> create_timer_precison;
   TimerManager manager([&](webrtc::TaskQueueBase::DelayPrecision precision) {
     create_timer_precison = precision;

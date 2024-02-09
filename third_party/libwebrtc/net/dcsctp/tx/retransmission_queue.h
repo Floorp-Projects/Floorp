@@ -69,7 +69,7 @@ class RetransmissionQueue {
 
   // Handles a received SACK. Returns true if the `sack` was processed and
   // false if it was discarded due to received out-of-order and not relevant.
-  bool HandleSack(TimeMs now, const SackChunk& sack);
+  bool HandleSack(webrtc::Timestamp now, const SackChunk& sack);
 
   // Handles an expired retransmission timer.
   void HandleT3RtxTimerExpiry();
@@ -90,7 +90,7 @@ class RetransmissionQueue {
   // called prior to this method, to abandon expired chunks, as this method will
   // not expire any chunks.
   std::vector<std::pair<TSN, Data>> GetChunksToSend(
-      TimeMs now,
+      webrtc::Timestamp now,
       size_t bytes_remaining_in_packet);
 
   // Returns the internal state of all queued chunks. This is only used in
@@ -136,7 +136,7 @@ class RetransmissionQueue {
   // Given the current time `now`, it will evaluate if there are chunks that
   // have expired and that need to be discarded. It returns true if a
   // FORWARD-TSN should be sent.
-  bool ShouldSendForwardTsn(TimeMs now);
+  bool ShouldSendForwardTsn(webrtc::Timestamp now);
 
   // Creates a FORWARD-TSN chunk.
   ForwardTsnChunk CreateForwardTsn() const {
@@ -185,7 +185,7 @@ class RetransmissionQueue {
 
   // When a SACK chunk is received, this method will be called which _may_ call
   // into the `RetransmissionTimeout` to update the RTO.
-  void UpdateRTT(TimeMs now, UnwrappedTSN cumulative_tsn_ack);
+  void UpdateRTT(webrtc::Timestamp now, UnwrappedTSN cumulative_tsn_ack);
 
   // If the congestion control is in "fast recovery mode", this may be exited
   // now.

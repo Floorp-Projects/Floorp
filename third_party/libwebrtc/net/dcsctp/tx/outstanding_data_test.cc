@@ -38,8 +38,9 @@ using ::testing::Return;
 using ::testing::StrictMock;
 using ::testing::UnorderedElementsAre;
 using ::webrtc::TimeDelta;
+using ::webrtc::Timestamp;
 
-constexpr TimeMs kNow(42);
+constexpr Timestamp kNow = Timestamp::Millis(42);
 constexpr OutgoingMessageId kMessageId = OutgoingMessageId(17);
 
 class OutstandingDataTest : public testing::Test {
@@ -278,20 +279,20 @@ TEST_F(OutstandingDataTest, NacksThreeTimesResultsInAbandoningWithPlaceholder) {
 }
 
 TEST_F(OutstandingDataTest, ExpiresChunkBeforeItIsInserted) {
-  static constexpr TimeMs kExpiresAt = kNow + DurationMs(1);
+  static constexpr Timestamp kExpiresAt = kNow + TimeDelta::Millis(1);
   EXPECT_TRUE(buf_.Insert(kMessageId, gen_.Ordered({1}, "B"), kNow,
                           MaxRetransmits::NoLimit(), kExpiresAt)
                   .has_value());
   EXPECT_TRUE(buf_.Insert(kMessageId, gen_.Ordered({1}, ""),
-                          kNow + DurationMs(0), MaxRetransmits::NoLimit(),
-                          kExpiresAt)
+                          kNow + TimeDelta::Millis(0),
+                          MaxRetransmits::NoLimit(), kExpiresAt)
                   .has_value());
 
   EXPECT_CALL(on_discard_, Call(StreamID(1), kMessageId))
       .WillOnce(Return(false));
   EXPECT_FALSE(buf_.Insert(kMessageId, gen_.Ordered({1}, "E"),
-                           kNow + DurationMs(1), MaxRetransmits::NoLimit(),
-                           kExpiresAt)
+                           kNow + TimeDelta::Millis(1),
+                           MaxRetransmits::NoLimit(), kExpiresAt)
                    .has_value());
 
   EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
@@ -363,12 +364,12 @@ TEST_F(OutstandingDataTest, AckWithGapBlocksFromRFC4960Section334) {
 
 TEST_F(OutstandingDataTest, MeasureRTT) {
   buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow);
-  buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + DurationMs(1));
-  buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + DurationMs(2));
+  buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + TimeDelta::Millis(1));
+  buf_.Insert(kMessageId, gen_.Ordered({1}, "BE"), kNow + TimeDelta::Millis(2));
 
   static constexpr TimeDelta kDuration = TimeDelta::Millis(123);
   TimeDelta duration =
-      buf_.MeasureRTT(kNow + DurationMs(kDuration), unwrapper_.Unwrap(TSN(11)));
+      buf_.MeasureRTT(kNow + kDuration, unwrapper_.Unwrap(TSN(11)));
 
   EXPECT_EQ(duration, kDuration - TimeDelta::Millis(1));
 }
@@ -453,13 +454,13 @@ TEST_F(OutstandingDataTest, MustRetransmitBeforeGettingNackedAgain) {
 
 TEST_F(OutstandingDataTest, LifecyleReturnsAckedItemsInAckInfo) {
   buf_.Insert(OutgoingMessageId(1), gen_.Ordered({1}, "BE"), kNow,
-              MaxRetransmits::NoLimit(), TimeMs::InfiniteFuture(),
+              MaxRetransmits::NoLimit(), Timestamp::PlusInfinity(),
               LifecycleId(42));
   buf_.Insert(OutgoingMessageId(2), gen_.Ordered({1}, "BE"), kNow,
-              MaxRetransmits::NoLimit(), TimeMs::InfiniteFuture(),
+              MaxRetransmits::NoLimit(), Timestamp::PlusInfinity(),
               LifecycleId(43));
   buf_.Insert(OutgoingMessageId(3), gen_.Ordered({1}, "BE"), kNow,
-              MaxRetransmits::NoLimit(), TimeMs::InfiniteFuture(),
+              MaxRetransmits::NoLimit(), Timestamp::PlusInfinity(),
               LifecycleId(44));
 
   OutstandingData::AckInfo ack1 =
@@ -479,7 +480,7 @@ TEST_F(OutstandingDataTest, LifecycleReturnsAbandonedNackedThreeTimes) {
   buf_.Insert(kMessageId, gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
   buf_.Insert(kMessageId, gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
   buf_.Insert(kMessageId, gen_.Ordered({1}, "E"), kNow, MaxRetransmits(0),
-              TimeMs::InfiniteFuture(), LifecycleId(42));
+              Timestamp::PlusInfinity(), LifecycleId(42));
 
   std::vector<SackChunk::GapAckBlock> gab1 = {SackChunk::GapAckBlock(2, 2)};
   EXPECT_FALSE(
@@ -515,7 +516,7 @@ TEST_F(OutstandingDataTest, LifecycleReturnsAbandonedAfterT3rtxExpired) {
   buf_.Insert(kMessageId, gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
   buf_.Insert(kMessageId, gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
   buf_.Insert(kMessageId, gen_.Ordered({1}, "E"), kNow, MaxRetransmits(0),
-              TimeMs::InfiniteFuture(), LifecycleId(42));
+              Timestamp::PlusInfinity(), LifecycleId(42));
 
   EXPECT_THAT(buf_.GetChunkStatesForTesting(),
               testing::ElementsAre(Pair(TSN(9), State::kAcked),      //
