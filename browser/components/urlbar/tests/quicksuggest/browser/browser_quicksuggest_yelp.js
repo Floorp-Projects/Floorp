@@ -49,7 +49,7 @@ add_task(async function basic() {
   Assert.equal(result.payload.provider, "Yelp");
   Assert.equal(
     result.payload.url,
-    "https://www.yelp.com/search?find_desc=RaMeN&find_loc=tOkYo"
+    "https://www.yelp.com/search?find_desc=RaMeN&find_loc=tOkYo&utm_medium=partner&utm_source=mozilla"
   );
   Assert.equal(result.payload.title, "RaMeN iN tOkYo");
 });

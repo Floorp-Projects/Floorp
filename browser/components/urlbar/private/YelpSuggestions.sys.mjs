@@ -73,6 +73,9 @@ export class YelpSuggestions extends BaseFeature {
       }
     }
 
+    url.searchParams.set("utm_medium", "partner");
+    url.searchParams.set("utm_source", "mozilla");
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
