@@ -1821,6 +1821,11 @@ void nsHostResolver::ThreadFunc() {
       TypeRecordResultType result = AsVariant(mozilla::Nothing());
       uint32_t ttl = UINT32_MAX;
       nsresult status = ResolveHTTPSRecord(rec->host, rec->flags, result, ttl);
+      mozilla::glean::networking::dns_native_count
+          .EnumGet(rec->pb
+                       ? glean::networking::DnsNativeCountLabel::eHttpsPrivate
+                       : glean::networking::DnsNativeCountLabel::eHttpsRegular)
+          .Add(1);
       CompleteLookupByType(rec, status, result, rec->mTRRSkippedReason, ttl,
                            rec->pb);
       rec = nullptr;
@@ -1835,6 +1840,11 @@ void nsHostResolver::ThreadFunc() {
                            getTtl);
     }
 #endif
+
+    mozilla::glean::networking::dns_native_count
+        .EnumGet(rec->pb ? glean::networking::DnsNativeCountLabel::ePrivate
+                         : glean::networking::DnsNativeCountLabel::eRegular)
+        .Add(1);
 
     if (RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec)) {
       // obtain lock to check shutdown and manage inter-module telemetry
