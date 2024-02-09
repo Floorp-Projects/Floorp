@@ -27144,3 +27144,6 @@ d28b6fdf49
 # MOZ_LIBWEBRTC_SRC=/Users/jan-ivar/moz/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 dfe62c8ad4
+# MOZ_LIBWEBRTC_SRC=/Users/jan-ivar/moz/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9f0d10b1f4
