@@ -267,7 +267,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
 
     if (
       !("searchTermParamName" in urlData) &&
-      !urlData.base.includes("{searchTerms}")
+      !urlData.base.includes("{searchTerms}") &&
+      !urlType.includes("trending")
     ) {
       throw new Error("Search terms missing from engine URL.");
     }
