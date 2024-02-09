@@ -539,11 +539,8 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   MOZ_RELEASE_ASSERT(!mApplyingAnchorAdjustment);
   // We should use AutoRestore here, but that doesn't work with bitfields
   mApplyingAnchorAdjustment = true;
-  Frame()->ScrollToInternal(
-      Frame()->GetScrollPosition() + physicalAdjustment, ScrollMode::Instant,
-      StaticPrefs::layout_css_scroll_anchoring_absolute_update()
-          ? ScrollOrigin::AnchorAdjustment
-          : ScrollOrigin::Relative);
+  Frame()->ScrollToInternal(Frame()->GetScrollPosition() + physicalAdjustment,
+                            ScrollMode::Instant, ScrollOrigin::Relative);
   mApplyingAnchorAdjustment = false;
 
   if (Frame()->mIsRoot) {

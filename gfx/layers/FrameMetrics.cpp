@@ -147,12 +147,10 @@ CSSSize FrameMetrics::CalculateCompositedSizeInCssPixels(
   return aCompositionBounds.Size() / aZoom;
 }
 
-std::pair<bool, CSSPoint> FrameMetrics::ApplyAbsoluteScrollUpdateFrom(
-    const ScrollPositionUpdate& aUpdate) {
-  CSSPoint oldVisualOffset = GetVisualScrollOffset();
+bool FrameMetrics::ApplyScrollUpdateFrom(const ScrollPositionUpdate& aUpdate) {
   // In applying a main-thread scroll update, try to preserve the relative
   // offset between the visual and layout viewports.
-  CSSPoint relativeOffset = oldVisualOffset - GetLayoutScrollOffset();
+  CSSPoint relativeOffset = GetVisualScrollOffset() - GetLayoutScrollOffset();
   MOZ_ASSERT(IsRootContent() || relativeOffset == CSSPoint());
   // We need to set the two offsets together, otherwise a subsequent
   // RecalculateLayoutViewportOffset() could see divergent layout and
@@ -160,7 +158,7 @@ std::pair<bool, CSSPoint> FrameMetrics::ApplyAbsoluteScrollUpdateFrom(
   bool offsetChanged = SetLayoutScrollOffset(aUpdate.GetDestination());
   offsetChanged |=
       ClampAndSetVisualScrollOffset(aUpdate.GetDestination() + relativeOffset);
-  return {offsetChanged, GetVisualScrollOffset() - oldVisualOffset};
+  return offsetChanged;
 }
 
 CSSPoint FrameMetrics::ApplyRelativeScrollUpdateFrom(
