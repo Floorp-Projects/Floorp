@@ -5768,14 +5768,10 @@ static bool DetachArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool EnsureNonInline(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  Rooted<JSObject*> callee(cx, &args.callee());
 
-  if (args.length() != 1) {
-    JS_ReportErrorASCII(cx, "ensureNonInline() requires a single argument");
-    return false;
-  }
-
-  if (!args[0].isObject()) {
-    JS_ReportErrorASCII(cx, "ensureNonInline must be passed an object");
+  if (!args.get(0).isObject()) {
+    js::ReportUsageErrorASCII(cx, callee, "Single object argument required");
     return false;
   }
 
@@ -5785,6 +5781,30 @@ static bool EnsureNonInline(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setUndefined();
+  return true;
+}
+
+static bool PinArrayBufferOrViewLength(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  Rooted<JSObject*> callee(cx, &args.callee());
+
+  if (!args.get(0).isObject()) {
+    js::ReportUsageErrorASCII(
+        cx, callee, "ArrayBuffer or ArrayBufferView argument required");
+    return false;
+  }
+  RootedObject obj(cx, &args[0].toObject());
+  if (!obj->canUnwrapAs<ArrayBufferViewObject>() &&
+      !obj->canUnwrapAs<ArrayBufferObjectMaybeShared>()) {
+    js::ReportUsageErrorASCII(
+        cx, callee, "ArrayBuffer or ArrayBufferView argument required");
+    return false;
+  }
+
+  bool pin = args.get(1).isUndefined() ? true : ToBoolean(args.get(1));
+
+  args.rval().setBoolean(JS::PinArrayBufferOrViewLength(obj, pin));
   return true;
 }
 
@@ -9852,6 +9872,11 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "ensureNonInline(view or buffer)",
 "  Ensure that the memory for the given ArrayBuffer or ArrayBufferView\n"
 "  is not inline."),
+
+    JS_FN_HELP("pinArrayBufferOrViewLength", PinArrayBufferOrViewLength, 1, 0,
+"pinArrayBufferOrViewLength(view or buffer[, pin])",
+"  Prevent or allow (if `pin` is false) changes to the length of the given\n"
+"  ArrayBuffer or ArrayBufferView. `pin` defaults to true."),
 
     JS_FN_HELP("JSONStringify", JSONStringify, 4, 0,
 "JSONStringify(value, behavior)",
