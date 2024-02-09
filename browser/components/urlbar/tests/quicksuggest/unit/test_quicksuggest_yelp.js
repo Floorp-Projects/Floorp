@@ -31,6 +31,8 @@ add_setup(async function () {
       ["yelp.featureGate", true],
     ],
   });
+
+  await MerinoTestUtils.initGeolocation();
 });
 
 add_task(async function basic() {
@@ -49,6 +51,16 @@ add_task(async function basic() {
       expected: {
         url: "https://www.yelp.com/search?find_desc=BeSt+RaMeN+dElIvErY&find_loc=tOkYo",
         title: "BeSt RaMeN dElIvErY iN tOkYo",
+      },
+    },
+    {
+      description: "No specific location",
+      query: "ramen",
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
+        displayUrl:
+          "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
+        title: "ramen in Yokohama, Kanagawa",
       },
     },
   ];
@@ -82,14 +94,14 @@ add_task(async function sponsoredDisabled() {
   // First make sure the suggestion is added when non-sponsored
   // suggestions are enabled, if the rust is enabled.
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
     matches: [
       makeExpectedResult({
-        url: "https://www.yelp.com/search?find_desc=ramen",
-        title: "ramen",
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
       }),
     ],
   });
@@ -97,7 +109,7 @@ add_task(async function sponsoredDisabled() {
   // Now disable the pref.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
@@ -116,14 +128,14 @@ add_task(async function yelpSpecificPrefsDisabled() {
   for (const pref of prefs) {
     // First make sure the suggestion is added, if the rust is enabled.
     await check_results({
-      context: createContext("ramen", {
+      context: createContext("ramen in tokyo", {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
       matches: [
         makeExpectedResult({
-          url: "https://www.yelp.com/search?find_desc=ramen",
-          title: "ramen",
+          url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+          title: "ramen in tokyo",
         }),
       ],
     });
@@ -131,7 +143,7 @@ add_task(async function yelpSpecificPrefsDisabled() {
     // Now disable the pref.
     UrlbarPrefs.set(pref, false);
     await check_results({
-      context: createContext("ramen", {
+      context: createContext("ramen in tokyo", {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
@@ -150,7 +162,7 @@ add_task(async function featureGate() {
   // Disable the fature gate.
   UrlbarPrefs.set("yelp.featureGate", false);
   await check_results({
-    context: createContext("ramem", {
+    context: createContext("ramem in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
@@ -163,14 +175,14 @@ add_task(async function featureGate() {
   });
   await QuickSuggestTestUtils.forceSync();
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
     matches: [
       makeExpectedResult({
-        url: "https://www.yelp.com/search?find_desc=ramen",
-        title: "ramen",
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
       }),
     ],
   });
@@ -185,7 +197,7 @@ add_task(async function featureGate() {
     yelpFeatureGate: false,
   });
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
@@ -208,14 +220,14 @@ add_task(async function yelpSuggestPriority() {
   await QuickSuggestTestUtils.forceSync();
 
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
     matches: [
       makeExpectedResult({
-        url: "https://www.yelp.com/search?find_desc=ramen",
-        title: "ramen",
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
         isTopPick: true,
       }),
     ],
@@ -225,14 +237,14 @@ add_task(async function yelpSuggestPriority() {
   await QuickSuggestTestUtils.forceSync();
 
   await check_results({
-    context: createContext("ramen", {
+    context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
     matches: [
       makeExpectedResult({
-        url: "https://www.yelp.com/search?find_desc=ramen",
-        title: "ramen",
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
         isTopPick: false,
       }),
     ],
@@ -243,13 +255,15 @@ add_task(async function yelpSuggestPriority() {
 // querying depending on whether Yelp suggestions are enabled.
 add_task(async function rustProviders() {
   await doRustProvidersTests({
-    searchString: "ramen",
+    searchString: "ramen in tokyo",
     tests: [
       {
         prefs: {
           "suggest.yelp": true,
         },
-        expectedUrls: ["https://www.yelp.com/search?find_desc=ramen"],
+        expectedUrls: [
+          "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        ],
       },
       {
         prefs: {
@@ -278,9 +292,9 @@ function makeExpectedResult(expected) {
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
       url: expected.url,
       title: expected.title,
-      displayUrl: expected.url
-        .replace(/^https:\/\/www[.]/, "")
-        .replace("%20", " "),
+      displayUrl:
+        expected.displayUrl ??
+        expected.url.replace(/^https:\/\/www[.]/, "").replace("%20", " "),
     },
   };
 }
