@@ -96,6 +96,7 @@ class RtpTransport : public RtpTransportInternal {
                   rtc::CopyOnWriteBuffer* packet,
                   const rtc::PacketOptions& options,
                   int flags);
+  flat_set<uint32_t> GetSsrcsForSink(RtpPacketSinkInterface* sink);
 
   // Overridden by SrtpTransport.
   virtual void OnNetworkRouteChanged(

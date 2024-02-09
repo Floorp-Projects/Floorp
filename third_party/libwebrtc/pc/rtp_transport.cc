@@ -180,6 +180,10 @@ bool RtpTransport::UnregisterRtpDemuxerSink(RtpPacketSinkInterface* sink) {
   return true;
 }
 
+flat_set<uint32_t> RtpTransport::GetSsrcsForSink(RtpPacketSinkInterface* sink) {
+  return rtp_demuxer_.GetSsrcsForSink(sink);
+}
+
 void RtpTransport::DemuxPacket(rtc::CopyOnWriteBuffer packet,
                                int64_t packet_time_us) {
   webrtc::RtpPacketReceived parsed_packet(
