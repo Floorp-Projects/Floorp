@@ -565,7 +565,8 @@ void TCPConnection::OnReadPacket(rtc::AsyncPacketSocket* socket,
                                  const int64_t& packet_time_us) {
   RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK_EQ(socket, socket_.get());
-  Connection::OnReadPacket(data, size, packet_time_us);
+  Connection::OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy(data, size, packet_time_us));
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {

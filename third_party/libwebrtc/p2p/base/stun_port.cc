@@ -404,7 +404,8 @@ void UDPPort::OnReadPacket(rtc::AsyncPacketSocket* socket,
   }
 
   if (Connection* conn = GetConnection(remote_addr)) {
-    conn->OnReadPacket(data, size, packet_time_us);
+    conn->OnReadPacket(
+        rtc::ReceivedPacket::CreateFromLegacy(data, size, packet_time_us));
   } else {
     Port::OnReadPacket(data, size, remote_addr, PROTO_UDP);
   }
