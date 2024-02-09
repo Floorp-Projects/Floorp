@@ -1,6 +1,5 @@
 [DEFAULT]
 skip-if = [
-  "os == 'android'",
   "http3",
   "http2",
 ]

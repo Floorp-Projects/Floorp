@@ -663,9 +663,11 @@ class WebSocketServer(object):
         cmd = [sys.executable, script]
         if self.debuggerInfo and self.debuggerInfo.interactive:
             cmd += ["--interactive"]
+        # We need to use 0.0.0.0 to listen on all interfaces because
+        # Android tests connect from a different hosts
         cmd += [
             "-H",
-            "127.0.0.1",
+            "0.0.0.0",
             "-p",
             str(self.port),
             "-w",
@@ -752,9 +754,12 @@ class SSLTunnel:
             config.write("httpproxy:1\n")
             config.write("certdbdir:%s\n" % self.certPath)
             config.write("forward:127.0.0.1:%s\n" % self.httpPort)
-            config.write(
-                "websocketserver:%s:%s\n" % (self.webServer, self.webSocketPort)
-            )
+
+            wsserver = self.webServer
+            if self.webServer == "10.0.2.2":
+                wsserver = "127.0.0.1"
+
+            config.write("websocketserver:%s:%s\n" % (wsserver, self.webSocketPort))
             # Use "*" to tell ssltunnel to listen on the public ip
             # address instead of the loopback address 127.0.0.1. This
             # may have the side-effect of causing firewall warnings on

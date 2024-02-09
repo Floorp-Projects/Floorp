@@ -1,4 +1,3 @@
 [DEFAULT]
-skip-if = ["os == 'android'"]
 
 ["test_websocket_frame.html"]
