@@ -279,6 +279,14 @@ add_task(async function rustProviders() {
 });
 
 function makeExpectedResult(expected) {
+  const utmParameters = "&utm_medium=partner&utm_source=mozilla";
+
+  let url = expected.url + utmParameters;
+  let displayUrl =
+    (expected.displayUrl ??
+      expected.url.replace(/^https:\/\/www[.]/, "").replace("%20", " ")) +
+    utmParameters;
+
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -290,11 +298,9 @@ function makeExpectedResult(expected) {
       telemetryType: "yelp",
       shouldShowUrl: true,
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
-      url: expected.url,
+      url,
       title: expected.title,
-      displayUrl:
-        expected.displayUrl ??
-        expected.url.replace(/^https:\/\/www[.]/, "").replace("%20", " "),
+      displayUrl,
     },
   };
 }
