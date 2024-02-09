@@ -55,5 +55,17 @@ describe("ASRouterChild", () => {
         });
       });
     });
+    // Some legacy privileged extensions still send this legacy NEWTAB_MESSAGE_REQUEST
+    // action type. We simply
+    it("can accept the legacy NEWTAB_MESSAGE_REQUEST message without throwing", async () => {
+      assert.doesNotThrow(async () => {
+        let result = await asRouterChild.asRouterMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        sandbox.assert.deepEqual(result, {});
+        sandbox.assert.notCalled(asRouterChild.sendAsyncMessage);
+      });
+    });
   });
 });
