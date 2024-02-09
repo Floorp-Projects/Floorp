@@ -131,7 +131,10 @@ export class SuggestBackendRust extends BaseFeature {
       suggestion.provider = type;
       suggestion.is_sponsored = type == "Amp" || type == "Yelp";
       if (Array.isArray(suggestion.icon)) {
-        suggestion.icon_blob = new Blob([new Uint8Array(suggestion.icon)]);
+        suggestion.icon_blob = new Blob(
+          [new Uint8Array(suggestion.icon)],
+          type == "Yelp" ? { type: "image/svg+xml" } : null
+        );
         delete suggestion.icon;
       }
     }
