@@ -368,6 +368,26 @@ networking:
     expires: never
     telemetry_mirror: DNS_FAILED_LOOKUP_TIME
 
+  dns_native_count:
+    type: labeled_counter
+    description: >
+      The count of calls to the native DNS APIs
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879165
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879165
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    expires: 140
+    labels:
+      - regular
+      - private
+      - https_regular
+      - https_private
+
   http_content_onstart_delay:
     type: timing_distribution
     time_unit: millisecond
