@@ -49,3 +49,50 @@ gmp:
     notification_emails:
       - media-alerts@mozilla.com
     expires: never
+
+media.audio:
+  init_failure:
+    type: labeled_counter
+    labels:
+      - first
+      - other
+    description: >
+      Failure occurs when initializing the audio stream.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879192
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  backend:
+    type: labeled_counter
+    labels:
+      - unknown
+      - audiounit
+      - audiounit-rust
+      - aaudio
+      - opensl
+      - wasapi
+      - winmm
+      - alsa
+      - jack
+      - oss
+      - pulse
+      - pulse-rust
+      - sndio
+      - sunaudio
+    description: >
+      The operating system audio backend
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879192
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
