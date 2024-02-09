@@ -232,6 +232,15 @@ pub(crate) mod ast_ty {
         //
         // Also, maybe this one shouldn't be the default?
         match (fk, ctx.options().convert_floats) {
+            (FloatKind::Float16, _) => {
+                // TODO: do f16 when rust lands it
+                ctx.generated_bindgen_float16();
+                if ctx.options().enable_cxx_namespaces {
+                    syn::parse_quote! { root::__BindgenFloat16 }
+                } else {
+                    syn::parse_quote! { __BindgenFloat16 }
+                }
+            }
             (FloatKind::Float, true) => syn::parse_quote! { f32 },
             (FloatKind::Double, true) => syn::parse_quote! { f64 },
             (FloatKind::Float, false) => raw_type(ctx, "c_float"),

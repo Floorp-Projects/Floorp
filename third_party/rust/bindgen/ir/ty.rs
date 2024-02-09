@@ -558,6 +558,8 @@ impl TemplateParameters for TypeKind {
 /// The kind of float this type represents.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum FloatKind {
+    /// A half (`_Float16` or `__fp16`)
+    Float16,
     /// A `float`.
     Float,
     /// A `double`.

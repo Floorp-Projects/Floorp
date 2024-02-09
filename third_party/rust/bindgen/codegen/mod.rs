@@ -578,6 +578,9 @@ impl CodeGenerator for Module {
                 if result.saw_incomplete_array {
                     utils::prepend_incomplete_array_types(ctx, &mut *result);
                 }
+                if ctx.need_bindgen_float16_type() {
+                    utils::prepend_float16_type(&mut *result);
+                }
                 if ctx.need_bindgen_complex_type() {
                     utils::prepend_complex_type(&mut *result);
                 }
@@ -1974,6 +1977,7 @@ impl CodeGenerator for CompInfo {
             ty,
             &canonical_name,
             visibility,
+            packed,
         );
 
         if !is_opaque {
@@ -2193,7 +2197,14 @@ impl CodeGenerator for CompInfo {
         if let Some(comment) = item.comment(ctx) {
             attributes.push(attributes::doc(comment));
         }
-        if packed && !is_opaque {
+
+        // if a type has both a "packed" attribute and an "align(N)" attribute, then check if the
+        // "packed" attr is redundant, and do not include it if so.
+        if packed &&
+            !is_opaque &&
+            !(explicit_align.is_some() &&
+                self.already_packed(ctx).unwrap_or(false))
+        {
             let n = layout.map_or(1, |l| l.align);
             assert!(ctx.options().rust_features().repr_packed_n || n == 1);
             let packed_repr = if n == 1 {
@@ -5132,6 +5143,20 @@ pub(crate) mod utils {
             incomplete_array_debug_impl,
         ];
 
+        let old_items = mem::replace(result, items);
+        result.extend(old_items);
+    }
+
+    pub(crate) fn prepend_float16_type(
+        result: &mut Vec<proc_macro2::TokenStream>,
+    ) {
+        let float16_type = quote! {
+            #[derive(PartialEq, Copy, Clone, Hash, Debug, Default)]
+            #[repr(transparent)]
+            pub struct __BindgenFloat16(pub u16);
+        };
+
+        let items = vec![float16_type];
         let old_items = mem::replace(result, items);
         result.extend(old_items);
     }

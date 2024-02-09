@@ -19,7 +19,7 @@ use super::module::{Module, ModuleKind};
 use super::template::{TemplateInstantiation, TemplateParameters};
 use super::traversal::{self, Edge, ItemTraversal};
 use super::ty::{FloatKind, Type, TypeKind};
-use crate::clang::{self, Cursor};
+use crate::clang::{self, ABIKind, Cursor};
 use crate::codegen::CodegenError;
 use crate::BindgenOptions;
 use crate::{Entry, HashMap, HashSet};
@@ -386,6 +386,9 @@ pub(crate) struct BindgenContext {
     /// Whether a bindgen complex was generated
     generated_bindgen_complex: Cell<bool>,
 
+    /// Whether a bindgen float16 was generated
+    generated_bindgen_float16: Cell<bool>,
+
     /// The set of `ItemId`s that are allowlisted. This the very first thing
     /// computed after parsing our IR, and before running any of our analyses.
     allowlisted: Option<ItemSet>,
@@ -585,6 +588,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             target_info,
             options,
             generated_bindgen_complex: Cell::new(false),
+            generated_bindgen_float16: Cell::new(false),
             allowlisted: None,
             blocklisted_types_implement_traits: Default::default(),
             codegen_items: None,
@@ -620,6 +624,11 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// translation.
     pub(crate) fn target_pointer_size(&self) -> usize {
         self.target_info.pointer_width / 8
+    }
+
+    /// Returns the ABI, which is mostly useful for determining the mangling kind.
+    pub(crate) fn abi_kind(&self) -> ABIKind {
+        self.target_info.abi
     }
 
     /// Get the stack of partially parsed types that we are in the middle of
@@ -2005,6 +2014,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             CXType_ULongLong => TypeKind::Int(IntKind::ULongLong),
             CXType_Int128 => TypeKind::Int(IntKind::I128),
             CXType_UInt128 => TypeKind::Int(IntKind::U128),
+            CXType_Float16 | CXType_Half => TypeKind::Float(FloatKind::Float16),
             CXType_Float => TypeKind::Float(FloatKind::Float),
             CXType_Double => TypeKind::Float(FloatKind::Double),
             CXType_LongDouble => TypeKind::Float(FloatKind::LongDouble),
@@ -2013,6 +2023,7 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 let float_type =
                     ty.elem_type().expect("Not able to resolve complex type?");
                 let float_kind = match float_type.kind() {
+                    CXType_Float16 | CXType_Half => FloatKind::Float16,
                     CXType_Float => FloatKind::Float,
                     CXType_Double => FloatKind::Double,
                     CXType_LongDouble => FloatKind::LongDouble,
@@ -2526,6 +2537,16 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     /// Whether we need to generate the bindgen complex type
     pub(crate) fn need_bindgen_complex_type(&self) -> bool {
         self.generated_bindgen_complex.get()
+    }
+
+    /// Call if a bindgen float16 is generated
+    pub(crate) fn generated_bindgen_float16(&self) {
+        self.generated_bindgen_float16.set(true)
+    }
+
+    /// Whether we need to generate the bindgen float16 type
+    pub(crate) fn need_bindgen_float16_type(&self) -> bool {
+        self.generated_bindgen_float16.get()
     }
 
     /// Compute which `enum`s have an associated `typedef` definition.

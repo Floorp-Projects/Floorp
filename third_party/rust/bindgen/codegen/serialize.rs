@@ -270,6 +270,7 @@ impl<'a> CSerialize<'a> for Type {
                     write!(writer, "const ")?;
                 }
                 match float_kind {
+                    FloatKind::Float16 => write!(writer, "_Float16")?,
                     FloatKind::Float => write!(writer, "float")?,
                     FloatKind::Double => write!(writer, "double")?,
                     FloatKind::LongDouble => write!(writer, "long double")?,
@@ -281,6 +282,7 @@ impl<'a> CSerialize<'a> for Type {
                     write!(writer, "const ")?;
                 }
                 match float_kind {
+                    FloatKind::Float16 => write!(writer, "_Float16 complex")?,
                     FloatKind::Float => write!(writer, "float complex")?,
                     FloatKind::Double => write!(writer, "double complex")?,
                     FloatKind::LongDouble => {

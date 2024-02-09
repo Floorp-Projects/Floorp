@@ -222,6 +222,22 @@ options! {
         },
         as_args: "--blocklist-file",
     },
+    /// Variables that have been blocklisted and should not appear in the generated code.
+    blocklisted_vars: RegexSet {
+        methods: {
+            regex_option! {
+                /// Do not generate any bindings for the given variable.
+                ///
+                /// This option is not recursive, meaning that it will only block variables whose
+                /// names explicitly match the argument of this method.
+                pub fn blocklist_var<T: AsRef<str>>(mut self, arg: T) -> Builder {
+                    self.options.blocklisted_vars.insert(arg);
+                    self
+                }
+            }
+        },
+        as_args: "--blocklist-var",
+    },
     /// Types that should be treated as opaque structures in the generated code.
     opaque_types: RegexSet {
         methods: {

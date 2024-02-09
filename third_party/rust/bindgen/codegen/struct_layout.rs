@@ -91,9 +91,9 @@ impl<'a> StructLayoutTracker<'a> {
         ty: &'a Type,
         name: &'a str,
         visibility: FieldVisibilityKind,
+        is_packed: bool,
     ) -> Self {
         let known_type_layout = ty.layout(ctx);
-        let is_packed = comp.is_packed(ctx, known_type_layout.as_ref());
         let (is_rust_union, can_copy_union_fields) =
             comp.is_rust_union(ctx, known_type_layout.as_ref(), name);
         StructLayoutTracker {
@@ -156,9 +156,7 @@ impl<'a> StructLayoutTracker<'a> {
 
         self.latest_field_layout = Some(layout);
         self.last_field_was_bitfield = true;
-        // NB: We intentionally don't update the max_field_align here, since our
-        // bitfields code doesn't necessarily guarantee it, so we need to
-        // actually generate the dummy alignment.
+        self.max_field_align = cmp::max(self.max_field_align, layout.align);
     }
 
     /// Returns a padding field if necessary for a given new field _before_
@@ -214,7 +212,10 @@ impl<'a> StructLayoutTracker<'a> {
                     0
                 } else if !self.is_packed {
                     self.padding_bytes(field_layout)
-                } else if let Some(l) = self.known_type_layout {
+                } else if let Some(mut l) = self.known_type_layout {
+                    if field_layout.align < l.align {
+                        l.align = field_layout.align;
+                    }
                     self.padding_bytes(l)
                 } else {
                     0
