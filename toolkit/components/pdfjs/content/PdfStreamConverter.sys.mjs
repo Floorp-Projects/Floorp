@@ -299,6 +299,9 @@ class ChromeActions {
       supportsMouseWheelZoomMetaKey:
         Services.prefs.getIntPref("mousewheel.with_meta.action") === 3,
       supportsPinchToZoom: Services.prefs.getBoolPref("apz.allow_zooming"),
+      supportsCaretBrowsingMode: Services.prefs.getBoolPref(
+        "accessibility.browsewithcaret"
+      ),
     };
   }
 
