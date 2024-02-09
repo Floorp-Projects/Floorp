@@ -885,7 +885,7 @@
   {
     "testIdPattern": "[page.spec] Page Page.bringToFront should work",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["chrome", "webDriverBiDi"],
+    "parameters": ["webDriverBiDi"],
     "expectations": ["FAIL"]
   },
   {

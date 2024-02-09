@@ -232,25 +232,11 @@ class BrowsingContextModule extends Module {
       );
     }
 
-    const targetTab = lazy.TabManager.getTabForBrowsingContext(context);
-    const targetWindow = lazy.TabManager.getWindowForTab(targetTab);
-    const selectedTab = lazy.TabManager.getTabBrowser(targetWindow).selectedTab;
+    const tab = lazy.TabManager.getTabForBrowsingContext(context);
+    const window = lazy.TabManager.getWindowForTab(tab);
 
-    const activated = [
-      lazy.windowManager.focusWindow(targetWindow),
-      lazy.TabManager.selectTab(targetTab),
-    ];
-
-    if (targetTab !== selectedTab) {
-      // We need to wait until the "document.visibilityState" of the currently
-      // selected tab in the target window is marked as "hidden".
-      const selectedBrowser = lazy.TabManager.getBrowserForTab(selectedTab);
-      activated.push(
-        this.#waitForVisibilityChange(selectedBrowser.browsingContext)
-      );
-    }
-
-    await Promise.all(activated);
+    await lazy.windowManager.focusWindow(window);
+    await lazy.TabManager.selectTab(tab);
   }
 
   /**
@@ -561,39 +547,17 @@ class BrowsingContextModule extends Module {
           );
         }
 
-        // The window to open the new tab in.
-        let window = Services.wm.getMostRecentWindow(null);
-
         let referenceTab;
         if (referenceContext !== null) {
           referenceTab =
             lazy.TabManager.getTabForBrowsingContext(referenceContext);
-          window = lazy.TabManager.getWindowForTab(referenceTab);
         }
 
-        const promises = [];
-
-        if (!background) {
-          // When opening a new foreground tab we need to wait until the
-          // "document.visibilityState" of the currently selected tab in this
-          // window is marked as "hidden".
-          const selectedTab = lazy.TabManager.getTabBrowser(window).selectedTab;
-          promises.push(
-            this.#waitForVisibilityChange(
-              lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
-            )
-          );
-        }
-
-        promises.unshift(
-          lazy.TabManager.addTab({
-            focus: !background,
-            referenceTab,
-            userContextId: userContext,
-          })
-        );
-
-        const [tab] = await Promise.all(promises);
+        const tab = await lazy.TabManager.addTab({
+          focus: !background,
+          referenceTab,
+          userContextId: userContext,
+        });
         browser = lazy.TabManager.getBrowserForTab(tab);
     }
 
@@ -1952,21 +1916,6 @@ class BrowsingContextModule extends Module {
         break;
       }
     }
-  }
-
-  #waitForVisibilityChange(browsingContext) {
-    return this.messageHandler.forwardCommand({
-      moduleName: "browsingContext",
-      commandName: "_awaitVisibilityState",
-      destination: {
-        type: lazy.WindowGlobalMessageHandler.type,
-        id: browsingContext.id,
-      },
-      params: {
-        value: "hidden",
-      },
-      retryOnAbort: true,
-    });
   }
 
   /**
