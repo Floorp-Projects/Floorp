@@ -2,8 +2,8 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 299:
-/***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
+/***/ 140:
+/***/ ((__unused_webpack___webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
 // EXTERNAL MODULE: ./node_modules/react/index.js
@@ -25,8 +25,9 @@ function Header(props) {
 }
 
 /* harmony default export */ const Header_Header = (Header);
-;// CONCATENATED MODULE: ./content/panels/js/messages.js
+;// CONCATENATED MODULE: ./content/panels/js/messages.mjs
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
+
 var pktPanelMessaging = {
   removeMessageListener(messageId, callback) {
     RPMRemoveMessageListener(messageId, callback);
@@ -43,41 +44,39 @@ var pktPanelMessaging = {
       // and we don't want to close a RPMSendQuery promise loop unexpectedly.
       // So instead we setup a response event.
       const responseMessageId = `${messageId}_response`;
-
       var responseListener = responsePayload => {
         callback(responsePayload);
         this.removeMessageListener(responseMessageId, responseListener);
       };
 
       this.addMessageListener(responseMessageId, responseListener);
-    } // Send message
+    }
 
-
+    // Send message
     RPMSendAsyncMessage(messageId, payload);
   },
 
   // Click helper to reduce bugs caused by oversight
   // from different implementations of similar code.
-  clickHelper(element, {
-    source = "",
-    position
-  }) {
+  clickHelper(element, { source = "", position }) {
     element?.addEventListener(`click`, event => {
       event.preventDefault();
+
       this.sendMessage("PKT_openTabWithUrl", {
         url: event.currentTarget.getAttribute(`href`),
         source,
-        position
+        position,
       });
     });
   },
 
   log() {
     RPMSendAsyncMessage("PKT_log", arguments);
-  }
-
+  },
 };
+
 /* harmony default export */ const messages = (pktPanelMessaging);
+
 ;// CONCATENATED MODULE: ./content/panels/js/components/TelemetryLink/TelemetryLink.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -390,9 +389,7 @@ function Home(props) {
 }
 
 /* harmony default export */ const Home_Home = (Home);
-;// CONCATENATED MODULE: ./content/panels/js/home/overlay.js
-/* global Handlebars:false */
-
+;// CONCATENATED MODULE: ./content/panels/js/home/overlay.jsx
 /*
 HomeOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
@@ -503,7 +500,7 @@ function Signup(props) {
 }
 
 /* harmony default export */ const Signup_Signup = (Signup);
-;// CONCATENATED MODULE: ./content/panels/js/signup/overlay.js
+;// CONCATENATED MODULE: ./content/panels/js/signup/overlay.jsx
 /*
 SignupOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
@@ -886,7 +883,7 @@ function Saved(props) {
 }
 
 /* harmony default export */ const Saved_Saved = (Saved);
-;// CONCATENATED MODULE: ./content/panels/js/saved/overlay.js
+;// CONCATENATED MODULE: ./content/panels/js/saved/overlay.jsx
 /*
 SavedOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
@@ -931,7 +928,7 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.jsx
 
 
 
@@ -1042,12 +1039,12 @@ StyleGuideOverlay.prototype = {
 
 };
 /* harmony default export */ const style_guide_overlay = (StyleGuideOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/main.js
+;// CONCATENATED MODULE: ./content/panels/js/main.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 /* global RPMGetStringPref:false */
+
 
 
 
@@ -1078,13 +1075,13 @@ PKT_PANEL.prototype = {
   },
 
   setupObservers() {
-    this.setupMutationObserver(); // Mutation observer isn't always enough for fast loading, static pages.
+    this.setupMutationObserver();
+    // Mutation observer isn't always enough for fast loading, static pages.
     // Sometimes the mutation observer fires before the page is totally visible.
     // In this case, the resize tries to fire with 0 height,
     // and because it's a static page, it only does one mutation.
     // So in this case, we have a backup intersection observer that fires when
     // the page is first visible, and thus, the page is going to guarantee a height.
-
     this.setupIntersectionObserver();
   },
 
@@ -1092,25 +1089,23 @@ PKT_PANEL.prototype = {
     if (this.inited) {
       return;
     }
-
     this.setupObservers();
     this.inited = true;
   },
 
   resizeParent() {
     let clientHeight = document.body.clientHeight;
-
     if (this.overlay.tagsDropdownOpen) {
       clientHeight = Math.max(clientHeight, 252);
-    } // We can ignore 0 height here.
+    }
+
+    // We can ignore 0 height here.
     // We rely on intersection observer to do the
     // resize for 0 height loads.
-
-
     if (clientHeight) {
       messages.sendMessage("PKT_resizePanel", {
         width: document.body.clientWidth,
-        height: clientHeight
+        height: clientHeight,
       });
     }
   },
@@ -1127,45 +1122,43 @@ PKT_PANEL.prototype = {
 
   setupMutationObserver() {
     // Select the node that will be observed for mutations
-    const targetNode = document.body; // Options for the observer (which mutations to observe)
+    const targetNode = document.body;
 
-    const config = {
-      attributes: false,
-      childList: true,
-      subtree: true
-    }; // Callback function to execute when mutations are observed
+    // Options for the observer (which mutations to observe)
+    const config = { attributes: false, childList: true, subtree: true };
 
+    // Callback function to execute when mutations are observed
     const callback = (mutationList, observer) => {
       mutationList.forEach(mutation => {
         switch (mutation.type) {
-          case "childList":
-            {
-              /* One or more children have been added to and/or removed
-                 from the tree.
-                 (See mutation.addedNodes and mutation.removedNodes.) */
-              this.resizeParent();
-              break;
-            }
+          case "childList": {
+            /* One or more children have been added to and/or removed
+               from the tree.
+               (See mutation.addedNodes and mutation.removedNodes.) */
+            this.resizeParent();
+            break;
+          }
         }
       });
-    }; // Create an observer instance linked to the callback function
+    };
 
+    // Create an observer instance linked to the callback function
+    const observer = new MutationObserver(callback);
 
-    const observer = new MutationObserver(callback); // Start observing the target node for configured mutations
-
+    // Start observing the target node for configured mutations
     observer.observe(targetNode, config);
   },
 
   create() {
-    const pockethost = RPMGetStringPref("extensions.pocket.site") || "getpocket.com";
-    this.overlay.create({
-      pockethost
-    });
-  }
-
+    const pockethost =
+      RPMGetStringPref("extensions.pocket.site") || "getpocket.com";
+    this.overlay.create({ pockethost });
+  },
 };
+
 window.PKT_PANEL = PKT_PANEL;
 window.pktPanelMessaging = messages;
+
 
 /***/ })
 
@@ -1294,7 +1287,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(299)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(140)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

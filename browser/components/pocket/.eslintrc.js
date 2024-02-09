@@ -11,14 +11,6 @@ module.exports = {
       version: "17.0.2",
     },
   },
-  overrides: [
-    {
-      files: ["content/**/*.js", "content/**/*.jsx"],
-      parserOptions: {
-        sourceType: "module",
-      },
-    },
-  ],
   rules: {
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,

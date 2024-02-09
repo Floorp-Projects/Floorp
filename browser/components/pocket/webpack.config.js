@@ -5,7 +5,7 @@
 module.exports = {
   mode: "production",
   entry: {
-    main: "./content/panels/js/main.js",
+    main: "./content/panels/js/main.mjs",
   },
   output: {
     filename: "[name].bundle.js",
@@ -14,7 +14,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
+        test: /\.jsx$/,
         exclude: /node_modules/,
         loader: "babel-loader",
         options: {
@@ -24,7 +24,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: [".js", ".jsx"],
+    extensions: [".mjs", ".jsx"],
   },
   optimization: {
     minimize: false,
