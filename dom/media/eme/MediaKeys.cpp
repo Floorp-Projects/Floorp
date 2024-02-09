@@ -800,7 +800,6 @@ void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
   }
 }
 
-// https://w3c.github.io/encrypted-media/#dom-mediakeys-getstatusforpolicy
 already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
     const MediaKeysPolicy& aPolicy, ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
@@ -809,10 +808,15 @@ already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
     return nullptr;
   }
 
-  // 1. If policy has no present members, return a promise rejected with a newly
-  // created TypeError.
-  if (!aPolicy.mMinHdcpVersion.WasPassed()) {
-    promise->MaybeRejectWithTypeError("No minHdcpVersion in MediaKeysPolicy");
+  // Currently, only widevine CDM supports for this API.
+  if (!IsWidevineKeySystem(mKeySystem)) {
+    EME_LOG(
+        "MediaKeys[%p]::GetStatusForPolicy() HDCP policy check on unsupported "
+        "keysystem ",
+        this);
+    NS_WARNING("Tried to query without a CDM");
+    promise->MaybeRejectWithNotSupportedError(
+        "HDCP policy check on unsupported keysystem");
     return promise.forget();
   }
 
@@ -824,9 +828,8 @@ already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
   }
 
   EME_LOG("GetStatusForPolicy minHdcpVersion = %s.",
-          HDCPVersionValues::GetString(aPolicy.mMinHdcpVersion.Value()).data());
-  mProxy->GetStatusForPolicy(StorePromise(promise),
-                             aPolicy.mMinHdcpVersion.Value());
+          NS_ConvertUTF16toUTF8(aPolicy.mMinHdcpVersion).get());
+  mProxy->GetStatusForPolicy(StorePromise(promise), aPolicy.mMinHdcpVersion);
   return promise.forget();
 }
 

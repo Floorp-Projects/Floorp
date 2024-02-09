@@ -210,7 +210,6 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
     aKeySystemConfig.mEncryptionSchemes.AppendElement(
         NS_ConvertUTF8toUTF16(EncryptionSchemeStr(scheme)));
   }
-  aKeySystemConfig.mIsHDCP22Compatible = aCDMConfig.isHDCP22Compatible();
   EME_LOG("New Capabilities=%s",
           NS_ConvertUTF16toUTF8(aKeySystemConfig.GetDebugInfo()).get());
 }

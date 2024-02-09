@@ -80,7 +80,7 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
                                     uint32_t aProtectionMask);
 
   void GetStatusForPolicy(uint32_t aPromiseId,
-                          const dom::HDCPVersion& aMinHdcpVersion);
+                          const nsCString& aMinHdcpVersion);
 
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
 
