@@ -476,10 +476,15 @@ bool AdjustWebSocketLocation(relayBuffer& buffer, connection_info_t* ci) {
   assert(buffer.margin());
   buffer.buffertail[1] = '\0';
 
-  char* wsloc = strstr(buffer.bufferhead, "Sec-WebSocket-Location:");
-  if (!wsloc) return true;
+  char* wsloc_header = strstr(buffer.bufferhead, "Sec-WebSocket-Location:");
+  if (!wsloc_header) {
+    return true;
+  }
   // advance pointer to the start of the hostname
-  wsloc = strstr(wsloc, "ws://");
+  char* wsloc = strstr(wsloc_header, "ws://");
+  if (!wsloc) {
+    wsloc = strstr(wsloc_header, "wss://");
+  }
   if (!wsloc) return false;
   wsloc += 5;
   // find the end of the hostname
