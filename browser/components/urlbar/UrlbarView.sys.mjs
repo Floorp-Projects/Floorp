@@ -2225,6 +2225,8 @@ export class UrlbarView {
           return { id: "urlbar-group-mdn" };
         case "pocket":
           return { id: "urlbar-group-pocket" };
+        case "yelp":
+          return { id: "urlbar-group-local" };
       }
     }
 
@@ -2878,11 +2880,19 @@ export class UrlbarView {
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
       idArgs.push({ id: "urlbar-group-best-match" });
-      if (
-        lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
-        lazy.UrlbarPrefs.get("addonsFeatureGate")
-      ) {
-        idArgs.push({ id: "urlbar-group-addon" });
+      if (lazy.UrlbarPrefs.get("quickSuggestEnabled")) {
+        if (lazy.UrlbarPrefs.get("addonsFeatureGate")) {
+          idArgs.push({ id: "urlbar-group-addon" });
+        }
+        if (lazy.UrlbarPrefs.get("mdn.featureGate")) {
+          idArgs.push({ id: "urlbar-group-mdn" });
+        }
+        if (lazy.UrlbarPrefs.get("pocketFeatureGate")) {
+          idArgs.push({ id: "urlbar-group-pocket" });
+        }
+        if (lazy.UrlbarPrefs.get("yelpFeatureGate")) {
+          idArgs.push({ id: "urlbar-group-local" });
+        }
       }
     }
 

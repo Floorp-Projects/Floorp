@@ -283,3 +283,30 @@ add_task(async function resultMenu_not_interested() {
   await UrlbarTestUtils.promisePopupClose(window);
   UrlbarPrefs.clear("suggest.yelp");
 });
+
+// Tests the row/group label.
+add_task(async function rowLabel() {
+  let tests = [
+    { topPick: true, label: "Local recommendations" },
+    { topPick: false, label: "Firefox Suggest" },
+  ];
+
+  for (let { topPick, label } of tests) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.quicksuggest.yelpPriority", topPick]],
+    });
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "ramen",
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    const row = element.row;
+    Assert.equal(row.getAttribute("label"), label);
+
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  }
+});

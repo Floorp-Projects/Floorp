@@ -42,6 +42,12 @@ urlbar-group-mdn =
 urlbar-group-pocket =
   .label = Recommended reads
 
+# A label shown above urlbar suggestions for businesses and other locations
+# in the user's city or a city they included in their search string (e.g., Yelp
+# suggestions).
+urlbar-group-local =
+  .label = Local recommendations
+
 # Block menu item shown in the result menu of top pick and quick suggest
 # results.
 urlbar-result-menu-dismiss-firefox-suggest =
