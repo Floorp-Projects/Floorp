@@ -11,7 +11,7 @@
 
 #include "base/platform_thread.h"  // for PlatformThreadId
 #include "gfxEnv.h"
-#include "GLTypes.h"
+#include "GLContext.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
@@ -264,7 +264,6 @@ class GLLibraryEGL final {
     const bool CHECK_CONTEXT_OWNERSHIP = true;
     if (CHECK_CONTEXT_OWNERSHIP) {
       const MutexAutoLock lock(mMutex);
-
       const auto tid = PlatformThread::CurrentId();
       const auto prevCtx = fGetCurrentContext();
 
@@ -286,6 +285,11 @@ class GLLibraryEGL final {
         ctxOwnerThread = tid;
       }
     }
+
+    // Always reset the TLS current context.
+    // If we're called by TLS-caching MakeCurrent, after we return true,
+    // the caller will set the TLS correctly anyway.
+    GLContext::ResetTLSCurrentContext();
 
     WRAP(fMakeCurrent(dpy, draw, read, ctx));
   }
