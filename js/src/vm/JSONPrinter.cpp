@@ -33,11 +33,6 @@ void JSONPrinter::indent() {
 }
 
 void JSONPrinter::beforeValue() {
-  if (afterPropName_) {
-    afterPropName_ = false;
-    return;
-  }
-
   if (!first_) {
     out_.putChar(',');
   }
@@ -45,11 +40,6 @@ void JSONPrinter::beforeValue() {
 }
 
 void JSONPrinter::propertyName(const char* name) {
-  propertyNameImpl(name);
-  afterPropName_ = true;
-}
-
-void JSONPrinter::propertyNameImpl(const char* name) {
   beforeValue();
   out_.printf("\"%s\":", name);
   if (indent_) {
@@ -70,7 +60,6 @@ void JSONPrinter::endStringPropertyName() {
   if (indent_) {
     out_.put(" ");
   }
-  afterPropName_ = true;
 }
 
 void JSONPrinter::beginObject() {
@@ -88,14 +77,14 @@ void JSONPrinter::beginList() {
 }
 
 void JSONPrinter::beginObjectProperty(const char* name) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.putChar('{');
   indentLevel_++;
   first_ = true;
 }
 
 void JSONPrinter::beginListProperty(const char* name) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.putChar('[');
   indentLevel_++;
   first_ = true;
@@ -107,7 +96,7 @@ void JSONPrinter::beginInlineListProperty(const char* name) {
 }
 
 GenericPrinter& JSONPrinter::beginStringProperty(const char* name) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.putChar('"');
   return out_;
 }
@@ -126,7 +115,7 @@ GenericPrinter& JSONPrinter::beginString() {
 void JSONPrinter::endString() { out_.putChar('"'); }
 
 void JSONPrinter::boolProperty(const char* name, bool value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.put(value ? "true" : "false");
 }
 
@@ -200,7 +189,7 @@ void JSONPrinter::value(const char* format, ...) {
 }
 
 void JSONPrinter::property(const char* name, int32_t value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.printf("%" PRId32, value);
 }
 
@@ -211,23 +200,23 @@ void JSONPrinter::value(int val) {
 }
 
 void JSONPrinter::property(const char* name, uint32_t value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.printf("%" PRIu32, value);
 }
 
 void JSONPrinter::property(const char* name, int64_t value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.printf("%" PRId64, value);
 }
 
 void JSONPrinter::property(const char* name, uint64_t value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.printf("%" PRIu64, value);
 }
 
 #if defined(XP_DARWIN) || defined(__OpenBSD__) || defined(__wasi__)
 void JSONPrinter::property(const char* name, size_t value) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.printf("%zu", value);
 }
 #endif
@@ -235,7 +224,7 @@ void JSONPrinter::property(const char* name, size_t value) {
 void JSONPrinter::floatProperty(const char* name, double value,
                                 size_t precision) {
   if (!std::isfinite(value)) {
-    propertyNameImpl(name);
+    propertyName(name);
     out_.put("null");
     return;
   }
@@ -254,7 +243,7 @@ void JSONPrinter::property(const char* name, const mozilla::TimeDuration& dur,
     return;
   }
 
-  propertyNameImpl(name);
+  propertyName(name);
   lldiv_t split;
   switch (precision) {
     case SECONDS:
@@ -270,7 +259,7 @@ void JSONPrinter::property(const char* name, const mozilla::TimeDuration& dur,
 }
 
 void JSONPrinter::nullProperty(const char* name) {
-  propertyNameImpl(name);
+  propertyName(name);
   out_.put("null");
 }
 
