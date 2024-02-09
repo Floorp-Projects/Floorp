@@ -16,27 +16,42 @@ add_task(async function test_translations_settings_pane_elements() {
     visible: { settingsButton },
   });
 
-  const { backButton, header } =
+  const {
+    backButton,
+    header,
+    translationsSettingsDescription,
+    translateAlwaysHeader,
+    translateNeverHeader,
+    translateAlwaysAddButton,
+    translateNeverAddButton,
+    translateNeverSiteHeader,
+    translateNeverSiteDesc,
+    translateDownloadLanguagesHeader,
+    translateDownloadLanguagesLearnMore,
+  } =
     await TranslationsSettingsTestUtils.openAboutPreferencesTranslationsSettingsPane(
       settingsButton
     );
 
   assertVisibility({
     message: "Expect paneTranslations elements to be visible.",
-    visible: { backButton, header },
-    hidden: { settingsButton },
+    visible: {
+      backButton,
+      header,
+      translationsSettingsDescription,
+      translateAlwaysHeader,
+      translateNeverHeader,
+      translateAlwaysAddButton,
+      translateNeverAddButton,
+      translateNeverSiteHeader,
+      translateNeverSiteDesc,
+      translateDownloadLanguagesHeader,
+      translateDownloadLanguagesLearnMore,
+    },
+    hidden: {
+      settingsButton,
+    },
   });
-
-  is(
-    header.getAttribute("data-l10n-id"),
-    "translations-settings-header-text",
-    "Translations settings header is localized"
-  );
-  is(
-    backButton.getAttribute("data-l10n-id"),
-    "translations-settings-back-button-text",
-    "Translations settings back button is localized"
-  );
 
   const promise = BrowserTestUtils.waitForEvent(
     document,
@@ -48,10 +63,25 @@ add_task(async function test_translations_settings_pane_elements() {
   click(backButton);
   await promise;
 
-  ok(
-    BrowserTestUtils.isHidden(backButton),
-    "Translations settings Back Button is hidden"
-  );
+  assertVisibility({
+    message: "Expect paneGeneral elements to be visible.",
+    visible: {
+      settingsButton,
+    },
+    hidden: {
+      backButton,
+      header,
+      translationsSettingsDescription,
+      translateAlwaysHeader,
+      translateNeverHeader,
+      translateAlwaysAddButton,
+      translateNeverAddButton,
+      translateNeverSiteHeader,
+      translateNeverSiteDesc,
+      translateDownloadLanguagesHeader,
+      translateDownloadLanguagesLearnMore,
+    },
+  });
 
   await cleanup();
 });

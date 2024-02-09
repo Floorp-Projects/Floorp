@@ -8,7 +8,7 @@ let gTranslationsPane = {
   init() {
     document
       .getElementById("translations-settings-back-button")
-      .addEventListener("command", function () {
+      .addEventListener("click", function () {
         gotoPref("general");
       });
   },
