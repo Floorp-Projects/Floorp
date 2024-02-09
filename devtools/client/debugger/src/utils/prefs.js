@@ -58,6 +58,7 @@ if (isNode()) {
   pref("devtools.debugger.features.log-points", true);
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.features.javascript-tracing", false);
+  pref("devtools.debugger.features.codemirror-next", false);
   pref("devtools.editor.tabsize", 2);
   pref("devtools.editor.expandtab", false);
   pref("devtools.editor.autoclosebrackets", false);
@@ -141,6 +142,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   inlinePreview: ["Bool", "inline-preview"],
   windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
   javascriptTracing: ["Bool", "javascript-tracing"],
+  codemirrorNext: ["Bool", "codemirror-next"],
 });
 
 // Import the asyncStore already spawned by the TargetMixin class

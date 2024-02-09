@@ -60,3 +60,4 @@ pref("devtools.debugger.features.map-expression-bindings", true);
 pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.inline-preview", true);
 pref("devtools.debugger.features.javascript-tracing", false);
+pref("devtools.debugger.features.codemirror-next", false);
