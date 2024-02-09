@@ -1,0 +1,322 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FxviewCategoryNavigation Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <script type="module" src="chrome://browser/content/firefoxview/fxview-category-navigation.mjs"></script>
+</head>
+<style>
+body {
+  display: flex;
+}
+#navigation {
+  width: var(--in-content-sidebar-width);
+}
+fxview-category-button[name="category-one"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="category-two"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="category-three"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="category-four"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="category-five"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+</style>
+<body>
+  <p id="display"></p>
+  <div id="content">
+    <div id="navigation">
+      <fxview-category-navigation>
+        <h2 slot="category-nav-header">Header</h2>
+        <fxview-category-button class="category" slot="category-button" name="category-one">
+          <span class="category-name">Category 1</span>
+        </fxview-category-button>
+        <fxview-category-button class="category" slot="category-button" name="category-two">
+          <span class="category-name">Category 2</span>
+        </fxview-category-button>
+        <fxview-category-button class="category" slot="category-button" name="category-three">
+          <span class="category-name">Category 3</span>
+        </fxview-category-button>
+        <fxview-category-button class="category" slot="category-button" name="category-four">
+          <span class="category-name">Category 4</span>
+        </fxview-category-button>
+        <fxview-category-button class="category" slot="category-button" name="category-five">
+          <span class="category-name">Category 5</span>
+        </fxview-category-button>
+      </fxview-category-navigation>
+    </div>
+  </div>
+<pre id="test"></pre>
+<script>
+  Services.scriptloader.loadSubScript(
+    "chrome://browser/content/utilityOverlay.js",
+    this
+  );
+  const { BrowserTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/BrowserTestUtils.sys.mjs"
+  );
+
+const fxviewCategoryNav = document.querySelector("fxview-category-navigation");
+
+function isActiveElement(expectedActiveEl) {
+    return expectedActiveEl.getRootNode().activeElement == expectedActiveEl;
+  }
+
+  /**
+  * Tests that the first category is selected by default
+  */
+  add_task(async function test_first_item_selected_by_default() {
+    is(
+      fxviewCategoryNav.categoryButtons.length,
+      5,
+      "Five category buttons are in the navigation"
+    );
+
+    ok(
+      fxviewCategoryNav.categoryButtons[0].name === fxviewCategoryNav.currentCategory,
+      "The first category button is selected by default"
+    )
+  });
+
+  /**
+  * Tests that categories are selected when clicked
+  */
+  add_task(async function test_select_category() {
+    let gBrowser = BrowserWindowTracker.getTopWindow().top.gBrowser;
+    let secondCategory = fxviewCategoryNav.categoryButtons[1];
+    let categoryChanged = BrowserTestUtils.waitForEvent(
+      gBrowser,
+      "change-category"
+    );
+
+    secondCategory.buttonEl.click();
+    await categoryChanged;
+
+    ok(
+      secondCategory.name === fxviewCategoryNav.currentCategory,
+      "The second category button is selected"
+    )
+
+    let thirdCategory = fxviewCategoryNav.categoryButtons[2];
+    categoryChanged = BrowserTestUtils.waitForEvent(
+      gBrowser,
+      "change-category"
+    );
+
+    thirdCategory.buttonEl.click();
+    await categoryChanged;
+
+    ok(
+      thirdCategory.name === fxviewCategoryNav.currentCategory,
+      "The third category button is selected"
+    )
+
+    let firstCategory = fxviewCategoryNav.categoryButtons[0];
+    categoryChanged = BrowserTestUtils.waitForEvent(
+      gBrowser,
+      "change-category"
+    );
+
+    firstCategory.buttonEl.click();
+    await categoryChanged;
+
+    ok(
+      firstCategory.name === fxviewCategoryNav.currentCategory,
+      "The first category button is selected"
+    )
+  });
+
+  /**
+  * Tests that categories are keyboard-navigable
+  */
+  add_task(async function test_keyboard_navigation() {
+    const arrowDown = async () => {
+      info("Arrow down");
+      synthesizeKey("KEY_ArrowDown", {});
+      await fxviewCategoryNav.getUpdateComplete();
+    };
+    const arrowUp = async () => {
+      info("Arrow up");
+      synthesizeKey("KEY_ArrowUp", {});
+      await fxviewCategoryNav.getUpdateComplete();
+    };
+    const arrowLeft = async () => {
+      info("Arrow left");
+      synthesizeKey("KEY_ArrowLeft", {});
+      await fxviewCategoryNav.getUpdateComplete();
+    };
+    const arrowRight = async () => {
+      info("Arrow right");
+      synthesizeKey("KEY_ArrowRight", {});
+      await fxviewCategoryNav.getUpdateComplete();
+    };
+
+     // Setting this pref allows the test to run as expected with a keyboard on MacOS
+     await SpecialPowers.pushPrefEnv({
+      set: [["accessibility.tabfocus", 7]],
+    });
+
+    let firstCategory = fxviewCategoryNav.categoryButtons[0];
+    let secondCategory = fxviewCategoryNav.categoryButtons[1];
+    let thirdCategory = fxviewCategoryNav.categoryButtons[2];
+    let fourthCategory = fxviewCategoryNav.categoryButtons[3];
+    let fifthCategory = fxviewCategoryNav.categoryButtons[4];
+
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is selected"
+    )
+    firstCategory.focus();
+    await arrowDown();
+    ok(
+      isActiveElement(secondCategory),
+      "The second category button is the active element after first arrow down"
+    );
+    is(
+      secondCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The second category button is selected"
+    )
+    await arrowDown();
+    is(
+      thirdCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The third category button is selected"
+    )
+    await arrowDown();
+    is(
+      fourthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fourth category button is selected"
+    )
+    await arrowDown();
+    is(
+      fifthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fifth category button is selected"
+    )
+    await arrowDown();
+    is(
+      fifthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fifth category button is still selected"
+    )
+    await arrowUp();
+    is(
+      fourthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fourth category button is selected"
+    )
+    await arrowUp();
+    is(
+      thirdCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The third category button is selected"
+    )
+    await arrowUp();
+    is(
+      secondCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The second category button is selected"
+    )
+    await arrowUp();
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is selected"
+    )
+    await arrowUp();
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is still selected"
+    )
+
+    // Test navigation with arrow left/right keys
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is selected"
+    )
+    firstCategory.focus();
+    await arrowRight();
+    ok(
+      isActiveElement(secondCategory),
+      "The second category button is the active element after first arrow right"
+    );
+    is(
+      secondCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The second category button is selected"
+    )
+    await arrowRight();
+    is(
+      thirdCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The third category button is selected"
+    )
+    await arrowRight();
+    is(
+      fourthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fourth category button is selected"
+    )
+    await arrowRight();
+    is(
+      fifthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fifth category button is selected"
+    )
+    await arrowRight();
+    is(
+      fifthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fifth category button is still selected"
+    )
+    await arrowLeft();
+    is(
+      fourthCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The fourth category button is selected"
+    )
+    await arrowLeft();
+    is(
+      thirdCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The third category button is selected"
+    )
+    await arrowLeft();
+    is(
+      secondCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The second category button is selected"
+    )
+    await arrowLeft();
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is selected"
+    )
+    await arrowLeft();
+    is(
+      firstCategory.name,
+      fxviewCategoryNav.currentCategory,
+      "The first category button is still selected"
+    )
+
+    await SpecialPowers.popPrefEnv();
+  });
+</script>
+</body>
+</html>

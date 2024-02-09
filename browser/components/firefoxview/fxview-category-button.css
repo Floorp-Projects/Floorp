@@ -3,15 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  border-radius: var(--border-radius-small);
-  &:focus-visible {
-    outline-offset: var(--page-nav-focus-outline-inset);
-  }
+  border-radius: 4px;
 }
 
 button {
-  background-color: var(--page-nav-button-background-color);
-  border: 1px solid var(--page-nav-border-color);
+  background-color: initial;
+  border: 1px solid var(--in-content-primary-button-border-color);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   display: grid;
@@ -21,11 +18,11 @@ button {
   font-size: inherit;
   width: 100%;
   font-weight: normal;
-  border-radius: var(--page-nav-button-border-radius);
-  color: var(--page-nav-button-text-color);
+  border-radius: 4px;
+  color: inherit;
   text-align: start;
   transition: background-color 150ms;
-  padding: var(--page-nav-button-padding);
+  padding: var(--fxviewcategorynav-button-padding);
 }
 
 button:hover {
@@ -41,7 +38,8 @@ button:hover {
 
   button:hover,
   button[selected]:hover {
-    background-color: var(--page-nav-button-background-color-hover);
+    background-color: var(--in-content-button-background-hover);
+    border-color: var(--in-content-button-border-color-hover);
   }
 
   button[selected]:hover {
@@ -59,15 +57,15 @@ button:hover {
   }
 
   button[selected]:not(:hover) {
-    color: var(--color-accent-primary);
-    background-color: color-mix(in srgb, var(--page-nav-button-background-color-selected) 5%, transparent);
-    border-inline-start-color: var(--color-accent-primary);
+    color: var(--in-content-accent-color);
+    background-color: color-mix(in srgb, var(--fxview-primary-action-background) 5%, transparent);
+    border-inline-start-color: var(--in-content-accent-color);
   }
 }
 
 @media (prefers-color-scheme: dark) {
   button[selected] {
-    background-color: color-mix(in srgb, var(--page-nav-button-background-color-selected) 12%, transparent);
+    background-color: color-mix(in srgb, var(--fxview-primary-action-background) 12%, transparent);
   }
 }
 
@@ -75,10 +73,13 @@ button:focus-visible,
 button[selected]:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-offset);
-  border-radius: var(--border-radius-small);
 }
 
-.page-nav-icon {
+.category-icon {
+  background-color: initial;
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
   height: 20px;
   width: 20px;
   -moz-context-properties: fill;
@@ -89,7 +90,7 @@ button[selected]:focus-visible {
   button {
     transition: none;
     border-color: ButtonText;
-    background-color: var(--button-background-color);
+    background-color: var(--in-content-button-background);
   }
 
   button:hover {
@@ -104,7 +105,8 @@ button[selected]:focus-visible {
 }
 
 slot {
-  font-size: var(--font-size-large);
+  font-size: 1.13em;
+  line-height: 1.4;
   margin: 0;
   padding-inline-start: 0;
   user-select: none;

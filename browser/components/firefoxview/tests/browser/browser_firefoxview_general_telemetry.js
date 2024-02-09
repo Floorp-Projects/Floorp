@@ -39,7 +39,7 @@ add_task(async function firefox_view_entered_telemetry() {
     enteredTelemetry[4] = { page: "recentlyclosed" };
     enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
 
-    await navigateToViewAndWait(document, "recentlyclosed");
+    navigateToCategory(document, "recentlyclosed");
     await clearAllParentTelemetryEvents();
     await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
     is(
@@ -107,9 +107,9 @@ add_task(async function test_change_page_telemetry() {
       ],
     ];
     await clearAllParentTelemetryEvents();
-    await navigateToViewAndWait(document, "recentlyclosed");
+    navigateToCategory(document, "recentlyclosed");
     await telemetryEvent(changePageEvent);
-    await navigateToViewAndWait(document, "recentbrowsing");
+    navigateToCategory(document, "recentbrowsing");
 
     let openTabsComponent = document.querySelector(
       "view-opentabs[slot=opentabs]"
@@ -189,7 +189,7 @@ add_task(async function test_context_menu_new_window_telemetry() {
     );
 
     // Test history context menu options
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
@@ -245,7 +245,7 @@ add_task(async function test_context_menu_private_window_telemetry() {
     );
 
     // Test history context menu options
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
@@ -314,7 +314,7 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
     );
 
     // Test history context menu options
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
