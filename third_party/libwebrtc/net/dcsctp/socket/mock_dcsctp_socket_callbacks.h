@@ -81,6 +81,9 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
               << message;
         });
     ON_CALL(*this, TimeMillis).WillByDefault([this]() { return now_; });
+    ON_CALL(*this, Now).WillByDefault([this]() {
+      return webrtc::Timestamp::Millis(*now_);
+    });
   }
 
   MOCK_METHOD(SendPacketStatus,
@@ -95,6 +98,7 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
   }
 
   MOCK_METHOD(TimeMs, TimeMillis, (), (override));
+  MOCK_METHOD(webrtc::Timestamp, Now, (), (override));
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override {
     return random_.Rand(low, high);
   }
