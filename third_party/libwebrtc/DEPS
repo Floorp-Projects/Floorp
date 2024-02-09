@@ -276,6 +276,8 @@ deps = {
   # Used for building libFuzzers (only supports Linux).
   'src/third_party/libFuzzer/src':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/compiler-rt/lib/fuzzer.git@758bd21f103a501b362b1ca46fa8fcb692eaa303',
+  'src/third_party/fuzztest/src':
+    'https://chromium.googlesource.com/external/github.com/google/fuzztest.git@b2220493586a1b96ff043cf27aaa6c24f0da8fb3',
   'src/third_party/libjpeg_turbo':
     'https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git@9b894306ec3b28cea46e84c32b56773a98c483da',
   'src/third_party/libsrtp':
