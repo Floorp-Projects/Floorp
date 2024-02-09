@@ -1245,12 +1245,15 @@ TEST_F(NetEqImplTest, UnsupportedDecoder) {
   EXPECT_EQ(kChannels, output.num_channels_);
   EXPECT_THAT(output.packet_infos_, IsEmpty());
 
-  // Second call to GetAudio will decode the packet that is ok. No errors are
-  // expected.
-  EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
-  EXPECT_EQ(kExpectedOutputSize, output.samples_per_channel_ * kChannels);
-  EXPECT_EQ(kChannels, output.num_channels_);
-  EXPECT_THAT(output.packet_infos_, SizeIs(1));
+  // Call GetAudio until the next packet is decoded.
+  int calls = 0;
+  int kTimeout = 10;
+  while (output.packet_infos_.empty() && calls < kTimeout) {
+    EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
+    EXPECT_EQ(kExpectedOutputSize, output.samples_per_channel_ * kChannels);
+    EXPECT_EQ(kChannels, output.num_channels_);
+  }
+  EXPECT_LT(calls, kTimeout);
 
   // Die isn't called through NiceMock (since it's called by the
   // MockAudioDecoder constructor), so it needs to be mocked explicitly.

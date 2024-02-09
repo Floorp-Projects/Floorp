@@ -1642,6 +1642,7 @@ if (rtc_include_tests) {
         "neteq/mock/mock_expand.h",
         "neteq/mock/mock_histogram.h",
         "neteq/mock/mock_neteq_controller.h",
+        "neteq/mock/mock_packet_arrival_history.h",
         "neteq/mock/mock_packet_buffer.h",
         "neteq/mock/mock_red_payload_splitter.h",
         "neteq/mock/mock_statistics_calculator.h",
