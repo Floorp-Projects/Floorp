@@ -149,6 +149,10 @@ export var FormAutofillContent = {
   ) {
     this.debug(`Handling form submission - infered by ${formSubmissionReason}`);
 
+    // Unregister the progress listener since we detected a form submission
+    // (domWin is null in unit tests)
+    getActorFromWindow(domWin)?.unregisterProgressListener();
+
     lazy.AutofillTelemetry.recordFormSubmissionHeuristicCount(
       formSubmissionReason
     );
