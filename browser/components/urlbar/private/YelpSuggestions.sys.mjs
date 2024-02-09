@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -43,7 +44,13 @@ export class YelpSuggestions extends BaseFeature {
     return "yelp";
   }
 
-  makeResult(queryContext, suggestion, searchString) {
+  enable(enabled) {
+    if (!enabled) {
+      this.#merino = null;
+    }
+  }
+
+  async makeResult(queryContext, suggestion, searchString) {
     if (
       this.#showLessFrequentlyCount &&
       searchString.length <=
@@ -54,14 +61,26 @@ export class YelpSuggestions extends BaseFeature {
 
     suggestion.is_top_pick = lazy.UrlbarPrefs.get("yelpSuggestPriority");
 
+    let url = new URL(suggestion.url);
+    let title = suggestion.title;
+    if (!url.searchParams.has("find_loc")) {
+      let city = await this.#fetchCity();
+
+      // If we can't get city from Merino, rely on Yelp own.
+      if (city) {
+        url.searchParams.set("find_loc", city);
+        title = `${title} in ${city}`;
+      }
+    }
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           // TODO: Should define Yelp icon here. Bug 1874624.
-          url: suggestion.url,
-          title: suggestion.title,
+          url: url.toString(),
+          title,
           shouldShowUrl: true,
           bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
         })
@@ -164,4 +183,24 @@ export class YelpSuggestions extends BaseFeature {
     const cap = lazy.UrlbarPrefs.get("yelpShowLessFrequentlyCap") || 0;
     return !cap || this.#showLessFrequentlyCount < cap;
   }
+
+  async #fetchCity() {
+    if (!this.#merino) {
+      this.#merino = new lazy.MerinoClient(this.constructor.name);
+    }
+
+    let results = await this.#merino.fetch({
+      providers: ["geolocation"],
+      query: "",
+    });
+
+    if (!results.length) {
+      return null;
+    }
+
+    let { city, region } = results[0].custom_details.geolocation;
+    return [city, region].filter(loc => !!loc).join(", ");
+  }
+
+  #merino = null;
 }

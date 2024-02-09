@@ -88,6 +88,21 @@ const WEATHER_SUGGESTION = {
 // absolutely will not fire during tests.
 const WEATHER_FETCH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+const GEOLOCATION_DATA = {
+  provider: "geolocation",
+  title: "",
+  url: "https://merino.services.mozilla.com/",
+  is_sponsored: false,
+  score: 0,
+  custom_details: {
+    geolocation: {
+      country: "Japan",
+      region: "Kanagawa",
+      city: "Yokohama",
+    },
+  },
+};
+
 /**
  * Test utils for Merino.
  */
@@ -348,6 +363,14 @@ class _MerinoTestUtils {
       lazy.UrlbarPrefs.clear("suggest.weather");
       lazy.QuickSuggest.weather._test_fetchIntervalMs = -1;
     });
+  }
+
+  /**
+   * Initializes the mock Merino geolocation server.
+   */
+  async initGeolocation() {
+    await this.server.start();
+    this.server.response.body.suggestions = [GEOLOCATION_DATA];
   }
 
   #initDepth = 0;
