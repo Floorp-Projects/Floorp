@@ -276,19 +276,26 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   SafeRefPtr<InternalRequest> request;
 
   RefPtr<AbortSignal> signal;
+  bool bodyFromInit = false;
 
   if (aInput.IsRequest()) {
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
-    inputReq->GetBody(getter_AddRefs(body));
-    if (inputReq->BodyUsed()) {
-      aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
-      return nullptr;
-    }
 
-    // The body will be copied when GetRequestConstructorCopy() is executed.
-    if (body) {
+    if (aInit.mBody.WasPassed() && !aInit.mBody.Value().IsNull()) {
+      bodyFromInit = true;
       hasCopiedBody = true;
+    } else {
+      inputReq->GetBody(getter_AddRefs(body));
+      if (inputReq->BodyUsed()) {
+        aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+        return nullptr;
+      }
+
+      // The body will be copied when GetRequestConstructorCopy() is executed.
+      if (body) {
+        hasCopiedBody = true;
+      }
     }
 
     request = inputReq->GetInternalRequest();
@@ -602,7 +609,7 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   auto domRequest =
       MakeSafeRefPtr<Request>(aGlobal, std::move(request), signal);
 
-  if (aInput.IsRequest()) {
+  if (aInput.IsRequest() && !bodyFromInit) {
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
