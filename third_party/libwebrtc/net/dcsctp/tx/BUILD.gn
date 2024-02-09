@@ -89,6 +89,7 @@ rtc_library("retransmission_error_counter") {
 
 rtc_library("retransmission_timeout") {
   deps = [
+    "../../../api/units:time_delta",
     "../../../rtc_base:checks",
     "../public:types",
   ]

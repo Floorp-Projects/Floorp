@@ -68,7 +68,7 @@ class TransmissionControlBlock : public Context {
   TSN peer_initial_tsn() const override { return peer_initial_tsn_; }
   DcSctpSocketCallbacks& callbacks() const override { return callbacks_; }
   void ObserveRTT(webrtc::TimeDelta rtt) override;
-  DurationMs current_rto() const override { return rto_.rto(); }
+  DurationMs current_rto() const override { return DurationMs(rto_.rto()); }
   bool IncrementTxErrorCounter(absl::string_view reason) override {
     return tx_error_counter_.Increment(reason);
   }
@@ -91,7 +91,7 @@ class TransmissionControlBlock : public Context {
   StreamResetHandler& stream_reset_handler() { return stream_reset_handler_; }
   HeartbeatHandler& heartbeat_handler() { return heartbeat_handler_; }
   size_t cwnd() const { return retransmission_queue_.cwnd(); }
-  DurationMs current_srtt() const { return rto_.srtt(); }
+  DurationMs current_srtt() const { return DurationMs(rto_.srtt()); }
 
   // Returns this socket's verification tag, set in all packet headers.
   VerificationTag my_verification_tag() const { return my_verification_tag_; }
