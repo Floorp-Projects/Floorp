@@ -2372,6 +2372,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":dtls_srtp_transport",
       ":dtls_transport",
       ":dtmf_sender",
+      ":enable_fake_media",
       ":ice_server_parsing",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
@@ -2532,7 +2533,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":libjingle_peerconnection",
       ":pc_test_utils",
       ":rtc_pc",
-      "../api:callfactory_api",
       "../api:rtc_event_log_output_file",
       "../api:rtc_stats_api",
       "../api:rtp_parameters",
@@ -2729,6 +2729,23 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_library("enable_fake_media") {
+    testonly = true
+    visibility = [ ":*" ]
+    sources = [
+      "test/enable_fake_media.cc",
+      "test/enable_fake_media.h",
+    ]
+    deps = [
+      ":media_factory",
+      "../api:libjingle_peerconnection_api",
+      "../call:call_interfaces",
+      "../media:rtc_media_tests_utils",
+      "../rtc_base:checks",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
+  }
+
   rtc_library("pc_test_utils") {
     testonly = true
     sources = [
@@ -2761,6 +2778,7 @@ if (rtc_include_tests && !build_with_chromium) {
     deps = [
       ":channel",
       ":channel_interface",
+      ":enable_fake_media",
       ":jitter_buffer_delay",
       ":libjingle_peerconnection",
       ":peer_connection_internal",
