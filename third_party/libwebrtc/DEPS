@@ -312,6 +312,10 @@ deps = {
 
   'src/third_party/openh264/src':
     'https://chromium.googlesource.com/external/github.com/cisco/openh264@09a4f3ec842a8932341b195c5b01e141c8a16eb7',
+
+  'src/third_party/re2/src':
+    'https://chromium.googlesource.com/external/github.com/google/re2.git@24d460a9db6048b9d3e05cfdea13ec9d592545ad',
+
   'src/third_party/r8': {
       'packages': [
           {
