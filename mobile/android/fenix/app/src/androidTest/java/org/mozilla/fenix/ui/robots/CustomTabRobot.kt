@@ -48,21 +48,24 @@ class CustomTabRobot {
     fun verifyMainMenuButton() = assertUIObjectExists(mainMenuButton())
 
     fun verifyDesktopSiteButtonExists() {
+        Log.i(TAG, "verifyDesktopSiteButtonExists: Trying to verify that the request desktop site button is displayed")
         desktopSiteButton().check(matches(isDisplayed()))
-        Log.i(TAG, "verifyDesktopSiteButtonExists: Verified request desktop site button is displayed")
+        Log.i(TAG, "verifyDesktopSiteButtonExists: Verified that the request desktop site button is displayed")
     }
 
     fun verifyFindInPageButtonExists() {
+        Log.i(TAG, "verifyFindInPageButtonExists: Trying to verify that the find in page button is displayed")
         findInPageButton().check(matches(isDisplayed()))
-        Log.i(TAG, "verifyFindInPageButtonExists: Verified find in page button is displayed")
+        Log.i(TAG, "verifyFindInPageButtonExists: Verified that the find in page button is displayed")
     }
 
     fun verifyPoweredByTextIsDisplayed() =
         assertUIObjectExists(itemContainingText("POWERED BY $appName"))
 
     fun verifyOpenInBrowserButtonExists() {
+        Log.i(TAG, "verifyOpenInBrowserButtonExists: Trying to verify that the \"Open in Firefox\" button is displayed")
         openInBrowserButton().check(matches(isDisplayed()))
-        Log.i(TAG, "verifyOpenInBrowserButtonExists: Verified open in browser button is displayed")
+        Log.i(TAG, "verifyOpenInBrowserButtonExists: Verified that the \"Open in Firefox\" button is displayed")
     }
 
     fun verifyBackButtonExists() = assertUIObjectExists(itemWithDescription("Back"))
@@ -74,8 +77,9 @@ class CustomTabRobot {
     fun verifyCustomMenuItem(label: String) = assertUIObjectExists(itemContainingText(label))
 
     fun verifyCustomTabCloseButton() {
+        Log.i(TAG, "verifyCustomTabCloseButton: Trying to verify that the close custom tab button is displayed")
         closeButton().check(matches(isDisplayed()))
-        Log.i(TAG, "verifyCustomTabCloseButton: Verified close custom tab button is displayed")
+        Log.i(TAG, "verifyCustomTabCloseButton: Verified that the close custom tab button is displayed")
     }
 
     fun verifyCustomTabToolbarTitle(title: String) {
@@ -109,13 +113,16 @@ class CustomTabRobot {
             mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar")),
             waitingTime,
         )
+        Log.i(TAG, "longCLickAndCopyToolbarUrl: Trying to long click the custom tab toolbar")
         customTabToolbar().click(LONG_CLICK_DURATION)
-        Log.i(TAG, "longCLickAndCopyToolbarUrl: Long clicked custom tab toolbar")
+        Log.i(TAG, "longCLickAndCopyToolbarUrl: Long clicked the custom tab toolbar")
         clickContextMenuItem("Copy")
     }
 
     fun fillAndSubmitLoginCredentials(userName: String, password: String) {
+        Log.i(TAG, "fillAndSubmitLoginCredentials: Waiting for device to be idle for $waitingTime ms")
         mDevice.waitForIdle(waitingTime)
+        Log.i(TAG, "fillAndSubmitLoginCredentials: Waited for device to be idle for $waitingTime ms")
         setPageObjectText(itemWithResId("username"), userName)
         setPageObjectText(itemWithResId("password"), password)
         clickPageObject(itemWithResId("submit"))
@@ -126,11 +133,13 @@ class CustomTabRobot {
     }
 
     fun waitForPageToLoad() {
+        Log.i(TAG, "waitForPageToLoad: Waiting for $waitingTime ms until progress bar is gone")
         progressBar().waitUntilGone(waitingTime)
-        Log.i(TAG, "waitForPageToLoad: Waited $waitingTime ms until progress bar was gone")
+        Log.i(TAG, "waitForPageToLoad: Waited for $waitingTime ms until progress bar was gone")
     }
 
     fun clickCustomTabCloseButton() {
+        Log.i(TAG, "clickCustomTabCloseButton: Trying to click close custom tab button")
         closeButton().click()
         Log.i(TAG, "clickCustomTabCloseButton: Clicked close custom tab button")
     }
@@ -147,10 +156,12 @@ class CustomTabRobot {
     class Transition {
         fun openMainMenu(interact: CustomTabRobot.() -> Unit): Transition {
             mainMenuButton().also {
-                Log.i(TAG, "openMainMenu: Looking for main menu button")
+                Log.i(TAG, "openMainMenu: Waiting for $waitingTime ms for the main menu button to exist")
                 it.waitForExists(waitingTime)
+                Log.i(TAG, "openMainMenu: Waited for $waitingTime ms for the main menu button to exist")
+                Log.i(TAG, "openMainMenu: Trying to click the main menu button")
                 it.click()
-                Log.i(TAG, "openMainMenu: Clicked main menu button")
+                Log.i(TAG, "openMainMenu: Clicked the main menu button")
             }
 
             CustomTabRobot().interact()
@@ -158,16 +169,18 @@ class CustomTabRobot {
         }
 
         fun clickOpenInBrowserButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "clickOpenInBrowserButton: Trying to click the \"Open in Firefox\" button")
             openInBrowserButton().perform(click())
-            Log.i(TAG, "clickOpenInBrowserButton: Clicked \"Open in Firefox\" button")
+            Log.i(TAG, "clickOpenInBrowserButton: Clicked the \"Open in Firefox\" button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            Log.i(TAG, "clickShareButton: Trying to click the share button")
             itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)).click()
-            Log.i(TAG, "clickShareButton: Clicked share button")
+            Log.i(TAG, "clickShareButton: Clicked the share button")
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
