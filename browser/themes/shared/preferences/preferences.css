@@ -70,10 +70,12 @@ groupbox[data-category] {
 }
 
 html|h1 {
+  font-size: var(--font-size-xlarge);
   margin: 0 0 var(--space-small);
 }
 
 html|h2 {
+  font-size: var(--font-size-large);
   margin: var(--space-small) 0 var(--space-xxsmall) 0;
 }
 

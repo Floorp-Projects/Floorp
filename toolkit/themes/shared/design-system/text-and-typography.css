@@ -8,12 +8,18 @@
 }
 
 h1,
+.heading-xlarge {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xxlarge);
+}
+
+h2,
 .heading-large {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xlarge);
 }
 
-h2,
+h3,
 .heading-medium {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-large);

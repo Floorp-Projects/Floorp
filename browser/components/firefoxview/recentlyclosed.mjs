@@ -350,7 +350,7 @@ class RecentlyClosedTabsInView extends ViewPage {
           ?hidden=${!this.selectedTab}
         >
           <h2
-            class="page-header heading-large"
+            class="page-header"
             data-l10n-id="firefoxview-recently-closed-header"
           ></h2>
           ${when(
