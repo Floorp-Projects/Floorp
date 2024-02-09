@@ -1,0 +1,439 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Core :: Graphics: ImageLib"
+
+avif:
+  decode_result:
+    type: labeled_counter
+    labels:
+      - success
+      - parse_error
+      - no_primary_item
+      - decode_error
+      - size_overflow
+      - out_of_memory
+      - pipe_init_error
+      - write_buffer_error
+      - alpha_y_sz_mismatch
+      - alpha_y_bpc_mismatch
+      - ispe_mismatch
+      - render_size_mismatch
+      - frame_size_changed
+      - invalid_cicp
+      - invalid_parse_status
+      - missing_brand
+      - ftyp_not_first
+      - no_image
+      - multiple_moov
+      - no_moov
+      - lsel_no_essential
+      - a1op_no_essential
+      - a1lx_essential
+      - txform_no_essential
+      - image_item_type
+      - item_type_missing
+      - construction_method
+      - item_loc_not_found
+      - no_item_data_box
+      - no_samples
+      - uncategorized
+    description: >
+      Decode result of AVIF image.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  decoder:
+    type: labeled_counter
+    labels:
+      - dav1d
+      - aom
+    description: >
+      Decoder of AVIF image.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  aom_decode_error:
+    type: labeled_counter
+    labels:
+      - error
+      - mem_error
+      - abi_mismatch
+      - incapable
+      - unsup_bitstream
+      - unsup_feature
+      - corrupt_frame
+      - invalid_param
+    description: >
+      Image-decode Error from AOM decoder
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1690406
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1690406#c3
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  yuv_color_space:
+    type: labeled_counter
+    labels:
+      - bt601
+      - bt709
+      - bt2020
+      - identity
+      - unknown
+    description: >
+      YUV color space of AVIF image.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  bit_depth:
+    type: labeled_counter
+    labels:
+      - color_8
+      - color_10
+      - color_12
+      - color_16
+      - unknown
+    gecko_datapoint: AVIF_BIT_DEPTH
+    description: >
+      Bits per pixel of AVIF image.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  alpha:
+    type: labeled_counter
+    labels:
+      - absent
+      - present
+    description: >
+      AVIF alpha plane.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  colr:
+    type: labeled_counter
+    labels:
+      - nclx
+      - icc
+      - absent
+      - both
+    description: >
+      AVIF colour information type.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729071
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729071#c15
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  cicp_cp:
+    type: labeled_counter
+    labels:
+      - reserved
+      - bt709
+      - unspecified
+      - reserved_3
+      - bt470m
+      - bt470bg
+      - bt601
+      - smpte240
+      - generic_film
+      - bt2020
+      - xyz
+      - smpte431
+      - smpte432
+      - reserved_13
+      - reserved_14
+      - reserved_15
+      - reserved_16
+      - reserved_17
+      - reserved_18
+      - reserved_19
+      - reserved_20
+      - reserved_21
+      - ebu3213
+      - reserved_rest
+    description: >
+      AVIF CICP colour primaries.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  cicp_tc:
+    type: labeled_counter
+    labels:
+      - reserved
+      - bt709
+      - unspecified
+      - reserved_3
+      - bt470m
+      - bt470bg
+      - bt601
+      - smpte240
+      - linear
+      - log_100
+      - log_100_sqrt10
+      - iec61966
+      - bt_1361
+      - srgb
+      - bt2020_10bit
+      - bt2020_12bit
+      - smpte2084
+      - smpte428
+      - hlg
+      - reserved_rest
+    description: >
+      AVIF CICP transfer characteristics.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  cicp_mc:
+    type: labeled_counter
+    labels:
+      - identity
+      - bt709
+      - unspecified
+      - reserved
+      - fcc
+      - bt470bg
+      - bt601
+      - smpte240
+      - ycgco
+      - bt2020_ncl
+      - bt2020_cl
+      - smpte2085
+      - chromat_ncl
+      - chromat_cl
+      - ictcp
+      - reserved_rest
+    description: >
+      AVIF CICP transfer characteristics.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  ispe:
+    type: labeled_counter
+    labels:
+      - valid
+      - absent
+      - bitstream_mismatch
+    description: >
+      AVIF spatial extents (image size).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  pixi:
+    type: labeled_counter
+    labels:
+      - valid
+      - absent
+      - bitstream_mismatch
+    description: >
+      AVIF pixel information (bits per channel).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  pasp:
+    type: labeled_counter
+    labels:
+      - absent
+      - square
+      - nonsquare
+      - invalid
+    description: >
+      AVIF pixel aspect ratio.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  a1lx:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AV1LayeredImageIndexingProperty (a1lx).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  a1op:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AVIF OperatingPointSelectorProperty (a1op).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  clap:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AVIF CleanApertureBox (clap).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  grid:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AVIF AVIF grid-based image.
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  ipro:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AVIF ItemProtectionBox (ipro).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
+
+  lsel:
+    type: labeled_counter
+    labels:
+      - present
+      - absent
+    description: >
+      AVIF LayerSelectorProperty (lsel).
+      (Migrated from the geckoview metric of the same name).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877840
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
