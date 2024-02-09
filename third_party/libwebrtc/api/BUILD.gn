@@ -86,12 +86,10 @@ if (!build_with_chromium && !build_with_mozilla) {
       "create_peerconnection_factory.h",
     ]
     deps = [
-      ":callfactory_api",
+      ":enable_media",
       ":libjingle_peerconnection_api",
       ":scoped_refptr",
       "../api/rtc_event_log:rtc_event_log_factory",
-      "../media:rtc_audio_video",
-      "../media:rtc_media_base",
       "../modules/audio_device:audio_device_api",
       "../modules/audio_processing:api",
       "../pc:peer_connection_factory",
