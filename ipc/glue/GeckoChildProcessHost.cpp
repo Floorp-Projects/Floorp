@@ -1627,25 +1627,6 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoFinishLaunch() {
     return err;
   }
 
-#  ifdef MOZ_SANDBOX
-  if (!mUseSandbox) {
-    // We need to be able to duplicate handles to some types of non-sandboxed
-    // child processes.
-    switch (mProcessType) {
-      case GeckoProcessType_Default:
-        MOZ_CRASH("shouldn't be launching a parent process");
-      case GeckoProcessType_IPDLUnitTest:
-        // No handle duplication necessary.
-        break;
-      default:
-        if (!SandboxBroker::AddTargetPeer(mResults.mHandle)) {
-          NS_WARNING("Failed to add child process as target peer.");
-        }
-        break;
-    }
-  }
-#  endif  // MOZ_SANDBOX
-
   return Ok();
 }
 #endif  // XP_WIN

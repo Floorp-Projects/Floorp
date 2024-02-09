@@ -119,9 +119,6 @@ Result<Ok, mozilla::ipc::LaunchError> RemoteSandboxBroker::LaunchApp(
 
   *aProcessHandle = (void**)(ourChildHandle);
 
-  base::ProcessHandle process = *aProcessHandle;
-  SandboxBroker::AddTargetPeer(process);
-
   return Ok();
 }
 
