@@ -342,10 +342,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
     rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
-    // TODO(bugs.webrtc.org/15111):
-    //   Remove the raw AudioFrameProcessor pointer in the follow-up.
-    webrtc::AudioFrameProcessor* audio_frame_processor,
-    std::unique_ptr<webrtc::AudioFrameProcessor> owned_audio_frame_processor,
+    std::unique_ptr<webrtc::AudioFrameProcessor> audio_frame_processor,
     const webrtc::FieldTrialsView& trials)
     : task_queue_factory_(task_queue_factory),
       adm_(adm),
@@ -353,8 +350,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
       decoder_factory_(decoder_factory),
       audio_mixer_(audio_mixer),
       apm_(audio_processing),
-      audio_frame_processor_(audio_frame_processor),
-      owned_audio_frame_processor_(std::move(owned_audio_frame_processor)),
+      audio_frame_processor_(std::move(audio_frame_processor)),
       minimized_remsampling_on_mobile_trial_enabled_(
           IsEnabled(trials, "WebRTC-Audio-MinimizeResamplingOnMobile")) {
   RTC_LOG(LS_INFO) << "WebRtcVoiceEngine::WebRtcVoiceEngine";
@@ -423,11 +419,7 @@ void WebRtcVoiceEngine::Init() {
     if (audio_frame_processor_) {
       config.async_audio_processing_factory =
           rtc::make_ref_counted<webrtc::AsyncAudioProcessing::Factory>(
-              *audio_frame_processor_, *task_queue_factory_);
-    } else if (owned_audio_frame_processor_) {
-      config.async_audio_processing_factory =
-          rtc::make_ref_counted<webrtc::AsyncAudioProcessing::Factory>(
-              std::move(owned_audio_frame_processor_), *task_queue_factory_);
+              std::move(audio_frame_processor_), *task_queue_factory_);
     }
     audio_state_ = webrtc::AudioState::Create(config);
   }
