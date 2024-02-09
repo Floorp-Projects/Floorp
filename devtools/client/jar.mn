@@ -246,8 +246,6 @@ devtools.jar:
     content/debugger/images/regex-match.svg (debugger/images/regex-match.svg)
     content/debugger/images/search.svg (debugger/images/search.svg)
     content/debugger/images/sourcemap.svg (debugger/images/sourcemap.svg)
-    content/debugger/images/sourcemap-active.svg (debugger/images/sourcemap-active.svg)
-    content/debugger/images/sourcemap-disabled.svg (debugger/images/sourcemap-disabled.svg)
     content/debugger/images/stepIn.svg (debugger/images/stepIn.svg)
     content/debugger/images/stepOut.svg (debugger/images/stepOut.svg)
     content/debugger/images/tab.svg (debugger/images/tab.svg)

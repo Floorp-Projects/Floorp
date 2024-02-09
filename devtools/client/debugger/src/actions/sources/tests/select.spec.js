@@ -8,6 +8,7 @@ import {
   createStore,
   createSourceObject,
   makeSource,
+  makeSourceURL,
   waitForState,
   makeOriginalSource,
 } from "../../../utils/test-head";
@@ -174,5 +175,21 @@ describe("sources", () => {
 
     const selected = getSelectedLocation(getState());
     expect(selected && selected.line).toBe(1);
+  });
+
+  describe("selectSourceURL", () => {
+    it("should automatically select a pending source", async () => {
+      const { dispatch, getState } = createStore(mockCommandClient);
+      const baseSourceURL = makeSourceURL("base.js");
+      await dispatch(actions.selectSourceURL(baseSourceURL));
+
+      expect(getSelectedSource(getState())).toBe(undefined);
+      const baseSource = await dispatch(
+        actions.newGeneratedSource(makeSource("base.js"))
+      );
+
+      const selected = getSelectedSource(getState());
+      expect(selected && selected.url).toBe(baseSource.url);
+    });
   });
 });

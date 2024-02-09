@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`has syntax error should return the error object for the invalid expression 1`] = `"SyntaxError : Missing semicolon. (1:3)"`;

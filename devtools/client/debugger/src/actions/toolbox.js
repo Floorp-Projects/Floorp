@@ -12,12 +12,6 @@ export function openLink(url) {
   };
 }
 
-export function openSourceMap(url, line, column) {
-  return async function ({ panel }) {
-    return panel.toolbox.viewSource(url, line, column);
-  };
-}
-
 export function evaluateInConsole(inputString) {
   return async ({ panel }) => {
     return panel.openConsoleAndEvaluate(inputString);
