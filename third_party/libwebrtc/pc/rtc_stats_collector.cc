@@ -336,7 +336,7 @@ const char* QualityLimitationReasonToRTCQualityLimitationReason(
 
 std::map<std::string, double>
 QualityLimitationDurationToRTCQualityLimitationDuration(
-    std::map<webrtc::QualityLimitationReason, int64_t> durations_ms) {
+    std::map<QualityLimitationReason, int64_t> durations_ms) {
   std::map<std::string, double> result;
   // The internal duration is defined in milliseconds while the spec defines
   // the value in seconds:
@@ -513,7 +513,7 @@ std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
 
 std::unique_ptr<RTCAudioPlayoutStats> CreateAudioPlayoutStats(
     const AudioDeviceModule::Stats& audio_device_stats,
-    webrtc::Timestamp timestamp) {
+    Timestamp timestamp) {
   auto stats = std::make_unique<RTCAudioPlayoutStats>(
       /*id=*/kAudioPlayoutSingletonId, timestamp);
   stats->synthesized_samples_duration =

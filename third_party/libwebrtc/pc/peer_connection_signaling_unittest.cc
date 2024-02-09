@@ -896,8 +896,8 @@ TEST_P(PeerConnectionSignalingTest, UnsupportedContentType) {
       "m=bogus 9 FOO 0 8\r\n"
       "c=IN IP4 0.0.0.0\r\n"
       "a=mid:bogusmid\r\n";
-  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
-      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+  std::unique_ptr<SessionDescriptionInterface> remote_description =
+      CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
 
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(remote_description)));
 
@@ -977,8 +977,8 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFec) {
       "a=ssrc-group:FEC-FR 1224551896 1953032773\r\n"
       "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n"
       "a=ssrc:1953032773 cname:/exJcmhSLpyu9FgV\r\n";
-  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
-      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+  std::unique_ptr<SessionDescriptionInterface> remote_description =
+      CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
 
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(remote_description)));
 
@@ -1033,8 +1033,8 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFecReoffer) {
       "a=ssrc-group:FEC-FR 1224551896 1953032773\r\n"
       "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n"
       "a=ssrc:1953032773 cname:/exJcmhSLpyu9FgV\r\n";
-  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
-      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+  std::unique_ptr<SessionDescriptionInterface> remote_description =
+      CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
 
   EXPECT_TRUE(caller->SetRemoteDescription(std::move(remote_description)));
 
@@ -1104,8 +1104,8 @@ TEST_P(PeerConnectionSignalingTest, MidAttributeMaxLength) {
       "a=rtcp-fb:102 nack\r\n"
       "a=rtcp-fb:102 nack pli\r\n"
       "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n";
-  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
-      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+  std::unique_ptr<SessionDescriptionInterface> remote_description =
+      CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
 
   EXPECT_FALSE(caller->SetRemoteDescription(std::move(remote_description)));
 }
@@ -1339,8 +1339,8 @@ TEST_F(PeerConnectionSignalingUnifiedPlanTest, RtxReofferApt) {
       "a=rtcp-fb:102 nack\r\n"
       "a=rtcp-fb:102 nack pli\r\n"
       "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n";
-  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
-      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+  std::unique_ptr<SessionDescriptionInterface> remote_description =
+      CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
 
   EXPECT_TRUE(callee->SetRemoteDescription(std::move(remote_description)));
 

@@ -33,9 +33,7 @@ class TransportObserver : public RtpPacketSinkInterface {
     rtp_transport->SubscribeReadyToSend(
         this, [this](bool arg) { OnReadyToSend(arg); });
     rtp_transport->SetUnDemuxableRtpPacketReceivedHandler(
-        [this](webrtc::RtpPacketReceived& packet) {
-          OnUndemuxableRtpPacket(packet);
-        });
+        [this](RtpPacketReceived& packet) { OnUndemuxableRtpPacket(packet); });
     rtp_transport->SubscribeSentPacket(this,
                                        [this](const rtc::SentPacket& packet) {
                                          sent_packet_count_++;

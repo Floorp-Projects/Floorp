@@ -138,7 +138,7 @@ class ConnectionContext final
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::NetworkManager> default_network_manager_
       RTC_GUARDED_BY(signaling_thread_);
-  std::unique_ptr<webrtc::CallFactoryInterface> const call_factory_
+  std::unique_ptr<CallFactoryInterface> const call_factory_
       RTC_GUARDED_BY(worker_thread());
 
   std::unique_ptr<rtc::PacketSocketFactory> default_socket_factory_

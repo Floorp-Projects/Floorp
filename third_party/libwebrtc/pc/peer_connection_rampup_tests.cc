@@ -201,7 +201,7 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     fake_network_managers_.emplace_back(fake_network_manager);
 
     auto observer = std::make_unique<MockPeerConnectionObserver>();
-    webrtc::PeerConnectionDependencies dependencies(observer.get());
+    PeerConnectionDependencies dependencies(observer.get());
     cricket::BasicPortAllocator* port_allocator =
         new cricket::BasicPortAllocator(fake_network_manager,
                                         firewall_socket_factory_.get());

@@ -263,9 +263,9 @@ class FakeAudioTrackForStats : public MediaStreamTrack<AudioTrackInterface> {
   std::string kind() const override {
     return MediaStreamTrackInterface::kAudioKind;
   }
-  webrtc::AudioSourceInterface* GetSource() const override { return nullptr; }
-  void AddSink(webrtc::AudioTrackSinkInterface* sink) override {}
-  void RemoveSink(webrtc::AudioTrackSinkInterface* sink) override {}
+  AudioSourceInterface* GetSource() const override { return nullptr; }
+  void AddSink(AudioTrackSinkInterface* sink) override {}
+  void RemoveSink(AudioTrackSinkInterface* sink) override {}
   bool GetSignalLevel(int* level) override { return false; }
   rtc::scoped_refptr<AudioProcessorInterface> GetAudioProcessor() override {
     return processor_;
@@ -2030,7 +2030,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   EXPECT_TRUE(report->Get(*expected_pair.transport_id));
 
   // Set bandwidth and "GetStats" again.
-  webrtc::Call::Stats call_stats;
+  Call::Stats call_stats;
   const int kSendBandwidth = 888;
   call_stats.send_bandwidth_bps = kSendBandwidth;
   const int kRecvBandwidth = 999;
@@ -2339,12 +2339,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].key_frames_decoded = 3;
   video_media_info.receivers[0].frames_dropped = 13;
   video_media_info.receivers[0].qp_sum = absl::nullopt;
-  video_media_info.receivers[0].total_decode_time =
-      webrtc::TimeDelta::Seconds(9);
-  video_media_info.receivers[0].total_processing_delay =
-      webrtc::TimeDelta::Millis(600);
-  video_media_info.receivers[0].total_assembly_time =
-      webrtc::TimeDelta::Millis(500);
+  video_media_info.receivers[0].total_decode_time = TimeDelta::Seconds(9);
+  video_media_info.receivers[0].total_processing_delay = TimeDelta::Millis(600);
+  video_media_info.receivers[0].total_assembly_time = TimeDelta::Millis(500);
   video_media_info.receivers[0].frames_assembled_from_multiple_packets = 23;
   video_media_info.receivers[0].total_inter_frame_delay = 0.123;
   video_media_info.receivers[0].total_squared_inter_frame_delay = 0.00456;
@@ -2617,12 +2614,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
   video_media_info.senders[0].key_frames_encoded = 3;
   video_media_info.senders[0].total_encode_time_ms = 9000;
   video_media_info.senders[0].total_encoded_bytes_target = 1234;
-  video_media_info.senders[0].total_packet_send_delay =
-      webrtc::TimeDelta::Seconds(10);
+  video_media_info.senders[0].total_packet_send_delay = TimeDelta::Seconds(10);
   video_media_info.senders[0].quality_limitation_reason =
       QualityLimitationReason::kBandwidth;
-  video_media_info.senders[0].quality_limitation_durations_ms
-      [webrtc::QualityLimitationReason::kBandwidth] = 300;
+  video_media_info.senders[0]
+      .quality_limitation_durations_ms[QualityLimitationReason::kBandwidth] =
+      300;
   video_media_info.senders[0].quality_limitation_resolution_changes = 56u;
   video_media_info.senders[0].qp_sum = absl::nullopt;
   video_media_info.senders[0].content_type = VideoContentType::UNSPECIFIED;

@@ -186,10 +186,10 @@ flat_set<uint32_t> RtpTransport::GetSsrcsForSink(RtpPacketSinkInterface* sink) {
 
 void RtpTransport::DemuxPacket(rtc::CopyOnWriteBuffer packet,
                                int64_t packet_time_us) {
-  webrtc::RtpPacketReceived parsed_packet(
-      &header_extension_map_, packet_time_us == -1
-                                  ? Timestamp::MinusInfinity()
-                                  : Timestamp::Micros(packet_time_us));
+  RtpPacketReceived parsed_packet(&header_extension_map_,
+                                  packet_time_us == -1
+                                      ? Timestamp::MinusInfinity()
+                                      : Timestamp::Micros(packet_time_us));
   if (!parsed_packet.Parse(std::move(packet))) {
     RTC_LOG(LS_ERROR)
         << "Failed to parse the incoming RTP packet before demuxing. Drop it.";

@@ -68,7 +68,7 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
 #ifdef WEBRTC_ANDROID
     InitializeAndroidObjects();
 #endif
-    webrtc::PeerConnectionInterface::IceServer ice_server;
+    PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     config_.servers.push_back(ice_server);
     config_.sdp_semantics = SdpSemantics::kUnifiedPlan;
@@ -108,7 +108,7 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
   std::unique_ptr<rtc::SocketServer> socket_server_;
   rtc::AutoSocketServerThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;
-  webrtc::PeerConnectionInterface::RTCConfiguration config_;
+  PeerConnectionInterface::RTCConfiguration config_;
 };
 
 // Tests for the dependency descriptor field trial. The dependency descriptor
@@ -133,7 +133,7 @@ TEST_F(PeerConnectionFieldTrialTest, EnableDependencyDescriptorAdvertised) {
       media_description1->rtp_header_extensions();
 
   bool found = absl::c_find_if(rtp_header_extensions1,
-                               [](const webrtc::RtpExtension& rtp_extension) {
+                               [](const RtpExtension& rtp_extension) {
                                  return rtp_extension.uri ==
                                         RtpExtension::kDependencyDescriptorUri;
                                }) != rtp_header_extensions1.end();
@@ -163,14 +163,14 @@ TEST_F(PeerConnectionFieldTrialTest, InjectDependencyDescriptor) {
       media_description1->rtp_header_extensions();
 
   bool found1 = absl::c_find_if(rtp_header_extensions1,
-                                [](const webrtc::RtpExtension& rtp_extension) {
+                                [](const RtpExtension& rtp_extension) {
                                   return rtp_extension.uri ==
                                          RtpExtension::kDependencyDescriptorUri;
                                 }) != rtp_header_extensions1.end();
   EXPECT_FALSE(found1);
 
   std::set<int> existing_ids;
-  for (const webrtc::RtpExtension& rtp_extension : rtp_header_extensions1) {
+  for (const RtpExtension& rtp_extension : rtp_header_extensions1) {
     existing_ids.insert(rtp_extension.id);
   }
 
@@ -207,7 +207,7 @@ TEST_F(PeerConnectionFieldTrialTest, InjectDependencyDescriptor) {
       media_description2->rtp_header_extensions();
 
   bool found2 = absl::c_find_if(rtp_header_extensions2,
-                                [](const webrtc::RtpExtension& rtp_extension) {
+                                [](const RtpExtension& rtp_extension) {
                                   return rtp_extension.uri ==
                                          RtpExtension::kDependencyDescriptorUri;
                                 }) != rtp_header_extensions2.end();

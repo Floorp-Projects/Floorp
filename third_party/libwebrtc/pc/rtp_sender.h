@@ -87,7 +87,7 @@ class RtpSenderInternal : public RtpSenderInterface {
 
   // Additional checks that are specific to the current codec settings
   virtual RTCError CheckCodecParameters(const RtpParameters& parameters) {
-    return webrtc::RTCError::OK();
+    return RTCError::OK();
   }
 
   // Returns an ID that changes every time SetTrack() is called, but

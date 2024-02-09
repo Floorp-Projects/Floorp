@@ -177,9 +177,9 @@ class LegacyStatsCollector : public LegacyStatsCollectorInterface {
   void ExtractMediaInfo(
       const std::map<std::string, std::string>& transport_names_by_mid);
   void ExtractSenderInfo();
-  webrtc::StatsReport* GetReport(const StatsReport::StatsType& type,
-                                 const std::string& id,
-                                 StatsReport::Direction direction);
+  StatsReport* GetReport(const StatsReport::StatsType& type,
+                         const std::string& id,
+                         StatsReport::Direction direction);
 
   // Helper method to get stats from the local audio tracks.
   void UpdateStatsFromExistingLocalAudioTracks(bool has_remote_tracks);

@@ -56,7 +56,7 @@ static const char kDataMid1[] = "data1";
 
 namespace webrtc {
 
-class FakeIceTransportFactory : public webrtc::IceTransportFactory {
+class FakeIceTransportFactory : public IceTransportFactory {
  public:
   ~FakeIceTransportFactory() override = default;
   rtc::scoped_refptr<IceTransportInterface> CreateIceTransport(
@@ -72,7 +72,7 @@ class FakeDtlsTransportFactory : public cricket::DtlsTransportFactory {
  public:
   std::unique_ptr<cricket::DtlsTransportInternal> CreateDtlsTransport(
       cricket::IceTransportInternal* ice,
-      const webrtc::CryptoOptions& crypto_options,
+      const CryptoOptions& crypto_options,
       rtc::SSLProtocolVersion max_version) override {
     return std::make_unique<FakeDtlsTransport>(
         static_cast<cricket::FakeIceTransport*>(ice));
@@ -379,7 +379,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
   // Transport controller needs to be destroyed first, because it may issue
   // callbacks that modify the changed_*_by_mid in the destructor.
   std::unique_ptr<JsepTransportController> transport_controller_;
-  webrtc::test::ScopedKeyValueConfig field_trials_;
+  test::ScopedKeyValueConfig field_trials_;
 };
 
 TEST_F(JsepTransportControllerTest, GetRtpTransport) {
@@ -425,7 +425,7 @@ TEST_F(JsepTransportControllerTest, GetDtlsTransport) {
   // and verify that the resulting container is empty.
   auto dtls_transport =
       transport_controller_->LookupDtlsTransportByMid(kVideoMid1);
-  webrtc::DtlsTransport* my_transport =
+  DtlsTransport* my_transport =
       static_cast<DtlsTransport*>(dtls_transport.get());
   EXPECT_NE(nullptr, my_transport->internal());
   transport_controller_.reset();
@@ -899,7 +899,7 @@ TEST_F(JsepTransportControllerTest,
       transport_controller_->GetDtlsTransport(kAudioMid1));
   fake_audio_dtls->fake_ice_transport()->MaybeStartGathering();
   fake_audio_dtls->fake_ice_transport()->SetTransportState(
-      webrtc::IceTransportState::kChecking,
+      IceTransportState::kChecking,
       cricket::IceTransportState::STATE_CONNECTING);
   EXPECT_EQ_WAIT(PeerConnectionInterface::kIceConnectionChecking,
                  ice_connection_state_, kTimeout);
