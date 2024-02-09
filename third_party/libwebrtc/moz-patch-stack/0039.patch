@@ -1,54 +1,47 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 18 Feb 2021 17:23:00 -0800
-Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
- r=pehrsons
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-Upstreaming bug 1697385
-
-Differential Revision: https://phabricator.services.mozilla.com/D107899
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- modules/video_capture/windows/device_info_ds.cc | 3 ++-
- modules/video_capture/windows/device_info_ds.h  | 6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 9d22f42f4d..f6927281f3 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
-                                     char* deviceUniqueIdUTF8,
-                                     uint32_t deviceUniqueIdUTF8Length,
-                                     char* productUniqueIdUTF8,
--                                    uint32_t productUniqueIdUTF8Length) {
-+                                    uint32_t productUniqueIdUTF8Length,
-+                                    pid_t* pid) {
-   MutexLock lock(&_apiLock);
-   const int32_t result = GetDeviceInfo(
-       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index ed2a726d6f..e6dfaed366 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -12,8 +12,11 @@
- #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
- 
- #include <dshow.h>
-+#include <Ks.h>
-+#include <dbt.h>
- 
- #include "modules/video_capture/device_info_impl.h"
-+#include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_impl.h"
- 
- namespace webrtc {
-@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8,
--                        uint32_t productUniqueIdUTF8Length) override;
-+                        uint32_t productUniqueIdUTF8Length,
-+                        pid_t* pid) override;
- 
-   /*
-    * Display OS /capture device specific settings dialog
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
++
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
++
++#include_next <X11/extensions/Xrandr.h>
++
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_
