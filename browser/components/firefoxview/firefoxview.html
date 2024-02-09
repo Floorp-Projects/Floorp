@@ -41,51 +41,54 @@
     ></script>
     <script
       type="module"
-      src="chrome://browser/content/firefoxview/syncedtabs.mjs"
+      src="chrome://browser/content/firefoxview/fxview-category-navigation.mjs"
     ></script>
     <script
       type="module"
-      src="chrome://global/content/elements/moz-page-nav.mjs"
+      src="chrome://browser/content/firefoxview/syncedtabs.mjs"
     ></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
   </head>
 
   <body>
-    <moz-page-nav
-      data-l10n-id="firefoxview-page-heading"
-      data-l10n-attrs="heading"
-    >
-      <moz-page-nav-button
-        view="recentbrowsing"
+    <fxview-category-navigation>
+      <h1 slot="category-nav-header" data-l10n-id="firefoxview-page-title"></h1>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="recentbrowsing"
         data-l10n-id="firefoxview-overview-nav"
-        iconSrc="chrome://browser/content/firefoxview/view-recentbrowsing.svg"
       >
-      </moz-page-nav-button>
-      <moz-page-nav-button
-        view="opentabs"
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="opentabs"
         data-l10n-id="firefoxview-opentabs-nav"
-        iconSrc="chrome://browser/content/firefoxview/view-opentabs.svg"
       >
-      </moz-page-nav-button>
-      <moz-page-nav-button
-        view="recentlyclosed"
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="recentlyclosed"
         data-l10n-id="firefoxview-recently-closed-nav"
-        iconSrc="chrome://browser/content/firefoxview/view-recentlyclosed.svg"
       >
-      </moz-page-nav-button>
-      <moz-page-nav-button
-        view="syncedtabs"
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="syncedtabs"
         data-l10n-id="firefoxview-synced-tabs-nav"
-        iconSrc="chrome://browser/content/firefoxview/view-syncedtabs.svg"
       >
-      </moz-page-nav-button>
-      <moz-page-nav-button
-        view="history"
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="history"
         data-l10n-id="firefoxview-history-nav"
-        iconSrc="chrome://browser/content/firefoxview/view-history.svg"
       >
-      </moz-page-nav-button>
-    </moz-page-nav>
+      </fxview-category-button>
+    </fxview-category-navigation>
     <main id="pages" role="application" data-l10n-id="firefoxview-page-label">
       <div class="main-container">
         <named-deck>

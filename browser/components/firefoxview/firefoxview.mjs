@@ -3,35 +3,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let pageList = [];
-let viewsDeck = null;
-let pageNav = null;
+let categoryPagesDeck = null;
+let categoryNavigation = null;
 let activeComponent = null;
 let searchKeyboardShortcut = null;
 
 const { topChromeWindow } = window.browsingContext;
 
 function onHashChange() {
-  let view = document.location?.hash.substring(1);
-  if (!view || !pageList.includes(view)) {
-    view = "recentbrowsing";
+  let page = document.location?.hash.substring(1);
+  if (!page || !pageList.includes(page)) {
+    page = "recentbrowsing";
   }
-  changeView(view);
+  changePage(page);
 }
 
-function changeView(view) {
-  viewsDeck.selectedViewName = view;
-  pageNav.currentPage = view;
-  if (pageNav.pageNavButtons.includes(document.activeElement)) {
-    let currentPageButton = pageNav.pageNavButtons.find(
-      pageButton => pageButton.view === view
+function changePage(page) {
+  categoryPagesDeck.selectedViewName = page;
+  categoryNavigation.currentCategory = page;
+  if (categoryNavigation.categoryButtons.includes(document.activeElement)) {
+    let currentCategoryButton = categoryNavigation.categoryButtons.find(
+      categoryButton => categoryButton.name === page
     );
-    (currentPageButton || pageNav.pageNavButtons[0]).focus();
+    (currentCategoryButton || categoryNavigation.categoryButtons[0]).focus();
   }
 }
 
-function onViewsDeckViewChange() {
-  for (const child of viewsDeck.children) {
-    if (child.getAttribute("name") == viewsDeck.selectedViewName) {
+function onPagesDeckViewChange() {
+  for (const child of categoryPagesDeck.children) {
+    if (child.getAttribute("name") == categoryPagesDeck.selectedViewName) {
       child.enter();
       activeComponent = child;
     } else {
@@ -41,11 +41,11 @@ function onViewsDeckViewChange() {
 }
 
 function recordNavigationTelemetry(source, eventTarget) {
-  let view = "recentbrowsing";
+  let page = "recentbrowsing";
   if (source === "category-navigation") {
-    view = eventTarget.parentNode.currentView;
+    page = eventTarget.parentNode.currentCategory;
   } else if (source === "view-all") {
-    view = eventTarget.shortPageName;
+    page = eventTarget.shortPageName;
   }
   // Record telemetry
   Services.telemetry.recordEvent(
@@ -54,7 +54,7 @@ function recordNavigationTelemetry(source, eventTarget) {
     "navigation",
     null,
     {
-      page: view,
+      page,
       source,
     }
   );
@@ -73,7 +73,7 @@ async function updateSearchTextboxSize() {
     const placeholder = msg.attributes[0].value;
     maxLength = Math.max(maxLength, placeholder.length);
   }
-  for (const child of viewsDeck.children) {
+  for (const child of categoryPagesDeck.children) {
     child.searchTextboxSize = maxLength;
   }
 }
@@ -89,15 +89,15 @@ async function updateSearchKeyboardShortcut() {
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
 
-  pageNav = document.querySelector("moz-page-nav");
-  viewsDeck = document.querySelector("named-deck");
+  categoryNavigation = document.querySelector("fxview-category-navigation");
+  categoryPagesDeck = document.querySelector("named-deck");
 
-  for (const item of pageNav.pageNavButtons) {
-    pageList.push(item.getAttribute("view"));
+  for (const item of categoryNavigation.categoryButtons) {
+    pageList.push(item.getAttribute("name"));
   }
   window.addEventListener("hashchange", onHashChange);
-  window.addEventListener("change-view", function (event) {
-    location.hash = event.target.getAttribute("view");
+  window.addEventListener("change-category", function (event) {
+    location.hash = event.target.getAttribute("name");
     window.scrollTo(0, 0);
     recordNavigationTelemetry("category-navigation", event.target);
   });
@@ -105,11 +105,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     recordNavigationTelemetry("view-all", event.originalTarget);
   });
 
-  viewsDeck.addEventListener("view-changed", onViewsDeckViewChange);
+  categoryPagesDeck.addEventListener("view-changed", onPagesDeckViewChange);
 
   // set the initial state
   onHashChange();
-  onViewsDeckViewChange();
+  onPagesDeckViewChange();
   await updateSearchTextboxSize();
   await updateSearchKeyboardShortcut();
 

@@ -22,7 +22,7 @@ add_task(async function test_notification_dot_indicator() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
-    await navigateToViewAndWait(document, "opentabs");
+    await navigateToCategoryAndWait(document, "opentabs");
     // load page that opens prompt when page is hidden
     let openedTab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
@@ -48,7 +48,7 @@ add_task(async function test_notification_dot_indicator() {
     await openTabs.updateComplete;
 
     await TestUtils.waitForCondition(
-      () => openTabs.viewCards[0].tabList.rowEls[0].attention,
+      () => openTabs.viewCards[0].tabList.rowEls[1].attention,
       "The opened tab doesn't have the attention property, so no notification dot is shown."
     );
 
@@ -79,7 +79,7 @@ add_task(async function test_container_indicator() {
       URLs[0]
     );
 
-    await navigateToViewAndWait(document, "opentabs");
+    await navigateToCategoryAndWait(document, "opentabs");
 
     let openTabs = document.querySelector("view-opentabs[name=opentabs]");
 
@@ -118,7 +118,7 @@ add_task(async function test_container_indicator() {
 add_task(async function test_sound_playing_muted_indicator() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToViewAndWait(document, "opentabs");
+    await navigateToCategoryAndWait(document, "opentabs");
 
     // Load a page in a container tab
     let soundTab = await BrowserTestUtils.openNewForegroundTab(
@@ -146,7 +146,7 @@ add_task(async function test_sound_playing_muted_indicator() {
       "The tab list hasn't rendered."
     );
 
-    let soundPlayingTabElem = openTabs.viewCards[0].tabList.rowEls[0];
+    let soundPlayingTabElem = openTabs.viewCards[0].tabList.rowEls[1];
 
     await TestUtils.waitForCondition(() => soundPlayingTabElem.soundPlaying);
 

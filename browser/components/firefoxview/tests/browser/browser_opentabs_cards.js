@@ -21,7 +21,7 @@ add_setup(function () {
 async function navigateToOpenTabs(browser) {
   const document = browser.contentDocument;
   if (document.querySelector("named-deck").selectedViewName != "opentabs") {
-    await navigateToViewAndWait(browser.contentDocument, "opentabs");
+    await navigateToCategoryAndWait(browser.contentDocument, "opentabs");
   }
 }
 
@@ -591,7 +591,7 @@ add_task(async function search_open_tabs_recent_browsing() {
   });
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await navigateToViewAndWait(browser.contentDocument, "recentbrowsing");
+    await navigateToCategoryAndWait(browser.contentDocument, "recentbrowsing");
     const recentBrowsing = browser.contentDocument.querySelector(
       "view-recentbrowsing"
     );

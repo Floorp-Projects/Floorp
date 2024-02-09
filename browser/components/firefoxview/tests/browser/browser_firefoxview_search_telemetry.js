@@ -56,7 +56,7 @@ add_task(async function test_search_initiated_telemetry() {
     EventUtils.sendString("example.com", content);
     await telemetryEvent(searchEvent("recentbrowsing"));
 
-    await navigateToViewAndWait(document, "opentabs");
+    await navigateToCategoryAndWait(document, "opentabs");
     await clearAllParentTelemetryEvents();
     is(document.location.hash, "#opentabs", "Searching within open tabs.");
     const openTabs = document.querySelector("named-deck > view-opentabs");
@@ -65,7 +65,7 @@ add_task(async function test_search_initiated_telemetry() {
     EventUtils.sendString("example.com", content);
     await telemetryEvent(searchEvent("opentabs"));
 
-    await navigateToViewAndWait(document, "recentlyclosed");
+    await navigateToCategoryAndWait(document, "recentlyclosed");
     await clearAllParentTelemetryEvents();
     is(
       document.location.hash,
@@ -84,7 +84,7 @@ add_task(async function test_search_initiated_telemetry() {
     EventUtils.sendString("example.com", content);
     await telemetryEvent(searchEvent("recentlyclosed"));
 
-    await navigateToViewAndWait(document, "syncedtabs");
+    await navigateToCategoryAndWait(document, "syncedtabs");
     await clearAllParentTelemetryEvents();
     is(document.location.hash, "#syncedtabs", "Searching within synced tabs.");
     const syncedTabs = document.querySelector("named-deck > view-syncedtabs");
@@ -93,7 +93,7 @@ add_task(async function test_search_initiated_telemetry() {
     EventUtils.sendString("example.com", content);
     await telemetryEvent(searchEvent("syncedtabs"));
 
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     await clearAllParentTelemetryEvents();
     is(document.location.hash, "#history", "Searching within history.");
     const history = document.querySelector("named-deck > view-history");
@@ -310,7 +310,7 @@ add_task(async function test_sort_history_search_telemetry() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
 
     const searchTextbox = await TestUtils.waitForCondition(
@@ -426,7 +426,7 @@ add_task(async function test_cumulative_searches_recently_closed_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToViewAndWait(document, "recentlyclosed");
+    await navigateToCategoryAndWait(document, "recentlyclosed");
     is(
       document.location.hash,
       "#recentlyclosed",
@@ -471,7 +471,7 @@ add_task(async function test_cumulative_searches_open_tabs_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToViewAndWait(document, "opentabs");
+    await navigateToCategoryAndWait(document, "opentabs");
     is(document.location.hash, "#opentabs", "Searching within open tabs.");
     const openTabs = document.querySelector("named-deck > view-opentabs");
 
@@ -517,7 +517,7 @@ add_task(async function test_cumulative_searches_history_telemetry() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    await navigateToViewAndWait(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     is(document.location.hash, "#history", "Searching within history.");
     const history = document.querySelector("named-deck > view-history");
     const searchTextbox = await TestUtils.waitForCondition(() => {
@@ -579,7 +579,7 @@ add_task(async function test_cumulative_searches_syncedtabs_telemetry() {
     const { document } = browser.contentWindow;
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
-    await navigateToViewAndWait(document, "syncedtabs");
+    await navigateToCategoryAndWait(document, "syncedtabs");
     is(document.location.hash, "#syncedtabs", "Searching within synced tabs.");
     let syncedTabs = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
