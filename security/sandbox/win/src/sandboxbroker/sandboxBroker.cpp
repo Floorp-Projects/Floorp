@@ -1809,16 +1809,6 @@ bool SandboxBroker::AllowReadFile(wchar_t const* file) {
   return true;
 }
 
-/* static */
-bool SandboxBroker::AddTargetPeer(HANDLE aPeerProcess) {
-  if (!sBrokerService) {
-    return false;
-  }
-
-  sandbox::ResultCode result = sBrokerService->AddTargetPeer(aPeerProcess);
-  return (sandbox::SBOX_ALL_OK == result);
-}
-
 void SandboxBroker::AddHandleToShare(HANDLE aHandle) {
   mPolicy->AddHandleToShare(aHandle);
 }
