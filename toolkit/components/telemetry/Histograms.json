@@ -8665,7 +8665,7 @@
   },
   "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 100,
@@ -8677,7 +8677,7 @@
   },
   "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 100,
@@ -11334,16 +11334,6 @@
     "kind": "enumerated",
     "n_values": 5,
     "description": "Counts the number of entries in the sample description box (stsd) for a track in an mp4. Recorded each time we process a track's metadata while parsing mp4s."
-  },
-  "MEDIA_DECODING_PROCESS_CRASH": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["media-alerts@mozilla.com"],
-    "bug_numbers": [1304268],
-    "expires_in_version": "never",
-    "kind": "count",
-    "operating_systems": ["android"],
-    "description": "Records a value each time GeckoView remote decoding process crashes unexpectedly while decoding media content."
   },
   "MEDIA_AUDIO_INIT_FAILURE": {
     "record_in_processes": ["main", "content"],
@@ -17411,20 +17401,9 @@
     "alert_emails": ["jvarga@mozilla.com", "storage-telemetry@mozilla.com"],
     "description": "Time (ms) for the QuotaManager to shutdown. Keyed by conditions during shutdown, see RecordTimeDeltaHelper::Run in https://searchfox.org/mozilla-central/source/dom/quota/ActorsParent.cpp"
   },
-  "GV_CONTENT_PROCESS_LIFETIME_MS": {
-    "record_in_processes": ["main"],
-    "products": ["geckoview_streaming"],
-    "alert_emails": ["geckoview-team@mozilla.com", "asferro@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 3600000,
-    "n_buckets": 100,
-    "bug_numbers": [1625325],
-    "description": "GeckoView: The uptime of content processes in ms"
-  },
   "GV_PAGE_LOAD_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["geckoview-team@mozilla.com", "esawin@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -17435,7 +17414,7 @@
   },
   "GV_PAGE_LOAD_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["geckoview-team@mozilla.com", "esawin@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -17446,7 +17425,7 @@
   },
   "GV_PAGE_RELOAD_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "geckoview-team@mozilla.com",
       "sefeng@mozilla.com",
@@ -17458,28 +17437,6 @@
     "n_buckets": 100,
     "bug_numbers": [1549519, 1580077],
     "description": "GeckoView: Time taken to reload a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted."
-  },
-  "GV_STARTUP_RUNTIME_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["geckoview-team@mozilla.com", "esawin@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "bug_numbers": [1499418, 1584109],
-    "description": "GeckoView: Time taken to initialize GeckoRuntime in ms."
-  },
-  "GV_STARTUP_MODULES_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["geckoview-team@mozilla.com", "esawin@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 50,
-    "bug_numbers": [1499418],
-    "description": "GeckoView: Time taken to initialize all GeckoView modules in ms."
   },
   "HTTP_TRAFFIC_ANALYSIS_3": {
     "record_in_processes": ["main"],

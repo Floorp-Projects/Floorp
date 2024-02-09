@@ -15,33 +15,30 @@ export var InitializationTracker = {
   },
 };
 
-// A helper for histogram timer probes.
-export class HistogramStopwatch {
-  constructor(aName, aAssociated) {
-    this._name = aName;
-    this._obj = aAssociated;
+// A helper for timing_distribution metrics.
+export class GleanStopwatch {
+  constructor(aTimingDistribution) {
+    this._metric = aTimingDistribution;
   }
 
   isRunning() {
-    return TelemetryStopwatch.running(this._name, this._obj);
+    return !!this._timerId;
   }
 
   start() {
     if (this.isRunning()) {
       this.cancel();
     }
-    TelemetryStopwatch.start(this._name, this._obj);
+    this._timerId = this._metric.start();
   }
 
   finish() {
-    TelemetryStopwatch.finish(this._name, this._obj);
+    this._metric.stopAndAccumulate(this._timerId);
+    this._timerId = null;
   }
 
   cancel() {
-    TelemetryStopwatch.cancel(this._name, this._obj);
-  }
-
-  timeElapsed() {
-    return TelemetryStopwatch.timeElapsed(this._name, this._obj, false);
+    this._metric.cancel(this._timerId);
+    this._timerId = null;
   }
 }

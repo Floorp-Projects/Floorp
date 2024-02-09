@@ -9,3 +9,42 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - "Toolkit :: Startup and Profile System"
+
+gecko:
+  version:
+    description: >
+      The version of the Gecko engine, example: 74.0a1
+      (Migrated from the geckoview metric of the same name).
+    type: string
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877576
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
+
+  build_id:
+    description: >
+      The Buildid of the Gecko engine, example: 20200205124310
+      (Migrated from the geckoview metric of the same name).
+    type: string
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877576
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never

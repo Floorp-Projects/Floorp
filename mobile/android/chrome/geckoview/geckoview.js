@@ -18,7 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
   GeckoViewActorManager: "resource://gre/modules/GeckoViewActorManager.sys.mjs",
   GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.sys.mjs",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
-  HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.sys.mjs",
   InitializationTracker: "resource://gre/modules/GeckoViewTelemetry.sys.mjs",
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
@@ -54,13 +53,6 @@ var ModuleManager = {
   },
 
   init(aBrowser, aModules) {
-    const MODULES_INIT_PROBE = new HistogramStopwatch(
-      "GV_STARTUP_MODULES_MS",
-      aBrowser
-    );
-
-    MODULES_INIT_PROBE.start();
-
     const initData = this._initData;
     this._browser = aBrowser;
     this._settings = initData.settings;
@@ -121,8 +113,6 @@ var ModuleManager = {
 
       this._modules.clear();
     });
-
-    MODULES_INIT_PROBE.finish();
   },
 
   onPrintWindow(aParams) {

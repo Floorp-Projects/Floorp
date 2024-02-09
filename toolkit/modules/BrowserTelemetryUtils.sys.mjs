@@ -56,9 +56,6 @@ export var BrowserTelemetryUtils = {
     }
 
     let originCount = this.computeSiteOriginCount(aWindows, aIsGeckoView);
-    let histogram = Services.telemetry.getHistogramById(
-      "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS"
-    );
 
     // Discard the first load because most of the time the first load only has 1
     // tab and 1 window open, so it is useless to report it.
@@ -67,7 +64,7 @@ export var BrowserTelemetryUtils = {
     } else if (currentTime >= this._lastRecordSiteOrigin + this.min_interval) {
       this._lastRecordSiteOrigin = currentTime;
 
-      histogram.add(originCount);
+      Glean.geckoview.documentSiteOrigins.accumulateSamples([originCount]);
     }
   },
 };
