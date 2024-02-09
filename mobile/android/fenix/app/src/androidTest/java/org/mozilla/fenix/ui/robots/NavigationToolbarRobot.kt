@@ -61,10 +61,33 @@ class NavigationToolbarRobot {
     fun verifyUrl(url: String) =
         onView(withId(R.id.mozac_browser_toolbar_url_view)).check(matches(withText(url)))
 
-    fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
+    fun verifyTabButtonShortcutMenuItems() {
+        onView(withId(R.id.mozac_browser_menu_recyclerView))
+            .check(matches(hasDescendant(withText("Close tab"))))
+            .check(matches(hasDescendant(withText("New private tab"))))
+            .check(matches(hasDescendant(withText("New tab"))))
+    }
 
-    fun verifyReaderViewDetected(visible: Boolean = false) =
-        assertReaderViewDetected(visible)
+    fun verifyReaderViewDetected(visible: Boolean = false) {
+        mDevice.findObject(
+            UiSelector()
+                .description("Reader view"),
+        )
+            .waitForExists(waitingTime)
+
+        onView(
+            allOf(
+                withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
+                withContentDescription("Reader view"),
+            ),
+        ).check(
+            if (visible) {
+                matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+            } else {
+                ViewAssertions.doesNotExist()
+            },
+        )
+    }
 
     fun toggleReaderView() {
         mDevice.findObject(
@@ -374,13 +397,6 @@ fun openEditURLView() {
     Log.i(TAG, "openEditURLView: Edit URL bar displayed.")
 }
 
-private fun assertTabButtonShortcutMenuItems() {
-    onView(withId(R.id.mozac_browser_menu_recyclerView))
-        .check(matches(hasDescendant(withText("Close tab"))))
-        .check(matches(hasDescendant(withText("New private tab"))))
-        .check(matches(hasDescendant(withText("New tab"))))
-}
-
 private fun urlBar() = mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
 private fun awesomeBar() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
@@ -391,27 +407,6 @@ private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBarButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_clear_view")
 private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
-
-private fun assertReaderViewDetected(visible: Boolean) {
-    mDevice.findObject(
-        UiSelector()
-            .description("Reader view"),
-    )
-        .waitForExists(waitingTime)
-
-    onView(
-        allOf(
-            withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
-            withContentDescription("Reader view"),
-        ),
-    ).check(
-        if (visible) {
-            matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-        } else {
-            ViewAssertions.doesNotExist()
-        },
-    )
-}
 
 private fun searchSelectorButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/search_selector"))
