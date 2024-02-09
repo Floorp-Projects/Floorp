@@ -61,15 +61,10 @@ class NavigationToolbarRobot {
     fun verifyUrl(url: String) =
         onView(withId(R.id.mozac_browser_toolbar_url_view)).check(matches(withText(url)))
 
-    fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
-
     fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
 
     fun verifyReaderViewDetected(visible: Boolean = false) =
         assertReaderViewDetected(visible)
-
-    fun verifyCloseReaderViewDetected(visible: Boolean = false) =
-        assertCloseReaderViewDetected(visible)
 
     fun toggleReaderView() {
         mDevice.findObject(
@@ -379,13 +374,6 @@ fun openEditURLView() {
     Log.i(TAG, "openEditURLView: Edit URL bar displayed.")
 }
 
-private fun assertNoHistoryBookmarks() {
-    onView(withId(R.id.container))
-        .check(matches(not(hasDescendant(withText("Test_Page_1")))))
-        .check(matches(not(hasDescendant(withText("Test_Page_2")))))
-        .check(matches(not(hasDescendant(withText("Test_Page_3")))))
-}
-
 private fun assertTabButtonShortcutMenuItems() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .check(matches(hasDescendant(withText("Close tab"))))
@@ -415,27 +403,6 @@ private fun assertReaderViewDetected(visible: Boolean) {
         allOf(
             withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
             withContentDescription("Reader view"),
-        ),
-    ).check(
-        if (visible) {
-            matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-        } else {
-            ViewAssertions.doesNotExist()
-        },
-    )
-}
-
-private fun assertCloseReaderViewDetected(visible: Boolean) {
-    mDevice.findObject(
-        UiSelector()
-            .description("Close reader view"),
-    )
-        .waitForExists(waitingTime)
-
-    onView(
-        allOf(
-            withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
-            withContentDescription("Close reader view"),
         ),
     ).check(
         if (visible) {
