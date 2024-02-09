@@ -102,7 +102,7 @@ class StyleSheetWatcher {
       })
     );
 
-    this._onAvailable(resources);
+    await this._onAvailable(resources);
   }
 
   _notifyResourceUpdated(

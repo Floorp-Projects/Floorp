@@ -83,15 +83,11 @@ add_task(async function () {
   clickOnSidebarTab(document, "response");
 
   // Get all messages present in the "Response" panel
-  let frames = await waitFor(() => {
-    const nodeList = document.querySelectorAll(
-      "#messages-view .message-list-table .message-list-item"
-    );
-    return nodeList.length === 2 ? nodeList : null;
-  });
+  const frames = document.querySelectorAll(
+    "#messages-view .message-list-table .message-list-item"
+  );
 
   // Check expected results
-
   is(frames.length, 2, "There should be two frames");
 
   let columnHeaders = Array.prototype.map.call(
@@ -142,16 +138,6 @@ add_task(async function () {
   store.dispatch(Actions.toggleMessageColumn("lastEventId"));
   store.dispatch(Actions.toggleMessageColumn("eventName"));
   store.dispatch(Actions.toggleMessageColumn("retry"));
-
-  await waitFor(
-    () =>
-      document.querySelectorAll(
-        "#messages-view .message-list-headers .button-text"
-      ).length === 5
-  );
-  frames = document.querySelectorAll(
-    "#messages-view .message-list-table .message-list-item"
-  );
 
   columnHeaders = Array.prototype.map.call(
     document.querySelectorAll(
