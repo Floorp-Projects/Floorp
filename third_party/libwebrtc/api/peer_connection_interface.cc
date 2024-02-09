@@ -60,8 +60,13 @@ PeerConnectionDependencies::~PeerConnectionDependencies() = default;
 PeerConnectionFactoryDependencies::PeerConnectionFactoryDependencies() =
     default;
 
+// TODO(bugs.webrtc.org/15574): Remove pragma once call_factory and media_engine
+// are removed from PeerConnectionFactoryDependencies
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 PeerConnectionFactoryDependencies::PeerConnectionFactoryDependencies(
     PeerConnectionFactoryDependencies&&) = default;
+#pragma clang diagnostic pop
 
 PeerConnectionFactoryDependencies::~PeerConnectionFactoryDependencies() =
     default;
