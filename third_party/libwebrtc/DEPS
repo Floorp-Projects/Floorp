@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'd51ff9503d70d4d2ac1dc3a292e08960f071b117',
+  'chromium_revision': '15aec93e66e6d7a2ccc723f347944e36c28027c5',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,9 +50,9 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@54337a07a51d9d99a89cc1cb08d008e3742469f4',
+    'https://chromium.googlesource.com/chromium/src/base@44f4ed53b39b5d95a7e645aaefaba9f868b0e6a2',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@f4f93067362cc84423929e8e5a4cf4b7385c1ad9',
+    'https://chromium.googlesource.com/chromium/src/build@d1c7080c734f727b03b88dc743d89e6328fd1846',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@e1fa8831f1cedbaf91002ad32b476cb33aafe72f',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -61,13 +61,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@70a0dc5735aad414aac64da458b89f4f778b509b',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@4909d73b1a9fbb7bfc1099d535978d67ed7c643b',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@9d709bef7e9e0fec00ce6735ae2c130a78e6c077',
+    'https://chromium.googlesource.com/chromium/src/testing@05d2066c10e9bfefe86e89561456eea3ab4995a3',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@e73ff986159984bd12416eb1d7355e0c67e04b35',
+    'https://chromium.googlesource.com/chromium/src/third_party@a8c098943dd095636bec8007677d0d615bfe7a47',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -178,7 +178,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@8988364bcddd9b194b0bf931c10bc125987330ed',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@448b931d9af81cee1f1bcf89672ccbad21a2513e',
+    'https://chromium.googlesource.com/catapult.git@c6db8519c02ae6a5afac0358c266dc3e5f2fd803',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -285,13 +285,13 @@ deps = {
   'src/third_party/dav1d/libdav1d':
     'https://chromium.googlesource.com/external/github.com/videolan/dav1d.git@47107e384bd1dc25674acf04d000a8cdc6195234',
   'src/third_party/libaom/source/libaom':
-    'https://aomedia.googlesource.com/aom.git@1dbe1c7fae2456f91ccc79fecb919e9ffea0727a',
+    'https://aomedia.googlesource.com/aom.git@7b5f665231dfbcc5abc49d3b8d6d8826c75ce473',
   'src/third_party/libunwindstack': {
       'url': 'https://chromium.googlesource.com/chromium/src/third_party/libunwindstack.git@4dbfa0e8c844c8e243b297bc185e54a99ff94f9e',
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@79b45f60dfbe97cbbc8f8be3a3807ae186bfd60a',
+    'https://android.googlesource.com/platform/external/perfetto.git@33063c9403c381f5411e1cddf8688a912529b4d9',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@424723dc025ce451dab9568239a46b18d0919b4d',
   'src/third_party/libyuv':
@@ -344,7 +344,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@2e673c45f4d64eb4d3ebb84c1977989f03b57a1c',
+    'https://chromium.googlesource.com/chromium/src/tools@fdfc1331807ba74c57d4c62582a954847bbbf1ae',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
