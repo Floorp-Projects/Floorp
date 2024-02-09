@@ -277,7 +277,7 @@ void StreamResetHandler::HandleResponse(const ParameterDescriptor& descriptor) {
                        });
         // Force this request to be sent again, but with new req_seq_nbr.
         current_request_->PrepareRetransmission();
-        reconfig_timer_->set_duration(ctx_->current_rto());
+        reconfig_timer_->set_duration(DurationMs(ctx_->current_rto()));
         reconfig_timer_->Start();
         break;
       case ResponseResult::kErrorRequestAlreadyInProgress:
@@ -312,7 +312,7 @@ absl::optional<ReConfigChunk> StreamResetHandler::MakeStreamResetRequest() {
 
   current_request_.emplace(retransmission_queue_->last_assigned_tsn(),
                            retransmission_queue_->BeginResetStreams());
-  reconfig_timer_->set_duration(ctx_->current_rto());
+  reconfig_timer_->set_duration(DurationMs(ctx_->current_rto()));
   reconfig_timer_->Start();
   return MakeReconfigChunk();
 }
@@ -362,7 +362,7 @@ DurationMs StreamResetHandler::OnReconfigTimerExpiry() {
   }
 
   ctx_->Send(ctx_->PacketBuilder().Add(MakeReconfigChunk()));
-  return ctx_->current_rto();
+  return DurationMs(ctx_->current_rto());
 }
 
 HandoverReadinessStatus StreamResetHandler::GetHandoverReadiness() const {

@@ -91,13 +91,14 @@ HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
     : log_prefix_(log_prefix),
       ctx_(context),
       timer_manager_(timer_manager),
-      interval_duration_(options.heartbeat_interval),
+      interval_duration_(options.heartbeat_interval.ToTimeDelta()),
       interval_duration_should_include_rtt_(
           options.heartbeat_interval_include_rtt),
       interval_timer_(timer_manager_->CreateTimer(
           "heartbeat-interval",
           absl::bind_front(&HeartbeatHandler::OnIntervalTimerExpiry, this),
-          TimerOptions(interval_duration_, TimerBackoffAlgorithm::kFixed))),
+          TimerOptions(DurationMs(interval_duration_),
+                       TimerBackoffAlgorithm::kFixed))),
       timeout_timer_(timer_manager_->CreateTimer(
           "heartbeat-timeout",
           absl::bind_front(&HeartbeatHandler::OnTimeoutTimerExpiry, this),
@@ -109,7 +110,7 @@ HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
 }
 
 void HeartbeatHandler::RestartTimer() {
-  if (interval_duration_ == DurationMs(0)) {
+  if (interval_duration_.IsZero()) {
     // Heartbeating has been disabled.
     return;
   }
@@ -117,9 +118,10 @@ void HeartbeatHandler::RestartTimer() {
   if (interval_duration_should_include_rtt_) {
     // The RTT should be used, but it's not easy accessible. The RTO will
     // suffice.
-    interval_timer_->set_duration(interval_duration_ + ctx_->current_rto());
+    interval_timer_->set_duration(
+        DurationMs(interval_duration_ + ctx_->current_rto()));
   } else {
-    interval_timer_->set_duration(interval_duration_);
+    interval_timer_->set_duration(DurationMs(interval_duration_));
   }
 
   interval_timer_->Start();
@@ -167,7 +169,7 @@ void HeartbeatHandler::HandleHeartbeatAck(HeartbeatAckChunk chunk) {
 DurationMs HeartbeatHandler::OnIntervalTimerExpiry() {
   if (ctx_->is_connection_established()) {
     HeartbeatInfo info(ctx_->callbacks().TimeMillis());
-    timeout_timer_->set_duration(ctx_->current_rto());
+    timeout_timer_->set_duration(DurationMs(ctx_->current_rto()));
     timeout_timer_->Start();
     RTC_DLOG(LS_INFO) << log_prefix_ << "Sending HEARTBEAT with timeout "
                       << *timeout_timer_->duration();

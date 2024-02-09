@@ -58,7 +58,7 @@ constexpr TSN kPeerInitialTsn = MockContext::PeerInitialTsn();
 constexpr ReconfigRequestSN kPeerInitialReqSn =
     ReconfigRequestSN(*kPeerInitialTsn);
 constexpr uint32_t kArwnd = 131072;
-constexpr DurationMs kRto = DurationMs(250);
+constexpr TimeDelta kRto = TimeDelta::Millis(250);
 
 constexpr std::array<uint8_t, 4> kShortPayload = {1, 2, 3, 4};
 
@@ -131,7 +131,7 @@ class StreamResetHandlerTest : public testing::Test {
   }
 
   void AdvanceTime(DurationMs duration) {
-    callbacks_.AdvanceTime(kRto);
+    callbacks_.AdvanceTime(DurationMs(kRto));
     for (;;) {
       absl::optional<TimeoutID> timeout_id = callbacks_.GetNextExpiredTimeout();
       if (!timeout_id.has_value()) {
@@ -630,7 +630,7 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
   // Let some time pass, so that the reconfig timer expires, and retries the
   // same request.
   EXPECT_CALL(callbacks_, SendPacketWithStatus).Times(1);
-  AdvanceTime(kRto);
+  AdvanceTime(DurationMs(kRto));
 
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
   ASSERT_FALSE(payload.empty());

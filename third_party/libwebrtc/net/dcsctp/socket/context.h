@@ -43,7 +43,7 @@ class Context {
   virtual void ObserveRTT(webrtc::TimeDelta rtt_ms) = 0;
 
   // Returns the current Retransmission Timeout (rto) value, in milliseconds.
-  virtual DurationMs current_rto() const = 0;
+  virtual webrtc::TimeDelta current_rto() const = 0;
 
   // Increments the transmission error counter, given a human readable reason.
   virtual bool IncrementTxErrorCounter(absl::string_view reason) = 0;

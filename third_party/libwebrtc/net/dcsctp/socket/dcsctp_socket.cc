@@ -600,7 +600,7 @@ absl::optional<Metrics> DcSctpSocket::GetMetrics() const {
 
   Metrics metrics = metrics_;
   metrics.cwnd_bytes = tcb_->cwnd();
-  metrics.srtt_ms = tcb_->current_srtt().value();
+  metrics.srtt_ms = tcb_->current_srtt().ms();
   size_t packet_payload_size =
       options_.mtu - SctpPacket::kHeaderSize - DataChunk::kHeaderSize;
   metrics.unack_data_count =
@@ -631,7 +631,7 @@ void DcSctpSocket::MaybeSendShutdownOnPacketReceived(const SctpPacket& packet) {
       // respond to each received packet containing one or more DATA chunks with
       // a SHUTDOWN chunk and restart the T2-shutdown timer.""
       SendShutdown();
-      t2_shutdown_->set_duration(tcb_->current_rto());
+      t2_shutdown_->set_duration(DurationMs(tcb_->current_rto()));
       t2_shutdown_->Start();
     }
   }
@@ -988,7 +988,7 @@ DurationMs DcSctpSocket::OnShutdownTimerExpiry() {
   // updated last sequential TSN received from its peer."
   SendShutdown();
   RTC_DCHECK(IsConsistent());
-  return tcb_->current_rto();
+  return DurationMs(tcb_->current_rto());
 }
 
 void DcSctpSocket::OnSentPacket(rtc::ArrayView<const uint8_t> packet,
@@ -1731,7 +1731,7 @@ void DcSctpSocket::MaybeSendShutdownOrAck() {
     // state.""
 
     SendShutdown();
-    t2_shutdown_->set_duration(tcb_->current_rto());
+    t2_shutdown_->set_duration(DurationMs(tcb_->current_rto()));
     t2_shutdown_->Start();
     SetState(State::kShutdownSent, "No more outstanding data");
   } else if (state_ == State::kShutdownReceived) {
@@ -1754,7 +1754,7 @@ void DcSctpSocket::SendShutdown() {
 
 void DcSctpSocket::SendShutdownAck() {
   packet_sender_.Send(tcb_->PacketBuilder().Add(ShutdownAckChunk()));
-  t2_shutdown_->set_duration(tcb_->current_rto());
+  t2_shutdown_->set_duration(DurationMs(tcb_->current_rto()));
   t2_shutdown_->Start();
 }
 
