@@ -86,9 +86,7 @@ class RtpSenderInternal : public RtpSenderInterface {
       const RtpParameters& parameters) = 0;
 
   // Additional checks that are specific to the current codec settings
-  virtual RTCError CheckCodecParameters(const RtpParameters& parameters) {
-    return RTCError::OK();
-  }
+  virtual RTCError CheckCodecParameters(const RtpParameters& parameters) = 0;
 
   // Returns an ID that changes every time SetTrack() is called, but
   // otherwise remains constant. Used to generate IDs for stats.
