@@ -30,6 +30,7 @@ import {
   setMaxDetectHeight,
   setMaxDetectWidth,
   getBestRectForElement,
+  getElementFromPoint,
   Region,
   WindowDimensions,
 } from "chrome://browser/content/screenshots/overlayHelpers.mjs";
@@ -1386,18 +1387,27 @@ export class ScreenshotsOverlay {
    * @param {Number} clientX The x position relative to the viewport
    * @param {Number} clientY The y position relative to the viewport
    */
-  handleElementHover(clientX, clientY) {
+  async handleElementHover(clientX, clientY) {
     this.setPointerEventsNone();
-    let ele = this.document.elementFromPoint(clientX, clientY);
+    let promise = getElementFromPoint(clientX, clientY, this.document);
     this.resetPointerEvents();
+    let { ele, rect } = await promise;
 
-    if (this.#cachedEle && this.#cachedEle === ele) {
+    if (
+      this.#cachedEle &&
+      !this.window.HTMLIFrameElement.isInstance(this.#cachedEle) &&
+      this.#cachedEle === ele
+    ) {
       // Still hovering over the same element
       return;
     }
     this.#cachedEle = ele;
 
-    let rect = getBestRectForElement(ele, this.document);
+    if (!rect) {
+      // this means we found an element that wasn't an iframe
+      rect = getBestRectForElement(ele, this.document);
+    }
+
     if (rect) {
       let { scrollX, scrollY } = this.windowDimensions.dimensions;
       let { left, top, right, bottom } = rect;
