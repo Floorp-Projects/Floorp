@@ -1785,7 +1785,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * aRoot, including aRoot itself, will be returned.  Returns
    * null if there are no more nsIContents to traverse.
    */
-  nsIContent* GetPreviousContent(const nsINode* aRoot = nullptr) const {
+  nsIContent* GetPrevNode(const nsINode* aRoot = nullptr) const {
 #ifdef DEBUG
     if (aRoot) {
       // TODO: perhaps nsINode::IsInclusiveDescendantOf could be used instead.

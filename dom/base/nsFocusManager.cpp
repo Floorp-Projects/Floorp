@@ -4171,7 +4171,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
       // look for the next or previous content node in tree order
       iterStartContent = aForward ? iterStartContent->GetNextNode()
-                                  : iterStartContent->GetPreviousContent();
+                                  : iterStartContent->GetPrevNode();
       if (!iterStartContent) {
         break;
       }
