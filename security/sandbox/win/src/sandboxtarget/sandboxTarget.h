@@ -54,14 +54,6 @@ class SandboxTarget {
    */
   void StartSandbox();
 
-  /**
-   * Used to duplicate handles via the broker process. The permission for the
-   * handle type and target process has to have been set on the sandbox policy.
-   */
-  bool BrokerDuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
-                             HANDLE* aTargetHandle, DWORD aDesiredAccess,
-                             DWORD aOptions);
-
   bool GetComplexLineBreaks(const WCHAR* text, uint32_t length,
                             uint8_t* break_before);
 

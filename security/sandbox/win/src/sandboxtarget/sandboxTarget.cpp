@@ -37,19 +37,6 @@ void SandboxTarget::NotifyStartObservers() {
   mStartObservers.clear();
 }
 
-bool SandboxTarget::BrokerDuplicateHandle(HANDLE aSourceHandle,
-                                          DWORD aTargetProcessId,
-                                          HANDLE* aTargetHandle,
-                                          DWORD aDesiredAccess,
-                                          DWORD aOptions) {
-  if (!mTargetServices) {
-    return false;
-  }
-
-  sandbox::ResultCode result = mTargetServices->DuplicateHandle(
-      aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess, aOptions);
-  return (sandbox::SBOX_ALL_OK == result);
-}
 bool SandboxTarget::GetComplexLineBreaks(const WCHAR* text, uint32_t length,
                                          uint8_t* break_before) {
   if (!mTargetServices) {
