@@ -816,7 +816,7 @@
   },
   "GC_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dev-telemetry-gc-alerts@mozilla.org",
       "jcoppeard@mozilla.com"
@@ -914,7 +914,7 @@
   },
   "GC_PREPARE_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dev-telemetry-gc-alerts@mozilla.org",
       "jcoppeard@mozilla.com"
@@ -929,7 +929,7 @@
   },
   "GC_MARK_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -940,7 +940,7 @@
   },
   "GC_SWEEP_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -951,7 +951,7 @@
   },
   "GC_COMPACT_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -962,7 +962,7 @@
   },
   "GC_MARK_ROOTS_US": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "dev-telemetry-gc-alerts@mozilla.org",
       "jcoppeard@mozilla.com"
@@ -1007,7 +1007,7 @@
   },
   "GC_SLICE_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1110,7 +1110,7 @@
   },
   "GC_MINOR_US": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
