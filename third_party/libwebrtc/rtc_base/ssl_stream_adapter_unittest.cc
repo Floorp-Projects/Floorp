@@ -31,8 +31,11 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"
 #include "test/field_trial.h"
+#include "test/gmock.h"
+#include "test/gtest.h"
 
 using ::testing::Combine;
+using ::testing::NotNull;
 using ::testing::tuple;
 using ::testing::Values;
 using ::testing::WithParamInterface;
@@ -593,9 +596,12 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
     size_t client_digest_len;
     bool rv;
 
+    ASSERT_THAT(server_identity(), NotNull());
     rv = server_identity()->certificate().ComputeDigest(
         rtc::DIGEST_SHA_1, server_digest, 20, &server_digest_len);
     ASSERT_TRUE(rv);
+
+    ASSERT_THAT(client_identity(), NotNull());
     rv = client_identity()->certificate().ComputeDigest(
         rtc::DIGEST_SHA_1, client_digest, 20, &client_digest_len);
     ASSERT_TRUE(rv);
