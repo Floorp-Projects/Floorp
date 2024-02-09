@@ -21,6 +21,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/units/time_delta.h"
 #include "net/dcsctp/packet/bounded_byte_reader.h"
 #include "net/dcsctp/packet/bounded_byte_writer.h"
 #include "net/dcsctp/packet/chunk/heartbeat_ack_chunk.h"
@@ -35,6 +36,7 @@
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
+using ::webrtc::TimeDelta;
 
 // This is stored (in serialized form) as HeartbeatInfoParameter sent in
 // HeartbeatRequestChunk and received back in HeartbeatAckChunk. It should be
@@ -97,12 +99,12 @@ HeartbeatHandler::HeartbeatHandler(absl::string_view log_prefix,
       interval_timer_(timer_manager_->CreateTimer(
           "heartbeat-interval",
           absl::bind_front(&HeartbeatHandler::OnIntervalTimerExpiry, this),
-          TimerOptions(DurationMs(interval_duration_),
+          TimerOptions(interval_duration_,
                        TimerBackoffAlgorithm::kFixed))),
       timeout_timer_(timer_manager_->CreateTimer(
           "heartbeat-timeout",
           absl::bind_front(&HeartbeatHandler::OnTimeoutTimerExpiry, this),
-          TimerOptions(options.rto_initial,
+          TimerOptions(options.rto_initial.ToTimeDelta(),
                        TimerBackoffAlgorithm::kExponential,
                        /*max_restarts=*/0))) {
   // The interval timer must always be running as long as the association is up.
@@ -119,9 +121,9 @@ void HeartbeatHandler::RestartTimer() {
     // The RTT should be used, but it's not easy accessible. The RTO will
     // suffice.
     interval_timer_->set_duration(
-        DurationMs(interval_duration_ + ctx_->current_rto()));
+        interval_duration_ + ctx_->current_rto());
   } else {
-    interval_timer_->set_duration(DurationMs(interval_duration_));
+    interval_timer_->set_duration(interval_duration_);
   }
 
   interval_timer_->Start();
@@ -166,13 +168,13 @@ void HeartbeatHandler::HandleHeartbeatAck(HeartbeatAckChunk chunk) {
   ctx_->ClearTxErrorCounter();
 }
 
-DurationMs HeartbeatHandler::OnIntervalTimerExpiry() {
+TimeDelta HeartbeatHandler::OnIntervalTimerExpiry() {
   if (ctx_->is_connection_established()) {
     HeartbeatInfo info(ctx_->callbacks().TimeMillis());
-    timeout_timer_->set_duration(DurationMs(ctx_->current_rto()));
+    timeout_timer_->set_duration(ctx_->current_rto());
     timeout_timer_->Start();
     RTC_DLOG(LS_INFO) << log_prefix_ << "Sending HEARTBEAT with timeout "
-                      << *timeout_timer_->duration();
+                      << webrtc::ToString(timeout_timer_->duration());
 
     Parameters parameters = Parameters::Builder()
                                 .Add(HeartbeatInfoParameter(info.Serialize()))
@@ -185,14 +187,14 @@ DurationMs HeartbeatHandler::OnIntervalTimerExpiry() {
         << log_prefix_
         << "Will not send HEARTBEAT when connection not established";
   }
-  return DurationMs(0);
+  return TimeDelta::Zero();
 }
 
-DurationMs HeartbeatHandler::OnTimeoutTimerExpiry() {
+TimeDelta HeartbeatHandler::OnTimeoutTimerExpiry() {
   // Note that the timeout timer is not restarted. It will be started again when
   // the interval timer expires.
   RTC_DCHECK(!timeout_timer_->is_running());
   ctx_->IncrementTxErrorCounter("HEARTBEAT timeout");
-  return DurationMs(0);
+  return TimeDelta::Zero();
 }
 }  // namespace dcsctp

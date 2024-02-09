@@ -149,9 +149,9 @@ class TransmissionControlBlock : public Context {
 
  private:
   // Will be called when the retransmission timer (t3-rtx) expires.
-  DurationMs OnRtxTimerExpiry();
+  webrtc::TimeDelta OnRtxTimerExpiry();
   // Will be called when the delayed ack timer expires.
-  DurationMs OnDelayedAckTimerExpiry();
+  webrtc::TimeDelta OnDelayedAckTimerExpiry();
 
   const absl::string_view log_prefix_;
   const DcSctpOptions options_;

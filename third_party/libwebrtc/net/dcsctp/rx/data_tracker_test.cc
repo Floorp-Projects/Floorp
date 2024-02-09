@@ -25,6 +25,7 @@
 
 namespace dcsctp {
 namespace {
+using ::webrtc::TimeDelta;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
@@ -42,8 +43,8 @@ class DataTrackerTest : public testing::Test {
         }),
         timer_(timer_manager_.CreateTimer(
             "test/delayed_ack",
-            []() { return DurationMs(0); },
-            TimerOptions(DurationMs(0)))),
+            []() { return TimeDelta::Zero(); },
+            TimerOptions(TimeDelta::Zero()))),
         tracker_(
             std::make_unique<DataTracker>("log: ", timer_.get(), kInitialTSN)) {
   }

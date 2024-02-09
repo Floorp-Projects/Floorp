@@ -98,12 +98,12 @@ class StreamResetHandlerTest : public testing::Test {
         }),
         delayed_ack_timer_(timer_manager_.CreateTimer(
             "test/delayed_ack",
-            []() { return DurationMs(0); },
-            TimerOptions(DurationMs(0)))),
+            []() { return TimeDelta::Zero(); },
+            TimerOptions(TimeDelta::Zero()))),
         t3_rtx_timer_(timer_manager_.CreateTimer(
             "test/t3_rtx",
-            []() { return DurationMs(0); },
-            TimerOptions(DurationMs(0)))),
+            []() { return TimeDelta::Zero(); },
+            TimerOptions(TimeDelta::Zero()))),
         data_tracker_(std::make_unique<DataTracker>("log: ",
                                                     delayed_ack_timer_.get(),
                                                     kPeerInitialTsn)),
@@ -205,8 +205,8 @@ class StreamResetHandlerTest : public testing::Test {
         std::make_unique<ReassemblyQueue>("log: ", kPeerInitialTsn, kArwnd);
     reasm_->RestoreFromState(state);
     retransmission_queue_ = std::make_unique<RetransmissionQueue>(
-        "", &callbacks_, kMyInitialTsn, kArwnd, producer_,
-        [](TimeDelta rtt) {}, []() {}, *t3_rtx_timer_, DcSctpOptions(),
+        "", &callbacks_, kMyInitialTsn, kArwnd, producer_, [](TimeDelta rtt) {},
+        []() {}, *t3_rtx_timer_, DcSctpOptions(),
         /*supports_partial_reliability=*/true,
         /*use_message_interleaving=*/false);
     retransmission_queue_->RestoreFromState(state);

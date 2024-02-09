@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/units/time_delta.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/chunk/reconfig_chunk.h"
@@ -38,6 +39,7 @@
 
 namespace dcsctp {
 namespace {
+using ::webrtc::TimeDelta;
 using ResponseResult = ReconfigurationResponseParameter::Result;
 
 bool DescriptorsAre(const std::vector<ParameterDescriptor>& c,
@@ -277,7 +279,7 @@ void StreamResetHandler::HandleResponse(const ParameterDescriptor& descriptor) {
                        });
         // Force this request to be sent again, but with new req_seq_nbr.
         current_request_->PrepareRetransmission();
-        reconfig_timer_->set_duration(DurationMs(ctx_->current_rto()));
+        reconfig_timer_->set_duration(ctx_->current_rto());
         reconfig_timer_->Start();
         break;
       case ResponseResult::kErrorRequestAlreadyInProgress:
@@ -312,7 +314,7 @@ absl::optional<ReConfigChunk> StreamResetHandler::MakeStreamResetRequest() {
 
   current_request_.emplace(retransmission_queue_->last_assigned_tsn(),
                            retransmission_queue_->BeginResetStreams());
-  reconfig_timer_->set_duration(DurationMs(ctx_->current_rto()));
+  reconfig_timer_->set_duration(ctx_->current_rto());
   reconfig_timer_->Start();
   return MakeReconfigChunk();
 }
@@ -347,13 +349,13 @@ void StreamResetHandler::ResetStreams(
   }
 }
 
-DurationMs StreamResetHandler::OnReconfigTimerExpiry() {
+TimeDelta StreamResetHandler::OnReconfigTimerExpiry() {
   if (current_request_->has_been_sent()) {
     // There is an outstanding request, which timed out while waiting for a
     // response.
     if (!ctx_->IncrementTxErrorCounter("RECONFIG timeout")) {
       // Timed out. The connection will close after processing the timers.
-      return DurationMs(0);
+      return TimeDelta::Zero();
     }
   } else {
     // There is no outstanding request, but there is a prepared one. This means
@@ -362,7 +364,7 @@ DurationMs StreamResetHandler::OnReconfigTimerExpiry() {
   }
 
   ctx_->Send(ctx_->PacketBuilder().Add(MakeReconfigChunk()));
-  return DurationMs(ctx_->current_rto());
+  return ctx_->current_rto();
 }
 
 HandoverReadinessStatus StreamResetHandler::GetHandoverReadiness() const {
