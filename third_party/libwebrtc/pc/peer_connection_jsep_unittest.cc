@@ -20,7 +20,6 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/call/call_factory_interface.h"
 #include "api/enable_media_with_defaults.h"
 #include "api/field_trials_view.h"
 #include "api/jsep.h"

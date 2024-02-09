@@ -16,7 +16,6 @@
 
 #include "absl/types/optional.h"
 #include "api/async_resolver_factory.h"
-#include "api/call/call_factory_interface.h"
 #include "api/jsep.h"
 #include "api/jsep_session_description.h"
 #include "api/peer_connection_interface.h"
@@ -25,7 +24,6 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/mock_async_dns_resolver.h"
-#include "media/base/fake_media_engine.h"
 #include "media/base/media_engine.h"
 #include "p2p/base/mock_async_resolver.h"
 #include "p2p/base/port_allocator.h"
@@ -35,6 +33,7 @@
 #include "pc/peer_connection_proxy.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/sdp_utils.h"
+#include "pc/test/enable_fake_media.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "pc/usage_pattern.h"
 #include "pc/webrtc_sdp.h"
@@ -84,9 +83,7 @@ class PeerConnectionFactoryForUsageHistogramTest
           dependencies.worker_thread = rtc::Thread::Current();
           dependencies.signaling_thread = rtc::Thread::Current();
           dependencies.task_queue_factory = CreateDefaultTaskQueueFactory();
-          dependencies.media_engine =
-              std::make_unique<cricket::FakeMediaEngine>();
-          dependencies.call_factory = CreateCallFactory();
+          EnableFakeMedia(dependencies);
           return dependencies;
         }()) {}
 };

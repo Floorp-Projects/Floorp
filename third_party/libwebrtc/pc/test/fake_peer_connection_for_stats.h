@@ -18,10 +18,10 @@
 #include <utility>
 #include <vector>
 
-#include "media/base/fake_media_engine.h"
 #include "media/base/media_channel.h"
 #include "pc/channel.h"
 #include "pc/stream_collection.h"
+#include "pc/test/enable_fake_media.h"
 #include "pc/test/fake_data_channel_controller.h"
 #include "pc/test/fake_peer_connection_base.h"
 
@@ -235,7 +235,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     dependencies.network_thread = rtc::Thread::Current();
     dependencies.worker_thread = rtc::Thread::Current();
     dependencies.signaling_thread = rtc::Thread::Current();
-    dependencies.media_engine = std::make_unique<cricket::FakeMediaEngine>();
+    EnableFakeMedia(dependencies);
     return dependencies;
   }
 
