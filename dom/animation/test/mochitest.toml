@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "dom.animations-api.compositing.enabled=true",
-  "dom.animations-api.getAnimations.enabled=true",
   "dom.animations-api.timelines.enabled=true",
   "gfx.omta.background-color=true",
   "layout.css.individual-transform.enabled=true",
@@ -15,7 +14,6 @@ support-files = [
   "mozilla/xhr_doc.html",
   "mozilla/file_deferred_start.html",
   "mozilla/file_disable_animations_api_compositing.html",
-  "mozilla/file_disable_animations_api_get_animations.html",
   "mozilla/file_disable_animations_api_timelines.html",
   "mozilla/file_discrete_animations.html",
   "mozilla/file_transition_finish_on_compositor.html",
@@ -36,8 +34,6 @@ support-files = [
 skip-if = ["os == 'win' && bits == 64"] # Bug 1363957
 
 ["mozilla/test_disable_animations_api_compositing.html"]
-
-["mozilla/test_disable_animations_api_get_animations.html"]
 
 ["mozilla/test_disable_animations_api_timelines.html"]
 
