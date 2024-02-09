@@ -479,7 +479,6 @@ void Connection::OnReadPacket(const char* data,
     stats_.packets_received++;
     if (received_packet_callback_) {
       RTC_DCHECK(packet_time_us == -1 || packet_time_us >= 0);
-      RTC_DCHECK(SignalReadPacket.is_empty());
       received_packet_callback_(
           this, rtc::ReceivedPacket(
                     rtc::reinterpret_array_view<const uint8_t>(
@@ -488,10 +487,6 @@ void Connection::OnReadPacket(const char* data,
                         ? absl::optional<webrtc::Timestamp>(
                               webrtc::Timestamp::Micros(packet_time_us))
                         : absl::nullopt));
-    } else {
-      // TODO(webrtc:11943): Remove SignalReadPacket once upstream projects have
-      // switched to use RegisterReceivedPacket.
-      SignalReadPacket(this, data, size, packet_time_us);
     }
     // If timed out sending writability checks, start up again
     if (!pruned_ && (write_state_ == STATE_WRITE_TIMEOUT)) {
