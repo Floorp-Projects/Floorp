@@ -290,9 +290,8 @@ JS_PUBLIC_API bool IsResizableArrayBufferView(JSObject* obj);
  * pin=false). Note that some objects (eg SharedArrayBuffers) cannot change
  * length to begin with, and are treated as always pinned.
  *
- * Normally, ArrayBuffers and their views cannot change length, but one way
- * currently exists: detaching them. In the future, more will be added with
- * GrowableArrayBuffer and ResizableArrayBuffer.
+ * ArrayBuffers and their views can change length by being detached, or
+ * if they are ResizableArrayBuffers or (shared) GrowableArrayBuffers.
  *
  * Returns whether the pinned status changed.
  */
