@@ -17,9 +17,21 @@ from functools import partial
 import gecko_taskgraph.main
 from gecko_taskgraph.main import commands as taskgraph_commands
 from mach.decorators import Command, CommandArgument, SubCommand
-from mach.util import strtobool
 
 logger = logging.getLogger("taskcluster")
+
+
+def strtobool(value):
+    """Convert string to boolean.
+
+    Wraps "distutils.util.strtobool", deferring the import of the package
+    in case it's not installed. Otherwise, we have a "chicken and egg problem" where
+    |mach bootstrap| would install the required package to enable "distutils.util", but
+    it can't because mach fails to interpret this file.
+    """
+    from distutils.util import strtobool
+
+    return bool(strtobool(value))
 
 
 def get_taskgraph_command_parser(name):
