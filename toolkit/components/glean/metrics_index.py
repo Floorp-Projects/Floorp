@@ -24,6 +24,7 @@ gecko_metrics = [
     "dom/performance/metrics.yaml",
     "gfx/metrics.yaml",
     "image/decoders/metrics.yaml",
+    "js/xpconnect/metrics.yaml",
     "layout/base/metrics.yaml",
     "mobile/android/actors/metrics.yaml",
     "mobile/android/modules/geckoview/metrics.yaml",

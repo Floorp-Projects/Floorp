@@ -2577,6 +2577,22 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
       MOZ_CRASH("Bad metric id");
   }
   // clang-format on
+
+  switch (id) {
+    case JSMetric::DESERIALIZE_BYTES:
+      glean::performance_clone_deserialize::size.Accumulate(sample);
+      break;
+    case JSMetric::DESERIALIZE_ITEMS:
+      glean::performance_clone_deserialize::items.AccumulateSamples({sample});
+      break;
+    case JSMetric::DESERIALIZE_US:
+      glean::performance_clone_deserialize::time.AccumulateRawDuration(
+          TimeDuration::FromMicroseconds(sample));
+      break;
+    default:
+      // The rest aren't relayed to Glean.
+      break;
+  }
 }
 
 static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
