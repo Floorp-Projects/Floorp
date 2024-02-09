@@ -545,6 +545,7 @@ if (!build_with_chromium) {
     if (build_with_mozilla) {
       deps -= [
         "api:create_peerconnection_factory",
+        "api:enable_media",
         "api:rtc_error",
         "api:transport_api",
         "api/crypto",
