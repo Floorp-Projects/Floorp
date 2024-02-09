@@ -3945,8 +3945,14 @@ pref("extensions.formautofill.addresses.enabled", true);
 #else
   pref("extensions.formautofill.addresses.capture.enabled", false);
 #endif
-// Whether address autofill is enabled or not ( this is set via Nimbus )
-pref("extensions.formautofill.addresses.experiments.enabled", false);
+#if defined(ANDROID)
+  // On android we have custom logic to control this. Ideally we should use nimbus there as well.
+  // https://github.com/mozilla-mobile/firefox-android/blob/d566743ea0f041ce27c1204da903de380f96b46e/fenix/app/src/main/java/org/mozilla/fenix/utils/Settings.kt#L1502-L1510
+  pref("extensions.formautofill.addresses.experiments.enabled", true);
+#else
+  // Whether address autofill is enabled or not ( this is set via Nimbus )
+  pref("extensions.formautofill.addresses.experiments.enabled", false);
+#endif
 // Defies the required address form fields to trigger the display of the address capture doorhanger
 pref("extensions.formautofill.addresses.capture.requiredFields", "street-address,postal-code,address-level1,address-level2");
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
