@@ -38,6 +38,17 @@ class TestReopenFromLibrary(WindowManagerMixin, MarionetteTestCase):
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
 
         star_button = self.marionette.find_element("id", "star-button-box")
+
+        # Await for async updates to the star button before clicking on it, as
+        # clicks are ignored during status updates.
+        script = """\
+          return window.BookmarkingUI.status != window.BookmarkingUI.STATUS_UPDATING;
+        """
+        Wait(self.marionette).until(
+            lambda _: self.marionette.execute_script(textwrap.dedent(script)),
+            message="Failed waiting for star updates",
+        )
+
         star_button.click()
 
         star_image = self.marionette.find_element("id", "star-button")
@@ -63,7 +74,16 @@ class TestReopenFromLibrary(WindowManagerMixin, MarionetteTestCase):
             PlacesUtils.bookmarks.virtualToolbarGuid
           );
 
-          let node = window.ContentTree.view.view.nodeForTreeIndex(1);
+          // Bookmarks may be imported and shift the expected one, so search
+          // for it.
+          let node;
+          for (let i = 1; i < window.ContentTree.view.result.root.childCount; ++i) {
+            node = window.ContentTree.view.view.nodeForTreeIndex(i);
+            if (node.uri.endsWith("empty.html")) {
+              break;
+            }
+          }
+
           window.ContentTree.view.selectNode(node);
 
           // Based on synthesizeDblClickOnSelectedTreeCell
