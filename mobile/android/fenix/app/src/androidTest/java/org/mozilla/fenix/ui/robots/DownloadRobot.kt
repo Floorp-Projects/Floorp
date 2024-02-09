@@ -51,9 +51,8 @@ class DownloadRobot {
     fun verifyDownloadPrompt(fileName: String) {
         var currentTries = 0
         while (currentTries++ < 3) {
-            Log.i(TAG, "verifyDownloadPrompt: While loop currentTries = $currentTries")
+            Log.i(TAG, "verifyDownloadPrompt: Started try #$currentTries")
             try {
-                Log.i(TAG, "verifyDownloadPrompt: Try block")
                 assertUIObjectExists(
                     itemWithResId("$packageName:id/download_button"),
                     itemContainingText(fileName),
@@ -61,7 +60,7 @@ class DownloadRobot {
 
                 break
             } catch (e: AssertionError) {
-                Log.i(TAG, "verifyDownloadPrompt: Catch block")
+                Log.i(TAG, "verifyDownloadPrompt: AssertionError caught, executing fallback methods")
                 Log.e("DOWNLOAD_ROBOT", "Failed to find locator: ${e.localizedMessage}")
 
                 browserScreen {
@@ -96,11 +95,12 @@ class DownloadRobot {
         )
 
     fun clickTryAgainButton() {
+        Log.i(TAG, "clickTryAgainButton: Trying to click the \"TRY AGAIN\" in app prompt button")
         itemWithResIdAndText(
             "$packageName:id/download_dialog_action_button",
             "Try Again",
         ).click()
-        Log.i(TAG, "clickTryAgainButton: Clicked \"TRY AGAIN\" in app prompt button")
+        Log.i(TAG, "clickTryAgainButton: Clicked the \"TRY AGAIN\" in app prompt button")
     }
 
     fun verifyPhotosAppOpens() = assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
@@ -111,34 +111,40 @@ class DownloadRobot {
     fun verifyDownloadedFileIcon() = assertUIObjectExists(itemWithResId("$packageName:id/favicon"))
 
     fun verifyEmptyDownloadsList() {
-        Log.i(TAG, "verifyEmptyDownloadsList: Looking for empty download list")
+        Log.i(TAG, "verifyEmptyDownloadsList: Waiting for $waitingTime ms for for empty download list to exist")
         mDevice.findObject(UiSelector().resourceId("$packageName:id/download_empty_view"))
             .waitForExists(waitingTime)
+        Log.i(TAG, "verifyEmptyDownloadsList: Waited for $waitingTime ms for for empty download list to exist")
+        Log.i(TAG, "verifyEmptyDownloadsList: Trying to verify that the \"No downloaded files\" list message is displayed")
         onView(withText("No downloaded files")).check(matches(isDisplayed()))
-        Log.i(TAG, "verifyEmptyDownloadsList: Verified \"No downloaded files\" list message")
+        Log.i(TAG, "verifyEmptyDownloadsList: Verified that the \"No downloaded files\" list message is displayed")
     }
 
     fun waitForDownloadsListToExist() =
         assertUIObjectExists(itemWithResId("$packageName:id/download_list"))
 
     fun openDownloadedFile(fileName: String) {
-        downloadedFile(fileName)
-            .check(matches(isDisplayed()))
-            .click()
+        Log.i(TAG, "openDownloadedFile: Trying to verify that the downloaded file: $fileName is displayed")
+        downloadedFile(fileName).check(matches(isDisplayed()))
+        Log.i(TAG, "openDownloadedFile: Verified that the downloaded file: $fileName is displayed")
+        Log.i(TAG, "openDownloadedFile: Trying to click downloaded file: $fileName")
+        downloadedFile(fileName).click()
         Log.i(TAG, "openDownloadedFile: Clicked downloaded file: $fileName")
     }
 
     fun deleteDownloadedItem(fileName: String) {
+        Log.i(TAG, "deleteDownloadedItem: Trying to click the trash bin icon to delete downloaded file: $fileName")
         onView(
             allOf(
                 withId(R.id.overflow_menu),
                 hasSibling(withText(fileName)),
             ),
         ).click()
-        Log.i(TAG, "deleteDownloadedItem: Deleted downloaded file: $fileName using trash bin icon")
+        Log.i(TAG, "deleteDownloadedItem: Clicked the trash bin icon to delete downloaded file: $fileName")
     }
 
     fun longClickDownloadedItem(title: String) {
+        Log.i(TAG, "longClickDownloadedItem: Trying to long click downloaded file: $title")
         onView(
             allOf(
                 withId(R.id.title),
@@ -149,21 +155,24 @@ class DownloadRobot {
     }
 
     fun selectDownloadedItem(title: String) {
+        Log.i(TAG, "selectDownloadedItem: Trying click downloaded file: $title to select it")
         onView(
             allOf(
                 withId(R.id.title),
                 withText(title),
             ),
         ).perform(click())
-        Log.i(TAG, "selectDownloadedItem: Selected downloaded file: $title")
+        Log.i(TAG, "selectDownloadedItem: Clicked downloaded file: $title to select it")
     }
 
     fun openMultiSelectMoreOptionsMenu() {
+        Log.i(TAG, "openMultiSelectMoreOptionsMenu: Trying to click multi-select more options button")
         itemWithDescription(getStringResource(R.string.content_description_menu)).click()
         Log.i(TAG, "openMultiSelectMoreOptionsMenu: Clicked multi-select more options button")
     }
 
     fun clickMultiSelectRemoveButton() {
+        Log.i(TAG, "clickMultiSelectRemoveButton: Trying to click multi-select remove button")
         itemWithResIdContainingText("$packageName:id/title", "Remove").click()
         Log.i(TAG, "clickMultiSelectRemoveButton: Clicked multi-select remove button")
     }
@@ -180,27 +189,31 @@ class DownloadRobot {
 
     class Transition {
         fun clickDownload(interact: DownloadRobot.() -> Unit): Transition {
+            Log.i(TAG, "clickDownload: Trying to click the \"Download\" download prompt button")
             downloadButton().click()
-            Log.i(TAG, "clickDownload: Clicked \"DOWNLOAD\" button from prompt")
+            Log.i(TAG, "clickDownload: Clicked the \"Download\" download prompt button")
 
             DownloadRobot().interact()
             return Transition()
         }
 
         fun closeDownloadPrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "closeDownloadPrompt: Trying to click the close download prompt button")
             itemWithResId("$packageName:id/download_dialog_close_button").click()
-            Log.i(TAG, "closeDownloadPrompt: Dismissed download prompt by clicking close prompt button")
+            Log.i(TAG, "closeDownloadPrompt: Clicked the close download prompt button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickOpen(type: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            Log.i(TAG, "clickOpen: Looking for \"OPEN\" download prompt button")
+            Log.i(TAG, "clickOpen: Waiting for $waitingTime ms for the for \"OPEN\" download prompt button to exist")
             openDownloadButton().waitForExists(waitingTime)
+            Log.i(TAG, "clickOpen: Waited for $waitingTime ms for the for \"OPEN\" download prompt button to exist")
+            Log.i(TAG, "clickOpen: Trying to click the \"OPEN\" download prompt button")
             openDownloadButton().click()
-            Log.i(TAG, "clickOpen: Clicked \"OPEN\" download prompt button")
-
+            Log.i(TAG, "clickOpen: Clicked the \"OPEN\" download prompt button")
+            Log.i(TAG, "clickOpen: Trying to verify that the open intent is matched with associated data type")
             // verify open intent is matched with associated data type
             Intents.intended(
                 allOf(
@@ -208,37 +221,38 @@ class DownloadRobot {
                     IntentMatchers.hasType(type),
                 ),
             )
-            Log.i(TAG, "clickOpen: Verified that open intent is matched with associated data type")
+            Log.i(TAG, "clickOpen: Verified that the open intent is matched with associated data type")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun clickAllowPermission(interact: DownloadRobot.() -> Unit): Transition {
-            Log.i(TAG, "clickAllowPermission: Looking for \"ALLOW\" permission button")
             mDevice.waitNotNull(
                 Until.findObject(By.res(getPermissionAllowID() + ":id/permission_allow_button")),
                 waitingTime,
             )
-
+            Log.i(TAG, "clickAllowPermission: Trying to click the \"ALLOW\" permission button")
             mDevice.findObject(By.res(getPermissionAllowID() + ":id/permission_allow_button")).click()
-            Log.i(TAG, "clickAllowPermission: Clicked \"ALLOW\" permission button")
+            Log.i(TAG, "clickAllowPermission: Clicked the \"ALLOW\" permission button")
 
             DownloadRobot().interact()
             return Transition()
         }
 
         fun exitDownloadsManagerToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            Log.i(TAG, "exitDownloadsManagerToBrowser: Trying to click the navigate up toolbar button")
             onView(withContentDescription("Navigate up")).click()
-            Log.i(TAG, "exitDownloadsManagerToBrowser: Exited download manager to browser by clicking the navigate up toolbar button")
+            Log.i(TAG, "exitDownloadsManagerToBrowser: Clicked the navigate up toolbar button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
 
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            Log.i(TAG, "goBack: Trying to click the navigate up toolbar button")
             goBackButton().click()
-            Log.i(TAG, "exitDownloadsManagerToBrowser: Exited download manager to home screen by clicking the navigate up toolbar button")
+            Log.i(TAG, "goBack: Clicked the navigate up toolbar button")
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
