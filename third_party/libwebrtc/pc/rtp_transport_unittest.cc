@@ -349,4 +349,27 @@ TEST(RtpTransportTest, RecursiveSetSendDoesNotCrash) {
   EXPECT_FALSE(observer.ready_to_send());
 }
 
+TEST(RtpTransportTest, RecursiveOnSentPacketDoesNotCrash) {
+  const int kShortTimeout = 100;
+  test::RunLoop loop;
+  RtpTransport transport(kMuxEnabled);
+  rtc::FakePacketTransport fake_rtp("fake_rtp");
+  transport.SetRtpPacketTransport(&fake_rtp);
+  fake_rtp.SetDestination(&fake_rtp, true);
+  TransportObserver observer(&transport);
+  const rtc::PacketOptions options;
+  const int flags = 0;
+  rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
+
+  fake_rtp.SetWritable(true);
+  observer.SetActionOnSentPacket([&]() {
+    if (observer.sent_packet_count() < 2) {
+      transport.SendRtpPacket(&rtp_data, options, flags);
+    }
+  });
+  transport.SendRtpPacket(&rtp_data, options, flags);
+  EXPECT_EQ(observer.sent_packet_count(), 1);
+  EXPECT_EQ_WAIT(observer.sent_packet_count(), 2, kShortTimeout);
+}
+
 }  // namespace webrtc

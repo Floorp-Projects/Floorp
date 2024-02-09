@@ -226,7 +226,14 @@ void RtpTransport::OnSentPacket(rtc::PacketTransportInternal* packet_transport,
                                 const rtc::SentPacket& sent_packet) {
   RTC_DCHECK(packet_transport == rtp_packet_transport_ ||
              packet_transport == rtcp_packet_transport_);
+  if (processing_sent_packet_) {
+    TaskQueueBase::Current()->PostTask(SafeTask(
+        safety_.flag(), [this, &sent_packet] { SendSentPacket(sent_packet); }));
+    return;
+  }
+  processing_sent_packet_ = true;
   SendSentPacket(sent_packet);
+  processing_sent_packet_ = false;
 }
 
 void RtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,
