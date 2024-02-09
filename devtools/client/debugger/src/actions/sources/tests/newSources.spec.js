@@ -7,9 +7,10 @@ import {
   selectors,
   createStore,
   makeSource,
+  makeSourceURL,
   makeOriginalSource,
 } from "../../../utils/test-head";
-const { getSource, getSourceCount } = selectors;
+const { getSource, getSourceCount, getSelectedSource } = selectors;
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
@@ -46,6 +47,20 @@ describe("sources - new sources", () => {
     await dispatch(actions.newGeneratedSource(makeSource("base.js")));
 
     expect(getSourceCount(getState())).toEqual(1);
+  });
+
+  it("should automatically select a pending source", async () => {
+    const { dispatch, getState } = createStore(mockCommandClient);
+    const baseSourceURL = makeSourceURL("base.js");
+    await dispatch(actions.selectSourceURL(baseSourceURL));
+
+    expect(getSelectedSource(getState())).toBe(undefined);
+    const baseSource = await dispatch(
+      actions.newGeneratedSource(makeSource("base.js"))
+    );
+
+    const selected = getSelectedSource(getState());
+    expect(selected && selected.url).toBe(baseSource.url);
   });
 
   // eslint-disable-next-line

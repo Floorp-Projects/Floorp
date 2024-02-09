@@ -111,7 +111,3 @@ export function getHideIgnoredSources(state) {
 export function isSourceMapIgnoreListEnabled(state) {
   return state.ui.sourceMapIgnoreListEnabled;
 }
-
-export function areSourceMapsEnabled(state) {
-  return state.ui.sourceMapsEnabled;
-}

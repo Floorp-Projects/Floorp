@@ -4,7 +4,6 @@
 
 import React, { Component } from "devtools/client/shared/vendor/react";
 import {
-  button,
   div,
   main,
   span,
@@ -209,23 +208,15 @@ class App extends Component {
     }
   }
 
-  closeSourceMapError = () => {
-    this.setState({ hiddenSourceMapError: this.props.sourceMapError });
-  };
-
   renderEditorNotificationBar() {
-    if (
-      this.props.sourceMapError &&
-      this.state.hiddenSourceMapError != this.props.sourceMapError
-    ) {
+    if (this.props.sourceMapError) {
       return div(
         { className: "editor-notification-footer", "aria-role": "status" },
         span(
           { className: "info icon" },
           React.createElement(AccessibleImage, { className: "sourcemap" })
         ),
-        `Source Map Error: ${this.props.sourceMapError}`,
-        button({ className: "close-button", onClick: this.closeSourceMapError })
+        `Source Map Error: ${this.props.sourceMapError}`
       );
     }
     if (this.props.showOriginalVariableMappingWarning) {
