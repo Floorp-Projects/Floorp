@@ -90,6 +90,7 @@ export class YelpSuggestions extends BaseFeature {
       ),
       {
         richSuggestionIconSize: 24,
+        showFeedbackMenu: true,
       }
     );
   }
