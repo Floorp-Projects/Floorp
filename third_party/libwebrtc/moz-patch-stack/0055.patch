@@ -24,10 +24,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index ddc3323df9..777cc6d4c1 100644
+index 38bb81b481..e46c3f83a6 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -431,7 +431,7 @@ ChannelSend::ChannelSend(
+@@ -440,7 +440,7 @@ ChannelSend::ChannelSend(
        transport_controller->GetRtcpObserver();
    configuration.transport_feedback_callback =
        transport_controller->transport_feedback_observer();

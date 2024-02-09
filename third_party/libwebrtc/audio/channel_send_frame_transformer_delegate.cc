@@ -55,13 +55,15 @@ class TransformableOutgoingAudioFrame
       const uint8_t* payload_data,
       size_t payload_size,
       absl::optional<uint64_t> absolute_capture_timestamp_ms,
-      uint32_t ssrc)
+      uint32_t ssrc,
+      const std::string& codec_mime_type)
       : frame_type_(frame_type),
         payload_type_(payload_type),
         rtp_timestamp_with_offset_(rtp_timestamp_with_offset),
         payload_(payload_data, payload_size),
         absolute_capture_timestamp_ms_(absolute_capture_timestamp_ms),
-        ssrc_(ssrc) {}
+        ssrc_(ssrc),
+        codec_mime_type_(codec_mime_type) {}
   ~TransformableOutgoingAudioFrame() override = default;
   rtc::ArrayView<const uint8_t> GetData() const override { return payload_; }
   void SetData(rtc::ArrayView<const uint8_t> data) override {
@@ -76,6 +78,7 @@ class TransformableOutgoingAudioFrame
 
   uint8_t GetPayloadType() const override { return payload_type_; }
   Direction GetDirection() const override { return Direction::kSender; }
+  std::string GetMimeType() const override { return codec_mime_type_; }
 
   rtc::ArrayView<const uint32_t> GetContributingSources() const override {
     return {};
@@ -100,6 +103,7 @@ class TransformableOutgoingAudioFrame
   rtc::Buffer payload_;
   absl::optional<uint64_t> absolute_capture_timestamp_ms_;
   uint32_t ssrc_;
+  std::string codec_mime_type_;
 };
 }  // namespace
 
@@ -131,11 +135,12 @@ void ChannelSendFrameTransformerDelegate::Transform(
     const uint8_t* payload_data,
     size_t payload_size,
     int64_t absolute_capture_timestamp_ms,
-    uint32_t ssrc) {
+    uint32_t ssrc,
+    const std::string& codec_mimetype) {
   frame_transformer_->Transform(
       std::make_unique<TransformableOutgoingAudioFrame>(
           frame_type, payload_type, rtp_timestamp, payload_data, payload_size,
-          absolute_capture_timestamp_ms, ssrc));
+          absolute_capture_timestamp_ms, ssrc, codec_mimetype));
 }
 
 void ChannelSendFrameTransformerDelegate::OnTransformedFrame(
@@ -173,7 +178,8 @@ std::unique_ptr<TransformableAudioFrameInterface> CloneSenderAudioFrame(
       InterfaceFrameTypeToInternalFrameType(original->Type()),
       original->GetPayloadType(), original->GetTimestamp(),
       original->GetData().data(), original->GetData().size(),
-      original->AbsoluteCaptureTimestamp(), original->GetSsrc());
+      original->AbsoluteCaptureTimestamp(), original->GetSsrc(),
+      original->GetMimeType());
 }
 
 }  // namespace webrtc

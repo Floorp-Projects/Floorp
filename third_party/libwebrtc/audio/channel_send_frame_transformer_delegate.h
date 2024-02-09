@@ -12,6 +12,7 @@
 #define AUDIO_CHANNEL_SEND_FRAME_TRANSFORMER_DELEGATE_H_
 
 #include <memory>
+#include <string>
 
 #include "api/frame_transformer_interface.h"
 #include "api/sequence_checker.h"
@@ -57,7 +58,8 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
                  const uint8_t* payload_data,
                  size_t payload_size,
                  int64_t absolute_capture_timestamp_ms,
-                 uint32_t ssrc);
+                 uint32_t ssrc,
+                 const std::string& codec_mime_type);
 
   // Implements TransformedFrameCallback. Can be called on any thread.
   void OnTransformedFrame(

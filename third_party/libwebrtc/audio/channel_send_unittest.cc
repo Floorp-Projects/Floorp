@@ -66,9 +66,10 @@ class ChannelSendTest : public ::testing::Test {
         &transport_, nullptr, &event_log_, nullptr, crypto_options_, false,
         kRtcpIntervalMs, kSsrc, nullptr, &transport_controller_, field_trials_);
     encoder_factory_ = CreateBuiltinAudioEncoderFactory();
-    std::unique_ptr<AudioEncoder> encoder = encoder_factory_->MakeAudioEncoder(
-        kPayloadType, SdpAudioFormat("opus", kRtpRateHz, 2), {});
-    channel_->SetEncoder(kPayloadType, std::move(encoder));
+    SdpAudioFormat opus = SdpAudioFormat("opus", kRtpRateHz, 2);
+    std::unique_ptr<AudioEncoder> encoder =
+        encoder_factory_->MakeAudioEncoder(kPayloadType, opus, {});
+    channel_->SetEncoder(kPayloadType, opus, std::move(encoder));
     transport_controller_.EnsureStarted();
     channel_->RegisterSenderCongestionControlObjects(&transport_controller_);
     ON_CALL(transport_, SendRtcp).WillByDefault(Return(true));
