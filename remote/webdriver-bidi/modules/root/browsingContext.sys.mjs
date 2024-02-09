@@ -1839,6 +1839,18 @@ class BrowsingContextModule extends Module {
     }
   };
 
+  #stopListeningToContextEvent(event) {
+    this.#subscribedEvents.delete(event);
+
+    const hasContextEvent =
+      this.#subscribedEvents.has("browsingContext.contextCreated") ||
+      this.#subscribedEvents.has("browsingContext.contextDestroyed");
+
+    if (!hasContextEvent) {
+      this.#contextListener.stopListening();
+    }
+  }
+
   #stopListeningToNavigationEvent(event) {
     this.#subscribedEvents.delete(event);
 
@@ -1890,14 +1902,12 @@ class BrowsingContextModule extends Module {
     switch (event) {
       case "browsingContext.contextCreated":
       case "browsingContext.contextDestroyed": {
-        this.#contextListener.stopListening();
-        this.#subscribedEvents.delete(event);
+        this.#stopListeningToContextEvent(event);
         break;
       }
       case "browsingContext.fragmentNavigated":
       case "browsingContext.navigationStarted": {
-        this.#stopListeningToNavigationEvent();
-        this.#subscribedEvents.delete(event);
+        this.#stopListeningToNavigationEvent(event);
         break;
       }
       case "browsingContext.userPromptClosed":
