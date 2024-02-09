@@ -355,7 +355,8 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         )
     }
 
-    @Test fun compareClientRect() {
+    @Test
+    fun compareClientRect() {
         // TODO: intermittent failure, bug 1829615
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val jsCssReset = """(function() {
@@ -630,10 +631,12 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
+        sessionRule.waitForContentTransformsReceived(mainSession)
 
         val requestClientRect: (String) -> RectF = {
             mainSession.reload()
             mainSession.waitForPageStop()
+            sessionRule.waitForContentTransformsReceived(mainSession)
 
             mainSession.evaluateJS(it)
             content.focus()
@@ -660,7 +663,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             fuzzyEqual(screenRectA.height(), screenRectB.height(), expectedDiff.height())
 
         assertThat(
-            "Selection rect is not at expected location. a$screenRectA b$screenRectB",
+            "Selection rect is not at expected location. a$screenRectA b$screenRectB expectedDiff$expectedDiff",
             result,
             equalTo(true),
         )

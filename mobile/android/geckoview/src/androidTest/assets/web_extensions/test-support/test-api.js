@@ -109,6 +109,12 @@ this.test = class extends ExtensionAPI {
           return pids[0];
         },
 
+        async waitForContentTransformsReceived(tabId) {
+          return getActorForTab(tabId).sendQuery(
+            "WaitForContentTransformsReceived"
+          );
+        },
+
         async getAllBrowserPids() {
           const pids = [];
           const processes = ChromeUtils.getAllDOMProcesses();

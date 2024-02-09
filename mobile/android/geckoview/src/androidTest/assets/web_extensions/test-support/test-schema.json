@@ -153,6 +153,18 @@
         ]
       },
       {
+        "name": "waitForContentTransformsReceived",
+        "type": "function",
+        "async": true,
+        "description": "If we want to test screen coordinates, we need to wait for the updated data which is what this function allows us to do",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
+      },
+      {
         "name": "getAllBrowserPids",
         "type": "function",
         "async": true,
