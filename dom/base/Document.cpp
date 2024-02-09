@@ -17740,11 +17740,14 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       ContentBlockingNotifier::eStorageAccessAPI, true)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [inner, promise] {
-            inner->SaveStorageAccessPermissionGranted();
-            promise->MaybeResolveWithUndefined();
-          },
-          [self, promise] {
+          [inner] { return inner->SaveStorageAccessPermissionGranted(); },
+          [] {
+            return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise] { promise->MaybeResolveWithUndefined(); },
+          [promise, self] {
             self->ConsumeTransientUserGestureActivation();
             promise->MaybeRejectWithNotAllowedError(
                 "requestStorageAccess not allowed"_ns);
