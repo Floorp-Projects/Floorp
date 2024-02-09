@@ -519,4 +519,19 @@ void SrtpTransport::MaybeUpdateWritableState() {
   }
 }
 
+bool SrtpTransport::UnregisterRtpDemuxerSink(RtpPacketSinkInterface* sink) {
+  if (recv_session_ &&
+      field_trials_.IsEnabled("WebRTC-SrtpRemoveReceiveStream")) {
+    // Remove the SSRCs explicitly registered with the demuxer
+    // (via SDP negotiation) from the SRTP session.
+    for (const auto ssrc : GetSsrcsForSink(sink)) {
+      if (!recv_session_->RemoveSsrcFromSession(ssrc)) {
+        RTC_LOG(LS_WARNING)
+            << "Could not remove SSRC " << ssrc << " from SRTP session.";
+      }
+    }
+  }
+  return RtpTransport::UnregisterRtpDemuxerSink(sink);
+}
+
 }  // namespace webrtc
