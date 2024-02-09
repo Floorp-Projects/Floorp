@@ -137,8 +137,6 @@ class RootActor extends Actor {
         : true,
       // @backward-compat { version 123 } A new Objects Manager front has a new "releaseActors" method.
       supportsReleaseActors: true,
-      // @backward-compat { version 124 } The server started throttling ressource emission
-      throttledResources: true,
     };
   }
 
