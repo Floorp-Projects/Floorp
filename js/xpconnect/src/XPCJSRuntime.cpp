@@ -2589,6 +2589,38 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
       glean::performance_clone_deserialize::time.AccumulateRawDuration(
           TimeDuration::FromMicroseconds(sample));
       break;
+    case JSMetric::GC_MS:
+      glean::javascript_gc::total_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
+    case JSMetric::GC_MINOR_US:
+      glean::javascript_gc::minor_time.AccumulateRawDuration(
+          TimeDuration::FromMicroseconds(sample));
+      break;
+    case JSMetric::GC_PREPARE_MS:
+      glean::javascript_gc::prepare_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
+    case JSMetric::GC_MARK_ROOTS_US:
+      glean::javascript_gc::mark_roots_time.AccumulateRawDuration(
+          TimeDuration::FromMicroseconds(sample));
+      break;
+    case JSMetric::GC_MARK_MS:
+      glean::javascript_gc::mark_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
+    case JSMetric::GC_SWEEP_MS:
+      glean::javascript_gc::sweep_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
+    case JSMetric::GC_COMPACT_MS:
+      glean::javascript_gc::compact_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
+    case JSMetric::GC_SLICE_MS:
+      glean::javascript_gc::slice_time.AccumulateRawDuration(
+          TimeDuration::FromMilliseconds(sample));
+      break;
     default:
       // The rest aren't relayed to Glean.
       break;

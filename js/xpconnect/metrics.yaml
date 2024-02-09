@@ -53,3 +53,133 @@ performance.clone.deserialize:
     notification_emails:
       - sfink@mozilla.com
     expires: never
+
+
+javascript.gc:
+  total_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The total time taken by a major collection.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c8
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  minor_time:
+    type: timing_distribution
+    time_unit: microsecond
+    description: >
+      The time taked by a minor (nursery) collection.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  prepare_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time spent in the preparation phase.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  mark_roots_time:
+    type: timing_distribution
+    time_unit: microsecond
+    description: >
+      The time spent marking GC roots.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  mark_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time spent in the mark phase.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  sweep_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time spent in the sweep phase.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  compact_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time spent in the compact phase.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
+
+  slice_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time spent running a GC slice.
+      (Migrated from the geckoview metric of the same name.)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877843
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1636419#c17
+    notification_emails:
+      - dev-telemetry-gc-alerts@mozilla.org
+      - jcoppeard@mozilla.com
+    expires: never
