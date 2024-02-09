@@ -294,7 +294,6 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   // Race checker for incoming frames. This is the network thread in chromium,
   // but may vary from test contexts.
   rtc::RaceChecker incoming_frame_race_checker_;
-  bool has_reported_screenshare_frame_rate_umas_ RTC_GUARDED_BY(queue_) = false;
 
   // Number of frames that are currently scheduled for processing on the
   // `queue_`.
@@ -610,8 +609,6 @@ void FrameCadenceAdapterImpl::SetZeroHertzModeEnabled(
     absl::optional<ZeroHertzModeParams> params) {
   RTC_DCHECK_RUN_ON(queue_);
   bool was_zero_hertz_enabled = zero_hertz_params_.has_value();
-  if (params.has_value() && !was_zero_hertz_enabled)
-    has_reported_screenshare_frame_rate_umas_ = false;
   zero_hertz_params_ = params;
   MaybeReconfigureAdapters(was_zero_hertz_enabled);
 }
@@ -735,11 +732,14 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
   RTC_DCHECK_RUN_ON(queue_);
   bool is_zero_hertz_enabled = IsZeroHertzScreenshareEnabled();
   if (is_zero_hertz_enabled) {
-    if (!was_zero_hertz_enabled) {
+    bool max_fps_has_changed = GetInputFrameRateFps().value_or(-1) !=
+                               source_constraints_->max_fps.value_or(-1);
+    if (!was_zero_hertz_enabled || max_fps_has_changed) {
       zero_hertz_adapter_.emplace(queue_, clock_, callback_,
                                   source_constraints_->max_fps.value());
       zero_hertz_adapter_is_active_.store(true, std::memory_order_relaxed);
-      RTC_LOG(LS_INFO) << "Zero hertz mode activated.";
+      RTC_LOG(LS_INFO) << "Zero hertz mode enabled (max_fps="
+                       << source_constraints_->max_fps.value() << ")";
       zero_hertz_adapter_created_timestamp_ = clock_->CurrentTime();
     }
     zero_hertz_adapter_->ReconfigureParameters(zero_hertz_params_.value());
@@ -748,6 +748,7 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
     if (was_zero_hertz_enabled) {
       zero_hertz_adapter_ = absl::nullopt;
       zero_hertz_adapter_is_active_.store(false, std::memory_order_relaxed);
+      RTC_LOG(LS_INFO) << "Zero hertz mode disabled.";
     }
     current_adapter_mode_ = &passthrough_adapter_.value();
   }

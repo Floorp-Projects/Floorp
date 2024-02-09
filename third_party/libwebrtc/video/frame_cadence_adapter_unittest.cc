@@ -184,6 +184,29 @@ TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
   }
 }
 
+TEST(FrameCadenceAdapterTest, ZeroHertzAdapterSupportsMaxFpsChange) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(adapter->GetInputFrameRateFps(), 1u);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 2});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(adapter->GetInputFrameRateFps(), 2u);
+  adapter->OnFrame(CreateFrame());
+  // Ensure that the max_fps has been changed from 1 to 2 fps even if it was
+  // changed while zero hertz was already active.
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(TimeDelta::Millis(500));
+}
+
 TEST(FrameCadenceAdapterTest,
      FrameRateFollowsRateStatisticsAfterZeroHertzDeactivated) {
   ZeroHertzFieldTrialEnabler enabler;
