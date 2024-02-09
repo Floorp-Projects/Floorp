@@ -359,14 +359,15 @@ TEST(RtpTransportTest, RecursiveOnSentPacketDoesNotCrash) {
   TransportObserver observer(&transport);
   const rtc::PacketOptions options;
   const int flags = 0;
-  rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
 
   fake_rtp.SetWritable(true);
   observer.SetActionOnSentPacket([&]() {
+    rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
     if (observer.sent_packet_count() < 2) {
       transport.SendRtpPacket(&rtp_data, options, flags);
     }
   });
+  rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
   transport.SendRtpPacket(&rtp_data, options, flags);
   EXPECT_EQ(observer.sent_packet_count(), 1);
   EXPECT_EQ_WAIT(observer.sent_packet_count(), 2, kShortTimeout);
