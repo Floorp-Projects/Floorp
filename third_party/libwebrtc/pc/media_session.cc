@@ -2237,37 +2237,19 @@ RTCError MediaSessionDescriptionFactory::AddTransportAnswer(
   return RTCError::OK();
 }
 
-// `audio_codecs` = set of all possible codecs that can be used, with correct
-// payload type mappings
-//
-// `supported_audio_codecs` = set of codecs that are supported for the direction
-// of this m= section
-//
-// mcd->codecs() = set of previously negotiated codecs for this m= section
-//
-// The payload types should come from audio_codecs, but the order should come
-// from mcd->codecs() and then supported_codecs, to ensure that re-offers don't
-// change existing codec priority, and that new codecs are added with the right
-// priority.
-RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
+webrtc::RTCErrorOr<AudioCodecs>
+MediaSessionDescriptionFactory::GetNegotiatedAudioCodecsForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const RtpHeaderExtensions& audio_rtp_extensions,
     const AudioCodecs& audio_codecs,
-    StreamParamsVec* current_streams,
-    SessionDescription* desc,
-    IceCredentialsIterator* ice_credentials) const {
-  const webrtc::FieldTrialsView* field_trials =
-      &transport_desc_factory_->trials();
+    const webrtc::FieldTrialsView* field_trials) const {
   // Filter audio_codecs (which includes all codecs, with correctly remapped
   // payload types) based on transceiver direction.
   const AudioCodecs& supported_audio_codecs =
       GetAudioCodecsForOffer(media_description_options.direction);
 
   AudioCodecs filtered_codecs;
-
   if (!media_description_options.codec_preferences.empty()) {
     // Add the codecs from the current transceiver's codec preferences.
     // They override any existing codecs from previous negotiations.
@@ -2311,6 +2293,37 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
     // If application doesn't want CN codecs in offer.
     StripCNCodecs(&filtered_codecs);
   }
+  return filtered_codecs;
+}
+
+// `audio_codecs` = set of all possible codecs that can be used, with correct
+// payload type mappings
+//
+// `supported_audio_codecs` = set of codecs that are supported for the direction
+// of this m= section
+//
+// mcd->codecs() = set of previously negotiated codecs for this m= section
+//
+// The payload types should come from audio_codecs, but the order should come
+// from mcd->codecs() and then supported_codecs, to ensure that re-offers don't
+// change existing codec priority, and that new codecs are added with the right
+// priority.
+RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
+    const MediaDescriptionOptions& media_description_options,
+    const MediaSessionOptions& session_options,
+    const ContentInfo* current_content,
+    const SessionDescription* current_description,
+    const RtpHeaderExtensions& audio_rtp_extensions,
+    const AudioCodecs& audio_codecs,
+    StreamParamsVec* current_streams,
+    SessionDescription* desc,
+    IceCredentialsIterator* ice_credentials) const {
+  auto error_or_filtered_codecs = GetNegotiatedAudioCodecsForOffer(
+      media_description_options, session_options, current_content, audio_codecs,
+      &transport_desc_factory_->trials());
+  if (!error_or_filtered_codecs.ok()) {
+    return error_or_filtered_codecs.MoveError();
+  }
 
   cricket::SecurePolicy sdes_policy =
       IsDtlsActive(current_content, current_description) ? cricket::SEC_DISABLED
@@ -2321,7 +2334,8 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
   GetSupportedAudioSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
   auto error = CreateMediaContentOffer(
-      media_description_options, session_options, filtered_codecs, sdes_policy,
+      media_description_options, session_options,
+      error_or_filtered_codecs.MoveValue(), sdes_policy,
       GetCryptos(current_content), crypto_suites, audio_rtp_extensions,
       ssrc_generator(), current_streams, audio.get(),
       transport_desc_factory_->trials());
@@ -2346,20 +2360,13 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
   return RTCError::OK();
 }
 
-// TODO(kron): This function is very similar to AddAudioContentForOffer.
-// Refactor to reuse shared code.
-RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
+webrtc::RTCErrorOr<VideoCodecs>
+MediaSessionDescriptionFactory::GetNegotiatedVideoCodecsForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const RtpHeaderExtensions& video_rtp_extensions,
     const VideoCodecs& video_codecs,
-    StreamParamsVec* current_streams,
-    SessionDescription* desc,
-    IceCredentialsIterator* ice_credentials) const {
-  const webrtc::FieldTrialsView* field_trials =
-      &transport_desc_factory_->trials();
+    const webrtc::FieldTrialsView* field_trials) const {
   // Filter video_codecs (which includes all codecs, with correctly remapped
   // payload types) based on transceiver direction.
   const VideoCodecs& supported_video_codecs =
@@ -2431,6 +2438,28 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
     }
   }
 
+  return filtered_codecs;
+}
+
+// TODO(kron): This function is very similar to AddAudioContentForOffer.
+// Refactor to reuse shared code.
+RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
+    const MediaDescriptionOptions& media_description_options,
+    const MediaSessionOptions& session_options,
+    const ContentInfo* current_content,
+    const SessionDescription* current_description,
+    const RtpHeaderExtensions& video_rtp_extensions,
+    const VideoCodecs& video_codecs,
+    StreamParamsVec* current_streams,
+    SessionDescription* desc,
+    IceCredentialsIterator* ice_credentials) const {
+  auto error_or_filtered_codecs = GetNegotiatedVideoCodecsForOffer(
+      media_description_options, session_options, current_content, video_codecs,
+      &transport_desc_factory_->trials());
+  if (!error_or_filtered_codecs.ok()) {
+    return error_or_filtered_codecs.MoveError();
+  }
+
   cricket::SecurePolicy sdes_policy =
       IsDtlsActive(current_content, current_description) ? cricket::SEC_DISABLED
                                                          : secure();
@@ -2439,7 +2468,8 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
   GetSupportedVideoSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
   auto error = CreateMediaContentOffer(
-      media_description_options, session_options, filtered_codecs, sdes_policy,
+      media_description_options, session_options,
+      error_or_filtered_codecs.MoveValue(), sdes_policy,
       GetCryptos(current_content), crypto_suites, video_rtp_extensions,
       ssrc_generator(), current_streams, video.get(),
       transport_desc_factory_->trials());
@@ -2526,56 +2556,14 @@ RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
                            current_description, desc, ice_credentials);
 }
 
-// `audio_codecs` = set of all possible codecs that can be used, with correct
-// payload type mappings
-//
-// `supported_audio_codecs` = set of codecs that are supported for the direction
-// of this m= section
-//
-// mcd->codecs() = set of previously negotiated codecs for this m= section
-//
-// The payload types should come from audio_codecs, but the order should come
-// from mcd->codecs() and then supported_codecs, to ensure that re-offers don't
-// change existing codec priority, and that new codecs are added with the right
-// priority.
-RTCError MediaSessionDescriptionFactory::AddAudioContentForAnswer(
+webrtc::RTCErrorOr<AudioCodecs>
+MediaSessionDescriptionFactory::GetNegotiatedAudioCodecsForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
-    const ContentInfo* offer_content,
-    const SessionDescription* offer_description,
     const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const TransportInfo* bundle_transport,
     const AudioCodecs& audio_codecs,
-    const RtpHeaderExtensions& rtp_header_extensions,
-    StreamParamsVec* current_streams,
-    SessionDescription* answer,
-    IceCredentialsIterator* ice_credentials) const {
-  const webrtc::FieldTrialsView* field_trials =
-      &transport_desc_factory_->trials();
-  RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_AUDIO));
-  const AudioContentDescription* offer_audio_description =
-      offer_content->media_description()->as_audio();
-
-  std::unique_ptr<TransportDescription> audio_transport = CreateTransportAnswer(
-      media_description_options.mid, offer_description,
-      media_description_options.transport_options, current_description,
-      bundle_transport != nullptr, ice_credentials);
-  if (!audio_transport) {
-    LOG_AND_RETURN_ERROR(
-        RTCErrorType::INTERNAL_ERROR,
-        "Failed to create transport answer, audio transport is missing");
-  }
-
-  // Pick codecs based on the requested communications direction in the offer
-  // and the selected direction in the answer.
-  // Note these will be filtered one final time in CreateMediaContentAnswer.
-  auto wants_rtd = media_description_options.direction;
-  auto offer_rtd = offer_audio_description->direction();
-  auto answer_rtd = NegotiateRtpTransceiverDirection(offer_rtd, wants_rtd);
-  AudioCodecs supported_audio_codecs =
-      GetAudioCodecsForAnswer(offer_rtd, answer_rtd);
-
+    const AudioCodecs& supported_audio_codecs,
+    const webrtc::FieldTrialsView* field_trials) const {
   AudioCodecs filtered_codecs;
 
   if (!media_description_options.codec_preferences.empty()) {
@@ -2618,6 +2606,64 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForAnswer(
     // If application doesn't want CN codecs in answer.
     StripCNCodecs(&filtered_codecs);
   }
+  return filtered_codecs;
+}
+
+// `audio_codecs` = set of all possible codecs that can be used, with correct
+// payload type mappings
+//
+// `supported_audio_codecs` = set of codecs that are supported for the direction
+// of this m= section
+//
+// mcd->codecs() = set of previously negotiated codecs for this m= section
+//
+// The payload types should come from audio_codecs, but the order should come
+// from mcd->codecs() and then supported_codecs, to ensure that re-offers don't
+// change existing codec priority, and that new codecs are added with the right
+// priority.
+RTCError MediaSessionDescriptionFactory::AddAudioContentForAnswer(
+    const MediaDescriptionOptions& media_description_options,
+    const MediaSessionOptions& session_options,
+    const ContentInfo* offer_content,
+    const SessionDescription* offer_description,
+    const ContentInfo* current_content,
+    const SessionDescription* current_description,
+    const TransportInfo* bundle_transport,
+    const AudioCodecs& audio_codecs,
+    const RtpHeaderExtensions& rtp_header_extensions,
+    StreamParamsVec* current_streams,
+    SessionDescription* answer,
+    IceCredentialsIterator* ice_credentials) const {
+  RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_AUDIO));
+  const AudioContentDescription* offer_audio_description =
+      offer_content->media_description()->as_audio();
+
+  std::unique_ptr<TransportDescription> audio_transport = CreateTransportAnswer(
+      media_description_options.mid, offer_description,
+      media_description_options.transport_options, current_description,
+      bundle_transport != nullptr, ice_credentials);
+  if (!audio_transport) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, audio transport is missing");
+  }
+
+  // Pick codecs based on the requested communications direction in the offer
+  // and the selected direction in the answer.
+  // Note these will be filtered one final time in CreateMediaContentAnswer.
+  auto wants_rtd = media_description_options.direction;
+  auto offer_rtd = offer_audio_description->direction();
+  auto answer_rtd = NegotiateRtpTransceiverDirection(offer_rtd, wants_rtd);
+  AudioCodecs supported_audio_codecs =
+      GetAudioCodecsForAnswer(offer_rtd, answer_rtd);
+
+  auto error_or_filtered_codecs = GetNegotiatedAudioCodecsForAnswer(
+      media_description_options, session_options, current_content, audio_codecs,
+      supported_audio_codecs, &transport_desc_factory_->trials());
+  if (!error_or_filtered_codecs.ok()) {
+    return error_or_filtered_codecs.MoveError();
+  }
+  auto filtered_codecs = error_or_filtered_codecs.MoveValue();
 
   // Determine if we have media codecs in common.
   bool has_common_media_codecs =
@@ -2671,46 +2717,14 @@ RTCError MediaSessionDescriptionFactory::AddAudioContentForAnswer(
   return RTCError::OK();
 }
 
-// TODO(kron): This function is very similar to AddAudioContentForAnswer.
-// Refactor to reuse shared code.
-RTCError MediaSessionDescriptionFactory::AddVideoContentForAnswer(
+webrtc::RTCErrorOr<AudioCodecs>
+MediaSessionDescriptionFactory::GetNegotiatedVideoCodecsForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
-    const ContentInfo* offer_content,
-    const SessionDescription* offer_description,
     const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const TransportInfo* bundle_transport,
     const VideoCodecs& video_codecs,
-    const RtpHeaderExtensions& default_video_rtp_header_extensions,
-    StreamParamsVec* current_streams,
-    SessionDescription* answer,
-    IceCredentialsIterator* ice_credentials) const {
-  const webrtc::FieldTrialsView* field_trials =
-      &transport_desc_factory_->trials();
-  RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_VIDEO));
-  const VideoContentDescription* offer_video_description =
-      offer_content->media_description()->as_video();
-
-  std::unique_ptr<TransportDescription> video_transport = CreateTransportAnswer(
-      media_description_options.mid, offer_description,
-      media_description_options.transport_options, current_description,
-      bundle_transport != nullptr, ice_credentials);
-  if (!video_transport) {
-    LOG_AND_RETURN_ERROR(
-        RTCErrorType::INTERNAL_ERROR,
-        "Failed to create transport answer, video transport is missing");
-  }
-
-  // Pick codecs based on the requested communications direction in the offer
-  // and the selected direction in the answer.
-  // Note these will be filtered one final time in CreateMediaContentAnswer.
-  auto wants_rtd = media_description_options.direction;
-  auto offer_rtd = offer_video_description->direction();
-  auto answer_rtd = NegotiateRtpTransceiverDirection(offer_rtd, wants_rtd);
-  VideoCodecs supported_video_codecs =
-      GetVideoCodecsForAnswer(offer_rtd, answer_rtd);
-
+    const VideoCodecs& supported_video_codecs,
+    const webrtc::FieldTrialsView* field_trials) const {
   VideoCodecs filtered_codecs;
 
   if (!media_description_options.codec_preferences.empty()) {
@@ -2755,13 +2769,6 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForAnswer(
     filtered_codecs =
         ComputeCodecsUnion(filtered_codecs, other_video_codecs, field_trials);
   }
-  // Determine if we have media codecs in common.
-  bool has_common_media_codecs =
-      std::find_if(
-          filtered_codecs.begin(), filtered_codecs.end(), [](const Codec& c) {
-            return !(IsRedCodec(c) || IsUlpfecCodec(c) || IsFlexfecCodec(c));
-          }) != filtered_codecs.end();
-
   if (session_options.raw_packetization_for_video) {
     for (Codec& codec : filtered_codecs) {
       if (codec.IsMediaCodec()) {
@@ -2769,6 +2776,60 @@ RTCError MediaSessionDescriptionFactory::AddVideoContentForAnswer(
       }
     }
   }
+  return filtered_codecs;
+}
+
+// TODO(kron): This function is very similar to AddAudioContentForAnswer.
+// Refactor to reuse shared code.
+RTCError MediaSessionDescriptionFactory::AddVideoContentForAnswer(
+    const MediaDescriptionOptions& media_description_options,
+    const MediaSessionOptions& session_options,
+    const ContentInfo* offer_content,
+    const SessionDescription* offer_description,
+    const ContentInfo* current_content,
+    const SessionDescription* current_description,
+    const TransportInfo* bundle_transport,
+    const VideoCodecs& video_codecs,
+    const RtpHeaderExtensions& default_video_rtp_header_extensions,
+    StreamParamsVec* current_streams,
+    SessionDescription* answer,
+    IceCredentialsIterator* ice_credentials) const {
+  RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_VIDEO));
+  const VideoContentDescription* offer_video_description =
+      offer_content->media_description()->as_video();
+
+  std::unique_ptr<TransportDescription> video_transport = CreateTransportAnswer(
+      media_description_options.mid, offer_description,
+      media_description_options.transport_options, current_description,
+      bundle_transport != nullptr, ice_credentials);
+  if (!video_transport) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, video transport is missing");
+  }
+
+  // Pick codecs based on the requested communications direction in the offer
+  // and the selected direction in the answer.
+  // Note these will be filtered one final time in CreateMediaContentAnswer.
+  auto wants_rtd = media_description_options.direction;
+  auto offer_rtd = offer_video_description->direction();
+  auto answer_rtd = NegotiateRtpTransceiverDirection(offer_rtd, wants_rtd);
+  VideoCodecs supported_video_codecs =
+      GetVideoCodecsForAnswer(offer_rtd, answer_rtd);
+
+  auto error_or_filtered_codecs = GetNegotiatedVideoCodecsForAnswer(
+      media_description_options, session_options, current_content, video_codecs,
+      supported_video_codecs, &transport_desc_factory_->trials());
+  if (!error_or_filtered_codecs.ok()) {
+    return error_or_filtered_codecs.MoveError();
+  }
+  auto filtered_codecs = error_or_filtered_codecs.MoveValue();
+  // Determine if we have media codecs in common.
+  bool has_common_media_codecs =
+      std::find_if(
+          filtered_codecs.begin(), filtered_codecs.end(), [](const Codec& c) {
+            return !(IsRedCodec(c) || IsUlpfecCodec(c) || IsFlexfecCodec(c));
+          }) != filtered_codecs.end();
 
   bool bundle_enabled = offer_description->HasGroup(GROUP_TYPE_BUNDLE) &&
                         session_options.bundle_enabled;

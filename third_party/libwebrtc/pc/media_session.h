@@ -233,7 +233,12 @@ class MediaSessionDescriptionFactory {
   // Helpers for adding media contents to the SessionDescription. Returns true
   // it succeeds or the media content is not needed, or false if there is any
   // error.
-
+  webrtc::RTCErrorOr<AudioCodecs> GetNegotiatedAudioCodecsForOffer(
+      const MediaDescriptionOptions& media_description_options,
+      const MediaSessionOptions& session_options,
+      const ContentInfo* current_content,
+      const AudioCodecs& audio_codecs,
+      const webrtc::FieldTrialsView* field_trials) const;
   webrtc::RTCError AddAudioContentForOffer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -245,6 +250,12 @@ class MediaSessionDescriptionFactory {
       SessionDescription* desc,
       IceCredentialsIterator* ice_credentials) const;
 
+  webrtc::RTCErrorOr<AudioCodecs> GetNegotiatedVideoCodecsForOffer(
+      const MediaDescriptionOptions& media_description_options,
+      const MediaSessionOptions& session_options,
+      const ContentInfo* current_content,
+      const VideoCodecs& video_codecs,
+      const webrtc::FieldTrialsView* field_trials) const;
   webrtc::RTCError AddVideoContentForOffer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -273,6 +284,13 @@ class MediaSessionDescriptionFactory {
       SessionDescription* desc,
       IceCredentialsIterator* ice_credentials) const;
 
+  webrtc::RTCErrorOr<AudioCodecs> GetNegotiatedAudioCodecsForAnswer(
+      const MediaDescriptionOptions& media_description_options,
+      const MediaSessionOptions& session_options,
+      const ContentInfo* current_content,
+      const AudioCodecs& audio_codecs,
+      const AudioCodecs& supported_audio_codecs,
+      const webrtc::FieldTrialsView* field_trials) const;
   webrtc::RTCError AddAudioContentForAnswer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -287,6 +305,13 @@ class MediaSessionDescriptionFactory {
       SessionDescription* answer,
       IceCredentialsIterator* ice_credentials) const;
 
+  webrtc::RTCErrorOr<AudioCodecs> GetNegotiatedVideoCodecsForAnswer(
+      const MediaDescriptionOptions& media_description_options,
+      const MediaSessionOptions& session_options,
+      const ContentInfo* current_content,
+      const VideoCodecs& video_codecs,
+      const VideoCodecs& supported_video_codecs,
+      const webrtc::FieldTrialsView* field_trials) const;
   webrtc::RTCError AddVideoContentForAnswer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
