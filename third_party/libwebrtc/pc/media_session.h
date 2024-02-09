@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "api/crypto/crypto_options.h"
-#include "api/field_trials_view.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
@@ -237,8 +236,7 @@ class MediaSessionDescriptionFactory {
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
       const ContentInfo* current_content,
-      const AudioCodecs& audio_codecs,
-      const webrtc::FieldTrialsView* field_trials) const;
+      const AudioCodecs& audio_codecs) const;
   webrtc::RTCError AddAudioContentForOffer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -254,8 +252,7 @@ class MediaSessionDescriptionFactory {
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
       const ContentInfo* current_content,
-      const VideoCodecs& video_codecs,
-      const webrtc::FieldTrialsView* field_trials) const;
+      const VideoCodecs& video_codecs) const;
   webrtc::RTCError AddVideoContentForOffer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -289,8 +286,7 @@ class MediaSessionDescriptionFactory {
       const MediaSessionOptions& session_options,
       const ContentInfo* current_content,
       const AudioCodecs& audio_codecs,
-      const AudioCodecs& supported_audio_codecs,
-      const webrtc::FieldTrialsView* field_trials) const;
+      const AudioCodecs& supported_audio_codecs) const;
   webrtc::RTCError AddAudioContentForAnswer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
@@ -310,8 +306,7 @@ class MediaSessionDescriptionFactory {
       const MediaSessionOptions& session_options,
       const ContentInfo* current_content,
       const VideoCodecs& video_codecs,
-      const VideoCodecs& supported_video_codecs,
-      const webrtc::FieldTrialsView* field_trials) const;
+      const VideoCodecs& supported_video_codecs) const;
   webrtc::RTCError AddVideoContentForAnswer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
