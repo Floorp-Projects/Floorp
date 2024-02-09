@@ -114,7 +114,7 @@ class NavigationToolbarRobot {
     // New unified search UI selector
     fun verifyDefaultSearchEngine(engineName: String) =
         assertUIObjectExists(
-            searchSelectorButton.getChild(UiSelector().description(engineName)),
+            searchSelectorButton().getChild(UiSelector().description(engineName)),
         )
 
     fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {
@@ -352,8 +352,8 @@ class NavigationToolbarRobot {
         }
 
         fun clickSearchSelectorButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            searchSelectorButton.waitForExists(waitingTime)
-            searchSelectorButton.click()
+            searchSelectorButton().waitForExists(waitingTime)
+            searchSelectorButton().click()
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -413,7 +413,7 @@ private fun assertReaderViewDetected(visible: Boolean) {
     )
 }
 
-private val searchSelectorButton =
+private fun searchSelectorButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/search_selector"))
 
 inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
