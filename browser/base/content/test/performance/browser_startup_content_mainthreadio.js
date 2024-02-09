@@ -24,6 +24,10 @@ const kDumpAllStacks = false;
 const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
+const FORK_SERVER = Services.prefs.getBoolPref(
+  "dom.ipc.forkserver.enable",
+  false
+);
 
 /* This is an object mapping string process types to lists of known cases
  * of IO happening on the main thread. Ideally, IO should not be on the main
@@ -70,13 +74,17 @@ const processes = {
   "Web Content": [
     {
       path: "GreD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
@@ -102,13 +110,17 @@ const processes = {
   "Privileged Content": [
     {
       path: "GreD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
@@ -121,13 +133,17 @@ const processes = {
   WebExtensions: [
     {
       path: "GreD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
       // bug 1376994
       path: "XCurProcD:omni.ja",
-      condition: !WIN, // Visible on Windows with an open marker
+      // Visible on Windows with an open marker.
+      // The fork server preloads the omnijars.
+      condition: !WIN && !FORK_SERVER,
       stat: 1,
     },
     {
