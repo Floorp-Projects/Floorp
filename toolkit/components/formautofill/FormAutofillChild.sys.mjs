@@ -231,15 +231,24 @@ export class FormAutofillChild extends JSWindowActorChild {
     // We only capture the form of the active field right now,
     // this means that we might miss some fields (see bug 1871356)
     lazy.FormAutofillContent.formSubmitted(activeElement, formSubmissionReason);
+  }
 
-    // acted on page navigation, remove progress listener
+  /**
+   * After a form submission we unregister the
+   * nsIWebProgressListener from the top level doc shell
+   */
+  unregisterProgressListener() {
     const docShell = this.getHighestDocShell();
-    docShell.removeProgressListener(observer);
+    try {
+      docShell.removeProgressListener(observer);
+    } catch (ex) {
+      // Ignore NS_ERROR_FAILURE if the progress listener was not registered
+    }
   }
 
   /**
    * After a focusin event and after we identified formautofill fields,
-   * we set up an nsIWebProgressListener that notifies of a request state
+   * we set up a nsIWebProgressListener that notifies of a request state
    * change or window location change in the top level doc shell
    */
   registerProgressListener() {
