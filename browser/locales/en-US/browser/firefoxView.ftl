@@ -12,9 +12,6 @@ menu-tools-firefox-view =
 
 firefoxview-page-title = { -firefoxview-brand-name }
 
-firefoxview-page-heading =
-  .heading = { -firefoxview-brand-name }
-
 firefoxview-page-label =
   .label = { -firefoxview-brand-name }
 

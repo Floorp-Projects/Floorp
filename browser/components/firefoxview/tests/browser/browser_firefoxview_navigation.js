@@ -3,15 +3,15 @@
 
 const URL_BASE = `${getFirefoxViewURL()}#`;
 
-function assertCorrectPage(document, view, event) {
+function assertCorrectPage(document, name, event) {
   is(
     document.location.hash,
-    `#${view}`,
-    `Navigation button for ${view} navigates to ${URL_BASE + view} on ${event}.`
+    `#${name}`,
+    `Navigation button for ${name} navigates to ${URL_BASE + name} on ${event}.`
   );
   is(
     document.querySelector("named-deck").selectedViewName,
-    view,
+    name,
     "The correct deck child is selected"
   );
 }
@@ -22,21 +22,21 @@ add_task(async function test_side_component_navigation_by_click() {
 
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
-    const pageNavButtons = document.querySelectorAll("moz-page-nav-button");
+    const categoryButtons = document.querySelectorAll("fxview-category-button");
 
-    for (let element of pageNavButtons) {
-      const view = element.view;
+    for (let element of categoryButtons) {
+      const name = element.name;
       let buttonClicked = BrowserTestUtils.waitForEvent(
         element.buttonEl,
         "click",
         win
       );
 
-      info(`Clicking navigation button for ${view}`);
+      info(`Clicking navigation button for ${name}`);
       EventUtils.synthesizeMouseAtCenter(element.buttonEl, {}, content);
       await buttonClicked;
 
-      assertCorrectPage(document, view, "click");
+      assertCorrectPage(document, name, "click");
     }
   });
 });
@@ -47,49 +47,49 @@ add_task(async function test_side_component_navigation_by_keyboard() {
 
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
-    const pageNavButtons = document.querySelectorAll("moz-page-nav-button");
-    const firstButton = pageNavButtons[0];
+    const categoryButtons = document.querySelectorAll("fxview-category-button");
+    const firstButton = categoryButtons[0];
 
     firstButton.focus();
     is(
-      document.activeElement.shadowRoot.activeElement,
+      document.activeElement,
       firstButton,
-      "The first page nav button has focus"
+      "The first category button has focus"
     );
 
-    for (let element of Array.from(pageNavButtons).slice(1)) {
-      const view = element.view;
+    for (let element of Array.from(categoryButtons).slice(1)) {
+      const name = element.name;
       let buttonFocused = BrowserTestUtils.waitForEvent(element, "focus", win);
 
-      info(`Focus is on ${document.activeElement.view}`);
-      info(`Arrow down on navigation to ${view}`);
+      info(`Focus is on ${document.activeElement.name}`);
+      info(`Arrow down on navigation to ${name}`);
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
       await buttonFocused;
 
-      assertCorrectPage(document, view, "key press");
+      assertCorrectPage(document, name, "key press");
     }
   });
 });
 
-add_task(async function test_direct_navigation_to_correct_view() {
+add_task(async function test_direct_navigation_to_correct_category() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    const pageNavButtons = document.querySelectorAll("moz-page-nav-button");
+    const categoryButtons = document.querySelectorAll("fxview-category-button");
     const namedDeck = document.querySelector("named-deck");
 
-    for (let element of pageNavButtons) {
-      const view = element.view;
+    for (let element of categoryButtons) {
+      const name = element.name;
 
-      info(`Navigating to ${URL_BASE + view}`);
-      document.location.assign(URL_BASE + view);
+      info(`Navigating to ${URL_BASE + name}`);
+      document.location.assign(URL_BASE + name);
       await BrowserTestUtils.waitForCondition(() => {
-        return namedDeck.selectedViewName === view;
+        return namedDeck.selectedViewName === name;
       }, "Wait for navigation to complete");
 
       is(
         namedDeck.selectedViewName,
-        view,
-        `The correct deck child for view ${view} is selected`
+        name,
+        `The correct deck child for category ${name} is selected`
       );
     }
   });
