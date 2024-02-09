@@ -174,7 +174,7 @@ TEST(WebRtcVoiceEngineTestStubLibrary, StartupShutdown) {
           task_queue_factory.get(), adm.get(),
           webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
           webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
-          nullptr, nullptr, trials);
+          nullptr, trials);
       engine.Init();
     }
   }
@@ -220,7 +220,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     auto decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
     engine_.reset(new cricket::WebRtcVoiceEngine(
         task_queue_factory_.get(), adm_.get(), encoder_factory, decoder_factory,
-        nullptr, apm_, nullptr, nullptr, field_trials_));
+        nullptr, apm_, nullptr, field_trials_));
     engine_->Init();
     send_parameters_.codecs.push_back(kPcmuCodec);
     recv_parameters_.codecs.push_back(kPcmuCodec);
@@ -3689,7 +3689,7 @@ TEST(WebRtcVoiceEngineTest, StartupShutdown) {
         task_queue_factory.get(), adm.get(),
         webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
         webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
-        nullptr, nullptr, field_trials);
+        nullptr, field_trials);
     engine.Init();
     webrtc::RtcEventLogNull event_log;
     CallConfig call_config(&event_log);
@@ -3725,7 +3725,7 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
           task_queue_factory.get(), adm.get(),
           webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
           webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
-          nullptr, nullptr, field_trials);
+          nullptr, field_trials);
       engine.Init();
       webrtc::RtcEventLogNull event_log;
       CallConfig call_config(&event_log);
@@ -3765,7 +3765,7 @@ TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
         task_queue_factory.get(), adm.get(),
         webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
         webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
-        nullptr, nullptr, field_trials);
+        nullptr, field_trials);
     engine.Init();
     for (const cricket::AudioCodec& codec : engine.send_codecs()) {
       auto is_codec = [&codec](const char* name, int clockrate = 0) {
@@ -3815,7 +3815,7 @@ TEST(WebRtcVoiceEngineTest, Has32Channels) {
         task_queue_factory.get(), adm.get(),
         webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
         webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
-        nullptr, nullptr, field_trials);
+        nullptr, field_trials);
     engine.Init();
     webrtc::RtcEventLogNull event_log;
     CallConfig call_config(&event_log);
@@ -3861,7 +3861,7 @@ TEST(WebRtcVoiceEngineTest, SetRecvCodecs) {
         task_queue_factory.get(), adm.get(),
         webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
         webrtc::CreateBuiltinAudioDecoderFactory(), nullptr, apm, nullptr,
-        nullptr, field_trials);
+        field_trials);
     engine.Init();
     webrtc::RtcEventLogNull event_log;
     CallConfig call_config(&event_log);
@@ -3889,8 +3889,7 @@ TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
   cricket::WebRtcVoiceEngine engine(task_queue_factory.get(), adm.get(),
                                     webrtc::CreateBuiltinAudioEncoderFactory(),
                                     webrtc::CreateBuiltinAudioDecoderFactory(),
-                                    nullptr, nullptr, nullptr, nullptr,
-                                    field_trials);
+                                    nullptr, nullptr, nullptr, field_trials);
   engine.Init();
   webrtc::RtcEventLogNull event_log;
   CallConfig call_config(&event_log);
@@ -3965,7 +3964,7 @@ TEST(WebRtcVoiceEngineTest, CollectRecvCodecs) {
     webrtc::FieldTrialBasedConfig field_trials;
     cricket::WebRtcVoiceEngine engine(
         task_queue_factory.get(), adm.get(), unused_encoder_factory,
-        mock_decoder_factory, nullptr, apm, nullptr, nullptr, field_trials);
+        mock_decoder_factory, nullptr, apm, nullptr, field_trials);
     engine.Init();
     auto codecs = engine.recv_codecs();
     EXPECT_EQ(11u, codecs.size());

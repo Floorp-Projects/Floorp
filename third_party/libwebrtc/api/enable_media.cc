@@ -54,8 +54,7 @@ class MediaFactoryImpl : public MediaFactory {
         deps.task_queue_factory.get(), deps.adm.get(),
         std::move(deps.audio_encoder_factory),
         std::move(deps.audio_decoder_factory), std::move(deps.audio_mixer),
-        std::move(deps.audio_processing), /*audio_frame_processor=*/nullptr,
-        /*owned_audio_frame_processor=*/std::move(deps.audio_frame_processor),
+        std::move(deps.audio_processing), std::move(deps.audio_frame_processor),
         *trials);
     auto video_engine = std::make_unique<WebRtcVideoEngine>(
         std::move(deps.video_encoder_factory),
