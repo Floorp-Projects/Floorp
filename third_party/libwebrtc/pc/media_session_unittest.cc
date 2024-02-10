@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -63,7 +62,6 @@ using ::rtc::kCsAeadAes256Gcm;
 using ::rtc::kCsAesCm128HmacSha1_32;
 using ::rtc::kCsAesCm128HmacSha1_80;
 using ::rtc::UniqueRandomIdGenerator;
-using ::testing::AllOf;
 using ::testing::Bool;
 using ::testing::Combine;
 using ::testing::Contains;
@@ -74,10 +72,8 @@ using ::testing::Eq;
 using ::testing::Field;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
-using ::testing::IsSupersetOf;
 using ::testing::Ne;
 using ::testing::Not;
-using ::testing::NotNull;
 using ::testing::Pointwise;
 using ::testing::SizeIs;
 using ::testing::Values;
@@ -4327,45 +4323,6 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   EXPECT_EQ(vcd1->codecs()[0].id, vcd2->codecs()[0].id);
 }
 
-TEST_F(MediaSessionDescriptionFactoryTest,
-       DoesntReusePayloadIdWhenAddingExistingCodecWithDifferentPacketization) {
-  VideoCodec vp8 = CreateVideoCodec(96, "VP8");
-  VideoCodec vp8_raw = CreateVideoCodec(98, "VP8");
-  vp8_raw.packetization = "raw";
-  VideoCodec vp9 = CreateVideoCodec(98, "VP9");
-
-  f1_.set_video_codecs({vp8, vp9}, {vp8, vp9});
-  MediaSessionOptions opts;
-  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
-                             RtpTransceiverDirection::kSendRecv, kActive,
-                             &opts);
-
-  std::unique_ptr<SessionDescription> offer =
-      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
-  ASSERT_THAT(offer, NotNull());
-  MediaContentDescription& video = *offer->contents()[0].media_description();
-  video.set_codecs({vp8, vp8_raw});
-  std::unique_ptr<SessionDescription> updated_offer =
-      f1_.CreateOfferOrError(opts, offer.get()).MoveValue();
-  ASSERT_THAT(updated_offer, NotNull());
-
-  MediaContentDescription& updated_video =
-      *updated_offer->contents()[0].media_description();
-  EXPECT_THAT(
-      updated_video.codecs(),
-      ElementsAre(AllOf(Field(&cricket::Codec::name, "VP8"),
-                        Field(&cricket::Codec::packetization, absl::nullopt)),
-                  AllOf(Field(&cricket::Codec::name, "VP8"),
-                        Field(&cricket::Codec::packetization, "raw")),
-                  AllOf(Field(&cricket::Codec::name, "VP9"),
-                        Field(&cricket::Codec::packetization, absl::nullopt))));
-  std::set<int> used_ids;
-  for (const VideoCodec& c : updated_video.codecs()) {
-    used_ids.insert(c.id);
-  }
-  EXPECT_THAT(used_ids, AllOf(SizeIs(3), IsSupersetOf({96, 98})));
-}
-
 // Test verifying that negotiating codecs with the same packetization retains
 // the packetization value.
 TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsEqual) {
@@ -4400,6 +4357,42 @@ TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsEqual) {
   vcd1 = answer->contents()[0].media_description();
   ASSERT_EQ(1u, vcd1->codecs().size());
   EXPECT_EQ(vcd1->codecs()[0].packetization, "raw");
+}
+
+// Test verifying that negotiating codecs with different packetization removes
+// the packetization value.
+TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsDifferent) {
+  std::vector f1_codecs = {CreateVideoCodec(96, "H264")};
+  f1_codecs.back().packetization = "raw";
+  f1_.set_video_codecs(f1_codecs, f1_codecs);
+
+  std::vector f2_codecs = {CreateVideoCodec(96, "H264")};
+  f2_codecs.back().packetization = "notraw";
+  f2_.set_video_codecs(f2_codecs, f2_codecs);
+
+  MediaSessionOptions opts;
+  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+
+  // Create an offer with two video sections using same codecs.
+  std::unique_ptr<SessionDescription> offer =
+      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
+  ASSERT_TRUE(offer);
+  ASSERT_EQ(1u, offer->contents().size());
+  const VideoContentDescription* vcd1 =
+      offer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, "raw");
+
+  // Create answer and negotiate the codecs.
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswerOrError(offer.get(), opts, nullptr).MoveValue();
+  ASSERT_TRUE(answer);
+  ASSERT_EQ(1u, answer->contents().size());
+  vcd1 = answer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, absl::nullopt);
 }
 
 // Test that the codec preference order per media section is respected in

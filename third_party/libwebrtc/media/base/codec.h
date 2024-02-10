@@ -112,10 +112,6 @@ struct RTC_EXPORT Codec {
   // checking the assigned id and profile values for the relevant video codecs.
   // H264 levels are not compared.
   bool Matches(const Codec& codec) const;
-
-  // Like `Matches` but does not consider the packetization.
-  bool MatchesWithoutPacketization(const Codec& codec) const;
-
   bool MatchesRtpCodec(const webrtc::RtpCodec& capability) const;
 
   // Find the parameter for `name` and write the value to `out`.
