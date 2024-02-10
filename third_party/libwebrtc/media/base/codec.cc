@@ -62,58 +62,6 @@ bool IsSameCodecSpecific(const std::string& name1,
   return true;
 }
 
-bool MatchesMediaSubtype(const Codec& lhs, const Codec& rhs) {
-  // Match the codec id/name based on the typical static/dynamic name rules.
-  // Matching is case-insensitive.
-
-  // We support the ranges [96, 127] and more recently [35, 65].
-  // https://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-1
-  // Within those ranges we match by codec name, outside by codec id.
-  // Since no codecs are assigned an id in the range [66, 95] by us, these will
-  // never match.
-  auto id_in_dynamic_range = [](int id) {
-    const int kLowerDynamicRangeMin = 35;
-    const int kLowerDynamicRangeMax = 65;
-    const int kUpperDynamicRangeMin = 96;
-    const int kUpperDynamicRangeMax = 127;
-    return (id >= kLowerDynamicRangeMin && id <= kLowerDynamicRangeMax) ||
-           (id >= kUpperDynamicRangeMin && id <= kUpperDynamicRangeMax);
-  };
-
-  if (lhs.type != rhs.type) {
-    return false;
-  }
-
-  return (id_in_dynamic_range(lhs.id) && id_in_dynamic_range(rhs.id))
-             ? absl::EqualsIgnoreCase(lhs.name, rhs.name)
-             : lhs.id == rhs.id;
-}
-
-bool MatchesMediaParameters(const Codec& lhs, const Codec& rhs) {
-  switch (lhs.type) {
-    case Codec::Type::kAudio:
-      // If a nonzero clockrate is specified, it must match the actual
-      // clockrate. If a nonzero bitrate is specified, it must match the
-      // actual bitrate, unless the codec is VBR (0), where we just force
-      // the supplied value. The number of channels must match exactly, with
-      // the exception that channels=0 is treated synonymously as
-      // channels=1, per RFC 4566 section 6: " [The channels] parameter is
-      // OPTIONAL and may be omitted if the number of channels is one."
-      // Preference is ignored.
-      // TODO(juberti): Treat a zero clockrate as 8000Hz, the RTP default
-      // clockrate.
-      return ((rhs.clockrate == 0 /*&& lsh.clockrate == 8000*/) ||
-              lhs.clockrate == rhs.clockrate) &&
-             (rhs.bitrate == 0 || lhs.bitrate <= 0 ||
-              lhs.bitrate == rhs.bitrate) &&
-             ((rhs.channels < 2 && lhs.channels < 2) ||
-              lhs.channels == rhs.channels);
-
-    case Codec::Type::kVideo:
-      return IsSameCodecSpecific(lhs.name, lhs.params, rhs.name, rhs.params);
-  }
-}
-
 }  // namespace
 
 FeedbackParams::FeedbackParams() = default;
@@ -211,14 +159,55 @@ bool Codec::operator==(const Codec& c) const {
 }
 
 bool Codec::Matches(const Codec& codec) const {
-  return MatchesMediaSubtype(*this, codec) &&
-         MatchesMediaParameters(*this, codec) &&
-         (packetization == codec.packetization);
-}
+  // Match the codec id/name based on the typical static/dynamic name rules.
+  // Matching is case-insensitive.
 
-bool Codec::MatchesWithoutPacketization(const Codec& codec) const {
-  return MatchesMediaSubtype(*this, codec) &&
-         MatchesMediaParameters(*this, codec);
+  // We support the ranges [96, 127] and more recently [35, 65].
+  // https://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-1
+  // Within those ranges we match by codec name, outside by codec id.
+  // Since no codecs are assigned an id in the range [66, 95] by us, these will
+  // never match.
+  const int kLowerDynamicRangeMin = 35;
+  const int kLowerDynamicRangeMax = 65;
+  const int kUpperDynamicRangeMin = 96;
+  const int kUpperDynamicRangeMax = 127;
+  const bool is_id_in_dynamic_range =
+      (id >= kLowerDynamicRangeMin && id <= kLowerDynamicRangeMax) ||
+      (id >= kUpperDynamicRangeMin && id <= kUpperDynamicRangeMax);
+  const bool is_codec_id_in_dynamic_range =
+      (codec.id >= kLowerDynamicRangeMin &&
+       codec.id <= kLowerDynamicRangeMax) ||
+      (codec.id >= kUpperDynamicRangeMin && codec.id <= kUpperDynamicRangeMax);
+  bool matches_id = is_id_in_dynamic_range && is_codec_id_in_dynamic_range
+                        ? (absl::EqualsIgnoreCase(name, codec.name))
+                        : (id == codec.id);
+
+  auto matches_type_specific = [&]() {
+    switch (type) {
+      case Type::kAudio:
+        // If a nonzero clockrate is specified, it must match the actual
+        // clockrate. If a nonzero bitrate is specified, it must match the
+        // actual bitrate, unless the codec is VBR (0), where we just force the
+        // supplied value. The number of channels must match exactly, with the
+        // exception that channels=0 is treated synonymously as channels=1, per
+        // RFC 4566 section 6: " [The channels] parameter is OPTIONAL and may be
+        // omitted if the number of channels is one."
+        // Preference is ignored.
+        // TODO(juberti): Treat a zero clockrate as 8000Hz, the RTP default
+        // clockrate.
+        return ((codec.clockrate == 0 /*&& clockrate == 8000*/) ||
+                clockrate == codec.clockrate) &&
+               (codec.bitrate == 0 || bitrate <= 0 ||
+                bitrate == codec.bitrate) &&
+               ((codec.channels < 2 && channels < 2) ||
+                channels == codec.channels);
+
+      case Type::kVideo:
+        return IsSameCodecSpecific(name, params, codec.name, codec.params);
+    }
+  };
+
+  return matches_id && matches_type_specific();
 }
 
 bool Codec::MatchesRtpCodec(const webrtc::RtpCodec& codec_capability) const {

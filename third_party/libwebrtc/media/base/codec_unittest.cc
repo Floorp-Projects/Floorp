@@ -210,22 +210,13 @@ TEST(CodecTest, TestVideoCodecMatches) {
   EXPECT_FALSE(c1.Matches(cricket::CreateVideoCodec(34, "V")));
 }
 
-TEST(CodecTest, CodecsWithDifferentPacketizationDoesntMatch) {
+TEST(CodecTest, TestVideoCodecMatchesWithDifferentPacketization) {
   VideoCodec c0 = cricket::CreateVideoCodec(100, cricket::kVp8CodecName);
   VideoCodec c1 = cricket::CreateVideoCodec(101, cricket::kVp8CodecName);
   c1.packetization = "raw";
 
-  EXPECT_FALSE(c0.Matches(c1));
-  EXPECT_FALSE(c1.Matches(c0));
-}
-
-TEST(CodecTest, CodecsWithDifferentPacketizationMatchesWithoutPacketization) {
-  VideoCodec c0 = cricket::CreateVideoCodec(100, cricket::kVp8CodecName);
-  VideoCodec c1 = cricket::CreateVideoCodec(101, cricket::kVp8CodecName);
-  c1.packetization = "raw";
-
-  EXPECT_TRUE(c0.MatchesWithoutPacketization(c1));
-  EXPECT_TRUE(c1.MatchesWithoutPacketization(c0));
+  EXPECT_TRUE(c0.Matches(c1));
+  EXPECT_TRUE(c1.Matches(c0));
 }
 
 // AV1 codecs compare profile information.

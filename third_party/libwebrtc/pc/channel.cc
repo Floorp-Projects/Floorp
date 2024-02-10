@@ -1032,7 +1032,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     webrtc::flat_set<const VideoCodec*> matched_codecs;
     for (VideoCodec& send_codec : send_params.codecs) {
       if (absl::c_any_of(matched_codecs, [&](const VideoCodec* c) {
-            return send_codec.MatchesWithoutPacketization(*c);
+            return send_codec.Matches(*c);
           })) {
         continue;
       }
@@ -1146,7 +1146,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
     webrtc::flat_set<const Codec*> matched_codecs;
     for (Codec& recv_codec : recv_params.codecs) {
       if (absl::c_any_of(matched_codecs, [&](const Codec* c) {
-            return recv_codec.MatchesWithoutPacketization(*c);
+            return recv_codec.Matches(*c);
           })) {
         continue;
       }
