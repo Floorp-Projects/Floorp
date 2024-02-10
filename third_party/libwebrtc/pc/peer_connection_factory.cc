@@ -80,12 +80,9 @@ CreateModularPeerConnectionFactory(
 // Static
 rtc::scoped_refptr<PeerConnectionFactory> PeerConnectionFactory::Create(
     PeerConnectionFactoryDependencies dependencies) {
-  // TODO(bugs.webrtc.org/15656): Move task_queue_factory into environment with
-  // ownership when MediaFactory::CreateMedia would use it from the
-  // Environment instead of the PeerConnectionFactoryDependencies.
   auto context = ConnectionContext::Create(
       CreateEnvironment(std::move(dependencies.trials),
-                        dependencies.task_queue_factory.get()),
+                        std::move(dependencies.task_queue_factory)),
       &dependencies);
   if (!context) {
     return nullptr;
@@ -97,7 +94,6 @@ PeerConnectionFactory::PeerConnectionFactory(
     rtc::scoped_refptr<ConnectionContext> context,
     PeerConnectionFactoryDependencies* dependencies)
     : context_(context),
-      task_queue_factory_(std::move(dependencies->task_queue_factory)),
       event_log_factory_(std::move(dependencies->event_log_factory)),
       fec_controller_factory_(std::move(dependencies->fec_controller_factory)),
       network_state_predictor_factory_(
@@ -111,15 +107,12 @@ PeerConnectionFactory::PeerConnectionFactory(
               : std::make_unique<RtpTransportControllerSendFactory>()),
       metronome_(std::move(dependencies->metronome)) {}
 
-// TODO(bugs.webrtc.org/15656): Move task_queue_factory into environment with
-// ownership when MediaFactory::CreateMedia would use it from the
-// Environment instead of the PeerConnectionFactoryDependencies.
 PeerConnectionFactory::PeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies)
     : PeerConnectionFactory(
           ConnectionContext::Create(
               CreateEnvironment(std::move(dependencies.trials),
-                                dependencies.task_queue_factory.get()),
+                                std::move(dependencies.task_queue_factory)),
               &dependencies),
           &dependencies) {}
 
