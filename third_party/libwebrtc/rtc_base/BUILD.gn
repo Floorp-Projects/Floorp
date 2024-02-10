@@ -156,8 +156,12 @@ rtc_library("byte_buffer") {
   deps = [
     ":buffer",
     ":byte_order",
+    "../api:array_view",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("buffer_queue") {
