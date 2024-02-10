@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/environment/environment_factory.h"
 #include "media/base/media_channel.h"
 #include "pc/channel.h"
 #include "pc/stream_collection.h"
@@ -219,7 +220,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         signaling_thread_(rtc::Thread::Current()),
         // TODO(hta): remove separate thread variables and use context.
         dependencies_(MakeDependencies()),
-        context_(ConnectionContext::Create(&dependencies_)),
+        context_(
+            ConnectionContext::Create(CreateEnvironment(), &dependencies_)),
         local_streams_(StreamCollection::Create()),
         remote_streams_(StreamCollection::Create()),
         data_channel_controller_(network_thread_) {}
