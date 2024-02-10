@@ -4,6 +4,8 @@
 
 // This test verifies that the keyboard shortcut "n" will Start/Stop the
 // narration of an article in readermode when the article is in focus.
+// This test also verifies that the keyboard shortcut "←" (left arrow) will
+// skip the narration backward, while "→" (right arrow) skips it forward.
 
 registerCleanupFunction(teardown);
 
@@ -22,7 +24,26 @@ add_task(async function testToggleNarrate() {
     $(NarrateTestUtils.TOGGLE).focus();
     eventUtils.synthesizeKey("n", {}, content);
 
-    await ContentTaskUtils.waitForEvent(content, "paragraphstart");
+    let promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphstart");
+    let speechinfo = (await promiseEvent).detail;
+    let paragraph = speechinfo.paragraph;
+
+    NarrateTestUtils.isStartedState(content, ok);
+
+    promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphstart");
+    $(NarrateTestUtils.TOGGLE).focus();
+    eventUtils.synthesizeKey("KEY_ArrowRight", {}, content);
+    speechinfo = (await promiseEvent).detail;
+    isnot(speechinfo.paragraph, paragraph, "next paragraph is being spoken");
+
+    NarrateTestUtils.isStartedState(content, ok);
+
+    promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphstart");
+    $(NarrateTestUtils.TOGGLE).focus();
+    eventUtils.synthesizeKey("KEY_ArrowLeft", { repeat: 2 }, content);
+    speechinfo = (await promiseEvent).detail;
+    is(speechinfo.paragraph, paragraph, "first paragraph being spoken");
+
     NarrateTestUtils.isStartedState(content, ok);
 
     $(NarrateTestUtils.TOGGLE).focus();
