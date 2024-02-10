@@ -113,6 +113,7 @@ class VideoSendStream {
     uint64_t total_encoded_bytes_target = 0;
     uint32_t frames = 0;
     uint32_t frames_dropped_by_capturer = 0;
+    uint32_t frames_dropped_by_bad_timestamp = 0;
     uint32_t frames_dropped_by_encoder_queue = 0;
     uint32_t frames_dropped_by_rate_limiter = 0;
     uint32_t frames_dropped_by_congestion_window = 0;
