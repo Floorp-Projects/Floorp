@@ -182,20 +182,10 @@ void AppProcessBuilder::InitAppProcess(int* argcp, char*** argvp) {
   ReplaceArguments(argcp, argvp);
 }
 
-static void handle_sigchld(int s) {
-  while (true) {
-    if (waitpid(-1, nullptr, WNOHANG) <= 0) {
-      // On error, or no process changed state.
-      break;
-    }
-  }
-}
-
 static void InstallChildSignalHandler() {
-  // Since content processes are not children of the chrome process
-  // any more, the fork server process has to handle SIGCHLD, or
-  // content process would remain zombie after dead.
-  signal(SIGCHLD, handle_sigchld);
+  // Eventually (bug 1752638) we'll want a real SIGCHLD handler, but
+  // for now, cause child processes to be automatically collected.
+  signal(SIGCHLD, SIG_IGN);
 }
 
 static void ReserveFileDescriptors() {
