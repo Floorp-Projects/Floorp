@@ -7790,7 +7790,7 @@
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-  set_spidermonkey_pref: startup
+  set_spidermonkey_pref: always
 
 # Whether to support parsing '//(#@) source(Mapping)?URL=' pragmas.
 - name: javascript.options.source_pragmas
