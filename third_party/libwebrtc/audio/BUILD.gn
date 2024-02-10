@@ -223,6 +223,7 @@ if (rtc_include_tests) {
       "utility:utility_tests",
       "//testing/gtest",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
   }
 
   rtc_library("channel_receive_unittest") {

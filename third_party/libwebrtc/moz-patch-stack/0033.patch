@@ -27,7 +27,7 @@ index c9dc42c04e..e7ebb2bf4e 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index b04b7265c2..38bb81b481 100644
+index 310e0517cf..549e65a59c 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
@@ -62,7 +62,7 @@ index b04b7265c2..38bb81b481 100644
  class ChannelSend : public ChannelSendInterface,
                      public AudioPacketizationCallback,  // receive encoded
                                                          // packets from the ACM
-@@ -209,6 +234,8 @@ class ChannelSend : public ChannelSendInterface,
+@@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
    bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
    bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
  
@@ -71,7 +71,7 @@ index b04b7265c2..38bb81b481 100644
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
    const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
-@@ -395,6 +422,7 @@ ChannelSend::ChannelSend(
+@@ -398,6 +425,7 @@ ChannelSend::ChannelSend(
      const FieldTrialsView& field_trials)
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
@@ -79,7 +79,7 @@ index b04b7265c2..38bb81b481 100644
        rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
        retransmission_rate_limiter_(
            new RateLimiter(clock, kMaxRetransmissionWindowMs)),
-@@ -420,6 +448,8 @@ ChannelSend::ChannelSend(
+@@ -423,6 +451,8 @@ ChannelSend::ChannelSend(
  
    configuration.event_log = event_log_;
    configuration.rtt_stats = rtcp_rtt_stats;
@@ -88,7 +88,7 @@ index b04b7265c2..38bb81b481 100644
    if (field_trials.IsDisabled("WebRTC-DisableRtxRateLimiter")) {
      configuration.retransmission_rate_limiter =
          retransmission_rate_limiter_.get();
-@@ -684,6 +714,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -687,6 +717,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
