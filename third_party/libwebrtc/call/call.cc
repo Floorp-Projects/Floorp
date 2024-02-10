@@ -462,7 +462,8 @@ class Call final : public webrtc::Call,
 
 /* Mozilla: Avoid this since it could use GetRealTimeClock().
 std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-  Clock* clock = Clock::GetRealTimeClock();
+  Clock* clock =
+      config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
   return Create(config, clock,
                 RtpTransportControllerSendFactory().Create(
                     config.ExtractTransportConfig(), clock));
