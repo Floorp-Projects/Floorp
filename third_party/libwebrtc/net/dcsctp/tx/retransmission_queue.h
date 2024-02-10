@@ -121,14 +121,10 @@ class RetransmissionQueue {
   uint64_t rtx_bytes_count() const { return rtx_bytes_count_; }
 
   // Returns the number of bytes of packets that are in-flight.
-  size_t outstanding_bytes() const {
-    return outstanding_data_.outstanding_bytes();
-  }
+  size_t unacked_bytes() const { return outstanding_data_.unacked_bytes(); }
 
   // Returns the number of DATA chunks that are in-flight.
-  size_t outstanding_items() const {
-    return outstanding_data_.outstanding_items();
-  }
+  size_t unacked_items() const { return outstanding_data_.unacked_items(); }
 
   // Indicates if the congestion control algorithm allows data to be sent.
   bool can_send_data() const;
@@ -197,7 +193,7 @@ class RetransmissionQueue {
 
   // Update the congestion control algorithm given as the cumulative ack TSN
   // value has increased, as reported in an incoming SACK chunk.
-  void HandleIncreasedCumulativeTsnAck(size_t outstanding_bytes,
+  void HandleIncreasedCumulativeTsnAck(size_t unacked_bytes,
                                        size_t total_bytes_acked);
   // Update the congestion control algorithm, given as packet loss has been
   // detected, as reported in an incoming SACK chunk.

@@ -77,8 +77,8 @@ bool OutstandingData::Item::has_expired(Timestamp now) const {
 }
 
 bool OutstandingData::IsConsistent() const {
-  size_t actual_outstanding_bytes = 0;
-  size_t actual_outstanding_items = 0;
+  size_t actual_unacked_bytes = 0;
+  size_t actual_unacked_items = 0;
 
   std::set<UnwrappedTSN> combined_to_be_retransmitted;
   combined_to_be_retransmitted.insert(to_be_retransmitted_.begin(),
@@ -91,8 +91,8 @@ bool OutstandingData::IsConsistent() const {
   for (const Item& item : outstanding_data_) {
     tsn.Increment();
     if (item.is_outstanding()) {
-      actual_outstanding_bytes += GetSerializedChunkSize(item.data());
-      ++actual_outstanding_items;
+      actual_unacked_bytes += GetSerializedChunkSize(item.data());
+      ++actual_unacked_items;
     }
 
     if (item.should_be_retransmitted()) {
@@ -100,8 +100,8 @@ bool OutstandingData::IsConsistent() const {
     }
   }
 
-  return actual_outstanding_bytes == outstanding_bytes_ &&
-         actual_outstanding_items == outstanding_items_ &&
+  return actual_unacked_bytes == unacked_bytes_ &&
+         actual_unacked_items == unacked_items_ &&
          actual_combined_to_be_retransmitted == combined_to_be_retransmitted;
 }
 
@@ -112,8 +112,8 @@ void OutstandingData::AckChunk(AckInfo& ack_info,
     size_t serialized_size = GetSerializedChunkSize(item.data());
     ack_info.bytes_acked += serialized_size;
     if (item.is_outstanding()) {
-      outstanding_bytes_ -= serialized_size;
-      --outstanding_items_;
+      unacked_bytes_ -= serialized_size;
+      --unacked_items_;
     }
     if (item.should_be_retransmitted()) {
       RTC_DCHECK(to_be_fast_retransmitted_.find(tsn) ==
@@ -259,8 +259,8 @@ bool OutstandingData::NackItem(UnwrappedTSN tsn,
                                bool retransmit_now,
                                bool do_fast_retransmit) {
   if (item.is_outstanding()) {
-    outstanding_bytes_ -= GetSerializedChunkSize(item.data());
-    --outstanding_items_;
+    unacked_bytes_ -= GetSerializedChunkSize(item.data());
+    --unacked_items_;
   }
 
   switch (item.Nack(retransmit_now)) {
@@ -302,7 +302,7 @@ void OutstandingData::AbandonAllFor(const Item& item) {
         item.message_id(), std::move(message_end), Timestamp::Zero(),
         MaxRetransmits(0), Timestamp::PlusInfinity(), LifecycleId::NotSet());
 
-    // The added chunk shouldn't be included in `outstanding_bytes`, so set it
+    // The added chunk shouldn't be included in `unacked_bytes`, so set it
     // as acked.
     added_item.Ack();
     RTC_DLOG(LS_VERBOSE) << "Adding unsent end placeholder for message at tsn="
@@ -344,8 +344,8 @@ std::vector<std::pair<TSN, Data>> OutstandingData::ExtractChunksThatCanFit(
       item.MarkAsRetransmitted();
       result.emplace_back(tsn.Wrap(), item.data().Clone());
       max_size -= serialized_size;
-      outstanding_bytes_ += serialized_size;
-      ++outstanding_items_;
+      unacked_bytes_ += serialized_size;
+      ++unacked_items_;
       it = chunks.erase(it);
     } else {
       ++it;
@@ -422,8 +422,8 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
     LifecycleId lifecycle_id) {
   // All chunks are always padded to be even divisible by 4.
   size_t chunk_size = GetSerializedChunkSize(data);
-  outstanding_bytes_ += chunk_size;
-  ++outstanding_items_;
+  unacked_bytes_ += chunk_size;
+  ++unacked_items_;
   UnwrappedTSN tsn = next_tsn();
   Item& item = outstanding_data_.emplace_back(message_id, data.Clone(),
                                               time_sent, max_retransmissions,

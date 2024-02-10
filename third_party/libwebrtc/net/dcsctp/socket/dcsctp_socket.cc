@@ -606,7 +606,7 @@ absl::optional<Metrics> DcSctpSocket::GetMetrics() const {
   size_t packet_payload_size =
       options_.mtu - SctpPacket::kHeaderSize - DataChunk::kHeaderSize;
   metrics.unack_data_count =
-      tcb_->retransmission_queue().outstanding_items() +
+      tcb_->retransmission_queue().unacked_items() +
       (send_queue_.total_buffered_amount() + packet_payload_size - 1) /
           packet_payload_size;
   metrics.peer_rwnd_bytes = tcb_->retransmission_queue().rwnd();
@@ -1720,7 +1720,7 @@ void DcSctpSocket::HandleForwardTsnCommon(const AnyForwardTsnChunk& chunk) {
 }
 
 void DcSctpSocket::MaybeSendShutdownOrAck() {
-  if (tcb_->retransmission_queue().outstanding_bytes() != 0) {
+  if (tcb_->retransmission_queue().unacked_bytes() != 0) {
     return;
   }
 
