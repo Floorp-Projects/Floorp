@@ -7,15 +7,15 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "net/dcsctp/common/str_join.h"
+#include "rtc_base/strings/str_join.h"
 
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "test/gmock.h"
+#include "test/gtest.h"
 
-namespace dcsctp {
+namespace webrtc {
 namespace {
 
 TEST(StrJoinTest, CanJoinStringsFromVector) {
@@ -42,4 +42,4 @@ TEST(StrJoinTest, CanFormatElementsWhileJoining) {
 }
 
 }  // namespace
-}  // namespace dcsctp
+}  // namespace webrtc
