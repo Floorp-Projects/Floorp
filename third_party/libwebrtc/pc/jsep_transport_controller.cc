@@ -437,8 +437,12 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportGatheringState_n);
   dtls->ice_transport()->SignalCandidateGathered.connect(
       this, &JsepTransportController::OnTransportCandidateGathered_n);
-  dtls->ice_transport()->SignalCandidateError.connect(
-      this, &JsepTransportController::OnTransportCandidateError_n);
+  dtls->ice_transport()->SetCandidateErrorCallback(
+      [this](cricket::IceTransportInternal* transport,
+             const cricket::IceCandidateErrorEvent& error) {
+        RTC_DCHECK_RUN_ON(network_thread_);
+        OnTransportCandidateError_n(transport, error);
+      });
   dtls->ice_transport()->SignalCandidatesRemoved.connect(
       this, &JsepTransportController::OnTransportCandidatesRemoved_n);
   dtls->ice_transport()->SignalRoleConflict.connect(
