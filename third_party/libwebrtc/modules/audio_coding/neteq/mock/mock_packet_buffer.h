@@ -28,13 +28,6 @@ class MockPacketBuffer : public PacketBuffer {
   MOCK_METHOD(bool, Empty, (), (const, override));
   MOCK_METHOD(int, InsertPacket, (Packet && packet), (override));
   MOCK_METHOD(int,
-              InsertPacketList,
-              (PacketList * packet_list,
-               const DecoderDatabase& decoder_database,
-               absl::optional<uint8_t>* current_rtp_payload_type,
-               absl::optional<uint8_t>* current_cng_rtp_payload_type),
-              (override));
-  MOCK_METHOD(int,
               NextTimestamp,
               (uint32_t * next_timestamp),
               (const, override));

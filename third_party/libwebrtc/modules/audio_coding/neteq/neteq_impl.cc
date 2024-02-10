@@ -70,6 +70,62 @@ std::unique_ptr<NetEqController> CreateNetEqController(
   return controller_factory.CreateNetEqController(config);
 }
 
+void SetAudioFrameActivityAndType(bool vad_enabled,
+                                  NetEqImpl::OutputType type,
+                                  AudioFrame::VADActivity last_vad_activity,
+                                  AudioFrame* audio_frame) {
+  switch (type) {
+    case NetEqImpl::OutputType::kNormalSpeech: {
+      audio_frame->speech_type_ = AudioFrame::kNormalSpeech;
+      audio_frame->vad_activity_ = AudioFrame::kVadActive;
+      break;
+    }
+    case NetEqImpl::OutputType::kVadPassive: {
+      // This should only be reached if the VAD is enabled.
+      RTC_DCHECK(vad_enabled);
+      audio_frame->speech_type_ = AudioFrame::kNormalSpeech;
+      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
+      break;
+    }
+    case NetEqImpl::OutputType::kCNG: {
+      audio_frame->speech_type_ = AudioFrame::kCNG;
+      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
+      break;
+    }
+    case NetEqImpl::OutputType::kPLC: {
+      audio_frame->speech_type_ = AudioFrame::kPLC;
+      audio_frame->vad_activity_ = last_vad_activity;
+      break;
+    }
+    case NetEqImpl::OutputType::kPLCCNG: {
+      audio_frame->speech_type_ = AudioFrame::kPLCCNG;
+      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
+      break;
+    }
+    case NetEqImpl::OutputType::kCodecPLC: {
+      audio_frame->speech_type_ = AudioFrame::kCodecPLC;
+      audio_frame->vad_activity_ = last_vad_activity;
+      break;
+    }
+    default:
+      RTC_DCHECK_NOTREACHED();
+  }
+  if (!vad_enabled) {
+    // Always set kVadUnknown when receive VAD is inactive.
+    audio_frame->vad_activity_ = AudioFrame::kVadUnknown;
+  }
+}
+
+// Returns true if both payload types are known to the decoder database, and
+// have the same sample rate.
+bool EqualSampleRates(uint8_t pt1,
+                      uint8_t pt2,
+                      const DecoderDatabase& decoder_database) {
+  auto* di1 = decoder_database.GetDecoderInfo(pt1);
+  auto* di2 = decoder_database.GetDecoderInfo(pt2);
+  return di1 && di2 && di1->SampleRateHz() == di2->SampleRateHz();
+}
+
 }  // namespace
 
 NetEqImpl::Dependencies::Dependencies(
@@ -182,54 +238,6 @@ void NetEqImpl::InsertEmptyPacket(const RTPHeader& rtp_header) {
   }
   controller_->RegisterEmptyPacket();
 }
-
-namespace {
-void SetAudioFrameActivityAndType(bool vad_enabled,
-                                  NetEqImpl::OutputType type,
-                                  AudioFrame::VADActivity last_vad_activity,
-                                  AudioFrame* audio_frame) {
-  switch (type) {
-    case NetEqImpl::OutputType::kNormalSpeech: {
-      audio_frame->speech_type_ = AudioFrame::kNormalSpeech;
-      audio_frame->vad_activity_ = AudioFrame::kVadActive;
-      break;
-    }
-    case NetEqImpl::OutputType::kVadPassive: {
-      // This should only be reached if the VAD is enabled.
-      RTC_DCHECK(vad_enabled);
-      audio_frame->speech_type_ = AudioFrame::kNormalSpeech;
-      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
-      break;
-    }
-    case NetEqImpl::OutputType::kCNG: {
-      audio_frame->speech_type_ = AudioFrame::kCNG;
-      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
-      break;
-    }
-    case NetEqImpl::OutputType::kPLC: {
-      audio_frame->speech_type_ = AudioFrame::kPLC;
-      audio_frame->vad_activity_ = last_vad_activity;
-      break;
-    }
-    case NetEqImpl::OutputType::kPLCCNG: {
-      audio_frame->speech_type_ = AudioFrame::kPLCCNG;
-      audio_frame->vad_activity_ = AudioFrame::kVadPassive;
-      break;
-    }
-    case NetEqImpl::OutputType::kCodecPLC: {
-      audio_frame->speech_type_ = AudioFrame::kCodecPLC;
-      audio_frame->vad_activity_ = last_vad_activity;
-      break;
-    }
-    default:
-      RTC_DCHECK_NOTREACHED();
-  }
-  if (!vad_enabled) {
-    // Always set kVadUnknown when receive VAD is inactive.
-    audio_frame->vad_activity_ = AudioFrame::kVadUnknown;
-  }
-}
-}  // namespace
 
 int NetEqImpl::GetAudio(AudioFrame* audio_frame,
                         bool* muted,
@@ -681,18 +689,25 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
                                      number_of_primary_packets);
   }
 
-  // Insert packets in buffer.
-  const int ret = packet_buffer_->InsertPacketList(
-      &parsed_packet_list, *decoder_database_, &current_rtp_payload_type_,
-      &current_cng_rtp_payload_type_);
   bool buffer_flush_occured = false;
-  if (ret == PacketBuffer::kFlushed) {
+  for (Packet& packet : parsed_packet_list) {
+    if (MaybeChangePayloadType(packet.payload_type)) {
+      packet_buffer_->Flush();
+      buffer_flush_occured = true;
+    }
+    int return_val = packet_buffer_->InsertPacket(std::move(packet));
+    if (return_val == PacketBuffer::kFlushed) {
+      buffer_flush_occured = true;
+    } else if (return_val != PacketBuffer::kOK) {
+      // An error occurred.
+      return kOtherError;
+    }
+  }
+
+  if (buffer_flush_occured) {
     // Reset DSP timestamp etc. if packet buffer flushed.
     new_codec_ = true;
     update_sample_rate_and_channels = true;
-    buffer_flush_occured = true;
-  } else if (ret != PacketBuffer::kOK) {
-    return kOtherError;
   }
 
   if (first_packet_) {
@@ -757,6 +772,31 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
     stats_->RelativePacketArrivalDelay(relative_delay.value());
   }
   return 0;
+}
+
+bool NetEqImpl::MaybeChangePayloadType(uint8_t payload_type) {
+  bool changed = false;
+  if (decoder_database_->IsComfortNoise(payload_type)) {
+    if (current_cng_rtp_payload_type_ &&
+        *current_cng_rtp_payload_type_ != payload_type) {
+      // New CNG payload type implies new codec type.
+      current_rtp_payload_type_ = absl::nullopt;
+      changed = true;
+    }
+    current_cng_rtp_payload_type_ = payload_type;
+  } else if (!decoder_database_->IsDtmf(payload_type)) {
+    // This must be speech.
+    if ((current_rtp_payload_type_ &&
+         *current_rtp_payload_type_ != payload_type) ||
+        (current_cng_rtp_payload_type_ &&
+         !EqualSampleRates(payload_type, *current_cng_rtp_payload_type_,
+                           *decoder_database_))) {
+      current_cng_rtp_payload_type_ = absl::nullopt;
+      changed = true;
+    }
+    current_rtp_payload_type_ = payload_type;
+  }
+  return changed;
 }
 
 int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,

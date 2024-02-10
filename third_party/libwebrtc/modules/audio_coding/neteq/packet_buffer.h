@@ -58,20 +58,6 @@ class PacketBuffer {
   // was flushed due to overfilling.
   virtual int InsertPacket(Packet&& packet);
 
-  // Inserts a list of packets into the buffer. The buffer will take over
-  // ownership of the packet objects.
-  // Returns PacketBuffer::kOK if all packets were inserted successfully.
-  // If the buffer was flushed due to overfilling, only a subset of the list is
-  // inserted, and PacketBuffer::kFlushed is returned.
-  // The last three parameters are included for legacy compatibility.
-  // TODO(hlundin): Redesign to not use current_*_payload_type and
-  // decoder_database.
-  virtual int InsertPacketList(
-      PacketList* packet_list,
-      const DecoderDatabase& decoder_database,
-      absl::optional<uint8_t>* current_rtp_payload_type,
-      absl::optional<uint8_t>* current_cng_rtp_payload_type);
-
   // Gets the timestamp for the first packet in the buffer and writes it to the
   // output variable `next_timestamp`.
   // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
