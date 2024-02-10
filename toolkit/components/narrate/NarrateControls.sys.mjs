@@ -23,9 +23,9 @@ export function NarrateControls(win, languagePromise) {
   win.document.head.appendChild(style);
 
   let elemL10nMap = {
-    ".narrate-skip-previous": "back",
+    ".narrate-skip-previous": "previous-label",
     ".narrate-start-stop": "start-label",
-    ".narrate-skip-next": "forward",
+    ".narrate-skip-next": "next-label",
     ".narrate-rate-input": "speed",
   };
 
@@ -72,22 +72,33 @@ export function NarrateControls(win, languagePromise) {
   let narrateSkipPrevious = win.document.createElement("button");
   narrateSkipPrevious.className = "narrate-skip-previous";
   narrateSkipPrevious.disabled = true;
+  narrateSkipPrevious.ariaKeyShortcuts = "ArrowLeft";
   narrateControl.appendChild(narrateSkipPrevious);
 
   let narrateStartStop = win.document.createElement("button");
   narrateStartStop.className = "narrate-start-stop";
+  narrateStartStop.ariaKeyShortcuts = "N";
   narrateControl.appendChild(narrateStartStop);
+
+  let narrateSkipNext = win.document.createElement("button");
+  narrateSkipNext.className = "narrate-skip-next";
+  narrateSkipNext.disabled = true;
+  narrateSkipNext.ariaKeyShortcuts = "ArrowRight";
+  narrateControl.appendChild(narrateSkipNext);
 
   win.document.addEventListener("keydown", function (event) {
     if (win.document.hasFocus() && event.key === "n") {
       narrateStartStop.click();
     }
+    //Arrow key direction also hardcoded for RTL in order to be
+    //consistent with playback arrows in UI panel
+    if (win.document.hasFocus() && event.key === "ArrowLeft") {
+      narrateSkipPrevious.click();
+    }
+    if (win.document.hasFocus() && event.key === "ArrowRight") {
+      narrateSkipNext.click();
+    }
   });
-
-  let narrateSkipNext = win.document.createElement("button");
-  narrateSkipNext.className = "narrate-skip-next";
-  narrateSkipNext.disabled = true;
-  narrateControl.appendChild(narrateSkipNext);
 
   let narrateRateInput = win.document.createElement("input");
   narrateRateInput.className = "narrate-rate-input";
@@ -98,16 +109,44 @@ export function NarrateControls(win, languagePromise) {
   narrateRateInput.setAttribute("type", "range");
   narrateRate.appendChild(narrateRateInput);
 
-  for (let [selector, stringID] of Object.entries(elemL10nMap)) {
-    if (selector === ".narrate-start-stop") {
-      let shortcut = gStrings.GetStringFromName("narrate-key-shortcut");
-      let label = gStrings.formatStringFromName(stringID, [shortcut]);
-
-      dropdown.querySelector(selector).setAttribute("title", label);
+  function setShortcutAttribute(
+    keyShortcut,
+    stringID,
+    selector,
+    isString = false
+  ) {
+    let shortcut;
+    if (isString) {
+      shortcut = keyShortcut;
     } else {
-      dropdown
-        .querySelector(selector)
-        .setAttribute("title", gStrings.GetStringFromName(stringID));
+      shortcut = gStrings.GetStringFromName(keyShortcut);
+    }
+    let label = gStrings.formatStringFromName(stringID, [shortcut]);
+
+    dropdown.querySelector(selector).setAttribute("title", label);
+  }
+
+  for (const [selector, stringID] of Object.entries(elemL10nMap)) {
+    switch (selector) {
+      case ".narrate-start-stop":
+        setShortcutAttribute("narrate-key-shortcut", stringID, selector);
+        break;
+
+      // Arrow direction also hardcoded for RTL in order to be
+      // consistent with playback arrows in UI panel
+      case ".narrate-skip-previous":
+        setShortcutAttribute("←", stringID, selector, true);
+        break;
+
+      case ".narrate-skip-next":
+        setShortcutAttribute("→", stringID, selector, true);
+        break;
+
+      default:
+        dropdown
+          .querySelector(selector)
+          .setAttribute("title", gStrings.GetStringFromName(stringID));
+        break;
     }
   }
 
@@ -282,15 +321,26 @@ NarrateControls.prototype = {
     dropdown.classList.toggle("speaking", speaking);
 
     let startStopButton = this._doc.querySelector(".narrate-start-stop");
-    let shortcutId = gStrings.GetStringFromName("narrate-key-shortcut");
+    let skipPreviousButton = this._doc.querySelector(".narrate-skip-previous");
+    let skipNextButton = this._doc.querySelector(".narrate-skip-next");
+
+    skipPreviousButton.disabled = !speaking;
+    skipNextButton.disabled = !speaking;
+
+    let narrateShortcutId = gStrings.GetStringFromName("narrate-key-shortcut");
+    let skipPreviousShortcut = "←";
+    let skipNextShortcut = "→";
 
     startStopButton.title = gStrings.formatStringFromName(
       speaking ? "stop-label" : "start-label",
-      [shortcutId]
+      [narrateShortcutId]
     );
-
-    this._doc.querySelector(".narrate-skip-previous").disabled = !speaking;
-    this._doc.querySelector(".narrate-skip-next").disabled = !speaking;
+    skipPreviousButton.title = gStrings.formatStringFromName("previous-label", [
+      skipPreviousShortcut,
+    ]);
+    skipNextButton.title = gStrings.formatStringFromName("next-label", [
+      skipNextShortcut,
+    ]);
   },
 
   _createVoiceLabel(voice) {
