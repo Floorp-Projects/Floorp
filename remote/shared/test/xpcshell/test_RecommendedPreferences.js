@@ -8,12 +8,12 @@ const { RecommendedPreferences } = ChromeUtils.importESModule(
 
 const COMMON_PREF = "toolkit.startup.max_resumed_crashes";
 
-const MARIONETTE_PREF = "dom.disable_beforeunload";
-const MARIONETTE_RECOMMENDED_PREFS = new Map([[MARIONETTE_PREF, true]]);
+const PROTOCOL_1_PREF = "dom.disable_beforeunload";
+const PROTOCOL_1_RECOMMENDED_PREFS = new Map([[PROTOCOL_1_PREF, true]]);
 
-const CDP_PREF = "browser.contentblocking.features.standard";
-const CDP_RECOMMENDED_PREFS = new Map([
-  [CDP_PREF, "-tp,tpPrivate,cookieBehavior0,-cm,-fp"],
+const PROTOCOL_2_PREF = "browser.contentblocking.features.standard";
+const PROTOCOL_2_RECOMMENDED_PREFS = new Map([
+  [PROTOCOL_2_PREF, "-tp,tpPrivate,cookieBehavior0,-cm,-fp"],
 ]);
 
 function cleanup() {
@@ -27,55 +27,62 @@ function cleanup() {
 // - via registerCleanupFunction in case a test crashes/times out
 registerCleanupFunction(cleanup);
 
-add_task(async function test_RecommendedPreferences() {
+add_task(async function test_multipleClients() {
   info("Check initial values for the test preferences");
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
 
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
 
-  info("Apply recommended preferences for a marionette client");
-  RecommendedPreferences.applyPreferences(MARIONETTE_RECOMMENDED_PREFS);
-  checkPreferences({ cdp: false, common: true, marionette: true });
+  info("Apply recommended preferences for a protocol_1 client");
+  RecommendedPreferences.applyPreferences(PROTOCOL_1_RECOMMENDED_PREFS);
+  checkPreferences({ common: true, protocol_1: true, protocol_2: false });
 
-  info("Apply recommended preferences for a cdp client");
-  RecommendedPreferences.applyPreferences(CDP_RECOMMENDED_PREFS);
-  checkPreferences({ cdp: true, common: true, marionette: true });
+  info("Apply recommended preferences for a protocol_2 client");
+  RecommendedPreferences.applyPreferences(PROTOCOL_2_RECOMMENDED_PREFS);
+  checkPreferences({ common: true, protocol_1: true, protocol_2: true });
 
-  info("Restore marionette preferences");
-  RecommendedPreferences.restorePreferences(MARIONETTE_RECOMMENDED_PREFS);
-  checkPreferences({ cdp: true, common: true, marionette: false });
+  info("Restore protocol_1 preferences");
+  RecommendedPreferences.restorePreferences(PROTOCOL_1_RECOMMENDED_PREFS);
+  checkPreferences({ common: true, protocol_1: false, protocol_2: true });
 
-  info("Restore cdp preferences");
-  RecommendedPreferences.restorePreferences(CDP_RECOMMENDED_PREFS);
-  checkPreferences({ cdp: false, common: true, marionette: false });
+  info("Restore protocol_2 preferences");
+  RecommendedPreferences.restorePreferences(PROTOCOL_2_RECOMMENDED_PREFS);
+  checkPreferences({ common: true, protocol_1: false, protocol_2: false });
 
   info("Restore all the altered preferences");
   RecommendedPreferences.restoreAllPreferences();
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
 
   info("Attemps to restore again");
   RecommendedPreferences.restoreAllPreferences();
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
 
   cleanup();
 });
 
-add_task(async function test_RecommendedPreferences_disabled() {
+add_task(async function test_disabled() {
   info("Disable RecommendedPreferences");
   Services.prefs.setBoolPref("remote.prefs.recommended", false);
 
   info("Check initial values for the test preferences");
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
 
   info("Recommended preferences are not applied, applyPreferences is a no-op");
-  RecommendedPreferences.applyPreferences(MARIONETTE_RECOMMENDED_PREFS);
-  checkPreferences({ cdp: false, common: false, marionette: false });
+  RecommendedPreferences.applyPreferences(PROTOCOL_1_RECOMMENDED_PREFS);
+  checkPreferences({ common: false, protocol_1: false, protocol_2: false });
+
+  cleanup();
+});
+
+add_task(async function test_noCustomPreferences() {
+  info("Applying preferences without any custom preference should not throw");
+  RecommendedPreferences.applyPreferences();
 
   cleanup();
 });
 
 // Check that protocols can override common preferences.
-add_task(async function test_RecommendedPreferences_override() {
+add_task(async function test_override() {
   info("Make sure the common preference has no user value");
   Services.prefs.clearUserPref(COMMON_PREF);
 
@@ -94,10 +101,10 @@ add_task(async function test_RecommendedPreferences_override() {
   cleanup();
 });
 
-function checkPreferences({ cdp, common, marionette }) {
+function checkPreferences({ common, protocol_1, protocol_2 }) {
   checkPreference(COMMON_PREF, { hasValue: common });
-  checkPreference(MARIONETTE_PREF, { hasValue: marionette });
-  checkPreference(CDP_PREF, { hasValue: cdp });
+  checkPreference(PROTOCOL_1_PREF, { hasValue: protocol_1 });
+  checkPreference(PROTOCOL_2_PREF, { hasValue: protocol_2 });
 }
 
 function checkPreference(pref, { hasValue }) {
