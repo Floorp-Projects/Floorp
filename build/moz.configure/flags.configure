@@ -163,6 +163,12 @@ def check_build_id_sha1(developer_options):
 check_and_add_linker_flag("-Wl,--build-id=uuid", when=check_build_id_uuid)
 check_and_add_linker_flag("-Wl,--build-id=sha1", when=check_build_id_sha1)
 
+check_and_add_linker_flag("-Wl,-z,noexecstack", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,text", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,relro", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,now", when=is_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=is_gnu_cc)
+
 
 @depends("--enable-address-sanitizer", is_gnu_cc)
 def check_Bsymbolic(enable_asan, is_gnu_cc):
