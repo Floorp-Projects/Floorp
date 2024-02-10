@@ -10,26 +10,28 @@ just used to inform about camera device existence.
 Differential Revision: https://phabricator.services.mozilla.com/D189929
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ed31b2acb5fbca3e2d0691a64bc52e65952070c0
 ---
- modules/video_capture/linux/device_info_pipewire.cc | 3 ++-
+ modules/video_capture/linux/device_info_pipewire.cc | 4 +++-
  modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
  modules/video_capture/linux/device_info_v4l2.cc     | 3 ++-
  modules/video_capture/linux/device_info_v4l2.h      | 3 ++-
  modules/video_capture/video_capture.h               | 3 ++-
  modules/video_capture/windows/device_info_ds.cc     | 3 ++-
  modules/video_capture/windows/device_info_ds.h      | 3 ++-
- 7 files changed, 14 insertions(+), 7 deletions(-)
+ 7 files changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index 2cb6161514..71dcec4da9 100644
+index 2b7393c100..601335373a 100644
 --- a/modules/video_capture/linux/device_info_pipewire.cc
 +++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -48,7 +48,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+@@ -50,8 +50,10 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
                                            uint32_t deviceUniqueIdUTF8Length,
                                            char* productUniqueIdUTF8,
                                            uint32_t productUniqueIdUTF8Length,
 -                                          pid_t* pid) {
 +                                          pid_t* pid,
 +                                          bool* deviceIsPlaceholder) {
+   RTC_CHECK(pipewire_session_);
++
    if (deviceNumber >= NumberOfDevices())
      return -1;
  
