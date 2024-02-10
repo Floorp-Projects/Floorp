@@ -38,9 +38,7 @@ rtc_library("rtc_event_log_factory") {
   deps = [
     ":rtc_event_log",
     "..:field_trials_view",
-    "../../rtc_base:checks",
     "../../rtc_base/system:rtc_export",
-    "../../system_wrappers:field_trial",
     "../environment",
     "../task_queue",
   ]

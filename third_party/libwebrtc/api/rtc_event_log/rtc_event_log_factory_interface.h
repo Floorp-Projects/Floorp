@@ -28,13 +28,6 @@ class RtcEventLogFactoryInterface {
 
   virtual absl::Nonnull<std::unique_ptr<RtcEventLog>> Create(
       const Environment& env) const = 0;
-
-  // TODO(bugs.webrtc.org/15656): Delete functions below when all usage is
-  // migrated to the Create(const Environment&) function above.
-  virtual std::unique_ptr<RtcEventLog> Create(
-      RtcEventLog::EncodingType encoding_type) const = 0;
-  [[deprecated]] virtual std::unique_ptr<RtcEventLog> CreateRtcEventLog(
-      RtcEventLog::EncodingType encoding_type) = 0;
 };
 
 }  // namespace webrtc
