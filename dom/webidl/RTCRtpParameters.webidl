@@ -20,18 +20,7 @@ enum RTCDegradationPreference {
   "balanced"
 };
 
-dictionary RTCRtxParameters {
-  unsigned long ssrc;
-};
-
-dictionary RTCFecParameters {
-  unsigned long ssrc;
-};
-
 dictionary RTCRtpEncodingParameters {
-  unsigned long            ssrc;
-  RTCRtxParameters         rtx;
-  RTCFecParameters         fec;
   boolean                  active = true;
   // From https://www.w3.org/TR/webrtc-priority/
   RTCPriorityType          priority = "low";

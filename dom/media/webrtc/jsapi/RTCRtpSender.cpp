@@ -979,12 +979,10 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
 bool operator==(const RTCRtpEncodingParameters& a1,
                 const RTCRtpEncodingParameters& a2) {
   // webidl does not generate types that are equality comparable
-  return a1.mActive == a2.mActive && a1.mFec == a2.mFec &&
-         a1.mMaxBitrate == a2.mMaxBitrate &&
+  return a1.mActive == a2.mActive && a1.mMaxBitrate == a2.mMaxBitrate &&
          a1.mMaxFramerate == a2.mMaxFramerate && a1.mPriority == a2.mPriority &&
-         a1.mRid == a2.mRid && a1.mRtx == a2.mRtx &&
-         a1.mScaleResolutionDownBy == a2.mScaleResolutionDownBy &&
-         a1.mSsrc == a2.mSsrc;
+         a1.mRid == a2.mRid &&
+         a1.mScaleResolutionDownBy == a2.mScaleResolutionDownBy;
 }
 
 // static
