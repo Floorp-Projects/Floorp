@@ -433,8 +433,11 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportWritableState_n);
   dtls->SignalReceivingState.connect(
       this, &JsepTransportController::OnTransportReceivingState_n);
-  dtls->ice_transport()->SignalGatheringState.connect(
-      this, &JsepTransportController::OnTransportGatheringState_n);
+  dtls->ice_transport()->SetGatheringStateCallback(
+      [this](cricket::IceTransportInternal* transport) {
+        RTC_DCHECK_RUN_ON(network_thread_);
+        OnTransportGatheringState_n(transport);
+      });
   dtls->ice_transport()->SignalCandidateGathered.connect(
       this, &JsepTransportController::OnTransportCandidateGathered_n);
   dtls->ice_transport()->SetCandidateErrorCallback(
