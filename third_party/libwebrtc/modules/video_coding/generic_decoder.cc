@@ -329,18 +329,7 @@ int32_t VCMGenericDecoder::Decode(const EncodedImage& frame,
     }
     _callback->OnDecoderInfoChanged(std::move(decoder_info));
   }
-  if (ret < WEBRTC_VIDEO_CODEC_OK) {
-    const absl::optional<uint32_t> ssrc =
-        !frame_info.packet_infos.empty()
-            ? absl::make_optional(frame_info.packet_infos[0].ssrc())
-            : absl::nullopt;
-    RTC_LOG(LS_WARNING) << "Failed to decode frame with timestamp "
-                        << frame.RtpTimestamp() << ", ssrc "
-                        << (ssrc ? rtc::ToString(*ssrc) : "<not set>")
-                        << ", error code: " << ret;
-    _callback->ClearTimestampMap();
-  } else if (ret == WEBRTC_VIDEO_CODEC_NO_OUTPUT) {
-    // No output.
+  if (ret < WEBRTC_VIDEO_CODEC_OK || ret == WEBRTC_VIDEO_CODEC_NO_OUTPUT) {
     _callback->ClearTimestampMap();
   }
   return ret;
