@@ -27,6 +27,7 @@
 #include "p2p/base/port.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "rtc_base/async_packet_socket.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/ssl_certificate.h"
 
 namespace webrtc {
@@ -144,10 +145,7 @@ class TurnPort : public Port {
   int GetError() override;
 
   bool HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
-                            const char* data,
-                            size_t size,
-                            const rtc::SocketAddress& remote_addr,
-                            int64_t packet_time_us) override;
+                            const rtc::ReceivedPacket& packet) override;
   bool CanHandleIncomingPacketsFrom(
       const rtc::SocketAddress& addr) const override;
 
@@ -159,10 +157,7 @@ class TurnPort : public Port {
                                 absl::string_view reason) override;
 
   virtual void OnReadPacket(rtc::AsyncPacketSocket* socket,
-                            const char* data,
-                            size_t size,
-                            const rtc::SocketAddress& remote_addr,
-                            const int64_t& packet_time_us);
+                            const rtc::ReceivedPacket& packet);
 
   void OnSentPacket(rtc::AsyncPacketSocket* socket,
                     const rtc::SentPacket& sent_packet) override;

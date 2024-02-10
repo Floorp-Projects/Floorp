@@ -22,6 +22,7 @@
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace cricket {
@@ -97,10 +98,7 @@ class RTC_EXPORT UDPPort : public Port {
   int GetError() override;
 
   bool HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
-                            const char* data,
-                            size_t size,
-                            const rtc::SocketAddress& remote_addr,
-                            int64_t packet_time_us) override;
+                            const rtc::ReceivedPacket& packet) override;
 
   bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
@@ -158,10 +156,7 @@ class RTC_EXPORT UDPPort : public Port {
   void PostAddAddress(bool is_final) override;
 
   void OnReadPacket(rtc::AsyncPacketSocket* socket,
-                    const char* data,
-                    size_t size,
-                    const rtc::SocketAddress& remote_addr,
-                    const int64_t& packet_time_us);
+                    const rtc::ReceivedPacket& packet);
 
   void OnSentPacket(rtc::AsyncPacketSocket* socket,
                     const rtc::SentPacket& sent_packet) override;

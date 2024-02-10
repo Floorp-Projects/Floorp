@@ -13,6 +13,7 @@
 #include <math.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -31,6 +32,7 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/network.h"
 #include "rtc_base/numerics/safe_minmax.h"
+#include "rtc_base/socket_address.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
@@ -359,10 +361,10 @@ void Port::AddOrReplaceConnection(Connection* conn) {
   }
 }
 
-void Port::OnReadPacket(const char* data,
-                        size_t size,
-                        const rtc::SocketAddress& addr,
-                        ProtocolType proto) {
+void Port::OnReadPacket(const rtc::ReceivedPacket& packet, ProtocolType proto) {
+  const char* data = reinterpret_cast<const char*>(packet.payload().data());
+  size_t size = packet.payload().size();
+  const rtc::SocketAddress& addr = packet.source_address();
   // If the user has enabled port packets, just hand this over.
   if (enable_port_packets_) {
     SignalReadPacket(this, data, size, addr);
@@ -725,10 +727,7 @@ std::string Port::CreateStunUsername(absl::string_view remote_username) const {
 }
 
 bool Port::HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
-                                const char* data,
-                                size_t size,
-                                const rtc::SocketAddress& remote_addr,
-                                int64_t packet_time_us) {
+                                const rtc::ReceivedPacket& packet) {
   RTC_DCHECK_NOTREACHED();
   return false;
 }
