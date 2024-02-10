@@ -70,7 +70,7 @@ template <>
 struct ParamTraits<cdm::HdcpVersion>
     : public ContiguousEnumSerializerInclusive<
           cdm::HdcpVersion, cdm::HdcpVersion::kHdcpVersionNone,
-          cdm::HdcpVersion::kHdcpVersion2_2> {};
+          cdm::HdcpVersion::kHdcpVersion2_3> {};
 
 template <>
 struct ParamTraits<GMPSimulcastStream> {

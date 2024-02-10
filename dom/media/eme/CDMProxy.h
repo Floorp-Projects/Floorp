@@ -241,7 +241,7 @@ class CDMProxy {
   // Calls MediaKeys->ResolvePromiseWithKeyStatus(aPromiseId, aKeyStatus) after
   // the CDM has processed the request.
   virtual void GetStatusForPolicy(PromiseId aPromiseId,
-                                  const nsAString& aMinHdcpVersion) = 0;
+                                  const dom::HDCPVersion& aMinHdcpVersion) = 0;
 
 #ifdef DEBUG
   virtual bool IsOnOwnerThread() = 0;
