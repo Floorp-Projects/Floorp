@@ -252,33 +252,6 @@ TEST_F(ReassemblyQueueTest, ForwardTSNRemoveALotOrdered) {
               ElementsAre(SctpMessageIs(kStreamID, kPPID, kMessage2Payload)));
 }
 
-TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenDeliveredTsnsHaveGap) {
-  ReassemblyQueue reasm("log: ", TSN(10), kBufferSize);
-  reasm.Add(TSN(10), gen_.Unordered({1, 2, 3, 4}, "B"));
-  EXPECT_FALSE(reasm.HasMessages());
-
-  reasm.Add(TSN(12), gen_.Unordered({1, 2, 3, 4}, "BE"));
-  EXPECT_TRUE(reasm.HasMessages());
-  EXPECT_EQ(
-      reasm.GetHandoverReadiness(),
-      HandoverReadinessStatus()
-          .Add(HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap)
-          .Add(
-              HandoverUnreadinessReason::kUnorderedStreamHasUnassembledChunks));
-
-  EXPECT_THAT(reasm.FlushMessages(),
-              ElementsAre(SctpMessageIs(kStreamID, kPPID, kShortPayload)));
-  EXPECT_EQ(
-      reasm.GetHandoverReadiness(),
-      HandoverReadinessStatus()
-          .Add(HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap)
-          .Add(
-              HandoverUnreadinessReason::kUnorderedStreamHasUnassembledChunks));
-
-  reasm.HandleForwardTsn(TSN(13), std::vector<SkippedStream>());
-  EXPECT_EQ(reasm.GetHandoverReadiness(), HandoverReadinessStatus());
-}
-
 TEST_F(ReassemblyQueueTest, NotReadyForHandoverWhenResetStreamIsDeferred) {
   ReassemblyQueue reasm("log: ", TSN(10), kBufferSize);
   reasm.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE", {.mid = MID(0)}));

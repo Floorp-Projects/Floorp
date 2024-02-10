@@ -786,5 +786,16 @@ TEST_F(DataTrackerTest, DoesNotAcceptGapsWithDuplicateData) {
   EXPECT_FALSE(tracker_->Observe(TSN(12)));
 }
 
+TEST_F(DataTrackerTest, NotReadyForHandoverWhenHavingTsnGaps) {
+  tracker_->Observe(TSN(10));
+  tracker_->Observe(TSN(12));
+  EXPECT_EQ(tracker_->GetHandoverReadiness(),
+            HandoverReadinessStatus().Add(
+                HandoverUnreadinessReason::kDataTrackerTsnBlocksPending));
+
+  tracker_->Observe(TSN(11));
+  EXPECT_EQ(tracker_->GetHandoverReadiness(), HandoverReadinessStatus());
+}
+
 }  // namespace
 }  // namespace dcsctp
