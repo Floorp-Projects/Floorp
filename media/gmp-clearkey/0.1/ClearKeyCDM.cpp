@@ -25,10 +25,13 @@ void ClearKeyCDM::Initialize(bool aAllowDistinctiveIdentifier,
 
 void ClearKeyCDM::GetStatusForPolicy(uint32_t aPromiseId,
                                      const Policy& aPolicy) {
-  // MediaKeys::GetStatusForPolicy checks the keysystem and
-  // reject the promise with NS_ERROR_DOM_NOT_SUPPORTED_ERR without calling CDM.
-  // This function should never be called and is not supported.
-  assert(false);
+  // Pretend the device is HDCP 2.1 compliant.
+  const cdm::HdcpVersion kDeviceHdcpVersion = cdm::kHdcpVersion2_1;
+  if (aPolicy.min_hdcp_version <= kDeviceHdcpVersion) {
+    mHost->OnResolveKeyStatusPromise(aPromiseId, KeyStatus::kUsable);
+  } else {
+    mHost->OnResolveKeyStatusPromise(aPromiseId, KeyStatus::kOutputRestricted);
+  }
 }
 void ClearKeyCDM::SetServerCertificate(uint32_t aPromiseId,
                                        const uint8_t* aServerCertificateData,
