@@ -1027,9 +1027,10 @@ void TurnPort::HandleDataIndication(const char* data,
                            "peer address, addr: "
                         << ext_addr.ToSensitiveString();
   }
-
-  DispatchPacket(data_attr->bytes(), data_attr->length(), ext_addr, PROTO_UDP,
-                 packet_time_us);
+  // TODO(bugs.webrtc.org/14870): rebuild DispatchPacket to take an
+  // ArrayView<uint8_t>
+  DispatchPacket(reinterpret_cast<const char*>(data_attr->array_view().data()),
+                 data_attr->length(), ext_addr, PROTO_UDP, packet_time_us);
 }
 
 void TurnPort::HandleChannelData(int channel_id,

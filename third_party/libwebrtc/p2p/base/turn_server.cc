@@ -670,8 +670,8 @@ void TurnServerAllocation::HandleSendIndication(const TurnMessage* msg) {
 
   // If a permission exists, send the data on to the peer.
   if (HasPermission(peer_attr->GetAddress().ipaddr())) {
-    SendExternal(data_attr->bytes(), data_attr->length(),
-                 peer_attr->GetAddress());
+    SendExternal(reinterpret_cast<char*>(data_attr->array_view().data()),
+                 data_attr->length(), peer_attr->GetAddress());
   } else {
     RTC_LOG(LS_WARNING) << ToString()
                         << ": Received send indication without permission"
