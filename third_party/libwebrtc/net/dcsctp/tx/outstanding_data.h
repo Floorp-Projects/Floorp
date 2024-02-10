@@ -330,10 +330,11 @@ class OutstandingData {
   // many times so that it should be retransmitted, this will schedule it to be
   // "fast retransmitted". This is only done just before going into fast
   // recovery.
-  bool NackItem(UnwrappedTSN tsn,
-                Item& item,
-                bool retransmit_now,
-                bool do_fast_retransmit);
+  //
+  // Note that since nacking an item may result in it becoming abandoned, which
+  // in turn could alter `outstanding_data_`, any iterators are invalidated
+  // after having called this method.
+  bool NackItem(UnwrappedTSN tsn, bool retransmit_now, bool do_fast_retransmit);
 
   // Given that a message fragment, `item` has been abandoned, abandon all other
   // fragments that share the same message - both never-before-sent fragments
