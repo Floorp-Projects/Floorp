@@ -190,7 +190,7 @@ nsFileProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
     return rv;
   }
 
-  chan.forget(result);
+  *result = chan.forget().downcast<nsBaseChannel>().take();
   return NS_OK;
 }
 
