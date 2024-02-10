@@ -16,10 +16,10 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/field_trials.h"
 #include "api/media_types.h"
-#include "api/rtc_event_log/rtc_event_log.h"
-#include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/units/timestamp.h"
@@ -36,7 +36,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/string_to_number.h"
 #include "rtc_base/strings/json.h"
-#include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/call_config_utils.h"
@@ -478,26 +477,21 @@ class RtpReplayer final {
               bool simulated_time)
       : replay_config_path_(replay_config_path),
         rtp_dump_path_(rtp_dump_path),
-        field_trials_(std::move(field_trials)),
+        time_sim_(simulated_time
+                      ? std::make_unique<GlobalSimulatedTimeController>(
+                            Timestamp::Millis(1 << 30))
+                      : nullptr),
+        env_(CreateEnvironment(
+            std::move(field_trials),
+            time_sim_ ? time_sim_->GetTaskQueueFactory() : nullptr,
+            time_sim_ ? time_sim_->GetClock() : nullptr)),
         rtp_reader_(CreateRtpReader(rtp_dump_path_)) {
-    TaskQueueFactory* task_queue_factory;
-    if (simulated_time) {
-      time_sim_ = std::make_unique<GlobalSimulatedTimeController>(
-          Timestamp::Millis(1 << 30));
-      task_queue_factory = time_sim_->GetTaskQueueFactory();
-    } else {
-      task_queue_factory_ = CreateDefaultTaskQueueFactory(field_trials_.get()),
-      task_queue_factory = task_queue_factory_.get();
-    }
-    worker_thread_ =
-        std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
+    worker_thread_ = std::make_unique<rtc::TaskQueue>(
+        env_.task_queue_factory().CreateTaskQueue(
             "worker_thread", TaskQueueFactory::Priority::NORMAL));
     rtc::Event event;
     worker_thread_->PostTask([&]() {
-      CallConfig call_config(&event_log_);
-      call_config.trials = field_trials_.get();
-      call_config.task_queue_factory = task_queue_factory;
-      call_ = Call::Create(call_config);
+      call_ = Call::Create(CallConfig(env_));
 
       // Creation of the streams must happen inside a task queue because it is
       // resued as a worker thread.
@@ -655,10 +649,7 @@ class RtpReplayer final {
     }
   }
 
-  int64_t CurrentTimeMs() {
-    return time_sim_ ? time_sim_->GetClock()->TimeInMilliseconds()
-                     : rtc::TimeMillis();
-  }
+  int64_t CurrentTimeMs() { return env_.clock().CurrentTime().ms(); }
 
   void SleepOrAdvanceTime(int64_t duration_ms) {
     if (time_sim_) {
@@ -670,10 +661,8 @@ class RtpReplayer final {
 
   const std::string replay_config_path_;
   const std::string rtp_dump_path_;
-  RtcEventLogNull event_log_;
-  std::unique_ptr<FieldTrialsView> field_trials_;
   std::unique_ptr<GlobalSimulatedTimeController> time_sim_;
-  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
+  Environment env_;
   std::unique_ptr<rtc::TaskQueue> worker_thread_;
   std::unique_ptr<Call> call_;
   std::unique_ptr<test::RtpFileReader> rtp_reader_;
