@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 
+#include <cstdint>
 #include <memory>
 
 #include "rtc_base/async_packet_socket.h"

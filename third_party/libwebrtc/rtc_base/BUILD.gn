@@ -1699,10 +1699,13 @@ rtc_library("testclient") {
   ]
   deps = [
     ":async_udp_socket",
+    ":buffer",
     ":gunit_helpers",
     ":rtc_base_tests_utils",
     ":threading",
     ":timeutils",
+    "../api/units:timestamp",
+    "network:received_packet",
     "synchronization:mutex",
   ]
 }
