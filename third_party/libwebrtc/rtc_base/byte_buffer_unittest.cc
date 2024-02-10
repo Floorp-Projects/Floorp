@@ -264,4 +264,18 @@ TEST(ByteBufferTest, ReadFromArrayView) {
   EXPECT_FALSE(read_buffer.ReadUInt8(&val));
 }
 
+TEST(ByteBufferTest, ReadToArrayView) {
+  const uint8_t buf[] = {'a', 'b', 'c'};
+  ArrayView<const uint8_t> stored_view(buf, 3);
+  ByteBufferReader read_buffer(stored_view);
+  uint8_t result[] = {'1', '2', '3'};
+  EXPECT_TRUE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(result, 2)));
+  EXPECT_EQ(result[0], 'a');
+  EXPECT_EQ(result[1], 'b');
+  EXPECT_EQ(result[2], '3');
+  EXPECT_TRUE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(&result[2], 1)));
+  EXPECT_EQ(result[2], 'c');
+  EXPECT_FALSE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(result, 1)));
+}
+
 }  // namespace rtc
