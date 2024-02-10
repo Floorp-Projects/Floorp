@@ -2177,7 +2177,40 @@ class PresShell final : public nsStubDocumentObserver,
       Document* GetDocument() const {
         return mPresShell ? mPresShell->GetDocument() : nullptr;
       }
+
+      /**
+       * Return content of the frame if and only if a frame is set.
+       * I.e., this may return non-element node even when GetContent() returns
+       * an element node.
+       */
       nsIContent* GetFrameContent() const;
+
+      nsIFrame* GetFrame() const { return mFrame; }
+      nsIContent* GetContent() const { return mContent; }
+
+      /**
+       * Set the event target content and the topmost frame at the event point.
+       * This checks whether the relation is correct if aContent is not nullptr.
+       * If you set aGUIEvent, the check is done with strict way, but otherwise,
+       * it checks whether aContent is a proper inclusive ancestor of
+       * mFrame->GetContent() or not.
+       */
+      void SetFrameAndContent(nsIFrame* aFrame, nsIContent* aContent = nullptr,
+                              const WidgetGUIEvent* aGUIEvent = nullptr) {
+        mFrame = aFrame;
+        mContent = aContent ? aContent : GetFrameContent();
+        AssertIfEventTargetContentAndFrameContentMismatch(aGUIEvent);
+      }
+
+      /**
+       * Set the event target content and clear the frame.
+       */
+      void SetContent(nsIContent* aContent) {
+        mContent = aContent;
+        if (mFrame && GetFrameContent() != aContent) {
+          mFrame = nullptr;
+        }
+      }
 
       /**
        * MaybeRetargetToActiveDocument() tries retarget aGUIEvent into
@@ -2221,10 +2254,24 @@ class PresShell final : public nsStubDocumentObserver,
        */
       void UpdateWheelEventTarget(WidgetGUIEvent* aGUIEvent);
 
+     private:
+      void AssertIfEventTargetContentAndFrameContentMismatch(
+          const WidgetGUIEvent* aGUIEvent = nullptr) const;
+
+     public:
       RefPtr<PresShell> mPresShell;
-      nsIFrame* mFrame = nullptr;
-      nsCOMPtr<nsIContent> mContent;
       nsCOMPtr<nsIContent> mOverrideClickTarget;
+
+     private:
+      nsIFrame* mFrame = nullptr;
+      // mContent is the event target content for mFrame->GetContent().
+      // This may be nullptr even if mFrame is not nullptr.
+      // This may be an ancestor element of mFrame->GetContent() or native
+      // anonymous root content parent.
+      // This may be not an ancestor element of mFrame->GetContent() if
+      // mFrame->GetContentForEvent() returns such element. E.g., clicking in
+      // <area>, mContent is the <area> but mFrame->GetContent() is an <img>.
+      nsCOMPtr<nsIContent> mContent;
     };
 
     /**
@@ -2801,7 +2848,7 @@ class PresShell final : public nsStubDocumentObserver,
         MOZ_DIAGNOSTIC_ASSERT(!mEventHandler.mCurrentEventInfoSetter);
         mEventHandler.mCurrentEventInfoSetter = this;
         mEventHandler.mPresShell->PushCurrentEventInfo(
-            aEventTargetData.mFrame, aEventTargetData.mContent);
+            aEventTargetData.GetFrame(), aEventTargetData.GetContent());
       }
       ~AutoCurrentEventInfoSetter() {
         mEventHandler.mPresShell->PopCurrentEventInfo();

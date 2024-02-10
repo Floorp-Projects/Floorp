@@ -9,12 +9,15 @@
 #include "mozilla/PresShell.h"
 
 #include "Units.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CaretAssociationHint.h"
@@ -7185,9 +7188,9 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // content is not a descendant of the capturing content.
   if (capturingContent && !pointerCapturingElement &&
       (PresShell::sCapturingContentInfo.mRetargetToElement ||
-       !eventTargetData.mFrame->GetContent() ||
+       !eventTargetData.GetFrameContent() ||
        !nsContentUtils::ContentIsCrossDocDescendantOf(
-           eventTargetData.mFrame->GetContent(), capturingContent))) {
+           eventTargetData.GetFrameContent(), capturingContent))) {
     // A check was already done above to ensure that capturingContent is
     // in this presshell.
     NS_ASSERTION(capturingContent->OwnerDoc() == GetDocument(),
@@ -7198,13 +7201,13 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
     }
   }
 
-  if (NS_WARN_IF(!eventTargetData.mFrame)) {
+  if (NS_WARN_IF(!eventTargetData.GetFrame())) {
     return NS_OK;
   }
 
   // Suppress mouse event if it's being targeted at an element inside
   // a document which needs events suppressed
-  if (MaybeDiscardOrDelayMouseEvent(eventTargetData.mFrame, aGUIEvent)) {
+  if (MaybeDiscardOrDelayMouseEvent(eventTargetData.GetFrame(), aGUIEvent)) {
     return NS_OK;
   }
 
@@ -7214,7 +7217,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // active document.  This way content can get mouse events even when mouse
   // is over the chrome or outside the window.
   if (eventTargetData.MaybeRetargetToActiveDocument(aGUIEvent) &&
-      NS_WARN_IF(!eventTargetData.mFrame)) {
+      NS_WARN_IF(!eventTargetData.GetFrame())) {
     return NS_OK;
   }
 
@@ -7379,7 +7382,7 @@ bool PresShell::EventHandler::ComputeEventTargetFrameAndPresShellAtEventPoint(
   nsIFrame* targetFrame =
       GetFrameToHandleNonTouchEvent(aRootFrameToHandleEvent, aGUIEvent);
   aEventTargetData->SetFrameAndComputePresShell(targetFrame);
-  return !!aEventTargetData->mFrame;
+  return !!aEventTargetData->GetFrame();
 }
 
 bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
@@ -7404,7 +7407,7 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
   // and do hit test for each point.
   nsIFrame* targetFrame = aGUIEvent->mClass == eTouchEventClass
                               ? aFrameForPresShell
-                              : aEventTargetData->mFrame;
+                              : aEventTargetData->GetFrame();
 
   if (aPointerCapturingContent) {
     aEventTargetData->mOverrideClickTarget =
@@ -7420,16 +7423,16 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
     }
 
     targetFrame = aPointerCapturingContent->GetPrimaryFrame();
-    aEventTargetData->mFrame = targetFrame;
+    aEventTargetData->SetFrameAndContent(targetFrame, aPointerCapturingContent);
   }
 
   AutoWeakFrame weakTargetFrame(targetFrame);
-  AutoWeakFrame weakFrame(aEventTargetData->mFrame);
-  nsCOMPtr<nsIContent> content(aEventTargetData->mContent);
+  AutoWeakFrame weakFrame(aEventTargetData->GetFrame());
+  nsCOMPtr<nsIContent> content(aEventTargetData->GetContent());
   RefPtr<PresShell> presShell(aEventTargetData->mPresShell);
   nsCOMPtr<nsIContent> targetContent;
   PointerEventHandler::DispatchPointerFromMouseOrTouch(
-      presShell, aEventTargetData->mFrame, content, aGUIEvent,
+      presShell, aEventTargetData->GetFrame(), content, aGUIEvent,
       aDontRetargetEvents, aEventStatus, getter_AddRefs(targetContent));
 
   // If the target frame is alive, the caller should keep handling the event
@@ -7453,10 +7456,10 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
     return false;
   }
 
-  // XXX Why don't we reset aEventTargetData->mContent here?
-  aEventTargetData->mFrame = targetContent->GetPrimaryFrame();
+  aEventTargetData->SetFrameAndContent(targetContent->GetPrimaryFrame(),
+                                       targetContent);
   aEventTargetData->mPresShell = PresShell::GetShellForEventTarget(
-      aEventTargetData->mFrame, targetContent);
+      aEventTargetData->GetFrame(), aEventTargetData->GetContent());
 
   // If new target PresShel is not found, we cannot keep handling the event.
   return !!aEventTargetData->mPresShell;
@@ -11771,10 +11774,59 @@ void PresShell::EventHandler::EventTargetData::SetContentForEventFromFrame(
   MOZ_ASSERT(mFrame);
   mContent = nullptr;
   mFrame->GetContentForEvent(aGUIEvent, getter_AddRefs(mContent));
+  AssertIfEventTargetContentAndFrameContentMismatch(aGUIEvent);
 }
 
 nsIContent* PresShell::EventHandler::EventTargetData::GetFrameContent() const {
   return mFrame ? mFrame->GetContent() : nullptr;
+}
+
+void PresShell::EventHandler::EventTargetData::
+    AssertIfEventTargetContentAndFrameContentMismatch(
+        const WidgetGUIEvent* aGUIEvent) const {
+#ifdef DEBUG
+  if (!mContent || !mFrame || !mFrame->GetContent()) {
+    return;
+  }
+
+  // If we know the event, we can compute the target correctly.
+  if (aGUIEvent) {
+    nsCOMPtr<nsIContent> content;
+    mFrame->GetContentForEvent(aGUIEvent, getter_AddRefs(content));
+    MOZ_ASSERT(mContent == content);
+    return;
+  }
+
+  // Otherwise, we can check only whether mContent is an inclusive ancestor
+  // element or not.
+  if (!mContent->IsElement()) {
+    MOZ_ASSERT(mContent == mFrame->GetContent());
+    return;
+  }
+  const Element* const closestInclusiveAncestorElement =
+      [&]() -> const Element* {
+    for (const nsIContent* const content :
+         mFrame->GetContent()->InclusiveFlatTreeAncestorsOfType<nsIContent>()) {
+      if (content->IsElement()) {
+        return content->AsElement();
+      }
+    }
+    return nullptr;
+  }();
+  if (closestInclusiveAncestorElement == mContent) {
+    return;
+  }
+  if (closestInclusiveAncestorElement->IsInNativeAnonymousSubtree() &&
+      (mContent == closestInclusiveAncestorElement
+                       ->FindFirstNonChromeOnlyAccessContent())) {
+    return;
+  }
+  NS_WARNING(nsPrintfCString("mContent=%s", ToString(*mContent).c_str()).get());
+  NS_WARNING(nsPrintfCString("mFrame->GetContent()=%s",
+                             ToString(*mFrame->GetContent()).c_str())
+                 .get());
+  MOZ_ASSERT(mContent == mFrame->GetContent());
+#endif  // #ifdef DEBUG
 }
 
 bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
