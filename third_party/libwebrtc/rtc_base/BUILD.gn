@@ -1396,16 +1396,33 @@ if (!build_with_mozilla) {
   ]
   deps = [
     ":callback_list",
+    ":checks",
     ":dscp",
     ":socket",
     ":timeutils",
     "../api:sequence_checker",
+    "network:received_packet",
     "network:sent_packet",
     "system:no_unique_address",
     "system:rtc_export",
     "third_party/sigslot",
   ]
 }
+}
+
+if (rtc_include_tests) {
+  rtc_library("async_packet_socket_unittest") {
+    testonly = true
+    visibility = [ "*" ]
+    sources = [ "async_packet_socket_unittest.cc" ]
+    deps = [
+      ":async_packet_socket",
+      ":gunit_helpers",
+      "../test:test_support",
+      "network:received_packet",
+      "third_party/sigslot",
+    ]
+  }
 }
 
 rtc_library("mdns_responder_interface") {
