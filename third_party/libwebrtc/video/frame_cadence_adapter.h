@@ -109,6 +109,12 @@ class FrameCadenceAdapterInterface
   // Updates spatial layer enabled status.
   virtual void UpdateLayerStatus(size_t spatial_index, bool enabled) = 0;
 
+  // Updates the restrictions of max frame rate for the video source.
+  // The new `max_frame_rate` will only affect the cadence of Callback::OnFrame
+  // for non-idle (non converged) repeated frames.
+  virtual void UpdateVideoSourceRestrictions(
+      absl::optional<double> max_frame_rate) = 0;
+
   // Conditionally requests a refresh frame via
   // Callback::RequestRefreshFrame.
   virtual void ProcessKeyFrameRequest() = 0;

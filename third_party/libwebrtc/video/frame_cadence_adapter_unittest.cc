@@ -731,6 +731,8 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
   static constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(100);
   static constexpr TimeDelta kIdleFrameDelay =
       FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod;
+  // Restricts non-idle repeat rate to 5 fps (default is 10 fps);
+  static constexpr int kRestrictedMaxFps = 5;
 
   ZeroHertzLayerQualityConvergenceTest() {
     adapter_->Initialize(&callback_);
@@ -830,6 +832,100 @@ TEST_F(ZeroHertzLayerQualityConvergenceTest,
       11 * kMinFrameDelay + kIdleFrameDelay,      // ...
       11 * kMinFrameDelay + 2 * kIdleFrameDelay,  // ...
                                                   // ...
+  });
+}
+
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateAdaptsDownWhenRestricted) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      4 * kMinFrameDelay,  // Unconverged repeats at restricted rate. This
+                           // happens 2 * kMinFrameDelay after the last frame.
+      6 * kMinFrameDelay,  // ...
+  });
+}
+
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateAdaptsUpWhenGoingFromRestrictedToUnrestricted) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ScheduleDelayed(5.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(absl::nullopt);
+  });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      4 * kMinFrameDelay,  // Unconverged repeat at restricted rate.
+
+      // 5.5 * kMinFrameDelay: removes frame-rate restriction and we should
+      // then go back to 10 fps as unconverged repeat rate.
+      6 * kMinFrameDelay,  // Last unconverged repeat at restricted rate.
+      7 * kMinFrameDelay,  // Back to unconverged repeat at non-restricted rate.
+      8 * kMinFrameDelay,  // We are now unrestricted.
+      9 * kMinFrameDelay,  // ...
+  });
+}
+
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateMaintainsRestrictionOnReconfigureToHigherMaxFps) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ScheduleDelayed(2.5 * kMinFrameDelay, [&] {
+    adapter_->OnConstraintsChanged(VideoTrackSourceConstraints{
+        /*min_fps=*/0, /*max_fps=*/2 * TimeDelta::Seconds(1) / kMinFrameDelay});
+  });
+  ScheduleDelayed(3 * kMinFrameDelay, [&] { PassFrame(); });
+  ScheduleDelayed(8 * kMinFrameDelay, [&] {
+    adapter_->OnConstraintsChanged(VideoTrackSourceConstraints{
+        /*min_fps=*/0,
+        /*max_fps=*/0.2 * TimeDelta::Seconds(1) / kMinFrameDelay});
+  });
+  ScheduleDelayed(9 * kMinFrameDelay, [&] { PassFrame(); });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+
+      // 2.5 * kMinFrameDelay: new constraint asks for max rate of 20 fps.
+      // The 0Hz adapter is reconstructed for 20 fps but inherits the current
+      // restriction for rate of non-converged frames of 5 fps.
+
+      // A new frame is passed at 3 * kMinFrameDelay. The previous repeat
+      // cadence was stopped by the change in constraints.
+      3.5 * kMinFrameDelay,  // Original frame emitted at non-restricted 20 fps.
+                             // The delay is 0.5 * kMinFrameDelay.
+      5.5 * kMinFrameDelay,  // Unconverged repeat at restricted rate.
+                             // The delay is 2 * kMinFrameDelay when restricted.
+      7.5 * kMinFrameDelay,  // ...
+
+      // 8 * kMinFrameDelay: new constraint asks for max rate of 2 fps.
+      // The 0Hz adapter is reconstructed for 2 fps and will therefore not obey
+      // the current restriction for rate of non-converged frames of 5 fps
+      // since the new max rate is lower.
+
+      // A new frame is passed at 9 * kMinFrameDelay. The previous repeat
+      // cadence was stopped by the change in constraints.
+      14 * kMinFrameDelay,  // Original frame emitted at non-restricted 2 fps.
+                            // The delay is 5 * kMinFrameDelay.
+      19 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      24 * kMinFrameDelay,  // ...
   });
 }
 
