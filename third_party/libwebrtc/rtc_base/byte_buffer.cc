@@ -20,22 +20,22 @@ ByteBufferWriter::ByteBufferWriter(const char* bytes, size_t len)
     : ByteBufferWriterT(bytes, len) {}
 
 ByteBufferReader::ByteBufferReader(const char* bytes, size_t len) {
-  Construct(bytes, len);
+  Construct(reinterpret_cast<const uint8_t*>(bytes), len);
 }
 
 ByteBufferReader::ByteBufferReader(const char* bytes) {
-  Construct(bytes, strlen(bytes));
+  Construct(reinterpret_cast<const uint8_t*>(bytes), strlen(bytes));
 }
 
 ByteBufferReader::ByteBufferReader(const Buffer& buf) {
-  Construct(buf.data<char>(), buf.size());
+  Construct(buf.data(), buf.size());
 }
 
 ByteBufferReader::ByteBufferReader(const ByteBufferWriter& buf) {
-  Construct(buf.Data(), buf.Length());
+  Construct(reinterpret_cast<const uint8_t*>(buf.Data()), buf.Length());
 }
 
-void ByteBufferReader::Construct(const char* bytes, size_t len) {
+void ByteBufferReader::Construct(const uint8_t* bytes, size_t len) {
   bytes_ = bytes;
   size_ = len;
   start_ = 0;
@@ -134,7 +134,7 @@ bool ByteBufferReader::ReadString(std::string* val, size_t len) {
   if (len > Length()) {
     return false;
   } else {
-    val->append(bytes_ + start_, len);
+    val->append(reinterpret_cast<const char*>(bytes_ + start_), len);
     start_ += len;
     return true;
   }
