@@ -1232,8 +1232,8 @@ TEST_F(StunTest, AddMessageIntegrity) {
   const StunByteStringAttribute* mi_attr =
       msg.GetByteString(STUN_ATTR_MESSAGE_INTEGRITY);
   EXPECT_EQ(20U, mi_attr->length());
-  EXPECT_EQ(
-      0, memcmp(mi_attr->bytes(), kCalculatedHmac1, sizeof(kCalculatedHmac1)));
+  EXPECT_EQ(0, memcmp(mi_attr->array_view().data(), kCalculatedHmac1,
+                      sizeof(kCalculatedHmac1)));
 
   rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
@@ -1248,8 +1248,8 @@ TEST_F(StunTest, AddMessageIntegrity) {
   const StunByteStringAttribute* mi_attr2 =
       msg2.GetByteString(STUN_ATTR_MESSAGE_INTEGRITY);
   EXPECT_EQ(20U, mi_attr2->length());
-  EXPECT_EQ(
-      0, memcmp(mi_attr2->bytes(), kCalculatedHmac2, sizeof(kCalculatedHmac2)));
+  EXPECT_EQ(0, memcmp(mi_attr2->array_view().data(), kCalculatedHmac2,
+                      sizeof(kCalculatedHmac2)));
 
   rtc::ByteBufferWriter buf3;
   EXPECT_TRUE(msg2.Write(&buf3));
@@ -1321,7 +1321,7 @@ TEST_F(StunTest, AddMessageIntegrity32) {
   const StunByteStringAttribute* mi_attr =
       msg.GetByteString(STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32);
   EXPECT_EQ(4U, mi_attr->length());
-  EXPECT_EQ(0, memcmp(mi_attr->bytes(), kCalculatedHmac1_32,
+  EXPECT_EQ(0, memcmp(mi_attr->array_view().data(), kCalculatedHmac1_32,
                       sizeof(kCalculatedHmac1_32)));
 
   rtc::ByteBufferWriter buf1;
@@ -1337,7 +1337,7 @@ TEST_F(StunTest, AddMessageIntegrity32) {
   const StunByteStringAttribute* mi_attr2 =
       msg2.GetByteString(STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32);
   EXPECT_EQ(4U, mi_attr2->length());
-  EXPECT_EQ(0, memcmp(mi_attr2->bytes(), kCalculatedHmac2_32,
+  EXPECT_EQ(0, memcmp(mi_attr2->array_view().data(), kCalculatedHmac2_32,
                       sizeof(kCalculatedHmac2_32)));
 
   rtc::ByteBufferWriter buf3;
@@ -1502,7 +1502,7 @@ TEST_F(StunTest, ReadRelayMessage) {
   bytes = msg.GetByteString(STUN_ATTR_MAGIC_COOKIE);
   ASSERT_TRUE(bytes != NULL);
   EXPECT_EQ(4U, bytes->length());
-  EXPECT_EQ(0, memcmp(bytes->bytes(), TURN_MAGIC_COOKIE_VALUE,
+  EXPECT_EQ(0, memcmp(bytes->array_view().data(), TURN_MAGIC_COOKIE_VALUE,
                       sizeof(TURN_MAGIC_COOKIE_VALUE)));
 
   bytes2 = StunAttribute::CreateByteString(STUN_ATTR_MAGIC_COOKIE);
@@ -1586,8 +1586,9 @@ TEST_F(StunTest, RemoveAttribute) {
     auto attr = msg.RemoveAttribute(STUN_ATTR_USERNAME);
     ASSERT_NE(attr, nullptr);
     EXPECT_EQ(attr->type(), STUN_ATTR_USERNAME);
-    EXPECT_STREQ("kes",
-                 static_cast<StunByteStringAttribute*>(attr.get())->bytes());
+    EXPECT_STREQ("kes", static_cast<StunByteStringAttribute*>(attr.get())
+                            ->string_view()
+                            .data());
     EXPECT_LT(msg.length(), len);
   }
 
@@ -1609,8 +1610,9 @@ TEST_F(StunTest, RemoveAttribute) {
     auto attr = msg.RemoveAttribute(STUN_ATTR_USERNAME);
     ASSERT_NE(attr, nullptr);
     EXPECT_EQ(attr->type(), STUN_ATTR_USERNAME);
-    EXPECT_STREQ("kenta",
-                 static_cast<StunByteStringAttribute*>(attr.get())->bytes());
+    EXPECT_STREQ("kenta", static_cast<StunByteStringAttribute*>(attr.get())
+                              ->string_view()
+                              .data());
   }
 
   // Remove should remove the last added occurrence.
@@ -1618,8 +1620,9 @@ TEST_F(StunTest, RemoveAttribute) {
     auto attr = msg.RemoveAttribute(STUN_ATTR_USERNAME);
     ASSERT_NE(attr, nullptr);
     EXPECT_EQ(attr->type(), STUN_ATTR_USERNAME);
-    EXPECT_STREQ("kes",
-                 static_cast<StunByteStringAttribute*>(attr.get())->bytes());
+    EXPECT_STREQ("kes", static_cast<StunByteStringAttribute*>(attr.get())
+                            ->string_view()
+                            .data());
   }
 
   // Removing something that does exist should return nullptr.
@@ -1652,8 +1655,9 @@ TEST_F(StunTest, CopyAttribute) {
 
       auto copy = CopyStunAttribute(*attr.get(), buffer_ptr);
       ASSERT_EQ(copy->value_type(), STUN_VALUE_BYTE_STRING);
-      EXPECT_STREQ("kes",
-                   static_cast<StunByteStringAttribute*>(copy.get())->bytes());
+      EXPECT_STREQ("kes", static_cast<StunByteStringAttribute*>(copy.get())
+                              ->string_view()
+                              .data());
     }
 
     {  // Test StunAddressAttribute.
