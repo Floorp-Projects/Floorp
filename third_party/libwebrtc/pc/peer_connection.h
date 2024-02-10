@@ -27,6 +27,7 @@
 #include "api/crypto/crypto_options.h"
 #include "api/data_channel_interface.h"
 #include "api/dtls_transport_interface.h"
+#include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "api/ice_transport_interface.h"
 #include "api/jsep.h"
@@ -110,9 +111,9 @@ class PeerConnection : public PeerConnectionInternal,
   // Note that the function takes ownership of dependencies, and will
   // either use them or release them, whether it succeeds or fails.
   static RTCErrorOr<rtc::scoped_refptr<PeerConnection>> Create(
+      const Environment& env,
       rtc::scoped_refptr<ConnectionContext> context,
       const PeerConnectionFactoryInterface::Options& options,
-      std::unique_ptr<RtcEventLog> event_log,
       std::unique_ptr<Call> call,
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies);
@@ -428,7 +429,7 @@ class PeerConnection : public PeerConnectionInternal,
   void TeardownDataChannelTransport_n(RTCError error)
       RTC_RUN_ON(network_thread());
 
-  const FieldTrialsView& trials() const override { return *trials_; }
+  const FieldTrialsView& trials() const override { return env_.field_trials(); }
 
   bool ConfiguredForMedia() const;
 
@@ -441,10 +442,10 @@ class PeerConnection : public PeerConnectionInternal,
 
  protected:
   // Available for rtc::scoped_refptr creation
-  PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
+  PeerConnection(const Environment& env,
+                 rtc::scoped_refptr<ConnectionContext> context,
                  const PeerConnectionFactoryInterface::Options& options,
                  bool is_unified_plan,
-                 std::unique_ptr<RtcEventLog> event_log,
                  std::unique_ptr<Call> call,
                  PeerConnectionDependencies& dependencies,
                  bool dtls_enabled);
@@ -597,22 +598,13 @@ class PeerConnection : public PeerConnectionInternal,
   std::function<void(const RtpPacketReceived& parsed_packet)>
   InitializeUnDemuxablePacketHandler();
 
+  const Environment env_;
   const rtc::scoped_refptr<ConnectionContext> context_;
-  // Field trials active for this PeerConnection is the first of:
-  // a) Specified in PeerConnectionDependencies (owned).
-  // b) Accessed via ConnectionContext (e.g PeerConnectionFactoryDependencies>
-  // c) Created as Default (FieldTrialBasedConfig).
-  const AlwaysValidPointer<const FieldTrialsView, FieldTrialBasedConfig>
-      trials_;
   const PeerConnectionFactoryInterface::Options options_;
   PeerConnectionObserver* observer_ RTC_GUARDED_BY(signaling_thread()) =
       nullptr;
 
   const bool is_unified_plan_;
-
-  // The EventLog needs to outlive `call_` (and any other object that uses it).
-  const std::unique_ptr<RtcEventLog> event_log_
-      RTC_PT_GUARDED_BY(worker_thread());
 
   IceConnectionState ice_connection_state_ RTC_GUARDED_BY(signaling_thread()) =
       kIceConnectionNew;

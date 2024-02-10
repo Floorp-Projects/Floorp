@@ -220,6 +220,23 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
     PeerConnectionDependencies dependencies) {
   RTC_DCHECK_RUN_ON(signaling_thread());
 
+  EnvironmentFactory env_factory(context_->env());
+
+  // Field trials active for this PeerConnection is the first of:
+  // a) Specified in the PeerConnectionDependencies
+  // b) Specified in the PeerConnectionFactoryDependencies
+  // c) Created as default by the EnvironmentFactory.
+  env_factory.Set(std::move(dependencies.trials));
+
+  if (event_log_factory_ != nullptr) {
+    worker_thread()->BlockingCall([&] {
+      Environment env_for_rtc_event_log = env_factory.Create();
+      env_factory.Set(event_log_factory_->Create(env_for_rtc_event_log));
+    });
+  }
+
+  const Environment env = env_factory.Create();
+
   // Set internal defaults if optional dependencies are not set.
   if (!dependencies.cert_generator) {
     dependencies.cert_generator =
@@ -227,11 +244,10 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
                                                        network_thread());
   }
   if (!dependencies.allocator) {
-    const FieldTrialsView* trials =
-        dependencies.trials ? dependencies.trials.get() : &field_trials();
     dependencies.allocator = std::make_unique<cricket::BasicPortAllocator>(
         context_->default_network_manager(), context_->default_socket_factory(),
-        configuration.turn_customizer, /*relay_port_factory=*/nullptr, trials);
+        configuration.turn_customizer, /*relay_port_factory=*/nullptr,
+        &env.field_trials());
     dependencies.allocator->SetPortRange(
         configuration.port_allocator_config.min_port,
         configuration.port_allocator_config.max_port);
@@ -247,19 +263,13 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
   dependencies.allocator->SetNetworkIgnoreMask(options().network_ignore_mask);
   dependencies.allocator->SetVpnList(configuration.vpn_list);
 
-  std::unique_ptr<RtcEventLog> event_log =
-      worker_thread()->BlockingCall([this] { return CreateRtcEventLog_w(); });
-
-  const FieldTrialsView* trials =
-      dependencies.trials ? dependencies.trials.get() : &field_trials();
   std::unique_ptr<Call> call =
-      worker_thread()->BlockingCall([this, &event_log, trials, &configuration] {
-        return CreateCall_w(event_log.get(), *trials, configuration);
+      worker_thread()->BlockingCall([this, &env, &configuration] {
+        return CreateCall_w(env, configuration);
       });
 
-  auto result = PeerConnection::Create(context_, options_, std::move(event_log),
-                                       std::move(call), configuration,
-                                       std::move(dependencies));
+  auto result = PeerConnection::Create(env, context_, options_, std::move(call),
+                                       configuration, std::move(dependencies));
   if (!result.ok()) {
     return result.MoveError();
   }
@@ -300,23 +310,12 @@ rtc::scoped_refptr<AudioTrackInterface> PeerConnectionFactory::CreateAudioTrack(
   return AudioTrackProxy::Create(signaling_thread(), track);
 }
 
-std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
-  RTC_DCHECK_RUN_ON(worker_thread());
-
-  auto encoding_type = RtcEventLog::EncodingType::NewFormat;
-  if (field_trials().IsDisabled("WebRTC-RtcEventLogNewFormat"))
-    encoding_type = RtcEventLog::EncodingType::Legacy;
-  return event_log_factory_ ? event_log_factory_->Create(encoding_type)
-                            : std::make_unique<RtcEventLogNull>();
-}
-
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
-    RtcEventLog* event_log,
-    const FieldTrialsView& field_trials,
+    const Environment& env,
     const PeerConnectionInterface::RTCConfiguration& configuration) {
   RTC_DCHECK_RUN_ON(worker_thread());
 
-  CallConfig call_config(event_log, network_thread());
+  CallConfig call_config(env, network_thread());
   if (!media_engine() || !context_->call_factory()) {
     return nullptr;
   }
@@ -329,7 +328,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   FieldTrialParameter<DataRate> max_bandwidth("max",
                                               DataRate::KilobitsPerSec(2000));
   ParseFieldTrial({&min_bandwidth, &start_bandwidth, &max_bandwidth},
-                  field_trials.Lookup("WebRTC-PcFactoryDefaultBitrates"));
+                  env.field_trials().Lookup("WebRTC-PcFactoryDefaultBitrates"));
 
   call_config.bitrate_config.min_bitrate_bps =
       rtc::saturated_cast<int>(min_bandwidth->bps());
@@ -339,7 +338,6 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
       rtc::saturated_cast<int>(max_bandwidth->bps());
 
   call_config.fec_controller_factory = fec_controller_factory_.get();
-  call_config.task_queue_factory = task_queue_factory_.get();
   call_config.network_state_predictor_factory =
       network_state_predictor_factory_.get();
   call_config.neteq_factory = neteq_factory_.get();
@@ -352,7 +350,6 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     RTC_LOG(LS_INFO) << "Using default network controller factory";
   }
 
-  call_config.trials = &field_trials;
   call_config.rtp_transport_controller_send_factory =
       transport_controller_send_factory_.get();
   call_config.metronome = metronome_.get();
