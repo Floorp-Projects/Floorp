@@ -222,6 +222,31 @@ class TranslationsActionTest {
     }
 
     @Test
+    fun `WHEN a RemoveNeverTranslateSiteAction is dispatched AND successful THEN update neverTranslateSites`() {
+        // Initial add to neverTranslateSites
+        assertEquals(null, tabState().translationsState.neverTranslateSites)
+        val neverTranslateSites = listOf("google.com")
+        store.dispatch(
+            TranslationsAction.SetNeverTranslateSitesAction(
+                tabId = tab.id,
+                neverTranslateSites = neverTranslateSites,
+            ),
+        ).joinBlocking()
+        assertEquals(neverTranslateSites, tabState().translationsState.neverTranslateSites)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.RemoveNeverTranslateSiteAction(
+                tabId = tab.id,
+                origin = "google.com",
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(listOf<String>(), tabState().translationsState.neverTranslateSites)
+    }
+
+    @Test
     fun `WHEN a TranslateExceptionAction is dispatched due to an error THEN update the error condition according to the operation`() {
         // Initial state
         assertEquals(null, tabState().translationsState.translationError)

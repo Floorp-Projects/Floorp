@@ -980,6 +980,17 @@ sealed class TranslationsAction : BrowserAction() {
         override val tabId: String,
         val neverTranslateSites: List<String>,
     ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Remove from the list of sites the user has opted to never translate.
+     *
+     * @property tabId The ID of the tab the [EngineSession] that requested the removal.
+     * @property origin A site origin URI that will have the specified never translate permission set.
+     */
+    data class RemoveNeverTranslateSiteAction(
+        override val tabId: String,
+        val origin: String,
+    ) : TranslationsAction(), ActionWithTab
 }
 
 /**

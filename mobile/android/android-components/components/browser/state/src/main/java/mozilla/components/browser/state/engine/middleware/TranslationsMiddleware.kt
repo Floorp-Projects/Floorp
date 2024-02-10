@@ -61,6 +61,11 @@ class TranslationsMiddleware(
                     -> Unit
                 }
             }
+            is TranslationsAction.RemoveNeverTranslateSiteAction -> {
+                scope.launch {
+                    removeNeverTranslateSite(context, action.tabId, action.origin)
+                }
+            }
             else -> {
                 // no-op
             }
@@ -139,6 +144,48 @@ class TranslationsMiddleware(
                     ),
                 )
                 logger.error("Error requesting never translate sites: ", it)
+            },
+        )
+    }
+
+    /**
+     * Removes the site from the list of never translate sites using [scope] and dispatches the result to the
+     * store via [TranslationsAction.SetNeverTranslateSitesAction] or else dispatches the failure
+     * [TranslationsAction.TranslateExceptionAction].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId Tab ID associated with the request.
+     * @param origin A site origin URI that will have the specified never translate permission set.
+     */
+    private fun removeNeverTranslateSite(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String,
+        origin: String,
+    ) {
+        engine.setNeverTranslateSpecifiedSite(
+            origin = origin,
+            setting = false,
+            onSuccess = {
+                logger.info("Success requesting never translate sites.")
+
+                // Fetch page settings to ensure the state matches the engine.
+                context.store.dispatch(
+                    TranslationsAction.OperationRequestedAction(
+                        tabId = tabId,
+                        operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+                    ),
+                )
+            },
+            onError = {
+                logger.error("Error removing site from never translate list: ", it)
+
+                // Fetch never translate sites to ensure the state matches the engine.
+                context.store.dispatch(
+                    TranslationsAction.OperationRequestedAction(
+                        tabId = tabId,
+                        operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+                    ),
+                )
             },
         )
     }

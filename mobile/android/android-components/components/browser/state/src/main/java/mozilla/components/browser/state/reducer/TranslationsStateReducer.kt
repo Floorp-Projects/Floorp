@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.TranslationsAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -189,6 +190,16 @@ internal object TranslationsStateReducer {
                     neverTranslateSites = action.neverTranslateSites,
                 )
             }
+
+        is TranslationsAction.RemoveNeverTranslateSiteAction -> {
+            val neverTranslateSites = state.findTab(action.tabId)?.translationsState?.neverTranslateSites
+            val updatedNeverTranslateSites = neverTranslateSites?.filter { it != action.origin }?.toList()
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    neverTranslateSites = updatedNeverTranslateSites,
+                )
+            }
+        }
 
         is TranslationsAction.OperationRequestedAction ->
             when (action.operation) {

@@ -34,6 +34,7 @@ import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -280,5 +281,61 @@ class TranslationsMiddlewareTest {
             ),
         )
         waitForIdle()
+    }
+
+    @Test
+    fun `WHEN RemoveNeverTranslateSiteAction is dispatched AND removing is unsuccessful THEN FETCH_NEVER_TRANSLATE_SITES is dispatched`() = runTest {
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(
+            engine.setNeverTranslateSpecifiedSite(
+                origin = any(),
+                setting = anyBoolean(),
+                onSuccess = any(),
+                onError = errorCallback.capture(),
+            ),
+        ).thenAnswer { errorCallback.value.invoke(Throwable()) }
+
+        val action =
+            TranslationsAction.RemoveNeverTranslateSiteAction(
+                tabId = tab.id,
+                origin = "google.com",
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store).dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN RemoveNeverTranslateSiteAction is dispatched AND removing is successful THEN FETCH_PAGE_SETTINGS is dispatched`() = runTest {
+        val sitesCallback = argumentCaptor<(() -> Unit)>()
+        val action =
+            TranslationsAction.RemoveNeverTranslateSiteAction(
+                tabId = tab.id,
+                origin = "google.com",
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        verify(engine).setNeverTranslateSpecifiedSite(
+            origin = any(),
+            setting = anyBoolean(),
+            onSuccess = sitesCallback.capture(),
+            onError = any(),
+        )
+        sitesCallback.value.invoke()
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store).dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        )
     }
 }
