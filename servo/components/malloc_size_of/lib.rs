@@ -862,7 +862,7 @@ malloc_size_of_is_0!(Range<f32>, Range<f64>);
 
 malloc_size_of_is_0!(app_units::Au);
 
-malloc_size_of_is_0!(cssparser::TokenSerializationType, cssparser::SourceLocation);
+malloc_size_of_is_0!(cssparser::TokenSerializationType, cssparser::SourceLocation, cssparser::SourcePosition);
 
 malloc_size_of_is_0!(dom::ElementState, dom::DocumentState);
 

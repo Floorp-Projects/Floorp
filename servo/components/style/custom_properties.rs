@@ -402,18 +402,25 @@ pub enum DeferFontRelativeCustomPropertyResolution {
     No,
 }
 
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToShmem)]
+struct VarOrEnvReference {
+    name: Name,
+    is_var: bool,
+}
+
 /// A struct holding information about the external references to that a custom
 /// property value may have.
 #[derive(Clone, Debug, Default, MallocSizeOf, PartialEq, ToShmem)]
 struct References {
-    custom_properties: PrecomputedHashSet<Name>,
-    environment: bool,
+    refs: Vec<VarOrEnvReference>,
     non_custom_references: NonCustomReferences,
+    any_env: bool,
+    any_var: bool,
 }
 
 impl References {
     fn has_references(&self) -> bool {
-        self.environment || !self.custom_properties.is_empty()
+        !self.refs.is_empty()
     }
 
     fn get_non_custom_dependencies(&self, is_root_element: bool) -> NonCustomReferences {
@@ -538,7 +545,7 @@ impl VariableValue {
         let mut css = css.into_owned();
         css.shrink_to_fit();
 
-        references.custom_properties.shrink_to_fit();
+        references.refs.shrink_to_fit();
 
         Ok(Self {
             css,
@@ -729,13 +736,21 @@ fn parse_declaration_value_block<'i, 't>(
                 return Err(input.new_custom_error(e));
             },
             Token::Function(ref name) => {
-                if name.eq_ignore_ascii_case("var") {
+                let is_var = name.eq_ignore_ascii_case("var");
+                if is_var || name.eq_ignore_ascii_case("env") {
                     let args_start = input.state();
-                    input.parse_nested_block(|input| parse_var_function(input, references))?;
-                    input.reset(&args_start);
-                } else if name.eq_ignore_ascii_case("env") {
-                    let args_start = input.state();
-                    input.parse_nested_block(|input| parse_env_function(input, references))?;
+                    let name = input.parse_nested_block(|input| {
+                        parse_var_or_env_function(input, is_var)
+                    })?;
+                    references.refs.push(VarOrEnvReference {
+                        name,
+                        is_var,
+                    });
+                    if is_var {
+                        references.any_var = true;
+                    } else {
+                        references.any_env = true;
+                    }
                     input.reset(&args_start);
                 }
                 nested!();
@@ -842,34 +857,25 @@ fn parse_and_substitute_fallback<'i>(
     Ok(fallback)
 }
 
-// If the var function is valid, return Ok((custom_property_name, fallback))
-fn parse_var_function<'i, 't>(
-    input: &mut Parser<'i, 't>,
-    references: &mut References,
-) -> Result<(), ParseError<'i>> {
-    let name = input.expect_ident_cloned()?;
-    let name = parse_name(&name).map_err(|()| {
-        input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone()))
-    })?;
+fn parse_var_or_env_function<'i, 't>(input: &mut Parser<'i, 't>, is_var: bool) -> Result<Name, ParseError<'i>> {
+    // TODO(emilio): For env() this should be <custom-ident> per spec, but no other browser does
+    // that, see https://github.com/w3c/csswg-drafts/issues/3262.
+    let name = input.expect_ident()?;
+    let name = Atom::from(if is_var {
+        match parse_name(name.as_ref()) {
+            Ok(name) => name,
+            Err(()) => {
+                let name = name.clone();
+                return Err(input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name)));
+            },
+        }
+    } else {
+        name.as_ref()
+    });
     if input.try_parse(|input| input.expect_comma()).is_ok() {
         parse_fallback(input)?;
     }
-    references.custom_properties.insert(Atom::from(name));
-    Ok(())
-}
-
-fn parse_env_function<'i, 't>(
-    input: &mut Parser<'i, 't>,
-    references: &mut References,
-) -> Result<(), ParseError<'i>> {
-    // TODO(emilio): This should be <custom-ident> per spec, but no other
-    // browser does that, see https://github.com/w3c/csswg-drafts/issues/3262.
-    input.expect_ident()?;
-    if input.try_parse(|input| input.expect_comma()).is_ok() {
-        parse_fallback(input)?;
-    }
-    references.environment = true;
-    Ok(())
+    Ok(name)
 }
 
 /// A struct that takes care of encapsulating the cascade process for custom
@@ -948,8 +954,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         let registration = self.stylist.get_custom_property_registration(&name);
         match *value {
             CustomDeclarationValue::Value(ref unparsed_value) => {
-                let has_custom_property_references =
-                    !unparsed_value.references.custom_properties.is_empty();
+                let has_custom_property_references = unparsed_value.references.any_var;
                 let registered_length_property =
                     registration.syntax.may_reference_font_relative_length();
                 // Non-custom dependency is really relevant for registered custom properties
@@ -1032,14 +1037,20 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             },
             _ => return,
         };
-        let variables: &std::collections::HashSet<Atom, std::hash::BuildHasherDefault<crate::selector_map::PrecomputedHasher>> = &decl.value.variable_value.references.custom_properties;
-        if variables.is_empty() {
+        let refs = &decl.value.variable_value.references;
+        if !refs.any_var {
             return;
         }
 
-        let variables: Vec<Atom> = variables.into_iter().filter(|name| {
-            self.stylist.get_custom_property_registration(name).syntax.may_compute_length()
-        }).cloned().collect();
+        let variables: Vec<Atom> = refs.refs.iter().filter_map(|reference| {
+            if !reference.is_var {
+                return None;
+            }
+            if !self.stylist.get_custom_property_registration(&reference.name).syntax.may_compute_length() {
+                return None;
+            }
+            Some(reference.name.clone())
+        }).collect();
         references.for_each(|idx| {
             let entry = &mut self.references_from_non_custom_properties[idx];
             let was_none = entry.is_none();
@@ -1341,13 +1352,10 @@ fn substitute_all(
                 let non_custom_references = value
                     .references
                     .get_non_custom_dependencies(context.computed_context.is_root_element());
-                let has_custom_property_reference = !value.references.custom_properties.is_empty();
+                let has_custom_property_reference = value.references.any_var;
                 // Nothing to resolve.
                 if !has_custom_property_reference && non_custom_references.is_empty() {
-                    debug_assert!(
-                        !value.references.environment,
-                        "Should've been handled earlier"
-                    );
+                    debug_assert!(!value.references.any_env, "Should've been handled earlier");
                     return None;
                 }
 
@@ -1419,9 +1427,13 @@ fn substitute_all(
             );
 
             // Visit other custom properties...
-            for next in v.references.custom_properties.iter() {
+            // FIXME: Maybe avoid visiting the same var twice if not needed?
+            for next in &v.references.refs {
+                if !next.is_var {
+                    continue;
+                }
                 visit_link(
-                    VarType::Custom(next.clone()),
+                    VarType::Custom(next.name.clone()),
                     context,
                     &mut lowlink,
                     &mut self_ref,
@@ -1544,11 +1556,14 @@ fn substitute_all(
                 }
             }
             if should_substitute && !defer {
-                for e in v.references.custom_properties.iter() {
+                for reference in v.references.refs.iter() {
+                    if !reference.is_var {
+                        continue;
+                    }
                     if let Some(deferred) = &mut context.deferred_properties {
-                        if deferred.get(context.stylist, e).is_some() {
+                        if deferred.get(context.stylist, &reference.name).is_some() {
                             // This property depends on a custom property that depends on a non-custom property, defer.
-                            deferred.insert(registration, &name, (*v).clone());
+                            deferred.insert(registration, &name, Arc::clone(v));
                             context.map.remove(registration, &name);
                             defer = true;
                             break;
@@ -1640,22 +1655,8 @@ fn substitute_references_if_needed_and_apply(
     // but hopefully llvm optimizes it well anyways.
     let mut substituted_value = None;
     let computed_value = if should_substitute {
-        let mut substituted = ComputedValue::empty(&value.url_data);
-        let mut input = ParserInput::new(&value.css);
-        let mut input = Parser::new(&mut input);
-        let mut position = (input.position(), value.first_token_type);
-
-        let last_token_type = substitute_block(
-            &mut input,
-            &mut position,
-            &mut substituted,
-            custom_properties,
-            stylist,
-            computed_context,
-        );
-
-        let last_token_type = match last_token_type {
-            Ok(t) => t,
+        let substituted = match substitute_internal(value, custom_properties, stylist, computed_context) {
+            Ok(v) => v,
             Err(..) => {
                 handle_invalid_at_computed_value_time(
                     name,
@@ -1667,20 +1668,6 @@ fn substitute_references_if_needed_and_apply(
                 return;
             },
         };
-
-        if substituted
-            .push_from(&input, position, last_token_type)
-            .is_err()
-        {
-            handle_invalid_at_computed_value_time(
-                name,
-                custom_properties,
-                inherited,
-                stylist,
-                is_root_element,
-            );
-            return;
-        }
 
         // If variable fallback results in a wide keyword, deal with it now.
         {
@@ -1943,15 +1930,14 @@ fn substitute_block<'i>(
     Ok(last_token_type)
 }
 
-/// Replace `var()` and `env()` functions for a non-custom property.
-///
-/// Return `Err(())` for invalid at computed time.
-pub fn substitute<'i>(
+/// Replace `var()` and `env()` functions. Return `Err(..)` for invalid at computed time.
+fn substitute_internal<'i>(
     variable_value: &'i VariableValue,
     custom_properties: &ComputedCustomProperties,
     stylist: &Stylist,
     computed_context: &computed::Context,
-) -> Result<String, ParseError<'i>> {
+) -> Result<ComputedValue, ParseError<'i>> {
+    debug_assert!(variable_value.has_references());
     let mut substituted = ComputedValue::empty(&variable_value.url_data);
     let mut input = ParserInput::new(&variable_value.css);
     let mut input = Parser::new(&mut input);
@@ -1965,5 +1951,16 @@ pub fn substitute<'i>(
         computed_context,
     )?;
     substituted.push_from(&input, position, last_token_type)?;
-    Ok(substituted.css)
+    Ok(substituted)
+}
+
+/// Replace var() and env() functions, returning the resulting CSS string.
+pub fn substitute<'i>(
+    variable_value: &'i VariableValue,
+    custom_properties: &ComputedCustomProperties,
+    stylist: &Stylist,
+    computed_context: &computed::Context,
+) -> Result<String, ParseError<'i>> {
+    let v = substitute_internal(variable_value, custom_properties, stylist, computed_context)?;
+    Ok(v.css)
 }
