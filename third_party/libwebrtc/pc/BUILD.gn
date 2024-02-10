@@ -318,6 +318,7 @@ rtc_source_set("media_factory") {
   sources = [ "media_factory.h" ]
   deps = [
     "../api:callfactory_api",
+    "../api/environment",
     "../call:call_interfaces",
     "../media:rtc_media_base",
   ]
@@ -2746,6 +2747,7 @@ if (rtc_include_tests && !build_with_chromium) {
     deps = [
       ":media_factory",
       "../api:libjingle_peerconnection_api",
+      "../api/environment",
       "../call:call_interfaces",
       "../media:rtc_media_tests_utils",
       "../rtc_base:checks",

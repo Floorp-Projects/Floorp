@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "api/call/call_factory_interface.h"
+#include "api/environment/environment.h"
 #include "call/call.h"
 #include "call/call_config.h"
 #include "media/base/media_engine.h"
@@ -38,6 +39,7 @@ class MediaFactory : public CallFactoryInterface {
 
   std::unique_ptr<Call> CreateCall(const CallConfig& config) override = 0;
   virtual std::unique_ptr<cricket::MediaEngineInterface> CreateMediaEngine(
+      const Environment& env,
       PeerConnectionFactoryDependencies& dependencies) = 0;
 };
 

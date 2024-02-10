@@ -47,6 +47,7 @@ rtc_source_set("enable_media") {
     "../media:rtc_audio_video",
     "../pc:media_factory",
     "../rtc_base/system:rtc_export",
+    "environment",
   ]
   if (build_with_mozilla) {
     deps -= [ "../pc:media_factory" ]
@@ -1467,6 +1468,7 @@ if (rtc_include_tests) {
       "../rtc_base:checks",
       "../system_wrappers",
       "../test/time_controller",
+      "environment",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
   }
