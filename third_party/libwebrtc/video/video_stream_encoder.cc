@@ -1482,7 +1482,7 @@ void VideoStreamEncoder::OnEncoderSettingsChanged() {
 }
 
 void VideoStreamEncoder::OnFrame(Timestamp post_time,
-                                 int frames_scheduled_for_processing,
+                                 bool queue_overload,
                                  const VideoFrame& video_frame) {
   RTC_DCHECK_RUN_ON(&encoder_queue_);
   VideoFrame incoming_frame = video_frame;
@@ -1541,7 +1541,7 @@ void VideoStreamEncoder::OnFrame(Timestamp post_time,
   bool cwnd_frame_drop =
       cwnd_frame_drop_interval_ &&
       (cwnd_frame_counter_++ % cwnd_frame_drop_interval_.value() == 0);
-  if (frames_scheduled_for_processing == 1 && !cwnd_frame_drop) {
+  if (!queue_overload && !cwnd_frame_drop) {
     MaybeEncodeVideoFrame(incoming_frame, post_time.us());
   } else {
     if (cwnd_frame_drop) {

@@ -136,8 +136,8 @@ void PassAFrame(
     FrameCadenceAdapterInterface::Callback* video_stream_encoder_callback,
     int64_t ntp_time_ms) {
   encoder_queue->PostTask([video_stream_encoder_callback, ntp_time_ms] {
-    video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms), 1,
-                                           CreateSimpleNV12Frame());
+    video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms),
+                                           false, CreateSimpleNV12Frame());
   });
 }
 
