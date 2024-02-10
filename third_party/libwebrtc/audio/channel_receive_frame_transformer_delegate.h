@@ -62,6 +62,8 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
   // `channel_receive_thread_`, by calling `receive_frame_callback_`.
   void ReceiveFrame(std::unique_ptr<TransformableFrameInterface> frame) const;
 
+  rtc::scoped_refptr<FrameTransformerInterface> FrameTransformer();
+
  protected:
   ~ChannelReceiveFrameTransformerDelegate() override = default;
 

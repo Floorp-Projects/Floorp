@@ -928,10 +928,17 @@ void ChannelReceive::SetAssociatedSendChannel(
 void ChannelReceive::SetDepacketizerToDecoderFrameTransformer(
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  // Depending on when the channel is created, the transformer might be set
-  // twice. Don't replace the delegate if it was already initialized.
-  if (!frame_transformer || frame_transformer_delegate_) {
+  if (!frame_transformer) {
     RTC_DCHECK_NOTREACHED() << "Not setting the transformer?";
+    return;
+  }
+  if (frame_transformer_delegate_) {
+    // Depending on when the channel is created, the transformer might be set
+    // twice. Don't replace the delegate if it was already initialized.
+    // TODO(crbug.com/webrtc/15674): Prevent multiple calls during
+    // reconfiguration.
+    RTC_CHECK_EQ(frame_transformer_delegate_->FrameTransformer(),
+                 frame_transformer);
     return;
   }
 

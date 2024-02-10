@@ -241,6 +241,7 @@ if (rtc_include_tests) {
       "../rtc_base:logging",
       "../rtc_base:threading",
       "../test:audio_codec_mocks",
+      "../test:mock_frame_transformer",
       "../test:mock_transport",
       "../test:test_support",
       "../test/time_controller",
