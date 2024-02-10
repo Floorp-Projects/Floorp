@@ -129,6 +129,9 @@ void RecordedTextureData::EndDraw() {
 
 already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
   if (mSnapshotWrapper && (!mDT || !mDT->IsDirty())) {
+    // The DT is unmodified since the last time snapshot was borrowed, so it
+    // is safe to reattach the snapshot for shmem readbacks.
+    mCanvasChild->AttachSurface(mSnapshotWrapper);
     return do_AddRef(mSnapshotWrapper);
   }
 
