@@ -253,6 +253,8 @@ void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
       info->mKeySystemName = name;
       info->mCapabilities = keySystemConfigs.LastElement().GetDebugInfo();
       info->mClearlead = DoesKeySystemSupportClearLead(name);
+      // TODO : ask real CDM
+      info->mIsHDCP22Compatible = false;
     }
   }
   aPromise->MaybeResolve(cdmInfo);
@@ -314,6 +316,8 @@ nsString KeySystemConfig::GetDebugInfo() const {
   debugInfo.AppendLiteral(" WEBM={");
   debugInfo.Append(NS_ConvertUTF8toUTF16(mWebM.GetDebugInfo()));
   debugInfo.AppendLiteral("}");
+  debugInfo.AppendASCII(
+      nsPrintfCString(" isHDCP22Compatible=%d", mIsHDCP22Compatible));
   return debugInfo;
 }
 
