@@ -22,14 +22,10 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 let webDriverSessionId = null;
 
 export class MarionetteCommandsParent extends JSWindowActorParent {
-  actorCreated() {
-    this._resolveDialogOpened = null;
-  }
+  #deferredDialogOpened;
 
-  dialogOpenedPromise() {
-    return new Promise(resolve => {
-      this._resolveDialogOpened = resolve;
-    });
+  actorCreated() {
+    this.#deferredDialogOpened = null;
   }
 
   async sendQuery(name, serializedValue) {
@@ -39,6 +35,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     );
 
     // return early if a dialog is opened
+    this.#deferredDialogOpened = Promise.withResolvers();
     let {
       error,
       seenNodeIds,
@@ -46,9 +43,9 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
       hasSerializedWindows,
     } = await Promise.race([
       super.sendQuery(name, serializedValue),
-      this.dialogOpenedPromise(),
+      this.#deferredDialogOpened.promise,
     ]).finally(() => {
-      this._resolveDialogOpened = null;
+      this.#deferredDialogOpened = null;
     });
 
     if (error) {
@@ -104,8 +101,8 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   notifyDialogOpened() {
-    if (this._resolveDialogOpened) {
-      this._resolveDialogOpened({ data: null });
+    if (this.#deferredDialogOpened) {
+      this.#deferredDialogOpened.resolve({ data: null });
     }
   }
 
