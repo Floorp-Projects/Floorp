@@ -96,8 +96,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
         thread_(ss_.get()),
         network_(network),
         socket_factory_(ss_.get()),
-        stun_server_1_(cricket::TestStunServer::Create(ss_.get(), kStunAddr1)),
-        stun_server_2_(cricket::TestStunServer::Create(ss_.get(), kStunAddr2)),
+        stun_server_1_(
+            cricket::TestStunServer::Create(ss_.get(), kStunAddr1, thread_)),
+        stun_server_2_(
+            cricket::TestStunServer::Create(ss_.get(), kStunAddr2, thread_)),
         mdns_responder_provider_(new FakeMdnsResponderProvider()),
         done_(false),
         error_(false),
@@ -226,14 +228,16 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   cricket::TestStunServer* stun_server_1() { return stun_server_1_.get(); }
   cricket::TestStunServer* stun_server_2() { return stun_server_2_.get(); }
 
+  rtc::AutoSocketServerThread& thread() { return thread_; }
+
  private:
   std::unique_ptr<rtc::VirtualSocketServer> ss_;
   rtc::AutoSocketServerThread thread_;
   rtc::Network network_;
   rtc::BasicPacketSocketFactory socket_factory_;
   std::unique_ptr<cricket::UDPPort> stun_port_;
-  std::unique_ptr<cricket::TestStunServer> stun_server_1_;
-  std::unique_ptr<cricket::TestStunServer> stun_server_2_;
+  cricket::TestStunServer::StunServerPtr stun_server_1_;
+  cricket::TestStunServer::StunServerPtr stun_server_2_;
   std::unique_ptr<rtc::AsyncPacketSocket> socket_;
   std::unique_ptr<rtc::MdnsResponderProvider> mdns_responder_provider_;
   bool done_;
@@ -620,12 +624,12 @@ class StunIPv6PortTestBase : public StunPortTestBase {
                                       kIPv6LocalAddr.ipaddr(),
                                       128),
                          kIPv6LocalAddr.ipaddr()) {
-    stun_server_ipv6_1_.reset(
-        cricket::TestStunServer::Create(ss(), kIPv6StunAddr1));
+    stun_server_ipv6_1_ =
+        cricket::TestStunServer::Create(ss(), kIPv6StunAddr1, thread());
   }
 
  protected:
-  std::unique_ptr<cricket::TestStunServer> stun_server_ipv6_1_;
+  cricket::TestStunServer::StunServerPtr stun_server_ipv6_1_;
 };
 
 class StunIPv6PortTestWithRealClock : public StunIPv6PortTestBase {};

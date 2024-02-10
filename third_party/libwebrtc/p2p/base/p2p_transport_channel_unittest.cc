@@ -285,7 +285,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         ss_(new rtc::FirewallSocketServer(nss_.get())),
         socket_factory_(new rtc::BasicPacketSocketFactory(ss_.get())),
         main_(ss_.get()),
-        stun_server_(TestStunServer::Create(ss_.get(), kStunAddr)),
+        stun_server_(TestStunServer::Create(ss_.get(), kStunAddr, main_)),
         turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr),
         socks_server1_(ss_.get(),
                        kSocksProxyAddrs[0],
@@ -1025,7 +1025,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_ =
       PendingTaskSafetyFlag::Create();
-  std::unique_ptr<TestStunServer> stun_server_;
+  TestStunServer::StunServerPtr stun_server_;
   TestTurnServer turn_server_;
   rtc::SocksProxyServer socks_server1_;
   rtc::SocksProxyServer socks_server2_;

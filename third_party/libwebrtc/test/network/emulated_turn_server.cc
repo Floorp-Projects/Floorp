@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "api/packet_socket_factory.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_queue_for_test.h"
 
@@ -21,55 +22,6 @@ namespace {
 
 static const char kTestRealm[] = "example.org";
 static const char kTestSoftware[] = "TestTurnServer";
-
-// A wrapper class for copying data between an AsyncPacketSocket and a
-// EmulatedEndpoint. This is used by the cricket::TurnServer when
-// sending data back into the emulated network.
-class AsyncPacketSocketWrapper : public rtc::AsyncPacketSocket {
- public:
-  AsyncPacketSocketWrapper(webrtc::test::EmulatedTURNServer* turn_server,
-                           webrtc::EmulatedEndpoint* endpoint,
-                           uint16_t port)
-      : turn_server_(turn_server),
-        endpoint_(endpoint),
-        local_address_(
-            rtc::SocketAddress(endpoint_->GetPeerLocalAddress(), port)) {}
-  ~AsyncPacketSocketWrapper() { turn_server_->Unbind(local_address_); }
-
-  rtc::SocketAddress GetLocalAddress() const override { return local_address_; }
-  rtc::SocketAddress GetRemoteAddress() const override {
-    return rtc::SocketAddress();
-  }
-  int Send(const void* pv,
-           size_t cb,
-           const rtc::PacketOptions& options) override {
-    RTC_CHECK(false) << "TCP not implemented";
-    return -1;
-  }
-  int SendTo(const void* pv,
-             size_t cb,
-             const rtc::SocketAddress& addr,
-             const rtc::PacketOptions& options) override {
-    // Copy from rtc::AsyncPacketSocket to EmulatedEndpoint.
-    rtc::CopyOnWriteBuffer buf(reinterpret_cast<const char*>(pv), cb);
-    endpoint_->SendPacket(local_address_, addr, buf);
-    return cb;
-  }
-  int Close() override { return 0; }
-
-  rtc::AsyncPacketSocket::State GetState() const override {
-    return rtc::AsyncPacketSocket::STATE_BOUND;
-  }
-  int GetOption(rtc::Socket::Option opt, int* value) override { return 0; }
-  int SetOption(rtc::Socket::Option opt, int value) override { return 0; }
-  int GetError() const override { return 0; }
-  void SetError(int error) override {}
-
- private:
-  webrtc::test::EmulatedTURNServer* const turn_server_;
-  webrtc::EmulatedEndpoint* const endpoint_;
-  const rtc::SocketAddress local_address_;
-};
 
 // A wrapper class for cricket::TurnServer to allocate sockets.
 class PacketSocketFactoryWrapper : public rtc::PacketSocketFactory {
@@ -115,6 +67,59 @@ class PacketSocketFactoryWrapper : public rtc::PacketSocketFactory {
 
 namespace webrtc {
 namespace test {
+
+// A wrapper class for copying data between an AsyncPacketSocket and a
+// EmulatedEndpoint. This is used by the cricket::TurnServer when
+// sending data back into the emulated network.
+class EmulatedTURNServer::AsyncPacketSocketWrapper
+    : public rtc::AsyncPacketSocket {
+ public:
+  AsyncPacketSocketWrapper(webrtc::test::EmulatedTURNServer* turn_server,
+                           webrtc::EmulatedEndpoint* endpoint,
+                           uint16_t port)
+      : turn_server_(turn_server),
+        endpoint_(endpoint),
+        local_address_(
+            rtc::SocketAddress(endpoint_->GetPeerLocalAddress(), port)) {}
+  ~AsyncPacketSocketWrapper() { turn_server_->Unbind(local_address_); }
+
+  rtc::SocketAddress GetLocalAddress() const override { return local_address_; }
+  rtc::SocketAddress GetRemoteAddress() const override {
+    return rtc::SocketAddress();
+  }
+  int Send(const void* pv,
+           size_t cb,
+           const rtc::PacketOptions& options) override {
+    RTC_CHECK(false) << "TCP not implemented";
+    return -1;
+  }
+  int SendTo(const void* pv,
+             size_t cb,
+             const rtc::SocketAddress& addr,
+             const rtc::PacketOptions& options) override {
+    // Copy from rtc::AsyncPacketSocket to EmulatedEndpoint.
+    rtc::CopyOnWriteBuffer buf(reinterpret_cast<const char*>(pv), cb);
+    endpoint_->SendPacket(local_address_, addr, buf);
+    return cb;
+  }
+  int Close() override { return 0; }
+  void NotifyPacketReceived(const rtc::ReceivedPacket& packet) {
+    rtc::AsyncPacketSocket::NotifyPacketReceived(packet);
+  }
+
+  rtc::AsyncPacketSocket::State GetState() const override {
+    return rtc::AsyncPacketSocket::STATE_BOUND;
+  }
+  int GetOption(rtc::Socket::Option opt, int* value) override { return 0; }
+  int SetOption(rtc::Socket::Option opt, int value) override { return 0; }
+  int GetError() const override { return 0; }
+  void SetError(int error) override {}
+
+ private:
+  webrtc::test::EmulatedTURNServer* const turn_server_;
+  webrtc::EmulatedEndpoint* const endpoint_;
+  const rtc::SocketAddress local_address_;
+};
 
 EmulatedTURNServer::EmulatedTURNServer(std::unique_ptr<rtc::Thread> thread,
                                        EmulatedEndpoint* client,
@@ -170,9 +175,8 @@ void EmulatedTURNServer::OnPacketReceived(webrtc::EmulatedIpPacket packet) {
     RTC_DCHECK_RUN_ON(thread_.get());
     auto it = sockets_.find(packet.to);
     if (it != sockets_.end()) {
-      it->second->SignalReadPacket(
-          it->second, reinterpret_cast<const char*>(packet.cdata()),
-          packet.size(), packet.from, packet.arrival_time.ms());
+      it->second->NotifyPacketReceived(
+          rtc::ReceivedPacket(packet.data, packet.from, packet.arrival_time));
     }
   });
 }
