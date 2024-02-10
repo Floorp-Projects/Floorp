@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'a524babe1d5c628e5bd52150bab0e4710b1e1b2f',
+  'chromium_revision': '97753a50d67ca62804f8ab6163392571963e2c56',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,7 +50,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@09b8f9d805b584b4acd299bc36551c23f6391b5f',
+    'https://chromium.googlesource.com/chromium/src/base@8721d10b9c70b92e06ef007c5d2a5f40395495f4',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@74fa4382054c72ee8708cd2af239af24f5f19bc3',
   'src/buildtools':
@@ -61,19 +61,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@0f9e99975ed2acd8e06029cac3ccc025aef12dc0',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@f37ffdf92f94e47123736179887bb49154652eac',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@918cef45142d36e80d625c885f7469ff95246f2d',
+    'https://chromium.googlesource.com/chromium/src/testing@e517739aaa136c5e1aab7d26fb20fc9445692142',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@10b40d2b3d98a11b9ff1e5b758438f6a10403a5b',
+    'https://chromium.googlesource.com/chromium/src/third_party@0740fe23a1c4c21bde11fead5471d21f954d7bc6',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-${{arch}}',
-        'version': 'git_revision:c7b223bfb225ce87a72a244d016ffdfcf227fa5e',
+        'version': 'git_revision:92e63272dc04ee7cc1eaae2633c25da06e4f9c03',
       }
     ],
     'dep_type': 'cipd',
@@ -83,7 +83,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:c7b223bfb225ce87a72a244d016ffdfcf227fa5e',
+        'version': 'git_revision:92e63272dc04ee7cc1eaae2633c25da06e4f9c03',
       }
     ],
     'dep_type': 'cipd',
@@ -93,7 +93,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:c7b223bfb225ce87a72a244d016ffdfcf227fa5e',
+        'version': 'git_revision:92e63272dc04ee7cc1eaae2633c25da06e4f9c03',
       }
     ],
     'dep_type': 'cipd',
@@ -291,7 +291,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@2ee1fe9e10b545724f6237028142f87bb98073dd',
+    'https://android.googlesource.com/platform/external/perfetto.git@bacd363b7efb08d1d9f549d8198d7f79156aa0db',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@9142314c2cec2be364e6844d1630a056e7b0a3c8',
   'src/third_party/libyuv':
@@ -320,7 +320,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/r8',
-              'version': 'mIydEkNvLtzm1YbYV6Vch1Oj7Hwzdgw-XVLHEKLmjq4C',
+              'version': 'vgwqt33JWwV0OVbbDCoTLt78eMlewV8Ut0CN1HyOdfYC',
           },
       ],
       'condition': 'checkout_android',
@@ -344,7 +344,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@a3bda1e42fd63b5eaaf01c7757e0c97368059c34',
+    'https://chromium.googlesource.com/chromium/src/tools@61e2df269c4c2d5af903a7c705ddee1834f07872',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -416,7 +416,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': '8W71dyBO10LAZ7st6G_K1g2WBl-YrrMuQGJkhktKzBYC',
+          'version': 'TMu71_HcY-ApxWqCLsgKqvduO-TQqjOiagaK7Sr8MDYC',
       },
     ],
     'condition': 'checkout_android',
