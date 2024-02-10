@@ -41,6 +41,17 @@ class ByteBufferWriterT {
   const value_type* Data() const { return buffer_.data(); }
   size_t Length() const { return buffer_.size(); }
   size_t Capacity() const { return buffer_.capacity(); }
+  rtc::ArrayView<const value_type> DataView() const {
+    return rtc::MakeArrayView(Data(), Length());
+  }
+  // Accessor that returns a string_view, independent of underlying type.
+  // Intended to provide access for existing users that expect char*
+  // when the underlying type changes to uint8_t.
+  // TODO(bugs.webrtc.org/15665): Delete when users are converted.
+  absl::string_view DataAsStringView() const {
+    return absl::string_view(reinterpret_cast<const char*>(Data()), Length());
+  }
+  char* DataAsCharPointer() const { return reinterpret_cast<char*>(Data()); }
 
   // Write value to the buffer. Resizes the buffer when it is
   // neccessary.
@@ -152,7 +163,7 @@ class ByteBufferReader {
   // Returns number of unprocessed bytes.
   size_t Length() const { return end_ - start_; }
   // Returns a view of the unprocessed data.
-  rtc::ArrayView<const uint8_t> DataView() {
+  rtc::ArrayView<const uint8_t> DataView() const {
     return rtc::ArrayView<const uint8_t>(bytes_ + start_, end_ - start_);
   }
 
