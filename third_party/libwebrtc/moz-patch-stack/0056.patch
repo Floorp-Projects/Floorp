@@ -1,29 +1,67 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Fri, 8 Apr 2022 11:36:36 -0500
-Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
- throw exception
+Date: Thu, 28 Apr 2022 10:53:43 -0500
+Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
 
 ---
- api/video_codecs/video_encoder.cc | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 +++
+ common_video/libyuv/webrtc_libyuv.cc        | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
-index b0fe078b37..d2de985d5c 100644
---- a/api/video_codecs/video_encoder.cc
-+++ b/api/video_codecs/video_encoder.cc
-@@ -180,7 +180,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
-   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
-     if (i > 0)
-       oss << ", ";
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+    // This could assert, as opposed to throw using the form in the
-+    // else, but since we're in a for loop that uses .size() we can
-+    // be fairly sure that this is safe without doing a further
-+    // check to make sure 'i' is in-range.
-+    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
-+#else
-     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
-+#endif
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 68831c70ab..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -35,11 +35,14 @@ enum class VideoType {
+   kBGR24,
+   kARGB,
+   kABGR,
++  kARGB4444,
+   kRGB565,
++  kARGB1555,
+   kYUY2,
+   kYV12,
+   kUYVY,
+   kMJPEG,
++  kNV21,
+   kBGRA,
+   kNV12,
+ };
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 31ba1feca3..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(height, 0);
+   switch (type) {
+     case VideoType::kI420:
++    case VideoType::kNV21:
+     case VideoType::kIYUV:
+     case VideoType::kYV12:
+     case VideoType::kNV12: {
+@@ -31,7 +32,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       int half_height = (height + 1) >> 1;
+       return width * height + half_width * half_height * 2;
+     }
++    case VideoType::kARGB4444:
+     case VideoType::kRGB565:
++    case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+       return width * height * 2;
+@@ -104,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_UYVY;
+     case VideoType::kMJPEG:
+       return libyuv::FOURCC_MJPG;
++    case VideoType::kNV21:
++      return libyuv::FOURCC_NV21;
+     case VideoType::kARGB:
+       return libyuv::FOURCC_ARGB;
+     case VideoType::kBGRA:
+       return libyuv::FOURCC_BGRA;
++    case VideoType::kARGB4444:
++      return libyuv::FOURCC_R444;
++    case VideoType::kARGB1555:
++      return libyuv::FOURCC_RGBO;
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
    }
-   oss << "]";
-   if (is_qp_trusted.has_value()) {

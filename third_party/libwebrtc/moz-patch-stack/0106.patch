@@ -1,107 +1,101 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 18 Dec 2023 15:00:00 +0000
-Subject: Bug 1867099 - revert libwebrtc 8602f604e0. r=bwc
+Date: Mon, 22 Jan 2024 11:40:00 -0600
+Subject: Bug 1871981 - Cherry-pick upstream libwebrtc commit 6a992129fb
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstream 8602f604e0 removed code sending BYEs which breaks some of
-our wpt.  They've opened a bug for a real fix here:
-https://bugs.chromium.org/p/webrtc/issues/detail?id=15664
+Upstream commit: https://webrtc.googlesource.com/src/+/6a992129fb0dede4a8fbdaf5de43abaf43c20299
+       Tighten som DCHECKs to CHECKs in VP9 packetization.
 
-I've opened Bug 1870643 to track the real fix and upstream bug.
-
-Differential Revision: https://phabricator.services.mozilla.com/D196729
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d92a578327f524ec3e1c144c82492a4c76b8266f
+       Bug: chromium:1518991, chromium:1518994
+       Change-Id: I47f68ba6aaf4874fd952332bf213e3a1e0389268
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335241
+       Auto-Submit: Erik Språng <sprang@webrtc.org>
+       Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+       Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#41580}
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/83483e973267a892a795eda1f5b5d421bed22031
 ---
- call/rtp_video_sender.cc                      |  1 +
- modules/rtp_rtcp/source/rtcp_sender.cc        | 19 +++++++++++++++++--
- .../rtp_rtcp/source/rtcp_sender_unittest.cc   |  5 +++--
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc      |  1 +
- modules/rtp_rtcp/source/rtp_rtcp_interface.h  |  2 +-
- 5 files changed, 23 insertions(+), 5 deletions(-)
+ modules/rtp_rtcp/source/rtp_format_vp9.cc | 26 ++++++++++++-----------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
-index 1ace08fa32..4d99c61bb4 100644
---- a/call/rtp_video_sender.cc
-+++ b/call/rtp_video_sender.cc
-@@ -510,6 +510,7 @@ void RtpVideoSender::SetActiveModulesLocked(
-     const bool was_active = rtp_module.Sending();
-     const bool should_be_active = active_modules[i];
+diff --git a/modules/rtp_rtcp/source/rtp_format_vp9.cc b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+index 15e059e85c..9ad4aa97c3 100644
+--- a/modules/rtp_rtcp/source/rtp_format_vp9.cc
++++ b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+@@ -94,8 +94,8 @@ size_t RefIndicesLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.inter_pic_predicted || !hdr.flexible_mode)
+     return 0;
  
-+    // Sends a kRtcpByeCode when going from true to false.
-     rtp_module.SetSendingStatus(active_modules[i]);
- 
-     if (was_active && !should_be_active) {
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 099b0be1a3..971f49b949 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -212,8 +212,23 @@ bool RTCPSender::Sending() const {
- 
- void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
-                                   bool sending) {
--  MutexLock lock(&mutex_rtcp_sender_);
--  sending_ = sending;
-+  bool sendRTCPBye = false;
-+  {
-+    MutexLock lock(&mutex_rtcp_sender_);
-+
-+    if (method_ != RtcpMode::kOff) {
-+      if (sending == false && sending_ == true) {
-+        // Trigger RTCP bye
-+        sendRTCPBye = true;
-+      }
-+    }
-+    sending_ = sending;
-+  }
-+  if (sendRTCPBye) {
-+    if (SendRTCP(feedback_state, kRtcpBye) != 0) {
-+      RTC_LOG(LS_WARNING) << "Failed to send RTCP BYE";
-+    }
-+  }
+-  RTC_DCHECK_GT(hdr.num_ref_pics, 0U);
+-  RTC_DCHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
++  RTC_CHECK_GT(hdr.num_ref_pics, 0U);
++  RTC_CHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
+   return hdr.num_ref_pics;
  }
  
- void RTCPSender::SetNonSenderRttMeasurement(bool enabled) {
-diff --git a/modules/rtp_rtcp/source/rtcp_sender_unittest.cc b/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
-index 002a5f86f1..1dcb628722 100644
---- a/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
-@@ -328,12 +328,13 @@ TEST_F(RtcpSenderTest, SendBye) {
-   EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
- }
+@@ -123,9 +123,9 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.ss_data_available)
+     return 0;
  
--TEST_F(RtcpSenderTest, StopSendingDoesNotTriggersBye) {
-+TEST_F(RtcpSenderTest, StopSendingTriggersBye) {
-   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-   rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
-   rtcp_sender->SetSendingStatus(feedback_state(), true);
-   rtcp_sender->SetSendingStatus(feedback_state(), false);
--  EXPECT_EQ(0, parser()->bye()->num_packets());
-+  EXPECT_EQ(1, parser()->bye()->num_packets());
-+  EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
- }
- 
- TEST_F(RtcpSenderTest, SendFir) {
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index cca9a40250..a63067141d 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -296,6 +296,7 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
- 
- int32_t ModuleRtpRtcpImpl::SetSendingStatus(const bool sending) {
-   if (rtcp_sender_.Sending() != sending) {
-+    // Sends RTCP BYE when going from true to false
-     rtcp_sender_.SetSendingStatus(GetFeedbackState(), sending);
+-  RTC_DCHECK_GT(hdr.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(hdr.num_spatial_layers, 0U);
++  RTC_CHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   size_t length = 1;  // V
+   if (hdr.spatial_layer_resolution_present) {
+     length += 4 * hdr.num_spatial_layers;  // Y
+@@ -136,7 +136,7 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   // N_G
+   length += hdr.gof.num_frames_in_gof;  // T, U, R
+   for (size_t i = 0; i < hdr.gof.num_frames_in_gof; ++i) {
+-    RTC_DCHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
++    RTC_CHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
+     length += hdr.gof.num_ref_pics[i];  // R times
    }
-   return 0;
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index f196d11b58..bc8da63ab6 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -277,7 +277,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-   // Returns the FlexFEC SSRC, if there is one.
-   virtual absl::optional<uint32_t> FlexfecSsrc() const = 0;
+   return length;
+@@ -248,9 +248,9 @@ bool WriteRefIndices(const RTPVideoHeaderVP9& vp9,
+ //      +-+-+-+-+-+-+-+-+              -|           -|
+ //
+ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+-  RTC_DCHECK_GT(vp9.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(vp9.num_spatial_layers, 0U);
++  RTC_CHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   bool g_bit = vp9.gof.num_frames_in_gof > 0;
  
--  // Sets sending status.
-+  // Sets sending status. Sends kRtcpByeCode when going from true to false.
-   // Returns -1 on failure else 0.
-   virtual int32_t SetSendingStatus(bool sending) = 0;
+   RETURN_FALSE_ON_ERROR(writer->WriteBits(vp9.num_spatial_layers - 1, 3));
+@@ -288,6 +288,8 @@ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+ // current API to invoke SVC is not flexible enough.
+ RTPVideoHeaderVP9 RemoveInactiveSpatialLayers(
+     const RTPVideoHeaderVP9& original_header) {
++  RTC_CHECK_LE(original_header.num_spatial_layers,
++               kMaxVp9NumberOfSpatialLayers);
+   RTPVideoHeaderVP9 hdr(original_header);
+   if (original_header.first_active_layer == 0)
+     return hdr;
+@@ -314,7 +316,7 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
+       header_size_(PayloadDescriptorLengthMinusSsData(hdr_)),
+       first_packet_extra_header_size_(SsDataLength(hdr_)),
+       remaining_payload_(payload) {
+-  RTC_DCHECK_EQ(hdr_.first_active_layer, 0);
++  RTC_CHECK_EQ(hdr_.first_active_layer, 0);
  
+   limits.max_payload_len -= header_size_;
+   limits.first_packet_reduction_len += first_packet_extra_header_size_;
+@@ -357,8 +359,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
+ 
+   // Ensure end_of_picture is always set on top spatial layer when it is not
+   // dropped.
+-  RTC_DCHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
+-             hdr_.end_of_picture);
++  RTC_CHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
++            hdr_.end_of_picture);
+ 
+   packet->SetMarker(layer_end && hdr_.end_of_picture);
+   return true;
