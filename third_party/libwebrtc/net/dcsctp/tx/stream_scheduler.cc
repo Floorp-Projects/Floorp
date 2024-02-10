@@ -14,7 +14,6 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
@@ -22,6 +21,7 @@
 #include "net/dcsctp/tx/send_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/str_join.h"
 
 namespace dcsctp {
 

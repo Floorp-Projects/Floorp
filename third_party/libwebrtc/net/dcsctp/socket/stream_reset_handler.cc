@@ -18,7 +18,6 @@
 #include "api/array_view.h"
 #include "api/units/time_delta.h"
 #include "net/dcsctp/common/internal_types.h"
-#include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/chunk/reconfig_chunk.h"
 #include "net/dcsctp/packet/parameter/add_incoming_streams_request_parameter.h"
 #include "net/dcsctp/packet/parameter/add_outgoing_streams_request_parameter.h"
@@ -36,6 +35,7 @@
 #include "net/dcsctp/timer/timer.h"
 #include "net/dcsctp/tx/retransmission_queue.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/str_join.h"
 
 namespace dcsctp {
 namespace {

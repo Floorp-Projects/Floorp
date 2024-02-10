@@ -23,7 +23,6 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "net/dcsctp/common/sequence_numbers.h"
-#include "net/dcsctp/common/str_join.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/packet/parameter/outgoing_ssn_reset_request_parameter.h"
@@ -34,6 +33,7 @@
 #include "net/dcsctp/rx/reassembly_streams.h"
 #include "net/dcsctp/rx/traditional_reassembly_streams.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/str_join.h"
 
 namespace dcsctp {
 namespace {

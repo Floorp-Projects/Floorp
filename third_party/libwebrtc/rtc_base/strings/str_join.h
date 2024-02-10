@@ -7,15 +7,15 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef NET_DCSCTP_COMMON_STR_JOIN_H_
-#define NET_DCSCTP_COMMON_STR_JOIN_H_
+#ifndef RTC_BASE_STRINGS_STR_JOIN_H_
+#define RTC_BASE_STRINGS_STR_JOIN_H_
 
 #include <string>
 
 #include "absl/strings/string_view.h"
 #include "rtc_base/strings/string_builder.h"
 
-namespace dcsctp {
+namespace webrtc {
 
 template <typename Range>
 std::string StrJoin(const Range& seq, absl::string_view delimiter) {
@@ -51,6 +51,6 @@ std::string StrJoin(const Range& seq,
   return sb.Release();
 }
 
-}  // namespace dcsctp
+}  // namespace webrtc
 
-#endif  // NET_DCSCTP_COMMON_STR_JOIN_H_
+#endif  // RTC_BASE_STRINGS_STR_JOIN_H_

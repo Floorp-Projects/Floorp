@@ -132,7 +132,8 @@ docs.
 WebRTC uses std::string, with content assumed to be UTF-8. Note that this
 has to be verified whenever accepting external input.
 
-For concatenation of strings, use rtc::SimpleStringBuilder.
+For concatenation of strings, use webrtc::StrJoin or rtc::SimpleStringBuilder
+directly.
 
 The following string building tools are NOT recommended:
 * The + operator. See https://abseil.io/tips/3 for why not.
