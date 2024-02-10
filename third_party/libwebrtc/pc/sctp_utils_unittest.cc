@@ -35,7 +35,7 @@ class SctpUtilsTest : public ::testing::Test {
     uint16_t label_length;
     uint16_t protocol_length;
 
-    rtc::ByteBufferReader buffer(packet.data<char>(), packet.size());
+    rtc::ByteBufferReader buffer(packet);
     ASSERT_TRUE(buffer.ReadUInt8(&message_type));
     EXPECT_EQ(0x03, message_type);
 
@@ -176,7 +176,7 @@ TEST_F(SctpUtilsTest, WriteParseAckMessage) {
   webrtc::WriteDataChannelOpenAckMessage(&packet);
 
   uint8_t message_type;
-  rtc::ByteBufferReader buffer(packet.data<char>(), packet.size());
+  rtc::ByteBufferReader buffer(packet);
   ASSERT_TRUE(buffer.ReadUInt8(&message_type));
   EXPECT_EQ(0x02, message_type);
 

@@ -195,7 +195,8 @@ void TurnServer::HandleStunMessage(TurnServerConnection* conn,
                                    const char* data,
                                    size_t size) {
   TurnMessage msg;
-  rtc::ByteBufferReader buf(data, size);
+  rtc::ByteBufferReader buf(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data), size));
   if (!msg.Read(&buf) || (buf.Length() > 0)) {
     RTC_LOG(LS_WARNING) << "Received invalid STUN message";
     return;

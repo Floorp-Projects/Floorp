@@ -1727,7 +1727,8 @@ class MessageObserver : public StunMessageObserver {
     const StunByteStringAttribute* attr =
         msg->GetByteString(TestTurnCustomizer::STUN_ATTR_COUNTER);
     if (attr != nullptr && attr_counter_ != nullptr) {
-      rtc::ByteBufferReader buf(attr->bytes(), attr->length());
+      rtc::ByteBufferReader buf(rtc::MakeArrayView(
+          reinterpret_cast<const uint8_t*>(attr->bytes()), attr->length()));
       unsigned int val = ~0u;
       buf.ReadUInt32(&val);
       (*attr_counter_)++;

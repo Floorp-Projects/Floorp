@@ -124,7 +124,8 @@ class ByteBufferWriter : public ByteBufferWriterT<BufferT<char>> {
 // valid during the lifetime of the reader.
 class ByteBufferReader {
  public:
-  ByteBufferReader(const char* bytes, size_t len);
+  [[deprecated("Use ArrayView<uint8_t>")]] ByteBufferReader(const char* bytes,
+                                                            size_t len);
 
   explicit ByteBufferReader(
       rtc::ArrayView<const uint8_t> bytes ABSL_ATTRIBUTE_LIFETIME_BOUND);
@@ -160,7 +161,7 @@ class ByteBufferReader {
   bool ReadBytes(rtc::ArrayView<uint8_t> val);
   // For backwards compatibility.
   // TODO(bugs.webrtc.org/15661): Deprecate and remove.
-  bool ReadBytes(char* val, size_t len);
+  [[deprecated("Read using ArrayView")]] bool ReadBytes(char* val, size_t len);
 
   // Appends next `len` bytes from the buffer to `val`. Returns false
   // if there is less than `len` bytes left.
