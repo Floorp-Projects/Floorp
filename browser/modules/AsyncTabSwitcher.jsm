@@ -485,7 +485,11 @@ class AsyncTabSwitcher {
           }
 
           this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
-          this.window.gURLBar.afterTabSwitchFocusChange();
+
+          // Floorp Injections
+          this.window.gURLBar?.afterTabSwitchFocusChange();
+          // End Floorp Injections
+
           this.maybeActivateDocShell(this.requestedTab);
         }
       }
