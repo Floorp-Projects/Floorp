@@ -8703,7 +8703,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       "aria-describedby": "custom-pocket-subtitle",
       "data-preference": "feeds.section.topstories",
       "data-eventSource": "TOP_STORIES",
-      "data-l10n-id": "newtab-custom-pocket-toggle",
+      "data-l10n-id": "newtab-custom-stories-toggle",
       "data-l10n-attrs": "label, description"
     })), /*#__PURE__*/external_React_default().createElement("div", null, (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-pocket-wrapper"

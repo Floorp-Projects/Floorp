@@ -2115,8 +2115,7 @@ getHardcodedLayout = ({
           editorsPicksHeader,
           header: {
             title: {
-              id: "newtab-section-header-pocket",
-              values: { provider: "Pocket" },
+              id: "newtab-section-header-stories",
             },
             subtitle: "",
             link_text: {

@@ -707,29 +707,26 @@ home-prefs-shortcuts-description = Sites you save or visit
 home-prefs-shortcuts-by-option-sponsored =
     .label = Sponsored shortcuts
 
-## Variables:
-##  $provider (string) - Name of the corresponding content provider, e.g "Pocket".
-
-home-prefs-recommended-by-header =
-    .label = Recommended by { $provider }
-home-prefs-recommended-by-description-new = Exceptional content curated by { $provider }, part of the { -brand-product-name } family
+home-prefs-recommended-by-header-generic =
+    .label = Recommended stories
+home-prefs-recommended-by-description-generic = Exceptional content curated by the { -brand-product-name } family
 
 ##
 
 home-prefs-recommended-by-learn-more = How it works
 home-prefs-recommended-by-option-sponsored-stories =
-    .label = Sponsored Stories
+    .label = Sponsored stories
 home-prefs-recommended-by-option-recent-saves =
     .label = Show Recent Saves
 
 home-prefs-highlights-option-visited-pages =
-    .label = Visited Pages
+    .label = Visited pages
 home-prefs-highlights-options-bookmarks =
     .label = Bookmarks
 home-prefs-highlights-option-most-recent-download =
-    .label = Most Recent Download
+    .label = Most recent download
 home-prefs-highlights-option-saved-to-pocket =
-    .label = Pages Saved to { -pocket-brand-name }
+    .label = Pages saved to { -pocket-brand-name }
 
 home-prefs-recent-activity-header =
     .label = Recent activity

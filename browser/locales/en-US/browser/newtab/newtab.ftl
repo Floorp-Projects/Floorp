@@ -203,18 +203,14 @@ newtab-section-expand-section-label =
 
 newtab-section-header-topsites = Top Sites
 newtab-section-header-recent-activity = Recent activity
-# Variables:
-#   $provider (string) - Name of the corresponding content provider.
-newtab-section-header-pocket = Recommended by { $provider }
+newtab-section-header-stories = Thought-provoking stories
 
 ## Empty Section States: These show when there are no more items in a section. Ex. When there are no more Pocket story recommendations, in the space where there would have been stories, this is shown instead.
 
 newtab-empty-section-highlights = Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.
 
-# Ex. When there are no more Pocket story recommendations, in the space where there would have been stories, this is shown instead.
-# Variables:
-#   $provider (string) - Name of the content provider for this section, e.g "Pocket".
-newtab-empty-section-topstories = You’ve caught up. Check back later for more top stories from { $provider }. Can’t wait? Select a popular topic to find more great stories from around the web.
+# Ex. When there are no more story recommendations, in the space where there would have been stories, this is shown instead.
+newtab-empty-section-topstories-generic = You’ve caught up. Check back later for more stories. Can’t wait? Select a popular topic to find more great stories from around the web.
 
 ## Empty Section (Content Discovery Experience). These show when there are no more stories or when some stories fail to load.
 
@@ -265,9 +261,9 @@ newtab-custom-row-selector =
            *[other] { $num } rows
         }
 newtab-custom-sponsored-sites = Sponsored shortcuts
-newtab-custom-pocket-toggle =
-  .label = Recommended by { -pocket-brand-name }
-  .description = Exceptional content curated by { -pocket-brand-name }, part of the { -brand-product-name } family
+newtab-custom-stories-toggle =
+  .label = Recommended stories
+  .description = Exceptional content curated by the { -brand-product-name } family
 newtab-custom-pocket-sponsored = Sponsored stories
 newtab-custom-pocket-show-recent-saves = Show recent saves
 newtab-custom-recent-toggle =
