@@ -126,7 +126,8 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     return do_AddRef(mDataSourceSurface);
   }
 
-  void DrawTargetWillChange() { mDetached = true; }
+  void AttachSurface() { mDetached = false; }
+  void DetachSurface() { mDetached = true; }
 
  private:
   void EnsureDataSurfaceOnMainThread() {
@@ -480,10 +481,17 @@ void CanvasChild::ReturnDataSurfaceShmem(
   }
 }
 
+void CanvasChild::AttachSurface(const RefPtr<gfx::SourceSurface>& aSurface) {
+  if (auto* surface =
+          static_cast<SourceSurfaceCanvasRecording*>(aSurface.get())) {
+    surface->AttachSurface();
+  }
+}
+
 void CanvasChild::DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface) {
   if (auto* surface =
           static_cast<SourceSurfaceCanvasRecording*>(aSurface.get())) {
-    surface->DrawTargetWillChange();
+    surface->DetachSurface();
   }
 }
 

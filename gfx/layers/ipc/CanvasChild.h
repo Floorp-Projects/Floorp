@@ -120,6 +120,12 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
       const RefPtr<gfx::SourceSurface>& aSurface, int64_t aTextureId);
 
   /**
+   * The DrawTargetRecording backing the surface has not been modified since the
+   * previous use, so it is safe to reattach the snapshot for readback.
+   */
+  void AttachSurface(const RefPtr<gfx::SourceSurface>& aSurface);
+
+  /**
    * The DrawTargetRecording is about to change, so detach the old snapshot.
    */
   void DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface);
