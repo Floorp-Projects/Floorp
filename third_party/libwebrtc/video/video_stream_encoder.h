@@ -132,6 +132,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
                                double cwnd_reduce_ratio);
 
  protected:
+  friend class VideoStreamEncoderFrameCadenceRestrictionTest;
+
   // Used for testing. For example the `ScalingObserverInterface` methods must
   // be called on `encoder_queue_`.
   TaskQueueBase* encoder_queue() { return encoder_queue_.Get(); }
