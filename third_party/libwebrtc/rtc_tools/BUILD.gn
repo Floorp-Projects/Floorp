@@ -371,10 +371,6 @@ if (!build_with_chromium) {
         "rtc_event_log_visualizer/log_simulation.h",
         "rtc_event_log_visualizer/plot_base.cc",
         "rtc_event_log_visualizer/plot_base.h",
-        "rtc_event_log_visualizer/plot_protobuf.cc",
-        "rtc_event_log_visualizer/plot_protobuf.h",
-        "rtc_event_log_visualizer/plot_python.cc",
-        "rtc_event_log_visualizer/plot_python.h",
       ]
       deps = [
         ":chart_proto",
