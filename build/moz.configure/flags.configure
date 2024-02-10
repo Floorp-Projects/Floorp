@@ -144,6 +144,25 @@ def file_prefix_map_flags(path_remapping, path_remappings, compiler):
 
 set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)
 
+
+@depends(c_compiler)
+def is_gnu_cc(c_compiler):
+    return c_compiler.type != "clang-cl"
+
+
+@depends("--enable-address-sanitizer", is_gnu_cc)
+def check_Bsymbolic(enable_asan, is_gnu_cc):
+    return enable_asan and is_gnu_cc
+
+
+# ASan assumes no symbols are being interposed, and when that happens,
+# it's not happy with it. Inconveniently, since Firefox is exporting
+# libffi symbols and Gtk+3 pulls system libffi via libwayland-client,
+# system libffi interposes libffi symbols that ASan assumes are in
+# libxul, so it barfs about buffer overflows.
+# Using -Wl,-Bsymbolic ensures no exported symbol can be interposed.
+check_and_add_linker_flag("-Wl,-Bsymbolic", when=check_Bsymbolic)
+
 # Please keep these last in this file.
 add_old_configure_assignment("_COMPILATION_LDFLAGS", linker_flags.ldflags)
 add_old_configure_assignment("_COMPILATION_HOST_LDFLAGS", linker_flags.host_ldflags)
