@@ -1798,6 +1798,7 @@ rtc_library("rtc_base_tests_utils") {
     "../test:scoped_key_value_config",
     "memory:always_valid_pointer",
     "memory:fifo_buffer",
+    "network:received_packet",
     "synchronization:mutex",
     "third_party/sigslot",
   ]

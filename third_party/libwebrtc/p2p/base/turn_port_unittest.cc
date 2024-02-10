@@ -932,7 +932,7 @@ class TurnLoggingIdValidator : public StunMessageObserver {
       }
     }
   }
-  void ReceivedChannelData(const char* data, size_t size) override {}
+  void ReceivedChannelData(rtc::ArrayView<const uint8_t> packet) override {}
 
  private:
   const char* expect_val_;
@@ -1734,7 +1734,7 @@ class MessageObserver : public StunMessageObserver {
     }
   }
 
-  void ReceivedChannelData(const char* data, size_t size) override {
+  void ReceivedChannelData(rtc::ArrayView<const uint8_t> payload) override {
     if (channel_data_counter_ != nullptr) {
       (*channel_data_counter_)++;
     }
