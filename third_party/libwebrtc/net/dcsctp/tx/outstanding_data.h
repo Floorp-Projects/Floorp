@@ -31,6 +31,9 @@ namespace dcsctp {
 
 // This class keeps track of outstanding data chunks (sent, not yet acked) and
 // handles acking, nacking, rescheduling and abandoning.
+//
+// Items are added to this queue as they are sent and will be removed when the
+// peer acks them using the cumulative TSN ack.
 class OutstandingData {
  public:
   // State for DATA chunks (message fragments) in the queue - used in tests.
@@ -98,10 +101,10 @@ class OutstandingData {
   // it?
   std::vector<std::pair<TSN, Data>> GetChunksToBeRetransmitted(size_t max_size);
 
-  size_t outstanding_bytes() const { return outstanding_bytes_; }
+  size_t unacked_bytes() const { return unacked_bytes_; }
 
-  // Returns the number of DATA chunks that are in-flight.
-  size_t outstanding_items() const { return outstanding_items_; }
+  // Returns the number of DATA chunks that are in-flight (not acked or nacked).
+  size_t unacked_items() const { return unacked_items_; }
 
   // Given the current time `now_ms`, expire and abandon outstanding (sent at
   // least once) chunks that have a limited lifetime.
@@ -355,10 +358,10 @@ class OutstandingData {
   // increasing TSN order. The last item has `TSN=highest_outstanding_tsn()`.
   std::deque<Item> outstanding_data_;
   // The number of bytes that are in-flight (sent but not yet acked or nacked).
-  size_t outstanding_bytes_ = 0;
+  size_t unacked_bytes_ = 0;
   // The number of DATA chunks that are in-flight (sent but not yet acked or
   // nacked).
-  size_t outstanding_items_ = 0;
+  size_t unacked_items_ = 0;
   // Data chunks that are eligible for fast retransmission.
   std::set<UnwrappedTSN> to_be_fast_retransmitted_;
   // Data chunks that are to be retransmitted.
