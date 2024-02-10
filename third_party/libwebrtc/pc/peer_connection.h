@@ -611,11 +611,8 @@ class PeerConnection : public PeerConnectionInternal,
   const bool is_unified_plan_;
 
   // The EventLog needs to outlive `call_` (and any other object that uses it).
-  std::unique_ptr<RtcEventLog> event_log_ RTC_GUARDED_BY(worker_thread());
-
-  // Points to the same thing as `event_log_`. Since it's const, we may read the
-  // pointer (but not touch the object) from any thread.
-  RtcEventLog* const event_log_ptr_ RTC_PT_GUARDED_BY(worker_thread());
+  const std::unique_ptr<RtcEventLog> event_log_
+      RTC_PT_GUARDED_BY(worker_thread());
 
   IceConnectionState ice_connection_state_ RTC_GUARDED_BY(signaling_thread()) =
       kIceConnectionNew;

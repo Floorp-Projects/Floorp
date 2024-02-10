@@ -629,7 +629,6 @@ PeerConnection::PeerConnection(
       observer_(dependencies.observer),
       is_unified_plan_(is_unified_plan),
       event_log_(std::move(event_log)),
-      event_log_ptr_(event_log_.get()),
       async_dns_resolver_factory_(
           std::move(dependencies.async_dns_resolver_factory)),
       port_allocator_(std::move(dependencies.allocator)),
@@ -648,7 +647,9 @@ PeerConnection::PeerConnection(
       dtls_enabled_(dtls_enabled),
       data_channel_controller_(this),
       message_handler_(signaling_thread()),
-      weak_factory_(this) {}
+      weak_factory_(this) {
+  RTC_CHECK(event_log_);
+}
 
 PeerConnection::~PeerConnection() {
   TRACE_EVENT0("webrtc", "PeerConnection::~PeerConnection");
@@ -699,13 +700,11 @@ PeerConnection::~PeerConnection() {
   sctp_mid_s_.reset();
   SetSctpTransportName("");
 
-  // call_ and event_log_ must be destroyed on the worker thread.
+  // call_ must be destroyed on the worker thread.
   worker_thread()->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(worker_thread());
     worker_thread_safety_->SetNotAlive();
     call_.reset();
-    // The event log must outlive call (and any other object that uses it).
-    event_log_.reset();
   });
 
   data_channel_controller_.PrepareForShutdown();
@@ -797,7 +796,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
   config.transport_observer = this;
   config.rtcp_handler = InitializeRtcpCallback();
   config.un_demuxable_packet_handler = InitializeUnDemuxablePacketHandler();
-  config.event_log = event_log_ptr_;
+  config.event_log = event_log_.get();
 #if defined(ENABLE_EXTERNAL_AUTH)
   config.enable_external_auth = true;
 #endif
@@ -1931,8 +1930,7 @@ void PeerConnection::Close() {
     RTC_DCHECK_RUN_ON(worker_thread());
     worker_thread_safety_->SetNotAlive();
     call_.reset();
-    // The event log must outlive call (and any other object that uses it).
-    event_log_.reset();
+    StopRtcEventLog_w();
   });
   ReportUsagePattern();
 
@@ -2255,7 +2253,7 @@ bool PeerConnection::StartRtcEventLog_w(
     std::unique_ptr<RtcEventLogOutput> output,
     int64_t output_period_ms) {
   RTC_DCHECK_RUN_ON(worker_thread());
-  if (!event_log_) {
+  if (!worker_thread_safety_->alive()) {
     return false;
   }
   return event_log_->StartLogging(std::move(output), output_period_ms);
@@ -2263,9 +2261,7 @@ bool PeerConnection::StartRtcEventLog_w(
 
 void PeerConnection::StopRtcEventLog_w() {
   RTC_DCHECK_RUN_ON(worker_thread());
-  if (event_log_) {
-    event_log_->StopLogging();
-  }
+  event_log_->StopLogging();
 }
 
 absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n() {
