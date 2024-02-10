@@ -123,6 +123,7 @@ class LossBasedBweV2 {
     double hold_duration_factor = 0.0;
     bool use_byte_loss_rate = false;
     TimeDelta padding_duration = TimeDelta::Zero();
+    bool bound_best_candidate = false;
   };
 
   struct Derivatives {
@@ -188,7 +189,6 @@ class LossBasedBweV2 {
 
   // Returns false if no observation was created.
   bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results);
-  void UpdateResult();
   bool IsEstimateIncreasingWhenLossLimited(DataRate old_estimate,
                                            DataRate new_estimate);
   bool IsInLossLimitedState() const;

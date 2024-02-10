@@ -1383,6 +1383,42 @@ TEST_F(LossBasedBweV2Test, IncreaseUsingPaddingStateIfFieldTrial) {
             LossBasedState::kIncreaseUsingPadding);
 }
 
+TEST_F(LossBasedBweV2Test, BestCandidateResetsToUpperBoundInFieldTrial) {
+  ExplicitKeyValueConfig key_value_config(
+      ShortObservationConfig("PaddingDuration:1000ms,BoundBestCandidate:true"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pPacketLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/true);
+  LossBasedBweV2::Result result_after_loss =
+      loss_based_bandwidth_estimator.GetLossBasedResult();
+  ASSERT_EQ(result_after_loss.state, LossBasedState::kDecreasing);
+
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/true);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          2 * kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/true);
+  // After a BWE decrease due to large loss, BWE is expected to ramp up slowly
+  // and follow the acked bitrate.
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kIncreaseUsingPadding);
+  EXPECT_NEAR(loss_based_bandwidth_estimator.GetLossBasedResult()
+                  .bandwidth_estimate.kbps(),
+              result_after_loss.bandwidth_estimate.kbps(), 100);
+}
+
 TEST_F(LossBasedBweV2Test, DecreaseToAckedCandidateIfPaddingInAlr) {
   ExplicitKeyValueConfig key_value_config(ShortObservationConfig(
       "PaddingDuration:1000ms,"

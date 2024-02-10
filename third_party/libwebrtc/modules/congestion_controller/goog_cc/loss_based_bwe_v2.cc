@@ -316,33 +316,27 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     }
   }
 
-  current_best_estimate_ = best_candidate;
-  UpdateResult();
-
-  if (IsInLossLimitedState() &&
-      (recovering_after_loss_timestamp_.IsInfinite() ||
-       recovering_after_loss_timestamp_ + config_->delayed_increase_window <
-           last_send_time_most_recent_observation_)) {
-    bandwidth_limit_in_current_window_ =
-        std::max(kCongestionControllerMinBitrate,
-                 current_best_estimate_.loss_limited_bandwidth *
-                     config_->max_increase_factor);
-    recovering_after_loss_timestamp_ = last_send_time_most_recent_observation_;
-  }
-}
-
-void LossBasedBweV2::UpdateResult() {
   DataRate bounded_bandwidth_estimate = DataRate::PlusInfinity();
   if (IsValid(delay_based_estimate_)) {
     bounded_bandwidth_estimate =
         std::max(GetInstantLowerBound(),
-                 std::min({current_best_estimate_.loss_limited_bandwidth,
+                 std::min({best_candidate.loss_limited_bandwidth,
                            GetInstantUpperBound(), delay_based_estimate_}));
   } else {
-    bounded_bandwidth_estimate =
-        std::max(GetInstantLowerBound(),
-                 std::min(current_best_estimate_.loss_limited_bandwidth,
-                          GetInstantUpperBound()));
+    bounded_bandwidth_estimate = std::max(
+        GetInstantLowerBound(), std::min(best_candidate.loss_limited_bandwidth,
+                                         GetInstantUpperBound()));
+  }
+  if (config_->bound_best_candidate &&
+      bounded_bandwidth_estimate < best_candidate.loss_limited_bandwidth) {
+    RTC_LOG(LS_INFO) << "Resetting loss based BWE to "
+                     << bounded_bandwidth_estimate.kbps()
+                     << "due to loss. Avg loss rate: "
+                     << GetAverageReportedLossRatio();
+    current_best_estimate_.loss_limited_bandwidth = bounded_bandwidth_estimate;
+    current_best_estimate_.inherent_loss = 0;
+  } else {
+    current_best_estimate_ = best_candidate;
   }
 
   if (loss_based_result_.state == LossBasedState::kDecreasing &&
@@ -399,6 +393,17 @@ void LossBasedBweV2::UpdateResult() {
     loss_based_result_.state = LossBasedState::kDelayBasedEstimate;
   }
   loss_based_result_.bandwidth_estimate = bounded_bandwidth_estimate;
+
+  if (IsInLossLimitedState() &&
+      (recovering_after_loss_timestamp_.IsInfinite() ||
+       recovering_after_loss_timestamp_ + config_->delayed_increase_window <
+           last_send_time_most_recent_observation_)) {
+    bandwidth_limit_in_current_window_ =
+        std::max(kCongestionControllerMinBitrate,
+                 current_best_estimate_.loss_limited_bandwidth *
+                     config_->max_increase_factor);
+    recovering_after_loss_timestamp_ = last_send_time_most_recent_observation_;
+  }
 }
 
 bool LossBasedBweV2::IsEstimateIncreasingWhenLossLimited(
@@ -483,6 +488,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool> use_byte_loss_rate("UseByteLossRate", false);
   FieldTrialParameter<TimeDelta> padding_duration("PaddingDuration",
                                                   TimeDelta::Zero());
+  FieldTrialParameter<bool> bound_best_candidate("BoundBestCandidate", false);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -521,7 +527,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &lower_bound_by_acked_rate_factor,
                      &hold_duration_factor,
                      &use_byte_loss_rate,
-                     &padding_duration},
+                     &padding_duration,
+                     &bound_best_candidate},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -586,7 +593,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->hold_duration_factor = hold_duration_factor.Get();
   config->use_byte_loss_rate = use_byte_loss_rate.Get();
   config->padding_duration = padding_duration.Get();
-
+  config->bound_best_candidate = bound_best_candidate.Get();
   return config;
 }
 
