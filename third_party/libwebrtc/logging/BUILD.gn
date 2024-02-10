@@ -482,10 +482,12 @@ rtc_library("fake_rtc_event_log") {
   ]
 
   deps = [
+    "../api/environment",
     "../api/rtc_event_log",
     "../rtc_base:macromagic",
     "../rtc_base/synchronization:mutex",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
 }
 
 if (rtc_enable_protobuf) {
@@ -604,9 +606,10 @@ if (rtc_enable_protobuf) {
         "../api:rtc_event_log_output_file",
         "../api:rtp_headers",
         "../api:rtp_parameters",
+        "../api/environment",
+        "../api/environment:environment_factory",
         "../api/rtc_event_log",
         "../api/rtc_event_log:rtc_event_log_factory",
-        "../api/task_queue:default_task_queue_factory",
         "../api/units:time_delta",
         "../api/units:timestamp",
         "../call",
@@ -621,6 +624,7 @@ if (rtc_enable_protobuf) {
         "../rtc_base:timeutils",
         "../system_wrappers",
         "../system_wrappers:field_trial",
+        "../test:explicit_key_value_config",
         "../test:field_trial",
         "../test:fileutils",
         "../test:test_support",

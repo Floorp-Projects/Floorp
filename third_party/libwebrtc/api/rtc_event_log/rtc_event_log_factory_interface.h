@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include "absl/base/nullability.h"
+#include "api/environment/environment.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 
 namespace webrtc {
@@ -24,6 +26,11 @@ class RtcEventLogFactoryInterface {
  public:
   virtual ~RtcEventLogFactoryInterface() = default;
 
+  virtual absl::Nonnull<std::unique_ptr<RtcEventLog>> Create(
+      const Environment& env) const = 0;
+
+  // TODO(bugs.webrtc.org/15656): Delete functions below when all usage is
+  // migrated to the Create(const Environment&) function above.
   virtual std::unique_ptr<RtcEventLog> Create(
       RtcEventLog::EncodingType encoding_type) const = 0;
   [[deprecated]] virtual std::unique_ptr<RtcEventLog> CreateRtcEventLog(
