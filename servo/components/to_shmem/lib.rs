@@ -217,8 +217,11 @@ impl_trivial_to_shmem!(
     usize
 );
 
-impl_trivial_to_shmem!(cssparser::SourceLocation);
-impl_trivial_to_shmem!(cssparser::TokenSerializationType);
+impl_trivial_to_shmem!(
+    cssparser::SourceLocation,
+    cssparser::SourcePosition,
+    cssparser::TokenSerializationType
+);
 
 impl<T> ToShmem for PhantomData<T> {
     fn to_shmem(&self, _builder: &mut SharedMemoryBuilder) -> Result<Self> {
