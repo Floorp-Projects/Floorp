@@ -14,7 +14,6 @@
 #include <string>
 #include <utility>
 
-#include "media/engine/webrtc_media_engine_defaults.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
 
@@ -321,21 +320,5 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBwe3) {
   EXPECT_EQ(1u, filtered.size());
   EXPECT_EQ(RtpExtension::kTimestampOffsetUri, filtered[0].uri);
 }
-
-// Deprecated as part of the bugs.webrtc.org/15574 effort.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-TEST(WebRtcMediaEngineTest, Create) {
-  MediaEngineDependencies deps;
-  webrtc::DeprecatedSetMediaEngineDefaults(&deps);
-  webrtc::test::ScopedKeyValueConfig trials;
-  deps.trials = &trials;
-
-  std::unique_ptr<MediaEngineInterface> engine =
-      CreateMediaEngine(std::move(deps));
-
-  EXPECT_TRUE(engine);
-}
-#pragma clang diagnostic pop
 
 }  // namespace cricket

@@ -609,33 +609,6 @@ rtc_library("rtc_audio_video") {
   }
 }
 
-# Heavy but optional helper for unittests and webrtc users who prefer to use
-# defaults factories or do not worry about extra dependencies and binary size.
-rtc_library("rtc_media_engine_defaults") {
-  visibility = [ "*" ]
-  allow_poison = [
-    "audio_codecs",
-    "environment_construction",
-    "software_video_codecs",
-  ]
-  sources = [
-    "engine/webrtc_media_engine_defaults.cc",
-    "engine/webrtc_media_engine_defaults.h",
-  ]
-  deps = [
-    ":rtc_audio_video",
-    "../api/audio_codecs:builtin_audio_decoder_factory",
-    "../api/audio_codecs:builtin_audio_encoder_factory",
-    "../api/task_queue:default_task_queue_factory",
-    "../api/video:builtin_video_bitrate_allocator_factory",
-    "../api/video_codecs:builtin_video_decoder_factory",
-    "../api/video_codecs:builtin_video_encoder_factory",
-    "../modules/audio_processing:api",
-    "../rtc_base:checks",
-    "../rtc_base/system:rtc_export",
-  ]
-}
-
 rtc_source_set("rtc_data_sctp_transport_internal") {
   sources = [ "sctp/sctp_transport_internal.h" ]
   deps = [
@@ -838,7 +811,6 @@ if (rtc_include_tests) {
         ":rtc_internal_video_codecs",
         ":rtc_media",
         ":rtc_media_base",
-        ":rtc_media_engine_defaults",
         ":rtc_media_tests_utils",
         ":rtc_sdp_video_format_utils",
         ":rtc_simulcast_encoder_adapter",
