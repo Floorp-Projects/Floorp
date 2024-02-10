@@ -455,8 +455,11 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportStateChanged_n);
   dtls->ice_transport()->SignalIceTransportStateChanged.connect(
       this, &JsepTransportController::OnTransportStateChanged_n);
-  dtls->ice_transport()->SignalCandidatePairChanged.connect(
-      this, &JsepTransportController::OnTransportCandidatePairChanged_n);
+  dtls->ice_transport()->SetCandidatePairChangeCallback(
+      [this](const cricket::CandidatePairChangeEvent& event) {
+        RTC_DCHECK_RUN_ON(network_thread_);
+        OnTransportCandidatePairChanged_n(event);
+      });
 
   dtls->SubscribeDtlsHandshakeError(
       [this](rtc::SSLHandshakeError error) { OnDtlsHandshakeError(error); });
