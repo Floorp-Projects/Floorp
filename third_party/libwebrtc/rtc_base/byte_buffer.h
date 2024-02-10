@@ -27,39 +27,43 @@ namespace rtc {
 
 template <class BufferClassT>
 class ByteBufferWriterT {
+  using value_type = typename BufferClassT::value_type;
+
  public:
   ByteBufferWriterT() { Construct(nullptr, kDefaultCapacity); }
-  ByteBufferWriterT(const char* bytes, size_t len) { Construct(bytes, len); }
+  ByteBufferWriterT(const value_type* bytes, size_t len) {
+    Construct(bytes, len);
+  }
 
   ByteBufferWriterT(const ByteBufferWriterT&) = delete;
   ByteBufferWriterT& operator=(const ByteBufferWriterT&) = delete;
 
-  const char* Data() const { return buffer_.data(); }
+  const value_type* Data() const { return buffer_.data(); }
   size_t Length() const { return buffer_.size(); }
   size_t Capacity() const { return buffer_.capacity(); }
 
   // Write value to the buffer. Resizes the buffer when it is
   // neccessary.
   void WriteUInt8(uint8_t val) {
-    WriteBytes(reinterpret_cast<const char*>(&val), 1);
+    WriteBytes(reinterpret_cast<const value_type*>(&val), 1);
   }
   void WriteUInt16(uint16_t val) {
     uint16_t v = HostToNetwork16(val);
-    WriteBytes(reinterpret_cast<const char*>(&v), 2);
+    WriteBytes(reinterpret_cast<const value_type*>(&v), 2);
   }
   void WriteUInt24(uint32_t val) {
     uint32_t v = HostToNetwork32(val);
-    char* start = reinterpret_cast<char*>(&v);
+    value_type* start = reinterpret_cast<value_type*>(&v);
     ++start;
     WriteBytes(start, 3);
   }
   void WriteUInt32(uint32_t val) {
     uint32_t v = HostToNetwork32(val);
-    WriteBytes(reinterpret_cast<const char*>(&v), 4);
+    WriteBytes(reinterpret_cast<const value_type*>(&v), 4);
   }
   void WriteUInt64(uint64_t val) {
     uint64_t v = HostToNetwork64(val);
-    WriteBytes(reinterpret_cast<const char*>(&v), 8);
+    WriteBytes(reinterpret_cast<const value_type*>(&v), 8);
   }
   // Serializes an unsigned varint in the format described by
   // https://developers.google.com/protocol-buffers/docs/encoding#varints
@@ -68,22 +72,24 @@ class ByteBufferWriterT {
     while (val >= 0x80) {
       // Write 7 bits at a time, then set the msb to a continuation byte
       // (msb=1).
-      char byte = static_cast<char>(val) | 0x80;
+      value_type byte = static_cast<value_type>(val) | 0x80;
       WriteBytes(&byte, 1);
       val >>= 7;
     }
-    char last_byte = static_cast<char>(val);
+    value_type last_byte = static_cast<value_type>(val);
     WriteBytes(&last_byte, 1);
   }
   void WriteString(absl::string_view val) {
     WriteBytes(val.data(), val.size());
   }
-  void WriteBytes(const char* val, size_t len) { buffer_.AppendData(val, len); }
+  void WriteBytes(const value_type* val, size_t len) {
+    buffer_.AppendData(val, len);
+  }
 
-  // Reserves the given number of bytes and returns a char* that can be written
-  // into. Useful for functions that require a char* buffer and not a
-  // ByteBufferWriter.
-  char* ReserveWriteBuffer(size_t len) {
+  // Reserves the given number of bytes and returns a value_type* that can be
+  // written into. Useful for functions that require a value_type* buffer and
+  // not a ByteBufferWriter.
+  value_type* ReserveWriteBuffer(size_t len) {
     buffer_.SetSize(buffer_.size() + len);
     return buffer_.data();
   }
@@ -97,7 +103,7 @@ class ByteBufferWriterT {
  private:
   static constexpr size_t kDefaultCapacity = 4096;
 
-  void Construct(const char* bytes, size_t size) {
+  void Construct(const value_type* bytes, size_t size) {
     if (bytes) {
       buffer_.AppendData(bytes, size);
     } else {
