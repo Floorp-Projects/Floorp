@@ -36,12 +36,10 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
     id: "topstories",
     pref: {
       titleString: {
-        id: "home-prefs-recommended-by-header",
-        values: { provider: options.provider_name },
+        id: "home-prefs-recommended-by-header-generic",
       },
       descString: {
-        id: "home-prefs-recommended-by-description-new",
-        values: { provider: options.provider_name },
+        id: "home-prefs-recommended-by-description-generic",
       },
       nestedPrefs: [
         ...(Services.prefs.getBoolPref(
@@ -80,8 +78,7 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
     title: {
-      id: "newtab-section-header-pocket",
-      values: { provider: options.provider_name },
+      id: "newtab-section-header-stories",
     },
     learnMore: {
       link: {
@@ -103,8 +100,7 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
     ],
     emptyState: {
       message: {
-        id: "newtab-empty-section-topstories",
-        values: { provider: options.provider_name },
+        id: "newtab-empty-section-topstories-generic",
       },
       icon: "check",
     },
