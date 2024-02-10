@@ -2202,7 +2202,9 @@ void P2PTransportChannel::OnCandidatesRemoved(
     candidate.set_transport_name(transport_name());
     candidates_to_remove.push_back(candidate);
   }
-  SignalCandidatesRemoved(this, candidates_to_remove);
+  if (candidates_removed_callback_) {
+    candidates_removed_callback_(this, candidates_to_remove);
+  }
 }
 
 void P2PTransportChannel::PruneAllPorts() {

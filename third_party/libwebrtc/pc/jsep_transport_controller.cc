@@ -443,8 +443,12 @@ JsepTransportController::CreateDtlsTransport(
         RTC_DCHECK_RUN_ON(network_thread_);
         OnTransportCandidateError_n(transport, error);
       });
-  dtls->ice_transport()->SignalCandidatesRemoved.connect(
-      this, &JsepTransportController::OnTransportCandidatesRemoved_n);
+  dtls->ice_transport()->SetCandidatesRemovedCallback(
+      [this](cricket::IceTransportInternal* transport,
+             const cricket::Candidates& candidates) {
+        RTC_DCHECK_RUN_ON(network_thread_);
+        OnTransportCandidatesRemoved_n(transport, candidates);
+      });
   dtls->ice_transport()->SignalRoleConflict.connect(
       this, &JsepTransportController::OnTransportRoleConflict_n);
   dtls->ice_transport()->SignalStateChanged.connect(
