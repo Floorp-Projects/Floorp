@@ -16,6 +16,8 @@
 #include "absl/strings/match.h"
 #include "api/async_resolver_factory.h"
 #include "api/call/call_factory_interface.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/fec_controller.h"
 #include "api/ice_transport_interface.h"
 #include "api/network_state_predictor.h"
@@ -78,7 +80,13 @@ CreateModularPeerConnectionFactory(
 // Static
 rtc::scoped_refptr<PeerConnectionFactory> PeerConnectionFactory::Create(
     PeerConnectionFactoryDependencies dependencies) {
-  auto context = ConnectionContext::Create(&dependencies);
+  // TODO(bugs.webrtc.org/15656): Move task_queue_factory into environment with
+  // ownership when MediaFactory::CreateMedia would use it from the
+  // Environment instead of the PeerConnectionFactoryDependencies.
+  auto context = ConnectionContext::Create(
+      CreateEnvironment(std::move(dependencies.trials),
+                        dependencies.task_queue_factory.get()),
+      &dependencies);
   if (!context) {
     return nullptr;
   }
@@ -103,10 +111,17 @@ PeerConnectionFactory::PeerConnectionFactory(
               : std::make_unique<RtpTransportControllerSendFactory>()),
       metronome_(std::move(dependencies->metronome)) {}
 
+// TODO(bugs.webrtc.org/15656): Move task_queue_factory into environment with
+// ownership when MediaFactory::CreateMedia would use it from the
+// Environment instead of the PeerConnectionFactoryDependencies.
 PeerConnectionFactory::PeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies)
-    : PeerConnectionFactory(ConnectionContext::Create(&dependencies),
-                            &dependencies) {}
+    : PeerConnectionFactory(
+          ConnectionContext::Create(
+              CreateEnvironment(std::move(dependencies.trials),
+                                dependencies.task_queue_factory.get()),
+              &dependencies),
+          &dependencies) {}
 
 PeerConnectionFactory::~PeerConnectionFactory() {
   RTC_DCHECK_RUN_ON(signaling_thread());
