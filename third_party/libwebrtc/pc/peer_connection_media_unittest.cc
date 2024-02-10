@@ -1638,7 +1638,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan, SetCodecPreferencesAllAudioCodecs) {
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_audio()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(sender_audio_codecs, codecs));
 }
@@ -1661,7 +1660,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_audio()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(sender_audio_codecs, codecs));
 }
@@ -1733,7 +1731,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan, SetCodecPreferencesAllVideoCodecs) {
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(sender_video_codecs, codecs));
 }
@@ -1757,7 +1754,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(sender_video_codecs, codecs));
 }
@@ -1786,7 +1782,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(single_codec, codecs));
 }
@@ -1831,7 +1826,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan, SetCodecPreferencesVideoWithRtx) {
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
 
   EXPECT_TRUE(CompareCodecs(video_codecs_vpx_rtx, codecs));
@@ -1878,7 +1872,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
 
   EXPECT_EQ(codecs.size(), 2u);  // VP8, VP9
@@ -1903,7 +1896,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto recv_codecs = answer->description()
                          ->contents()[0]
                          .media_description()
-                         ->as_video()
                          ->codecs();
   EXPECT_EQ(recv_codecs.size(), 1u);  // VP8
 }
@@ -1951,7 +1943,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto codecs = offer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   EXPECT_EQ(codecs.size(), 2u);  // VP9, VP8
   EXPECT_TRUE(CompareCodecs(video_codecs_vpx, codecs));
@@ -1966,7 +1957,6 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto recv_codecs = answer->description()
                          ->contents()[0]
                          .media_description()
-                         ->as_video()
                          ->codecs();
 
   EXPECT_TRUE(CompareCodecs(video_codecs_vpx_reverse, recv_codecs));

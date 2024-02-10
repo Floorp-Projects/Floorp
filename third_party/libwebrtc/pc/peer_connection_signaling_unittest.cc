@@ -984,13 +984,10 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFec) {
 
   auto answer = caller->CreateAnswer();
   ASSERT_EQ(answer->description()->contents().size(), 1u);
-  ASSERT_NE(
-      answer->description()->contents()[0].media_description()->as_video(),
-      nullptr);
+  ASSERT_NE(answer->description()->contents()[0].media_description(), nullptr);
   auto codecs = answer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   ASSERT_EQ(codecs.size(), 2u);
   EXPECT_EQ(codecs[1].name, "flexfec-03");
@@ -1040,13 +1037,10 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFecReoffer) {
 
   auto answer = caller->CreateAnswer();
   ASSERT_EQ(answer->description()->contents().size(), 1u);
-  ASSERT_NE(
-      answer->description()->contents()[0].media_description()->as_video(),
-      nullptr);
+  ASSERT_NE(answer->description()->contents()[0].media_description(), nullptr);
   auto codecs = answer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   ASSERT_EQ(codecs.size(), 2u);
   EXPECT_EQ(codecs[1].name, "flexfec-03");
@@ -1059,7 +1053,6 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFecReoffer) {
   auto offer_codecs = offer->description()
                           ->contents()[0]
                           .media_description()
-                          ->as_video()
                           ->codecs();
   auto flexfec_it = std::find_if(
       offer_codecs.begin(), offer_codecs.end(),
@@ -1353,7 +1346,6 @@ TEST_F(PeerConnectionSignalingUnifiedPlanTest, RtxReofferApt) {
   auto codecs = reoffer->description()
                     ->contents()[0]
                     .media_description()
-                    ->as_video()
                     ->codecs();
   ASSERT_GT(codecs.size(), 2u);
   EXPECT_EQ(codecs[0].name, "VP8");
