@@ -884,7 +884,7 @@ void P2PTransportChannel::MaybeStartGathering() {
                             ice_parameters_.ufrag, ice_parameters_.pwd)) {
     if (gathering_state_ != kIceGatheringGathering) {
       gathering_state_ = kIceGatheringGathering;
-      SignalGatheringState(this);
+      SendGatheringStateEvent();
     }
 
     if (!allocator_sessions_.empty()) {
@@ -1014,7 +1014,7 @@ void P2PTransportChannel::OnCandidatesAllocationDone(
   gathering_state_ = kIceGatheringComplete;
   RTC_LOG(LS_INFO) << "P2PTransportChannel: " << transport_name()
                    << ", component " << component() << " gathering complete";
-  SignalGatheringState(this);
+  SendGatheringStateEvent();
 }
 
 // Handle stun packets
