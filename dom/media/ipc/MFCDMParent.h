@@ -79,6 +79,10 @@ class MFCDMParent final : public PMFCDMParent {
       const CopyableTArray<uint8_t>& aCertificate,
       UpdateSessionResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvGetStatusForPolicy(
+      const dom::HDCPVersion& aMinHdcpVersion,
+      GetStatusForPolicyResolver&& aResolver);
+
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
     MOZ_ASSERT(mManagerThread->IsOnCurrentThread());

@@ -47,6 +47,12 @@ struct ParamTraits<mozilla::dom::MediaKeyStatus>
                                       mozilla::dom::MediaKeyStatus::EndGuard_> {
 };
 
+template <>
+struct ParamTraits<mozilla::dom::HDCPVersion>
+    : public ContiguousEnumSerializer<mozilla::dom::HDCPVersion,
+                                      mozilla::dom::HDCPVersion::_1_0,
+                                      mozilla::dom::HDCPVersion::EndGuard_> {};
+
 }  // namespace IPC
 
 #endif  // DOM_MEDIA_IPC_MFCDMSERIALIZERS_H_

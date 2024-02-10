@@ -92,6 +92,12 @@ class WMFCDMImpl final {
     return mCDM->SetServerCertificate(aPromiseId, aCert);
   }
 
+  RefPtr<GenericPromise> GetStatusForPolicy(
+      uint32_t aPromiseId, const dom::HDCPVersion& aMinHdcpVersion) {
+    MOZ_DIAGNOSTIC_ASSERT(mCDM);
+    return mCDM->GetStatusForPolicy(aPromiseId, aMinHdcpVersion);
+  }
+
   uint64_t Id() {
     MOZ_DIAGNOSTIC_ASSERT(mCDM,
                           "Should be called only after Init() is resolved");
