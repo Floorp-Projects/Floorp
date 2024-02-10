@@ -224,6 +224,9 @@
   'xcode_13_main': {
     'args': ['--xcode-build-version', '13c100'],
     'swarming': {
+      'dimensions': {
+        'caches': 'xcode_ios_13c100',
+      },
       'named_caches': [{
         'name': 'xcode_ios_13c100',
         'path': 'Xcode.app'
@@ -233,6 +236,9 @@
   'xcode_14_main': {
     'args': ['--xcode-build-version', '14c18'],
     'swarming': {
+      'dimensions': {
+        'caches': 'xcode_ios_14c18',
+      },
       'named_caches': [{
         'name': 'xcode_ios_14c18',
         'path': 'Xcode.app'
