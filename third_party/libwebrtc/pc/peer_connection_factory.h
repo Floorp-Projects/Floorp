@@ -33,7 +33,6 @@
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_control.h"
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "call/call.h"
@@ -139,7 +138,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionFactoryInterface::Options options_
       RTC_GUARDED_BY(signaling_thread());
-  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory_;
   std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory_;
   std::unique_ptr<NetworkStatePredictorFactoryInterface>
