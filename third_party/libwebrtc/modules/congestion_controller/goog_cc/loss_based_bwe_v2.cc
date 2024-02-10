@@ -293,11 +293,17 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
         /*new_estimate=*/best_candidate.loss_limited_bandwidth);
     // Bound the best candidate by the acked bitrate.
     if (increasing_when_loss_limited && IsValid(acknowledged_bitrate_)) {
+      double rampup_factor = config_->bandwidth_rampup_upper_bound_factor;
+      if (IsValid(last_hold_info_.rate) &&
+          acknowledged_bitrate_ <
+              config_->bandwidth_rampup_hold_threshold * last_hold_info_.rate) {
+        rampup_factor = config_->bandwidth_rampup_upper_bound_factor_in_hold;
+      }
+
       best_candidate.loss_limited_bandwidth =
           std::max(current_best_estimate_.loss_limited_bandwidth,
                    std::min(best_candidate.loss_limited_bandwidth,
-                            config_->bandwidth_rampup_upper_bound_factor *
-                                (*acknowledged_bitrate_)));
+                            rampup_factor * (*acknowledged_bitrate_)));
       // Increase current estimate by at least 1kbps to make sure that the state
       // will be switched to kIncreasing, thus padding is triggered.
       if (loss_based_result_.state == LossBasedState::kDecreasing &&
@@ -412,6 +418,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool> enabled("Enabled", true);
   FieldTrialParameter<double> bandwidth_rampup_upper_bound_factor(
       "BwRampupUpperBoundFactor", 1000000.0);
+  FieldTrialParameter<double> bandwidth_rampup_upper_bound_factor_in_hold(
+      "BwRampupUpperBoundInHoldFactor", 1000000.0);
+  FieldTrialParameter<double> bandwidth_rampup_hold_threshold(
+      "BwRampupUpperBoundHoldThreshold", 1.3);
   FieldTrialParameter<double> rampup_acceleration_max_factor(
       "BwRampupAccelMaxFactor", 0.0);
   FieldTrialParameter<TimeDelta> rampup_acceleration_maxout_time(
@@ -476,6 +486,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
+                     &bandwidth_rampup_upper_bound_factor_in_hold,
+                     &bandwidth_rampup_hold_threshold,
                      &rampup_acceleration_max_factor,
                      &rampup_acceleration_maxout_time,
                      &candidate_factors,
@@ -520,6 +532,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config.emplace(Config());
   config->bandwidth_rampup_upper_bound_factor =
       bandwidth_rampup_upper_bound_factor.Get();
+  config->bandwidth_rampup_upper_bound_factor_in_hold =
+      bandwidth_rampup_upper_bound_factor_in_hold.Get();
+  config->bandwidth_rampup_hold_threshold =
+      bandwidth_rampup_hold_threshold.Get();
   config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
   config->rampup_acceleration_maxout_time =
       rampup_acceleration_maxout_time.Get();
@@ -585,6 +601,18 @@ bool LossBasedBweV2::IsConfigValid() const {
     RTC_LOG(LS_WARNING)
         << "The bandwidth rampup upper bound factor must be greater than 1: "
         << config_->bandwidth_rampup_upper_bound_factor;
+    valid = false;
+  }
+  if (config_->bandwidth_rampup_upper_bound_factor_in_hold <= 1.0) {
+    RTC_LOG(LS_WARNING) << "The bandwidth rampup upper bound factor in hold "
+                           "must be greater than 1: "
+                        << config_->bandwidth_rampup_upper_bound_factor_in_hold;
+    valid = false;
+  }
+  if (config_->bandwidth_rampup_hold_threshold < 0.0) {
+    RTC_LOG(LS_WARNING) << "The bandwidth rampup hold threshold must"
+                           "must be non-negative.: "
+                        << config_->bandwidth_rampup_hold_threshold;
     valid = false;
   }
   if (config_->rampup_acceleration_max_factor < 0.0) {
