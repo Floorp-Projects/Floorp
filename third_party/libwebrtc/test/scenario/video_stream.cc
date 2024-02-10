@@ -372,9 +372,9 @@ SendVideoStream::SendVideoStream(CallClient* sender,
                                  VideoFrameMatcher* matcher)
     : sender_(sender), config_(config) {
   video_capturer_ = std::make_unique<FrameGeneratorCapturer>(
-      sender_->clock_, CreateFrameGenerator(sender_->clock_, config.source),
-      config.source.framerate,
-      *sender->time_controller_->GetTaskQueueFactory());
+      &sender_->env_.clock(),
+      CreateFrameGenerator(&sender_->env_.clock(), config.source),
+      config.source.framerate, sender_->env_.task_queue_factory());
   video_capturer_->Init();
 
   using Encoder = VideoStreamConfig::Encoder;
@@ -386,9 +386,11 @@ SendVideoStream::SendVideoStream(CallClient* sender,
             MutexLock lock(&mutex_);
             std::unique_ptr<FakeEncoder> encoder;
             if (config_.encoder.codec == Codec::kVideoCodecVP8) {
-              encoder = std::make_unique<test::FakeVp8Encoder>(sender_->clock_);
+              encoder = std::make_unique<test::FakeVp8Encoder>(
+                  &sender_->env_.clock());
             } else if (config_.encoder.codec == Codec::kVideoCodecGeneric) {
-              encoder = std::make_unique<test::FakeEncoder>(sender_->clock_);
+              encoder =
+                  std::make_unique<test::FakeEncoder>(&sender_->env_.clock());
             } else {
               RTC_DCHECK_NOTREACHED();
             }
@@ -436,7 +438,7 @@ SendVideoStream::SendVideoStream(CallClient* sender,
 
     if (matcher->Active()) {
       frame_tap_ = std::make_unique<ForwardingCapturedFrameTap>(
-          sender_->clock_, matcher, video_capturer_.get());
+          &sender_->env_.clock(), matcher, video_capturer_.get());
       send_stream_->SetSource(frame_tap_.get(),
                               config.encoder.degradation_preference);
     } else {
@@ -565,8 +567,8 @@ ReceiveVideoStream::ReceiveVideoStream(CallClient* receiver,
   for (size_t i = 0; i < num_streams; ++i) {
     rtc::VideoSinkInterface<VideoFrame>* renderer = &fake_renderer_;
     if (matcher->Active()) {
-      render_taps_.emplace_back(
-          std::make_unique<DecodedFrameTap>(receiver_->clock_, matcher, i));
+      render_taps_.emplace_back(std::make_unique<DecodedFrameTap>(
+          &receiver_->env_.clock(), matcher, i));
       renderer = render_taps_.back().get();
     }
     auto recv_config = CreateVideoReceiveStreamConfig(
