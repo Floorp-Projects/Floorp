@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#include <cstdint>
+
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
 #include "test/gtest.h"
@@ -245,6 +247,21 @@ TEST(ByteBufferTest, TestReadWriteUVarint) {
   EXPECT_EQ(68719476736u, val5);
   size -= 6;
   EXPECT_EQ(size, read_buffer.Length());
+}
+
+TEST(ByteBufferTest, ReadFromArrayView) {
+  const uint8_t buf[] = {'a', 'b', 'c'};
+  ArrayView<const uint8_t> view(buf, 3);
+
+  ByteBufferReader read_buffer(view);
+  uint8_t val;
+  EXPECT_TRUE(read_buffer.ReadUInt8(&val));
+  EXPECT_EQ(val, 'a');
+  EXPECT_TRUE(read_buffer.ReadUInt8(&val));
+  EXPECT_EQ(val, 'b');
+  EXPECT_TRUE(read_buffer.ReadUInt8(&val));
+  EXPECT_EQ(val, 'c');
+  EXPECT_FALSE(read_buffer.ReadUInt8(&val));
 }
 
 }  // namespace rtc
