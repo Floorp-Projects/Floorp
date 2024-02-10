@@ -332,8 +332,8 @@ void MediaDrmCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
   }
 }
 
-void MediaDrmCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
-                                          const nsAString& aMinHdcpVersion) {
+void MediaDrmCDMProxy::GetStatusForPolicy(
+    PromiseId aPromiseId, const dom::HDCPVersion& aMinHdcpVersion) {
   // TODO: Implement GetStatusForPolicy.
   constexpr auto err =
       "Currently Fennec does not support GetStatusForPolicy"_ns;

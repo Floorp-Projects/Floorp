@@ -98,7 +98,7 @@ class ChromiumCDMProxy : public CDMProxy {
   void OnKeyStatusesChange(const nsAString& aSessionId) override;
 
   void GetStatusForPolicy(PromiseId aPromiseId,
-                          const nsAString& aMinHdcpVersion) override;
+                          const dom::HDCPVersion& aMinHdcpVersion) override;
 
 #ifdef DEBUG
   bool IsOnOwnerThread() override;
