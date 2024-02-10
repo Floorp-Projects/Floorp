@@ -97,11 +97,6 @@ bool OutstandingData::IsConsistent() const {
     }
   }
 
-  if (outstanding_data_.empty() &&
-      next_tsn_ != last_cumulative_tsn_ack_.next_value()) {
-    return false;
-  }
-
   return actual_outstanding_bytes == outstanding_bytes_ &&
          actual_outstanding_items == outstanding_items_ &&
          actual_combined_to_be_retransmitted == combined_to_be_retransmitted;
@@ -275,12 +270,11 @@ void OutstandingData::AbandonAllFor(const Item& item) {
     // skipped over). So create a new fragment, representing the end, that the
     // received will never see as it is abandoned immediately and used as cum
     // TSN in the sent FORWARD-TSN.
-    UnwrappedTSN tsn = next_tsn_;
-    next_tsn_.Increment();
     Data message_end(item.data().stream_id, item.data().ssn, item.data().mid,
                      item.data().fsn, item.data().ppid, std::vector<uint8_t>(),
                      Data::IsBeginning(false), Data::IsEnd(true),
                      item.data().is_unordered);
+    UnwrappedTSN tsn = next_tsn();
     Item& added_item =
         outstanding_data_
             .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
@@ -394,8 +388,8 @@ void OutstandingData::ExpireOutstandingChunks(Timestamp now) {
 }
 
 UnwrappedTSN OutstandingData::highest_outstanding_tsn() const {
-  return outstanding_data_.empty() ? last_cumulative_tsn_ack_
-                                   : outstanding_data_.rbegin()->first;
+  return UnwrappedTSN::AddTo(last_cumulative_tsn_ack_,
+                             outstanding_data_.size());
 }
 
 absl::optional<UnwrappedTSN> OutstandingData::Insert(
@@ -405,13 +399,11 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
     MaxRetransmits max_retransmissions,
     Timestamp expires_at,
     LifecycleId lifecycle_id) {
-  UnwrappedTSN tsn = next_tsn_;
-  next_tsn_.Increment();
-
   // All chunks are always padded to be even divisible by 4.
   size_t chunk_size = GetSerializedChunkSize(data);
   outstanding_bytes_ += chunk_size;
   ++outstanding_items_;
+  UnwrappedTSN tsn = next_tsn();
   auto it = outstanding_data_
                 .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
                          std::forward_as_tuple(message_id, data.Clone(),
@@ -542,16 +534,12 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
                           std::move(skipped_streams));
 }
 
-void OutstandingData::ResetSequenceNumbers(UnwrappedTSN next_tsn,
-                                           UnwrappedTSN last_cumulative_tsn) {
+void OutstandingData::ResetSequenceNumbers(UnwrappedTSN last_cumulative_tsn) {
   RTC_DCHECK(outstanding_data_.empty());
-  RTC_DCHECK(next_tsn_ == last_cumulative_tsn_ack_.next_value());
-  RTC_DCHECK(next_tsn == last_cumulative_tsn.next_value());
-  next_tsn_ = next_tsn;
   last_cumulative_tsn_ack_ = last_cumulative_tsn;
 }
 
 void OutstandingData::BeginResetStreams() {
-  stream_reset_breakpoint_tsns_.insert(next_tsn_);
+  stream_reset_breakpoint_tsns_.insert(next_tsn());
 }
 }  // namespace dcsctp

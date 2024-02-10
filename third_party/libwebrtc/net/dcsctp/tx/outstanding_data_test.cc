@@ -48,7 +48,6 @@ class OutstandingDataTest : public testing::Test {
   OutstandingDataTest()
       : gen_(MID(42)),
         buf_(DataChunk::kHeaderSize,
-             unwrapper_.Unwrap(TSN(10)),
              unwrapper_.Unwrap(TSN(9)),
              on_discard_.AsStdFunction()) {}
 
