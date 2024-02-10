@@ -2419,6 +2419,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":webrtc_sdp",
       "../api:array_view",
       "../api:audio_options_api",
+      "../api:callfactory_api",
       "../api:candidate",
       "../api:create_peerconnection_factory",
       "../api:dtls_transport_interface",

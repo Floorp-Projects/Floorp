@@ -80,7 +80,6 @@
 #include "absl/types/optional.h"
 #include "api/adaptation/resource.h"
 #include "api/async_dns_resolver.h"
-#include "api/async_resolver_factory.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
@@ -1388,13 +1387,6 @@ struct RTC_EXPORT PeerConnectionDependencies final {
   // Factory for creating resolvers that look up hostnames in DNS
   std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
       async_dns_resolver_factory;
-  // Deprecated - use async_dns_resolver_factory
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  [[deprecated("Use async_dns_resolver_factory")]] std::unique_ptr<
-      webrtc::AsyncResolverFactory>
-      async_resolver_factory;
-#pragma clang diagnostic pop
   std::unique_ptr<webrtc::IceTransportFactory> ice_transport_factory;
   std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator;
   std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier;

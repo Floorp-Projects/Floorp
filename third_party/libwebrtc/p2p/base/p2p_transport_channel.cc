@@ -28,7 +28,6 @@
 #include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/ice_logger.h"
-#include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_ice_controller.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/connection_info.h"
@@ -117,25 +116,11 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
     absl::string_view transport_name,
     int component,
     webrtc::IceTransportInit init) {
-  // TODO(bugs.webrtc.org/12598): Remove pragma and fallback once
-  // async_resolver_factory is gone
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (init.async_resolver_factory()) {
-    return absl::WrapUnique(new P2PTransportChannel(
-        transport_name, component, init.port_allocator(), nullptr,
-        std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
-            init.async_resolver_factory()),
-        init.event_log(), init.ice_controller_factory(),
-        init.active_ice_controller_factory(), init.field_trials()));
-#pragma clang diagnostic pop
-  } else {
-    return absl::WrapUnique(new P2PTransportChannel(
-        transport_name, component, init.port_allocator(),
-        init.async_dns_resolver_factory(), nullptr, init.event_log(),
-        init.ice_controller_factory(), init.active_ice_controller_factory(),
-        init.field_trials()));
-  }
+  return absl::WrapUnique(new P2PTransportChannel(
+      transport_name, component, init.port_allocator(),
+      init.async_dns_resolver_factory(), nullptr, init.event_log(),
+      init.ice_controller_factory(), init.active_ice_controller_factory(),
+      init.field_trials()));
 }
 
 P2PTransportChannel::P2PTransportChannel(

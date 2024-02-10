@@ -931,20 +931,6 @@ rtc_library("net_test_helpers") {
   }
 }
 
-rtc_library("async_resolver_interface") {
-  visibility = [ "*" ]
-  sources = [
-    "async_resolver_interface.cc",
-    "async_resolver_interface.h",
-  ]
-  deps = [
-    ":checks",
-    ":socket_address",
-    "system:rtc_export",
-    "third_party/sigslot",
-  ]
-}
-
 rtc_library("async_dns_resolver") {
   sources = [
     "async_dns_resolver.cc",
@@ -1043,8 +1029,6 @@ rtc_library("threading") {
   visibility = [ "*" ]
 
   sources = [
-    "async_resolver.cc",
-    "async_resolver.h",
     "internal/default_socket_server.cc",
     "internal/default_socket_server.h",
     "network_monitor.cc",
@@ -1066,7 +1050,6 @@ rtc_library("threading") {
   ]
   deps = [
     ":async_dns_resolver",
-    ":async_resolver_interface",
     ":byte_order",
     ":checks",
     ":criticalsection",
@@ -1792,6 +1775,7 @@ rtc_library("rtc_base_tests_utils") {
     "../api:make_ref_counted",
     "../api:refcountedbase",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/units:timestamp",
