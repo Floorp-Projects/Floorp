@@ -26,6 +26,7 @@ rtc_library("received_packet") {
     "..:socket_address",
     "../../api:array_view",
     "../../api/units:timestamp",
+    "../system:rtc_export",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/functional:any_invocable",

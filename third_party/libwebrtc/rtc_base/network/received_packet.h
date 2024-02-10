@@ -16,6 +16,7 @@
 #include "api/array_view.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace rtc {
 
@@ -23,7 +24,7 @@ namespace rtc {
 // It contains a payload and metadata.
 // ReceivedPacket itself does not put constraints on what payload contains. For
 // example it may contains STUN, SCTP, SRTP, RTP, RTCP.... etc.
-class ReceivedPacket {
+class RTC_EXPORT ReceivedPacket {
  public:
   // Caller must keep memory pointed to by payload and address valid for the
   // lifetime of this ReceivedPacket.
