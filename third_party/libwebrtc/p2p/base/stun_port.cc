@@ -46,7 +46,9 @@ class StunBindingRequest : public StunRequest {
                     std::make_unique<StunMessage>(STUN_BINDING_REQUEST)),
         port_(port),
         server_addr_(addr),
-        start_time_(start_time) {}
+        start_time_(start_time) {
+    SetAuthenticationRequired(false);
+  }
 
   const rtc::SocketAddress& server_addr() const { return server_addr_; }
 
