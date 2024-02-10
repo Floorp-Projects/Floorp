@@ -40,12 +40,18 @@ class RtcEventLog;
 // passed as a construction parameter and saved by value in each class that
 // needs it. Most classes shouldn't create a new instance of the `Environment`,
 // but instead should use a propagated copy.
+// Usually Environment should be the first parameter in a constructor or a
+// factory, and the first member in the class. Keeping Environment as the first
+// member in the class ensures utilities (e.g. clock) are still valid during
+// destruction of other members.
+//
 // Example:
 //    class PeerConnection {
 //     public:
 //      PeerConnection(const Environment& env, ...)
 //          : env_(env),
-//            rtp_manager_(env, ...),
+//            log_duration_on_destruction_(&env_.clock()),
+//            rtp_manager_(env_, ...),
 //            ...
 //
 //      const FieldTrialsView& trials() const { return env_.field_trials(); }
@@ -56,6 +62,7 @@ class RtcEventLog;
 //
 //     private:
 //      const Environment env_;
+//      Stats log_duration_on_destruction_;
 //      RtpTransmissionManager rtp_manager_;
 //    };
 // This class is thread safe.
