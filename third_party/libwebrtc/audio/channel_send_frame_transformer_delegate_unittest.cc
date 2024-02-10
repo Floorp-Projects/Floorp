@@ -168,5 +168,25 @@ TEST(ChannelSendFrameTransformerDelegateTest,
   channel_queue.WaitForPreviouslyPostedTasks();
 }
 
+TEST(ChannelSendFrameTransformerDelegateTest, ShortCircuitingSkipsTransform) {
+  TaskQueueForTest channel_queue("channel_queue");
+  rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
+      rtc::make_ref_counted<testing::NiceMock<MockFrameTransformer>>();
+  MockChannelSend mock_channel;
+  rtc::scoped_refptr<ChannelSendFrameTransformerDelegate> delegate =
+      rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
+          mock_channel.callback(), mock_frame_transformer, &channel_queue);
+
+  delegate->StartShortCircuiting();
+
+  // Will not call the actual transformer.
+  EXPECT_CALL(*mock_frame_transformer, Transform).Times(0);
+  // Will pass the frame straight to the channel.
+  EXPECT_CALL(mock_channel, SendFrame);
+  const uint8_t data[] = {1, 2, 3, 4};
+  delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, data, sizeof(data), 0,
+                      /*ssrc=*/0, /*mimeType=*/"audio/opus");
+}
+
 }  // namespace
 }  // namespace webrtc

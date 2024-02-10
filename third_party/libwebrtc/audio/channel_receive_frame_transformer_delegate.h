@@ -56,6 +56,8 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
   void OnTransformedFrame(
       std::unique_ptr<TransformableFrameInterface> frame) override;
 
+  void StartShortCircuiting() override;
+
   // Delegates the call to ChannelReceive::OnReceivedPayloadData on the
   // `channel_receive_thread_`, by calling `receive_frame_callback_`.
   void ReceiveFrame(std::unique_ptr<TransformableFrameInterface> frame) const;
@@ -70,6 +72,7 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
       RTC_GUARDED_BY(sequence_checker_);
   TaskQueueBase* const channel_receive_thread_;
+  bool short_circuit_ RTC_GUARDED_BY(sequence_checker_) = false;
 };
 
 }  // namespace webrtc

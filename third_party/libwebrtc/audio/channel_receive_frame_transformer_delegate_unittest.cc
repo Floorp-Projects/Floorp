@@ -150,5 +150,29 @@ TEST(ChannelReceiveFrameTransformerDelegateTest,
   rtc::ThreadManager::ProcessAllMessageQueuesForTesting();
 }
 
+TEST(ChannelReceiveFrameTransformerDelegateTest,
+     ShortCircuitingSkipsTransform) {
+  rtc::AutoThread main_thread;
+  rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
+      rtc::make_ref_counted<testing::NiceMock<MockFrameTransformer>>();
+  MockChannelReceive mock_channel;
+  rtc::scoped_refptr<ChannelReceiveFrameTransformerDelegate> delegate =
+      rtc::make_ref_counted<ChannelReceiveFrameTransformerDelegate>(
+          mock_channel.callback(), mock_frame_transformer,
+          rtc::Thread::Current());
+  const uint8_t data[] = {1, 2, 3, 4};
+  rtc::ArrayView<const uint8_t> packet(data, sizeof(data));
+  RTPHeader header;
+
+  delegate->StartShortCircuiting();
+  rtc::ThreadManager::ProcessAllMessageQueuesForTesting();
+
+  // Will not call the actual transformer.
+  EXPECT_CALL(*mock_frame_transformer, Transform).Times(0);
+  // Will pass the frame straight to the channel.
+  EXPECT_CALL(mock_channel, ReceiveFrame);
+  delegate->Transform(packet, header, /*ssrc=*/1111, /*mimeType=*/"audio/opus");
+}
+
 }  // namespace
 }  // namespace webrtc

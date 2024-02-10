@@ -65,6 +65,8 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
   void OnTransformedFrame(
       std::unique_ptr<TransformableFrameInterface> frame) override;
 
+  void StartShortCircuiting() override;
+
   // Delegates the call to ChannelSend::SendRtpAudio on the `encoder_queue_`,
   // by calling `send_audio_callback_`.
   void SendFrame(std::unique_ptr<TransformableFrameInterface> frame) const;
@@ -77,6 +79,7 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
   SendFrameCallback send_frame_callback_ RTC_GUARDED_BY(send_lock_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
   rtc::TaskQueue* encoder_queue_ RTC_GUARDED_BY(send_lock_);
+  bool short_circuit_ RTC_GUARDED_BY(send_lock_) = false;
 };
 
 std::unique_ptr<TransformableAudioFrameInterface> CloneSenderAudioFrame(
