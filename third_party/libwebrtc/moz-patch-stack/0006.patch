@@ -93,7 +93,7 @@ index d298081432..dd706e569d 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 800ec77d3e..0df8543497 100644
+index 3dbbc77086..1d73bc3d87 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -503,6 +503,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(

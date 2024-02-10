@@ -96,7 +96,7 @@ index dd706e569d..742a69cce3 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 0df8543497..31a1b764b3 100644
+index 1d73bc3d87..d7e3c50f82 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -504,8 +504,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
