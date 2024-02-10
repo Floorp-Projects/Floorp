@@ -35,7 +35,8 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
                             uint8_t payloadType,
                             uint32_t rtp_timestamp_with_offset,
                             rtc::ArrayView<const uint8_t> payload,
-                            int64_t absolute_capture_timestamp_ms)>;
+                            int64_t absolute_capture_timestamp_ms,
+                            rtc::ArrayView<const uint32_t> csrcs)>;
   ChannelSendFrameTransformerDelegate(
       SendFrameCallback send_frame_callback,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,

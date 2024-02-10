@@ -194,7 +194,8 @@ class ChannelSend : public ChannelSendInterface,
                        uint8_t payloadType,
                        uint32_t rtp_timestamp_without_offset,
                        rtc::ArrayView<const uint8_t> payload,
-                       int64_t absolute_capture_timestamp_ms)
+                       int64_t absolute_capture_timestamp_ms,
+                       rtc::ArrayView<const uint32_t> csrcs)
       RTC_RUN_ON(encoder_queue_);
 
   void OnReceivedRtt(int64_t rtt_ms);
@@ -325,14 +326,15 @@ int32_t ChannelSend::SendData(AudioFrameType frameType,
     return 0;
   }
   return SendRtpAudio(frameType, payloadType, rtp_timestamp, payload,
-                      absolute_capture_timestamp_ms);
+                      absolute_capture_timestamp_ms, /*csrcs=*/{});
 }
 
 int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
                                   uint8_t payloadType,
                                   uint32_t rtp_timestamp_without_offset,
                                   rtc::ArrayView<const uint8_t> payload,
-                                  int64_t absolute_capture_timestamp_ms) {
+                                  int64_t absolute_capture_timestamp_ms,
+                                  rtc::ArrayView<const uint32_t> csrcs) {
   // E2EE Custom Audio Frame Encryption (This is optional).
   // Keep this buffer around for the lifetime of the send call.
   rtc::Buffer encrypted_audio_payload;
@@ -394,7 +396,8 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
       .payload = payload,
       .payload_id = payloadType,
       .rtp_timestamp =
-          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp()};
+          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp(),
+      .csrcs = csrcs};
   if (absolute_capture_timestamp_ms > 0) {
     frame.capture_time = Timestamp::Millis(absolute_capture_timestamp_ms);
   }
@@ -892,12 +895,13 @@ void ChannelSend::InitFrameTransformerDelegate(
       [this](AudioFrameType frameType, uint8_t payloadType,
              uint32_t rtp_timestamp_with_offset,
              rtc::ArrayView<const uint8_t> payload,
-             int64_t absolute_capture_timestamp_ms) {
+             int64_t absolute_capture_timestamp_ms,
+             rtc::ArrayView<const uint32_t> csrcs) {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
         return SendRtpAudio(
             frameType, payloadType,
             rtp_timestamp_with_offset - rtp_rtcp_->StartTimestamp(), payload,
-            absolute_capture_timestamp_ms);
+            absolute_capture_timestamp_ms, csrcs);
       };
   frame_transformer_delegate_ =
       rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
