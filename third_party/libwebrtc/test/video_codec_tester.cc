@@ -34,6 +34,7 @@
 #include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/time_utils.h"
@@ -190,8 +191,9 @@ class LimitedTaskQueue {
     task_queue_.PostTask([this, task = std::move(task), start]() mutable {
       // `TaskQueue` doesn't guarantee FIFO order of execution for delayed
       // tasks.
-      int wait_ms = static_cast<int>(start.ms() - rtc::TimeMillis());
+      int64_t wait_ms = (start - Timestamp::Millis(rtc::TimeMillis())).ms();
       if (wait_ms > 0) {
+        RTC_CHECK_LT(wait_ms, 10000) << "Too high wait_ms " << wait_ms;
         SleepMs(wait_ms);
       }
       std::move(task)();
@@ -207,7 +209,7 @@ class LimitedTaskQueue {
   }
 
   void PostTaskAndWait(absl::AnyInvocable<void() &&> task) {
-    PostScheduledTask(std::move(task), Timestamp::Zero());
+    PostScheduledTask(std::move(task), Timestamp::Millis(rtc::TimeMillis()));
     task_queue_.WaitForPreviouslyPostedTasks();
   }
 
@@ -455,10 +457,12 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
           continue;
         }
         if (filter.layer_id) {
-          if ((is_svc &&
-               frame.layer_id.spatial_idx > filter.layer_id->spatial_idx) ||
-              (!is_svc &&
-               frame.layer_id.spatial_idx != filter.layer_id->spatial_idx)) {
+          if (is_svc &&
+              frame.layer_id.spatial_idx > filter.layer_id->spatial_idx) {
+            continue;
+          }
+          if (!is_svc &&
+              frame.layer_id.spatial_idx != filter.layer_id->spatial_idx) {
             continue;
           }
           if (frame.layer_id.temporal_idx > filter.layer_id->temporal_idx) {
@@ -590,6 +594,61 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
     }
 
     return stream;
+  }
+
+  void LogMetrics(absl::string_view csv_path,
+                  std::vector<Frame> frames,
+                  std::map<std::string, std::string> metadata) const {
+    RTC_LOG(LS_INFO) << "Write metrics to " << csv_path;
+    FILE* csv_file = fopen(csv_path.data(), "w");
+    const std::string delimiter = ";";
+    rtc::StringBuilder header;
+    header
+        << "timestamp_rtp;spatial_idx;temporal_idx;width;height;frame_size_"
+           "bytes;keyframe;qp;encode_time_us;decode_time_us;psnr_y_db;psnr_u_"
+           "db;psnr_v_db;target_bitrate_kbps;target_framerate_fps";
+    for (const auto& data : metadata) {
+      header << ";" << data.first;
+    }
+    fwrite(header.str().c_str(), 1, header.size(), csv_file);
+
+    for (const Frame& f : frames) {
+      rtc::StringBuilder row;
+      row << "\n" << f.timestamp_rtp;
+      row << ";" << f.layer_id.spatial_idx;
+      row << ";" << f.layer_id.temporal_idx;
+      row << ";" << f.width;
+      row << ";" << f.height;
+      row << ";" << f.frame_size.bytes();
+      row << ";" << f.keyframe;
+      row << ";";
+      if (f.qp) {
+        row << *f.qp;
+      }
+      row << ";" << f.encode_time.us();
+      row << ";" << f.decode_time.us();
+      if (f.psnr) {
+        row << ";" << f.psnr->y;
+        row << ";" << f.psnr->u;
+        row << ";" << f.psnr->v;
+      } else {
+        row << ";;;";
+      }
+
+      const auto& es = encoding_settings_.at(f.timestamp_rtp);
+      row << ";"
+          << f.target_bitrate.value_or(GetTargetBitrate(es, f.layer_id)).kbps();
+      row << ";"
+          << f.target_framerate.value_or(GetTargetFramerate(es, f.layer_id))
+                 .hertz<double>();
+
+      for (const auto& data : metadata) {
+        row << ";" << data.second;
+      }
+      fwrite(row.str().c_str(), 1, row.size(), csv_file);
+    }
+
+    fclose(csv_file);
   }
 
   void Flush() { task_queue_.WaitForPreviouslyPostedTasks(); }
@@ -1077,55 +1136,60 @@ SplitBitrateAndUpdateScalabilityMode(std::string codec_type,
 void VideoCodecStats::Stream::LogMetrics(
     MetricsLogger* logger,
     std::string test_case_name,
+    std::string prefix,
     std::map<std::string, std::string> metadata) const {
-  logger->LogMetric("width", test_case_name, width, Unit::kCount,
+  logger->LogMetric(prefix + "width", test_case_name, width, Unit::kCount,
                     ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("height", test_case_name, height, Unit::kCount,
+  logger->LogMetric(prefix + "height", test_case_name, height, Unit::kCount,
                     ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("frame_size_bytes", test_case_name, frame_size_bytes,
-                    Unit::kBytes, ImprovementDirection::kNeitherIsBetter,
-                    metadata);
-  logger->LogMetric("keyframe", test_case_name, keyframe, Unit::kCount,
+  logger->LogMetric(prefix + "frame_size_bytes", test_case_name,
+                    frame_size_bytes, Unit::kBytes,
+                    ImprovementDirection::kNeitherIsBetter, metadata);
+  logger->LogMetric(prefix + "keyframe", test_case_name, keyframe, Unit::kCount,
                     ImprovementDirection::kSmallerIsBetter, metadata);
-  logger->LogMetric("qp", test_case_name, qp, Unit::kUnitless,
+  logger->LogMetric(prefix + "qp", test_case_name, qp, Unit::kUnitless,
                     ImprovementDirection::kSmallerIsBetter, metadata);
-  logger->LogMetric("encode_time_ms", test_case_name, encode_time_ms,
+  // TODO(webrtc:14852): Change to us or even ns.
+  logger->LogMetric(prefix + "encode_time_ms", test_case_name, encode_time_ms,
                     Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter,
                     metadata);
-  logger->LogMetric("decode_time_ms", test_case_name, decode_time_ms,
+  logger->LogMetric(prefix + "decode_time_ms", test_case_name, decode_time_ms,
                     Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter,
                     metadata);
   // TODO(webrtc:14852): Change to kUnitLess. kKilobitsPerSecond are converted
   // to bytes per second in Chromeperf dash.
-  logger->LogMetric("target_bitrate_kbps", test_case_name, target_bitrate_kbps,
-                    Unit::kKilobitsPerSecond,
+  logger->LogMetric(prefix + "target_bitrate_kbps", test_case_name,
+                    target_bitrate_kbps, Unit::kKilobitsPerSecond,
                     ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("target_framerate_fps", test_case_name,
+  logger->LogMetric(prefix + "target_framerate_fps", test_case_name,
                     target_framerate_fps, Unit::kHertz,
                     ImprovementDirection::kBiggerIsBetter, metadata);
   // TODO(webrtc:14852): Change to kUnitLess. kKilobitsPerSecond are converted
   // to bytes per second in Chromeperf dash.
-  logger->LogMetric("encoded_bitrate_kbps", test_case_name,
+  logger->LogMetric(prefix + "encoded_bitrate_kbps", test_case_name,
                     encoded_bitrate_kbps, Unit::kKilobitsPerSecond,
                     ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("encoded_framerate_fps", test_case_name,
+  logger->LogMetric(prefix + "encoded_framerate_fps", test_case_name,
                     encoded_framerate_fps, Unit::kHertz,
                     ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("bitrate_mismatch_pct", test_case_name,
+  logger->LogMetric(prefix + "bitrate_mismatch_pct", test_case_name,
                     bitrate_mismatch_pct, Unit::kPercent,
                     ImprovementDirection::kNeitherIsBetter, metadata);
-  logger->LogMetric("framerate_mismatch_pct", test_case_name,
+  logger->LogMetric(prefix + "framerate_mismatch_pct", test_case_name,
                     framerate_mismatch_pct, Unit::kPercent,
                     ImprovementDirection::kNeitherIsBetter, metadata);
-  logger->LogMetric("transmission_time_ms", test_case_name,
+  logger->LogMetric(prefix + "transmission_time_ms", test_case_name,
                     transmission_time_ms, Unit::kMilliseconds,
                     ImprovementDirection::kSmallerIsBetter, metadata);
-  logger->LogMetric("psnr_y_db", test_case_name, psnr.y, Unit::kUnitless,
-                    ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("psnr_u_db", test_case_name, psnr.u, Unit::kUnitless,
-                    ImprovementDirection::kBiggerIsBetter, metadata);
-  logger->LogMetric("psnr_v_db", test_case_name, psnr.v, Unit::kUnitless,
-                    ImprovementDirection::kBiggerIsBetter, metadata);
+  logger->LogMetric(prefix + "psnr_y_db", test_case_name, psnr.y,
+                    Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+  logger->LogMetric(prefix + "psnr_u_db", test_case_name, psnr.u,
+                    Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+  logger->LogMetric(prefix + "psnr_v_db", test_case_name, psnr.v,
+                    Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
+                    metadata);
 }
 
 // TODO(ssilkin): use Frequency and DataRate for framerate and bitrate.
