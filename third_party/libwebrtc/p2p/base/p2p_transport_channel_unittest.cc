@@ -488,8 +488,10 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         this, &P2PTransportChannelTestBase::OnReadyToSend);
     channel->SignalCandidateGathered.connect(
         this, &P2PTransportChannelTestBase::OnCandidateGathered);
-    channel->SignalCandidatesRemoved.connect(
-        this, &P2PTransportChannelTestBase::OnCandidatesRemoved);
+    channel->SetCandidatesRemovedCallback(
+        [this](IceTransportInternal* transport, const Candidates& candidates) {
+          OnCandidatesRemoved(transport, candidates);
+        });
     channel->SignalReadPacket.connect(
         this, &P2PTransportChannelTestBase::OnReadPacket);
     channel->SignalRoleConflict.connect(
