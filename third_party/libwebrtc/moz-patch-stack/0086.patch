@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d
  3 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index ddbd22e34a..6f9aa6ae09 100644
+index fbd10c4c7b..ad3aa86c79 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -95,8 +95,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+@@ -96,8 +96,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
          RtpVideoFrameReceiver* receiver,
          Clock* clock,
          rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -29,7 +29,7 @@ index ddbd22e34a..6f9aa6ae09 100644
        frame_transformer_(std::move(frame_transformer)),
        network_thread_(network_thread),
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
-index 62a42fdddf..20f9a5caa9 100644
+index f08fc692dd..02f2e53923 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
 @@ -41,8 +41,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
@@ -42,7 +42,7 @@ index 62a42fdddf..20f9a5caa9 100644
  
    void Init();
    void Reset();
-@@ -67,7 +66,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+@@ -71,7 +70,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
    RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
        RTC_GUARDED_BY(network_sequence_checker_);
@@ -50,7 +50,7 @@ index 62a42fdddf..20f9a5caa9 100644
 +  TaskQueueBase* const network_thread_;
    const uint32_t ssrc_;
    Clock* const clock_;
- };
+   bool short_circuit_ RTC_GUARDED_BY(network_sequence_checker_) = false;
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
 index db0b87c736..c4a021d6c0 100644
 --- a/video/rtp_video_stream_receiver2.cc

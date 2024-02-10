@@ -95,6 +95,12 @@ class TransformedFrameCallback : public rtc::RefCountInterface {
   virtual void OnTransformedFrame(
       std::unique_ptr<TransformableFrameInterface> frame) = 0;
 
+  // Request to no longer be called on each frame, instead having frames be
+  // sent directly to OnTransformedFrame without additional work.
+  // TODO(crbug.com/1502781): Make pure virtual once all mocks have
+  // implementations.
+  virtual void StartShortCircuiting() {}
+
  protected:
   ~TransformedFrameCallback() override = default;
 };

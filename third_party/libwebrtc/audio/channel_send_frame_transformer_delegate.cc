@@ -137,6 +137,16 @@ void ChannelSendFrameTransformerDelegate::Transform(
     int64_t absolute_capture_timestamp_ms,
     uint32_t ssrc,
     const std::string& codec_mimetype) {
+  {
+    MutexLock lock(&send_lock_);
+    if (short_circuit_) {
+      send_frame_callback_(
+          frame_type, payload_type, rtp_timestamp,
+          rtc::ArrayView<const uint8_t>(payload_data, payload_size),
+          absolute_capture_timestamp_ms);
+      return;
+    }
+  }
   frame_transformer_->Transform(
       std::make_unique<TransformableOutgoingAudioFrame>(
           frame_type, payload_type, rtp_timestamp, payload_data, payload_size,
@@ -153,6 +163,11 @@ void ChannelSendFrameTransformerDelegate::OnTransformedFrame(
       [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
         delegate->SendFrame(std::move(frame));
       });
+}
+
+void ChannelSendFrameTransformerDelegate::StartShortCircuiting() {
+  MutexLock lock(&send_lock_);
+  short_circuit_ = true;
 }
 
 void ChannelSendFrameTransformerDelegate::SendFrame(

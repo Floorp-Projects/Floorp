@@ -19,6 +19,7 @@
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
@@ -155,6 +156,17 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
     const EncodedImage& encoded_image,
     RTPVideoHeader video_header,
     TimeDelta expected_retransmission_time) {
+  {
+    MutexLock lock(&sender_lock_);
+    if (short_circuit_) {
+      sender_->SendVideo(payload_type, codec_type, rtp_timestamp,
+                         encoded_image.CaptureTime(),
+                         *encoded_image.GetEncodedData(), encoded_image.size(),
+                         video_header, expected_retransmission_time,
+                         /*csrcs=*/{});
+      return true;
+    }
+  }
   frame_transformer_->Transform(std::make_unique<TransformableVideoSenderFrame>(
       encoded_image, video_header, payload_type, codec_type, rtp_timestamp,
       expected_retransmission_time, ssrc_,
@@ -175,6 +187,11 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
         RTC_DCHECK_RUN_ON(delegate->transformation_queue_.get());
         delegate->SendVideo(std::move(frame));
       });
+}
+
+void RTPSenderVideoFrameTransformerDelegate::StartShortCircuiting() {
+  MutexLock lock(&sender_lock_);
+  short_circuit_ = true;
 }
 
 void RTPSenderVideoFrameTransformerDelegate::SendVideo(

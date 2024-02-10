@@ -100,9 +100,13 @@ void ChannelReceiveFrameTransformerDelegate::Transform(
     uint32_t ssrc,
     const std::string& codec_mime_type) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  frame_transformer_->Transform(
-      std::make_unique<TransformableIncomingAudioFrame>(packet, header, ssrc,
-                                                        codec_mime_type));
+  if (short_circuit_) {
+    receive_frame_callback_(packet, header);
+  } else {
+    frame_transformer_->Transform(
+        std::make_unique<TransformableIncomingAudioFrame>(packet, header, ssrc,
+                                                          codec_mime_type));
+  }
 }
 
 void ChannelReceiveFrameTransformerDelegate::OnTransformedFrame(
@@ -112,6 +116,14 @@ void ChannelReceiveFrameTransformerDelegate::OnTransformedFrame(
       [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
         delegate->ReceiveFrame(std::move(frame));
       });
+}
+
+void ChannelReceiveFrameTransformerDelegate::StartShortCircuiting() {
+  rtc::scoped_refptr<ChannelReceiveFrameTransformerDelegate> delegate(this);
+  channel_receive_thread_->PostTask([delegate = std::move(delegate)]() mutable {
+    RTC_DCHECK_RUN_ON(&delegate->sequence_checker_);
+    delegate->short_circuit_ = true;
+  });
 }
 
 void ChannelReceiveFrameTransformerDelegate::ReceiveFrame(
