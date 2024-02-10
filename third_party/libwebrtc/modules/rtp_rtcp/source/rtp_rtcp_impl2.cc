@@ -53,8 +53,8 @@ RTCPSender::Configuration AddRtcpSendEvaluationCallback(
 
 RtpPacketHistory::PaddingMode GetPaddingMode(
     const FieldTrialsView* field_trials) {
-  if (field_trials &&
-      field_trials->IsEnabled("WebRTC-PaddingMode-RecentLargePacket")) {
+  if (!field_trials ||
+      !field_trials->IsDisabled("WebRTC-PaddingMode-RecentLargePacket")) {
     return RtpPacketHistory::PaddingMode::kRecentLargePacket;
   }
   return RtpPacketHistory::PaddingMode::kPriority;
