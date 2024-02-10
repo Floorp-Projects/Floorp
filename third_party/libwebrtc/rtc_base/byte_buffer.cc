@@ -46,7 +46,7 @@ bool ByteBufferReader::ReadUInt8(uint8_t* val) {
   if (!val)
     return false;
 
-  return ReadBytes(reinterpret_cast<char*>(val), 1);
+  return ReadBytes(val, 1);
 }
 
 bool ByteBufferReader::ReadUInt16(uint16_t* val) {
@@ -54,7 +54,7 @@ bool ByteBufferReader::ReadUInt16(uint16_t* val) {
     return false;
 
   uint16_t v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 2)) {
+  if (!ReadBytes(reinterpret_cast<uint8_t*>(&v), 2)) {
     return false;
   } else {
     *val = NetworkToHost16(v);
@@ -67,7 +67,7 @@ bool ByteBufferReader::ReadUInt24(uint32_t* val) {
     return false;
 
   uint32_t v = 0;
-  char* read_into = reinterpret_cast<char*>(&v);
+  uint8_t* read_into = reinterpret_cast<uint8_t*>(&v);
   ++read_into;
 
   if (!ReadBytes(read_into, 3)) {
@@ -83,7 +83,7 @@ bool ByteBufferReader::ReadUInt32(uint32_t* val) {
     return false;
 
   uint32_t v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 4)) {
+  if (!ReadBytes(reinterpret_cast<uint8_t*>(&v), 4)) {
     return false;
   } else {
     *val = NetworkToHost32(v);
@@ -96,7 +96,7 @@ bool ByteBufferReader::ReadUInt64(uint64_t* val) {
     return false;
 
   uint64_t v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 8)) {
+  if (!ReadBytes(reinterpret_cast<uint8_t*>(&v), 8)) {
     return false;
   } else {
     *val = NetworkToHost64(v);
@@ -112,14 +112,14 @@ bool ByteBufferReader::ReadUVarint(uint64_t* val) {
   // continuation byte (msb=1) if there are more bytes to be read.
   uint64_t v = 0;
   for (int i = 0; i < 64; i += 7) {
-    char byte;
+    uint8_t byte;
     if (!ReadBytes(&byte, 1)) {
       return false;
     }
     // Read the first 7 bits of the byte, then offset by bits read so far.
     v |= (static_cast<uint64_t>(byte) & 0x7F) << i;
-    // True if the msb is not a continuation byte.
-    if (static_cast<uint64_t>(byte) < 0x80) {
+    // Return if the msb is not a continuation byte.
+    if (byte < 0x80) {
       *val = v;
       return true;
     }
@@ -140,7 +140,16 @@ bool ByteBufferReader::ReadString(std::string* val, size_t len) {
   }
 }
 
+bool ByteBufferReader::ReadBytes(rtc::ArrayView<uint8_t> val) {
+  return ReadBytes(val.data(), val.size());
+}
+
 bool ByteBufferReader::ReadBytes(char* val, size_t len) {
+  return ReadBytes(reinterpret_cast<uint8_t*>(val), len);
+}
+
+// Private function supporting the other Read* functions.
+bool ByteBufferReader::ReadBytes(uint8_t* val, size_t len) {
   if (len > Length()) {
     return false;
   } else {
