@@ -17,12 +17,11 @@
 
 #include "absl/strings/string_view.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/media_types.h"
-#include "api/rtc_event_log/rtc_event_log.h"
-#include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/mock_audio_mixer.h"
 #include "api/test/video/function_video_encoder_factory.h"
-#include "api/transport/field_trial_based_config.h"
 #include "api/units/timestamp.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "audio/audio_receive_stream.h"
@@ -54,7 +53,6 @@ using ::webrtc::test::RunLoop;
 
 struct CallHelper {
   explicit CallHelper(bool use_null_audio_processing) {
-    task_queue_factory_ = CreateDefaultTaskQueueFactory();
     AudioState::Config audio_state_config;
     audio_state_config.audio_mixer = rtc::make_ref_counted<MockAudioMixer>();
     audio_state_config.audio_processing =
@@ -63,10 +61,8 @@ struct CallHelper {
             : rtc::make_ref_counted<NiceMock<MockAudioProcessing>>();
     audio_state_config.audio_device_module =
         rtc::make_ref_counted<MockAudioDeviceModule>();
-    CallConfig config(&event_log_);
+    CallConfig config(CreateEnvironment());
     config.audio_state = AudioState::Create(audio_state_config);
-    config.task_queue_factory = task_queue_factory_.get();
-    config.trials = &field_trials_;
     call_ = Call::Create(config);
   }
 
@@ -74,9 +70,6 @@ struct CallHelper {
 
  private:
   RunLoop loop_;
-  RtcEventLogNull event_log_;
-  FieldTrialBasedConfig field_trials_;
-  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<Call> call_;
 };
 

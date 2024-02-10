@@ -37,17 +37,18 @@ index 38bb81b481..e46c3f83a6 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index 071b34e009..92b7c067e1 100644
+index 42b3b988ea..d2ac705274 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -473,12 +473,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -473,6 +473,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
 +/* Mozilla: Avoid this since it could use GetRealTimeClock().
  std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-   Clock* clock = Clock::GetRealTimeClock();
-   return Create(config, clock,
+   Clock* clock =
+       config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
+@@ -480,6 +481,7 @@ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
                  RtpTransportControllerSendFactory().Create(
                      config.ExtractTransportConfig(), clock));
  }
