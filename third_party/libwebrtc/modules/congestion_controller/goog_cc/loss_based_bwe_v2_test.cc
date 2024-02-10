@@ -1650,6 +1650,36 @@ TEST_F(LossBasedBweV2Test, IncreaseEstimateAfterHoldDuration) {
   }
 }
 
+TEST_F(LossBasedBweV2Test, HoldRateNotLowerThanAckedRate) {
+  ExplicitKeyValueConfig key_value_config(ShortObservationConfig(
+      "HoldDurationFactor:10,LowerBoundByAckedRateFactor:1.0"));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(2500));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pPacketLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero()),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+
+  // During the hold duration, hold rate is not lower than the acked rate.
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(1000));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      CreatePacketResultsWith50pPacketLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound),
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      /*in_alr=*/false);
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+  EXPECT_EQ(
+      loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
+      DataRate::KilobitsPerSec(1000));
+}
+
 TEST_F(LossBasedBweV2Test, EndHoldDurationIfDelayBasedEstimateWorks) {
   ExplicitKeyValueConfig key_value_config(
       ShortObservationConfig("HoldDurationFactor:3"));

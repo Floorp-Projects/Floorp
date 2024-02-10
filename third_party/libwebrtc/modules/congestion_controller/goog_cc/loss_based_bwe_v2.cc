@@ -342,6 +342,11 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   if (loss_based_result_.state == LossBasedState::kDecreasing &&
       last_hold_info_.timestamp > last_send_time_most_recent_observation_ &&
       bounded_bandwidth_estimate < delay_based_estimate_) {
+    // Ensure that acked rate is the lower bound of HOLD rate.
+    if (config_->lower_bound_by_acked_rate_factor > 0.0) {
+      last_hold_info_.rate =
+          std::max(GetInstantLowerBound(), last_hold_info_.rate);
+    }
     // BWE is not allowed to increase above the HOLD rate. The purpose of
     // HOLD is to not immediately ramp up BWE to a rate that may cause loss.
     loss_based_result_.bandwidth_estimate =
@@ -868,10 +873,17 @@ DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound() const {
 
 std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
     bool in_alr) const {
+  ChannelParameters best_estimate = current_best_estimate_;
+  // Ensure that acked rate is the lower bound of best estimate.
+  if (config_->lower_bound_by_acked_rate_factor > 0.0 &&
+      IsValid(best_estimate.loss_limited_bandwidth)) {
+    best_estimate.loss_limited_bandwidth =
+        std::max(GetInstantLowerBound(), best_estimate.loss_limited_bandwidth);
+  }
   std::vector<DataRate> bandwidths;
   for (double candidate_factor : config_->candidate_factors) {
     bandwidths.push_back(candidate_factor *
-                         current_best_estimate_.loss_limited_bandwidth);
+                         best_estimate.loss_limited_bandwidth);
   }
 
   if (acknowledged_bitrate_.has_value() &&
@@ -887,13 +899,13 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
 
   if (IsValid(delay_based_estimate_) &&
       config_->append_delay_based_estimate_candidate) {
-    if (delay_based_estimate_ > current_best_estimate_.loss_limited_bandwidth) {
+    if (delay_based_estimate_ > best_estimate.loss_limited_bandwidth) {
       bandwidths.push_back(delay_based_estimate_);
     }
   }
 
   if (in_alr && config_->append_upper_bound_candidate_in_alr &&
-      current_best_estimate_.loss_limited_bandwidth > GetInstantUpperBound()) {
+      best_estimate.loss_limited_bandwidth > GetInstantUpperBound()) {
     bandwidths.push_back(GetInstantUpperBound());
   }
 
@@ -903,10 +915,10 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
   std::vector<ChannelParameters> candidates;
   candidates.resize(bandwidths.size());
   for (size_t i = 0; i < bandwidths.size(); ++i) {
-    ChannelParameters candidate = current_best_estimate_;
-    candidate.loss_limited_bandwidth = std::min(
-        bandwidths[i], std::max(current_best_estimate_.loss_limited_bandwidth,
-                                candidate_bandwidth_upper_bound));
+    ChannelParameters candidate = best_estimate;
+    candidate.loss_limited_bandwidth =
+        std::min(bandwidths[i], std::max(best_estimate.loss_limited_bandwidth,
+                                         candidate_bandwidth_upper_bound));
     candidate.inherent_loss = GetFeasibleInherentLoss(candidate);
     candidates[i] = candidate;
   }
