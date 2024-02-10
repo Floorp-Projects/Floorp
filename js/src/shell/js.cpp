@@ -12151,7 +12151,7 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
 
   JS::Prefs::setAtStartup_destructuring_fuse(
       !op.getBoolOption("disable-destructuring-fuse"));
-  JS::Prefs::setAtStartup_use_fdlibm_for_sin_cos_tan(
+  JS::Prefs::set_use_fdlibm_for_sin_cos_tan(
       op.getBoolOption("use-fdlibm-for-sin-cos-tan"));
   JS::Prefs::setAtStartup_property_error_message_fix(
       !op.getBoolOption("disable-property-error-message-fix"));
