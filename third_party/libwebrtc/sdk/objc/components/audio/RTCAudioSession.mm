@@ -399,8 +399,10 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
   // Set isActive and decrement activation count on deactivation
   // whether or not it succeeded.
   if (!active) {
-    self.isActive = active;
-    [self notifyDidSetActive:active];
+    if (shouldSetActive) {
+      self.isActive = active;
+      [self notifyDidSetActive:active];
+    }
     [self decrementActivationCount];
   }
   RTCLog(@"Number of current activations: %d", _activationCount.load());
