@@ -1314,6 +1314,8 @@ TurnAllocateRequest::TurnAllocateRequest(TurnPort* port)
   message->AddAttribute(std::move(transport_attr));
   if (!port_->hash().empty()) {
     port_->AddRequestAuthInfo(message);
+  } else {
+    SetAuthenticationRequired(false);
   }
   port_->MaybeAddTurnLoggingId(message);
   port_->TurnCustomizerMaybeModifyOutgoingStunMessage(message);
