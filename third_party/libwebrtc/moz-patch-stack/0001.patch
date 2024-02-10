@@ -205,7 +205,7 @@ index 40cad75701..b89c98fe5e 100644
 +
  }  // namespace cricket
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index b816b9c65e..51166ee2fb 100644
+index e9549cdfd8..e4cff6a5ce 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
 @@ -2479,6 +2479,7 @@ if (rtc_include_tests && !build_with_chromium) {

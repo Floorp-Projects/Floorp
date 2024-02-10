@@ -96,7 +96,7 @@ class ConnectionContext final
     RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_socket_factory_.get();
   }
-  CallFactoryInterface* call_factory() {
+  MediaFactory* call_factory() {
     RTC_DCHECK_RUN_ON(worker_thread());
     return call_factory_.get();
   }
@@ -143,7 +143,7 @@ class ConnectionContext final
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::NetworkManager> default_network_manager_
       RTC_GUARDED_BY(signaling_thread_);
-  std::unique_ptr<CallFactoryInterface> const call_factory_
+  std::unique_ptr<MediaFactory> const call_factory_
       RTC_GUARDED_BY(worker_thread());
 
   std::unique_ptr<rtc::PacketSocketFactory> default_socket_factory_

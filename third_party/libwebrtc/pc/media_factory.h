@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "api/call/call_factory_interface.h"
 #include "api/environment/environment.h"
 #include "call/call.h"
 #include "call/call_config.h"
@@ -31,13 +30,11 @@ struct PeerConnectionFactoryDependencies;
 
 // Interface repsponsible for constructing media specific classes for
 // PeerConnectionFactory and PeerConnection.
-// TODO(bugs.webrtc.org/15574): Delete CallFactoryInterface inheritance
-// when call_factory is removed from PeerConnectionFactoryDependencies.
-class MediaFactory : public CallFactoryInterface {
+class MediaFactory {
  public:
   virtual ~MediaFactory() = default;
 
-  std::unique_ptr<Call> CreateCall(const CallConfig& config) override = 0;
+  virtual std::unique_ptr<Call> CreateCall(const CallConfig& config) = 0;
   virtual std::unique_ptr<cricket::MediaEngineInterface> CreateMediaEngine(
       const Environment& env,
       PeerConnectionFactoryDependencies& dependencies) = 0;
