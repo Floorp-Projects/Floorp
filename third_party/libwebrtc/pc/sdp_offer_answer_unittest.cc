@@ -990,8 +990,7 @@ TEST_F(SdpOfferAnswerTest, SdpMungingWithInvalidPayloadTypeIsRejected) {
 
   auto offer = pc->CreateOffer();
   ASSERT_EQ(offer->description()->contents().size(), 1u);
-  auto* audio =
-      offer->description()->contents()[0].media_description()->as_audio();
+  auto* audio = offer->description()->contents()[0].media_description();
   ASSERT_GT(audio->codecs().size(), 0u);
   EXPECT_TRUE(audio->rtcp_mux());
   auto codecs = audio->codecs();

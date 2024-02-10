@@ -1316,8 +1316,9 @@ class WebRtcSdpTest : public ::testing::Test {
     return video;
   }
 
-  template <class MCD>
-  void CompareMediaContentDescription(const MCD* cd1, const MCD* cd2) {
+  void CompareMediaContentDescription(
+      const cricket::MediaContentDescription* cd1,
+      const cricket::MediaContentDescription* cd2) {
     // type
     EXPECT_EQ(cd1->type(), cd2->type());
 
@@ -1427,20 +1428,14 @@ class WebRtcSdpTest : public ::testing::Test {
 
       ASSERT_EQ(IsAudioContent(&c1), IsAudioContent(&c2));
       if (IsAudioContent(&c1)) {
-        const AudioContentDescription* acd1 =
-            c1.media_description()->as_audio();
-        const AudioContentDescription* acd2 =
-            c2.media_description()->as_audio();
-        CompareMediaContentDescription<AudioContentDescription>(acd1, acd2);
+        CompareMediaContentDescription(c1.media_description(),
+                                       c2.media_description());
       }
 
       ASSERT_EQ(IsVideoContent(&c1), IsVideoContent(&c2));
       if (IsVideoContent(&c1)) {
-        const VideoContentDescription* vcd1 =
-            c1.media_description()->as_video();
-        const VideoContentDescription* vcd2 =
-            c2.media_description()->as_video();
-        CompareMediaContentDescription<VideoContentDescription>(vcd1, vcd2);
+        CompareMediaContentDescription(c1.media_description(),
+                                       c2.media_description());
       }
 
       ASSERT_EQ(IsDataContent(&c1), IsDataContent(&c2));
@@ -5015,7 +5010,7 @@ TEST_F(WebRtcSdpTest, ParseSessionLevelExtmapAttributes) {
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
   ASSERT_EQ(1u, jdesc.description()->contents().size());
   const auto content = jdesc.description()->contents()[0];
-  const auto* audio_description = content.media_description()->as_audio();
+  const auto* audio_description = content.media_description();
   ASSERT_NE(audio_description, nullptr);
   const auto& extensions = audio_description->rtp_header_extensions();
   ASSERT_EQ(1u, extensions.size());

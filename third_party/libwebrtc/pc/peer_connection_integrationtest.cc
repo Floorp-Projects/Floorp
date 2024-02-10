@@ -1086,11 +1086,7 @@ void ModifyPayloadTypesAndRemoveMidExtension(
                                     }),
                      extensions.end());
     media->set_rtp_header_extensions(extensions);
-    cricket::VideoContentDescription* video = media->as_video();
-    ASSERT_TRUE(video != nullptr);
-    std::vector<cricket::VideoCodec> codecs = {
-        cricket::CreateVideoCodec(pt++, "VP8")};
-    video->set_codecs(codecs);
+    media->set_codecs({cricket::CreateVideoCodec(pt++, "VP8")});
   }
 }
 
@@ -3757,11 +3753,10 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
   // codecs.
   caller()->SetGeneratedSdpMunger([](cricket::SessionDescription* desc) {
     for (ContentInfo& content : desc->contents()) {
-      cricket::AudioContentDescription* media =
-          content.media_description()->as_audio();
-      std::vector<cricket::AudioCodec> codecs = media->codecs();
-      std::vector<cricket::AudioCodec> codecs_out;
-      for (cricket::AudioCodec codec : codecs) {
+      cricket::MediaContentDescription* media = content.media_description();
+      std::vector<cricket::Codec> codecs = media->codecs();
+      std::vector<cricket::Codec> codecs_out;
+      for (cricket::Codec codec : codecs) {
         if (codec.name == "opus") {
           codec.AddFeedbackParam(cricket::FeedbackParam(
               cricket::kRtcpFbParamNack, cricket::kParamValueEmpty));
@@ -3808,11 +3803,10 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan, VideoPacketLossCausesNack) {
   // codecs.
   caller()->SetGeneratedSdpMunger([](cricket::SessionDescription* desc) {
     for (ContentInfo& content : desc->contents()) {
-      cricket::VideoContentDescription* media =
-          content.media_description()->as_video();
-      std::vector<cricket::VideoCodec> codecs = media->codecs();
-      std::vector<cricket::VideoCodec> codecs_out;
-      for (cricket::VideoCodec codec : codecs) {
+      cricket::MediaContentDescription* media = content.media_description();
+      std::vector<cricket::Codec> codecs = media->codecs();
+      std::vector<cricket::Codec> codecs_out;
+      for (cricket::Codec codec : codecs) {
         if (codec.name == "VP8") {
           ASSERT_TRUE(codec.HasFeedbackParam(cricket::FeedbackParam(
               cricket::kRtcpFbParamNack, cricket::kParamValueEmpty)));

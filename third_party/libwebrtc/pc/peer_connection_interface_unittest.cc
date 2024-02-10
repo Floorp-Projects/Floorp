@@ -1227,8 +1227,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
   bool HasCNCodecs(const cricket::ContentInfo* content) {
     RTC_DCHECK(content);
     RTC_DCHECK(content->media_description());
-    for (const cricket::AudioCodec& codec :
-         content->media_description()->as_audio()->codecs()) {
+    for (const cricket::Codec& codec : content->media_description()->codecs()) {
       if (codec.name == "CN") {
         return true;
       }
