@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "absl/strings/match.h"
-#include "api/call/call_factory_interface.h"
 #include "api/environment/environment.h"
 #include "api/environment/environment_factory.h"
 #include "api/fec_controller.h"
@@ -34,6 +33,7 @@
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/audio_track.h"
 #include "pc/local_audio_source.h"
+#include "pc/media_factory.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
 #include "pc/media_stream_track_proxy.h"

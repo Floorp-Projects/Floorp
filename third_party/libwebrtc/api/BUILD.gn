@@ -346,7 +346,6 @@ if (!build_with_mozilla) {
     ":array_view",
     ":async_dns_resolver",
     ":audio_options_api",
-    ":callfactory_api",
     ":candidate",
     ":dtls_transport_interface",
     ":fec_controller_api",

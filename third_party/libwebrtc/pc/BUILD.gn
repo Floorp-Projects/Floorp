@@ -317,7 +317,6 @@ rtc_source_set("jsep_transport_controller") {
 rtc_source_set("media_factory") {
   sources = [ "media_factory.h" ]
   deps = [
-    "../api:callfactory_api",
     "../api/environment",
     "../call:call_interfaces",
     "../media:rtc_media_base",
@@ -1541,6 +1540,7 @@ rtc_source_set("peer_connection_factory") {
     "../p2p:rtc_p2p",
     "../pc:audio_track",
     "../pc:connection_context",
+    "../pc:media_factory",
     "../pc:media_stream",
     "../pc:rtp_parameters_conversion",
     "../pc:session_description",

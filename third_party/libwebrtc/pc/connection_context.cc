@@ -81,18 +81,6 @@ std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
 rtc::scoped_refptr<ConnectionContext> ConnectionContext::Create(
     const Environment& env,
     PeerConnectionFactoryDependencies* dependencies) {
-// TODO(bugs.webrtc.org/15574): Remove when call_factory and media_engine
-// are removed from PeerConnectionFactoryDependencies
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (dependencies->media_factory != nullptr) {
-    RTC_CHECK(dependencies->media_engine == nullptr)
-        << "media_factory replaces media_engine. Do not set media_engine.";
-    RTC_CHECK(dependencies->call_factory == nullptr)
-        << "media_factory replaces call_factory. Do not set call_factory.";
-  }
-#pragma clang diagnostic pop
-
   return rtc::scoped_refptr<ConnectionContext>(
       new ConnectionContext(env, dependencies));
 }
@@ -117,19 +105,11 @@ ConnectionContext::ConnectionContext(
           dependencies->media_factory != nullptr
               ? dependencies->media_factory->CreateMediaEngine(env_,
                                                                *dependencies)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-              : std::move(dependencies->media_engine)),
-#pragma clang diagnostic pop
+              : nullptr),
       network_monitor_factory_(
           std::move(dependencies->network_monitor_factory)),
       default_network_manager_(std::move(dependencies->network_manager)),
-      call_factory_(dependencies->media_factory != nullptr
-                        ? std::move(dependencies->media_factory)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                        : std::move(dependencies->call_factory)),
-#pragma clang diagnostic pop
+      call_factory_(std::move(dependencies->media_factory)),
       default_socket_factory_(std::move(dependencies->packet_socket_factory)),
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
