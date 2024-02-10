@@ -255,20 +255,26 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
-  const onPromptOpened = action => {
+  const onPromptOpened = (_, data) => {
+    if (data.prompt.promptType === "beforeunload") {
+      // Ignore beforeunload prompts which are handled by the driver class.
+      return;
+    }
+
     lazy.logger.trace("Canceled page load listener because a dialog opened");
     checkDone({ finished: true });
   };
 
   const onTimer = timer => {
-    // In the case when a document has a beforeunload handler
-    // registered, the currently active command will return immediately
-    // due to the modal dialog observer.
+    // For the command "Element Click" we want to detect a potential navigation
+    // as early as possible. The `beforeunload` event is an indication for that
+    // but could still cause the navigation to get aborted by the user. As such
+    // wait a bit longer for the `unload` event to happen, which usually will
+    // occur pretty soon after `beforeunload`.
     //
-    // Otherwise the timeout waiting for the document to start
-    // navigating is increased by 5000 ms to ensure a possible load
-    // event is not missed. In the common case such an event should
-    // occur pretty soon after beforeunload, and we optimise for this.
+    // Note that with WebDriver BiDi enabled the `beforeunload` prompts might
+    // not get implicitly accepted, so lets keep the timer around until we know
+    // that it is really not required.
     if (seenBeforeUnload) {
       seenBeforeUnload = false;
       unloadTimer.initWithCallback(
