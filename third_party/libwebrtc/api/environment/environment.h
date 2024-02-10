@@ -63,7 +63,7 @@ class RTC_EXPORT Environment final {
  public:
   // Default constructor is deleted in favor of creating this object using
   // `EnvironmentFactory`. To create the default environment use
-  // `EnvironmentFactory().Create()`.
+  // `EnvironmentFactory().Create()` or `CreateEnvironment()`.
   Environment() = delete;
 
   Environment(const Environment&) = default;
