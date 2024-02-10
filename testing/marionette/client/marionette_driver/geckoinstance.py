@@ -60,8 +60,6 @@ class GeckoInstance(object):
         # Do not show datareporting policy notifications which can interfere with tests
         "datareporting.policy.dataSubmissionEnabled": False,
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
-        # Automatically unload beforeunload alerts
-        "dom.disable_beforeunload": True,
         # Enabling the support for File object creation in the content process.
         "dom.file.createInChild": True,
         # Disable delayed user input event handling

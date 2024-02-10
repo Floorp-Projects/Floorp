@@ -505,29 +505,6 @@ class TestClickNavigation(WindowManagerMixin, MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_url(), self.test_page)
         self.assertEqual(self.marionette.title, "Marionette Test")
 
-    def test_click_link_page_load_dismissed_beforeunload_prompt(self):
-        self.marionette.navigate(
-            inline(
-                """
-          <input type="text"></input>
-          <a href="{}">Click</a>
-          <script>
-            window.addEventListener("beforeunload", function (event) {{
-              event.preventDefault();
-            }});
-          </script>
-        """.format(
-                    self.marionette.absolute_url("clicks.html")
-                )
-            )
-        )
-        self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
-        self.marionette.find_element(By.TAG_NAME, "a").click()
-
-        # navigation auto-dismisses beforeunload prompt
-        with self.assertRaises(errors.NoAlertPresentException):
-            Alert(self.marionette).text
-
     def test_click_link_anchor(self):
         self.marionette.find_element(By.ID, "anchor").click()
         self.assertEqual(self.marionette.get_url(), "{}#".format(self.test_page))

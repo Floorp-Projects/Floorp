@@ -114,6 +114,9 @@ export function GeckoDriver(server) {
   // WebDriver Session
   this._currentSession = null;
 
+  // Flag to indicate that the application is shutting down
+  this._isShuttingDown = false;
+
   this.browsers = {};
 
   // points to current browser
@@ -211,7 +214,16 @@ GeckoDriver.prototype.handleClosedModalDialog = function () {
  */
 GeckoDriver.prototype.handleOpenModalDialog = function (eventName, data) {
   this.dialog = data.prompt;
-  this.getActor().notifyDialogOpened();
+
+  if (this.dialog.promptType === "beforeunload") {
+    lazy.logger.trace(`Implicitly accepted "beforeunload" prompt`);
+    this.dialog.accept();
+    return;
+  }
+
+  if (!this._isShuttingDown) {
+    this.getActor().notifyDialogOpened(this.dialog);
+  }
 };
 
 /**
@@ -2375,7 +2387,9 @@ GeckoDriver.prototype.deleteSession = function () {
   // reset to the top-most frame
   this.mainFrame = null;
 
-  if (this.promptListener) {
+  if (!this._isShuttingDown && this.promptListener) {
+    // Do not stop the prompt listener when quitting the browser to
+    // allow us to also accept beforeunload prompts during shutdown.
     this.promptListener.stopListening();
     this.promptListener = null;
   }
@@ -2792,6 +2806,12 @@ GeckoDriver.prototype._handleUserPrompts = async function () {
     return;
   }
 
+  if (this.dialog.promptType == "beforeunload") {
+    // Wait until the "beforeunload" prompt has been accepted.
+    await this.promptListener.dialogClosed();
+    return;
+  }
+
   const textContent = await this.dialog.getText();
 
   const behavior = this.currentSession.unhandledPromptBehavior;
@@ -2899,16 +2919,17 @@ GeckoDriver.prototype.quit = async function (cmd) {
 
   let quitApplicationResponse;
   try {
+    this._isShuttingDown = true;
     quitApplicationResponse = await lazy.quit(
       flags,
       safeMode,
       this.currentSession.capabilities.get("moz:windowless")
     );
   } catch (e) {
+    this._isShuttingDown = false;
     if (e instanceof TypeError) {
       throw new lazy.error.InvalidArgumentError(e.message);
     }
-
     throw new lazy.error.UnsupportedOperationError(e.message);
   } finally {
     Services.obs.removeObserver(this, TOPIC_QUIT_APPLICATION_REQUESTED);

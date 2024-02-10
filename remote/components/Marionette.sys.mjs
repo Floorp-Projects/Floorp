@@ -40,13 +40,6 @@ const ENV_ENABLED = "MOZ_MARIONETTE";
 // pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
-// Map of Marionette-specific preferences that should be set via
-// RecommendedPreferences.
-const RECOMMENDED_PREFS = new Map([
-  // Automatically unload beforeunload alerts
-  ["dom.disable_beforeunload", true],
-]);
-
 const isRemote =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
@@ -147,7 +140,7 @@ class MarionetteParentProcess {
             Services.obs.addObserver(this, "domwindowopened");
           }
 
-          lazy.RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
+          lazy.RecommendedPreferences.applyPreferences();
 
           // Only set preferences to preserve in a new profile
           // when Marionette is enabled.
