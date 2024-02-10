@@ -79,6 +79,7 @@ skip-if = [
 ]
 
 ["test_pause.js"]
+skip-if = ["tsan && socketprocess_networking"] # Times out on TSan and socket process, bug 1878882
 
 ["test_responsiveness.js"]
 skip-if = ["tsan"] # Times out on TSan, bug 1612707
