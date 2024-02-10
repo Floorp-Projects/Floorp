@@ -294,8 +294,8 @@ void AsyncTCPSocket::ProcessInput(char* data, size_t* len) {
     if (*len < kPacketLenSize + pkt_len)
       return;
 
-    SignalReadPacket(this, data + kPacketLenSize, pkt_len, remote_addr,
-                     TimeMicros());
+    NotifyPacketReceived(rtc::ReceivedPacket::CreateFromLegacy(
+        data + kPacketLenSize, pkt_len, rtc::TimeMicros(), remote_addr));
 
     *len -= kPacketLenSize + pkt_len;
     if (*len > 0) {

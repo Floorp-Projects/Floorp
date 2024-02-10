@@ -11,14 +11,17 @@
 #include <string.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_tcp_socket.h"
 #include "rtc_base/async_udp_socket.h"
+#include "rtc_base/event.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -80,29 +83,36 @@ void TestSend(SocketServer* internal,
   NATSocketFactory* natsf = new NATSocketFactory(
       internal, nat->internal_udp_address(), nat->internal_tcp_address());
 
-  TestClient* in = CreateTestClient(natsf, internal_addr);
-  TestClient* out[4];
-  for (int i = 0; i < 4; i++)
-    out[i] = CreateTestClient(external, external_addrs[i]);
-
   th_int.Start();
   th_ext.Start();
+
+  TestClient* in;
+  th_int.BlockingCall([&] { in = CreateTestClient(natsf, internal_addr); });
+
+  TestClient* out[4];
+  th_ext.BlockingCall([&] {
+    for (int i = 0; i < 4; i++)
+      out[i] = CreateTestClient(external, external_addrs[i]);
+  });
 
   const char* buf = "filter_test";
   size_t len = strlen(buf);
 
-  in->SendTo(buf, len, out[0]->address());
+  th_int.BlockingCall([&] { in->SendTo(buf, len, out[0]->address()); });
   SocketAddress trans_addr;
-  EXPECT_TRUE(out[0]->CheckNextPacket(buf, len, &trans_addr));
+  th_ext.BlockingCall(
+      [&] { EXPECT_TRUE(out[0]->CheckNextPacket(buf, len, &trans_addr)); });
 
   for (int i = 1; i < 4; i++) {
-    in->SendTo(buf, len, out[i]->address());
+    th_int.BlockingCall([&] { in->SendTo(buf, len, out[i]->address()); });
     SocketAddress trans_addr2;
-    EXPECT_TRUE(out[i]->CheckNextPacket(buf, len, &trans_addr2));
-    bool are_same = (trans_addr == trans_addr2);
-    ASSERT_EQ(are_same, exp_same) << "same translated address";
-    ASSERT_NE(AF_UNSPEC, trans_addr.family());
-    ASSERT_NE(AF_UNSPEC, trans_addr2.family());
+    th_ext.BlockingCall([&] {
+      EXPECT_TRUE(out[i]->CheckNextPacket(buf, len, &trans_addr2));
+      bool are_same = (trans_addr == trans_addr2);
+      ASSERT_EQ(are_same, exp_same) << "same translated address";
+      ASSERT_NE(AF_UNSPEC, trans_addr.family());
+      ASSERT_NE(AF_UNSPEC, trans_addr2.family());
+    });
   }
 
   th_int.Stop();
@@ -134,29 +144,39 @@ void TestRecv(SocketServer* internal,
   NATSocketFactory* natsf = new NATSocketFactory(
       internal, nat->internal_udp_address(), nat->internal_tcp_address());
 
-  TestClient* in = CreateTestClient(natsf, internal_addr);
-  TestClient* out[4];
-  for (int i = 0; i < 4; i++)
-    out[i] = CreateTestClient(external, external_addrs[i]);
-
   th_int.Start();
   th_ext.Start();
+
+  TestClient* in = nullptr;
+  th_int.BlockingCall([&] { in = CreateTestClient(natsf, internal_addr); });
+
+  TestClient* out[4];
+  th_ext.BlockingCall([&] {
+    for (int i = 0; i < 4; i++)
+      out[i] = CreateTestClient(external, external_addrs[i]);
+  });
 
   const char* buf = "filter_test";
   size_t len = strlen(buf);
 
-  in->SendTo(buf, len, out[0]->address());
+  th_int.BlockingCall([&] { in->SendTo(buf, len, out[0]->address()); });
   SocketAddress trans_addr;
-  EXPECT_TRUE(out[0]->CheckNextPacket(buf, len, &trans_addr));
+  th_ext.BlockingCall(
+      [&] { EXPECT_TRUE(out[0]->CheckNextPacket(buf, len, &trans_addr)); });
 
-  out[1]->SendTo(buf, len, trans_addr);
-  EXPECT_TRUE(CheckReceive(in, !filter_ip, buf, len));
+  th_ext.BlockingCall([&] { out[1]->SendTo(buf, len, trans_addr); });
+  th_int.BlockingCall(
+      [&] { EXPECT_TRUE(CheckReceive(in, !filter_ip, buf, len)); });
+  th_ext.BlockingCall([&] { out[2]->SendTo(buf, len, trans_addr); });
 
-  out[2]->SendTo(buf, len, trans_addr);
-  EXPECT_TRUE(CheckReceive(in, !filter_port, buf, len));
+  th_int.BlockingCall(
+      [&] { EXPECT_TRUE(CheckReceive(in, !filter_port, buf, len)); });
 
-  out[3]->SendTo(buf, len, trans_addr);
-  EXPECT_TRUE(CheckReceive(in, !filter_ip && !filter_port, buf, len));
+  th_ext.BlockingCall([&] { out[3]->SendTo(buf, len, trans_addr); });
+
+  th_int.BlockingCall([&] {
+    EXPECT_TRUE(CheckReceive(in, !filter_ip && !filter_port, buf, len));
+  });
 
   th_int.Stop();
   th_ext.Stop();
