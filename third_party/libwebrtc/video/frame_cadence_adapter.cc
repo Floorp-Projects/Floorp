@@ -252,7 +252,7 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
  private:
   // Called from OnFrame in both pass-through and zero-hertz mode.
   void OnFrameOnMainQueue(Timestamp post_time,
-                          int frames_scheduled_for_processing,
+                          bool queue_overload,
                           const VideoFrame& frame) RTC_RUN_ON(queue_);
 
   // Returns true under all of the following conditions:
@@ -719,13 +719,11 @@ void FrameCadenceAdapterImpl::OnConstraintsChanged(
   }));
 }
 
-void FrameCadenceAdapterImpl::OnFrameOnMainQueue(
-    Timestamp post_time,
-    int frames_scheduled_for_processing,
-    const VideoFrame& frame) {
+void FrameCadenceAdapterImpl::OnFrameOnMainQueue(Timestamp post_time,
+                                                 bool queue_overload,
+                                                 const VideoFrame& frame) {
   RTC_DCHECK_RUN_ON(queue_);
-  current_adapter_mode_->OnFrame(post_time, frames_scheduled_for_processing,
-                                 frame);
+  current_adapter_mode_->OnFrame(post_time, queue_overload, frame);
 }
 
 bool FrameCadenceAdapterImpl::IsZeroHertzScreenshareEnabled() const {
