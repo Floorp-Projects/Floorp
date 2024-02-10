@@ -1418,6 +1418,7 @@ rtc_library("video_codec_tester") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_event",
+    "../rtc_base:stringutils",
     "../rtc_base:task_queue_for_test",
     "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
