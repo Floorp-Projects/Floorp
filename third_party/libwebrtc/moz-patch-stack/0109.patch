@@ -1,0 +1,22 @@
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Fri, 9 Feb 2024 15:02:00 -0500
+Subject: Bug 1876843 - (fix-b29ff000da) remove mozilla dependency on
+ api:enable_media
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7f403ee038e9797a1aff6161fc70a2d92769851f
+---
+ BUILD.gn | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index 0b42b2e049..7feca08e60 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -545,6 +545,7 @@ if (!build_with_chromium) {
+     if (build_with_mozilla) {
+       deps -= [
+         "api:create_peerconnection_factory",
++        "api:enable_media",
+         "api:rtc_error",
+         "api:transport_api",
+         "api/crypto",
