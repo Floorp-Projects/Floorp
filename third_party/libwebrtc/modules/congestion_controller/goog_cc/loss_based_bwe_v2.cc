@@ -463,12 +463,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool>
       not_increase_if_inherent_loss_less_than_average_loss(
           "NotIncreaseIfInherentLossLessThanAverageLoss", true);
-  FieldTrialParameter<double> high_loss_rate_threshold("HighLossRateThreshold",
-                                                       1.0);
-  FieldTrialParameter<DataRate> bandwidth_cap_at_high_loss_rate(
-      "BandwidthCapAtHighLossRate", DataRate::KilobitsPerSec(500.0));
-  FieldTrialParameter<double> slope_of_bwe_high_loss_func(
-      "SlopeOfBweHighLossFunc", 1000);
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
                                                       true);
   FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
@@ -509,9 +503,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &max_increase_factor,
                      &delayed_increase_window,
                      &not_increase_if_inherent_loss_less_than_average_loss,
-                     &high_loss_rate_threshold,
-                     &bandwidth_cap_at_high_loss_rate,
-                     &slope_of_bwe_high_loss_func,
                      &not_use_acked_rate_in_alr,
                      &use_in_start_phase,
                      &min_num_observations,
@@ -571,10 +562,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->delayed_increase_window = delayed_increase_window.Get();
   config->not_increase_if_inherent_loss_less_than_average_loss =
       not_increase_if_inherent_loss_less_than_average_loss.Get();
-  config->high_loss_rate_threshold = high_loss_rate_threshold.Get();
-  config->bandwidth_cap_at_high_loss_rate =
-      bandwidth_cap_at_high_loss_rate.Get();
-  config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
   config->use_in_start_phase = use_in_start_phase.Get();
   config->min_num_observations = min_num_observations.Get();
@@ -755,12 +742,6 @@ bool LossBasedBweV2::IsConfigValid() const {
   if (config_->delayed_increase_window <= TimeDelta::Zero()) {
     RTC_LOG(LS_WARNING) << "The delayed increase window must be positive: "
                         << config_->delayed_increase_window.ms();
-    valid = false;
-  }
-  if (config_->high_loss_rate_threshold <= 0.0 ||
-      config_->high_loss_rate_threshold > 1.0) {
-    RTC_LOG(LS_WARNING) << "The high loss rate threshold must be in (0, 1]: "
-                        << config_->high_loss_rate_threshold;
     valid = false;
   }
   if (config_->min_num_observations <= 0) {
@@ -1058,14 +1039,6 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
     instant_limit = config_->instant_upper_bound_bandwidth_balance /
                     (average_reported_loss_ratio -
                      config_->instant_upper_bound_loss_offset);
-    if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
-      instant_limit = std::min(
-          instant_limit, DataRate::KilobitsPerSec(std::max(
-                             static_cast<double>(min_bitrate_.kbps()),
-                             config_->bandwidth_cap_at_high_loss_rate.kbps() -
-                                 config_->slope_of_bwe_high_loss_func *
-                                     average_reported_loss_ratio)));
-    }
   }
 
   cached_instant_upper_bound_ = instant_limit;
