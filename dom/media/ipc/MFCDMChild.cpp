@@ -399,6 +399,23 @@ RefPtr<GenericPromise> MFCDMChild::SetServerCertificate(
   return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
+RefPtr<GenericPromise> MFCDMChild::GetStatusForPolicy(
+    uint32_t aPromiseId, const dom::HDCPVersion& aMinHdcpVersion) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
+  INVOKE_ASYNC(GetStatusForPolicy, aPromiseId, aMinHdcpVersion);
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
+}
+
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
     const MFCDMKeyMessage& aMessage) {
   LOG("RecvOnSessionKeyMessage, sessionId=%s",

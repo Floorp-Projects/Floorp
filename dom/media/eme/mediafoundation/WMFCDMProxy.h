@@ -100,7 +100,7 @@ class WMFCDMProxy : public CDMProxy {
   void OnKeyStatusesChange(const nsAString& aSessionId) override;
 
   void GetStatusForPolicy(PromiseId aPromiseId,
-                          const dom::HDCPVersion& aMinHdcpVersion) override {}
+                          const dom::HDCPVersion& aMinHdcpVersion) override;
 
 #ifdef DEBUG
   bool IsOnOwnerThread() override {
@@ -125,6 +125,10 @@ class WMFCDMProxy : public CDMProxy {
                                  const nsCString& aReason);
   // Reject promise with an InvalidStateError and the given message.
   void RejectPromiseWithStateError(PromiseId aId, const nsCString& aReason);
+
+  // For HDCP GetStatusForPolicy usage.
+  void ResolvePromiseWithKeyStatus(const PromiseId& aId,
+                                   const dom::MediaKeyStatus& aStatus);
 
   CopyableTArray<MFCDMMediaCapability> GenerateMFCDMMediaCapabilities(
       const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities,

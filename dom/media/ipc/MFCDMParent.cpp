@@ -10,6 +10,7 @@
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
 #include <propvarutil.h>  // For InitPropVariantFrom*()
 
+#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/ipc/UtilityAudioDecoderChild.h"
@@ -151,6 +152,18 @@ static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
   } else {
     return L"unknown";
   }
+}
+
+// The HDCP value follows the feature value in
+// https://docs.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
+// - 1 (on without HDCP 2.2 Type 1 restriction)
+// - 2 (on with HDCP 2.2 Type 1 restriction)
+static nsString GetHdcpPolicy(const dom::HDCPVersion& aMinHdcpVersion) {
+  if (aMinHdcpVersion == dom::HDCPVersion::_2_2 ||
+      aMinHdcpVersion == dom::HDCPVersion::_2_3) {
+    return nsString(u"hdcp=2");
+  }
+  return nsString(u"hdcp=1");
 }
 
 static void BuildCapabilitiesArray(
@@ -1086,6 +1099,25 @@ mozilla::ipc::IPCResult MFCDMParent::RecvSetServerCertificate(
                              static_cast<const BYTE*>(aCertificate.Elements()),
                              aCertificate.Length()),
                          NS_ERROR_DOM_MEDIA_CDM_ERR);
+  aResolver(rv);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
+    const dom::HDCPVersion& aMinHdcpVersion,
+    GetStatusForPolicyResolver&& aResolver) {
+  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
+  nsresult rv = NS_OK;
+
+  // Codec doesn't matter when querying the HDCP policy, so use H264.
+  if (!FactorySupports(mFactory, mKeySystem, nsCString("avc1"),
+                       KeySystemConfig::EMECodecString(""),
+                       GetHdcpPolicy(aMinHdcpVersion))) {
+    rv = NS_ERROR_DOM_MEDIA_CDM_HDCP_NOT_SUPPORT;
+  }
+  MFCDM_PARENT_LOG("Get status for HDCP policy %s : %s",
+                   dom::HDCPVersionValues::GetString(aMinHdcpVersion).data(),
+                   rv == NS_OK ? "usable" : "output-restricted");
   aResolver(rv);
   return IPC_OK();
 }
