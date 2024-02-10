@@ -332,8 +332,12 @@ class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
   // SignalNetworkRouteChanged.
   sigslot::signal2<IceTransportInternal*, const Candidate&> SignalRouteChange;
 
-  sigslot::signal1<const cricket::CandidatePairChangeEvent&>
-      SignalCandidatePairChanged;
+  void SetCandidatePairChangeCallback(
+      absl::AnyInvocable<void(const cricket::CandidatePairChangeEvent&)>
+          callback) {
+    RTC_DCHECK(!candidate_pair_change_callback_);
+    candidate_pair_change_callback_ = std::move(callback);
+  }
 
   // Invoked when there is conflict in the ICE role between local and remote
   // agents.
@@ -386,6 +390,9 @@ class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
 
   absl::AnyInvocable<void(IceTransportInternal*, const Candidates&)>
       candidates_removed_callback_;
+
+  absl::AnyInvocable<void(const cricket::CandidatePairChangeEvent&)>
+      candidate_pair_change_callback_;
 };
 
 }  // namespace cricket
