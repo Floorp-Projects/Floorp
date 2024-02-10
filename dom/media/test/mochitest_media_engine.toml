@@ -6,3 +6,5 @@ skip-if = ["!wmfme"]
 ["test_eme_mfcdm_generate_request.html"]
 
 ["test_eme_wideinve_l1_installation.html"]
+
+["test_eme_mfcdm_getstatusforpolicy.html"]
