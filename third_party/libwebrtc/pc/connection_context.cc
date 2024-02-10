@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/environment/environment.h"
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/media_engine.h"
 #include "media/sctp/sctp_transport_factory.h"
@@ -114,7 +115,8 @@ ConnectionContext::ConnectionContext(
       env_(env),
       media_engine_(
           dependencies->media_factory != nullptr
-              ? dependencies->media_factory->CreateMediaEngine(*dependencies)
+              ? dependencies->media_factory->CreateMediaEngine(env_,
+                                                               *dependencies)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
               : std::move(dependencies->media_engine)),

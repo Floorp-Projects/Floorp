@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/base/nullability.h"
+#include "api/environment/environment.h"
 #include "api/peer_connection_interface.h"
 #include "call/call.h"
 #include "call/call_config.h"
@@ -40,6 +41,7 @@ void EnableFakeMedia(
     }
 
     std::unique_ptr<MediaEngineInterface> CreateMediaEngine(
+        const Environment& /*env*/,
         PeerConnectionFactoryDependencies& /*dependencies*/) {
       RTC_CHECK(fake_ != nullptr)
           << "CreateMediaEngine can be called at most once.";

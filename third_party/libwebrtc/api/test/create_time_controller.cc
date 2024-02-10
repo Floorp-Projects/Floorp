@@ -15,6 +15,7 @@
 
 #include "absl/base/nullability.h"
 #include "api/enable_media_with_defaults.h"
+#include "api/environment/environment.h"
 #include "api/peer_connection_interface.h"
 #include "call/call.h"
 #include "call/rtp_transport_config.h"
@@ -74,8 +75,9 @@ void EnableMediaWithDefaultsAndTimeController(
     }
 
     std::unique_ptr<cricket::MediaEngineInterface> CreateMediaEngine(
+        const Environment& env,
         PeerConnectionFactoryDependencies& dependencies) override {
-      return media_factory_->CreateMediaEngine(dependencies);
+      return media_factory_->CreateMediaEngine(env, dependencies);
     }
 
    private:
