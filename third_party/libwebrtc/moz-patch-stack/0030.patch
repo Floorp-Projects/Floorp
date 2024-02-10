@@ -106,7 +106,7 @@ index b9948d2fcd..77cfa94d8a 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index baf8b0951d..201bb80a09 100644
+index 571049f3e4..24341e7216 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -193,7 +193,7 @@ index baf8b0951d..201bb80a09 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index e57092ee34..03dd75f011 100644
+index c187a7d296..4edf177bcc 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -74,7 +74,7 @@ rtc_source_set("enable_media_with_defaults") {
@@ -204,7 +204,7 @@ index e57092ee34..03dd75f011 100644
 +if (!build_with_chromium && !build_with_mozilla) {
    rtc_library("create_peerconnection_factory") {
      visibility = [ "*" ]
-     allow_poison = [ "default_task_queue" ]
+     allow_poison = [ "environment_construction" ]
 @@ -227,6 +227,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
@@ -407,7 +407,7 @@ index 0000000000..45194f5ace
 +
 +#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
 diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index e0e2e50514..8d845e2735 100644
+index 246164c68b..d557d8f100 100644
 --- a/api/task_queue/BUILD.gn
 +++ b/api/task_queue/BUILD.gn
 @@ -31,6 +31,7 @@ rtc_library("task_queue") {
@@ -558,7 +558,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index d12c9296ae..0386fdef64 100644
+index 6b8eaf700b..9307598c5c 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -1303,7 +1303,7 @@ index 1722ad4f6e..e84b73a352 100644
      "../api/adaptation:resource_adaptation_api",
      "../api/task_queue:pending_task_safety_flag",
 diff --git a/webrtc.gni b/webrtc.gni
-index 912b9b4ef0..1ee647b69d 100644
+index 277c12c054..c84464e84a 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1403,7 +1403,7 @@ index 912b9b4ef0..1ee647b69d 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1144,7 +1154,7 @@ if (is_mac || is_ios) {
+@@ -1146,7 +1156,7 @@ if (is_mac || is_ios) {
    }
  }
  

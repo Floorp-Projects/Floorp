@@ -853,10 +853,10 @@ rtc_static_library("dcsctp") {
 group("poison_audio_codecs") {
 }
 
-group("poison_default_task_queue") {
+group("poison_default_echo_detector") {
 }
 
-group("poison_default_echo_detector") {
+group("poison_environment_construction") {
 }
 
 group("poison_software_video_codecs") {

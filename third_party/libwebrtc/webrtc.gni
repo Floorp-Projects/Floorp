@@ -484,11 +484,13 @@ all_poison_types = [
   # Encoders and decoders for specific audio codecs such as Opus and iSAC.
   "audio_codecs",
 
-  # Default task queue implementation.
-  "default_task_queue",
-
   # Default echo detector implementation.
   "default_echo_detector",
+
+  # Implementations of the utilities exposed through `Environment`.
+  # Most webrtc classes must use propagated `Environment`. Only few top-level
+  # classes are allowed to create `Environment` from individual utilities.
+  "environment_construction",
 
   # Software video codecs (VP8 and VP9 through libvpx).
   "software_video_codecs",
