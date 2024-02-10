@@ -329,14 +329,9 @@ TEST_F(NetEqImplTest, InsertPacket) {
   EXPECT_CALL(*mock_packet_buffer_, Empty())
       .WillOnce(Return(false));  // Called once after first packet is inserted.
   EXPECT_CALL(*mock_packet_buffer_, Flush()).Times(1);
-  EXPECT_CALL(*mock_packet_buffer_, InsertPacketList(_, _, _, _))
+  EXPECT_CALL(*mock_packet_buffer_, InsertPacket(_))
       .Times(2)
-      .WillRepeatedly(DoAll(SetArgPointee<2>(kPayloadType),
-                            WithArg<0>(Invoke(DeletePacketsAndReturnOk))));
-  // SetArgPointee<2>(kPayloadType) means that the third argument (zero-based
-  // index) is a pointer, and the variable pointed to is set to kPayloadType.
-  // Also invoke the function DeletePacketsAndReturnOk to properly delete all
-  // packets in the list (to avoid memory leaks in the test).
+      .WillRepeatedly(Return(PacketBuffer::kOK));
   EXPECT_CALL(*mock_packet_buffer_, PeekNextPacket())
       .Times(1)
       .WillOnce(Return(&fake_packet));
@@ -1640,6 +1635,74 @@ TEST_F(NetEqImplTest, NoCrashWith1000Channels) {
     // GetAudio should return an error, and not crash, even in muted state.
     EXPECT_NE(0, neteq_->GetAudio(&audio_frame, &muted));
   }
+}
+
+// The test first inserts a packet with narrow-band CNG, then a packet with
+// wide-band speech. The expected behavior is to detect a change in sample rate,
+// even though no speech packet has been inserted before, and flush out the CNG
+// packet.
+TEST_F(NetEqImplTest, CngFirstThenSpeechWithNewSampleRate) {
+  UseNoMocks();
+  CreateInstance();
+  constexpr int kCnPayloadType = 7;
+  neteq_->RegisterPayloadType(kCnPayloadType, SdpAudioFormat("cn", 8000, 1));
+  constexpr int kSpeechPayloadType = 8;
+  neteq_->RegisterPayloadType(kSpeechPayloadType,
+                              SdpAudioFormat("l16", 16000, 1));
+
+  RTPHeader header;
+  header.payloadType = kCnPayloadType;
+  uint8_t payload[320] = {0};
+
+  EXPECT_EQ(neteq_->InsertPacket(header, payload), NetEq::kOK);
+  EXPECT_EQ(neteq_->GetLifetimeStatistics().packets_discarded, 0u);
+
+  header.payloadType = kSpeechPayloadType;
+  header.timestamp += 160;
+  EXPECT_EQ(neteq_->InsertPacket(header, payload), NetEq::kOK);
+  // CN packet should be discarded, since it does not match the
+  // new speech sample rate.
+  EXPECT_EQ(neteq_->GetLifetimeStatistics().packets_discarded, 1u);
+
+  // Next decoded packet should be speech.
+  AudioFrame audio_frame;
+  bool muted;
+  EXPECT_EQ(neteq_->GetAudio(&audio_frame, &muted), NetEq::kOK);
+  EXPECT_EQ(audio_frame.sample_rate_hz(), 16000);
+  EXPECT_EQ(audio_frame.speech_type_, AudioFrame::SpeechType::kNormalSpeech);
+}
+
+TEST_F(NetEqImplTest, InsertPacketChangePayloadType) {
+  UseNoMocks();
+  CreateInstance();
+  constexpr int kPcmuPayloadType = 7;
+  neteq_->RegisterPayloadType(kPcmuPayloadType,
+                              SdpAudioFormat("pcmu", 8000, 1));
+  constexpr int kPcmaPayloadType = 8;
+  neteq_->RegisterPayloadType(kPcmaPayloadType,
+                              SdpAudioFormat("pcma", 8000, 1));
+
+  RTPHeader header;
+  header.payloadType = kPcmuPayloadType;
+  header.timestamp = 1234;
+  uint8_t payload[160] = {0};
+
+  EXPECT_EQ(neteq_->InsertPacket(header, payload), NetEq::kOK);
+  EXPECT_EQ(neteq_->GetLifetimeStatistics().packets_discarded, 0u);
+
+  header.payloadType = kPcmaPayloadType;
+  header.timestamp += 80;
+  EXPECT_EQ(neteq_->InsertPacket(header, payload), NetEq::kOK);
+  // The previous packet should be discarded since the codec changed.
+  EXPECT_EQ(neteq_->GetLifetimeStatistics().packets_discarded, 1u);
+
+  // Next decoded packet should be speech.
+  AudioFrame audio_frame;
+  bool muted;
+  EXPECT_EQ(neteq_->GetAudio(&audio_frame, &muted), NetEq::kOK);
+  EXPECT_EQ(audio_frame.sample_rate_hz(), 8000);
+  EXPECT_EQ(audio_frame.speech_type_, AudioFrame::SpeechType::kNormalSpeech);
+  // TODO(jakobi): check active decoder.
 }
 
 class Decoder120ms : public AudioDecoder {
