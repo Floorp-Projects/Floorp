@@ -16,8 +16,10 @@
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/mock_dns_resolving_packet_socket_factory.h"
 #include "p2p/base/test_stun_server.h"
+#include "rtc_base/async_packet_socket.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/virtual_socket_server.h"
@@ -160,7 +162,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
           rtc::SocketAddress(kLocalAddr.ipaddr(), 0), 0, 0));
     }
     ASSERT_TRUE(socket_ != NULL);
-    socket_->SignalReadPacket.connect(this, &StunPortTestBase::OnReadPacket);
+    socket_->RegisterReceivedPacketCallback(
+        [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+          OnReadPacket(socket, packet);
+        });
     stun_port_ = cricket::UDPPort::Create(
         rtc::Thread::Current(), socket_factory(), &network_, socket_.get(),
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), false,
@@ -178,18 +183,15 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   void PrepareAddress() { stun_port_->PrepareAddress(); }
 
   void OnReadPacket(rtc::AsyncPacketSocket* socket,
-                    const char* data,
-                    size_t size,
-                    const rtc::SocketAddress& remote_addr,
-                    const int64_t& /* packet_time_us */) {
-    stun_port_->HandleIncomingPacket(socket, data, size, remote_addr,
-                                     /* packet_time_us */ -1);
+                    const rtc::ReceivedPacket& packet) {
+    stun_port_->HandleIncomingPacket(socket, packet);
   }
 
   void SendData(const char* data, size_t len) {
-    stun_port_->HandleIncomingPacket(socket_.get(), data, len,
-                                     rtc::SocketAddress("22.22.22.22", 0),
-                                     /* packet_time_us */ -1);
+    stun_port_->HandleIncomingPacket(socket_.get(),
+                                     rtc::ReceivedPacket::CreateFromLegacy(
+                                         data, len, /* packet_time_us */ -1,
+                                         rtc::SocketAddress("22.22.22.22", 0)));
   }
 
   void EnableMdnsObfuscation() {
