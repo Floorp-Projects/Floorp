@@ -615,7 +615,7 @@ rtc_library("rtc_media_engine_defaults") {
   visibility = [ "*" ]
   allow_poison = [
     "audio_codecs",
-    "default_task_queue",
+    "environment_construction",
     "software_video_codecs",
   ]
   sources = [

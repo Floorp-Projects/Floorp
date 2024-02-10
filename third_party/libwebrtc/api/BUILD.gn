@@ -57,7 +57,7 @@ rtc_source_set("enable_media_with_defaults") {
   visibility = [ "*" ]
   allow_poison = [
     "audio_codecs",
-    "default_task_queue",
+    "environment_construction",
     "software_video_codecs",
   ]
   sources = [
@@ -80,7 +80,7 @@ rtc_source_set("enable_media_with_defaults") {
 if (!build_with_chromium && !build_with_mozilla) {
   rtc_library("create_peerconnection_factory") {
     visibility = [ "*" ]
-    allow_poison = [ "default_task_queue" ]
+    allow_poison = [ "environment_construction" ]
     sources = [
       "create_peerconnection_factory.cc",
       "create_peerconnection_factory.h",
