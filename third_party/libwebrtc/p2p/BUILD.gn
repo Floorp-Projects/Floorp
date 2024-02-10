@@ -397,6 +397,7 @@ rtc_library("libstunprober") {
 
   deps = [
     ":rtc_p2p",
+    "../api:array_view",
     "../api:async_dns_resolver",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
@@ -414,6 +415,7 @@ rtc_library("libstunprober") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/network:received_packet",
     "../rtc_base/system:rtc_export",
   ]
 }
