@@ -212,7 +212,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     metrics::Reset();
     rtc::scoped_refptr<AudioDeviceModule> fake_audio_device =
         TestAudioDeviceModule::Create(
-            task_queue_factory_.get(),
+            &env().task_queue_factory(),
             TestAudioDeviceModule::CreatePulsedNoiseCapturer(256, 48000),
             TestAudioDeviceModule::CreateDiscardRenderer(48000),
             audio_rtp_speed);
@@ -223,12 +223,12 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     send_audio_state_config.audio_processing =
         AudioProcessingBuilder().Create();
     send_audio_state_config.audio_device_module = fake_audio_device;
-    CallConfig sender_config(send_event_log_.get());
+    CallConfig sender_config = SendCallConfig();
 
     auto audio_state = AudioState::Create(send_audio_state_config);
     fake_audio_device->RegisterAudioCallback(audio_state->audio_transport());
     sender_config.audio_state = audio_state;
-    CallConfig receiver_config(recv_event_log_.get());
+    CallConfig receiver_config = RecvCallConfig();
     receiver_config.audio_state = audio_state;
     CreateCalls(sender_config, receiver_config);
 
@@ -319,7 +319,8 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     }
     EXPECT_EQ(1u, video_receive_streams_.size());
     observer->set_receive_stream(video_receive_streams_[0]);
-    drifting_clock = std::make_unique<DriftingClock>(clock_, video_ntp_speed);
+    drifting_clock =
+        std::make_unique<DriftingClock>(&env().clock(), video_ntp_speed);
     CreateFrameGeneratorCapturerWithDrift(
         drifting_clock.get(), video_rtp_speed,
         test::VideoTestConstants::kDefaultFramerate,

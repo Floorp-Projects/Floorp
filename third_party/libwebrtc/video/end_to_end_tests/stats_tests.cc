@@ -518,9 +518,9 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
 
   metrics::Reset();
 
-  CallConfig send_config(send_event_log_.get());
+  CallConfig send_config = SendCallConfig();
   test.ModifySenderBitrateConfig(&send_config.bitrate_config);
-  CallConfig recv_config(recv_event_log_.get());
+  CallConfig recv_config = RecvCallConfig();
   test.ModifyReceiverBitrateConfig(&recv_config.bitrate_config);
 
   VideoEncoderConfig encoder_config_with_screenshare;
@@ -732,13 +732,13 @@ TEST_F(StatsEndToEndTest, CallReportsRttForSender) {
     Start();
   });
 
-  int64_t start_time_ms = clock_->TimeInMilliseconds();
+  int64_t start_time_ms = env().clock().TimeInMilliseconds();
   while (true) {
     Call::Stats stats;
     SendTask(task_queue(),
              [this, &stats]() { stats = sender_call_->GetStats(); });
     ASSERT_GE(start_time_ms + test::VideoTestConstants::kDefaultTimeout.ms(),
-              clock_->TimeInMilliseconds())
+              env().clock().TimeInMilliseconds())
         << "No RTT stats before timeout!";
     if (stats.rtt_ms != -1) {
       // To avoid failures caused by rounding or minor ntp clock adjustments,
