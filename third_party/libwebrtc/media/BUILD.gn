@@ -858,6 +858,8 @@ if (rtc_include_tests) {
         "../api:simulcast_test_fixture_api",
         "../api/audio_codecs:builtin_audio_decoder_factory",
         "../api/audio_codecs:builtin_audio_encoder_factory",
+        "../api/environment",
+        "../api/environment:environment_factory",
         "../api/rtc_event_log",
         "../api/task_queue",
         "../api/task_queue:default_task_queue_factory",
