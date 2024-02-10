@@ -1,85 +1,218 @@
 From: Jan-Ivar Bruaroey <jan-ivar@users.noreply.github.com>
-Date: Sat, 10 Feb 2024 17:42:56 -0500
-Subject: (tmp-cherry-pick) Revert "Correctly const-qualify return value of
- IceControllerInterface::connections()." (c925f50c1c)
+Date: Sat, 10 Feb 2024 17:47:37 -0500
+Subject: (tmp-cherry-pick) Revert "Delete deprecated SetMediaEngineDefaults"
+ (c176175f01)
 
-This reverts commit ad631f0d353011b8d4282577310abb48bf60ff67.
+This reverts commit 1682a7f41135d9529917c0f8e5b6a57fbb47220a.
 
-Reason for revert: error: virtual function 'connections' has a different return type ('ArrayView<const cricket::Connection *>') than the function it overrides (which has return type 'ArrayView<const Connection *const>')
+Reason for revert: Breaks chromium import: https://chromium-review.googlesource.com/c/chromium/src/+/5083877?tab=checks
 
 Original change's description:
-> Correctly const-qualify return value of IceControllerInterface::connections().
+> Delete deprecated SetMediaEngineDefaults
 >
-> This is intended to be a read-only view across a container of const
-> Connection*, but due to the missing const, elements of the container
-> could actually be re-assigned through the ArrayView.
->
-> This was discovered when trying to roll Googletest, since Googletest was
-> fixed to const-qualify converting actions:
-> https://github.com/google/googletest/commit/cbca6bc3957b28b8062f20b65f9349d94a4bf0b3
->
-> Bug: chromium:1409870
-> Change-Id: Iadd3abe6807111987e422b8510a23f2a4f7026ed
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/329481
-> Auto-Submit: Daniel Cheng <dcheng@chromium.org>
+> Bug: webrtc:15574
+> Change-Id: Ie60973e020ca91ca93ca46159d53d4a89d1757fe
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/326004
 > Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Auto-Submit: Danil Chapovalov <danilchap@webrtc.org>
+> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
 > Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Daniel Cheng <dcheng@chromium.org>
-> Cr-Commit-Position: refs/heads/main@{#41300}
+> Cr-Commit-Position: refs/heads/main@{#41304}
 
-Bug: chromium:1409870
-Change-Id: Id0026eb7727a3d1408045d0040b3b080cca07832
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/329762
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Bug: webrtc:15574
+Change-Id: Id09c8e1682831032e84a83187c6905a84e68d736
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/329842
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Manashi Sarkar <manashi@google.com>
-Cr-Commit-Position: refs/heads/main@{#41307}
+Auto-Submit: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41312}
 ---
- p2p/base/basic_ice_controller.h     | 6 ++++--
- p2p/base/ice_controller_interface.h | 2 +-
- p2p/base/mock_ice_controller.h      | 2 +-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+ media/BUILD.gn                               | 28 +++++++++++++
+ media/engine/webrtc_media_engine_defaults.cc | 43 ++++++++++++++++++++
+ media/engine/webrtc_media_engine_defaults.h  | 30 ++++++++++++++
+ media/engine/webrtc_media_engine_unittest.cc | 17 ++++++++
+ pc/BUILD.gn                                  |  1 +
+ 5 files changed, 119 insertions(+)
+ create mode 100644 media/engine/webrtc_media_engine_defaults.cc
+ create mode 100644 media/engine/webrtc_media_engine_defaults.h
 
-diff --git a/p2p/base/basic_ice_controller.h b/p2p/base/basic_ice_controller.h
-index ba14d80474..b941a0dd7e 100644
---- a/p2p/base/basic_ice_controller.h
-+++ b/p2p/base/basic_ice_controller.h
-@@ -32,8 +32,10 @@ class BasicIceController : public IceControllerInterface {
-   void SetSelectedConnection(const Connection* selected_connection) override;
-   void AddConnection(const Connection* connection) override;
-   void OnConnectionDestroyed(const Connection* connection) override;
--  rtc::ArrayView<const Connection* const> connections() const override {
--    return connections_;
-+  rtc::ArrayView<const Connection*> connections() const override {
-+    return rtc::ArrayView<const Connection*>(
-+        const_cast<const Connection**>(connections_.data()),
-+        connections_.size());
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 295a748802..3f18a79792 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -576,6 +576,33 @@ rtc_library("rtc_audio_video") {
    }
+ }
  
-   bool HasPingableConnection() const override;
-diff --git a/p2p/base/ice_controller_interface.h b/p2p/base/ice_controller_interface.h
-index adedf4c604..8b63ed3fc3 100644
---- a/p2p/base/ice_controller_interface.h
-+++ b/p2p/base/ice_controller_interface.h
-@@ -101,7 +101,7 @@ class IceControllerInterface {
-   virtual void OnConnectionDestroyed(const Connection* connection) = 0;
++# Heavy but optional helper for unittests and webrtc users who prefer to use
++# defaults factories or do not worry about extra dependencies and binary size.
++rtc_library("rtc_media_engine_defaults") {
++  visibility = [ "*" ]
++  allow_poison = [
++    "audio_codecs",
++    "environment_construction",
++    "software_video_codecs",
++  ]
++  sources = [
++    "engine/webrtc_media_engine_defaults.cc",
++    "engine/webrtc_media_engine_defaults.h",
++  ]
++  deps = [
++    ":rtc_audio_video",
++    "../api/audio_codecs:builtin_audio_decoder_factory",
++    "../api/audio_codecs:builtin_audio_encoder_factory",
++    "../api/task_queue:default_task_queue_factory",
++    "../api/video:builtin_video_bitrate_allocator_factory",
++    "../api/video_codecs:builtin_video_decoder_factory",
++    "../api/video_codecs:builtin_video_encoder_factory",
++    "../modules/audio_processing:api",
++    "../rtc_base:checks",
++    "../rtc_base/system:rtc_export",
++  ]
++}
++
+ rtc_source_set("rtc_data_sctp_transport_internal") {
+   sources = [ "sctp/sctp_transport_internal.h" ]
+   deps = [
+@@ -778,6 +805,7 @@ if (rtc_include_tests) {
+         ":rtc_internal_video_codecs",
+         ":rtc_media",
+         ":rtc_media_base",
++        ":rtc_media_engine_defaults",
+         ":rtc_media_tests_utils",
+         ":rtc_sdp_video_format_utils",
+         ":rtc_simulcast_encoder_adapter",
+diff --git a/media/engine/webrtc_media_engine_defaults.cc b/media/engine/webrtc_media_engine_defaults.cc
+new file mode 100644
+index 0000000000..fed646610b
+--- /dev/null
++++ b/media/engine/webrtc_media_engine_defaults.cc
+@@ -0,0 +1,43 @@
++/*
++ *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
++ *
++ *  Use of this source code is governed by a BSD-style license
++ *  that can be found in the LICENSE file in the root of the source
++ *  tree. An additional intellectual property rights grant can be found
++ *  in the file PATENTS.  All contributing project authors may
++ *  be found in the AUTHORS file in the root of the source tree.
++ */
++#include "media/engine/webrtc_media_engine_defaults.h"
++
++#include "api/audio_codecs/builtin_audio_decoder_factory.h"
++#include "api/audio_codecs/builtin_audio_encoder_factory.h"
++#include "api/task_queue/default_task_queue_factory.h"
++#include "api/video/builtin_video_bitrate_allocator_factory.h"
++#include "api/video_codecs/builtin_video_decoder_factory.h"
++#include "api/video_codecs/builtin_video_encoder_factory.h"
++#include "modules/audio_processing/include/audio_processing.h"
++#include "rtc_base/checks.h"
++
++namespace webrtc {
++
++void DeprecatedSetMediaEngineDefaults(cricket::MediaEngineDependencies* deps) {
++  RTC_DCHECK(deps);
++  if (deps->task_queue_factory == nullptr) {
++    static TaskQueueFactory* const task_queue_factory =
++        CreateDefaultTaskQueueFactory().release();
++    deps->task_queue_factory = task_queue_factory;
++  }
++  if (deps->audio_encoder_factory == nullptr)
++    deps->audio_encoder_factory = CreateBuiltinAudioEncoderFactory();
++  if (deps->audio_decoder_factory == nullptr)
++    deps->audio_decoder_factory = CreateBuiltinAudioDecoderFactory();
++  if (deps->audio_processing == nullptr)
++    deps->audio_processing = AudioProcessingBuilder().Create();
++
++  if (deps->video_encoder_factory == nullptr)
++    deps->video_encoder_factory = CreateBuiltinVideoEncoderFactory();
++  if (deps->video_decoder_factory == nullptr)
++    deps->video_decoder_factory = CreateBuiltinVideoDecoderFactory();
++}
++
++}  // namespace webrtc
+diff --git a/media/engine/webrtc_media_engine_defaults.h b/media/engine/webrtc_media_engine_defaults.h
+new file mode 100644
+index 0000000000..a0ed059a2b
+--- /dev/null
++++ b/media/engine/webrtc_media_engine_defaults.h
+@@ -0,0 +1,30 @@
++/*
++ *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
++ *
++ *  Use of this source code is governed by a BSD-style license
++ *  that can be found in the LICENSE file in the root of the source
++ *  tree. An additional intellectual property rights grant can be found
++ *  in the file PATENTS.  All contributing project authors may
++ *  be found in the AUTHORS file in the root of the source tree.
++ */
++
++#ifndef MEDIA_ENGINE_WEBRTC_MEDIA_ENGINE_DEFAULTS_H_
++#define MEDIA_ENGINE_WEBRTC_MEDIA_ENGINE_DEFAULTS_H_
++
++#include "media/engine/webrtc_media_engine.h"
++#include "rtc_base/system/rtc_export.h"
++
++namespace webrtc {
++
++// Sets required but null dependencies with default factories.
++// Deprecated in favor of EnableMediaWithDefaults.
++RTC_EXPORT void DeprecatedSetMediaEngineDefaults(
++    cricket::MediaEngineDependencies* deps);
++[[deprecated("bugs.webrc.org/15574")]] inline void SetMediaEngineDefaults(
++    cricket::MediaEngineDependencies* deps) {
++  DeprecatedSetMediaEngineDefaults(deps);
++}
++
++}  // namespace webrtc
++
++#endif  // MEDIA_ENGINE_WEBRTC_MEDIA_ENGINE_DEFAULTS_H_
+diff --git a/media/engine/webrtc_media_engine_unittest.cc b/media/engine/webrtc_media_engine_unittest.cc
+index 40cad75701..b89c98fe5e 100644
+--- a/media/engine/webrtc_media_engine_unittest.cc
++++ b/media/engine/webrtc_media_engine_unittest.cc
+@@ -14,6 +14,7 @@
+ #include <string>
+ #include <utility>
  
-   // These are all connections that has been added and not destroyed.
--  virtual rtc::ArrayView<const Connection* const> connections() const = 0;
-+  virtual rtc::ArrayView<const Connection*> connections() const = 0;
++#include "media/engine/webrtc_media_engine_defaults.h"
+ #include "test/gtest.h"
+ #include "test/scoped_key_value_config.h"
  
-   // Is there a pingable connection ?
-   // This function is used to boot-strap pinging, after this returns true
-diff --git a/p2p/base/mock_ice_controller.h b/p2p/base/mock_ice_controller.h
-index 02468402ac..bde9254e7d 100644
---- a/p2p/base/mock_ice_controller.h
-+++ b/p2p/base/mock_ice_controller.h
-@@ -35,7 +35,7 @@ class MockIceController : public cricket::IceControllerInterface {
-               OnConnectionDestroyed,
-               (const cricket::Connection*),
-               (override));
--  MOCK_METHOD(rtc::ArrayView<const cricket::Connection* const>,
-+  MOCK_METHOD(rtc::ArrayView<const cricket::Connection*>,
-               connections,
-               (),
-               (const, override));
+@@ -321,4 +322,20 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBwe3) {
+   EXPECT_EQ(RtpExtension::kTimestampOffsetUri, filtered[0].uri);
+ }
+ 
++// Deprecated as part of the bugs.webrtc.org/15574 effort.
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++TEST(WebRtcMediaEngineTest, Create) {
++  MediaEngineDependencies deps;
++  webrtc::DeprecatedSetMediaEngineDefaults(&deps);
++  webrtc::test::ScopedKeyValueConfig trials;
++  deps.trials = &trials;
++
++  std::unique_ptr<MediaEngineInterface> engine =
++      CreateMediaEngine(std::move(deps));
++
++  EXPECT_TRUE(engine);
++}
++#pragma clang diagnostic pop
++
+ }  // namespace cricket
+diff --git a/pc/BUILD.gn b/pc/BUILD.gn
+index b816b9c65e..51166ee2fb 100644
+--- a/pc/BUILD.gn
++++ b/pc/BUILD.gn
+@@ -2479,6 +2479,7 @@ if (rtc_include_tests && !build_with_chromium) {
+       "../media:rid_description",
+       "../media:rtc_data_sctp_transport_internal",
+       "../media:rtc_media_config",
++      "../media:rtc_media_engine_defaults",
+       "../media:stream_params",
+       "../modules/audio_device:audio_device_api",
+       "../modules/audio_processing:audio_processing_statistics",
