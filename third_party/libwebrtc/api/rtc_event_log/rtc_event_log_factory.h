@@ -29,19 +29,11 @@ class RTC_EXPORT RtcEventLogFactory : public RtcEventLogFactoryInterface {
   // TODO(bugs.webrtc.org/15656): deprecate and delete constructor taking
   // task queue factory in favor of using task queue factory provided through
   // the Environment parameter in Create function.
-  explicit RtcEventLogFactory(TaskQueueFactory* task_queue_factory);
+  explicit RtcEventLogFactory(TaskQueueFactory* task_queue_factory) {}
   ~RtcEventLogFactory() override = default;
 
   absl::Nonnull<std::unique_ptr<RtcEventLog>> Create(
       const Environment& env) const override;
-
-  std::unique_ptr<RtcEventLog> Create(
-      RtcEventLog::EncodingType encoding_type) const override;
-  std::unique_ptr<RtcEventLog> CreateRtcEventLog(
-      RtcEventLog::EncodingType encoding_type) override;
-
- private:
-  TaskQueueFactory* const task_queue_factory_ = nullptr;
 };
 
 }  // namespace webrtc
