@@ -25,7 +25,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "api/async_resolver_factory.h"
 #include "api/audio/audio_mixer.h"
 #include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"

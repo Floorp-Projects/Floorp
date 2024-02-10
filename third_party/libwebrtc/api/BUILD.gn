@@ -458,15 +458,10 @@ rtc_library("rtc_error") {
 
 rtc_source_set("packet_socket_factory") {
   visibility = [ "*" ]
-  sources = [
-    "async_resolver_factory.h",
-    "packet_socket_factory.h",
-  ]
+  sources = [ "packet_socket_factory.h" ]
   deps = [
     ":async_dns_resolver",
-    ":wrapping_async_dns_resolver",
     "../rtc_base:async_packet_socket",
-    "../rtc_base:async_resolver_interface",
     "../rtc_base:proxy_info",
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
@@ -482,28 +477,6 @@ rtc_source_set("async_dns_resolver") {
     "../rtc_base/system:rtc_export",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
-}
-
-rtc_source_set("wrapping_async_dns_resolver") {
-  visibility = [
-    ":*",
-    "../p2p:rtc_p2p",
-  ]
-  sources = [
-    "wrapping_async_dns_resolver.cc",
-    "wrapping_async_dns_resolver.h",
-  ]
-  deps = [
-    ":async_dns_resolver",
-    ":sequence_checker",
-    "../rtc_base:async_resolver_interface",
-    "../rtc_base:checks",
-    "../rtc_base:macromagic",
-    "../rtc_base:socket_address",
-    "../rtc_base:threading",
-    "../rtc_base/third_party/sigslot",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
 rtc_source_set("ref_count") {
