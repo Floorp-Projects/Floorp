@@ -38,26 +38,6 @@ std::unique_ptr<TimeController> CreateSimulatedTimeController() {
       Timestamp::Seconds(10000));
 }
 
-std::unique_ptr<CallFactoryInterface> CreateTimeControllerBasedCallFactory(
-    TimeController* time_controller) {
-  class TimeControllerBasedCallFactory : public CallFactoryInterface {
-   public:
-    explicit TimeControllerBasedCallFactory(TimeController* time_controller)
-        : time_controller_(time_controller) {}
-    std::unique_ptr<Call> CreateCall(const CallConfig& config) override {
-      RtpTransportConfig transportConfig = config.ExtractTransportConfig();
-
-      return Call::Create(config, time_controller_->GetClock(),
-                          config.rtp_transport_controller_send_factory->Create(
-                              transportConfig, time_controller_->GetClock()));
-    }
-
-   private:
-    TimeController* time_controller_;
-  };
-  return std::make_unique<TimeControllerBasedCallFactory>(time_controller);
-}
-
 void EnableMediaWithDefaultsAndTimeController(
     TimeController& time_controller,
     PeerConnectionFactoryDependencies& deps) {

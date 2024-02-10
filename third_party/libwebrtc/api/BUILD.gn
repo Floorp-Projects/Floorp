@@ -1430,7 +1430,6 @@ if (rtc_include_tests) {
     ]
 
     deps = [
-      ":callfactory_api",
       ":enable_media_with_defaults",
       ":libjingle_peerconnection_api",
       ":time_controller",
