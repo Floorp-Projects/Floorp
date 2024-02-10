@@ -141,6 +141,9 @@ bool ByteBufferReader::ReadString(std::string* val, size_t len) {
 }
 
 bool ByteBufferReader::ReadBytes(rtc::ArrayView<uint8_t> val) {
+  if (val.size() == 0) {
+    return true;
+  }
   return ReadBytes(val.data(), val.size());
 }
 
@@ -152,11 +155,13 @@ bool ByteBufferReader::ReadBytes(char* val, size_t len) {
 bool ByteBufferReader::ReadBytes(uint8_t* val, size_t len) {
   if (len > Length()) {
     return false;
-  } else {
-    memcpy(val, bytes_ + start_, len);
-    start_ += len;
+  }
+  if (len == 0) {
     return true;
   }
+  memcpy(val, bytes_ + start_, len);
+  start_ += len;
+  return true;
 }
 
 bool ByteBufferReader::Consume(size_t size) {

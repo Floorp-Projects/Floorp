@@ -41,7 +41,9 @@ uint32_t ReduceTransactionId(absl::string_view transaction_id) {
   RTC_DCHECK(transaction_id.length() == cricket::kStunTransactionIdLength ||
              transaction_id.length() == cricket::kStunLegacyTransactionIdLength)
       << transaction_id.length();
-  ByteBufferReader reader(transaction_id.data(), transaction_id.size());
+  ByteBufferReader reader(rtc::MakeArrayView(
+      reinterpret_cast<const uint8_t*>(transaction_id.data()),
+      transaction_id.size()));
   uint32_t result = 0;
   uint32_t next;
   while (reader.ReadUInt32(&next)) {
@@ -912,7 +914,8 @@ bool StunAddressAttribute::Read(ByteBufferReader* buf) {
     if (length() != SIZE_IP4) {
       return false;
     }
-    if (!buf->ReadBytes(reinterpret_cast<char*>(&v4addr), sizeof(v4addr))) {
+    if (!buf->ReadBytes(rtc::MakeArrayView(reinterpret_cast<uint8_t*>(&v4addr),
+                                           sizeof(v4addr)))) {
       return false;
     }
     rtc::IPAddress ipaddr(v4addr);
@@ -922,7 +925,8 @@ bool StunAddressAttribute::Read(ByteBufferReader* buf) {
     if (length() != SIZE_IP6) {
       return false;
     }
-    if (!buf->ReadBytes(reinterpret_cast<char*>(&v6addr), sizeof(v6addr))) {
+    if (!buf->ReadBytes(rtc::MakeArrayView(reinterpret_cast<uint8_t*>(&v6addr),
+                                           sizeof(v6addr)))) {
       return false;
     }
     rtc::IPAddress ipaddr(v6addr);
@@ -1153,7 +1157,9 @@ void StunByteStringAttribute::SetByte(size_t index, uint8_t value) {
 
 bool StunByteStringAttribute::Read(ByteBufferReader* buf) {
   bytes_ = new char[length()];
-  if (!buf->ReadBytes(bytes_, length())) {
+  RTC_CHECK(bytes_);
+  if (!buf->ReadBytes(
+          rtc::MakeArrayView(reinterpret_cast<uint8_t*>(bytes_), length()))) {
     return false;
   }
 

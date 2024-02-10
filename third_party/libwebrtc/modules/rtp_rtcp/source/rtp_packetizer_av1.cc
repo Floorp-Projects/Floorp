@@ -74,8 +74,7 @@ RtpPacketizerAv1::RtpPacketizerAv1(rtc::ArrayView<const uint8_t> payload,
 std::vector<RtpPacketizerAv1::Obu> RtpPacketizerAv1::ParseObus(
     rtc::ArrayView<const uint8_t> payload) {
   std::vector<Obu> result;
-  rtc::ByteBufferReader payload_reader(
-      reinterpret_cast<const char*>(payload.data()), payload.size());
+  rtc::ByteBufferReader payload_reader(payload);
   while (payload_reader.Length() > 0) {
     Obu obu;
     payload_reader.ReadUInt8(&obu.header);

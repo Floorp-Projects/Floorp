@@ -173,7 +173,8 @@ void StunProber::Requester::SendStunRequest() {
 void StunProber::Requester::Request::ProcessResponse(const char* buf,
                                                      size_t buf_len) {
   int64_t now = rtc::TimeMillis();
-  rtc::ByteBufferReader message(buf, buf_len);
+  rtc::ByteBufferReader message(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(buf), buf_len));
   cricket::StunMessage stun_response;
   if (!stun_response.Read(&message)) {
     // Invalid or incomplete STUN packet.

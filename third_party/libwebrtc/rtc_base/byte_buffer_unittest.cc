@@ -85,14 +85,14 @@ TEST(ByteBufferTest, TestBufferLength) {
 
 TEST(ByteBufferTest, TestReadWriteBuffer) {
   ByteBufferWriter buffer;
-  ByteBufferReader read_buf(nullptr, 0);
+  ByteBufferReader read_buf(rtc::ArrayView<const uint8_t>(nullptr, 0));
   uint8_t ru8;
   EXPECT_FALSE(read_buf.ReadUInt8(&ru8));
 
   // Write and read uint8_t.
   uint8_t wu8 = 1;
   buffer.WriteUInt8(wu8);
-  ByteBufferReader read_buf1(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf1(buffer);
   EXPECT_TRUE(read_buf1.ReadUInt8(&ru8));
   EXPECT_EQ(wu8, ru8);
   EXPECT_EQ(0U, read_buf1.Length());
@@ -101,7 +101,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read uint16_t.
   uint16_t wu16 = (1 << 8) + 1;
   buffer.WriteUInt16(wu16);
-  ByteBufferReader read_buf2(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf2(buffer);
   uint16_t ru16;
   EXPECT_TRUE(read_buf2.ReadUInt16(&ru16));
   EXPECT_EQ(wu16, ru16);
@@ -111,7 +111,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read uint24.
   uint32_t wu24 = (3 << 16) + (2 << 8) + 1;
   buffer.WriteUInt24(wu24);
-  ByteBufferReader read_buf3(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf3(buffer);
   uint32_t ru24;
   EXPECT_TRUE(read_buf3.ReadUInt24(&ru24));
   EXPECT_EQ(wu24, ru24);
@@ -121,7 +121,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read uint32_t.
   uint32_t wu32 = (4 << 24) + (3 << 16) + (2 << 8) + 1;
   buffer.WriteUInt32(wu32);
-  ByteBufferReader read_buf4(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf4(buffer);
   uint32_t ru32;
   EXPECT_TRUE(read_buf4.ReadUInt32(&ru32));
   EXPECT_EQ(wu32, ru32);
@@ -132,7 +132,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   uint32_t another32 = (8 << 24) + (7 << 16) + (6 << 8) + 5;
   uint64_t wu64 = (static_cast<uint64_t>(another32) << 32) + wu32;
   buffer.WriteUInt64(wu64);
-  ByteBufferReader read_buf5(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf5(buffer);
   uint64_t ru64;
   EXPECT_TRUE(read_buf5.ReadUInt64(&ru64));
   EXPECT_EQ(wu64, ru64);
@@ -142,7 +142,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read string.
   std::string write_string("hello");
   buffer.WriteString(write_string);
-  ByteBufferReader read_buf6(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf6(buffer);
   std::string read_string;
   EXPECT_TRUE(read_buf6.ReadString(&read_string, write_string.size()));
   EXPECT_EQ(write_string, read_string);
@@ -152,9 +152,9 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read bytes
   char write_bytes[] = "foo";
   buffer.WriteBytes(write_bytes, 3);
-  ByteBufferReader read_buf7(buffer.Data(), buffer.Length());
-  char read_bytes[3];
-  EXPECT_TRUE(read_buf7.ReadBytes(read_bytes, 3));
+  ByteBufferReader read_buf7(buffer);
+  uint8_t read_bytes[3];
+  EXPECT_TRUE(read_buf7.ReadBytes(read_bytes));
   for (int i = 0; i < 3; ++i) {
     EXPECT_EQ(write_bytes[i], read_bytes[i]);
   }
@@ -164,9 +164,9 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   // Write and read reserved buffer space
   char* write_dst = buffer.ReserveWriteBuffer(3);
   memcpy(write_dst, write_bytes, 3);
-  ByteBufferReader read_buf8(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf8(buffer);
   memset(read_bytes, 0, 3);
-  EXPECT_TRUE(read_buf8.ReadBytes(read_bytes, 3));
+  EXPECT_TRUE(read_buf8.ReadBytes(read_bytes));
   for (int i = 0; i < 3; ++i) {
     EXPECT_EQ(write_bytes[i], read_bytes[i]);
   }
@@ -179,7 +179,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   buffer.WriteUInt24(wu24);
   buffer.WriteUInt32(wu32);
   buffer.WriteUInt64(wu64);
-  ByteBufferReader read_buf9(buffer.Data(), buffer.Length());
+  ByteBufferReader read_buf9(buffer);
   EXPECT_TRUE(read_buf9.ReadUInt8(&ru8));
   EXPECT_EQ(wu8, ru8);
   EXPECT_TRUE(read_buf9.ReadUInt16(&ru16));
@@ -219,7 +219,7 @@ TEST(ByteBufferTest, TestReadWriteUVarint) {
   size += 6;
   EXPECT_EQ(size, write_buffer.Length());
 
-  ByteBufferReader read_buffer(write_buffer.Data(), write_buffer.Length());
+  ByteBufferReader read_buffer(write_buffer);
   EXPECT_EQ(size, read_buffer.Length());
   uint64_t val1, val2, val3, val4, val5;
 
@@ -269,13 +269,13 @@ TEST(ByteBufferTest, ReadToArrayView) {
   ArrayView<const uint8_t> stored_view(buf, 3);
   ByteBufferReader read_buffer(stored_view);
   uint8_t result[] = {'1', '2', '3'};
-  EXPECT_TRUE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(result, 2)));
+  EXPECT_TRUE(read_buffer.ReadBytes(rtc::MakeArrayView(result, 2)));
   EXPECT_EQ(result[0], 'a');
   EXPECT_EQ(result[1], 'b');
   EXPECT_EQ(result[2], '3');
-  EXPECT_TRUE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(&result[2], 1)));
+  EXPECT_TRUE(read_buffer.ReadBytes(rtc::MakeArrayView(&result[2], 1)));
   EXPECT_EQ(result[2], 'c');
-  EXPECT_FALSE(read_buffer.ReadBytes(rtc::ArrayView<uint8_t>(result, 1)));
+  EXPECT_FALSE(read_buffer.ReadBytes(rtc::MakeArrayView(result, 1)));
 }
 
 }  // namespace rtc

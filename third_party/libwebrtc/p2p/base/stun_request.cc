@@ -202,7 +202,8 @@ bool StunRequestManager::CheckResponse(const char* data, size_t size) {
 
   // Parse the STUN message and continue processing as usual.
 
-  rtc::ByteBufferReader buf(data, size);
+  rtc::ByteBufferReader buf(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data), size));
   std::unique_ptr<StunMessage> response(iter->second->msg_->CreateNew());
   if (!response->Read(&buf)) {
     RTC_LOG(LS_WARNING) << "Failed to read STUN response "

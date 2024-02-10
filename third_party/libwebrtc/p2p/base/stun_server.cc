@@ -33,7 +33,8 @@ void StunServer::OnPacket(rtc::AsyncPacketSocket* socket,
                           const rtc::SocketAddress& remote_addr,
                           const int64_t& /* packet_time_us */) {
   // Parse the STUN message; eat any messages that fail to parse.
-  rtc::ByteBufferReader bbuf(buf, size);
+  rtc::ByteBufferReader bbuf(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(buf), size));
   StunMessage msg;
   if (!msg.Read(&bbuf)) {
     return;
