@@ -20,10 +20,10 @@
 
 #include <vector>
 
+#include "modules/video_capture/linux/pipewire_session.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "modules/video_capture/video_capture_impl.h"
-#include "modules/video_capture/video_capture_options.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {

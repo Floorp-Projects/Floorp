@@ -26,7 +26,7 @@ index 8f89918359..45a0272eee 100644
      }
      if (is_win) {
 diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index 4782cee56a..2b7393c100 100644
+index e9f7e6a869..fc0554f384 100644
 --- a/modules/video_capture/linux/device_info_pipewire.cc
 +++ b/modules/video_capture/linux/device_info_pipewire.cc
 @@ -49,9 +49,9 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
@@ -42,7 +42,7 @@ index 4782cee56a..2b7393c100 100644
      return -1;
  
 diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
-index a006c85d1b..724717be5e 100644
+index 4da0c7a90b..8a33d75892 100644
 --- a/modules/video_capture/linux/device_info_pipewire.h
 +++ b/modules/video_capture/linux/device_info_pipewire.h
 @@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
