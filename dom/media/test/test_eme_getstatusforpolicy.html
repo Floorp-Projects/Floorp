@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test Encrypted Media Extensions</title>
+  <title>Test getStatusForPolicy on ClearKey CDM</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="manifest.js"></script>
@@ -12,8 +12,70 @@
 <video id="v" controls></video>
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
+add_task(async function setupTestingPrefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.eme.hdcp-policy-check.enabled", true],
+    ],
+  });
+});
 
+// We expect that ClearKey has HDCP 2.0 compliant.
+const expectedResults = [
+  {
+    minHdcpVersion : "1.0",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.1",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.2",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.3",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "1.4",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.0",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.1",
+    expectedResult : "usable"
+  },
+  {
+    minHdcpVersion : "2.2",
+    expectedResult : "output-restricted"
+  },
+  {
+    minHdcpVersion : "2.3",
+    expectedResult : "output-restricted"
+  },
+];
+
+add_task(async function testGetStatusForPolicy() {
+  for (let result of expectedResults) {
+    let mediaKey = await createMediaKeysAndSet();
+    let video = document.getElementById("v");
+    is(video.mediaKeys, mediaKey,
+      "Should have set MediaKeys on media element");
+    let keyStatus = await
+        video.mediaKeys.getStatusForPolicy({minHdcpVersion : result.minHdcpVersion})
+        .catch(e => ok(false, "getStatusForPolicy failed!"));
+    info(`getStatusForPolicy for HDCP ${result.minHdcpVersion} : ${keyStatus}`);
+    is(keyStatus, result.expectedResult,
+        `Expected ${result.expectedResult}, got ${keyStatus}`);
+  }
+});
+
+// Helper function
 function createMediaKeysAndSet() {
   return navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig)
   .then(function (access) {
@@ -24,30 +86,6 @@ function createMediaKeysAndSet() {
     return mediaKeys;
   });
 }
-
-function test() {
-  createMediaKeysAndSet()
-    .then((m) => {
-      let video = document.getElementById("v");
-      is(video.mediaKeys, m, "Should have set MediaKeys on media element");
-      // getStatusForPolicy() is not suppored by ClearKey key system.
-      // The promise will always be rejected with NotSupportedError.
-      return video.mediaKeys.getStatusForPolicy({minHdcpVersion: "hdcp-2.0"});
-    })
-    .then((mediaKeyStatus) => {
-      ok(false, "Promise of getStatusForPolicy should not be resolved with clearkey key system");
-    })
-    // Promise rejected with NotSupportedError as expected.
-    .catch(reason => is("NotSupportedError", reason.name,
-                        "Promise should be rejected with NotSupportedError."))
-    .then(() => SimpleTest.finish());
-}
-
-SpecialPowers.pushPrefEnv({"set":
-    [
-      ["media.eme.hdcp-policy-check.enabled", true],
-    ]
-  }, test);
 
 </script>
 </pre>
