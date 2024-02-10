@@ -13,7 +13,7 @@
     <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
     <string name="mozac_feature_downloads_dialog_title2">Llwytho (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
-    <string name="mozac_feature_downloads_dialog_download">Llwytho</string>
+    <string name="mozac_feature_downloads_dialog_download">Llwytho i Lawr</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Diddymu</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->

@@ -499,6 +499,103 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">%1$s اوچون کوکی بنر مسدود ائلین ایشدن سالینسین؟</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s بو سایتدا کوُکی ایستک‌لرینی اوْتوماتیک رد ائده بیلمز. گله‌جکده بوُ سایتی آرخالاماق اوُچون ایستک گؤندره بیلرسینیز.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">باغلاییْن و %1$s کوُکی‌لری سیله‌جک و بو سایتیْ یئنی‌دن دوْلدوُراجاق. بوُ ، سیزی حسابدان چیخارا ویا آلیْش-وئریْش سبدلرینی بوْشالتا بیلر.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">آچیْن و %1$s بو سایتداکیْ بوتون کوُکی بنرلرینی اوْتوماتیک رد ائتمه‌گه چالیْشاجاق.</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s سیزین اوچون کوُکی‌لری رد ائتدی.</string>
+
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">داها آز حواس داغیلماسیْ، بوُ سایتدا سیزی تعقیب ائدن کوُکی‌لر آز.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">داها چوْخ گوونلیک اوچون HTTPS رمزله‌مه پروْتوکولوُندان ایستیفاده ائده‌رک سایتلارا اوْتوماتیک قوْشوُلماغا چالیْشیر.</string>
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">باغلیْ</string>
+
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">بوتون تاغلاردا آچیْق</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">بوتون گیزلی تاغلاردا آچیْق</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">آرتیق بیلین</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">بوتون تاغلاردا گوجلندیر</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">بوتون گیزلی تاغلاردا گوجلندیر</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">گوونلی سایت موجود دئییل</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">ایحتیمالی چوْخ، سایت HTTPS-ی آرخالامیْر.</string>
+
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">بوُنونلا بئله، حمله ائده‌نین‌ده ایشتیراک ائتمه‌سی موُمکوندور. ایدامه وئرسز، هئچ بیر بیلگی وئرمه‌یین. ایدامه وئرسز، یالنیز HTTPS حالتی گئچیجی اوْلاراق باغلاناجاقدیْر.</string>
+
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">اَل چاتانلیق</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">اؤزل موْزیلا حسابیْ سِروری</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">اؤزل دؤنگل سرور</string>
+
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">حساب</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">ادوات چوبوغو</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">تم</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">آنایارپاق</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">اؤزللشدیرمک</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">موْزیلا حسابی</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">دیل</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">دیتا سئچیمی</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">هر زامان</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">هئچ زامان</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">تاخیلان‌لار</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">بیلدیریش‌لر</string>
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">ایجازه وئریلدی</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">ایجازه وئریلمه‌دی</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">تامام</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">لغو</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">آرتیق بیلین</string>
+
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">ایندی دؤنگل‌لندیر</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">گئچمیش</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">بوُکمارک‌لار</string>
+
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">رمز‌لر</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">آچیْق تاغ‌لار</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">چیخیش</string>
+
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">اوست</string>
@@ -518,6 +615,13 @@
     <string name="preference_gestures_website_pull_to_refresh">رفرش اوچون چک</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">آلت‌لر چوبوغونو گیزلتمک اوچون اسکرول ائله‌</string>
+
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">یئندیرنلر</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">بوُکمارک‌لار</string>
 
 
     <!-- Translations feature-->

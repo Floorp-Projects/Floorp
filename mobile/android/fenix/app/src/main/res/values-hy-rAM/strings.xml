@@ -2165,6 +2165,9 @@
     <string name="other_default_search_engine_suggestion_header">%s որոնում</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Փոխարկեք ձեր սկզբնադիր զննարկիչը</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Կայեք հղումներ կայքերից, էլ. նամակներից և հաղորդագրություններից, որոնք ինքնաբար կերպով կբացվեն Firefox-ում:</string>
 
     <!-- Content description for close button in collection placeholder. -->

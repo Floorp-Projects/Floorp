@@ -526,7 +526,7 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Впишете се, за да синхронизирате раздели, отметки, пароли и други.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name_2">сметка в Mozilla</string>
+    <string name="preferences_account_default_name_2">Профил в Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Свържете повторно, за да бъде възобновено синхронизирането</string>
     <!-- Preference for language -->

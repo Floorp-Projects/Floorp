@@ -2150,7 +2150,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Anadi %s</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Sbadu iseɣwan seg yismal web, seg yimaylen d yiznan i twaledyawt s wudem awurman deg Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2329,14 +2329,21 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ldi aseɣwen i wakken ad tissineḍ ugar</string>
 
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, azwel</string>
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Iseɣwan</string>
+
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Iseɣwan i yellan</string>
 
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Suqqel asebter-a?</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">Ԑreḍ tisuqilin tusligin n %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">Issin ugar</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -2354,13 +2361,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Suqqel</string>
 
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">Asuqel iteddu</string>
     <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
     <string name="translations_bottom_sheet_default_dropdown_selection">Fren tutlayt</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Yella wugur deg usuqqel. Ttxil-k ɛreḍ tikkelt niḍen.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Nesḥassef, mazal ur nessefrak ara tutlayt %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Issin ugar</string>
 
+    <!-- Translations options dialog -->
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title">Tixtiṛiyin n usuqel</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Sumer yal tikkelt tasuqqilt</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->

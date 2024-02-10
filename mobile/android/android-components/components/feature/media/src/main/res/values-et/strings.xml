@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_media_notification_channel">Meedia</string>
 
@@ -9,6 +9,27 @@
     <string name="mozac_feature_media_sharing_microphone">Mikrofon on sisse lülitatud</string>
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Kaamera ja mikrofon on sisse lülitatud</string>
+
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Puuduta kaamerat kasutava kaardi avamiseks.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Puuduta mikrofoni kasutava kaardi avamiseks.</string>
+
+
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Puuduta mikrofoni ja kaamerat kasutava kaardi avamiseks.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Meeldetuletus: %1$s kasutab endiselt kaamerat. Puuduta kaardi avamiseks.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Meeldetuletus: %1$s kasutab endiselt mikrofoni. Puuduta kaardi avamiseks.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text_2">Meeldetuletus: %1$s kasutab endiselt mikrofoni. Puuduta kaardi avamiseks.</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Meeldetuletus: %1$s kasutab endiselt mikrofoni ja kaamerat. Puuduta kaardi avamiseks.</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text_2">Meeldetuletus: %1$s kasutab endiselt mikrofoni ja kaamerat. Puuduta kaardi avamiseks.</string>
 
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Esita</string>
