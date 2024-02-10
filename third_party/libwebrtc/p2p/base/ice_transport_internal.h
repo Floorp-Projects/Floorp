@@ -310,8 +310,12 @@ class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
   sigslot::signal2<IceTransportInternal*, const Candidate&>
       SignalCandidateGathered;
 
-  sigslot::signal2<IceTransportInternal*, const IceCandidateErrorEvent&>
-      SignalCandidateError;
+  void SetCandidateErrorCallback(
+      absl::AnyInvocable<void(IceTransportInternal*,
+                              const IceCandidateErrorEvent&)> callback) {
+    RTC_DCHECK(!candidate_error_callback_);
+    candidate_error_callback_ = std::move(callback);
+  }
 
   sigslot::signal2<IceTransportInternal*, const Candidates&>
       SignalCandidatesRemoved;
@@ -372,6 +376,9 @@ class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
       dictionary_view_updated_callback_list_;
   webrtc::CallbackList<IceTransportInternal*, const StunDictionaryWriter&>
       dictionary_writer_synced_callback_list_;
+
+  absl::AnyInvocable<void(IceTransportInternal*, const IceCandidateErrorEvent&)>
+      candidate_error_callback_;
 };
 
 }  // namespace cricket
