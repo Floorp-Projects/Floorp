@@ -79,9 +79,6 @@ struct CallConfig {
 
   Metronome* metronome = nullptr;
 
-  // The burst interval of the pacer, see TaskQueuePacedSender constructor.
-  absl::optional<TimeDelta> pacer_burst_interval;
-
   // Enables send packet batching from the egress RTP sender.
   bool enable_send_packet_batching = false;
 };
