@@ -73,7 +73,7 @@ PacingController::PacingController(Clock* clock,
       keyframe_flushing_(
           IsEnabled(field_trials_, "WebRTC-Pacer-KeyframeFlushing")),
       transport_overhead_per_packet_(DataSize::Zero()),
-      send_burst_interval_(TimeDelta::Zero()),
+      send_burst_interval_(kDefaultBurstInterval),
       last_timestamp_(clock_->CurrentTime()),
       paused_(false),
       media_debt_(DataSize::Zero()),
