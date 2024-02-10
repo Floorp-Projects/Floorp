@@ -160,10 +160,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
         : video_stream_encoder_(video_stream_encoder) {}
     // FrameCadenceAdapterInterface::Callback overrides.
     void OnFrame(Timestamp post_time,
-                 int frames_scheduled_for_processing,
+                 bool queue_overload,
                  const VideoFrame& frame) override {
-      video_stream_encoder_.OnFrame(post_time, frames_scheduled_for_processing,
-                                    frame);
+      video_stream_encoder_.OnFrame(post_time, queue_overload, frame);
     }
     void OnDiscardedFrame() override {
       video_stream_encoder_.OnDiscardedFrame();
@@ -212,7 +211,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   void ReconfigureEncoder() RTC_RUN_ON(&encoder_queue_);
   void OnEncoderSettingsChanged() RTC_RUN_ON(&encoder_queue_);
   void OnFrame(Timestamp post_time,
-               int frames_scheduled_for_processing,
+               bool queue_overload,
                const VideoFrame& video_frame);
   void OnDiscardedFrame();
   void RequestRefreshFrame();
