@@ -855,6 +855,7 @@ malloc_size_of_is_0!(f32, f64);
 malloc_size_of_is_0!(std::sync::atomic::AtomicBool);
 malloc_size_of_is_0!(std::sync::atomic::AtomicIsize);
 malloc_size_of_is_0!(std::sync::atomic::AtomicUsize);
+malloc_size_of_is_0!(std::num::NonZeroUsize);
 
 malloc_size_of_is_0!(Range<u8>, Range<u16>, Range<u32>, Range<u64>, Range<usize>);
 malloc_size_of_is_0!(Range<i8>, Range<i16>, Range<i32>, Range<i64>, Range<isize>);

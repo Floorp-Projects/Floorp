@@ -214,7 +214,8 @@ impl_trivial_to_shmem!(
     u32,
     u64,
     isize,
-    usize
+    usize,
+    std::num::NonZeroUsize
 );
 
 impl_trivial_to_shmem!(
