@@ -135,10 +135,12 @@ add_task(async function test_show_all_recentlyclosed_telemetry() {
     await clearAllParentTelemetryEvents();
 
     info("Click the Show All link.");
+    const showAllButton = recentlyclosedSlot.shadowRoot.querySelector(
+      "[data-l10n-id='firefoxview-show-all']"
+    );
+    await TestUtils.waitForCondition(() => !showAllButton.hidden);
+    ok(!showAllButton.hidden, "Show all button is visible");
     await TestUtils.waitForCondition(() => {
-      const showAllButton = recentlyclosedSlot.shadowRoot.querySelector(
-        "[data-l10n-id='firefoxview-show-all']"
-      );
       EventUtils.synthesizeMouseAtCenter(showAllButton, {}, content);
       if (recentlyclosedSlot.tabList.rowEls.length === NUMBER_OF_TABS) {
         return true;
@@ -181,10 +183,12 @@ add_task(async function test_show_all_opentabs_telemetry() {
     await clearAllParentTelemetryEvents();
 
     info("Click the Show All link.");
+    const showAllButton = opentabsSlot.viewCards[0].shadowRoot.querySelector(
+      "[data-l10n-id='firefoxview-show-all']"
+    );
+    await TestUtils.waitForCondition(() => !showAllButton.hidden);
+    ok(!showAllButton.hidden, "Show all button is visible");
     await TestUtils.waitForCondition(() => {
-      const showAllButton = opentabsSlot.viewCards[0].shadowRoot.querySelector(
-        "[data-l10n-id='firefoxview-show-all']"
-      );
       EventUtils.synthesizeMouseAtCenter(showAllButton, {}, content);
       if (opentabsSlot.viewCards[0].tabList.rowEls.length === NUMBER_OF_TABS) {
         return true;
@@ -273,6 +277,8 @@ add_task(async function test_show_all_syncedtabs_telemetry() {
     );
     info("Scroll show all button into view.");
     showAllButton.scrollIntoView();
+    await TestUtils.waitForCondition(() => !showAllButton.hidden);
+    ok(!showAllButton.hidden, "Show all button is visible");
     info("Click the Show All link.");
     await TestUtils.waitForCondition(() => {
       EventUtils.synthesizeMouseAtCenter(showAllButton, {}, content);
