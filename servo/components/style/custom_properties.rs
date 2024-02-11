@@ -30,10 +30,10 @@ use selectors::parser::SelectorParseErrorKind;
 use servo_arc::Arc;
 use smallvec::SmallVec;
 use std::borrow::Cow;
-use std::cmp;
 use std::collections::hash_map::Entry;
 use std::fmt::{self, Write};
 use std::ops::{Index, IndexMut};
+use std::{cmp, num};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 
 /// The environment from which to get `env` function values.
@@ -284,8 +284,12 @@ impl ComputedCustomProperties {
         }
     }
 
-    fn get(&self, stylist: &Stylist, name: &Name) -> Option<&Arc<VariableValue>> {
-        if stylist.get_custom_property_registration(&name).inherits() {
+    fn get(
+        &self,
+        registration: &PropertyRegistrationData,
+        name: &Name,
+    ) -> Option<&Arc<VariableValue>> {
+        if registration.inherits() {
             self.inherited.get(name)
         } else {
             self.non_inherited.get(name)
@@ -403,8 +407,20 @@ pub enum DeferFontRelativeCustomPropertyResolution {
 }
 
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, ToShmem)]
+struct VariableFallback {
+    start: num::NonZeroUsize,
+    first_token_type: TokenSerializationType,
+    last_token_type: TokenSerializationType,
+}
+
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToShmem)]
 struct VarOrEnvReference {
     name: Name,
+    start: usize,
+    end: usize,
+    fallback: Option<VariableFallback>,
+    prev_token_type: TokenSerializationType,
+    next_token_type: TokenSerializationType,
     is_var: bool,
 }
 
@@ -465,11 +481,10 @@ impl VariableValue {
 
     fn push<'i>(
         &mut self,
-        input: &Parser<'i, '_>,
         css: &str,
         css_first_token_type: TokenSerializationType,
         css_last_token_type: TokenSerializationType,
-    ) -> Result<(), ParseError<'i>> {
+    ) -> Result<(), ()> {
         /// Prevent values from getting terribly big since you can use custom
         /// properties exponentially.
         ///
@@ -480,7 +495,7 @@ impl VariableValue {
         const MAX_VALUE_LENGTH_IN_BYTES: usize = 2 * 1024 * 1024;
 
         if self.css.len() + css.len() > MAX_VALUE_LENGTH_IN_BYTES {
-            return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+            return Err(());
         }
 
         // This happens e.g. between two subsequent var() functions:
@@ -505,46 +520,34 @@ impl VariableValue {
         Ok(())
     }
 
-    fn push_from<'i>(
-        &mut self,
-        input: &Parser<'i, '_>,
-        position: (SourcePosition, TokenSerializationType),
-        last_token_type: TokenSerializationType,
-    ) -> Result<(), ParseError<'i>> {
-        self.push(
-            input,
-            input.slice_from(position.0),
-            position.1,
-            last_token_type,
-        )
-    }
-
-    fn push_variable<'i>(
-        &mut self,
-        input: &Parser<'i, '_>,
-        variable: &ComputedValue,
-    ) -> Result<(), ParseError<'i>> {
-        debug_assert!(!variable.has_references(), "{}", variable.css);
-        self.push(
-            input,
-            &variable.css,
-            variable.first_token_type,
-            variable.last_token_type,
-        )
-    }
-
     /// Parse a custom property value.
     pub fn parse<'i, 't>(
         input: &mut Parser<'i, 't>,
         url_data: &UrlExtraData,
     ) -> Result<Self, ParseError<'i>> {
+        input.skip_whitespace();
+
         let mut references = References::default();
-        let (first_token_type, css, last_token_type) =
-            parse_self_contained_declaration_value(input, &mut references)?;
+        let mut missing_closing_characters = String::new();
+        let start_position = input.position();
+        let (first_token_type, last_token_type) = parse_declaration_value(
+            input,
+            start_position,
+            &mut references,
+            &mut missing_closing_characters,
+        )?;
+        let mut css = input.slice_from(start_position).to_owned();
+        if !missing_closing_characters.is_empty() {
+            // Unescaped backslash at EOF in a quoted string is ignored.
+            if css.ends_with("\\") &&
+                matches!(missing_closing_characters.as_bytes()[0], b'"' | b'\'')
+            {
+                css.pop();
+            }
+            css.push_str(&missing_closing_characters);
+        }
 
-        let mut css = css.into_owned();
         css.shrink_to_fit();
-
         references.refs.shrink_to_fit();
 
         Ok(Self {
@@ -641,57 +644,50 @@ impl VariableValue {
     }
 }
 
-fn parse_self_contained_declaration_value<'i, 't>(
-    input: &mut Parser<'i, 't>,
-    references: &mut References,
-) -> Result<(TokenSerializationType, Cow<'i, str>, TokenSerializationType), ParseError<'i>> {
-    let start_position = input.position();
-    let mut missing_closing_characters = String::new();
-    let (first, last) =
-        parse_declaration_value(input, references, &mut missing_closing_characters)?;
-    let mut css: Cow<str> = input.slice_from(start_position).into();
-    if !missing_closing_characters.is_empty() {
-        // Unescaped backslash at EOF in a quoted string is ignored.
-        if css.ends_with("\\") && matches!(missing_closing_characters.as_bytes()[0], b'"' | b'\'') {
-            css.to_mut().pop();
-        }
-        css.to_mut().push_str(&missing_closing_characters);
-    }
-    Ok((first, css, last))
-}
-
 /// <https://drafts.csswg.org/css-syntax-3/#typedef-declaration-value>
 fn parse_declaration_value<'i, 't>(
     input: &mut Parser<'i, 't>,
+    input_start: SourcePosition,
     references: &mut References,
     missing_closing_characters: &mut String,
 ) -> Result<(TokenSerializationType, TokenSerializationType), ParseError<'i>> {
     input.parse_until_before(Delimiter::Bang | Delimiter::Semicolon, |input| {
-        parse_declaration_value_block(input, references, missing_closing_characters)
+        parse_declaration_value_block(input, input_start, references, missing_closing_characters)
     })
 }
 
-/// Like parse_declaration_value, but accept `!` and `;` since they are only
-/// invalid at the top level
+/// Like parse_declaration_value, but accept `!` and `;` since they are only invalid at the top level.
 fn parse_declaration_value_block<'i, 't>(
     input: &mut Parser<'i, 't>,
+    input_start: SourcePosition,
     references: &mut References,
     missing_closing_characters: &mut String,
 ) -> Result<(TokenSerializationType, TokenSerializationType), ParseError<'i>> {
-    input.skip_whitespace();
-    let mut token_start = input.position();
-    let mut token = match input.next_including_whitespace_and_comments() {
-        Ok(token) => token,
-        Err(_) => {
-            return Ok(Default::default());
-        },
-    };
-    let first_token_type = token.serialization_type();
+    let mut is_first = true;
+    let mut first_token_type = TokenSerializationType::Nothing;
+    let mut last_token_type = TokenSerializationType::Nothing;
+    let mut prev_reference_index: Option<usize> = None;
     loop {
+        let token_start = input.position();
+        let Ok(token) = input.next_including_whitespace_and_comments() else { break };
+
+        let prev_token_type = last_token_type;
+        let serialization_type = token.serialization_type();
+        last_token_type = serialization_type;
+        if is_first {
+            first_token_type = last_token_type;
+            is_first = false;
+        }
+
         macro_rules! nested {
             () => {
                 input.parse_nested_block(|input| {
-                    parse_declaration_value_block(input, references, missing_closing_characters)
+                    parse_declaration_value_block(
+                        input,
+                        input_start,
+                        references,
+                        missing_closing_characters,
+                    )
                 })?
             };
         }
@@ -702,9 +698,11 @@ fn parse_declaration_value_block<'i, 't>(
                 }
             };
         }
-        let last_token_type = match *token {
+        if let Some(index) = prev_reference_index.take() {
+            references.refs[index].next_token_type = serialization_type;
+        }
+        match *token {
             Token::Comment(_) => {
-                let serialization_type = token.serialization_type();
                 let token_slice = input.slice_from(token_start);
                 if !token_slice.ends_with("*/") {
                     missing_closing_characters.push_str(if token_slice.ends_with('*') {
@@ -713,7 +711,6 @@ fn parse_declaration_value_block<'i, 't>(
                         "*/"
                     })
                 }
-                serialization_type
             },
             Token::BadUrl(ref u) => {
                 let e = StyleParseErrorKind::BadUrlInDeclarationValueBlock(u.clone());
@@ -738,49 +735,111 @@ fn parse_declaration_value_block<'i, 't>(
             Token::Function(ref name) => {
                 let is_var = name.eq_ignore_ascii_case("var");
                 if is_var || name.eq_ignore_ascii_case("env") {
-                    let args_start = input.state();
-                    let name = input.parse_nested_block(|input| {
-                        parse_var_or_env_function(input, is_var)
+                    let our_ref_index = references.refs.len();
+                    let fallback = input.parse_nested_block(|input| {
+                        // TODO(emilio): For env() this should be <custom-ident> per spec, but no other browser does
+                        // that, see https://github.com/w3c/csswg-drafts/issues/3262.
+                        let name = input.expect_ident()?;
+                        let name = Atom::from(if is_var {
+                            match parse_name(name.as_ref()) {
+                                Ok(name) => name,
+                                Err(()) => {
+                                    let name = name.clone();
+                                    return Err(input.new_custom_error(
+                                        SelectorParseErrorKind::UnexpectedIdent(name),
+                                    ));
+                                },
+                            }
+                        } else {
+                            name.as_ref()
+                        });
+
+                        // We want the order of the references to match source order. So we need to reserve our slot
+                        // now, _before_ parsing our fallback. Note that we don't care if parsing fails after all, since
+                        // if this fails we discard the whole result anyways.
+                        let start = token_start.byte_index() - input_start.byte_index();
+                        references.refs.push(VarOrEnvReference {
+                            name,
+                            start,
+                            // To be fixed up after parsing fallback and auto-closing via our_ref_index.
+                            end: start,
+                            prev_token_type,
+                            // To be fixed up (if needed) on the next loop iteration via prev_reference_index.
+                            next_token_type: TokenSerializationType::Nothing,
+                            // To be fixed up after parsing fallback.
+                            fallback: None,
+                            is_var,
+                        });
+
+                        let mut fallback = None;
+                        if input.try_parse(|input| input.expect_comma()).is_ok() {
+                            input.skip_whitespace();
+                            let fallback_start = num::NonZeroUsize::new(
+                                input.position().byte_index() - input_start.byte_index(),
+                            )
+                            .unwrap();
+                            // NOTE(emilio): Intentionally using parse_declaration_value rather than
+                            // parse_declaration_value_block, since that's what parse_fallback used to do.
+                            let (first, last) = parse_declaration_value(
+                                input,
+                                input_start,
+                                references,
+                                missing_closing_characters,
+                            )?;
+                            fallback = Some(VariableFallback {
+                                start: fallback_start,
+                                first_token_type: first,
+                                last_token_type: last,
+                            });
+                        } else {
+                            let state = input.state();
+                            // We still need to consume the rest of the potentially-unclosed
+                            // tokens, but make sure to not consume tokens that would otherwise be
+                            // invalid, by calling reset().
+                            parse_declaration_value_block(
+                                input,
+                                input_start,
+                                references,
+                                missing_closing_characters,
+                            )?;
+                            input.reset(&state);
+                        }
+                        Ok(fallback)
                     })?;
-                    references.refs.push(VarOrEnvReference {
-                        name,
-                        is_var,
-                    });
+                    check_closed!(")");
+                    prev_reference_index = Some(our_ref_index);
+                    let reference = &mut references.refs[our_ref_index];
+                    reference.end = input.position().byte_index() - input_start.byte_index() + missing_closing_characters.len();
+                    reference.fallback = fallback;
                     if is_var {
                         references.any_var = true;
                     } else {
                         references.any_env = true;
                     }
-                    input.reset(&args_start);
+                } else {
+                    nested!();
+                    check_closed!(")");
                 }
-                nested!();
-                check_closed!(")");
-                Token::CloseParenthesis.serialization_type()
             },
             Token::ParenthesisBlock => {
                 nested!();
                 check_closed!(")");
-                Token::CloseParenthesis.serialization_type()
             },
             Token::CurlyBracketBlock => {
                 nested!();
                 check_closed!("}");
-                Token::CloseCurlyBracket.serialization_type()
             },
             Token::SquareBracketBlock => {
                 nested!();
                 check_closed!("]");
-                Token::CloseSquareBracket.serialization_type()
             },
             Token::QuotedString(_) => {
-                let serialization_type = token.serialization_type();
                 let token_slice = input.slice_from(token_start);
                 let quote = &token_slice[..1];
                 debug_assert!(matches!(quote, "\"" | "'"));
                 if !(token_slice.ends_with(quote) && token_slice.len() > 1) {
                     missing_closing_characters.push_str(quote)
                 }
-                serialization_type
             },
             Token::Ident(ref value) |
             Token::AtKeyword(ref value) |
@@ -793,7 +852,6 @@ fn parse_declaration_value_block<'i, 't>(
                 references
                     .non_custom_references
                     .insert(NonCustomReferences::from_unit(value));
-                let serialization_type = token.serialization_type();
                 let is_unquoted_url = matches!(token, Token::UnquotedUrl(_));
                 if value.ends_with("�") && input.slice_from(token_start).ends_with("\\") {
                     // Unescaped backslash at EOF in these contexts is interpreted as U+FFFD
@@ -805,81 +863,14 @@ fn parse_declaration_value_block<'i, 't>(
                 if is_unquoted_url {
                     check_closed!(")");
                 }
-                serialization_type
             },
-            _ => token.serialization_type(),
-        };
-
-        token_start = input.position();
-        token = match input.next_including_whitespace_and_comments() {
-            Ok(token) => token,
-            Err(..) => return Ok((first_token_type, last_token_type)),
+            _ => {},
         };
     }
+    Ok((first_token_type, last_token_type))
 }
 
-fn parse_fallback<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), ParseError<'i>> {
-    // Exclude `!` and `;` at the top level
-    // https://drafts.csswg.org/css-syntax/#typedef-declaration-value
-    input.parse_until_before(Delimiter::Bang | Delimiter::Semicolon, |input| {
-        // Skip until the end.
-        while input.next_including_whitespace_and_comments().is_ok() {}
-        Ok(())
-    })
-}
-
-fn parse_and_substitute_fallback<'i>(
-    input: &mut Parser<'i, '_>,
-    custom_properties: &ComputedCustomProperties,
-    url_data: &UrlExtraData,
-    stylist: &Stylist,
-    computed_context: &computed::Context,
-) -> Result<ComputedValue, ParseError<'i>> {
-    input.skip_whitespace();
-    let after_comma = input.state();
-    let first_token_type = input
-        .next_including_whitespace_and_comments()
-        .ok()
-        .map_or_else(TokenSerializationType::default, |t| t.serialization_type());
-    input.reset(&after_comma);
-    let mut position = (after_comma.position(), first_token_type);
-
-    let mut fallback = ComputedValue::empty(url_data);
-    let last_token_type = substitute_block(
-        input,
-        &mut position,
-        &mut fallback,
-        custom_properties,
-        stylist,
-        computed_context,
-    )?;
-    fallback.push_from(input, position, last_token_type)?;
-    Ok(fallback)
-}
-
-fn parse_var_or_env_function<'i, 't>(input: &mut Parser<'i, 't>, is_var: bool) -> Result<Name, ParseError<'i>> {
-    // TODO(emilio): For env() this should be <custom-ident> per spec, but no other browser does
-    // that, see https://github.com/w3c/csswg-drafts/issues/3262.
-    let name = input.expect_ident()?;
-    let name = Atom::from(if is_var {
-        match parse_name(name.as_ref()) {
-            Ok(name) => name,
-            Err(()) => {
-                let name = name.clone();
-                return Err(input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name)));
-            },
-        }
-    } else {
-        name.as_ref()
-    });
-    if input.try_parse(|input| input.expect_comma()).is_ok() {
-        parse_fallback(input)?;
-    }
-    Ok(name)
-}
-
-/// A struct that takes care of encapsulating the cascade process for custom
-/// properties.
+/// A struct that takes care of encapsulating the cascade process for custom properties.
 pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
     seen: PrecomputedHashSet<&'a Name>,
     may_have_cycles: bool,
@@ -1089,7 +1080,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             _ => {},
         }
 
-        let existing_value = self.custom_properties.get(self.stylist, &name);
+        let existing_value = self.custom_properties.get(registration, &name);
         match (existing_value, value) {
             (None, &CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Initial)) => {
                 debug_assert!(registration.inherits(), "Should've been handled earlier");
@@ -1347,7 +1338,8 @@ fn substitute_all(
         // Some shortcut checks.
         let (value, should_substitute) = match var {
             VarType::Custom(ref name) => {
-                let value = context.map.get(context.stylist, name)?;
+                let registration = context.stylist.get_custom_property_registration(name);
+                let value = context.map.get(registration, name)?;
 
                 let non_custom_references = value
                     .references
@@ -1561,7 +1553,9 @@ fn substitute_all(
                         continue;
                     }
                     if let Some(deferred) = &mut context.deferred_properties {
-                        if deferred.get(context.stylist, &reference.name).is_some() {
+                        let registration =
+                            context.stylist.get_custom_property_registration(&reference.name);
+                        if deferred.get(registration, &reference.name).is_some() {
                             // This property depends on a custom property that depends on a non-custom property, defer.
                             deferred.insert(registration, &name, Arc::clone(v));
                             context.map.remove(registration, &name);
@@ -1625,7 +1619,7 @@ fn handle_invalid_at_computed_value_time(
         // For the root element, inherited maps are empty. We should just
         // use the initial value if any, rather than removing the name.
         if registration.inherits() && !is_root_element {
-            if let Some(value) = inherited.get(stylist, name) {
+            if let Some(value) = inherited.get(registration, name) {
                 custom_properties.insert(registration, name, Arc::clone(value));
                 return;
             }
@@ -1647,320 +1641,319 @@ fn substitute_references_if_needed_and_apply(
     stylist: &Stylist,
     computed_context: &computed::Context,
 ) {
-    let inherited = computed_context.inherited_custom_properties();
-    let is_root_element = computed_context.is_root_element();
     let registration = stylist.get_custom_property_registration(&name);
-    let should_substitute = value.has_references();
-    // TODO: we could just leave this uninitialized (and not an option) if rustc was a bit smarter,
-    // but hopefully llvm optimizes it well anyways.
-    let mut substituted_value = None;
-    let computed_value = if should_substitute {
-        let substituted = match substitute_internal(value, custom_properties, stylist, computed_context) {
-            Ok(v) => v,
-            Err(..) => {
-                handle_invalid_at_computed_value_time(
-                    name,
-                    custom_properties,
-                    inherited,
-                    stylist,
-                    is_root_element,
-                );
-                return;
-            },
-        };
+    if !value.has_references() && registration.syntax.is_universal() {
+        // Trivial path: no references and no need to compute the value, just apply it directly.
+        custom_properties.insert(registration, name, Arc::clone(value));
+        return;
+    }
 
-        // If variable fallback results in a wide keyword, deal with it now.
-        {
-            let mut input = ParserInput::new(&substituted.css);
-            let mut input = Parser::new(&mut input);
-
-            let inherits = registration.inherits();
-            if let Ok(kw) = input.try_parse(CSSWideKeyword::parse) {
-                // TODO: It's unclear what this should do for revert / revert-layer, see
-                // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
-                // seems fine?
-                match (kw, inherits, is_root_element) {
-                    (CSSWideKeyword::Initial, _, _) |
-                    (CSSWideKeyword::Revert, false, _) |
-                    (CSSWideKeyword::RevertLayer, false, _) |
-                    (CSSWideKeyword::Unset, false, _) |
-                    (CSSWideKeyword::Revert, true, true) |
-                    (CSSWideKeyword::RevertLayer, true, true) |
-                    (CSSWideKeyword::Unset, true, true) |
-                    (CSSWideKeyword::Inherit, _, true) => {
-                        custom_properties.remove(registration, name);
-                        if let Some(ref initial_value) = registration.initial_value {
-                            custom_properties.insert(registration, name, Arc::clone(initial_value));
-                        }
-                    },
-                    (CSSWideKeyword::Revert, true, false) |
-                    (CSSWideKeyword::RevertLayer, true, false) |
-                    (CSSWideKeyword::Inherit, _, false) |
-                    (CSSWideKeyword::Unset, true, false) => {
-                        match inherited.get(stylist, name) {
-                            Some(value) => {
-                                custom_properties.insert(registration, name, Arc::clone(value));
-                            },
-                            None => {
-                                custom_properties.remove(registration, name);
-                            },
-                        };
-                    },
-                }
-                return;
-            }
-        }
-        substituted_value = Some(substituted);
-        substituted_value.as_ref().unwrap()
-    } else {
-        &value
-    };
-
-    if !registration.syntax.is_universal() {
-        let mut input = ParserInput::new(&computed_value.css);
-        let mut input = Parser::new(&mut input);
-
-        if let Ok(value) = SpecifiedRegisteredValue::compute(
-            &mut input,
-            registration,
-            &computed_value.url_data,
-            computed_context,
-            AllowComputationallyDependent::Yes,
-        ) {
-            custom_properties.insert(registration, name, value);
-        } else {
+    let inherited = computed_context.inherited_custom_properties();
+    let value = match substitute_internal(value, custom_properties, stylist, registration, computed_context) {
+        Ok(v) => v,
+        Err(..) => {
             handle_invalid_at_computed_value_time(
                 name,
                 custom_properties,
                 inherited,
                 stylist,
-                is_root_element,
+                computed_context.is_root_element(),
             );
+            return;
+        },
+    }.into_value(&value.url_data);
+
+    // If variable fallback results in a wide keyword, deal with it now.
+    {
+        let mut input = ParserInput::new(&value.css);
+        let mut input = Parser::new(&mut input);
+
+        if let Ok(kw) = input.try_parse(CSSWideKeyword::parse) {
+            // TODO: It's unclear what this should do for revert / revert-layer, see
+            // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
+            // seems fine?
+            match (kw, registration.inherits(), computed_context.is_root_element()) {
+                (CSSWideKeyword::Initial, _, _) |
+                (CSSWideKeyword::Revert, false, _) |
+                (CSSWideKeyword::RevertLayer, false, _) |
+                (CSSWideKeyword::Unset, false, _) |
+                (CSSWideKeyword::Revert, true, true) |
+                (CSSWideKeyword::RevertLayer, true, true) |
+                (CSSWideKeyword::Unset, true, true) |
+                (CSSWideKeyword::Inherit, _, true) => {
+                    custom_properties.remove(registration, name);
+                    if let Some(ref initial_value) = registration.initial_value {
+                        custom_properties.insert(registration, name, Arc::clone(initial_value));
+                    }
+                },
+                (CSSWideKeyword::Revert, true, false) |
+                (CSSWideKeyword::RevertLayer, true, false) |
+                (CSSWideKeyword::Inherit, _, false) |
+                (CSSWideKeyword::Unset, true, false) => {
+                    match inherited.get(registration, name) {
+                        Some(value) => {
+                            custom_properties.insert(registration, name, Arc::clone(value));
+                        },
+                        None => {
+                            custom_properties.remove(registration, name);
+                        },
+                    };
+                },
+            }
+            return;
         }
-        return;
     }
 
-    // Try to avoid the copy if possible.
-    let final_value = if should_substitute {
-        let mut v = substituted_value.unwrap();
-        v.css.shrink_to_fit();
-        Arc::new(v)
-    } else {
-        Arc::clone(value)
-    };
-    custom_properties.insert(registration, name, final_value);
+    custom_properties.insert(registration, name, Arc::new(value));
 }
 
-/// Replace `var()` functions in an arbitrary bit of input.
-///
-/// If the variable has its initial value, the callback should return `Err(())`
-/// and leave `partial_computed_value` unchanged.
-///
-/// Otherwise, it should push the value of the variable (with its own `var()` functions replaced)
-/// to `partial_computed_value` and return `Ok(last_token_type of what was pushed)`
-///
-/// Return `Err(())` if `input` is invalid at computed-value time.
-/// or `Ok(last_token_type that was pushed to partial_computed_value)` otherwise.
-fn substitute_block<'i>(
-    input: &mut Parser<'i, '_>,
-    position: &mut (SourcePosition, TokenSerializationType),
-    partial_computed_value: &mut ComputedValue,
-    custom_properties: &ComputedCustomProperties,
-    stylist: &Stylist,
-    computed_context: &computed::Context,
-) -> Result<TokenSerializationType, ParseError<'i>> {
-    let mut last_token_type = TokenSerializationType::default();
-    let mut set_position_at_next_iteration = false;
-    loop {
-        let before_this_token = input.position();
-        let next = input.next_including_whitespace_and_comments();
-        if set_position_at_next_iteration {
-            *position = (
-                before_this_token,
-                match next {
-                    Ok(token) => token.serialization_type(),
-                    Err(_) => TokenSerializationType::default(),
-                },
-            );
-            set_position_at_next_iteration = false;
-        }
-        let token = match next {
-            Ok(token) => token,
-            Err(..) => break,
-        };
-        match token {
-            Token::Function(ref name)
-                if name.eq_ignore_ascii_case("var") || name.eq_ignore_ascii_case("env") =>
-            {
-                let is_env = name.eq_ignore_ascii_case("env");
+#[derive(Default)]
+struct Substitution<'a> {
+    css: Cow<'a, str>,
+    first_token_type: TokenSerializationType,
+    last_token_type: TokenSerializationType,
+}
 
-                partial_computed_value.push(
-                    input,
-                    input.slice(position.0..before_this_token),
-                    position.1,
-                    last_token_type,
-                )?;
-                input.parse_nested_block(|input| {
-                    // parse_var_function() / parse_env_function() ensure neither .unwrap() will fail.
-                    let name = {
-                        let name = input.expect_ident().unwrap();
-                        if is_env {
-                            Atom::from(&**name)
-                        } else {
-                            Atom::from(parse_name(&name).unwrap())
-                        }
-                    };
-
-                    let env_value;
-
-                    let registration;
-                    let value = if is_env {
-                        registration = PropertyRegistrationData::unregistered();
-                        let device = stylist.device();
-                        if let Some(v) = device.environment().get(
-                            &name,
-                            device,
-                            &partial_computed_value.url_data,
-                        ) {
-                            env_value = v;
-                            Some(&env_value)
-                        } else {
-                            None
-                        }
-                    } else {
-                        registration = stylist.get_custom_property_registration(&name);
-                        custom_properties.get(stylist, &name).map(|v| &**v)
-                    };
-
-                    if let Some(v) = value {
-                        last_token_type = v.last_token_type;
-
-                        if !registration.syntax.is_universal() {
-                            if input.try_parse(|input| input.expect_comma()).is_ok() {
-                                // Validate the fallback has the right type.
-                                let fallback = parse_and_substitute_fallback(
-                                    input,
-                                    custom_properties,
-                                    &partial_computed_value.url_data,
-                                    stylist,
-                                    computed_context,
-                                )?;
-                                let mut fallback_input = ParserInput::new(&fallback.css);
-                                let mut fallback_input = Parser::new(&mut fallback_input);
-                                if SpecifiedRegisteredValue::compute(
-                                    &mut fallback_input,
-                                    registration,
-                                    &partial_computed_value.url_data,
-                                    computed_context,
-                                    AllowComputationallyDependent::Yes,
-                                ).is_err() {
-                                    return Err(input
-                                        .new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                                }
-                            }
-                        } else {
-                            // Skip over the fallback, as `parse_nested_block` would return `Err`
-                            // if we don't consume all of `input`.
-                            // FIXME: Add a specialized method to cssparser to do this with less work.
-                            while input.next().is_ok() {}
-                        }
-                        partial_computed_value.push_variable(input, v)?;
-                    } else {
-                        input.expect_comma()?;
-                        let fallback = parse_and_substitute_fallback(
-                            input,
-                            custom_properties,
-                            &partial_computed_value.url_data,
-                            stylist,
-                            computed_context,
-                        )?;
-                        last_token_type = fallback.last_token_type;
-
-                        if !registration.syntax.is_universal() {
-                            let mut fallback_input = ParserInput::new(&fallback.css);
-                            let mut fallback_input = Parser::new(&mut fallback_input);
-                            if let Ok(fallback) = SpecifiedRegisteredValue::compute(
-                                &mut fallback_input,
-                                registration,
-                                &fallback.url_data,
-                                computed_context,
-                                AllowComputationallyDependent::Yes,
-                            ) {
-                                partial_computed_value.push_variable(input, &fallback)?;
-                            } else {
-                                return Err(
-                                    input.new_custom_error(StyleParseErrorKind::UnspecifiedError)
-                                );
-                            }
-                        } else {
-                            partial_computed_value.push_variable(&input, &fallback)?;
-                        }
-                    }
-                    Ok(())
-                })?;
-                set_position_at_next_iteration = true
-            },
-            Token::Function(_) |
-            Token::ParenthesisBlock |
-            Token::CurlyBracketBlock |
-            Token::SquareBracketBlock => {
-                input.parse_nested_block(|input| {
-                    substitute_block(
-                        input,
-                        position,
-                        partial_computed_value,
-                        custom_properties,
-                        stylist,
-                        computed_context,
-                    )
-                })?;
-                // It's the same type for CloseCurlyBracket and CloseSquareBracket.
-                last_token_type = Token::CloseParenthesis.serialization_type();
-            },
-
-            _ => last_token_type = token.serialization_type(),
+impl<'a> Substitution<'a> {
+    fn new(
+        css: &'a str,
+        first_token_type: TokenSerializationType,
+        last_token_type: TokenSerializationType,
+    ) -> Self {
+        Self {
+            css: Cow::Borrowed(css),
+            first_token_type,
+            last_token_type,
         }
     }
-    // FIXME: deal with things being implicitly closed at the end of the input. E.g.
-    // ```html
-    // <div style="--color: rgb(0,0,0">
-    // <p style="background: var(--color) var(--image) top left; --image: url('a.png"></p>
-    // </div>
-    // ```
-    Ok(last_token_type)
+
+    fn from_value(v: VariableValue) -> Substitution<'static> {
+        debug_assert!(!v.has_references(), "Computed values shouldn't have references");
+        Substitution {
+            css: Cow::from(v.css),
+            first_token_type: v.first_token_type,
+            last_token_type: v.last_token_type,
+        }
+    }
+
+    fn into_value(self, url_data: &UrlExtraData) -> VariableValue {
+        VariableValue {
+            css: self.css.into_owned(),
+            first_token_type: self.first_token_type,
+            last_token_type: self.last_token_type,
+            url_data: url_data.clone(),
+            references: Default::default(),
+        }
+    }
+}
+
+fn compute_value(
+    css: &str,
+    url_data: &UrlExtraData,
+    registration: &PropertyRegistrationData,
+    computed_context: &computed::Context,
+) -> Result<Substitution<'static>, ()> {
+    debug_assert!(!registration.syntax.is_universal());
+
+    let mut input = ParserInput::new(&css);
+    let mut input = Parser::new(&mut input);
+
+    let value = SpecifiedRegisteredValue::compute(
+        &mut input,
+        registration,
+        url_data,
+        computed_context,
+        AllowComputationallyDependent::Yes,
+    )?;
+    Ok(Substitution::from_value(value))
+}
+
+fn do_substitute_chunk<'a>(
+    css: &'a str,
+    start: usize,
+    end: usize,
+    first_token_type: TokenSerializationType,
+    last_token_type: TokenSerializationType,
+    url_data: &UrlExtraData,
+    custom_properties: &'a ComputedCustomProperties,
+    registration: &PropertyRegistrationData,
+    stylist: &Stylist,
+    computed_context: &computed::Context,
+    references: &mut std::iter::Peekable<std::slice::Iter<VarOrEnvReference>>,
+) -> Result<Substitution<'a>, ()> {
+    if start == end {
+        // Empty string. Easy.
+        return Ok(Substitution::default());
+    }
+    // Easy case: no references involved.
+    if references
+        .peek()
+        .map_or(true, |reference| reference.end > end)
+    {
+        let result = &css[start..end];
+        if !registration.syntax.is_universal() {
+            return compute_value(result, url_data, registration, computed_context);
+        }
+        return Ok(Substitution::new(result, first_token_type, last_token_type));
+    }
+
+    let mut substituted = ComputedValue::empty(url_data);
+    let mut next_token_type = first_token_type;
+    let mut cur_pos = start;
+    while let Some(reference) = references.next_if(|reference| reference.end <= end) {
+        if reference.start != cur_pos {
+            substituted.push(
+                &css[cur_pos..reference.start],
+                next_token_type,
+                reference.prev_token_type,
+            )?;
+        }
+
+        let substitution = substitute_one_reference(
+            css,
+            url_data,
+            custom_properties,
+            reference,
+            stylist,
+            computed_context,
+            references,
+        )?;
+
+        // Optimize the property: var(--...) case to avoid allocating at all.
+        if reference.start == start && reference.end == end && registration.syntax.is_universal() {
+            return Ok(substitution);
+        }
+
+        substituted.push(
+            &substitution.css,
+            substitution.first_token_type,
+            substitution.last_token_type,
+        )?;
+        next_token_type = reference.next_token_type;
+        cur_pos = reference.end;
+    }
+    // Push the rest of the value if needed.
+    if cur_pos != end {
+        substituted.push(&css[cur_pos..end], next_token_type, last_token_type)?;
+    }
+    if !registration.syntax.is_universal() {
+        return compute_value(&substituted.css, url_data, registration, computed_context);
+    }
+    Ok(Substitution::from_value(substituted))
+}
+
+fn substitute_one_reference<'a>(
+    css: &'a str,
+    url_data: &UrlExtraData,
+    custom_properties: &'a ComputedCustomProperties,
+    reference: &VarOrEnvReference,
+    stylist: &Stylist,
+    computed_context: &computed::Context,
+    references: &mut std::iter::Peekable<std::slice::Iter<VarOrEnvReference>>,
+) -> Result<Substitution<'a>, ()> {
+    let registration;
+    if reference.is_var {
+        registration = stylist.get_custom_property_registration(&reference.name);
+        if let Some(v) = custom_properties.get(registration, &reference.name) {
+            debug_assert!(!v.has_references(), "Should be already computed");
+            if registration.syntax.is_universal() {
+                // Skip references that are inside the outer variable (in fallback for example).
+                while references
+                    .next_if(|next_ref| next_ref.end <= reference.end)
+                    .is_some()
+                {}
+            } else {
+                // We need to validate the fallback if any, since invalid fallback should
+                // invalidate the whole variable.
+                if let Some(ref fallback) = reference.fallback {
+                    let _ = do_substitute_chunk(
+                        css,
+                        fallback.start.get(),
+                        reference.end - 1, // Don't include the closing parenthesis.
+                        fallback.first_token_type,
+                        fallback.last_token_type,
+                        url_data,
+                        custom_properties,
+                        registration,
+                        stylist,
+                        computed_context,
+                        references,
+                    )?;
+                }
+            }
+            return Ok(Substitution {
+                css: Cow::from(&v.css),
+                first_token_type: v.first_token_type,
+                last_token_type: v.last_token_type,
+            });
+        }
+    } else {
+        registration = PropertyRegistrationData::unregistered();
+        let device = stylist.device();
+        if let Some(v) = device.environment().get(&reference.name, device, url_data) {
+            while references
+                .next_if(|next_ref| next_ref.end <= reference.end)
+                .is_some()
+            {}
+            return Ok(Substitution::from_value(v));
+        }
+    }
+
+    let Some(ref fallback) = reference.fallback else { return Err(()) };
+
+    do_substitute_chunk(
+        css,
+        fallback.start.get(),
+        reference.end - 1, // Skip the closing parenthesis of the reference value.
+        fallback.first_token_type,
+        fallback.last_token_type,
+        url_data,
+        custom_properties,
+        registration,
+        stylist,
+        computed_context,
+        references,
+    )
 }
 
 /// Replace `var()` and `env()` functions. Return `Err(..)` for invalid at computed time.
-fn substitute_internal<'i>(
-    variable_value: &'i VariableValue,
-    custom_properties: &ComputedCustomProperties,
+fn substitute_internal<'a>(
+    variable_value: &'a VariableValue,
+    custom_properties: &'a ComputedCustomProperties,
     stylist: &Stylist,
+    registration: &PropertyRegistrationData,
     computed_context: &computed::Context,
-) -> Result<ComputedValue, ParseError<'i>> {
-    debug_assert!(variable_value.has_references());
-    let mut substituted = ComputedValue::empty(&variable_value.url_data);
-    let mut input = ParserInput::new(&variable_value.css);
-    let mut input = Parser::new(&mut input);
-    let mut position = (input.position(), variable_value.first_token_type);
-    let last_token_type = substitute_block(
-        &mut input,
-        &mut position,
-        &mut substituted,
+) -> Result<Substitution<'a>, ()> {
+    let mut refs = variable_value.references.refs.iter().peekable();
+    do_substitute_chunk(
+        &variable_value.css,
+        /* start = */ 0,
+        /* end = */ variable_value.css.len(),
+        variable_value.first_token_type,
+        variable_value.last_token_type,
+        &variable_value.url_data,
         custom_properties,
+        registration,
         stylist,
         computed_context,
-    )?;
-    substituted.push_from(&input, position, last_token_type)?;
-    Ok(substituted)
+        &mut refs,
+    )
 }
 
 /// Replace var() and env() functions, returning the resulting CSS string.
-pub fn substitute<'i>(
-    variable_value: &'i VariableValue,
-    custom_properties: &ComputedCustomProperties,
+pub fn substitute<'a>(
+    variable_value: &'a VariableValue,
+    custom_properties: &'a ComputedCustomProperties,
     stylist: &Stylist,
     computed_context: &computed::Context,
-) -> Result<String, ParseError<'i>> {
-    let v = substitute_internal(variable_value, custom_properties, stylist, computed_context)?;
+) -> Result<Cow<'a, str>, ()> {
+    debug_assert!(variable_value.has_references());
+    let v = substitute_internal(
+        variable_value,
+        custom_properties,
+        stylist,
+        PropertyRegistrationData::unregistered(),
+        computed_context,
+    )?;
     Ok(v.css)
 }

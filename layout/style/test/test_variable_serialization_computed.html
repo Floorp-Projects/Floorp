@@ -68,7 +68,7 @@ function runTest() {
     var expected = entry[2];
     span.setAttribute("style", declaration);
     var cs = getComputedStyle(span, "");
-    is(cs.getPropertyValue(property), expected, "subtest #" + i);
+    is(cs.getPropertyValue(property), expected, `subtest #${i}: ${declaration}`);
   });
 
   SimpleTest.finish();

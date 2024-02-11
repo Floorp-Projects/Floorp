@@ -221,6 +221,10 @@ impl PropertyRegistration {
             return Err(());
         };
 
+        if self.data.syntax.is_universal() {
+            return Ok(Arc::clone(initial));
+        }
+
         let mut input = ParserInput::new(initial.css_text());
         let mut input = Parser::new(&mut input);
         input.skip_whitespace();
@@ -232,7 +236,7 @@ impl PropertyRegistration {
             computed_context,
             AllowComputationallyDependent::No,
         ) {
-            Ok(computed) => Ok(computed),
+            Ok(computed) => Ok(Arc::new(computed)),
             Err(_) => Err(()),
         }
     }

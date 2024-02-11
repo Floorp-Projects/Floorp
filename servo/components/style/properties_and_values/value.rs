@@ -217,16 +217,15 @@ impl SpecifiedValue {
         url_data: &UrlExtraData,
         context: &computed::Context,
         allow_computationally_dependent: AllowComputationallyDependent,
-    ) -> Result<Arc<ComputedPropertyValue>, ()> {
+    ) -> Result<ComputedPropertyValue, ()> {
         let value = Self::get_computed_value(
             input,
             registration,
             url_data,
             context,
-            allow_computationally_dependent
-        );
-
-        Ok(value?.to_var(url_data))
+            allow_computationally_dependent,
+        )?;
+        Ok(value.to_variable_value(url_data))
     }
 
     /// Convert a registered custom property to a Computed custom property value, given input and a
@@ -238,6 +237,7 @@ impl SpecifiedValue {
         context: &computed::Context,
         allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<ComputedValue, ()> {
+        debug_assert!(!registration.syntax.is_universal(), "Shouldn't be needed");
         let Ok(value) = Self::parse(
             input,
             &registration.syntax,
@@ -294,19 +294,24 @@ impl ComputedValue {
         }
     }
 
-    fn to_var(&self, url_data: &UrlExtraData) -> Arc<ComputedPropertyValue> {
+    fn to_declared_value(&self, url_data: &UrlExtraData) -> Arc<ComputedPropertyValue> {
         if let Self::Universal(var) = self {
-            return var.clone();
+            return Arc::clone(var);
         }
+        Arc::new(self.to_variable_value(url_data))
+    }
+
+    fn to_variable_value(&self, url_data: &UrlExtraData) -> ComputedPropertyValue {
+        debug_assert!(!matches!(self, Self::Universal(..)), "Shouldn't be needed");
         // TODO(zrhoffman, 1864736): Preserve the computed type instead of converting back to a
         // string.
         let serialization_types = self.serialization_types();
-        Arc::new(ComputedPropertyValue::new(
+        ComputedPropertyValue::new(
             self.to_css_string(),
             url_data,
             serialization_types.0,
             serialization_types.1,
-        ))
+        )
     }
 }
 
@@ -615,7 +620,7 @@ impl CustomAnimatedValue {
     pub(crate) fn to_declaration(&self) -> properties::PropertyDeclaration {
         properties::PropertyDeclaration::Custom(properties::CustomDeclaration {
             name: self.name.clone(),
-            value: properties::CustomDeclarationValue::Value(self.value.to_var(&self.url_data)),
+            value: properties::CustomDeclarationValue::Value(self.value.to_declared_value(&self.url_data)),
         })
     }
 }
