@@ -928,7 +928,7 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   // Data Members
   // mContent can be null in a DocAccessible if the document has no body or
-  // root element.
+  // root element, or if the initial tree hasn't been constructed yet.
   nsCOMPtr<nsIContent> mContent;
   RefPtr<DocAccessible> mDoc;
 
