@@ -161,11 +161,24 @@ class JsepTransportController : public sigslot::has_slots<> {
   // level, creating/destroying transport objects as needed and updating their
   // properties. This includes RTP, DTLS, and ICE (but not SCTP). At least not
   // yet? May make sense to in the future.
+  //
+  // `local_desc` must always be valid. If a remote description has previously
+  // been set via a call to `SetRemoteDescription()` then `remote_desc` should
+  // point to that description object in order to keep the current local and
+  // remote session descriptions in sync.
   RTCError SetLocalDescription(SdpType type,
-                               const cricket::SessionDescription* description);
+                               const cricket::SessionDescription* local_desc,
+                               const cricket::SessionDescription* remote_desc);
 
+  // Call to apply a remote description (See `SetLocalDescription()` for local).
+  //
+  // `remote_desc` must always be valid. If a local description has previously
+  // been set via a call to `SetLocalDescription()` then `local_desc` should
+  // point to that description object in order to keep the current local and
+  // remote session descriptions in sync.
   RTCError SetRemoteDescription(SdpType type,
-                                const cricket::SessionDescription* description);
+                                const cricket::SessionDescription* local_desc,
+                                const cricket::SessionDescription* remote_desc);
 
   // Get transports to be used for the provided `mid`. If bundling is enabled,
   // calling GetRtpTransport for multiple MIDs may yield the same object.
@@ -325,14 +338,23 @@ class JsepTransportController : public sigslot::has_slots<> {
   CallbackList<const cricket::CandidatePairChangeEvent&>
       signal_ice_candidate_pair_changed_ RTC_GUARDED_BY(network_thread_);
 
+  // Called from SetLocalDescription and SetRemoteDescription.
+  // When `local` is true, local_desc must be valid. Similarly when
+  // `local` is false, remote_desc must be valid. The description counterpart
+  // to the one that's being applied, may be nullptr but when it's supplied
+  // the counterpart description's content groups will  be kept up to date for
+  // `type == SdpType::kAnswer`.
   RTCError ApplyDescription_n(bool local,
                               SdpType type,
-                              const cricket::SessionDescription* description)
+                              const cricket::SessionDescription* local_desc,
+                              const cricket::SessionDescription* remote_desc)
       RTC_RUN_ON(network_thread_);
   RTCError ValidateAndMaybeUpdateBundleGroups(
       bool local,
       SdpType type,
-      const cricket::SessionDescription* description);
+      const cricket::SessionDescription* local_desc,
+      const cricket::SessionDescription* remote_desc)
+      RTC_RUN_ON(network_thread_);
   RTCError ValidateContent(const cricket::ContentInfo& content_info);
 
   void HandleRejectedContent(const cricket::ContentInfo& content_info)
@@ -481,8 +503,6 @@ class JsepTransportController : public sigslot::has_slots<> {
   const Config config_;
   bool active_reset_srtp_params_ RTC_GUARDED_BY(network_thread_);
 
-  const cricket::SessionDescription* local_desc_ = nullptr;
-  const cricket::SessionDescription* remote_desc_ = nullptr;
   absl::optional<bool> initial_offerer_;
 
   cricket::IceConfig ice_config_;

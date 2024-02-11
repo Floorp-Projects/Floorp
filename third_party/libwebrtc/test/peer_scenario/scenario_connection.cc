@@ -173,7 +173,9 @@ void ScenarioIceConnectionImpl::SetRemoteSdp(SdpType type,
       });
 
   auto res = jsep_controller_->SetRemoteDescription(
-      remote_description_->GetType(), remote_description_->description());
+      remote_description_->GetType(),
+      local_description_ ? local_description_->description() : nullptr,
+      remote_description_->description());
   RTC_CHECK(res.ok()) << res.message();
   RtpDemuxerCriteria criteria;
   for (const auto& content : remote_description_->description()->contents()) {
@@ -194,7 +196,8 @@ void ScenarioIceConnectionImpl::SetLocalSdp(SdpType type,
   RTC_DCHECK_RUN_ON(signaling_thread_);
   local_description_ = webrtc::CreateSessionDescription(type, local_sdp);
   auto res = jsep_controller_->SetLocalDescription(
-      local_description_->GetType(), local_description_->description());
+      local_description_->GetType(), local_description_->description(),
+      remote_description_ ? remote_description_->description() : nullptr);
   RTC_CHECK(res.ok()) << res.message();
   jsep_controller_->MaybeStartGathering();
 }
