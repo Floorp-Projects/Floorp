@@ -76,14 +76,18 @@ JsepTransportController::~JsepTransportController() {
 
 RTCError JsepTransportController::SetLocalDescription(
     SdpType type,
-    const cricket::SessionDescription* description) {
+    const cricket::SessionDescription* local_desc,
+    const cricket::SessionDescription* remote_desc) {
+  RTC_DCHECK(local_desc);
   TRACE_EVENT0("webrtc", "JsepTransportController::SetLocalDescription");
+
   if (!network_thread_->IsCurrent()) {
     return network_thread_->BlockingCall(
-        [=] { return SetLocalDescription(type, description); });
+        [=] { return SetLocalDescription(type, local_desc, remote_desc); });
   }
 
   RTC_DCHECK_RUN_ON(network_thread_);
+
   if (!initial_offerer_.has_value()) {
     initial_offerer_.emplace(type == SdpType::kOffer);
     if (*initial_offerer_) {
@@ -92,20 +96,22 @@ RTCError JsepTransportController::SetLocalDescription(
       SetIceRole_n(cricket::ICEROLE_CONTROLLED);
     }
   }
-  return ApplyDescription_n(/*local=*/true, type, description);
+  return ApplyDescription_n(/*local=*/true, type, local_desc, remote_desc);
 }
 
 RTCError JsepTransportController::SetRemoteDescription(
     SdpType type,
-    const cricket::SessionDescription* description) {
+    const cricket::SessionDescription* local_desc,
+    const cricket::SessionDescription* remote_desc) {
+  RTC_DCHECK(remote_desc);
   TRACE_EVENT0("webrtc", "JsepTransportController::SetRemoteDescription");
   if (!network_thread_->IsCurrent()) {
     return network_thread_->BlockingCall(
-        [=] { return SetRemoteDescription(type, description); });
+        [=] { return SetRemoteDescription(type, local_desc, remote_desc); });
   }
 
   RTC_DCHECK_RUN_ON(network_thread_);
-  return ApplyDescription_n(/*local=*/false, type, description);
+  return ApplyDescription_n(/*local=*/false, type, local_desc, remote_desc);
 }
 
 RtpTransportInternal* JsepTransportController::GetRtpTransport(
@@ -563,18 +569,20 @@ JsepTransportController::GetActiveDtlsTransports() {
 RTCError JsepTransportController::ApplyDescription_n(
     bool local,
     SdpType type,
-    const cricket::SessionDescription* description) {
+    const cricket::SessionDescription* local_desc,
+    const cricket::SessionDescription* remote_desc) {
   TRACE_EVENT0("webrtc", "JsepTransportController::ApplyDescription_n");
+
+  // Stash away the description object that we'll be applying (since this
+  // function is used for both local and remote).
+  const cricket::SessionDescription* description =
+      local ? local_desc : remote_desc;
+
   RTC_DCHECK(description);
 
-  if (local) {
-    local_desc_ = description;
-  } else {
-    remote_desc_ = description;
-  }
-
   RTCError error;
-  error = ValidateAndMaybeUpdateBundleGroups(local, type, description);
+  error =
+      ValidateAndMaybeUpdateBundleGroups(local, type, local_desc, remote_desc);
   if (!error.ok()) {
     return error;
   }
@@ -686,7 +694,11 @@ RTCError JsepTransportController::ApplyDescription_n(
 RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
     bool local,
     SdpType type,
-    const cricket::SessionDescription* description) {
+    const cricket::SessionDescription* local_desc,
+    const cricket::SessionDescription* remote_desc) {
+  const cricket::SessionDescription* description =
+      local ? local_desc : remote_desc;
+
   RTC_DCHECK(description);
 
   std::vector<const cricket::ContentGroup*> new_bundle_groups =
@@ -752,72 +764,74 @@ RTCError JsepTransportController::ValidateAndMaybeUpdateBundleGroups(
       }
     }
   } else if (type == SdpType::kAnswer) {
-    std::vector<const cricket::ContentGroup*> offered_bundle_groups =
-        local ? remote_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE)
-              : local_desc_->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+    if ((local && remote_desc) || (!local && local_desc)) {
+      std::vector<const cricket::ContentGroup*> offered_bundle_groups =
+          local ? remote_desc->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE)
+                : local_desc->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
 
-    std::map<std::string, const cricket::ContentGroup*>
-        offered_bundle_groups_by_mid;
-    for (const cricket::ContentGroup* offered_bundle_group :
-         offered_bundle_groups) {
-      for (const std::string& content_name :
-           offered_bundle_group->content_names()) {
-        offered_bundle_groups_by_mid[content_name] = offered_bundle_group;
-      }
-    }
-
-    std::map<const cricket::ContentGroup*, const cricket::ContentGroup*>
-        new_bundle_groups_by_offered_bundle_groups;
-    for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
-      if (!new_bundle_group->FirstContentName()) {
-        // Empty groups could be a subset of any group.
-        continue;
-      }
-      // The group in the answer (new_bundle_group) must have a corresponding
-      // group in the offer (original_group), because the answer groups may only
-      // be subsets of the offer groups.
-      auto it = offered_bundle_groups_by_mid.find(
-          *new_bundle_group->FirstContentName());
-      if (it == offered_bundle_groups_by_mid.end()) {
-        return RTCError(RTCErrorType::INVALID_PARAMETER,
-                        "A BUNDLE group was added in the answer that did not "
-                        "exist in the offer.");
-      }
-      const cricket::ContentGroup* offered_bundle_group = it->second;
-      if (new_bundle_groups_by_offered_bundle_groups.find(
-              offered_bundle_group) !=
-          new_bundle_groups_by_offered_bundle_groups.end()) {
-        return RTCError(RTCErrorType::INVALID_PARAMETER,
-                        "A MID in the answer has changed group.");
-      }
-      new_bundle_groups_by_offered_bundle_groups.insert(
-          std::make_pair(offered_bundle_group, new_bundle_group));
-      for (const std::string& content_name :
-           new_bundle_group->content_names()) {
-        it = offered_bundle_groups_by_mid.find(content_name);
-        // The BUNDLE group in answer should be a subset of offered group.
-        if (it == offered_bundle_groups_by_mid.end() ||
-            it->second != offered_bundle_group) {
-          return RTCError(RTCErrorType::INVALID_PARAMETER,
-                          "A BUNDLE group in answer contains a MID='" +
-                              content_name +
-                              "' that was not in the offered group.");
+      std::map<std::string, const cricket::ContentGroup*>
+          offered_bundle_groups_by_mid;
+      for (const cricket::ContentGroup* offered_bundle_group :
+           offered_bundle_groups) {
+        for (const std::string& content_name :
+             offered_bundle_group->content_names()) {
+          offered_bundle_groups_by_mid[content_name] = offered_bundle_group;
         }
       }
-    }
 
-    for (const auto& bundle_group : bundles_.bundle_groups()) {
-      for (const std::string& content_name : bundle_group->content_names()) {
-        // An answer that removes m= sections from pre-negotiated BUNDLE group
-        // without rejecting it, is invalid.
-        auto it = new_bundle_groups_by_mid.find(content_name);
-        if (it == new_bundle_groups_by_mid.end()) {
-          auto* content_info = description->GetContentByName(content_name);
-          if (!content_info || !content_info->rejected) {
+      std::map<const cricket::ContentGroup*, const cricket::ContentGroup*>
+          new_bundle_groups_by_offered_bundle_groups;
+      for (const cricket::ContentGroup* new_bundle_group : new_bundle_groups) {
+        if (!new_bundle_group->FirstContentName()) {
+          // Empty groups could be a subset of any group.
+          continue;
+        }
+        // The group in the answer (new_bundle_group) must have a corresponding
+        // group in the offer (original_group), because the answer groups may
+        // only be subsets of the offer groups.
+        auto it = offered_bundle_groups_by_mid.find(
+            *new_bundle_group->FirstContentName());
+        if (it == offered_bundle_groups_by_mid.end()) {
+          return RTCError(RTCErrorType::INVALID_PARAMETER,
+                          "A BUNDLE group was added in the answer that did not "
+                          "exist in the offer.");
+        }
+        const cricket::ContentGroup* offered_bundle_group = it->second;
+        if (new_bundle_groups_by_offered_bundle_groups.find(
+                offered_bundle_group) !=
+            new_bundle_groups_by_offered_bundle_groups.end()) {
+          return RTCError(RTCErrorType::INVALID_PARAMETER,
+                          "A MID in the answer has changed group.");
+        }
+        new_bundle_groups_by_offered_bundle_groups.insert(
+            std::make_pair(offered_bundle_group, new_bundle_group));
+        for (const std::string& content_name :
+             new_bundle_group->content_names()) {
+          it = offered_bundle_groups_by_mid.find(content_name);
+          // The BUNDLE group in answer should be a subset of offered group.
+          if (it == offered_bundle_groups_by_mid.end() ||
+              it->second != offered_bundle_group) {
             return RTCError(RTCErrorType::INVALID_PARAMETER,
-                            "Answer cannot remove m= section with mid='" +
+                            "A BUNDLE group in answer contains a MID='" +
                                 content_name +
-                                "' from already-established BUNDLE group.");
+                                "' that was not in the offered group.");
+          }
+        }
+      }
+
+      for (const auto& bundle_group : bundles_.bundle_groups()) {
+        for (const std::string& content_name : bundle_group->content_names()) {
+          // An answer that removes m= sections from pre-negotiated BUNDLE group
+          // without rejecting it, is invalid.
+          auto it = new_bundle_groups_by_mid.find(content_name);
+          if (it == new_bundle_groups_by_mid.end()) {
+            auto* content_info = description->GetContentByName(content_name);
+            if (!content_info || !content_info->rejected) {
+              return RTCError(RTCErrorType::INVALID_PARAMETER,
+                              "Answer cannot remove m= section with mid='" +
+                                  content_name +
+                                  "' from already-established BUNDLE group.");
+            }
           }
         }
       }
