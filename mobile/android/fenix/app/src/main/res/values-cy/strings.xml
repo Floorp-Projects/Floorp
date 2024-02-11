@@ -490,7 +490,7 @@
     <!-- Summary of https only preference if https only is set to on in private tabs only -->
     <string name="preferences_https_only_on_private">Ymlaen mewn tabiau preifat</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
-    <string name="preferences_http_only_learn_more">Dysgu rhagor</string>
+    <string name="preferences_http_only_learn_more">Darllen rhagor</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">Galluogi ym mhob tab</string>
     <!-- Option for the https only setting -->
@@ -641,7 +641,7 @@
     <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
     <string name="wallpaper_select_error_snackbar_message">Methu newid papur wal</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
-    <string name="wallpaper_learn_more">Dysgu rhagor</string>
+    <string name="wallpaper_learn_more">Darllen rhagor</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s clasurol</string>
@@ -743,7 +743,7 @@
     <!-- Text displayed when there are no exceptions -->
     <string name="exceptions_empty_message_description">Mae eithriadau’n caniatáu i chi analluogi diogelwch rhag trasio ar wefannau penodol.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message_learn_more_link">Dysgu rhagor</string>
+    <string name="exceptions_empty_message_learn_more_link">Darllen rhagor</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Data defnydd a thechnegol</string>
@@ -913,7 +913,7 @@
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">Gall %1$s osod a rhedeg astudiaethau o bryd i’w gilydd.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
-    <string name="studies_learn_more">Dysgu rhagor</string>
+    <string name="studies_learn_more">Darllen rhagor</string>
 
     <!-- Dialog message shown after removing a study -->
     <string name="studies_restart_app">Bydd yr ap yn cau er mwyn gosod y newidiadau</string>
@@ -1511,7 +1511,7 @@
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n dilyn yr hyn rydych chi’n ei wneud ar-lein.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Dysgu rhagor</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Darllen rhagor</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Safonol (rhagosodedig)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
@@ -1610,7 +1610,7 @@
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
     <string name="preference_etp_smartblock_description">Mae rhai tracwyr sydd wedi’u marcio isod wedi cael eu dad-rwystr’n rhannol ar y dudalen hon oherwydd i chi ryngweithio â nhw *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
-    <string name="preference_etp_smartblock_learn_more">Dysgu rhagor</string>
+    <string name="preference_etp_smartblock_learn_more">Darllen rhagor</string>
 
     <!-- Content description (not visible, for screen readers etc.):
     Enhanced tracking protection exception preference icon for ETP settings. -->
@@ -2065,7 +2065,7 @@
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Mae angen cyfrinair</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Rhoi cyfrinair</string>
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Rhowch gyfrinair</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Mae angen enw defnyddiwr</string>
     <!--  The error message in add login view when username field is blank. -->
@@ -2199,7 +2199,7 @@
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Rhan o deulu Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
-    <string name="pocket_stories_feature_learn_more">Dysgu rhagor</string>
+    <string name="pocket_stories_feature_learn_more">Darllen rhagor</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
     <string name="pocket_stories_sponsor_indication">Noddwyd</string>
@@ -2423,7 +2423,7 @@
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Cyfieithu</string>
     <!-- Button text on the translations dialog when a translation error appears. -->
-    <string name="translations_bottom_sheet_positive_button_error">Ceisio eto</string>
+    <string name="translations_bottom_sheet_positive_button_error">Ceisiwch Eto</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Yn cyfieithu</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
@@ -2439,7 +2439,7 @@
     <string name="translation_error_language_not_supported_warning_text">Ymddiheuriadau, nid ydym yn cefnogi %1$s eto.</string>
 
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Dysgu rhagor</string>
+    <string name="translation_error_language_not_supported_learn_more">Darllen rhagor</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2499,7 +2499,7 @@
 
     <!-- Never translate site preference screen -->
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
-    <string name="never_translate_site_toolbar_title_preference">Peidio byth â chyfieithu\'r gwefannau hyn</string>
+    <string name="never_translate_site_toolbar_title_preference">Peidio â chyfieithu\'r gwefannau hyn</string>
     <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
     <string name="never_translate_site_header_preference">I ychwanegu gwefan newydd: Ewch yno a dewis “Peidio byth â chyfieithu\'r wefan hon” o\'r ddewislen cyfieithu.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.

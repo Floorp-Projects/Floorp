@@ -401,7 +401,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Selecione um</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_2">Gerencie mecanismos de pesquisa alternativos</string>
+    <string name="preferences_manage_search_shortcuts_2">Gerenciar mecanismos de pesquisa alternativos</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Editar mecanismos visíveis no menu de pesquisa</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->

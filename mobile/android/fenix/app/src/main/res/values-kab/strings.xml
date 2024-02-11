@@ -2053,6 +2053,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Sekcem isem n useqdac</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Asenneftaɣ yettwasra</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Sekcem tansa web</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Anadi s taɣect</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2150,6 +2152,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Anadi %s</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Beddel iminig-ik·im amezwer</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Sbadu iseɣwan seg yismal web, seg yimaylen d yiznan i twaledyawt s wudem awurman deg Firefox.</string>
 

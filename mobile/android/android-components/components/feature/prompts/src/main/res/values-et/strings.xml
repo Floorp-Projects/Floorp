@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">Parool</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">Ära salvesta</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Mitte praegu</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Ära salvesta kunagi</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -26,16 +28,26 @@
     <string name="mozac_feature_prompt_save_confirmation">Salvesta</string>
     <!-- Negative confirmation that we should not save the updated login -->
     <string name="mozac_feature_prompt_dont_update">Ära uuenda</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Mitte praegu</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Uuenda</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">Parooli väli ei tohi olla tühi</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Sisesta parool</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Kasutajatunnuste salvestamine pole võimalik</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Parooli ei saa salvestada</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">Kas salvestada need kasutajatunnused?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Salvesta parool?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_update_headline">Kas uuendada kasutajatunnused?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Uuenda parool?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Kas lisada salvestatud paroolile kasutajanimi?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -81,14 +93,33 @@
     <string name="mozac_feature_prompts_nov">nov</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">dets</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Aja määramine</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Halda kasutajakontosid</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Halda paroole</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description">Laienda soovitatud kasutajakontosid</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Laienda salvestatud paroolid</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Ahenda soovitatud kasutajakontosid</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Ahenda soovitatud kasutajakontod</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Ahenda salvestatud paroolid</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Soovitatud kasutajakontod</string>
+
+    <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
+    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Salvestatud paroolid</string>
+
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Soovita tugevat parooli</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Soovita tugevat parooli</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Kasuta tugevat parooli %1$s</string>
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Kas saata andmed sellele saidile uuesti?</string>
@@ -101,12 +132,20 @@
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
     <string name="mozac_feature_prompts_select_credit_card">Vali krediitkaart</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Kasuta salvestatud kaarti</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Laienda soovitatud krediitkaarte</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Laienda salvestatud kaardid</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Ahenda soovitatud krediitkaarte</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Ahenda salvestatud kaardid</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Halda krediitkaarte</string>
+    <!-- Option in the expanded select card prompt that links to cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Halda kaarte</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Kas salvestada see kaart turvaliselt?</string>
     <!-- Text for the title of an update credit card dialog. -->
@@ -114,13 +153,28 @@
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Kaardi number krüptitakse. Turvakoodi ei salvestata.</string>
 
+    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s krüpteerib kaardi numbri. Turvakoodi ei salvestata.</string>
+
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Vali aadress</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description">Laienda soovitatud aadressid</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Laienda salvestatud aadressid</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description">Ahenda soovitatud aadressid</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Ahenda salvestatud aadressid</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Halda aadresse</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Konto pilt</string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Jätka</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Loobu</string>
 </resources>

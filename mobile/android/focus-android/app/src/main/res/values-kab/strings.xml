@@ -86,6 +86,8 @@
 
     <string name="notification_erase_title_android_14">Sfeḍ amazray n tunigin?</string>
 
+    <string name="notification_erase_text_android_14">Sit ɣef telɣut-a neɣ kkes-itt i wakken ad tekkseḍ azray-ik n tunigin s wudem aɣelsan.</string>
+
     <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

@@ -2161,6 +2161,9 @@
     <string name="other_default_search_engine_suggestion_header">%s-søgning</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Skift din standardbrowser</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Indstil links fra websteder, mails og beskeder til automatisk at blive åbnet i Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

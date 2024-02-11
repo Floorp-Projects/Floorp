@@ -2163,6 +2163,9 @@
     <string name="other_default_search_engine_suggestion_header">Ricercje %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Cambie il navigadôr predefinît</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Configure i colegaments di sîts web, e-mails e messaçs in mût che a vegnin vierts in automatic cun Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

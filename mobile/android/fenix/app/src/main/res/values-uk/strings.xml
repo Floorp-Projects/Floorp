@@ -2183,6 +2183,9 @@
     <string name="other_default_search_engine_suggestion_header">%s пошук</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Змініть типовий браузер</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Автоматично відкривати посилання з вебсайтів, електронних листів та повідомлень у Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

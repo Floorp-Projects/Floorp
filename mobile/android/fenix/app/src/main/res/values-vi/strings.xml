@@ -2161,6 +2161,9 @@
     <string name="other_default_search_engine_suggestion_header">Tìm kiếm trên %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Đặt làm trình duyệt mặc định của bạn</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Đặt các liên kết từ trang web, email và tin nhắn để tự động mở trong Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

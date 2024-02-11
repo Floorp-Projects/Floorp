@@ -1899,6 +1899,8 @@
     <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Suojaa tallennetut maksutavat</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut luottokorttitiedot siltä varalta, että joku saa laitteesi haltuunsa.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja maksutapojasi, jos laitteesi on jollain toisella.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Aseta nyt</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2061,8 +2063,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Salasanojen asetukset</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Muokattava tekstikenttä kirjautumisen verkkosivua varten.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Verkkosivuston muokattava tekstikenttä.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Muokattava tekstikenttä kirjautumisen käyttäjätunnusta varten.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Käyttäjätunnuksen muokattava tekstikenttä.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Muokattava tekstikenttä kirjautumisen salasanaa varten.</string>
     <!--  The editable text field for a login's password. -->
@@ -2187,6 +2193,9 @@
     <string name="other_default_search_engine_suggestion_header">%s-haku</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Vaihda oletusselain</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Aseta verkkosivustojen, sähköpostien ja viestien linkit avautumaan automaattisesti Firefoxissa.</string>
 
     <!-- Content description for close button in collection placeholder. -->
