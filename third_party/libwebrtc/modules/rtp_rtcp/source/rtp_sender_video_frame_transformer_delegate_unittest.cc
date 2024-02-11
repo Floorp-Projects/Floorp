@@ -83,7 +83,7 @@ class RtpSenderVideoFrameTransformerDelegateTest : public ::testing::Test {
     delegate->TransformFrame(
         /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
         encoded_image, RTPVideoHeader::FromMetadata(metadata),
-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
+        /*expected_retransmission_time=*/TimeDelta::Millis(10));
     return frame;
   }
 
@@ -123,7 +123,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
   delegate->TransformFrame(
       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
       encoded_image, RTPVideoHeader(),
-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
+      /*expected_retransmission_time=*/TimeDelta::Millis(10));
 }
 
 TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
@@ -260,7 +260,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
       test_sender_,
       SendVideo(payload_type, absl::make_optional(kVideoCodecVP8), timestamp,
                 /*capture_time=*/Timestamp::MinusInfinity(), buffer, _, _,
-                /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
+                /*expected_retransmission_time=*/TimeDelta::Millis(10),
                 frame_csrcs))
       .WillOnce(WithoutArgs([&] {
         event.Set();
@@ -310,7 +310,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
   delegate->TransformFrame(
       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
       encoded_image, RTPVideoHeader(),
-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
+      /*expected_retransmission_time=*/TimeDelta::Millis(10));
 }
 
 }  // namespace
