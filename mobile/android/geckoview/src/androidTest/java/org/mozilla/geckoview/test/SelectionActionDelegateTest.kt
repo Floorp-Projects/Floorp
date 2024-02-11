@@ -357,8 +357,6 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
     @Test
     fun compareClientRect() {
-        // TODO: intermittent failure, bug 1829615
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         val jsCssReset = """(function() {
             document.querySelector('$id').style.display = "block";
             document.querySelector('$id').style.border = "0";
