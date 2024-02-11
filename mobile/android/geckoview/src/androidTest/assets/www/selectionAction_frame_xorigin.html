@@ -9,10 +9,16 @@
             break;
 
           case "select": {
-            const text = document.body.firstChild;
-            document
-              .getSelection()
-              .setBaseAndExtent(text, 0, text, e.data.length);
+            <!-- On fission, there's no way to wait for parent position change. -->
+            <!-- So we use requestAnimationFrame as a workaround. -->
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(() => {
+                const text = document.body.firstChild;
+                document
+                  .getSelection()
+                  .setBaseAndExtent(text, 0, text, e.data.length);
+              });
+            });
             break;
           }
 
