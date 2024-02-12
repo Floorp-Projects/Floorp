@@ -2702,14 +2702,11 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       rowGroups = OrderedRowGroups(&thead, &tfoot);
     }
   }
-  // If the child is a tbody in paginated mode, reduce the available block-size
-  // by a repeated footer.
   bool allowRepeatedFooter = false;
   for (size_t childX = 0; childX < rowGroups.Length(); childX++) {
     nsTableRowGroupFrame* kidFrame = rowGroups[childX];
     const nscoord rowSpacing =
         GetRowSpacing(kidFrame->GetStartRowIndex() + kidFrame->GetRowCount());
-    // Get the frame state bits
     // See if we should only reflow the dirty child frames
     if (reflowAllKids || kidFrame->IsSubtreeDirty() ||
         (aReflowInput.mReflowInput.mFlags.mSpecialBSizeReflow &&
@@ -2729,6 +2726,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       LogicalSize kidAvailSize = aReflowInput.AvailableSize();
       allowRepeatedFooter = false;
+
+      // If the child is a tbody in paginated mode, reduce the available
+      // block-size by a repeated footer.
       if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.BSize(wm))) {
         if (kidFrame != thead && kidFrame != tfoot && tfoot &&
             tfoot->IsRepeatable()) {
