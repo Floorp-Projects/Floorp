@@ -12,7 +12,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Unused.h"
 #include "nsArrayUtils.h"
 #include "nsBaseClipboard.h"
@@ -58,20 +57,13 @@ NS_IMETHODIMP nsClipboardProxy::AsyncSetData(
 
 NS_IMETHODIMP
 nsClipboardProxy::GetData(nsITransferable* aTransferable,
-                          int32_t aWhichClipboard,
-                          mozilla::dom::WindowContext* aWindowContext) {
-  MOZ_DIAGNOSTIC_ASSERT(aWindowContext && aWindowContext->IsInProcess(),
-                        "content clipboard reads must be associated with an "
-                        "in-process WindowContext");
-  if (aWindowContext->IsDiscarded()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+                          int32_t aWhichClipboard) {
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 
   IPCTransferableData transferable;
   ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
-                                                 aWindowContext, &transferable);
+                                                 &transferable);
   return nsContentUtils::IPCTransferableDataToTransferable(
       transferable, false /* aAddDataFlavor */, aTransferable,
       false /* aFilterUnknownFlavors */);

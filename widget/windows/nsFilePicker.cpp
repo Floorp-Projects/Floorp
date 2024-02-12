@@ -717,19 +717,25 @@ nsFilePicker::CheckContentAnalysisService() {
                                                                    __func__);
   }
 
-  nsCOMPtr<nsIURI> uri = mBrowsingContext->Canonical()->GetCurrentURI();
+  RefPtr<nsIURI> uri = mBrowsingContext->Canonical()->GetCurrentURI();
+  nsCString uriCString;
+  rv = uri->GetSpec(uriCString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsFilePicker::ContentAnalysisResponse::CreateAndReject(rv, __func__);
+  }
+  nsString uriString = NS_ConvertUTF8toUTF16(uriCString);
 
   auto processOneItem = [self = RefPtr{this},
                          contentAnalysis = std::move(contentAnalysis),
-                         uri =
-                             std::move(uri)](const mozilla::PathString& aItem) {
+                         uriString = std::move(uriString)](
+                            const mozilla::PathString& aItem) {
     nsCString emptyDigestString;
     auto* windowGlobal =
         self->mBrowsingContext->Canonical()->GetCurrentWindowGlobal();
     nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest(
         new mozilla::contentanalysis::ContentAnalysisRequest(
             nsIContentAnalysisRequest::AnalysisType::eFileAttached, aItem, true,
-            std::move(emptyDigestString), uri,
+            std::move(emptyDigestString), uriString,
             nsIContentAnalysisRequest::OperationType::eCustomDisplayString,
             windowGlobal));
 
@@ -744,8 +750,7 @@ nsFilePicker::CheckContentAnalysisService() {
             [promise](nsresult aError) { promise->Reject(aError, __func__); });
 
     nsresult rv = contentAnalysis->AnalyzeContentRequestCallback(
-        contentAnalysisRequest, /* aAutoAcknowledge */ true,
-        contentAnalysisCallback);
+        contentAnalysisRequest, true, contentAnalysisCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->Reject(rv, __func__);
     }
