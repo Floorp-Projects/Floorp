@@ -15,6 +15,9 @@
  *
  *   require-await - bug 1381030.
  *   no-prototype-builtins - bug 1551829.
+ *   require-atomic-updates - bug 1551829.
+ *     - This generates too many false positives that are not easy to work
+ *       around, and false positives seem to be inherent in the rule.
  */
 module.exports = {
   env: {
@@ -355,19 +358,8 @@ module.exports = {
     // This may conflict with prettier, so turn it off.
     "prefer-arrow-callback": "off",
 
-    // This generates too many false positives that are not easy to work around,
-    // and false positives seem to be inherent in the rule.
-    "require-atomic-updates": "off",
-
     // XXX Bug 1487642 - decide if we want to enable this or not.
     // Require generator functions to contain yield
     "require-yield": "off",
-  },
-
-  // To avoid bad interactions of the html plugin with the xml preprocessor in
-  // eslint-plugin-mozilla, we turn off processing of the html plugin for .xml
-  // files.
-  settings: {
-    "html/xml-extensions": [".xhtml"],
   },
 };
