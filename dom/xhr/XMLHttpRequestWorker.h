@@ -241,9 +241,8 @@ class XMLHttpRequestWorker final : public SupportsWeakPtr,
 
   void MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
-  void DispatchPrematureAbortEvent(EventTarget* aTarget,
-                                   const nsAString& aEventType,
-                                   bool aUploadTarget, ErrorResult& aRv);
+  void FireEvent(EventTarget* aTarget, const EventType& aEventType,
+                 bool aUploadTarget, ErrorResult& aRv);
 
   void Send(JSContext* aCx, JS::Handle<JSObject*> aBody, ErrorResult& aRv);
 
