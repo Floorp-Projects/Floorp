@@ -18,6 +18,7 @@ class RefPtr;
 namespace mozilla::dom::quota {
 
 class ClientDirectoryLock;
+enum class DirectoryLockCategory : uint8_t;
 class OpenDirectoryListener;
 struct OriginMetadata;
 
@@ -29,6 +30,8 @@ class NS_NO_VTABLE DirectoryLock {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual int64_t Id() const = 0;
+
+  virtual DirectoryLockCategory Category() const = 0;
 
   virtual bool Acquired() const = 0;
 
