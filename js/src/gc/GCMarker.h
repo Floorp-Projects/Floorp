@@ -473,9 +473,12 @@ class GCMarker {
   }
 
   template <uint32_t markingOptions, typename S, typename T>
-  void markAndTraverseEdge(S source, T* target);
+  void markAndTraverseEdge(S* source, T* target);
   template <uint32_t markingOptions, typename S, typename T>
-  void markAndTraverseEdge(S source, const T& target);
+  void markAndTraverseEdge(S* source, const T& target);
+
+  template <uint32_t markingOptions>
+  void markAndTraversePrivateGCThing(JSObject* source, gc::TenuredCell* target);
 
   template <typename S, typename T>
   void checkTraversedEdge(S source, T* target);
