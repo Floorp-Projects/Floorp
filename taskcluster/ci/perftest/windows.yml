@@ -100,7 +100,8 @@ livesites:
         - [cloudflare, netwerk/test/perf/perftest_http3_cloudflareblog.js]
         # broken: bug 1678588
         # - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
-        - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
+        # broken: bug 1879851
+        # - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
         # broken: bug 1799655
         # - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
         - [lq-fetch, netwerk/test/perf/perftest_http3_lucasquicfetch.js]
@@ -119,7 +120,8 @@ livesites:
                 timeToContentfulPaint: {}
             # broken: bug 1678588
             # fb-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, requestsPerSecond]
-            g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
+            # broken: bug 1879851
+            # g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
             # g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
             lq-fetch: [navigationTiming, pageTimings, resources, timeToContentfulPaint, resourceLoadTime, imagesLoaded, imagesMissed]
             # broken: bug 1695871
