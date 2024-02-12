@@ -599,13 +599,8 @@ nsresult TextEditor::HandlePasteAsQuotation(
     return NS_OK;
   }
 
-  auto* windowContext = GetDocument()->GetWindowContext();
-  if (!windowContext) {
-    NS_WARNING("Editor didn't have document window context");
-    return NS_ERROR_FAILURE;
-  }
   // Get the Data from the clipboard
-  rv = clipboard->GetData(trans, aClipboardType, windowContext);
+  clipboard->GetData(trans, aClipboardType);
 
   // Now we ask the transferable for the data
   // it still owns the data, we just have a pointer to it.

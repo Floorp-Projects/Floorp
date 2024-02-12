@@ -955,7 +955,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvGetClipboard(
       nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
-      const MaybeDiscarded<WindowContext>& aRequestingWindowContext,
       IPCTransferableData* aTransferableData);
 
   mozilla::ipc::IPCResult RecvEmptyClipboard(const int32_t& aWhichClipboard);

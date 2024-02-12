@@ -31,7 +31,7 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
 
   ContentAnalysisRequest(AnalysisType aAnalysisType, nsString aString,
                          bool aStringIsFilePath, nsCString aSha256Digest,
-                         nsCOMPtr<nsIURI> aUrl, OperationType aOperationType,
+                         nsString aUrl, OperationType aOperationType,
                          dom::WindowGlobalParent* aWindowGlobalParent);
   static nsresult GetFileDigest(const nsAString& aFilePath,
                                 nsCString& aDigestString);
@@ -53,7 +53,7 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
 
   // The URL containing the file download/upload or to which web content is
   // being uploaded.
-  nsCOMPtr<nsIURI> mUrl;
+  nsString mUrl;
 
   // Sha256 digest of file.
   nsCString mSha256Digest;
