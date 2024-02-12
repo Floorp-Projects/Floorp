@@ -111,6 +111,14 @@ void DataStruct::GetData(nsISupports** aData) {
 }
 
 //-------------------------------------------------------------------------
+void DataStruct::ClearData() {
+  if (mCacheFD) {
+    PR_Close(mCacheFD);
+  }
+  mData = nullptr;
+}
+
+//-------------------------------------------------------------------------
 nsresult DataStruct::WriteCache(void* aData, uint32_t aDataLen) {
   MOZ_ASSERT(aData && aDataLen);
   MOZ_ASSERT(aDataLen <= uint32_t(std::numeric_limits<int32_t>::max()),
@@ -364,6 +372,14 @@ nsTransferable::SetTransferData(const char* aFlavor, nsISupports* aData) {
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsTransferable::ClearAllData() {
+  for (auto& entry : mDataArray) {
+    entry.ClearData();
+  }
+  return NS_OK;
 }
 
 //

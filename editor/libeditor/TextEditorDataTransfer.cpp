@@ -193,7 +193,13 @@ nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
     return NS_OK;  // XXX Why?
   }
   // Get the Data from the clipboard.
-  rv = clipboard->GetData(transferable, aClipboardType);
+  auto* windowContext = GetDocument()->GetWindowContext();
+  if (!windowContext) {
+    NS_WARNING("Editor didn't have document window context");
+    return NS_ERROR_FAILURE;
+  }
+  rv = clipboard->GetData(transferable, aClipboardType, windowContext);
+
   if (NS_FAILED(rv)) {
     NS_WARNING("nsIClipboard::GetData() failed, but ignored");
     return NS_OK;  // XXX Why?
