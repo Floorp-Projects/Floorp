@@ -28,6 +28,8 @@ Preferences.addAll([
   { id: "browser.newtabpage.enabled", type: "bool" },
   { id: "browser.newtabpage.activity-stream.floorp.background.type", type: "int" },
   { id: "browser.newtabpage.activity-stream.floorp.newtab.backdrop.blur.disable", type: "bool" },
+  { id: "browser.newtabpage.activity-stream.floorp.newtab.releasenote.hide", type: "bool" },
+  { id: "browser.newtabpage.activity-stream.floorp.newtab.imagecredit.hide", type: "bool" },
 ]);
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
@@ -711,18 +713,18 @@ var gHomePane = {
     .getElementById("resetFolder")
     .addEventListener("command", (()=>{
       Services.prefs.clearUserPref("browser.newtabpage.activity-stream.floorp.background.images.folder")
-    }).bind(this))
+    }))
 
     document
     .getElementById("resetExtensions")
     .addEventListener("command", (()=>{
       Services.prefs.clearUserPref("browser.newtabpage.activity-stream.floorp.background.images.extensions")
-    }).bind(this))
+    }))
     document
     .getElementById("saveExtensions")
     .addEventListener("command", (()=>{
       Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions",document.querySelector("#pictureExtensions").value)
-    }).bind(this))
+    }))
 
     document
     .getElementById("chooseImagesFolder")
@@ -740,7 +742,7 @@ var gHomePane = {
         return;
       }
       Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder",fp.file.path)
-    }).bind(this))
+    }))
 
     document
     .getElementById("chooseImagePath")
@@ -761,7 +763,7 @@ var gHomePane = {
         return;
       }
       Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.image.path",fp.file.path)
-    }).bind(this))
+    }))
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
     // Extension/override-related events

@@ -209,6 +209,8 @@ class PrefsFeed {
     );
     this._setIntPref(values, "floorp.background.type", 0);
     this._setBoolPref(values, "floorp.newtab.backdrop.blur.disable", false);
+    this._setBoolPref(values, "floorp.newtab.releasenote.hide", false);
+    this._setBoolPref(values, "floorp.newtab.imagecredit.hide", false);
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
