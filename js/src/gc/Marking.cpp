@@ -1584,6 +1584,10 @@ scan_value_range:
     const Value& v = base[index];
     index++;
 
+    if (!v.isGCThing()) {
+      continue;
+    }
+
     if (v.isString()) {
       markAndTraverseEdge<opts>(obj, v.toString());
     } else if (v.hasObjectPayload()) {
@@ -1609,7 +1613,8 @@ scan_value_range:
       markAndTraverseEdge<opts>(obj, v.toSymbol());
     } else if (v.isBigInt()) {
       markAndTraverseEdge<opts>(obj, v.toBigInt());
-    } else if (v.isPrivateGCThing()) {
+    } else {
+      MOZ_ASSERT(v.isPrivateGCThing());
       // v.toGCCellPtr cannot be inlined, so construct one manually.
       Cell* cell = v.toGCThing();
       markAndTraverseEdge<opts>(obj, JS::GCCellPtr(cell, cell->getTraceKind()));
