@@ -101,7 +101,7 @@ module.exports = function (config) {
               functions: 64,
               branches: 66,
             },
-            "modules/ASRouterParentProcessMessageHandler.jsm": {
+            "modules/ASRouterParentProcessMessageHandler.sys.mjs": {
               statements: 98,
               lines: 98,
               functions: 100,

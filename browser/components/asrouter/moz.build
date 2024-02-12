@@ -19,7 +19,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouter.jsm",
     "modules/ASRouterDefaultConfig.jsm",
     "modules/ASRouterNewTabHook.sys.mjs",
-    "modules/ASRouterParentProcessMessageHandler.jsm",
+    "modules/ASRouterParentProcessMessageHandler.sys.mjs",
     "modules/ASRouterPreferences.jsm",
     "modules/ASRouterTargeting.jsm",
     "modules/ASRouterTriggerListeners.jsm",
