@@ -12,9 +12,7 @@ const { ASRouterNewTabHook } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs"
 );
 
-const { ASRouterDefaultConfig } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterDefaultConfig.jsm"
-);
+import { ASRouterDefaultConfig } from "resource:///modules/asrouter/ASRouterDefaultConfig.sys.mjs";
 
 export class ASRouterTabs {
   constructor({ asRouterNewTabHook }) {
