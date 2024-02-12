@@ -4432,10 +4432,6 @@ nsresult nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
       CacheFileUtils::CachePerfStats::AddValue(
           CacheFileUtils::CachePerfStats::ENTRY_OPEN, duration, isSlow);
     }
-
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-      Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD, false);
-    }
   }
 
   return NS_OK;
