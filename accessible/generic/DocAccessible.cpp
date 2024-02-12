@@ -58,15 +58,12 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
 
-static nsStaticAtom* const kRelationAttrs[] = {nsGkAtoms::aria_labelledby,
-                                               nsGkAtoms::aria_describedby,
-                                               nsGkAtoms::aria_details,
-                                               nsGkAtoms::aria_owns,
-                                               nsGkAtoms::aria_controls,
-                                               nsGkAtoms::aria_flowto,
-                                               nsGkAtoms::aria_errormessage,
-                                               nsGkAtoms::_for,
-                                               nsGkAtoms::control};
+static nsStaticAtom* const kRelationAttrs[] = {
+    nsGkAtoms::aria_labelledby,   nsGkAtoms::aria_describedby,
+    nsGkAtoms::aria_details,      nsGkAtoms::aria_owns,
+    nsGkAtoms::aria_controls,     nsGkAtoms::aria_flowto,
+    nsGkAtoms::aria_errormessage, nsGkAtoms::_for,
+    nsGkAtoms::control,           nsGkAtoms::popovertarget};
 
 static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
 
@@ -2006,6 +2003,22 @@ bool InsertIterator::Next() {
   return false;
 }
 
+void DocAccessible::MaybeFireEventsForChangedPopover(LocalAccessible *aAcc) {
+  dom::Element* el = aAcc->Elm();
+  if (!el || !el->IsHTMLElement() || !el->HasAttr(nsGkAtoms::popover)) {
+    return;  // Not a popover.
+  }
+  // A popover has just been inserted into or removed from the a11y tree, which
+  // means it just appeared or disappeared. Fire expanded state changes on its
+  // invokers.
+  RelatedAccIterator invokers(mDoc, el, nsGkAtoms::popovertarget);
+  while (Accessible* invoker = invokers.Next()) {
+    RefPtr<AccEvent> expandedChangeEvent =
+        new AccStateChangeEvent(invoker->AsLocal(), states::EXPANDED);
+    FireDelayedEvent(expandedChangeEvent);
+  }
+}
+
 void DocAccessible::ProcessContentInserted(
     LocalAccessible* aContainer, const nsTArray<nsCOMPtr<nsIContent>>* aNodes) {
   // Process insertions if the container accessible is still in tree.
@@ -2065,6 +2078,7 @@ void DocAccessible::ProcessContentInserted(
       CreateSubtree(iter.Child());
       mt.AfterInsertion(iter.Child());
       inserted = true;
+      MaybeFireEventsForChangedPopover(iter.Child());
       continue;
     }
 
@@ -2603,6 +2617,7 @@ void DocAccessible::CacheChildrenInSubtree(LocalAccessible* aRoot,
 }
 
 void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
+  MaybeFireEventsForChangedPopover(aRoot);
   aRoot->mStateFlags |= eIsNotInDocument;
   RemoveDependentIDsFor(aRoot);
 
