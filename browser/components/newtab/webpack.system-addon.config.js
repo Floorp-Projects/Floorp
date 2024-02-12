@@ -24,7 +24,14 @@ module.exports = (env = {}) => ({
     // The ResourceUriPlugin handles translating resource URIs in import
     // statements in .mjs files, in a similar way to what babel-jsm-to-commonjs
     // does for jsm files.
-    new ResourceUriPlugin({ resourcePathRegEx }),
+    new ResourceUriPlugin({
+      resourcePathRegExes: [
+        [
+          new RegExp("^resource://activity-stream/"),
+          path.join(__dirname, "./"),
+        ],
+      ],
+    }),
     new webpack.BannerPlugin(
       `THIS FILE IS AUTO-GENERATED: ${path.basename(__filename)}`
     ),

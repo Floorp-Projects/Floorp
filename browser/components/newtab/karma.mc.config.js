@@ -236,7 +236,12 @@ module.exports = function (config) {
         // statements in .mjs files, in a similar way to what
         // babel-jsm-to-commonjs does for jsm files.
         new ResourceUriPlugin({
-          resourcePathRegEx: PATHS.resourcePathRegEx,
+          resourcePathRegExes: [
+            [
+              new RegExp("^resource://activity-stream/"),
+              path.join(__dirname, "./"),
+            ],
+          ],
         }),
         new webpack.DefinePlugin({
           "process.env.NODE_ENV": JSON.stringify("development"),
