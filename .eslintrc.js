@@ -443,7 +443,6 @@ module.exports = {
         "dom/events/test/**",
         "dom/file/tests/**",
         "dom/html/test/**",
-        "dom/jsurl/test/**",
         "dom/media/webaudio/test/**",
         "dom/media/webrtc/tests/**",
         "dom/messagechannel/tests/**",

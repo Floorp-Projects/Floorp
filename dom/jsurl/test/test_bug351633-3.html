@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=351633
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=351633">Mozilla Bug 351633</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+// String concatenation used to avoid incorrect detection of end of script elements.
+/* eslint-disable no-useless-concat */
 
 var passJSUrl;
 var passJSUrl2;
