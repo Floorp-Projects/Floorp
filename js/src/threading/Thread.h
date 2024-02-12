@@ -83,9 +83,18 @@ class Thread {
       return false;
     }
 
-    // We hold this lock while create() sets the thread id.
-    LockGuard<Mutex> lock(trampoline->createMutex);
-    return create(Trampoline::Start, trampoline);
+    bool result;
+    {
+      // We hold this lock while create() sets the thread id.
+      LockGuard<Mutex> lock(trampoline->createMutex);
+      result = create(Trampoline::Start, trampoline);
+    }
+    if (!result) {
+      // Trampoline should be deleted outside of the above lock.
+      js_delete(trampoline);
+      return false;
+    }
+    return true;
   }
 
   // The thread must be joined or detached before destruction.
