@@ -1573,6 +1573,12 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
         attributes->Remove(nsGkAtoms::aria_placeholder);
       }
     }
+
+    nsString popupType;
+    mCachedFields->GetAttribute(CacheKey::PopupType, popupType);
+    if (!popupType.IsEmpty()) {
+      attributes->SetAttribute(nsGkAtoms::ispopup, std::move(popupType));
+    }
   }
 
   nsAutoString name;

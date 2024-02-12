@@ -194,6 +194,9 @@ class CacheKey {
   // as returned by LocalAccessible::ParentRelativeBounds.
   static constexpr nsStaticAtom* ParentRelativeBounds =
       nsGkAtoms::relativeBounds;
+  // nsAtom, CacheUpdateType::Initial
+  // The type of a popup (used for HTML popover).
+  static constexpr nsStaticAtom* PopupType = nsGkAtoms::ispopup;
   // nsAtom, CacheDomain::Actions
   static constexpr nsStaticAtom* PrimaryAction = nsGkAtoms::action;
   // float, no domain
