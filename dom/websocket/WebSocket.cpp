@@ -33,6 +33,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Unused.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/dom/Document.h"
 #include "nsXPCOM.h"
@@ -766,6 +767,15 @@ WebSocketImpl::OnBinaryMessageAvailable(nsISupports* aContext,
 
 NS_IMETHODIMP
 WebSocketImpl::OnStart(nsISupports* aContext) {
+  if (!IsTargetThread()) {
+    nsCOMPtr<nsISupports> context = aContext;
+    return Dispatch(NS_NewRunnableFunction("WebSocketImpl::OnStart",
+                                           [self = RefPtr{this}, context]() {
+                                             Unused << self->OnStart(context);
+                                           }),
+                    NS_DISPATCH_NORMAL);
+  }
+
   AssertIsOnTargetThread();
 
   if (mDisconnectingOrDisconnected) {
