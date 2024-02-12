@@ -379,11 +379,11 @@ mozbuild:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-node-12
+                    - linux64-node
                 macosx1015-64/opt:
-                    - macosx64-node-12
+                    - macosx64-node
                 windows11-64/opt:
-                    - win64-node-12
+                    - win64-node
                     - win64-mozmake
     when:
         files-changed:
