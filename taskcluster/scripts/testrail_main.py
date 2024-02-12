@@ -16,18 +16,19 @@ Functionality includes:
 
 import os
 import sys
+
 from lib.testrail_api import TestRail
+from lib.testrail_utils import (
+    build_milestone_description,
+    build_milestone_name,
+    get_release_type,
+    get_release_version,
+    load_testrail_credentials,
+)
 from slack_notifier import (
     get_taskcluster_options,
     send_error_notification,
     send_success_notification,
-)
-from lib.testrail_utils import (
-    build_milestone_name,
-    build_milestone_description,
-    get_release_version,
-    get_release_type,
-    load_testrail_credentials,
 )
 
 # Constants
