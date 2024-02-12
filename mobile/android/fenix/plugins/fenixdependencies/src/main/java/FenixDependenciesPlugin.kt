@@ -32,7 +32,7 @@ object FenixVersions {
     const val installreferrer = "2.2"
 
     const val junit = "5.9.3"
-    const val mockk = "1.13.8"
+    const val mockk = "1.13.9"
 
     const val google_ads_id_version = "16.0.0"
 
