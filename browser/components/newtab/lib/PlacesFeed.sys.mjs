@@ -178,7 +178,11 @@ export class PlacesFeed {
         }, PLACES_LINKS_CHANGED_DELAY_TIME);
       }
     } else {
-      this.store.dispatch(ac.BroadcastToContent(action));
+      // To avoid blocking Places notifications on expensive work, run it at the
+      // next tick of the events loop.
+      Services.tm.dispatchToMainThread(() =>
+        this.store.dispatch(ac.BroadcastToContent(action))
+      );
     }
   }
 

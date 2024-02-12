@@ -75,6 +75,7 @@ add_task(async function test_PlacesObserver() {
   let action = { type: "FOO" };
   feed.placesObserver.dispatch(action);
 
+  await TestUtils.waitForTick();
   Assert.ok(feed.store.dispatch.calledOnce, "PlacesFeed.store dispatch called");
   Assert.equal(feed.store.dispatch.firstCall.args[0].type, action.type);
 
