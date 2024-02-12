@@ -268,6 +268,19 @@ def accept_raptor_desktop_build(platform):
     return False
 
 
+def accept_awsy_task(try_name, platform):
+    if accept_raptor_desktop_build(platform):
+        if "windows" in platform and "windows11-64" not in platform:
+            return False
+        if "dmd" in try_name:
+            return False
+        if "awsy-base" in try_name:
+            return True
+        if "awsy-tp6" in try_name:
+            return True
+    return False
+
+
 def filter_unsupported_artifact_builds(task, parameters):
     try_config = parameters.get("try_task_config", {})
     if not try_config.get("use-artifact-builds", False):
@@ -1241,11 +1254,42 @@ def target_tasks_daily_beta_perf(full_task_graph, parameters, graph_config):
     def filter(task):
         platform = task.attributes.get("test_platform")
         attributes = task.attributes
-        try_name = attributes.get("raptor_try_name")
+        try_name = attributes.get("raptor_try_name") or task.label
 
-        if attributes.get("unittest_suite") != "raptor":
+        unittest_suite = attributes.get("unittest_suite")
+        if unittest_suite not in ("raptor", "awsy", "talos"):
             return False
         if not platform:
+            return False
+
+        # Select beta tasks for awsy
+        if "awsy" in try_name:
+            if accept_awsy_task(try_name, platform):
+                return True
+            return False
+
+        # Select beta tasks for talos
+        if "talos" == unittest_suite:
+            if accept_raptor_desktop_build(platform):
+                if "windows11-64" in platform:
+                    if "xperf" in try_name:
+                        return True
+                    return False
+                if ("mac" in platform or "windows" in platform) and "g3" in try_name:
+                    return False
+                if "-swr" in try_name:
+                    if "dromaeo" in try_name:
+                        return False
+                    if "perf-reftest-singletons" in try_name:
+                        return False
+                    if "realworldweb" in try_name:
+                        return False
+                if any(
+                    x in try_name
+                    for x in ("prof", "ipc", "gli", "sessionrestore", "tabswitch")
+                ):
+                    return False
+                return True
             return False
 
         if accept_raptor_desktop_build(platform):
@@ -1300,13 +1344,20 @@ def target_tasks_weekly_release_perf(full_task_graph, parameters, graph_config):
     def filter(task):
         platform = task.attributes.get("test_platform")
         attributes = task.attributes
-        try_name = attributes.get("raptor_try_name")
+        try_name = attributes.get("raptor_try_name") or task.label
 
-        if attributes.get("unittest_suite") != "raptor":
+        if attributes.get("unittest_suite") not in ("raptor", "awsy"):
             return False
         if not platform:
             return False
 
+        # Select release tasks for awsy
+        if "awsy" in try_name:
+            if accept_awsy_task(try_name, platform):
+                return True
+            return False
+
+        # Select browsertime tests
         if accept_raptor_desktop_build(platform):
             if "browsertime" and "firefox" in try_name:
                 if "power" in try_name:
