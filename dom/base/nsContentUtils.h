@@ -230,6 +230,8 @@ enum EventNameType {
   EventNameType_All = 0xFFFF
 };
 
+enum class TreeKind : uint8_t { DOM, Flat };
+
 struct EventNameMapping {
   // This holds pointers to nsGkAtoms members, and is therefore safe as a
   // non-owning reference.
@@ -3418,31 +3420,21 @@ class nsContentUtils {
   static bool IsExternalProtocol(nsIURI* aURI);
 
   /**
-   * Add an element to a list, keeping the list sorted by tree order.
-   * Can take a potential ancestor of the elements in order to speed up
-   * tree-order comparisons, if such an ancestor exists.
-   * Returns true if the element is appended to the end of the list.
-   */
-  template <typename ElementType, typename ElementPtr>
-  static bool AddElementToListByTreeOrder(nsTArray<ElementType>& aList,
-                                          ElementPtr aChild,
-                                          nsIContent* aCommonAncestor);
-
-  /**
-   * Compares the position of aContent1 and aContent2 in the document
-   * @param aContent1 First content to compare.
-   * @param aContent2 Second content to compare.
+   * Compares the position of aNode1 and aNode2 in the document
+   * @param aNode1 First content to compare.
+   * @param aNode2 Second content to compare.
    * @param aCommonAncestor Potential ancestor of the contents, if one exists.
    *                        This is only a hint; if it's not an ancestor of
-   *                        aContent1 or aContent2, this function will still
-   *                        work, but it will be slower than normal.
-   * @return < 0 if aContent1 is before aContent2,
-   *         > 0 if aContent1 is after aContent2,
+   *                        aNode1 or aNode2, this function will still
+   *                        work, but it will be slower.
+   * @return < 0 if aNode1 is before aNode2,
+   *         > 0 if aNode1 is after aNode2,
    *         0 otherwise
    */
-  static int32_t CompareTreePosition(nsIContent* aContent1,
-                                     nsIContent* aContent2,
-                                     const nsIContent* aCommonAncestor);
+  template <TreeKind>
+  static int32_t CompareTreePosition(const nsINode* aNode1,
+                                     const nsINode* aNode2,
+                                     const nsINode* aCommonAncestor);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static nsIContent* AttachDeclarativeShadowRoot(

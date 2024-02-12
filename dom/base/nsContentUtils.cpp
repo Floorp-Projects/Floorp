@@ -11286,83 +11286,124 @@ nsIContent* nsContentUtils::GetClosestLinkInFlatTree(nsIContent* aContent) {
   return nullptr;
 }
 
-namespace {
-
-struct TreePositionComparator {
-  Element* const mChild;
-  nsIContent* const mAncestor;
-  TreePositionComparator(Element* aChild, nsIContent* aAncestor)
-      : mChild(aChild), mAncestor(aAncestor) {}
-  int operator()(Element* aElement) const {
-    return nsLayoutUtils::CompareTreePosition(mChild, aElement, mAncestor);
+template <TreeKind aKind>
+MOZ_ALWAYS_INLINE const nsINode* GetParent(const nsINode* aNode) {
+  if constexpr (aKind == TreeKind::DOM) {
+    return aNode->GetParentNode();
+  } else {
+    return aNode->GetFlattenedTreeParentNode();
   }
-};
-
-}  // namespace
-
-/* static */
-int32_t nsContentUtils::CompareTreePosition(nsIContent* aContent1,
-                                            nsIContent* aContent2,
-                                            const nsIContent* aCommonAncestor) {
-  NS_ASSERTION(aContent1 != aContent2, "Comparing content to itself");
-
-  // TODO: remove the prevent asserts fix, see bug 598468.
-#ifdef DEBUG
-  nsLayoutUtils::gPreventAssertInCompareTreePosition = true;
-  int32_t rVal =
-      nsLayoutUtils::CompareTreePosition(aContent1, aContent2, aCommonAncestor);
-  nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
-
-  return rVal;
-#else   // DEBUG
-  return nsLayoutUtils::CompareTreePosition(aContent1, aContent2,
-                                            aCommonAncestor);
-#endif  // DEBUG
 }
 
-/* static */
-template <typename ElementType, typename ElementPtr>
-bool nsContentUtils::AddElementToListByTreeOrder(nsTArray<ElementType>& aList,
-                                                 ElementPtr aChild,
-                                                 nsIContent* aCommonAncestor) {
-  NS_ASSERTION(aList.IndexOf(aChild) == aList.NoIndex,
-               "aChild already in aList");
-
-  const uint32_t count = aList.Length();
-  ElementType element;
-
-  // Optimize most common case where we insert at the end.
-  int32_t position = -1;
-  if (count > 0) {
-    element = aList[count - 1];
-    position = CompareTreePosition(aChild, element, aCommonAncestor);
+template <TreeKind aKind>
+MOZ_ALWAYS_INLINE Maybe<uint32_t> GetIndexInParent(const nsINode* aParent,
+                                                   const nsINode* aNode) {
+  if constexpr (aKind == TreeKind::DOM) {
+    return aParent->ComputeIndexOf(aNode);
+  } else {
+    return aParent->ComputeFlatTreeIndexOf(aNode);
   }
-
-  // If this item comes after the last element, or the elements array is
-  // empty, we append to the end. Otherwise, we do a binary search to
-  // determine where the element should go.
-  if (position >= 0 || count == 0) {
-    aList.AppendElement(aChild);
-    return true;
-  }
-
-  size_t idx;
-  BinarySearchIf(aList, 0, count,
-                 TreePositionComparator(aChild, aCommonAncestor), &idx);
-
-  aList.InsertElementAt(idx, aChild);
-  return false;
 }
 
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<nsGenericHTMLFormElement*>& aList,
-    nsGenericHTMLFormElement* aChild, nsIContent* aAncestor);
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<HTMLImageElement*>& aList, HTMLImageElement* aChild,
-    nsIContent* aAncestor);
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<RefPtr<HTMLInputElement>>& aList, HTMLInputElement* aChild,
-    nsIContent* aAncestor);
+template <TreeKind aTreeKind>
+int32_t nsContentUtils::CompareTreePosition(const nsINode* aNode1,
+                                            const nsINode* aNode2,
+                                            const nsINode* aCommonAncestor) {
+  MOZ_ASSERT(aNode1, "aNode1 must not be null");
+  MOZ_ASSERT(aNode2, "aNode2 must not be null");
+
+  if (MOZ_UNLIKELY(NS_WARN_IF(aNode1 == aNode2))) {
+    return 0;
+  }
+
+  AutoTArray<const nsINode*, 32> node1Ancestors;
+  const nsINode* c1;
+  for (c1 = aNode1; c1 && c1 != aCommonAncestor;
+       c1 = GetParent<aTreeKind>(c1)) {
+    node1Ancestors.AppendElement(c1);
+  }
+  if (!c1 && aCommonAncestor) {
+    // So, it turns out aCommonAncestor was not an ancestor of c1. Oops.
+    // Never mind. We can continue as if aCommonAncestor was null.
+    aCommonAncestor = nullptr;
+  }
+
+  AutoTArray<const nsINode*, 32> node2Ancestors;
+  const nsINode* c2;
+  for (c2 = aNode2; c2 && c2 != aCommonAncestor;
+       c2 = GetParent<aTreeKind>(c2)) {
+    node2Ancestors.AppendElement(c2);
+  }
+  if (!c2 && aCommonAncestor) {
+    // So, it turns out aCommonAncestor was not an ancestor of c2.
+    // We need to retry with no common ancestor hint.
+    return CompareTreePosition<aTreeKind>(aNode1, aNode2, nullptr);
+  }
+
+  int last1 = node1Ancestors.Length() - 1;
+  int last2 = node2Ancestors.Length() - 1;
+  const nsINode* node1Ancestor = nullptr;
+  const nsINode* node2Ancestor = nullptr;
+  while (last1 >= 0 && last2 >= 0 &&
+         ((node1Ancestor = node1Ancestors.ElementAt(last1)) ==
+          (node2Ancestor = node2Ancestors.ElementAt(last2)))) {
+    last1--;
+    last2--;
+  }
+
+  if (last1 < 0) {
+    if (last2 < 0) {
+      NS_ASSERTION(aNode1 == aNode2, "internal error?");
+      return 0;
+    }
+    // aContent1 is an ancestor of aContent2
+    return -1;
+  }
+
+  if (last2 < 0) {
+    // aContent2 is an ancestor of aContent1
+    return 1;
+  }
+
+  // node1Ancestor != node2Ancestor, so they must be siblings with the
+  // same parent
+  const nsINode* parent = GetParent<aTreeKind>(node1Ancestor);
+  if (NS_WARN_IF(!parent)) {  // different documents??
+    return 0;
+  }
+
+  const Maybe<uint32_t> index1 =
+      GetIndexInParent<aTreeKind>(parent, node1Ancestor);
+  const Maybe<uint32_t> index2 =
+      GetIndexInParent<aTreeKind>(parent, node2Ancestor);
+
+  // None of the nodes are anonymous, just do a regular comparison.
+  if (index1.isSome() && index2.isSome()) {
+    return static_cast<int32_t>(static_cast<int64_t>(*index1) - *index2);
+  }
+
+  // Otherwise handle pseudo-element and anonymous node ordering.
+  // ::marker -> ::before -> anon siblings -> regular siblings -> ::after
+  auto PseudoIndex = [](const nsINode* aNode,
+                        const Maybe<uint32_t>& aNodeIndex) -> int32_t {
+    if (aNodeIndex.isSome()) {
+      return 1;  // Not a pseudo.
+    }
+    if (aNode->IsGeneratedContentContainerForMarker()) {
+      return -2;
+    }
+    if (aNode->IsGeneratedContentContainerForBefore()) {
+      return -1;
+    }
+    if (aNode->IsGeneratedContentContainerForAfter()) {
+      return 2;
+    }
+    return 0;
+  };
+
+  return PseudoIndex(node1Ancestor, index1) -
+         PseudoIndex(node2Ancestor, index2);
+}
 
 nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
                                                         ShadowRootMode aMode,
@@ -11386,6 +11427,11 @@ nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
   }
   return shadowRoot;
 }
+
+template int32_t nsContentUtils::CompareTreePosition<TreeKind::DOM>(
+    const nsINode*, const nsINode*, const nsINode*);
+template int32_t nsContentUtils::CompareTreePosition<TreeKind::Flat>(
+    const nsINode*, const nsINode*, const nsINode*);
 
 namespace mozilla {
 std::ostream& operator<<(std::ostream& aOut,

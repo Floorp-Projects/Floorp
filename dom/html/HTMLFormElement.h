@@ -520,7 +520,8 @@ class HTMLFormElement final : public nsGenericHTMLElement {
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its HTMLImageElements.
 
-  nsTArray<HTMLImageElement*> mImageElements;  // Holds WEAK references
+  // Holds WEAK references
+  TreeOrderedArray<HTMLImageElement*> mImageElements;
 
   // A map from an ID or NAME attribute to the HTMLImageElement(s), this
   // hash holds strong references either to the named HTMLImageElement, or

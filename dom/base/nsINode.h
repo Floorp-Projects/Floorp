@@ -685,6 +685,17 @@ class nsINode : public mozilla::dom::EventTarget {
   mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aPossibleChild) const;
 
   /**
+   * Get the index of a child within this content's flat tree children.
+   *
+   * @param aPossibleChild the child to get the index of.
+   * @return the index of the child, or Nothing if not a child. Be aware that
+   *         anonymous children (e.g. a <div> child of an <input> element) will
+   *         result in Nothing.
+   */
+  mozilla::Maybe<uint32_t> ComputeFlatTreeIndexOf(
+      const nsINode* aPossibleChild) const;
+
+  /**
    * Get the index of this within parent node (ComputeIndexInParentNode) or
    * parent content (nsIContent) node (ComputeIndexInParentContent).
    *
@@ -1551,6 +1562,24 @@ class nsINode : public mozilla::dom::EventTarget {
   // Whether this node is the root of a ChromeOnlyAccess DOM subtree.
   bool IsRootOfChromeAccessOnlySubtree() const {
     return IsRootOfNativeAnonymousSubtree();
+  }
+
+  /** Whether this is the container of a ::before pseudo-element. */
+  bool IsGeneratedContentContainerForBefore() const {
+    return IsRootOfNativeAnonymousSubtree() &&
+           mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore;
+  }
+
+  /** Whether this is the container of an ::after pseudo-element. */
+  bool IsGeneratedContentContainerForAfter() const {
+    return IsRootOfNativeAnonymousSubtree() &&
+           mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentafter;
+  }
+
+  /** Whether this is the container of a ::marker pseudo-element. */
+  bool IsGeneratedContentContainerForMarker() const {
+    return IsRootOfNativeAnonymousSubtree() &&
+           mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentmarker;
   }
 
   /**

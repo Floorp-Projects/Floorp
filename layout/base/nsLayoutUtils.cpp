@@ -186,11 +186,6 @@ using namespace mozilla::gfx;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_NOTHING;
 
-#ifdef DEBUG
-// TODO: remove, see bug 598468.
-bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
-#endif  // DEBUG
-
 typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
@@ -1115,113 +1110,6 @@ bool nsLayoutUtils::IsProperAncestorFrame(const nsIFrame* aAncestorFrame,
 }
 
 // static
-int32_t nsLayoutUtils::DoCompareTreePosition(
-    nsIContent* aContent1, nsIContent* aContent2, int32_t aIf1Ancestor,
-    int32_t aIf2Ancestor, const nsIContent* aCommonAncestor) {
-  MOZ_ASSERT(aIf1Ancestor == -1 || aIf1Ancestor == 0 || aIf1Ancestor == 1);
-  MOZ_ASSERT(aIf2Ancestor == -1 || aIf2Ancestor == 0 || aIf2Ancestor == 1);
-  MOZ_ASSERT(aContent1, "aContent1 must not be null");
-  MOZ_ASSERT(aContent2, "aContent2 must not be null");
-
-  AutoTArray<nsIContent*, 32> content1Ancestors;
-  nsIContent* c1;
-  for (c1 = aContent1; c1 && c1 != aCommonAncestor;
-       c1 = c1->GetFlattenedTreeParent()) {
-    content1Ancestors.AppendElement(c1);
-  }
-  if (!c1 && aCommonAncestor) {
-    // So, it turns out aCommonAncestor was not an ancestor of c1. Oops.
-    // Never mind. We can continue as if aCommonAncestor was null.
-    aCommonAncestor = nullptr;
-  }
-
-  AutoTArray<nsIContent*, 32> content2Ancestors;
-  nsIContent* c2;
-  for (c2 = aContent2; c2 && c2 != aCommonAncestor;
-       c2 = c2->GetFlattenedTreeParent()) {
-    content2Ancestors.AppendElement(c2);
-  }
-  if (!c2 && aCommonAncestor) {
-    // So, it turns out aCommonAncestor was not an ancestor of c2.
-    // We need to retry with no common ancestor hint.
-    return DoCompareTreePosition(aContent1, aContent2, aIf1Ancestor,
-                                 aIf2Ancestor, nullptr);
-  }
-
-  int last1 = content1Ancestors.Length() - 1;
-  int last2 = content2Ancestors.Length() - 1;
-  nsIContent* content1Ancestor = nullptr;
-  nsIContent* content2Ancestor = nullptr;
-  while (last1 >= 0 && last2 >= 0 &&
-         ((content1Ancestor = content1Ancestors.ElementAt(last1)) ==
-          (content2Ancestor = content2Ancestors.ElementAt(last2)))) {
-    last1--;
-    last2--;
-  }
-
-  if (last1 < 0) {
-    if (last2 < 0) {
-      NS_ASSERTION(aContent1 == aContent2, "internal error?");
-      return 0;
-    }
-    // aContent1 is an ancestor of aContent2
-    return aIf1Ancestor;
-  }
-
-  if (last2 < 0) {
-    // aContent2 is an ancestor of aContent1
-    return aIf2Ancestor;
-  }
-
-  // content1Ancestor != content2Ancestor, so they must be siblings with the
-  // same parent
-  nsIContent* parent = content1Ancestor->GetFlattenedTreeParent();
-#ifdef DEBUG
-  // TODO: remove the uglyness, see bug 598468.
-  NS_ASSERTION(gPreventAssertInCompareTreePosition || parent,
-               "no common ancestor at all???");
-#endif            // DEBUG
-  if (!parent) {  // different documents??
-    return 0;
-  }
-
-  const Maybe<uint32_t> index1 =
-      parent->ComputeFlatTreeIndexOf(content1Ancestor);
-  const Maybe<uint32_t> index2 =
-      parent->ComputeFlatTreeIndexOf(content2Ancestor);
-
-  // None of the nodes are anonymous, just do a regular comparison.
-  if (index1.isSome() && index2.isSome()) {
-    return static_cast<int32_t>(static_cast<int64_t>(*index1) - *index2);
-  }
-
-  // Otherwise handle pseudo-element and anonymous content ordering.
-  //
-  // ::marker -> ::before -> anon siblings -> regular siblings -> ::after
-  auto PseudoIndex = [](const nsINode* aNode,
-                        const Maybe<uint32_t>& aNodeIndex) -> int32_t {
-    if (aNodeIndex.isSome()) {
-      return 1;  // Not a pseudo.
-    }
-    if (aNode->IsContent()) {
-      if (aNode->AsContent()->IsGeneratedContentContainerForMarker()) {
-        return -2;
-      }
-      if (aNode->AsContent()->IsGeneratedContentContainerForBefore()) {
-        return -1;
-      }
-      if (aNode->AsContent()->IsGeneratedContentContainerForAfter()) {
-        return 2;
-      }
-    }
-    return 0;
-  };
-
-  return PseudoIndex(content1Ancestor, index1) -
-         PseudoIndex(content2Ancestor, index2);
-}
-
-// static
 nsIFrame* nsLayoutUtils::FillAncestors(nsIFrame* aFrame,
                                        nsIFrame* aStopAtAncestor,
                                        nsTArray<nsIFrame*>* aAncestors) {
@@ -1245,29 +1133,21 @@ static bool IsFrameAfter(nsIFrame* aFrame1, nsIFrame* aFrame2) {
 // static
 int32_t nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
                                              nsIFrame* aFrame2,
-                                             int32_t aIf1Ancestor,
-                                             int32_t aIf2Ancestor,
                                              nsIFrame* aCommonAncestor) {
-  MOZ_ASSERT(aIf1Ancestor == -1 || aIf1Ancestor == 0 || aIf1Ancestor == 1);
-  MOZ_ASSERT(aIf2Ancestor == -1 || aIf2Ancestor == 0 || aIf2Ancestor == 1);
   MOZ_ASSERT(aFrame1, "aFrame1 must not be null");
   MOZ_ASSERT(aFrame2, "aFrame2 must not be null");
 
   AutoTArray<nsIFrame*, 20> frame2Ancestors;
   nsIFrame* nonCommonAncestor =
       FillAncestors(aFrame2, aCommonAncestor, &frame2Ancestors);
-
-  return DoCompareTreePosition(aFrame1, aFrame2, frame2Ancestors, aIf1Ancestor,
-                               aIf2Ancestor,
+  return DoCompareTreePosition(aFrame1, aFrame2, frame2Ancestors,
                                nonCommonAncestor ? aCommonAncestor : nullptr);
 }
 
 // static
 int32_t nsLayoutUtils::DoCompareTreePosition(
     nsIFrame* aFrame1, nsIFrame* aFrame2, nsTArray<nsIFrame*>& aFrame2Ancestors,
-    int32_t aIf1Ancestor, int32_t aIf2Ancestor, nsIFrame* aCommonAncestor) {
-  MOZ_ASSERT(aIf1Ancestor == -1 || aIf1Ancestor == 0 || aIf1Ancestor == 1);
-  MOZ_ASSERT(aIf2Ancestor == -1 || aIf2Ancestor == 0 || aIf2Ancestor == 1);
+    nsIFrame* aCommonAncestor) {
   MOZ_ASSERT(aFrame1, "aFrame1 must not be null");
   MOZ_ASSERT(aFrame2, "aFrame2 must not be null");
 
@@ -1282,8 +1162,7 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
       !FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
     // it is wrong
-    return DoCompareTreePosition(aFrame1, aFrame2, aIf1Ancestor, aIf2Ancestor,
-                                 nullptr);
+    return DoCompareTreePosition(aFrame1, aFrame2, nullptr);
   }
 
   int32_t last1 = int32_t(frame1Ancestors.Length()) - 1;
@@ -1300,19 +1179,23 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
       return 0;
     }
     // aFrame1 is an ancestor of aFrame2
-    return aIf1Ancestor;
+    return -1;
   }
 
   if (last2 < 0) {
     // aFrame2 is an ancestor of aFrame1
-    return aIf2Ancestor;
+    return 1;
   }
 
   nsIFrame* ancestor1 = frame1Ancestors[last1];
   nsIFrame* ancestor2 = aFrame2Ancestors[last2];
   // Now we should be able to walk sibling chains to find which one is first
-  if (IsFrameAfter(ancestor2, ancestor1)) return -1;
-  if (IsFrameAfter(ancestor1, ancestor2)) return 1;
+  if (IsFrameAfter(ancestor2, ancestor1)) {
+    return -1;
+  }
+  if (IsFrameAfter(ancestor1, ancestor2)) {
+    return 1;
+  }
   NS_WARNING("Frames were in different child lists???");
   return 0;
 }
@@ -1351,8 +1234,8 @@ nsView* nsLayoutUtils::FindSiblingViewFor(nsView* aParentView,
       NS_ASSERTION(f, "Can't find a frame anywhere!");
     }
     if (!f || !aFrame->GetContent() || !f->GetContent() ||
-        CompareTreePosition(aFrame->GetContent(), f->GetContent(),
-                            parentViewContent) > 0) {
+        nsContentUtils::CompareTreePosition<TreeKind::Flat>(
+            aFrame->GetContent(), f->GetContent(), parentViewContent) > 0) {
       // aFrame's content is after f's content (or we just don't know),
       // so put our view before f's view
       return insertBefore;

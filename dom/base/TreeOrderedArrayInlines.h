@@ -15,15 +15,8 @@
 namespace mozilla::dom {
 
 template <typename Node>
-size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
-  static_assert(std::is_base_of<nsINode, Node>::value, "Should be a node");
-
-#ifdef DEBUG
-  for (Node* n : mList) {
-    MOZ_ASSERT(n->SubtreeRoot() == aNode.SubtreeRoot(),
-               "Should only insert nodes on the same subtree");
-  }
-#endif
+size_t TreeOrderedArray<Node>::Insert(Node& aNode, nsINode* aCommonAncestor) {
+  static_assert(std::is_base_of_v<nsINode, Node>, "Should be a node");
 
   if (mList.IsEmpty()) {
     mList.AppendElement(&aNode);
@@ -32,21 +25,22 @@ size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
 
   struct PositionComparator {
     Node& mNode;
-    explicit PositionComparator(Node& aNode) : mNode(aNode) {}
+    nsINode* mCommonAncestor;
+    PositionComparator(Node& aNode, nsINode* aCommonAncestor)
+        : mNode(aNode), mCommonAncestor(aCommonAncestor) {}
 
     int operator()(void* aNode) const {
       auto* curNode = static_cast<Node*>(aNode);
       MOZ_DIAGNOSTIC_ASSERT(curNode != &mNode,
                             "Tried to insert a node already in the list");
-      if (nsContentUtils::PositionIsBefore(&mNode, curNode)) {
-        return -1;
-      }
-      return 1;
+      return nsContentUtils::CompareTreePosition<TreeKind::DOM>(
+          &mNode, curNode, mCommonAncestor);
     }
   };
 
   size_t idx;
-  BinarySearchIf(mList, 0, mList.Length(), PositionComparator(aNode), &idx);
+  BinarySearchIf(mList, 0, mList.Length(),
+                 PositionComparator(aNode, aCommonAncestor), &idx);
   mList.InsertElementAt(idx, &aNode);
   return idx;
 }
