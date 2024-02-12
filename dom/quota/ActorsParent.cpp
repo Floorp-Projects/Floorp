@@ -5058,7 +5058,7 @@ RefPtr<BoolPromise> QuotaManager::TemporaryStorageInitialized() {
 RefPtr<UniversalDirectoryLockPromise> QuotaManager::OpenStorageDirectory(
     const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive,
+    bool aExclusive, DirectoryLockCategory aCategory,
     Maybe<RefPtr<UniversalDirectoryLock>&> aPendingDirectoryLockOut) {
   AssertIsOnOwningThread();
 
@@ -5079,7 +5079,7 @@ RefPtr<UniversalDirectoryLockPromise> QuotaManager::OpenStorageDirectory(
 
   RefPtr<UniversalDirectoryLock> universalDirectoryLock =
       CreateDirectoryLockInternal(aPersistenceType, aOriginScope, aClientType,
-                                  aExclusive);
+                                  aExclusive, aCategory);
 
   RefPtr<BoolPromise> universalDirectoryLockPromise =
       universalDirectoryLock->Acquire();
@@ -5193,12 +5193,12 @@ RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
 RefPtr<UniversalDirectoryLock> QuotaManager::CreateDirectoryLockInternal(
     const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive) {
+    bool aExclusive, DirectoryLockCategory aCategory) {
   AssertIsOnOwningThread();
 
   return DirectoryLockImpl::CreateInternal(WrapNotNullUnchecked(this),
                                            aPersistenceType, aOriginScope,
-                                           aClientType, aExclusive);
+                                           aClientType, aExclusive, aCategory);
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>

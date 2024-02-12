@@ -22,6 +22,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
+#include "mozilla/dom/quota/DirectoryLockCategory.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/InitializationTypes.h"
 #include "mozilla/dom/quota/PersistenceType.h"
@@ -268,6 +269,7 @@ class QuotaManager final : public BackgroundThreadObject {
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
+      DirectoryLockCategory aCategory = DirectoryLockCategory::None,
       Maybe<RefPtr<UniversalDirectoryLock>&> aPendingDirectoryLockOut =
           Nothing());
 
@@ -297,7 +299,8 @@ class QuotaManager final : public BackgroundThreadObject {
   RefPtr<UniversalDirectoryLock> CreateDirectoryLockInternal(
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
-      const Nullable<Client::Type>& aClientType, bool aExclusive);
+      const Nullable<Client::Type>& aClientType, bool aExclusive,
+      DirectoryLockCategory aCategory = DirectoryLockCategory::None);
 
   // Collect inactive and the least recently used origins.
   uint64_t CollectOriginsForEviction(
