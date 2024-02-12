@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-/* eslint-disable no-array-constructor, no-new-object */
+/* eslint-disable no-array-constructor, no-object-constructor */
 
 const { assert } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Assert.sys.mjs"
