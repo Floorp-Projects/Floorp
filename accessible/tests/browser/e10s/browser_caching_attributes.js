@@ -727,3 +727,37 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test the ispopup attribute.
+ */
+addAccessibleTask(
+  `<div id="popover" popover>popover</div>`,
+  async function testIspopup(browser, docAcc) {
+    info("Showing popover");
+    let shown = waitForEvent(EVENT_SHOW, "popover");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("popover").showPopover();
+    });
+    let popover = (await shown).accessible;
+    testAttrs(popover, { ispopup: "auto" }, true);
+    info("Setting popover to null");
+    // Setting popover causes the Accessible to be recreated.
+    shown = waitForEvent(EVENT_SHOW, "popover");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("popover").popover = null;
+    });
+    popover = (await shown).accessible;
+    testAbsentAttrs(popover, { ispopup: "" });
+    info("Setting popover to manual and showing");
+    shown = waitForEvent(EVENT_SHOW, "popover");
+    await invokeContentTask(browser, [], () => {
+      const popoverDom = content.document.getElementById("popover");
+      popoverDom.popover = "manual";
+      popoverDom.showPopover();
+    });
+    popover = (await shown).accessible;
+    testAttrs(popover, { ispopup: "manual" }, true);
+  },
+  { chrome: true, topLevel: true }
+);

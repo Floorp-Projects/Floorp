@@ -573,6 +573,7 @@ STATIC_ATOMS = [
     Atom("invokeaction", "invokeaction"),
     Atom("is", "is"),
     Atom("ismap", "ismap"),
+    Atom("ispopup", "ispopup"),
     Atom("itemid", "itemid"),
     Atom("itemprop", "itemprop"),
     Atom("itemref", "itemref"),
