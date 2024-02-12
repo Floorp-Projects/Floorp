@@ -29,11 +29,11 @@ Awsy tests
             * awsy-base-dmd: None
 
       * test-linux1804-64-shippable-qr/opt
-            * awsy-base: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base: trunk
             * awsy-base-dmd: None
 
       * test-macosx1015-64-shippable-qr/opt
-            * awsy-base: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base: trunk
             * awsy-base-dmd: None
 
       * test-windows11-32-2009-qr/opt
@@ -49,7 +49,7 @@ Awsy tests
             * awsy-base-dmd: None
 
       * test-windows11-64-2009-shippable-qr/opt
-            * awsy-base: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base: trunk
             * awsy-base-dmd: None
 
 
@@ -128,10 +128,10 @@ Awsy tests
             * awsy-tp6: None
 
       * test-linux1804-64-shippable-qr/opt
-            * awsy-tp6: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6: trunk
 
       * test-macosx1015-64-shippable-qr/opt
-            * awsy-tp6: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6: trunk
 
       * test-windows11-32-2009-qr/opt
             * awsy-tp6: None
@@ -143,7 +143,7 @@ Awsy tests
             * awsy-tp6: None
 
       * test-windows11-64-2009-shippable-qr/opt
-            * awsy-tp6: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6: trunk
 
 
 
