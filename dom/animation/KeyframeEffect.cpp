@@ -1341,7 +1341,8 @@ KeyframeEffect::OverflowRegionRefreshInterval() {
   return kOverflowRegionRefreshInterval;
 }
 
-static bool IsDefinitivelyInvisibleDueToOpacity(const nsIFrame& aFrame) {
+static bool CanOptimizeAwayDueToOpacity(const KeyframeEffect& aEffect,
+                                        const nsIFrame& aFrame) {
   if (!aFrame.Style()->IsInOpacityZeroSubtree()) {
     return false;
   }
@@ -1358,27 +1359,11 @@ static bool IsDefinitivelyInvisibleDueToOpacity(const nsIFrame& aFrame) {
 
   MOZ_ASSERT(root && root->Style()->IsInOpacityZeroSubtree());
 
-  // If aFrame is the root of the opacity: zero subtree, we can't prove we can
-  // optimize it away, because it may have an opacity animation itself.
-  if (root == &aFrame) {
-    return false;
-  }
-
   // Even if we're in an opacity: zero subtree, if the root of the subtree may
   // have an opacity animation, we can't optimize us away, as we may become
   // visible ourselves.
-  return !root->HasAnimationOfOpacity();
-}
-
-static bool CanOptimizeAwayDueToOpacity(const KeyframeEffect& aEffect,
-                                        const nsIFrame& aFrame) {
-  if (!aFrame.Style()->IsInOpacityZeroSubtree()) {
-    return false;
-  }
-  if (IsDefinitivelyInvisibleDueToOpacity(aFrame)) {
-    return true;
-  }
-  return !aEffect.HasOpacityChange() && !aFrame.HasAnimationOfOpacity();
+  return (root != &aFrame || !aEffect.HasOpacityChange()) &&
+         !root->HasAnimationOfOpacity();
 }
 
 bool KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const {

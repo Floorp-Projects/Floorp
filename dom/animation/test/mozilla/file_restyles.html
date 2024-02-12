@@ -36,6 +36,10 @@ SimpleTest.finish = function finish() {
   from { opacity: 1; }
   to { opacity: 0; }
 }
+@keyframes opacity-from-zero {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @keyframes opacity-without-end-value {
   from { opacity: 0; }
 }
@@ -2191,7 +2195,7 @@ waitForAllPaints(() => {
   });
 
   add_task_if_omta_enabled(async function restyling_main_thread_animations_in_opacity_zero_descendant_during_root_opacity_animation() {
-    const container = addDiv(null, { style: 'opacity: 0; animation: opacity 100s infinite' });
+    const container = addDiv(null, { style: 'opacity: 0; animation: opacity-from-zero 100s infinite' });
 
     const child = addDiv(null, { style: 'animation: on-main-thread 100s infinite;' });
     container.appendChild(child);
@@ -2204,6 +2208,19 @@ waitForAllPaints(() => {
     is(restyleCount, 5,
        'Animations in opacity zero descendant element ' +
        'should not be throttled if root is animating opacity');
+    await ensureElementRemoval(container);
+  });
+
+  add_task_if_omta_enabled(async function restyling_omt_animations_in_opacity_zero_descendant_during_root_opacity_animation() {
+    const container = addDiv(null, { style: 'opacity: 0; animation: opacity-from-zero 100s infinite' });
+
+    const child = addDiv(null, { style: 'animation: rotate 100s infinite' });
+    container.appendChild(child);
+
+    const animation = child.getAnimations()[0];
+    await waitForAnimationReadyToRestyle(animation);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
     await ensureElementRemoval(container);
   });
 
@@ -2243,7 +2260,7 @@ waitForAllPaints(() => {
     await SpecialPowers.spawn(iframe, [MS_PER_SEC], async (MS_PER_SEC) => {
       // Create a flex item with "preserve-3d" having an abs-pos child inside
       // a grid container.
-      // These styles make the the flex item size (0x0).
+      // These styles make the flex item size (0x0).
       const gridContainer = content.document.createElement("div");
       gridContainer.style.display = "grid";
       gridContainer.style.placeItems = "center";
