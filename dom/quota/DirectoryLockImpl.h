@@ -180,6 +180,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   bool Acquired() const override { return mAcquired; }
 
+  nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const override;
+
   void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) override;
 
   RefPtr<BoolPromise> Acquire() override;
