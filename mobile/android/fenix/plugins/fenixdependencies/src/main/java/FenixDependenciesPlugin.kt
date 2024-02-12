@@ -27,7 +27,7 @@ object FenixVersions {
     const val androidx_splash_screen = "1.0.1"
     const val androidx_transition = "1.4.1"
     const val androidx_datastore = "1.0.0"
-    const val google_accompanist = "0.30.1"
+    const val google_accompanist = "0.32.0"
 
     const val adjust = "4.35.1"
     const val installreferrer = "2.2"
