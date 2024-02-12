@@ -114,7 +114,7 @@ browsertime-tp6:
                         firefox:
                             by-test-platform:
                                 windows.*-32.*: []
-                                (macosx1015|linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                                (macosx1015|linux|windows10-64).*shippable-qr.*: [trunk]
                                 default: []
                         default: []
                 default:
@@ -122,7 +122,7 @@ browsertime-tp6:
                         firefox:
                             by-test-platform:
                                 windows.*-32.*: []
-                                .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                                .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -235,8 +235,8 @@ browsertime-tp6-essential:
                 firefox:
                     by-test-platform:
                         windows.*-32.*: []
-                        macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                        .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                        macosx1100.*shippable.*: [mozilla-central]
+                        .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk]
                         default: []
                 default: []
         tier:
@@ -269,8 +269,8 @@ browsertime-tp6-bytecode:
             firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                    macosx1100.*shippable.*: [mozilla-central]
+                    .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk]
                     default: []
             default: []
     mozharness:
@@ -416,7 +416,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     custom-car:
@@ -438,7 +438,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     custom-car:
@@ -451,7 +451,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk]
                             default: []
                     default: []
     max-run-time:
@@ -508,7 +508,7 @@ browsertime-benchmark-wasm:
             firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*64(?!.*nightlyasrelease).*shippable-qr/.*: [mozilla-central, mozilla-release]
+                    .*64(?!.*nightlyasrelease).*shippable-qr/.*: [mozilla-central]
                     default: []
             default: []
     max-run-time:
@@ -539,7 +539,7 @@ browsertime-youtube-playback:
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
-            .*64(?!.*nightlyasrelease).*shippable-qr/.*: [mozilla-central, mozilla-release]
+            .*64(?!.*nightlyasrelease).*shippable-qr/.*: [mozilla-central]
             default: []
     tier: 2
     limit-platforms:
