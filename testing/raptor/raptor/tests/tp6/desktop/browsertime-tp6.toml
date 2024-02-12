@@ -76,9 +76,8 @@ test_url = "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
 
 ["google-slides"]
 benchmark_page = false
-playback_pageset_manifest = "mitm6-linux-firefox-google-slides.manifest"
-playback_version = "6.0.2"
-secondary_url = "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
+playback_pageset_manifest = "mitm8-linux-firefox-google-slides.manifest"
+secondary_url = "https://docs.google.com/presentation/d/e/2PACX-1vRWwPQQFMDkSR4RtYc7HSAGm-hoprespfemIk5SatJxd2o8yrFfrMeAAUkjdfalC5PpjJ9ZKgfsuQ1T/pub?start=false&loop=false&delayms=3000"
 test_url = "https://docs.google.com/presentation/d/1Ici0ceWwpFvmIb3EmKeWSq_vAQdmmdFcWqaiLqUkJng/edit?usp=sharing"
 
 ["imdb"]
