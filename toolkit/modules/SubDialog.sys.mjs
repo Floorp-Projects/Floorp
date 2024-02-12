@@ -173,24 +173,8 @@ SubDialog.prototype = {
     // Wait until frame is ready to prevent browser crash in tests
     await this._frameCreated;
 
-    if (!this._frame.contentWindow) {
-      // Given the binding constructor execution is asynchronous, and "load"
-      // event can be dispatched before the browser element is shown, the
-      // browser binding might not be constructed at this point.  Forcibly
-      // construct the frame and construct the binding.
-      // FIXME: Remove this (bug 1437247)
-      this._frame.getBoundingClientRect();
-    }
-
-    // If we're open on some (other) URL or we're closing, open when closing has finished.
-    if (this._openedURL || this._isClosing) {
-      if (!this._isClosing) {
-        this.close();
-      }
-      let args = Array.from(arguments);
-      this._closingPromise.then(() => {
-        this.open.apply(this, args);
-      });
+    // If we're closing now that we've waited for the dialog to load, abort.
+    if (this._isClosing) {
       return;
     }
     this._addDialogEventListeners();
