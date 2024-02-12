@@ -19,7 +19,7 @@ The module is intended to be integrated into automated testing and release workf
 
 Required Values for Notifications:
 
-These values are required when calling the `send_success_notification` and `send_slack_notification` functions. 
+These values are required when calling the `send_success_notification` and `send_slack_notification` functions.
 They must be passed as an object with the following keys and their respective values.
 
 Required Keys and Expected Values:
@@ -69,7 +69,7 @@ SLACK_SUCCESS_MESSAGE_TEMPLATE = Template(
                 "text": "New Release: :firefox: $SHIPPING_PRODUCT-v$RELEASE_VERSION :star:"
         }
     },
-    { 
+    {
         "type": "divider"
     },
     {
