@@ -366,7 +366,7 @@
   },
   "COMPOSITE_SWAP_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com"
@@ -2605,7 +2605,7 @@
   },
   "HTTP_PAGE_TLS_HANDSHAKE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
@@ -10854,7 +10854,7 @@
   },
   "MEDIA_SNIFFER_MP4_BRAND_PATTERN": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -13972,7 +13972,7 @@
     "description": "Count of use of audio/video codecs in HTMLMediaElements and WebAudio. Those with 'resource' prefix are approximate; report based on HTTP ContentType or sniffing. Those with 'webaudio' prefix are for WebAudio."
   },
   "MSE_SOURCE_BUFFER_TYPE": {
-    "products": ["firefox", "geckoview_streaming"],
+    "products": ["firefox"],
     "record_in_processes": ["main", "content"],
     "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1699249, 1848211],
@@ -16627,7 +16627,7 @@
   },
   "WR_GPU_WAIT_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1772216],
     "expires_in_version": "never",
@@ -16662,7 +16662,7 @@
   },
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com"
@@ -16676,7 +16676,7 @@
   },
   "WR_SCENESWAP_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com"
@@ -16690,7 +16690,7 @@
   },
   "WR_FRAMEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com"
@@ -16704,7 +16704,7 @@
   },
   "WR_RASTERIZE_GLYPHS_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": [
       "gfx-telemetry-alerts@mozilla.com",
       "jmuizelaar@mozilla.com"
@@ -16718,7 +16718,7 @@
   },
   "WR_RASTERIZE_BLOBS_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1770974],
     "expires_in_version": "never",
