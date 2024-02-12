@@ -232,7 +232,7 @@ jobs:
       run-on-projects:
           - mozilla-beta
       when:
-          - {hour: 16, minute: 0}
+          - {hour: 12, minute: 0}
 
     - name: weekly-release-perf
       job:
@@ -243,7 +243,7 @@ jobs:
       run-on-projects:
           - mozilla-release
       when:
-          - {weekday: 'Friday', hour: 16, minute: 0}
+          - {weekday: 'Friday', hour: 12, minute: 0}
 
     - name: raptor-tp6m
       job:
