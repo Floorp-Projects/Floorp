@@ -2235,7 +2235,8 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("FindClientCertificatesWithPrivateKeys"));
 
-  BlockUntilLoadableCertsLoaded();
+  (void)BlockUntilLoadableCertsLoaded();
+  (void)CheckForSmartCardChanges();
 
   UniqueCERTCertList certsWithPrivateKeys(CERT_NewCertList());
   if (!certsWithPrivateKeys) {
