@@ -11,13 +11,6 @@ module.exports = {
     complexity: ["error", { max: 22 }],
     "max-nested-callbacks": ["error", 3],
     "no-extend-native": "error",
-    "no-fallthrough": [
-      "error",
-      {
-        commentPattern:
-          ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*",
-      },
-    ],
     "no-multi-str": "error",
     "no-return-assign": "error",
     "no-shadow": "error",

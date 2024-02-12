@@ -15,7 +15,6 @@ module.exports = {
     "max-nested-callbacks": ["error", 3],
     "new-cap": ["error", { capIsNew: false }],
     "no-extend-native": "error",
-    "no-fallthrough": "error",
     "no-inline-comments": "error",
     "no-multi-str": "error",
     "no-return-assign": "error",
