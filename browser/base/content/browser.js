@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(this, {
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  CFRPageActions: "resource:///modules/asrouter/CFRPageActions.sys.mjs",
   Color: "resource://gre/modules/Color.sys.mjs",
   ContentAnalysis: "resource:///modules/ContentAnalysis.sys.mjs",
   ContextualIdentityService:
@@ -99,10 +100,6 @@ ChromeUtils.defineESModuleGetters(this, {
   webrtcUI: "resource:///modules/webrtcUI.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
   ZoomUI: "resource:///modules/ZoomUI.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CFRPageActions: "resource:///modules/asrouter/CFRPageActions.jsm",
 });
 
 ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {

@@ -304,7 +304,7 @@
                           "properties": {
                             "url": {
                               "type": "string",
-                              "$comment": "This is dynamically generated from the addon.id. See CFRPageActions.jsm",
+                              "$comment": "This is dynamically generated from the addon.id. See CFRPageActions.sys.mjs",
                               "description": "URL used in combination with the primary action dispatched."
                             }
                           }

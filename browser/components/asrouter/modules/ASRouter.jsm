@@ -67,8 +67,8 @@ const { OnboardingMessageProvider } = ChromeUtils.importESModule(
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { CFRPageActions } = ChromeUtils.import(
-  "resource:///modules/asrouter/CFRPageActions.jsm"
+const { CFRPageActions } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/CFRPageActions.sys.mjs"
 );
 const { AttributionCode } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
