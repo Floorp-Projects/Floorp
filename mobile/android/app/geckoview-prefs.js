@@ -394,6 +394,8 @@ pref("pdfjs.handleOctetStream", true);
 // Disable tracking protection in PBM for GeckoView (bug 1436887)
 pref("privacy.trackingprotection.pbmode.enabled", false);
 
+pref("privacy.fingerprintingProtection.pbmode", true);
+
 // Relay integration is not supported on mobile
 pref("signon.firefoxRelay.feature", "not available");
 
