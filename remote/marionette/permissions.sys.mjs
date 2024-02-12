@@ -12,18 +12,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /** @namespace */
 export const permissions = {};
 
-const specialPermissionNameMap = {
-  geolocation: "geo",
-  notifications: "desktop-notification",
-};
-
-function mapToInternalPermissionParameters(browsingContext, descriptor) {
+function mapToInternalPermissionParameters(browsingContext, permissionType) {
   const currentURI = browsingContext.currentWindowGlobal.documentURI;
 
-  const { name } = descriptor;
-
   // storage-access is quite special...
-  if (name === "storage-access") {
+  if (permissionType === "storage-access") {
     const thirdPartyPrincipalSite = Services.eTLD.getSite(currentURI);
 
     const topLevelURI = browsingContext.top.currentWindowGlobal.documentURI;
@@ -39,15 +32,8 @@ function mapToInternalPermissionParameters(browsingContext, descriptor) {
   const currentPrincipal =
     Services.scriptSecurityManager.createContentPrincipal(currentURI, {});
 
-  if (name === "midi" && descriptor.sysex) {
-    return {
-      name: "midi-sysex",
-      principal: currentPrincipal,
-    };
-  }
-
   return {
-    name: specialPermissionNameMap[name] ?? name,
+    name: permissionType,
     principal: currentPrincipal,
   };
 }
@@ -56,8 +42,8 @@ function mapToInternalPermissionParameters(browsingContext, descriptor) {
  * Set a permission's state.
  * Note: Currently just a shim to support testdriver's set_permission.
  *
- * @param {object} descriptor
- *     Descriptor with the `name` property.
+ * @param {object} permissionType
+ *     The Gecko internal permission type
  * @param {string} state
  *     State of the permission. It can be `granted`, `denied` or `prompt`.
  * @param {boolean} oneRealm
@@ -68,7 +54,7 @@ function mapToInternalPermissionParameters(browsingContext, descriptor) {
  *     If `marionette.setpermission.enabled` is not set or
  *     an unsupported permission is used.
  */
-permissions.set = function (descriptor, state, oneRealm, browsingContext) {
+permissions.set = function (permissionType, state, oneRealm, browsingContext) {
   if (!lazy.MarionettePrefs.setPermissionEnabled) {
     throw new lazy.error.UnsupportedOperationError(
       "'Set Permission' is not available"
@@ -77,7 +63,7 @@ permissions.set = function (descriptor, state, oneRealm, browsingContext) {
 
   const { name, principal } = mapToInternalPermissionParameters(
     browsingContext,
-    descriptor
+    permissionType
   );
 
   switch (state) {

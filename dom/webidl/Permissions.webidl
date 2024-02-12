@@ -35,4 +35,10 @@ dictionary MidiPermissionDescriptor : PermissionDescriptor {
 interface Permissions {
   [NewObject]
   Promise<PermissionStatus> query(object permission);
+
+  // http://w3c.github.io/permissions/#webdriver-command-set-permission
+  // We use `object` instead of PermissionSetParameters here to retain the access
+  // to the extra descriptor members from e.g. MidiPermissionDescriptor.
+  [ChromeOnly, Throws]
+  PermissionStatus parseSetParameters(object parameters);
 };
