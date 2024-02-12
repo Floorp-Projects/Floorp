@@ -1837,7 +1837,7 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Arregistrà è riempie autumaticamente l’indirizzi</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Arregistrà è rinsignà l’indirizzi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Arregistrà è rinsignà autumaticamente l’indirizzi</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Include l’infurmazioni cum’è i numeri, i messaghji elettronichi è l’indirizzi di spedizione</string>
 

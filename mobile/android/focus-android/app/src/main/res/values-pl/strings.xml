@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Usuń ze skrótów</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Co nowego</string>
     <string name="menu_settings">Ustawienia</string>
     <string name="menu_about">O programie</string>
     <string name="menu_help">Pomoc</string>
@@ -84,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Udostępnij przez</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Usunąć historię przeglądania?</string>
+    <string name="notification_erase_text_android_14">Stuknij lub wyczyść to powiadomienie, aby bezpiecznie usunąć historię przeglądania.</string>
+
     <string name="notification_erase_text">Usuń historię przeglądania</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
@@ -290,7 +288,7 @@
     <string name="preference_privacy_block_ads">Blokowanie śledzących reklam</string>
     <string name="preference_privacy_block_ads_summary">Niektóre reklamy (nawet niekliknięte) śledzą odwiedziny zawierających je stron</string>
     <string name="preference_privacy_block_analytics">Blokowanie śledzących statystyk</string>
-    <string name="preference_privacy_block_analytics_summary">Używane do zbierania, analizowania i mierzenia działań użytkownika, takich jak kliknięcia i przewijanie</string>
+    <string name="preference_privacy_block_analytics_summary">Używane do zbierania, analizowania i mierzenia działań użytkownika, takich jak stuknięcia i przewijanie</string>
     <string name="preference_privacy_block_social">Blokowanie śledzących społecznościowych</string>
     <string name="preference_privacy_block_social_summary">Osadzane na stronach, aby śledzić ich odwiedziny i dodawać np. przyciski udostępniania</string>
     <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>

@@ -1715,6 +1715,8 @@
     <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Ниҳонвожаҳои нигоҳдошташуда</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Воридшавиҳое, ки шумо дар %s нигоҳ медоред ё ҳамоҳанг мекунед, дар ин ҷо нишон дода мешаванд.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Ниҳонвожаҳоеро, ки шумо нигоҳ медоред ё бо «%s» ҳамоҳанг месозед, дар ин рӯйхат нишон дода мешаванд. Ҳамаи ниҳонвожаҳое, ки шумо нигоҳ медоред, рамзгузорӣ карда мешаванд.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Маълумоти бештар дар бораи ҳамоҳангсозӣ</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
@@ -1723,8 +1725,12 @@
     <string name="preferences_passwords_exceptions">Истисноҳо</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Воридшавиҳо ва ниҳонвожаҳое, ки нигоҳ дошта нашудаанд, дар ин ҷо нишон дошта мешаванд.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">«%s» барои сомонаҳое, ки дар ин рӯйхат нишон дода шудаанд, ниҳонвожаҳоро нигоҳ намедорад.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Воридшавиҳо ва ниҳонвожаҳо барои сомонаҳои зерин нигоҳ дошта намешаванд.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">«%s» барои сомонаҳои зерин ниҳонвожаҳоро нигоҳ намедорад.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Нест кардани ҳамаи истисноҳо</string>
     <!-- Hint for search box in logins list -->
@@ -1759,8 +1765,12 @@
     <string name="saved_login_hide_password">Пинҳон кардани ниҳонвожа</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Барои дидани воридшавиҳои нигоҳдошташуда, қулфро кушоед</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Барои дидани ниҳонвожаҳои нигоҳдошташуда, қулфро кушоед</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Воридшавиҳо ва ниҳонвожаҳои худро муҳофизат намоед</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Ниҳонвожаҳои нигоҳдоштаро муҳофизат намоед</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Барои муҳофизат кардани воридшавиҳо ва ниҳонвожаҳои худ аз дастрасии озод, агар касе дигар аз дастгоҳи шумо истифода барад, шаклвораи қулфи экран, рамзи PIN ё ниҳонвожаеро барои дастгоҳи худ танзим намоед.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1804,14 +1814,20 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Илова кардани корти кредитӣ</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Илова кардани корт</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Идора кардани кортҳои нигоҳдошташуда</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Идоракунии кортҳо</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Илова кардани нишонӣ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Идоракунии нишониҳо</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Нигоҳ доштан ва ба таври худкор пур кардани нишониҳо</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Нигоҳ доштан ва пур кардани нишониҳо</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Илова кардани маълумот монанди рақамҳо, нишониҳои почтаи электронӣ ва бурдарасонӣ</string>
 
@@ -1836,6 +1852,8 @@
     <string name="credit_cards_delete_card_button">Нест кардани корт</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин корти кредитиро нест намоед?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Кортро нест мекунед?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Нест кардан</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1851,8 +1869,12 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Лутфан, рақами корти кредитии дурустро ворид намоед</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Рақами корти дурустро ворид намоед</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Лутфан, ин майдонро пур кунед</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Номеро ворид намоед</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Барои дидани кортҳои нигоҳдошташуда, қулфро кушоед</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1905,6 +1927,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Шумо мутмаин ҳастед, ки мехоҳед ин нишониро нест намоед?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Ин нишониро нест мекунед?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Нест кардан</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2002,12 +2026,16 @@
     <string name="login_menu_edit_button">Таҳрир кардан</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин воридшавиро нест намоед?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Шумо мутмаин ҳастед, ки мехоҳед ин ниҳонвожаро нест намоед?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Нест кардан</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Бекор кардан</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Имконоти воридшавӣ</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Инконоти ниҳонвожа</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Майдони матни таҳриршаванда барои нишонии сомонаи воридшавӣ.</string>
     <!--  The editable text field for a login's username. -->
@@ -2016,17 +2044,29 @@
     <string name="saved_login_password_description">Майдони матни таҳриршаванда барои ниҳонвожаи воридшавӣ.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Нигоҳ доштани тағйирот барои воридшавӣ</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Тағийротро нигоҳ медорад.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Таҳрир кардан</string>
 
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Таҳрир кардани ниҳонвожа</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Илова кардани воридшавии нав</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Илова кардани ниҳонвожа</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Ниҳонвожа лозим аст</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Ниҳонвожаеро ворид намоед</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Номи корбар лозим аст</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Номи корбареро ворид намоед</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Номи сервер лозим аст</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Нишонии сомонаеро ворид намоед</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Ҷустуҷӯи овозӣ</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2123,6 +2163,9 @@
     <string name="other_default_search_engine_suggestion_header">Ҷустуҷӯ дар «%s»</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Гузоштан ба браузери пешфарзи худ</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Пайвандҳоеро, танзим кунед, то ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери «Firefox» ба таври худкор кушода шаванд.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2380,6 +2423,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Дар ҳоли тарҷума қарор дорад</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Забонеро интихоб кунед</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Ҳангоми тарҷума мушкилие ба миён омад. Лутфан, аз нав кӯшиш кунед.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2401,6 +2446,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s ҳеҷ вақт тарҷума карда нашавад</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Ин сомона ҳеҷ гоҳ тарҷума карда нашавад</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Ҳамаи танзимоти дигарро иваз мекунад</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Пешниҳодҳоро барои тарҷума иваз мекунад</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Танзимоти сомона</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

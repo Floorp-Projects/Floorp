@@ -2172,6 +2172,9 @@
     <string name="other_default_search_engine_suggestion_header">Z %s pytaś</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Standardny wobglědowak změniś</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Nastajśo wótkaze z websedłow, mejlkow a powěsćow, aby se awtomatiski we Firefox wócynili.</string>
 
     <!-- Content description for close button in collection placeholder. -->

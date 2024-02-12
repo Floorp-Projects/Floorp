@@ -2164,6 +2164,9 @@
     <string name="other_default_search_engine_suggestion_header">%s leit</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Skiptu um sjálfgefinn vafra</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Stilltu tengla frá vefsvæðum, tölvupósti og skilaboðum til að opna sjálfkrafa í Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->

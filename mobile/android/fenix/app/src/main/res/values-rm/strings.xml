@@ -1698,20 +1698,32 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Infurmaziuns d\'annunzia memorisadas</string>
 
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Pleds-clav memorisads</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Las infurmaziuns d\'annunzia che ti memoriseschas u sincroniseschas cun %s vegnan mussadas qua.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Ils pleds-clav che ti memoriseschas en u sincroniseschas cun %s vegnan mussads qua. Tut ils pleds-clav che ti memoriseschas èn criptads.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Vegnir a savair dapli davart Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Vegnir a savair dapli davart la sincronisaziun</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepziuns</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Las infurmaziuns d\'annunzia ed ils pleds-clav betg memorisads vegnan mussadas qua.</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s na vegn betg a memorisar pleds-clav per websites inditgadas qua.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Las infurmaziuns d\'annunzia ed ils pleds-clav na vegnan betg memorisads per questas paginas.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s na vegn betg a memorisar pleds-clav per questas websites.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Stizzar tut las excepziuns</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Tschertgar datas d\'annunzia</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Tschertgar en ils pleds-clav</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Website</string>
     <!-- The header for the username for a login -->
@@ -1741,11 +1753,17 @@
     <string name="saved_login_hide_password">Zuppentar il pled-clav</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Debloccar per vesair las infurmaziuns d\'annunzia memorisadas</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Debloccar per vesair tes pleds-clav memorisads</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Protegia las infurmaziuns d\'annunzia ed ils pleds-clav</string>
 
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Protegia tes pleds-clav memorisads</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Definescha in muster per debloccar l\'apparat, in PIN u in pled-clav per proteger tias infurmaziuns d\'annunzia e tes pleds-clav da persunas che han access a tes apparat.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Endrizza in muster per bloccar l’apparat, in PIN u pled-clav per evitar ch’ina autra persuna possia acceder a tes pleds-clav memorisads sch’ella ha tes apparat.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pli tard</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1764,6 +1782,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Zavrar il menu da las datas d\'annunzia</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menu per zavrar ils pleds-clav</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Endataziun automatica</string>
@@ -1771,10 +1792,16 @@
     <string name="preferences_addresses">Adressas</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cartas da credit</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Metodas da pajament</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Emplenir automaticamain las datas da la carta da credit</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Memorisar ed endatar automaticamain las metodas da pajament</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Las datas èn criptadas</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s criptescha tut las metodas da pajament che ti memoriseschas</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronisar las cartas tranter ils apparats</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1782,16 +1809,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Agiuntar ina carta da credit</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Agiuntar ina carta</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Administrar las cartas memorisadas</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Administrar las cartas</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Agiuntar ina adressa</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Administrar las adressas</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Memorisar ed emplenir automaticamain las adressas</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Memorisar ed endatar automaticamain las adressas</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Includer infurmaziuns sco numers, adressas dad e-mail ed adressas postalas</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Cuntegna numers da telefon ed adressas dad e-mail</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Agiuntar ina carta</string>
@@ -1813,6 +1849,8 @@
     <string name="credit_cards_delete_card_button">Stizzar la carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation">Vuls ti propi stizzar questa carta da credit?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Stizzar la carta?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Stizzar</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1827,14 +1865,22 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Endatescha per plaschair in numer da carta da credit valid</string>
 
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Endatescha in numer da carta valid</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Emplenescha per plaschair quest champ</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Agiuntescha in num</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Debloccar per vesair tias cartas memorisadas</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Protegia tias cartas da credit</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Protegia tias metodas da pajament memorisadas</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Endrizza in muster per bloccar l\'apparat, in PIN u pled-clav per evitar ch\'ina autra persuna possia acceder a tias cartas da credit memorisadas sch\'ella ha tes apparat.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Endrizza in muster per bloccar l\'apparat, in PIN u pled-clav per evitar ch’ina autra persuna possia acceder a tias metodas da pajament memorisadas sch’ella ha tes apparat.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Ussa endrizzar</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1845,6 +1891,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Debloccar per utilisar las datas da cartas da credit memorisadas</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Debloccar per utilisar las metodas da pajament memorisadas</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Agiuntar ina adressa</string>
     <!-- Title of the "Edit address" screen -->
@@ -1882,6 +1930,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">Vuls ti propi stizzar questa adressa?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Stizzar questa adressa?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Stizzar</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1980,6 +2030,8 @@
     <string name="login_menu_edit_button">Modifitgar</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Vuls ti propi stizzar questa infurmaziun d\'annunzia?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Vuls ti propi stizzar quest pled-clav?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Stizzar</string>
 
@@ -1987,24 +2039,44 @@
     <string name="dialog_delete_negative">Interrumper</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Opziuns per datas d\'annunzia</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opziuns da pleds-clav</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Il champ modifitgabel per l\'adressa web da las datas d\'annunzia.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Il champ da text modifitgabel per l’adressa da la website.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Il champ modifitgabel per il num d\'utilisader da las datas d\'annunzia.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Il champ da text modifitgabel per il num d’utilisader.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Il champ modifitgabel per il pled-clav da las datas d\'annunzia.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Il champ da text modifitgabel per il pled-clav.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Memorisar las midadas da las datas d\'annunzia.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Memorisar las midadas.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Modifitgar</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Modifitgar il pled-clav</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Agiuntar novas datas d\'annunzia</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Agiuntar in pled-clav</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Pled-clav obligatoric</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Endatar in pled-clav</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Num d\'utilisader obligatoric</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Endatar in num d’utilisader</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Num dal server obligatoric</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Endatar ina adressa web</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Tschertga vocala</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2099,6 +2171,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Tschertga %s</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Mida tes navigatur standard</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Definescha che colliaziuns da websites, e-mails e messadis vegnan averts automaticamain en Firefox.</string>
 
@@ -2354,6 +2429,8 @@
     <string name="translations_bottom_sheet_translating_in_progress">Translatar</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Translaziun en elavuraziun</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Tscherner ina lingua</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Igl ha dà in problem cun translatar. Emprova per plaschair anc ina giada.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2374,6 +2451,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Mai translatar %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Mai translatar questa website</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Remplazza tut ils auters parameters</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Remplazza las offertas da translaziun</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Parameters da translaziun</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

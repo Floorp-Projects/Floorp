@@ -543,6 +543,8 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">اؤزل دؤنگل سرور</string>
 
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">موْزیلا حسابیْ/دؤنگل سروری دگیشدیریلدی. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیخیلیر...</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">حساب</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -551,18 +553,63 @@
     <string name="preferences_theme">تم</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">آنایارپاق</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">ایشاره‌لر</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">اؤزللشدیرمک</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">تاغلاریْ، بوکمارک‌لاریْ، رمزلری و داها چوْخوُنو دؤنگل ائتمک اوچون گیریش ائله‌یین.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name_2">موْزیلا حسابی</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">دؤنگلی ایدامه وئرمک اوچون یئنی‌دن باغلانین.</string>
     <!-- Preference for language -->
     <string name="preferences_language">دیل</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">دیتا سئچیمی</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">دیتا یئغیلماسیْ</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB طریقی‌نن اوُزاقدان سازلاما</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">آختاریْش تکلیف‌لرینی گؤستر</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">سس‌لی آختاریشیْ گؤستر</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">گیزلی اوْتوروُم‌لاردا گؤستر</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">کلیپ‌بوْرد تکلیف‌لرینی گؤستر</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">موُرور گئچمیشینده آختار</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">بوکمارک‌دا آختار</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">دؤنگل ائدیلمیش تاغ‌لاردا آختار</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">حساب تنظیم‌لری</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">اؤزاؤزونه URL تکمیل‌لشمه‌سی</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">اسپانسرلردن تکلیف‌لر</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">بعضاً اسپانسرلیق تکلیف‌لری ایله %1$s -یی آرخالایین.</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s تکلیف‌لری</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">وب‌دن آختاریْنیزلا باغلیْ تکلیف‌لری آلیْن.</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">اَپ‌لرده باغلانتی‌ْلاری آچیْن.</string>
     <!-- Preference for open links in third party apps always open in apps option -->
     <string name="preferences_open_links_in_apps_always">هر زامان</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">آچمازدان اؤنجه سوْروُشون.</string>
     <!-- Preference for open links in third party apps never open in apps option -->
     <string name="preferences_open_links_in_apps_never">هئچ زامان</string>
+
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">خاریجی یئندیرمه موْدیری.</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">تاخیلان‌لار</string>

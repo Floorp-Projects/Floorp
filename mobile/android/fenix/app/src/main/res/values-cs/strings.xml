@@ -2189,6 +2189,9 @@
     <string name="other_default_search_engine_suggestion_header">Vyhledat pomocí %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Změňte svůj výchozí prohlížeč</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Nastavte si automatické otevírání odkazů, e-mailů a zpráv ve Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->
