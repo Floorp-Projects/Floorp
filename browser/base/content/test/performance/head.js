@@ -259,8 +259,8 @@ async function ensureNoPreloadedBrowser(win = window) {
 // which confuses tests that look at repaints in the toolbar.  Use this
 // function to cancel the badge update.
 function disableFxaBadge() {
-  let { ToolbarBadgeHub } = ChromeUtils.import(
-    "resource:///modules/asrouter/ToolbarBadgeHub.jsm"
+  let { ToolbarBadgeHub } = ChromeUtils.importESModule(
+    "resource:///modules/asrouter/ToolbarBadgeHub.sys.mjs"
   );
   ToolbarBadgeHub.removeAllNotifications();
 
