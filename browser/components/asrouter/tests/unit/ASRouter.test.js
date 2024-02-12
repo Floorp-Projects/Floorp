@@ -12,7 +12,7 @@ import {
   ASRouterPreferences,
   TARGETING_PREFERENCES,
 } from "modules/ASRouterPreferences.jsm";
-import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.jsm";
+import { ASRouterTriggerListeners } from "modules/ASRouterTriggerListeners.sys.mjs";
 import { CFRPageActions } from "modules/CFRPageActions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 import { PanelTestProvider } from "modules/PanelTestProvider.sys.mjs";

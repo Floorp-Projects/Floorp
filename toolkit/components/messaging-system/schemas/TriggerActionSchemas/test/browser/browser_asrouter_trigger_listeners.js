@@ -1,9 +1,6 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "ASRouterTriggerListeners",
-  "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  ASRouterTriggerListeners:
+    "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });

@@ -13,6 +13,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterTriggerListeners:
+    "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs",
   Downloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   FeatureCalloutBroker:
@@ -39,8 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
   ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
   TARGETING_PREFERENCES: "resource:///modules/asrouter/ASRouterPreferences.jsm",
-  ASRouterTriggerListeners:
-    "resource:///modules/asrouter/ASRouterTriggerListeners.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
