@@ -37,7 +37,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/RemoteL10n.sys.mjs",
     "modules/Spotlight.sys.mjs",
     "modules/ToastNotification.sys.mjs",
-    "modules/ToolbarBadgeHub.jsm",
+    "modules/ToolbarBadgeHub.sys.mjs",
     "modules/ToolbarPanelHub.jsm",
 ]
 

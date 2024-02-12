@@ -1,8 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -23,7 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 let notificationsByWindow = new WeakMap();
 
-class _ToolbarBadgeHub {
+export class _ToolbarBadgeHub {
   constructor() {
     this.id = "toolbar-badge-hub";
     this.state = {};
@@ -313,6 +319,4 @@ class _ToolbarBadgeHub {
  * ToolbarBadgeHub - singleton instance of _ToolbarBadgeHub that can initiate
  * message requests and render messages.
  */
-const ToolbarBadgeHub = new _ToolbarBadgeHub();
-
-const EXPORTED_SYMBOLS = ["ToolbarBadgeHub", "_ToolbarBadgeHub"];
+export const ToolbarBadgeHub = new _ToolbarBadgeHub();
