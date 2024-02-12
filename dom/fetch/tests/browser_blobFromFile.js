@@ -8,10 +8,7 @@ add_task(async function test() {
     fileData += "hello world!";
   }
 
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIDirectoryService)
-    .QueryInterface(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("file.txt");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
@@ -27,8 +24,7 @@ add_task(async function test() {
   outStream.write(fileData, fileData.length);
   outStream.close();
 
-  let fileHandler = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService)
+  let fileHandler = Services.io
     .getProtocolHandler("file")
     .QueryInterface(Ci.nsIFileProtocolHandler);
 
