@@ -287,12 +287,12 @@ nsresult CheckForPreferredCertificate(const nsACString& aHostName,
 #endif
 
 void nsClientAuthRememberService::Migrate() {
-  MOZ_ASSERT(NS_IsMainThread());
-  static bool migrated = false;
-  if (migrated) {
+  auto migrated = mMigrated.Lock();
+  if (*migrated) {
     return;
   }
-  migrated = true;
+  *migrated = true;
+
   nsTArray<RefPtr<nsIDataStorageItem>> decisions;
   nsresult rv = mClientAuthRememberList->GetAll(decisions);
   if (NS_FAILED(rv)) {
@@ -339,9 +339,6 @@ nsClientAuthRememberService::HasRememberedDecision(
   NS_ENSURE_ARG_POINTER(aRetVal);
   if (aHostName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
-  }
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
   }
 
   *aRetVal = false;
