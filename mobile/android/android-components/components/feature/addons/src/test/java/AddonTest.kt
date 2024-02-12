@@ -6,6 +6,7 @@ package mozilla.components.feature.addons
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.webextension.DisabledFlags
+import mozilla.components.concept.engine.webextension.Incognito
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.test.mock
@@ -378,6 +379,7 @@ class AddonTest {
         whenever(metadata.reviewCount).thenReturn(0)
         whenever(metadata.averageRating).thenReturn(0f)
         whenever(metadata.detailUrl).thenReturn("detail-url")
+        whenever(metadata.incognito).thenReturn(Incognito.NOT_ALLOWED)
 
         val addon = Addon.newFromWebExtension(extension)
         assertEquals("some-id", addon.id)
@@ -394,6 +396,7 @@ class AddonTest {
         assertEquals("some-review-url", addon.ratingUrl)
         assertEquals(0, addon.rating!!.reviews)
         assertEquals("detail-url", addon.detailUrl)
+        assertEquals(Addon.Incognito.NOT_ALLOWED, addon.incognito)
     }
 
     @Test

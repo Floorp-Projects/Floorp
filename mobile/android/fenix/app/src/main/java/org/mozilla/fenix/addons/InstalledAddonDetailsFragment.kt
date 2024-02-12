@@ -162,9 +162,10 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             this.addon = it
                             switch.isClickable = true
-                            privateBrowsingSwitch.isVisible = it.isEnabled()
-                            privateBrowsingSwitch.isChecked = it.isAllowedInPrivateBrowsing()
                             switch.setText(R.string.mozac_feature_addons_enabled)
+                            privateBrowsingSwitch.isVisible = it.isEnabled()
+                            privateBrowsingSwitch.isChecked =
+                                it.incognito != Addon.Incognito.NOT_ALLOWED && it.isAllowedInPrivateBrowsing()
                             binding.settings.isVisible = shouldSettingsBeVisible()
                             enableButtons()
                             context?.let {
@@ -203,8 +204,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             this.addon = it
                             switch.isClickable = true
-                            privateBrowsingSwitch.isVisible = it.isEnabled()
                             switch.setText(R.string.mozac_feature_addons_disabled)
+                            privateBrowsingSwitch.isVisible = it.isEnabled()
                             enableButtons()
                             context?.let {
                                 showSnackBar(
@@ -220,9 +221,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                     onError = {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
-                            privateBrowsingSwitch.isClickable = true
-                            enableButtons()
                             switch.setState(addon.isEnabled())
+                            enableButtons()
                             context?.let {
                                 showSnackBar(
                                     binding.root,
@@ -258,6 +258,45 @@ class InstalledAddonDetailsFragment : Fragment() {
             )
         } else {
             addonManager.enableAddon(addon, EnableSource.USER, onSuccess, onError)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun bindAllowInPrivateBrowsingSwitch() {
+        val switch = providePrivateBrowsingSwitch()
+        switch.isVisible = addon.isEnabled()
+
+        if (addon.incognito == Addon.Incognito.NOT_ALLOWED) {
+            switch.isChecked = false
+            switch.isEnabled = false
+            switch.text = requireContext().getString(R.string.mozac_feature_addons_not_allowed_in_private_browsing)
+            return
+        }
+
+        switch.isChecked = addon.isAllowedInPrivateBrowsing()
+
+        switch.setOnCheckedChangeListener { v, isChecked ->
+            val addonManager = v.context.components.addonManager
+            switch.isClickable = false
+            disableButtons()
+            addonManager.setAddonAllowedInPrivateBrowsing(
+                addon,
+                isChecked,
+                onSuccess = {
+                    runIfFragmentIsAttached {
+                        this.addon = it
+                        switch.isClickable = true
+                        enableButtons()
+                    }
+                },
+                onError = {
+                    runIfFragmentIsAttached {
+                        switch.isChecked = addon.isAllowedInPrivateBrowsing()
+                        switch.isClickable = true
+                        enableButtons()
+                    }
+                },
+            )
         }
     }
 
@@ -322,35 +361,6 @@ class InstalledAddonDetailsFragment : Fragment() {
                     addon,
                 )
             Navigation.findNavController(binding.root).navigate(directions)
-        }
-    }
-
-    private fun bindAllowInPrivateBrowsingSwitch() {
-        val switch = binding.allowInPrivateBrowsingSwitch
-        switch.isChecked = addon.isAllowedInPrivateBrowsing()
-        switch.isVisible = addon.isEnabled()
-        switch.setOnCheckedChangeListener { v, isChecked ->
-            val addonManager = v.context.components.addonManager
-            switch.isClickable = false
-            disableButtons()
-            addonManager.setAddonAllowedInPrivateBrowsing(
-                addon,
-                isChecked,
-                onSuccess = {
-                    runIfFragmentIsAttached {
-                        this.addon = it
-                        switch.isClickable = true
-                        enableButtons()
-                    }
-                },
-                onError = {
-                    runIfFragmentIsAttached {
-                        switch.isChecked = addon.isAllowedInPrivateBrowsing()
-                        switch.isClickable = true
-                        enableButtons()
-                    }
-                },
-            )
         }
     }
 

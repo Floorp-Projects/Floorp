@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
+import mozilla.components.concept.engine.webextension.Incognito
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
@@ -373,6 +374,7 @@ class GeckoWebExtension(
                 baseUrl = it.baseUrl,
                 temporary = it.temporary,
                 detailUrl = it.amoListingUrl,
+                incognito = Incognito.fromString(it.incognito),
             )
         }
     }

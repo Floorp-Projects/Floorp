@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatCheckBox
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -57,6 +58,7 @@ class AddonInstallationDialogFragmentTest {
 
         assertTrue(titleTextView.text.contains(name))
         assertTrue(description.text.contains(name))
+        assertTrue(allowedInPrivateBrowsing.isVisible)
         assertTrue(allowedInPrivateBrowsing.text.contains(testContext.getString(R.string.mozac_feature_addons_settings_allow_in_private_browsing)))
     }
 
@@ -155,6 +157,30 @@ class AddonInstallationDialogFragmentTest {
 
         fragment.show(fragmentManager, "test")
         verify(fragmentTransaction).commitAllowingStateLoss()
+    }
+
+    @Test
+    fun `hide private browsing checkbox when the add-on does not allow running in private windows`() {
+        val addon = Addon(
+            "id",
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
+            permissions = listOf("privacy", "<all_urls>", "tabs"),
+            incognito = Addon.Incognito.NOT_ALLOWED,
+        )
+        val fragment = createAddonInstallationDialogFragment(addon)
+        assertSame(addon, fragment.arguments?.getParcelableCompat(KEY_INSTALLED_ADDON, Addon::class.java))
+
+        doReturn(testContext).`when`(fragment).requireContext()
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+        val name = addon.translateName(testContext)
+        val titleTextView = dialog.findViewById<TextView>(R.id.title)
+        val description = dialog.findViewById<TextView>(R.id.description)
+        val allowedInPrivateBrowsing = dialog.findViewById<AppCompatCheckBox>(R.id.allow_in_private_browsing)
+
+        assertTrue(titleTextView.text.contains(name))
+        assertTrue(description.text.contains(name))
+        assertFalse(allowedInPrivateBrowsing.isVisible)
     }
 
     private fun createAddonInstallationDialogFragment(

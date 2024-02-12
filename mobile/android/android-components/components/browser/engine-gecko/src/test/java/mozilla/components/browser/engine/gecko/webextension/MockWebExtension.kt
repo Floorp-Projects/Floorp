@@ -55,6 +55,7 @@ fun mockNativeWebExtensionMetaData(
     updateDate: String? = null,
     reviewCount: Int = 0,
     averageRating: Double = 0.0,
+    incognito: String? = "spanning",
 ): WebExtension.MetaData {
     val metadata: WebExtension.MetaData = mock()
     ReflectionUtils.setField(metadata, "icon", icon)
@@ -82,6 +83,8 @@ fun mockNativeWebExtensionMetaData(
     ReflectionUtils.setField(metadata, "updateDate", updateDate)
     ReflectionUtils.setField(metadata, "reviewCount", reviewCount)
     ReflectionUtils.setField(metadata, "averageRating", averageRating)
+    ReflectionUtils.setField(metadata, "averageRating", averageRating)
+    ReflectionUtils.setField(metadata, "incognito", incognito)
     return metadata
 }
 

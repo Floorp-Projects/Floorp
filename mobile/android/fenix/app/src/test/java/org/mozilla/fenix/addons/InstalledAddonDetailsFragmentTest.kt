@@ -76,7 +76,7 @@ class InstalledAddonDetailsFragmentTest {
     }
 
     @Test
-    fun `GIVEN blocklisted addon WHEN biding the enable switch THEN disable the switch`() {
+    fun `GIVEN blocklisted addon WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
         val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
         val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
@@ -93,7 +93,7 @@ class InstalledAddonDetailsFragmentTest {
     }
 
     @Test
-    fun `GIVEN enabled addon WHEN biding the enable switch THEN do not disable the switch`() {
+    fun `GIVEN enabled addon WHEN binding the enable switch THEN do not disable the switch`() {
         val addon = mockk<Addon>()
         val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
         val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
@@ -112,7 +112,7 @@ class InstalledAddonDetailsFragmentTest {
     }
 
     @Test
-    fun `GIVEN addon not correctly signed WHEN biding the enable switch THEN disable the switch`() {
+    fun `GIVEN addon not correctly signed WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
         val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
         val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
@@ -130,7 +130,7 @@ class InstalledAddonDetailsFragmentTest {
     }
 
     @Test
-    fun `GIVEN incompatible addon WHEN biding the enable switch THEN disable the switch`() {
+    fun `GIVEN incompatible addon WHEN binding the enable switch THEN disable the switch`() {
         val addon = mockk<Addon>()
         val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
         val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
@@ -228,9 +228,27 @@ class InstalledAddonDetailsFragmentTest {
         }
     }
 
+    @Test
+    fun `GIVEN addon does not allow private browsing WHEN binding THEN update switch`() {
+        val addon = mockAddon()
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
+
+        every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
+        every { addon.incognito } returns Addon.Incognito.NOT_ALLOWED
+        every { fragment.addon } returns addon
+        every { fragment.context } returns testContext
+
+        fragment.bindAllowInPrivateBrowsingSwitch()
+
+        verify { privateBrowsingSwitch.isEnabled = false }
+        verify { privateBrowsingSwitch.isChecked = false }
+        verify { privateBrowsingSwitch.text = "Not allowed in private windows" }
+    }
+
     private fun mockAddon(): Addon {
         val addon: Addon = mockk()
         every { addon.id } returns "some-addon-id"
+        every { addon.incognito } returns Addon.Incognito.SPANNING
         every { addon.isEnabled() } returns true
         every { addon.isDisabledAsBlocklisted() } returns false
         every { addon.isDisabledAsNotCorrectlySigned() } returns false

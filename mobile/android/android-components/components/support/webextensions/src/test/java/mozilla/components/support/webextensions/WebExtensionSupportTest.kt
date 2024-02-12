@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.Incognito
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -915,6 +916,7 @@ class WebExtensionSupportTest {
         whenever(ext.id).thenReturn("test")
         whenever(ext.isEnabled()).thenReturn(true)
         val extMeta: Metadata = mock()
+        whenever(extMeta.incognito).thenReturn(Incognito.SPANNING)
         whenever(ext.getMetadata()).thenReturn(extMeta)
         val installedList = mutableListOf(ext)
 
