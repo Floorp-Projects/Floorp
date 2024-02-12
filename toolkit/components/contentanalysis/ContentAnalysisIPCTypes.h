@@ -83,15 +83,6 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
     return FromNoResult(NoContentAnalysisResult::ERROR_INVALID_JSON_RESPONSE);
   }
 
-  static RefPtr<ContentAnalysisResult> FromContentAnalysisResponse(
-      nsIContentAnalysisResponse* aResponse) {
-    if (aResponse->GetShouldAllowContent()) {
-      return FromAction(nsIContentAnalysisResponse::Action::eAllow);
-    } else {
-      return FromAction(nsIContentAnalysisResponse::Action::eBlock);
-    }
-  }
-
  private:
   explicit ContentAnalysisResult(nsIContentAnalysisResponse::Action aAction)
       : mValue(aAction) {}

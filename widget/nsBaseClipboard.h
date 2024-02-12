@@ -47,9 +47,8 @@ class nsBaseClipboard : public nsIClipboard {
   NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
                           nsIAsyncClipboardRequestCallback* aCallback,
                           nsIAsyncSetClipboardData** _retval) override final;
-  NS_IMETHOD GetData(
-      nsITransferable* aTransferable, int32_t aWhichClipboard,
-      mozilla::dom::WindowContext* aWindowContext) override final;
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     int32_t aWhichClipboard) override final;
   NS_IMETHOD AsyncGetData(
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
       mozilla::dom::WindowContext* aRequestingWindowContext,
@@ -62,10 +61,9 @@ class nsBaseClipboard : public nsIClipboard {
   NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
                                       bool* aRetval) override final;
 
-  void AsyncGetDataInternal(
-      const nsTArray<nsCString>& aFlavorList, int32_t aClipboardType,
-      mozilla::dom::WindowContext* aRequestingWindowContext,
-      nsIAsyncClipboardGetCallback* aCallback);
+  void AsyncGetDataInternal(const nsTArray<nsCString>& aFlavorList,
+                            int32_t aClipboardType,
+                            nsIAsyncClipboardGetCallback* aCallback);
 
   using GetDataCallback = mozilla::MoveOnlyFunction<void(nsresult)>;
   using HasMatchingFlavorsCallback = mozilla::MoveOnlyFunction<void(
@@ -126,11 +124,9 @@ class nsBaseClipboard : public nsIClipboard {
 
   class AsyncGetClipboardData final : public nsIAsyncGetClipboardData {
    public:
-    AsyncGetClipboardData(
-        int32_t aClipboardType, int32_t aSequenceNumber,
-        nsTArray<nsCString>&& aFlavors, bool aFromCache,
-        nsBaseClipboard* aClipboard,
-        mozilla::dom::WindowContext* aRequestingWindowContext);
+    AsyncGetClipboardData(int32_t aClipboardType, int32_t aSequenceNumber,
+                          nsTArray<nsCString>&& aFlavors, bool aFromCache,
+                          nsBaseClipboard* aClipboard);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIASYNCGETCLIPBOARDDATA
@@ -151,8 +147,6 @@ class nsBaseClipboard : public nsIClipboard {
     const bool mFromCache;
     // This is also used to indicate whether this request is still valid.
     RefPtr<nsBaseClipboard> mClipboard;
-    // The requesting window, which is used for Content Analysis purposes.
-    RefPtr<mozilla::dom::WindowContext> mRequestingWindowContext;
   };
 
   class ClipboardCache final {
@@ -186,10 +180,10 @@ class nsBaseClipboard : public nsIClipboard {
     int32_t mSequenceNumber = -1;
   };
 
-  void MaybeRetryGetAvailableFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-      nsIAsyncClipboardGetCallback* aCallback, int32_t aRetryCount,
-      mozilla::dom::WindowContext* aRequestingWindowContext);
+  void MaybeRetryGetAvailableFlavors(const nsTArray<nsCString>& aFlavorList,
+                                     int32_t aWhichClipboard,
+                                     nsIAsyncClipboardGetCallback* aCallback,
+                                     int32_t aRetryCount);
 
   // Return clipboard cache if the cached data is valid, otherwise clear the
   // cached data and returns null.
