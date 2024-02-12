@@ -2,18 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const path = require("path");
-
-// This plugin supports finding files for resource:/activity-stream/ uris,
-// translating the uri into a path relative to the browser/components/newtab/
-// directory where the file may be found.
+// This plugin supports finding files with particular resource:// URIs
+// and translating the uri into a relative filesytem path where the file may be
+// found when running within the Karma / Mocha test framework.
 
 module.exports = {
   ResourceUriPlugin: class ResourceUriPlugin {
-    #resourcePathRegEx;
+    /**
+     * @typedef {RegEx} ResourceReplacement0
+     *   A regular expression matching a resource:// URI substring to be
+     *   replaced.
+     * @typedef {string} ResourceReplacement1
+     *   A string to replace the matched substring with.
+     * @typedef {[ResourceReplacement0, ResourceReplacement1]} ResourceReplacement
+     */
 
-    constructor({ resourcePathRegEx }) {
-      this.#resourcePathRegEx = resourcePathRegEx;
+    /**
+     * Maps regular expressions representing resource URIs to strings that
+     * should replace matches for those regular expressions.
+     *
+     * @type {ResourceReplacement[]}
+     */
+    #resourcePathRegExes;
+
+    /**
+     * @param {object} options
+     * @param {ResourceReplacement[]} options.resourcePathRegExes
+     *   An array of regex/string tuples to perform replacements on for
+     *   imports involving resource:// URIs.
+     */
+    constructor({ resourcePathRegExes }) {
+      this.#resourcePathRegExes = resourcePathRegExes;
     }
 
     apply(compiler) {
@@ -24,14 +43,19 @@ module.exports = {
             .for("resource")
             .tap("ResourceUriPlugin", resourceData => {
               const url = new URL(resourceData.resource);
-              if (!url.href.match(this.#resourcePathRegEx)) {
+
+              for (let [regex, replacement] of this.#resourcePathRegExes) {
+                if (!url.href.match(regex)) {
+                  continue;
+                }
+                const pathname = url.href.replace(regex, replacement);
+                resourceData.path = pathname;
+                resourceData.query = url.search;
+                resourceData.fragment = url.hash;
+                resourceData.resource = pathname + url.search + url.hash;
                 return true;
               }
-              const pathname = path.join(__dirname, "..", url.pathname);
-              resourceData.path = pathname;
-              resourceData.query = url.search;
-              resourceData.fragment = url.hash;
-              resourceData.resource = pathname + url.search + url.hash;
+
               return true;
             });
         }
